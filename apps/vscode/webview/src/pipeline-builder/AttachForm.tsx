@@ -24,13 +24,10 @@ export interface Attachment {
     note: string;
     /** Set when this replaces a hook in place, at the anchor it already had. */
     editIndex?: number;
-    /**
-     * Where the hook was, when the edit moved it to another boundary.
-     *
-     * An index belongs to its anchor, so a move cannot be a replace: it is a
-     * removal from the old place and an addition at the new one.
-     */
+    /** Where the hook was, when the edit moved it: an index belongs to its anchor, so this is a move, not a replace. */
     movedFrom?: { anchor: string; when: HookWhen; index: number };
+    /** Whether `anchor` names a node or a phase, since the two can share a name. */
+    boundary: 'node' | 'phase';
 }
 
 interface Props {
@@ -51,6 +48,12 @@ interface Props {
     onCancel: () => void;
     onAttach: (attachment: Attachment) => void;
     onRemove?: () => void;
+    /** Move the hook one place within its saved side and anchor. */
+    onMove?: (direction: 'up' | 'down') => void;
+    /** How many of this project's hooks share the edited hook's side and anchor. */
+    count?: number;
+    /** What the last move's write said, read once it answers. */
+    announce?: string;
 }
 
 /** The four things a hook can be; `field` names the value box a segment cannot. */
@@ -92,17 +95,32 @@ const WHENS: Array<{ id: HookWhen; label: string; note: string }> = [
     { id: 'after', label: 'after', note: 'once it has finished' },
 ];
 
+/** A node wins a name it shares with a phase, which is the order the writer resolves it in. */
+export function boundaryOf(step: PipelineStep, anchor: string): 'node' | 'phase' {
+    return step.phases.some(p => p.nodes.some(n => n.id === anchor)) ? 'node' : 'phase';
+}
+
+interface Place {
+    id: string; label: string; note: string; anchor: string; boundary: 'node' | 'phase';
+}
+
+const placeId = (boundary: 'node' | 'phase', anchor: string) => `${boundary}:${anchor}`;
+
 /** Every place in this step something can attach to, in the order they run. */
-function anchors(step: PipelineStep): Array<{ id: string; label: string; note: string }> {
-    const out: Array<{ id: string; label: string; note: string }> = [];
+function anchors(step: PipelineStep): Place[] {
+    const out: Place[] = [];
     for (const phase of step.phases) {
         out.push({
-            id: phase.name,
+            id: placeId('phase', phase.name),
             label: `the ${phase.name} phase`,
             note: `every node in ${phase.name}`,
+            anchor: phase.name, boundary: 'phase',
         });
         for (const node of phase.nodes) {
-            out.push({ id: node.id, label: node.name, note: node.id });
+            out.push({
+                id: placeId('node', node.id), label: node.name, note: node.id,
+                anchor: node.id, boundary: 'node',
+            });
         }
     }
     return out;
@@ -113,11 +131,13 @@ export function AttachForm(props: Props) {
     const [hookType, setHookType] = useState<HookType>(editing?.type ?? 'skill');
     const [value, setValue] = useState(editing?.summary ?? '');
     const [note, setNote] = useState(editing?.note ?? '');
-    const [where, setWhere] = useState(editing?.anchor ?? anchor);
+    const placeOf = (name: string) => placeId(boundaryOf(step, name), name);
+    const [where, setWhere] = useState(placeOf(editing?.anchor ?? anchor));
     const [when, setWhen] = useState<HookWhen>(editing?.when ?? seededWhen ?? 'before');
 
     const kind = KINDS.find(k => k.type === hookType)!;
     const places = anchors(step);
+    const place = places.find(p => p.id === where);
     // Every kind reads its offerings the same way, so a hook is a choice rather
     // than a name you had to already know. A skill and a node are names with
     // nothing to say about them; a spec-kit command carries what it does.
@@ -161,11 +181,13 @@ export function AttachForm(props: Props) {
         // An index only means anything under the anchor it was read from. Moving
         // a hook to another boundary and keeping the index replaced whatever sat
         // at that position under the NEW anchor — destroying an unrelated hook
-        // and leaving the original where it was. A move is a remove and an add.
+        // and leaving the original where it was. A move names where it came from.
         const moved = Boolean(editing)
-            && (where !== editing?.anchor || when !== editing?.when);
+            && (where !== placeOf(editing!.anchor) || when !== editing?.when);
         onAttach({
-            anchor: where, when, hookType, value: value.trim(), note: note.trim(),
+            anchor: place?.anchor ?? editing?.anchor ?? anchor,
+            boundary: place?.boundary ?? boundaryOf(step, editing?.anchor ?? anchor),
+            when, hookType, value: value.trim(), note: note.trim(),
             editIndex: moved ? undefined : editing?.index,
             movedFrom: moved && editing
                 ? { anchor: editing.anchor, when: editing.when, index: editing.index }
@@ -196,13 +218,18 @@ export function AttachForm(props: Props) {
                         <span class="pb-runs-where">
                             <Menu class="pb-menu-trigger--field"
                                 trigger={<span class="pb-trigger-text">
-                                    {places.find(p => p.id === where)?.label ?? where}
+                                    {place?.label ?? editing?.anchor ?? anchor}
                                 </span>}
                                 label="Where" title="What this hook attaches to"
                                 options={places} onPick={setWhere} />
                         </span>
                     </div>
                 </div>
+
+                {editing && <Order editing={editing} count={props.count}
+                    label={places.find(p => p.id === placeOf(editing.anchor))?.label
+                        ?? editing.anchor}
+                    onMove={props.onMove} />}
 
                 <div class="pb-field pb-field--labelled">
                     <span class="pb-field-label" id="pb-kind-label">Kind</span>
@@ -315,6 +342,7 @@ export function AttachForm(props: Props) {
 
                 {/* Forward, destructive, then leaving — the panel's order. */}
                 <div class="pb-form-actions">
+                    <p class="pb-live" role="status" aria-live="polite">{props.announce ?? ''}</p>
                     <button class="pb-action pb-action--primary" type="submit" disabled={!ready}>
                         {editing ? 'Save hook' : 'Add hook'}
                     </button>
@@ -327,6 +355,38 @@ export function AttachForm(props: Props) {
                 </div>
             </form>
         </SidePanel>
+    );
+}
+
+/** Where the hook sits now, among its side's hooks, and the keyboard's way to change it. */
+function Order({ editing, count, label, onMove }: {
+    editing: PipelineHook;
+    count?: number;
+    label: string;
+    onMove?: (direction: 'up' | 'down') => void;
+}) {
+    const total = Math.max(count ?? 0, editing.index + 1);
+    const first = editing.index <= 0;
+    const last = editing.index >= total - 1;
+    const where = `${editing.when} ${label}`;
+    const move = (direction: 'up' | 'down', edge: boolean, reason: string) => (
+        <button type="button" class="pb-order-move"
+            aria-disabled={edge ? 'true' : undefined}
+            title={edge ? reason : undefined}
+            onClick={() => { if (!edge) { onMove?.(direction); } }}>
+            {direction === 'up' ? 'Move up' : 'Move down'}
+            {edge && <span class="sr-only">{`, ${reason[0].toLowerCase()}${reason.slice(1)}`}</span>}
+        </button>
+    );
+    return (
+        <div class="pb-field pb-field--labelled">
+            <span class="pb-field-label">Order</span>
+            <div class="pb-order">
+                <span class="pb-order-place">{`${editing.index + 1} of ${total} ${where}`}</span>
+                {move('up', first, `Already first ${where}`)}
+                {move('down', last, `Already last ${where}`)}
+            </div>
+        </div>
     );
 }
 

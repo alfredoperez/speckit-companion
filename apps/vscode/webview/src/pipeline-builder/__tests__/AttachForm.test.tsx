@@ -8,7 +8,7 @@
  */
 import { AttachForm, Attachment } from '../AttachForm';
 import type { OfferedEntry, PipelineChoices } from '../../../../src/protocol/pipeline';
-import { flush, mount, step } from './support';
+import { flush, mount, node, step } from './support';
 
 const COMMANDS: OfferedEntry[] = [
     {
@@ -178,5 +178,106 @@ describe('the second selector reacts to the first (#646)', () => {
         await flush();
         expect(host.querySelector('.pb-menu-list')?.className)
             .toContain('pb-menu-list--right');
+    });
+});
+
+describe('a saved hook moves from the keyboard', () => {
+    const hook = (index: number) => ({
+        when: 'after' as const, type: 'skill' as const, summary: 'create-pr',
+        anchor: 'draft-spec', index, note: '',
+    });
+
+    function editing(index: number, count: number) {
+        const moves: Array<'up' | 'down'> = [];
+        const host = mount(
+            <AttachForm step={step()} anchor="draft-spec" choices={choices()} editing={hook(index)}
+                count={count} onCancel={noop} onAttach={noop}
+                onMove={direction => moves.push(direction)} />,
+        );
+        return { host, moves };
+    }
+
+    const order = (host: HTMLElement) => Array.from(host.querySelectorAll('.pb-field-label'))
+        .find(el => el.textContent === 'Order')?.parentElement ?? null;
+    const button = (host: HTMLElement, label: string) =>
+        Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-order-move'))
+            .find(el => el.textContent?.startsWith(label))!;
+
+    it('shows an Order row only for a hook that already exists', () => {
+        expect(order(form())).toBeNull();
+        const { host } = editing(1, 3);
+        expect(order(host)?.textContent).toContain('2 of 3 after Draft the spec');
+    });
+
+    it('keeps Move up focusable at the first place, says why, and does nothing', () => {
+        const { host, moves } = editing(0, 2);
+        const up = button(host, 'Move up');
+        expect(up.getAttribute('aria-disabled')).toBe('true');
+        expect(up.disabled).toBe(false);
+        expect(up.title).toBe('Already first after Draft the spec');
+        expect(up.textContent).toBe('Move up, already first after Draft the spec');
+        up.click();
+        expect(moves).toEqual([]);
+    });
+
+    it('says Move down has nowhere to go at the last place', () => {
+        const { host, moves } = editing(1, 2);
+        const down = button(host, 'Move down');
+        expect(down.getAttribute('aria-disabled')).toBe('true');
+        expect(down.title).toBe('Already last after Draft the spec');
+        down.click();
+        expect(moves).toEqual([]);
+    });
+
+    it('asks to move down when there is a place below', () => {
+        const { host, moves } = editing(0, 2);
+        expect(button(host, 'Move down').getAttribute('aria-disabled')).toBeNull();
+        button(host, 'Move down').click();
+        expect(moves).toEqual(['down']);
+    });
+});
+
+describe('a phase and a node can share a name', () => {
+    const shared = step({
+        phases: [
+            { name: 'gather', hooks: [], nodes: [node()] },
+            { name: 'review', hooks: [], nodes: [node({ id: 'review', name: 'Review the work' })] },
+        ],
+    });
+
+    async function attachTo(label: string, seeded = 'gather'): Promise<Attachment> {
+        const made: Attachment[] = [];
+        const host = mount(
+            <AttachForm step={shared} anchor={seeded} choices={choices()}
+                onCancel={noop} onAttach={a => made.push(a)} />,
+        );
+        (host.querySelectorAll('.pb-runs .pb-menu-trigger')[1] as HTMLButtonElement).click();
+        await flush();
+        Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+            .find(el => el.querySelector('.pb-menu-label')?.textContent === label)!.click();
+        await flush();
+        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
+        input.value = 'create-pr';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        await flush();
+        (host.querySelector('.pb-action--primary') as HTMLButtonElement).click();
+        return made[0];
+    }
+
+    it('reports the phase when the phase is picked', async () => {
+        expect(await attachTo('the review phase')).toMatchObject({ anchor: 'review', boundary: 'phase' });
+    });
+
+    it('reports the node when the node is picked', async () => {
+        expect(await attachTo('Review the work')).toMatchObject({ anchor: 'review', boundary: 'node' });
+    });
+
+    it('seeds a shared name as the node, the way the writer resolves it', () => {
+        const host = mount(
+            <AttachForm step={shared} anchor="review" choices={choices()}
+                onCancel={noop} onAttach={noop} />,
+        );
+        expect(host.querySelectorAll('.pb-runs .pb-trigger-text')[1].textContent?.trim())
+            .toBe('Review the work');
     });
 });

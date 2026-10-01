@@ -80,3 +80,86 @@ describe('a move is announced by what its write said', () => {
         expect(live()).not.toBe('Built');
     });
 });
+
+describe('a hook moved from its form is announced by what its write said', () => {
+    const hook = (summary: string, index: number) => ({
+        when: 'after' as const, type: 'skill' as const, summary, anchor: 'handoff', index, note: '',
+    });
+    const HOOKED = step({
+        phases: [
+            { name: 'gather', hooks: [], nodes: [node({ id: 'resolve-dir' })] },
+            { name: 'wrap-up', hooks: [], nodes: [node({
+                id: 'handoff', name: 'Hand off',
+                hooks: [hook('create-pr', 0), hook('notify', 1)],
+            })] },
+        ],
+    });
+
+    const formLive = () => root.querySelector('.pb-form .pb-live')?.textContent;
+    const order = () => Array.from(root.querySelectorAll('.pb-form .pb-field-label'))
+        .find(el => el.textContent === 'Order')?.parentElement?.textContent ?? '';
+    const press = async (label: string) => {
+        Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-form .pb-order-move'))
+            .find(el => el.textContent === label)!.click();
+        await flush();
+    };
+    const sent = (type: string) => posted.filter(m => m.type === type).length;
+
+    beforeAll(async () => {
+        await deliver({ type: 'graph', graph: graph({ steps: [HOOKED] }), buildState: 'built' });
+        Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-hook'))
+            .find(el => el.textContent?.includes('notify'))!.click();
+        await flush();
+    });
+
+    it('posts one move for Move up and says nothing until the write answers', async () => {
+        expect(order()).toContain('2 of 2 after Hand off');
+        const before = sent('moveHook');
+        await press('Move up');
+        expect(sent('moveHook')).toBe(before + 1);
+        expect(posted.at(-1)).toMatchObject({
+            type: 'moveHook', command: 'specify',
+            from: { when: 'after', anchor: 'handoff', index: 1 },
+            to: { when: 'after', anchor: 'handoff', index: 0, boundary: 'node' },
+        });
+        expect(order()).toContain('1 of 2 after Hand off');
+        expect(formLive()).toBe('');
+
+        await deliver({ type: 'status', status: { tone: 'done', text: 'Hook moved up after Hand off' } });
+        expect(formLive()).toBe('Hook moved up after Hand off');
+    });
+
+    it('reads the reason on a refusal and puts the form back on the hook\'s place', async () => {
+        await press('Move down');
+        expect(order()).toContain('2 of 2 after Hand off');
+        expect(formLive()).toBe('');
+
+        const reason = 'specify: that hook is not in companion.yml any more.';
+        await deliver({ type: 'notice', text: reason });
+        expect(formLive()).toBe(reason);
+        expect(order()).toContain('1 of 2 after Hand off');
+    });
+
+    it('saves a change of place as one move, leaving an unedited entry as written', async () => {
+        const counts = { add: sent('addHook'), remove: sent('removeHook'), move: sent('moveHook') };
+        (root.querySelectorAll('.pb-form .pb-runs .pb-menu-trigger')[1] as HTMLButtonElement).click();
+        await flush();
+        Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-form .pb-menu-option'))
+            .find(el => el.querySelector('.pb-menu-label')?.textContent === 'the gather phase')!
+            .click();
+        await flush();
+        (root.querySelector('.pb-form .pb-action--primary') as HTMLButtonElement).click();
+        await flush();
+
+        expect(sent('moveHook')).toBe(counts.move + 1);
+        expect(sent('addHook')).toBe(counts.add);
+        expect(sent('removeHook')).toBe(counts.remove);
+        expect(posted.at(-1)).toMatchObject({
+            type: 'moveHook',
+            from: { when: 'after', anchor: 'handoff', index: 0 },
+            to: { when: 'after', anchor: 'gather', boundary: 'phase' },
+        });
+        expect(posted.at(-1)!.hook).toBeUndefined();
+        expect((posted.at(-1)!.to as Record<string, unknown>).index).toBeUndefined();
+    });
+});

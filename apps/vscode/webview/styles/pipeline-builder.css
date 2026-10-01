@@ -853,6 +853,30 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 /* Not on another extension's, and not on a parked one: neither opens. */
 .pb-hook:not(.pb-hook--stock):not(.pb-hook--parked):hover { background: var(--bg-hover); }
 
+/* The whole row drags; the grip only says it can. */
+.pb-hook-grip {
+    display: flex;
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.pb-hook--dragging { opacity: 0.4; }
+
+/* Where a dragged hook would land, said by a rule on the side it lands, never by motion. */
+.pb-hook.pb-drop-over--upper { box-shadow: inset 0 2px 0 var(--accent); }
+.pb-hook.pb-drop-over--lower { box-shadow: inset 0 -2px 0 var(--accent); }
+.pb-node.pb-drop-over--upper { box-shadow: 0 -3px 0 var(--accent); }
+.pb-node.pb-drop-over--lower { box-shadow: 0 3px 0 var(--accent); }
+
+.pb-attached-side.pb-drop-over,
+.pb-slot.pb-drop-over,
+.pb-phase-head.pb-drop-over {
+    background: var(--accent-subtle);
+    outline: 1px dashed var(--accent);
+    outline-offset: 1px;
+    border-radius: var(--radius-sm);
+}
+
 /* The name, and only the name: the row used to repeat the kind as a lowercase
    word beside the badge that now says it. */
 .pb-hook-name {
@@ -2362,6 +2386,25 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
 .pb-order-move:hover,
 .pb-order-move:focus-visible { text-decoration-thickness: 2px; }
+
+/* The place reads on its own line, so neither button breaks across two. */
+.pb-order {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--space-3);
+    min-width: 0;
+}
+
+.pb-order-place { flex-basis: 100%; }
+.pb-order .pb-order-move { white-space: nowrap; }
+
+/* Still focusable, so its reason can be read; the missing underline says it does nothing. */
+.pb-order-move[aria-disabled="true"] {
+    color: var(--text-secondary);
+    text-decoration: none;
+    cursor: default;
+}
 
 .pb-order-move:focus-visible {
     outline: 2px solid var(--accent);

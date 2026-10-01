@@ -17,6 +17,7 @@ import {
     BuildReport,
     BuilderToExtensionMessage,
     ExtensionToBuilderMessage,
+    HookType,
     HookWhen,
     PipelineGraphResult,
     PipelineStatus,
@@ -35,6 +36,7 @@ import {
     applyRepair,
     resolveGraphScript,
     writeHook,
+    moveHook,
     removeHook,
     writeNodeOrder,
     writePhases,
@@ -60,6 +62,15 @@ function workflowLabel(name: string): string {
     if (name === '') { return 'this project'; }
     if (name === SHIPPED_WORKFLOW) { return 'the pipeline as it ships'; }
     return name;
+}
+
+/** What the form's one value means for each kind: a skill's note rides in `text`. */
+function hookContent(type: HookType, value: string, note?: string):
+Omit<HookDraft, 'when' | 'anchor' | 'editIndex'> {
+    if (type === 'skill' || type === 'node') {
+        return note ? { type, ref: value, text: note } : { type, ref: value };
+    }
+    return type === 'command' ? { type, run: value } : { type, text: value };
 }
 
 function nonce(): string {
@@ -378,41 +389,36 @@ export class PipelineBuilderPanel {
         },
 
         addHook: async message => {
-            // A move takes the hook off its old boundary first, and waits: both
-            // halves rewrite the same file, and run together they overwrote each
-            // other. A refused removal stops here rather than adding a second copy.
-            if (message.movedFrom) {
-                const from = message.movedFrom;
-                const gone = await this.write(
-                    script => removeHook(script, this.workspaceRoot, message.command,
-                        from.when, from.anchor, from.index),
-                    'Moving a hook');
-                if (!gone) { return; }
-            }
-            await this.write(script => {
-                const draft: HookDraft = {
-                    type: message.hookType, when: message.when, anchor: message.anchor,
-                    editIndex: message.editIndex,
-                };
-                if (message.hookType === 'skill' || message.hookType === 'node') {
-                    draft.ref = message.value;
-                    if (message.note) { draft.text = message.note; }
-                } else if (message.hookType === 'command') {
-                    draft.run = message.value;
-                } else {
-                    draft.text = message.value;
-                }
-                return writeHook(script, this.workspaceRoot, message.command, draft);
-            }, 'Attaching work',
+            await this.write(script => writeHook(script, this.workspaceRoot, message.command, {
+                ...hookContent(message.hookType, message.value, message.note),
+                when: message.when, anchor: message.anchor, editIndex: message.editIndex,
+            }), 'Attaching work',
             {
                 tone: 'done',
-                text: message.movedFrom
-                    ? `Hook moved to ${message.when} ${message.anchor}`
-                    : message.editIndex === undefined
-                        ? `Hook added ${message.when} ${message.anchor}`
-                        : `Hook changed ${message.when} ${message.anchor}`,
+                text: message.editIndex === undefined
+                    ? `Hook added ${message.when} ${message.anchor}`
+                    : `Hook changed ${message.when} ${message.anchor}`,
                 detail: 'Build to apply',
             });
+        },
+
+        moveHook: async message => {
+            const { from, to } = message;
+            const along = from.when === to.when && from.anchor === to.anchor;
+            await this.write(
+                script => moveHook(script, this.workspaceRoot, message.command, from, to,
+                    message.hook
+                        ? hookContent(message.hook.hookType, message.hook.value, message.hook.note)
+                        : undefined),
+                'Moving a hook',
+                {
+                    tone: 'done',
+                    text: along
+                        ? `Hook moved ${(to.index ?? Infinity) < from.index ? 'up' : 'down'} `
+                            + `${to.when} ${to.anchor}`
+                        : `Hook moved to ${to.when} ${to.anchor}`,
+                    detail: 'Build to apply',
+                });
         },
 
         selectWorkflow: async message => {
@@ -555,7 +561,20 @@ export class PipelineBuilderPanel {
      * the panel as a notice rather than a toast the panel cannot see — this view
      * is meant to run outside VS Code, where there is nothing to show a toast on.
      */
-    private async write(
+    private write(
+        run: (script: string) => Promise<string | null>,
+        what: string,
+        status?: PipelineStatus,
+    ): Promise<boolean> {
+        // One at a time: each write reads the file the previous one left, so two quick moves cannot both read the old file.
+        const turn = this.writing.then(() => this.writeNow(run, what, status));
+        this.writing = turn.catch(() => undefined);
+        return turn;
+    }
+
+    private writing: Promise<unknown> = Promise.resolve();
+
+    private async writeNow(
         run: (script: string) => Promise<string | null>,
         what: string,
         status?: PipelineStatus,

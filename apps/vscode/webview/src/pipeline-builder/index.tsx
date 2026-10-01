@@ -23,12 +23,14 @@ import {
     isGraphError,
 } from '../../../src/protocol/pipeline';
 import { BrokenPipeline } from './BrokenPipeline';
-import { Canvas, withoutNode as withoutNodeOf } from './Canvas';
+import { Canvas, hooksAt, withoutNode as withoutNodeOf } from './Canvas';
 import { Header } from './Header';
 import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
 import { moveTargets, movedToPhase } from './moves';
-import { AttachForm, NewStepForm, NewWorkflowForm, Attachment } from './AttachForm';
+import {
+    AttachForm, NewStepForm, NewWorkflowForm, Attachment, boundaryOf,
+} from './AttachForm';
 import { TemplateForm } from './TemplateForm';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
@@ -41,6 +43,8 @@ interface Attaching {
     /** Which side of the anchor the button that opened this sat on. */
     when?: HookWhen;
     hook?: PipelineHook;
+    /** Bumped each time the form opens, so a move inside it keeps it mounted. */
+    opened: number;
 }
 
 /** Only one thing occupies the side column at a time. */
@@ -135,6 +139,9 @@ function App() {
     // A move is announced once its write answers, never when it is only asked for.
     const [announced, setAnnounced] = useState('');
     const moving = useRef(false);
+    // The form as it was before a keyboard move, put back if the write refuses it.
+    const unmoved = useRef<Attaching | null>(null);
+    const opens = useRef(0);
 
     useEffect(() => {
         const onMessage = (event: MessageEvent) => {
@@ -146,11 +153,20 @@ function App() {
                 setBusy(message.busy);
             } else if (message.type === 'notice') {
                 setNotice(message.text);
-                if (moving.current) { moving.current = false; setAnnounced(message.text); }
+                if (!moving.current) { return; }
+                moving.current = false;
+                setAnnounced(message.text);
+                const before = unmoved.current;
+                if (before) {
+                    unmoved.current = null;
+                    setSide(side => side?.kind === 'attach' && side.at.opened === before.opened
+                        ? { kind: 'attach', at: before } : side);
+                }
             } else if (message.type === 'status') {
                 setStatus(message.status);
                 if (moving.current && message.status) {
                     moving.current = false;
+                    unmoved.current = null;
                     setAnnounced(message.status.text);
                 }
             } else if (message.type === 'buildReport') {
@@ -210,6 +226,20 @@ function App() {
         setAnnounced('');
         send(message);
     };
+    const openAttach = (at: Omit<Attaching, 'opened'>) => {
+        setNotice(null);
+        setAnnounced('');
+        unmoved.current = null;
+        opens.current += 1;
+        setSide({ kind: 'attach', at: { ...at, opened: opens.current } });
+    };
+    const editingHook = attaching?.hook;
+    const hookBoundary = attachStep && editingHook
+        ? boundaryOf(attachStep, editingHook.anchor) : 'node';
+    const hookCount = attachStep && editingHook
+        ? hooksAt(attachStep, editingHook.anchor, hookBoundary)
+            .filter(h => h.when === editingHook.when).length
+        : 0;
 
     // One strip at the foot, whatever it has to say. A refusal is a status with
     // nothing to take back, so it reads in the same place as everything else
@@ -288,28 +318,28 @@ function App() {
                         setSide({ kind: 'template', command });
                         setNotice(null);
                     }}
-                    onEditHook={(command, hook) => {
-                        setNotice(null);
-                        setSide({ kind: 'attach', at: { command, anchor: hook.anchor, hook } });
+                    onEditHook={(command, hook) => openAttach({ command, anchor: hook.anchor, hook })}
+                    onAddHook={(command, anchor, when) => openAttach({ command, anchor, when })}
+                    onMoveHook={(command, from, to) => {
+                        if (moving.current) {
+                            setStatus(null);
+                            setNotice('The last move is still being written. Drag again once the board redraws.');
+                            return;
+                        }
+                        // An open hook form holds an index this drag may have just changed.
+                        if (attaching?.hook) { setSide(null); }
+                        sendMove({
+                            type: 'moveHook', command,
+                            from: { when: from.when, anchor: from.anchor, index: from.index }, to,
+                        });
                     }}
-                    onAddHook={(command, anchor, when) => {
-                        setNotice(null);
-                        setSide({ kind: 'attach', at: { command, anchor, when } });
-                    }}
+                    onRefuse={reason => { setStatus(null); setNotice(reason); }}
                 />
 
                 {attachStep && attaching && (
                     <AttachForm
-                        // Keyed by the hook it is editing so picking a second one
-                        // remounts the form. The fields seed from `editing` at
-                        // mount, so without this a click on another hook left the
-                        // first one's values on screen — while the index it would
-                        // save to had already moved to the second. Saving then
-                        // wrote one hook's content over another.
-                        key={attaching.hook
-                            ? `${attaching.command}/${attaching.hook.when}/`
-                              + `${attaching.hook.anchor}/${attaching.hook.index}`
-                            : `${attaching.command}/new/${attaching.anchor}`}
+                        // Per opening: another hook remounts it, a keyboard move keeps focus.
+                        key={`${attaching.command}/${attaching.opened}`}
                         step={attachStep}
                         anchor={attaching.anchor}
                         when={attaching.when}
@@ -318,14 +348,26 @@ function App() {
                         onCancel={() => setSide(null)}
                         onAttach={(a: Attachment) => {
                             setSide(null);
-                            // A hook moved to another boundary travels as one
-                            // message: its index means nothing at the new anchor,
-                            // and the two halves sent separately rewrote the same
-                            // file at the same time.
+                            // A new place is one move carrying the edit, never a removal and an addition.
+                            if (a.movedFrom) {
+                                const old = attaching.hook;
+                                // Unedited, the entry travels as written rather than re-rendered as one line.
+                                const edited = !old || old.type !== a.hookType
+                                    || old.summary !== a.value || old.note !== a.note;
+                                sendMove({
+                                    type: 'moveHook', command: attaching.command,
+                                    from: a.movedFrom,
+                                    to: { when: a.when, anchor: a.anchor, boundary: a.boundary },
+                                    hook: edited
+                                        ? { hookType: a.hookType, value: a.value, note: a.note }
+                                        : undefined,
+                                });
+                                return;
+                            }
                             send({
                                 type: 'addHook', command: attaching.command, anchor: a.anchor,
                                 when: a.when, hookType: a.hookType, value: a.value, note: a.note,
-                                editIndex: a.editIndex, movedFrom: a.movedFrom,
+                                editIndex: a.editIndex,
                             });
                         }}
                         onRemove={attaching.hook ? () => {
@@ -334,6 +376,29 @@ function App() {
                             send({
                                 type: 'removeHook', command: attaching.command,
                                 anchor: hook.anchor, when: hook.when, index: hook.index,
+                            });
+                        } : undefined}
+                        count={hookCount}
+                        announce={announced}
+                        onMove={editingHook ? (direction: 'up' | 'down') => {
+                            const index = editingHook.index + (direction === 'up' ? -1 : 1);
+                            // A press while the last move is unanswered would act on an index the file may not have.
+                            if (index < 0 || index >= hookCount || moving.current) { return; }
+                            unmoved.current = attaching;
+                            setSide({
+                                kind: 'attach',
+                                at: { ...attaching, hook: { ...editingHook, index } },
+                            });
+                            sendMove({
+                                type: 'moveHook', command: attaching.command,
+                                from: {
+                                    when: editingHook.when, anchor: editingHook.anchor,
+                                    index: editingHook.index,
+                                },
+                                to: {
+                                    when: editingHook.when, anchor: editingHook.anchor,
+                                    index, boundary: hookBoundary,
+                                },
                             });
                         } : undefined}
                     />
@@ -440,13 +505,9 @@ function App() {
                         // does. Posting the message straight from here sent one
                         // with no kind and no value, and the write refused it
                         // with "unknown hook type 'undefined'".
-                        onAttach={() => {
-                            setNotice(null);
-                            setSide({
-                                kind: 'attach',
-                                at: { command: selected.command, anchor: selected.nodeId },
-                            });
-                        }}
+                        onAttach={() => openAttach({
+                            command: selected.command, anchor: selected.nodeId,
+                        })}
                         onUseVariant={(variantId: string) => {
                             const swapped = swapNode(graph, selected, variantId);
                             if (!swapped) { return; }

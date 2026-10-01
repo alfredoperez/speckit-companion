@@ -45,7 +45,9 @@ function board(g = graph([SPECIFY])) {
                 onOpenFrame={on('openFrame')}
                 onNewStep={on('newStep')}
                 onOpenTemplate={on('openTemplate')}
-                onRemoveNode={on('removeNode')} />
+                onRemoveNode={on('removeNode')}
+                onMoveHook={(c, from, to) => sent.push({ what: 'moveHook', with: [c, from, to] })}
+                onRefuse={on('refuse')} />
         </div>
     );
     return { view, sent };
@@ -394,6 +396,80 @@ export const PlaceTheHookFirst: Story = {
         assert(options.length > 0, 'the anchors are named, not listed as ids');
         const draft = options.find(el => el.textContent?.startsWith('Draft the spec'));
         (draft as HTMLButtonElement).click();
+    },
+};
+
+/** Drag one element onto another carrying a hook's payload, landing on the target's upper half. */
+function dragHook(from: Element, to: Element) {
+    const carried = new Map<string, string>();
+    const dataTransfer = {
+        get types() { return Array.from(carried.keys()); },
+        setData: (k: string, v: string) => { carried.set(k, v); },
+        getData: (k: string) => carried.get(k) ?? '',
+        effectAllowed: '', dropEffect: '',
+    };
+    const box = to.getBoundingClientRect();
+    const fire = (el: Element, type: string) => {
+        const event = new Event(type, { bubbles: true, cancelable: true }) as DragEvent;
+        Object.defineProperty(event, 'dataTransfer', { value: dataTransfer });
+        // A quarter of the way down, less one, so jsdom's zero-height box still reads as upper.
+        Object.defineProperty(event, 'clientY', { value: box.top + box.height / 4 - 1 });
+        el.dispatchEvent(event);
+    };
+    fire(from, 'dragstart');
+    fire(to, 'dragover');
+    fire(to, 'drop');
+}
+
+const TWO_HOOKS = graph([step('implement', [
+    phase('wrap-up', [
+        node('complete', 'Mark the spec complete', {
+            hooks: [
+                hook({ when: 'after', type: 'command', anchor: 'complete', summary: 'npm test' }),
+                hook({ when: 'after', type: 'skill', anchor: 'complete', index: 1, summary: 'create-pr' }),
+            ],
+        }),
+        node('handoff', 'Hand off at the end'),
+    ]),
+], {
+    stockHooks: [{ when: 'before', extension: 'git', command: 'speckit.git.commit',
+        description: '', optional: false, conditional: false }],
+})]);
+
+export const DragAHookAboveAnother: Story = {
+    name: 'Drag a hook above another',
+    render: () => board(TWO_HOOKS).view,
+    play: async ({ canvasElement }) => {
+        const rows = canvasElement.querySelectorAll('button.pb-hook');
+        dragHook(rows[1], rows[0]);
+        const sent = sentFrom(canvasElement);
+        assert(sent.length === 1 && sent[0].what === 'moveHook', 'one move is asked for');
+        const [, from, to] = sent[0].with as [string, { index: number }, { index: number }];
+        assert(from.index === 1 && to.index === 0, 'the second hook goes first');
+    },
+};
+
+export const DragAHookToAnotherNode: Story = {
+    name: 'Drag a hook before another node',
+    render: () => board(TWO_HOOKS).view,
+    play: async ({ canvasElement }) => {
+        const rows = canvasElement.querySelectorAll('button.pb-hook');
+        dragHook(rows[0], canvasElement.querySelectorAll('.pb-node')[1]);
+        const [, , to] = sentFrom(canvasElement)[0].with as [string, unknown,
+            { when: string; anchor: string }];
+        assert(to.when === 'before' && to.anchor === 'handoff', 'it runs before the node dropped on');
+    },
+};
+
+export const DragAnExtensionsHook: Story = {
+    name: "Drag an extension's hook",
+    render: () => board(TWO_HOOKS).view,
+    play: async ({ canvasElement }) => {
+        dragHook(canvasElement.querySelector('.pb-hook--stock')!,
+            canvasElement.querySelectorAll('.pb-node')[1]);
+        const sent = sentFrom(canvasElement);
+        assert(sent.length === 1 && sent[0].what === 'refuse', 'the drag is refused');
+        assert(String(sent[0].with).includes('git extension'), 'and says who registered it');
     },
 };
 

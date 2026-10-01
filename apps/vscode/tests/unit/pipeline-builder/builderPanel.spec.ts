@@ -80,7 +80,7 @@ beforeEach(() => {
     graph.resolveGraphScript.mockReturnValue(GRAPH_SCRIPT);
     graph.readPipelineGraph.mockResolvedValue({ error: 'stub' });
     for (const write of [
-        graph.writeNodeOrder, graph.writePhases, graph.writeHook, graph.removeHook,
+        graph.writeNodeOrder, graph.writePhases, graph.writeHook, graph.removeHook, graph.moveHook,
         graph.writeWorkflow, graph.createWorkflow, graph.createStep, graph.applyRepair,
         graph.writeTemplateSection,
     ]) {
@@ -1032,39 +1032,71 @@ describe('moving a node without dragging it', () => {
     });
 });
 
-describe('moving a hook to another boundary', () => {
-    // It used to travel as a `removeHook` and an `addHook`, each routed on its
-    // own — so two `config_write.py` runs read and rewrote `companion.yml` at
-    // the same time, and whichever finished last won.
-    it('takes it off the old boundary before putting it on the new one', async () => {
+describe('moving a hook', () => {
+    it('runs a second move only once the first has written', async () => {
+        let finish!: (v: null) => void;
+        graph.moveHook.mockImplementationOnce(() => new Promise(r => { finish = r; }));
+        const move = (index: number) => panel.__receive({
+            type: 'moveHook', command: 'specify',
+            from: { anchor: 'handoff', when: 'after', index },
+            to: { anchor: 'handoff', when: 'after', index: index + 1, boundary: 'node' },
+        });
+        const first = move(0);
+        const second = move(1);
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(graph.moveHook).toHaveBeenCalledTimes(1);
+        finish(null);
+        await Promise.all([first, second]);
+        expect(graph.moveHook).toHaveBeenCalledTimes(2);
+    });
+
+    // Two writes left the hook gone when the addition was refused.
+    it('is one write with both addresses', async () => {
         await panel.__receive({
-            type: 'addHook', command: 'specify', anchor: 'draft-spec', when: 'after',
-            hookType: 'skill', value: 'create-pr',
-            movedFrom: { anchor: 'handoff', when: 'before', index: 0 },
+            type: 'moveHook', command: 'specify',
+            from: { anchor: 'handoff', when: 'before', index: 0 },
+            to: { anchor: 'draft-spec', when: 'after', boundary: 'node' },
         });
 
-        expect(graph.removeHook).toHaveBeenCalledTimes(1);
-        const [, , command, when, anchor, index] = graph.removeHook.mock.calls.at(-1)!;
-        expect([command, when, anchor, index]).toEqual(['specify', 'before', 'handoff', 0]);
-        expect(graph.writeHook).toHaveBeenCalledTimes(1);
-        expect(graph.removeHook.mock.invocationCallOrder[0])
-            .toBeLessThan(graph.writeHook.mock.invocationCallOrder[0]);
+        expect(graph.removeHook).not.toHaveBeenCalled();
+        expect(graph.writeHook).not.toHaveBeenCalled();
+        expect(graph.moveHook).toHaveBeenCalledWith(WRITE_SCRIPT, workspace, 'specify',
+            { anchor: 'handoff', when: 'before', index: 0 },
+            { anchor: 'draft-spec', when: 'after', boundary: 'node' }, undefined);
         expect(panel.__lastPosted('status').status.text)
             .toBe('Hook moved to after draft-spec');
     });
 
-    // Adding it anyway would leave two copies, or one at a boundary the write
-    // had already refused.
-    it('does not add it when the removal was refused', async () => {
-        graph.removeHook.mockResolvedValue('there is no hook 0 before handoff.');
+    it('says which way it went along its own list', async () => {
         await panel.__receive({
-            type: 'addHook', command: 'specify', anchor: 'draft-spec', when: 'after',
-            hookType: 'skill', value: 'create-pr',
-            movedFrom: { anchor: 'handoff', when: 'before', index: 0 },
+            type: 'moveHook', command: 'specify',
+            from: { anchor: 'handoff', when: 'after', index: 1 },
+            to: { anchor: 'handoff', when: 'after', index: 0, boundary: 'node' },
         });
+        expect(panel.__lastPosted('status').status.text).toBe('Hook moved up after handoff');
+    });
 
-        expect(graph.writeHook).not.toHaveBeenCalled();
-        expect(panel.__lastPosted('notice').text).toBe('there is no hook 0 before handoff.');
+    it('carries a content edit made in the same save', async () => {
+        await panel.__receive({
+            type: 'moveHook', command: 'specify',
+            from: { anchor: 'handoff', when: 'before', index: 0 },
+            to: { anchor: 'draft-spec', when: 'after', boundary: 'node' },
+            hook: { hookType: 'skill', value: 'create-pr', note: 'open it as a draft' },
+        });
+        expect(graph.moveHook.mock.calls.at(-1)!.at(-1))
+            .toEqual({ type: 'skill', ref: 'create-pr', text: 'open it as a draft' });
+    });
+
+    it('says the reason, and claims no move, when the writer refuses it', async () => {
+        graph.moveHook.mockResolvedValue('specify has no node or phase called \'gone\'.');
+        await panel.__receive({
+            type: 'moveHook', command: 'specify',
+            from: { anchor: 'handoff', when: 'before', index: 0 },
+            to: { anchor: 'gone', when: 'after', boundary: 'node' },
+        });
+        expect(panel.__lastPosted('notice').text)
+            .toBe('specify has no node or phase called \'gone\'.');
+        expect(panel.__lastPosted('status')).toBeUndefined();
     });
 });
 

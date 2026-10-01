@@ -497,6 +497,58 @@ export const AttachingWork: Story = {
     ),
 };
 
+/** Three hooks after one node, two of them yours, which is where a reorder is worth showing. */
+const HOOKED = step('implement', [
+    phase('wrap-up', [
+        node('complete', 'Mark the spec complete', {
+            hooks: [
+                hook({ when: 'after', type: 'command', anchor: 'complete', summary: 'npm test' }),
+                hook({ when: 'after', type: 'skill', anchor: 'complete', index: 1,
+                    summary: 'create-pr' }),
+            ],
+        }),
+        node('handoff', 'Hand off at the end'),
+    ]),
+], {
+    stockHooks: [
+        { when: 'before', extension: 'git', command: 'speckit.git.commit',
+          description: 'Auto-commit before implementation', optional: true, conditional: false },
+    ],
+    changes: { ...NO_CHANGES, hooks: 2 },
+});
+
+/** Draw a drag the way the board does mid-gesture: the carried row faded, a rule where it lands. */
+function midDrag(el: HTMLElement | null) {
+    const rows = el?.querySelectorAll<HTMLElement>('button.pb-hook');
+    rows?.[1]?.classList.add('pb-hook--dragging');
+    rows?.[0]?.classList.add('pb-drop-over', 'pb-drop-over--upper');
+}
+
+export const MovingAHook: Story = {
+    parameters: { capture: { width: 620, height: 470 } },
+    name: 'Moving a hook',
+    render: () => (
+        <Panel>
+            <div ref={midDrag}>
+                <Canvas graph={graph([HOOKED])} {...CANVAS}
+                    onMoveHook={noop} onRefuse={noop} />
+            </div>
+        </Panel>
+    ),
+};
+
+export const MovingAHookFromTheKeyboard: Story = {
+    parameters: { capture: { width: 440, height: 560 } },
+    name: 'Moving a hook from the keyboard',
+    render: () => (
+        <Pane>
+            <AttachForm step={HOOKED} anchor="complete" choices={CHOICES}
+                editing={HOOKED.phases[0].nodes[0].hooks[1]} count={2}
+                onCancel={noop} onAttach={noop} onRemove={noop} onMove={noop} />
+        </Pane>
+    ),
+};
+
 // ── Whole configurations ────────────────────────────────
 
 export const StartingFromAPreset: Story = {

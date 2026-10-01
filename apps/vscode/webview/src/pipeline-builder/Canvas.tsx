@@ -22,6 +22,10 @@ import { Menu } from './Menu';
 import { changeSummary, changed } from './changes';
 import { KIND_LABELS } from './hookKinds';
 import {
+    HookAddress, HookMove, HookTarget, hookMove, isHookDrag, readHookDrag, upperHalf,
+    writeHookDrag,
+} from './hookMoves';
+import {
     HookWhen,
     PipelineDecision,
     PipelineGraph,
@@ -72,6 +76,10 @@ interface Props {
     ) => void;
     /** The node whose instructions are open in the inspector, if any. */
     selected?: { command: string; nodeId: string } | null;
+    /** Move one of the project's hooks, dragged to another place on its step. */
+    onMoveHook?: (command: string, from: HookAddress, to: HookMove) => void;
+    /** Say why a drag was not taken, where every other refusal is said. */
+    onRefuse?: (reason: string) => void;
 }
 
 /**
@@ -274,6 +282,8 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
     step: string;
     /** The file this project's own hooks are written in, as the group is headed. */
     yours: HookHome;
+    /** Present when hooks can be dragged here. */
+    drop?: HookDrop;
 };
 
 /**
@@ -395,6 +405,71 @@ function bySource(
     return side === 'before' ? [...groups, mine] : [mine, ...groups];
 }
 
+/** What a hook drag needs from the step it happens on. */
+interface HookDrop {
+    step: string;
+    onHookDrop: (from: HookAddress, target: HookTarget) => void;
+    onRefuse: (reason: string) => void;
+}
+
+const OVER = ['pb-drop-over', 'pb-drop-over--upper', 'pb-drop-over--lower'];
+
+const PARKED_REASON = 'This hook is parked: the project runs the pipeline as it ships, so its own '
+    + 'hooks are not moved until This project is running again.';
+
+/** The handlers that let an element take a hook dropped on it; `at` reads the target off the pointer. */
+function hookDropZone(
+    drop: HookDrop | undefined,
+    at: (event: DragEvent) => { target: HookTarget; upper?: boolean },
+) {
+    if (!drop) { return {}; }
+    const clear = (event: DragEvent) =>
+        (event.currentTarget as HTMLElement).classList.remove(...OVER);
+    return {
+        onDragOver: (event: DragEvent) => {
+            if (!isHookDrag(event.dataTransfer)) { return; }
+            event.preventDefault();
+            event.stopPropagation();
+            if (event.dataTransfer) { event.dataTransfer.dropEffect = 'move'; }
+            const { upper } = at(event);
+            const el = event.currentTarget as HTMLElement;
+            el.classList.add(OVER[0]);
+            el.classList.toggle(OVER[1], upper === true);
+            el.classList.toggle(OVER[2], upper === false);
+        },
+        onDragLeave: clear,
+        onDrop: (event: DragEvent) => {
+            const from = readHookDrag(event.dataTransfer);
+            if (!from) { return; }
+            event.preventDefault();
+            event.stopPropagation();
+            clear(event);
+            drop.onHookDrop(from, at(event).target);
+        },
+    };
+}
+
+/** Whether the pointer is over the upper half of the element handling the event. */
+function overUpper(event: DragEvent): boolean {
+    return upperHalf(event.clientY,
+        (event.currentTarget as HTMLElement).getBoundingClientRect());
+}
+
+/** A row the panel cannot move: a drag out says why, and stopping dragover keeps its block from taking a drop. */
+function readOnlyRow(drop: HookDrop | undefined, reason: string) {
+    if (!drop) { return {}; }
+    return {
+        draggable: true,
+        onDragStart: (event: DragEvent) => { event.preventDefault(); drop.onRefuse(reason); },
+        onDragOver: (event: DragEvent) => {
+            if (!isHookDrag(event.dataTransfer)) { return; }
+            event.stopPropagation();
+            if (event.dataTransfer) { event.dataTransfer.dropEffect = 'none'; }
+        },
+        onDrop: (event: DragEvent) => { event.stopPropagation(); },
+    };
+}
+
 /** One hook of this project's, as a line: which of the four it is, then its value. */
 function HookLine({ hook }: { hook: PipelineHook }) {
     return (
@@ -428,15 +503,19 @@ function HookLine({ hook }: { hook: PipelineHook }) {
  * `speckit.c…`, the prefix every one of them shares. The mark leads, the source
  * is named once for the group, and the row is left to say the work.
  */
-function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yours, onEdit }: {
+function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, boundary, yours,
+    onEdit, drop }: {
     before: PipelineHook[];
     after: PipelineHook[];
     stockBefore?: StockHook[];
     stockAfter?: StockHook[];
     anchor: string;
+    /** Whether the anchor is a node or a phase, which a moved hook has to land on. */
+    boundary: 'node' | 'phase';
     /** The file this project's own hooks are in, which heads their group. */
     yours: HookHome;
     onEdit: (hook: PipelineHook) => void;
+    drop?: HookDrop;
 }) {
     const sides: Array<[HookWhen, PipelineHook[], StockHook[]]> = [
         ['before', before, stockBefore],
@@ -448,7 +527,8 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
         <div class="pb-attached">
             {sides.map(([side, ours, theirs]) => (
                 (ours.length + theirs.length) > 0 && (
-                    <div key={side} class="pb-attached-side">
+                    <div key={side} class="pb-attached-side"
+                        {...hookDropZone(drop, () => ({ target: { when: side, anchor, boundary } }))}>
                         <span class="pb-attached-when">{side}</span>
                         {bySource(ours, theirs, yours, side).map((source, at) => (
                             <div key={`${at}-${source.name}`} class="pb-hook-group">
@@ -464,7 +544,8 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                                 <span class="pb-hook pb-hook--parked"
                                                     title={`${hook.summary}\n\nParked — this `
                                                         + 'project runs the pipeline as it '
-                                                        + 'ships, so this does not run.'}>
+                                                        + 'ships, so this does not run.'}
+                                                    {...readOnlyRow(drop, PARKED_REASON)}>
                                                     <HookLine hook={hook} />
                                                     <span class="pb-hook-parked">parked</span>
                                                     <span class="sr-only">
@@ -474,8 +555,36 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                                 </span>
                                             ) : (
                                                 <button class="pb-hook"
-                                                    title={`${hook.summary}\n\nClick to edit`}
-                                                    onClick={() => onEdit(hook)}>
+                                                    title={`${hook.summary}\n\nClick to edit`
+                                                        + (drop ? ', drag to move' : '')}
+                                                    onClick={() => onEdit(hook)}
+                                                    draggable={Boolean(drop)}
+                                                    onDragStart={drop && (event => {
+                                                        event.stopPropagation();
+                                                        writeHookDrag(event.dataTransfer, {
+                                                            command: drop.step, when: hook.when,
+                                                            anchor: hook.anchor, index: hook.index,
+                                                            boundary,
+                                                        });
+                                                        event.currentTarget.classList
+                                                            .add('pb-hook--dragging');
+                                                    })}
+                                                    onDragEnd={event => event.currentTarget
+                                                        .classList.remove('pb-hook--dragging')}
+                                                    {...hookDropZone(drop, event => {
+                                                        const upper = overUpper(event);
+                                                        return {
+                                                            upper,
+                                                            target: {
+                                                                when: hook.when, anchor: hook.anchor,
+                                                                boundary,
+                                                                place: hook.index + (upper ? 0 : 1),
+                                                            },
+                                                        };
+                                                    })}>
+                                                    {drop && (
+                                                        <span class="pb-hook-grip"><GripIcon /></span>
+                                                    )}
                                                     <HookLine hook={hook} />
                                                 </button>
                                             )}
@@ -485,6 +594,8 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
                                         <li key={`theirs-${i}`}>
                                             {/* No kind badge: every one of these is a command. */}
                                             <span class="pb-hook pb-hook--stock"
+                                                {...readOnlyRow(drop, source.title.replace(
+                                                    'is not edited', 'is not moved or edited'))}
                                                 title={(hook.description.trim()
                                                     ? `${hook.description.trim()}\n\n` : '')
                                                     + (hook.command.trim()
@@ -514,13 +625,15 @@ function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, yo
 }
 
 /** The quiet affordance for attaching work where nothing is attached yet. */
-function Seam({ side, anchor, onAdd }: {
+function Seam({ side, anchor, onAdd, drop }: {
     side: 'before' | 'after';
     anchor: string;
     onAdd: () => void;
+    drop?: HookDrop;
 }) {
     return (
         <button class={`pb-slot pb-slot--${side}`} onClick={onAdd}
+            {...hookDropZone(drop, () => ({ target: { when: side, anchor, boundary: 'node' } }))}
             title={`Attach a skill, an instruction or a command ${side} ${anchor}`}>
             <span class="pb-slot-label">{side} {anchor}</span>
         </button>
@@ -548,18 +661,24 @@ function Node({ node, actions, stock, seams }: {
     const movable = !node.pinned;
     const open = actions.selected?.command === actions.step
         && actions.selected?.nodeId === node.id;
+    // A hook dropped on a card runs before it from the upper half, after it from the lower.
+    const hookZone = hookDropZone(actions.drop, event => {
+        const upper = overUpper(event);
+        return { upper, target: { when: upper ? 'before' : 'after', anchor: node.id, boundary: 'node' } };
+    });
 
     return (
         <div class="pb-node-group">
             {seams.before && (
-                <Seam side="before" anchor={node.id}
+                <Seam side="before" anchor={node.id} drop={actions.drop}
                     onAdd={() => actions.onAdd(node.id, 'before')} />
             )}
             {/* Above the card, because BEFORE is an ordering claim and one
                 block under the card made it twice: a phase heading, the card,
                 and then a second BEFORE belonging to the card above it. */}
             <Attached before={before} after={[]} stockBefore={stock.before}
-                anchor={node.id} yours={actions.yours} onEdit={actions.onEditHook} />
+                anchor={node.id} boundary="node" yours={actions.yours}
+                onEdit={actions.onEditHook} drop={actions.drop} />
             <div
                 class={[
                     'pb-node',
@@ -581,13 +700,17 @@ function Node({ node, actions, stock, seams }: {
                 onDragEnd={event =>
                     (event.currentTarget as HTMLElement).classList.remove('pb-node--dragging')}
                 onDragOver={event => {
+                    if (isHookDrag(event.dataTransfer)) { hookZone.onDragOver?.(event); return; }
                     event.preventDefault();
                     if (event.dataTransfer) { event.dataTransfer.dropEffect = 'move'; }
                     (event.currentTarget as HTMLElement).classList.add('pb-node--over');
                 }}
-                onDragLeave={event =>
-                    (event.currentTarget as HTMLElement).classList.remove('pb-node--over')}
+                onDragLeave={event => {
+                    hookZone.onDragLeave?.(event);
+                    (event.currentTarget as HTMLElement).classList.remove('pb-node--over');
+                }}
                 onDrop={event => {
+                    if (isHookDrag(event.dataTransfer)) { hookZone.onDrop?.(event); return; }
                     event.preventDefault();
                     (event.currentTarget as HTMLElement).classList.remove('pb-node--over');
                     const moved = event.dataTransfer?.getData('text/plain');
@@ -659,9 +782,11 @@ function Node({ node, actions, stock, seams }: {
                 )}
             </div>
             <Attached before={[]} after={after} stockAfter={stock.after}
-                anchor={node.id} yours={actions.yours} onEdit={actions.onEditHook} />
+                anchor={node.id} boundary="node" yours={actions.yours}
+                onEdit={actions.onEditHook} drop={actions.drop} />
             {seams.after && (
-                <Seam side="after" anchor={node.id} onAdd={() => actions.onAdd(node.id, 'after')} />
+                <Seam side="after" anchor={node.id} drop={actions.drop}
+                    onAdd={() => actions.onAdd(node.id, 'after')} />
             )}
         </div>
     );
@@ -820,7 +945,9 @@ function Phase({ phase, actions, controls }: {
 
     return (
         <section class="pb-phase">
-            <header class="pb-phase-head">
+            <header class="pb-phase-head" {...hookDropZone(actions.drop, () => ({
+                target: { when: 'before', anchor: phase.name, boundary: 'phase' },
+            }))}>
                 {/* A phase name is the project's to choose — it is also a hook
                     anchor, so renaming it is a real edit, not a label. */}
                 <h3 class="pb-phase-name" contentEditable spellcheck={false}
@@ -885,8 +1012,8 @@ function Phase({ phase, actions, controls }: {
                 after its nodes, so drawing them above the nodes made the
                 heading contradict the layout. Neither block is indented, which
                 is what separates a phase's from the card-hung ones below. */}
-            <Attached before={before} after={[]} anchor={phase.name}
-                yours={actions.yours} onEdit={actions.onEditHook} />
+            <Attached before={before} after={[]} anchor={phase.name} boundary="phase"
+                yours={actions.yours} onEdit={actions.onEditHook} drop={actions.drop} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map((node, at) => (
                     // An installed extension registers against the step, not a
@@ -904,8 +1031,8 @@ function Phase({ phase, actions, controls }: {
                     }} />
                 ))}
             </div>
-            <Attached before={[]} after={after} anchor={phase.name}
-                yours={actions.yours} onEdit={actions.onEditHook} />
+            <Attached before={[]} after={after} anchor={phase.name} boundary="phase"
+                yours={actions.yours} onEdit={actions.onEditHook} drop={actions.drop} />
         </section>
     );
 }
@@ -981,12 +1108,24 @@ function FirstPhase({ step, onAddNode }: {
     );
 }
 
+/** This project's hooks at one anchor, which is what a dropped hook is counted among. */
+export function hooksAt(step: PipelineStep, anchor: string, boundary: 'node' | 'phase'): PipelineHook[] {
+    for (const phase of step.phases) {
+        if (boundary === 'phase' && phase.name === anchor) { return phase.hooks; }
+        const node = phase.nodes.find(n => n.id === anchor);
+        if (boundary === 'node' && node) { return node.hooks; }
+    }
+    return [];
+}
+
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
-    onAddNode, onOpenFrame, onRemoveNode, onOpenTemplate }: {
+    onAddNode, onOpenFrame, onRemoveNode, onOpenTemplate, onMoveHook, onRefuse }: {
     step: PipelineStep;
     index: number;
     actions: Omit<NodeActions,
-        'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'onRemove' | 'canRemove'>;
+        'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'onRemove' | 'canRemove' | 'drop'>;
+    onMoveHook: Props['onMoveHook'];
+    onRefuse: Props['onRefuse'];
     onReorder: Props['onReorder'];
     onAddHook: Props['onAddHook'];
     onEditHook: Props['onEditHook'];
@@ -1049,6 +1188,21 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
             onRemoveNode(step.name, nodeId, shape.order, shape.phases);
         },
         canRemove: nodeId => withoutNode(step, nodeId) !== null,
+        drop: onMoveHook && onRefuse && {
+            step: step.name,
+            onRefuse,
+            onHookDrop: (from, target) => {
+                if (from.command !== step.name) {
+                    onRefuse(`A hook moves within its own step, so it stays in ${from.command}. `
+                        + `To run it in ${step.name} too, add it there.`);
+                    return;
+                }
+                const count = hooksAt(step, target.anchor, target.boundary)
+                    .filter(hook => hook.when === target.when).length;
+                const to = hookMove(from, target, count);
+                if (to) { onMoveHook(step.name, from, to); }
+            },
+        },
     };
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
 
@@ -1224,7 +1378,7 @@ function LaneSeam({ after, onNewStep }: { after: string; onNewStep: Props['onNew
 export function Canvas(
     { graph, onOpenNode, onReorder, onAddHook,
         onEditHook, onSetPhases, onAddNode, onOpenFrame, onRemoveNode,
-        onOpenTemplate, onNewStep, selected }: Props,
+        onOpenTemplate, onNewStep, selected, onMoveHook, onRefuse }: Props,
 ) {
     const actions = { onOpenNode, selected, yours: hookHome(graph.workflows.active) };
     const sequence = graph.steps.filter(step => step.inSequence);
@@ -1248,7 +1402,8 @@ export function Canvas(
                         onEditHook={onEditHook} onSetPhases={onSetPhases}
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
                         onRemoveNode={onRemoveNode}
-                        onOpenTemplate={onOpenTemplate} />,
+                        onOpenTemplate={onOpenTemplate}
+                        onMoveHook={onMoveHook} onRefuse={onRefuse} />,
                 ])}
                 {/* The tail of the row: everything that does not take a turn in
                     the run, and the invitation to add something that does. This
