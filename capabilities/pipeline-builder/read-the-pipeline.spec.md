@@ -1,5 +1,7 @@
 # Read the Pipeline — Living Spec
 
+<!-- reviewed: 07d9b077 -->
+
 ## Purpose
 
 A person opens the Pipeline Builder to see the workflow their assistant actually runs, what the project changed in it, and what any one node says. Without it the only way to answer those questions is to read the configuration file and a dozen node files by hand.

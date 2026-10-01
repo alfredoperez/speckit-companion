@@ -1,5 +1,7 @@
 # Reshape a Step — Living Spec
 
+<!-- reviewed: 07d9b077 -->
+
 ## Purpose
 
 A project changes what a step tells the assistant: it rewrites a node, swaps one, reorders, regroups, reshapes the document, or adds a step of its own. Each change has to be one the project can take back, and none of them may touch what Companion ships.

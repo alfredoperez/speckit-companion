@@ -42,6 +42,14 @@ Pick where it runs, then the kind.
 
 Your hooks show under the Companion mascot. Hooks from an installed extension show as `via <extension>`. The same hooks written by hand are in [Custom commands and hooks](/docs/guides/customize).
 
+## Move a hook
+
+Drag one of your hooks to move it. Drop it on the top or bottom half of a node to run it before or after that node, on a dotted slot or a block of hooks to add it last there, or between two hooks to change their order. Hooks at one place run top to bottom. From the keyboard, open the hook and use **Move up** and **Move down** on its **Order** row, or change where it runs and save. Each move is one change to `companion.yml` and keeps the rest of the file as you wrote it.
+
+![A hook being dragged above another, with the drop line showing where it lands.](../../../../../../../docs/screenshots/generated/builder-move-hook.png)
+
+A hook moves within its own step. Hooks from an installed extension, and hooks parked while the pipeline runs as it ships, stay where they are, and dragging one says why.
+
 ## Edit a node, and go back
 
 ![The side panel showing one node's instructions and facts](../../../../../../../docs/screenshots/generated/builder-read-block.png)

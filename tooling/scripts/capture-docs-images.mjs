@@ -182,7 +182,7 @@ const STORIES = [
     { story: 'vs-code-extension-pipeline-builder-guide--when-it-cannot-be-read', out: 'builder-broken.png' },
     { story: 'vs-code-extension-pipeline-builder-guide--moving-a-node-to-another-phase', out: 'builder-move-to-phase.png' },
     { story: 'vs-code-extension-pipeline-builder-guide--a-side-panel', out: 'builder-side-panel.png' },
-
+    { story: 'vs-code-extension-pipeline-builder-guide--moving-a-hook', out: 'builder-move-hook.png' },
     // ── 16:9 article variants (ReadmeCapture.stories.tsx C8/C9/C10) ───────
     // 1600x900 CSS, so 3200x1800 at DPR 2. ADDITIONS, not replacements: the
     // names above are load-bearing for the published Marketplace README, so

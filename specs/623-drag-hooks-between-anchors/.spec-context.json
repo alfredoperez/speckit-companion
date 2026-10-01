@@ -1,0 +1,951 @@
+{
+  "workflow": "companion",
+  "specName": "Drag a hook between anchors",
+  "branch": "feat/665-drag-actions-between-hooks",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T14:12:35.032Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:12:48.551Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:12:48.813Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:13:33.203Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:13:48.274Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:14:00.125Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T14:14:08.062Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T14:14:13.872Z"
+    },
+    {
+      "step": "plan",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:14:38.389Z"
+    },
+    {
+      "step": "plan",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:14:46.024Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:16:31.548Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:17:05.442Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:17:05.542Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:18:35.104Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:18:39.903Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T14:18:58.921Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:18:59.033Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:19:31.765Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:19:40.360Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:19:40.470Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T14:19:48.786Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:21:39.282Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:21:48.019Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:22:08.473Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:22:13.028Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:22:39.211Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:22:59.201Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:23:45.030Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:27:11.742Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:27:41.363Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:27:43.473Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:33:07.529Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:33:13.891Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:33:14.008Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:35:19.047Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:35:19.185Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:35:19.323Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:57:34.986Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:57:35.008Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:57:35.102Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T14:57:52.488Z"
+    },
+    {
+      "step": "implement",
+      "substep": "living-review",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T15:20:37.656Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "attach-a-hook",
+      "read-the-pipeline",
+      "reshape-a-step",
+      "switch-workflows-and-build",
+      "webview-safety",
+      "act-on-a-spec",
+      "browse-specs",
+      "customize-the-pipeline",
+      "diagnose-a-run",
+      "fold-a-finished-change-back",
+      "keep-living-specs-current",
+      "keep-specs-honest",
+      "load-specs-for-a-change",
+      "pick-a-workflow",
+      "protect-the-run-record",
+      "record-a-run",
+      "register-living-specs",
+      "right-size-a-change",
+      "see-where-a-spec-stands",
+      "split-work-across-workers",
+      "see-changes-from-disk",
+      "produce-the-docs-media",
+      "release-the-spec-kit-extension",
+      "choose-an-assistant",
+      "keep-the-companion-extension-current",
+      "open-the-sidebar",
+      "set-up-and-update",
+      "share-anonymous-usage"
+    ],
+    "loadedRequirements": {
+      "attach-a-hook": [
+        "Work attaches before or after a node, a phase or a step",
+        "A hook is one of four kinds",
+        "Each kind offers what the project actually has",
+        "A hook can be changed, moved or taken out",
+        "Hooks are written to the configuration in force"
+      ],
+      "read-the-pipeline": [
+        "The panel opens on the workflow the project runs now",
+        "The run reads left to right as steps, phases and nodes",
+        "Everything the project changed carries one mark",
+        "Hooks at one anchor read top to bottom in the order they run",
+        "The board follows the files",
+        "A configuration the panel cannot read offers ways out"
+      ],
+      "reshape-a-step": [
+        "Saving an edit is what makes a node the project's own",
+        "A rewritten node can go back to the shipped one",
+        "A step's order and grouping are always written together",
+        "A node moves only when nothing downstream holds it",
+        "Nodes are taken out, put back and swapped without deleting anything",
+        "Phases are the project's to name, split and merge",
+        "A step's document is reshaped section by section",
+        "A project can add a step or hand one to a single document"
+      ],
+      "switch-workflows-and-build": [
+        "The header names the workflow in force and switches it",
+        "As shipped parks the project's configuration without deleting it",
+        "A new workflow starts from what runs now or from a shipped preset",
+        "Build and Preview build answer in the header",
+        "Every write says what it did, and the last one can be taken back where possible",
+        "The first open explains the board once"
+      ],
+      "webview-safety": [
+        "Text from outside is read as words, never as markup"
+      ],
+      "act-on-a-spec": [],
+      "browse-specs": [],
+      "customize-the-pipeline": [],
+      "diagnose-a-run": [],
+      "fold-a-finished-change-back": [],
+      "keep-living-specs-current": [],
+      "keep-specs-honest": [],
+      "load-specs-for-a-change": [],
+      "pick-a-workflow": [],
+      "protect-the-run-record": [],
+      "record-a-run": [
+        "Converge never changes a spec's status"
+      ],
+      "register-living-specs": [],
+      "right-size-a-change": [],
+      "see-where-a-spec-stands": [],
+      "split-work-across-workers": [],
+      "see-changes-from-disk": [],
+      "produce-the-docs-media": [],
+      "release-the-spec-kit-extension": [
+        "A setting written back leaves the rest of the file exactly as the person wrote it"
+      ],
+      "choose-an-assistant": [],
+      "keep-the-companion-extension-current": [],
+      "open-the-sidebar": [],
+      "set-up-and-update": [],
+      "share-anonymous-usage": []
+    },
+    "skipped": [
+      {
+        "name": "read-the-pipeline",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "reshape-a-step",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "switch-workflows-and-build",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "webview-safety",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "act-on-a-spec",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "browse-specs",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "customize-the-pipeline",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "diagnose-a-run",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "fold-a-finished-change-back",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "keep-living-specs-current",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "keep-specs-honest",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "load-specs-for-a-change",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "pick-a-workflow",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "protect-the-run-record",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "record-a-run",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "register-living-specs",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "right-size-a-change",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "see-where-a-spec-stands",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "split-work-across-workers",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "see-changes-from-disk",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "produce-the-docs-media",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "release-the-spec-kit-extension",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "choose-an-assistant",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "keep-the-companion-extension-current",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "open-the-sidebar",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "set-up-and-update",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      },
+      {
+        "name": "share-anonymous-usage",
+        "reason": "read for context; the hook move adds to attach-a-hook and leaves this capability's stated behaviour as it is"
+      }
+    ],
+    "synced": [
+      "attach-a-hook"
+    ]
+  },
+  "last_action": "all 17 tasks done; jest 3367/3367, python 1550 OK",
+  "coverage": {
+    "FR-001": {
+      "title": "A project hook row is draggable and dropping it on another anchor moves it in one write",
+      "tasks": [
+        "T003",
+        "T008",
+        "T009",
+        "T012"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ]
+    },
+    "FR-002": {
+      "title": "Dropping on the upper or lower half of another hook places it above or below that hook",
+      "tasks": [
+        "T003",
+        "T006",
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookMoves.test.tsx"
+      ]
+    },
+    "FR-003": {
+      "title": "The move is one atomic writer operation; a refusal leaves the file untouched",
+      "tasks": [
+        "T001",
+        "T004",
+        "T007"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_moves.py",
+        "apps/vscode/tests/unit/pipeline-builder/builderPanel.spec.ts"
+      ]
+    },
+    "FR-004": {
+      "title": "The moved entry keeps its exact text and every other line, comments included, is unchanged",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_moves.py"
+      ]
+    },
+    "FR-005": {
+      "title": "The writer refuses an unknown anchor, a boundary mismatch, and a missing index",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_moves.py"
+      ]
+    },
+    "FR-006": {
+      "title": "Extension and parked hooks accept no drops and a drag on one shows the reason",
+      "tasks": [
+        "T008",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ]
+    },
+    "FR-007": {
+      "title": "A drop into another step is refused in the panel with a reason",
+      "tasks": [
+        "T008",
+        "T009",
+        "T012"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ]
+    },
+    "FR-008": {
+      "title": "The hook form offers Move up and Move down, disabled with a reason at the edges",
+      "tasks": [
+        "T011",
+        "T013"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/AttachForm.test.tsx"
+      ]
+    },
+    "FR-009": {
+      "title": "Saving the hook form at another anchor uses the same atomic move with any content edit",
+      "tasks": [
+        "T002",
+        "T005",
+        "T007",
+        "T011",
+        "T013"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/MoveAnnouncement.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/wiring.test.tsx"
+      ]
+    },
+    "FR-010": {
+      "title": "Status line and live region announce a move only once its write answers",
+      "tasks": [
+        "T011",
+        "T012",
+        "T013"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/MoveAnnouncement.test.tsx"
+      ]
+    },
+    "FR-011": {
+      "title": "Drag and keyboard work in the narrow layout and with reduced motion",
+      "tasks": [
+        "T010",
+        "T017"
+      ],
+      "tests": [
+        "headless Chrome check (narrow + reduced motion)"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 10,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "moving a hook to another step",
+    "drawing step-level hooks on the board",
+    "an Undo for a move"
+  ],
+  "context": [
+    "living spec: attach-a-hook",
+    "living spec: reshape-a-step",
+    "living spec: read-the-pipeline",
+    "area: apps/vscode/webview/src/pipeline-builder (Canvas, AttachForm, index)",
+    "area: apps/vscode/src/features/pipeline-builder/builderPanel.ts",
+    "area: apps/speckit-extension/scripts/config_write.py",
+    "constraint: every write goes through config_write.py",
+    "constraint: announce a move only once its write answers"
+  ],
+  "intent": "Move a project hook between anchors or within one by drag or keyboard, written atomically by the config writer",
+  "decisions": [
+    {
+      "decision": "One atomic move_hook writer operation behind --move-from/--to-index/--boundary",
+      "why": "the remove-then-add pair leaves the hook gone when the add is refused",
+      "rejected": "two writes with rollback"
+    },
+    {
+      "decision": "The moved entry travels verbatim, re-indented only",
+      "why": "comments and formatting must survive",
+      "rejected": "re-render through _hook_line"
+    },
+    {
+      "decision": "Writer validates the target via plan_build + resolve_anchor and refuses an unreadable plan",
+      "why": "refuse exactly what the board could not draw",
+      "rejected": "let unvalidated writes through"
+    },
+    {
+      "decision": "Hook drags use their own MIME type application/x-pb-hook",
+      "why": "text/plain already carries node ids",
+      "rejected": "a prefix on text/plain"
+    },
+    {
+      "decision": "Keyboard path is an Order row in the hook form plus its Runs fields",
+      "why": "extend the inspector pattern instead of a second interaction",
+      "rejected": "a Move to menu listing every anchor"
+    },
+    {
+      "decision": "Board drag and form moves share one moveHook message and one writer operation",
+      "why": "one refusal path and one announcement path",
+      "rejected": "keeping addHook.movedFrom for the form"
+    },
+    {
+      "decision": "The hook form is keyed per opening, not by index",
+      "why": "a keyboard move must not remount the form and drop focus",
+      "rejected": "remounting and restoring focus by hand"
+    },
+    {
+      "decision": "An open hook form closes when a board drag moves a hook",
+      "why": "its saved index may no longer point at the same hook",
+      "rejected": "re-finding the hook after the redraw"
+    },
+    {
+      "decision": "Config writes from the panel run one at a time",
+      "why": "two quick moves each read the old file and the last save won",
+      "rejected": "request ids echoed through every message"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Atomic writer move + drag sources/targets on the board + Order row in the hook form",
+      "key_finding": "Today the form move is two writes, so a refused add loses the hook"
+    },
+    "tasks": {
+      "summary": "17 tasks: foundational writer/protocol/helpers (3 waves), board drag, keyboard form, polish"
+    },
+    "implement": {
+      "summary": "Hooks drag between anchors and reorder on the board, move from the hook form by keyboard, and every move is one atomic config write"
+    }
+  },
+  "approach": "config_write.py gains an atomic move_hook that moves the entry verbatim and validates the target against the built plan. The panel sends one moveHook message from both the board drag and the hook form, whose new Order row gives keyboard users Move up and Move down. Read-only rows and cross-lane drops are refused in the panel with a reason.",
+  "currentTask": "T017",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "move_hook + --move-from/--to-index/--boundary, verbatim entry, plan-validated target",
+      "files": [
+        "apps/speckit-extension/scripts/config_write.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "moveHook message added, addHook.movedFrom removed",
+      "files": [
+        "apps/vscode/src/protocol/pipeline.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "pure hook-move helpers: payload, halves, landing index",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/hookMoves.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "13 unittest cases: across anchors, reorder both ways, verbatim, emptied anchor keeps comments, content edit, byte-identical refusals",
+      "files": [
+        "apps/speckit-extension/tests/test_hook_moves.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "moveHook writer helper + flag tests",
+      "files": [
+        "apps/vscode/src/features/specs/pipelineGraph.ts",
+        "apps/vscode/tests/unit/pipeline-builder/pipelineGraph.spec.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "hook-move helper tests (landing index, payload, halves)",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookMoves.test.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "moveHook handler in one write with up/down/to status; addHook loses movedFrom; panel tests",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/builderPanel.ts",
+        "apps/vscode/tests/unit/pipeline-builder/builderPanel.spec.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "12 drag tests: card halves, seam, phase head, reorder, self-drop, read-only and cross-step refusals",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "hook rows drag; rows, cards, seams, blocks, phase heads take drops; read-only rows and other lanes refuse with a reason",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "grip, dragging, half and block drop styles, no transitions",
+      "files": [
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Hook form gains an Order row (Move up/down, aria-disabled with reason at the edges), a polite live region, unique node/phase place ids and a boundary on every attachment",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/AttachForm.tsx"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Board drags and form moves post moveHook through sendMove; the form stays mounted across a move with an optimistic index, goes back on refusal, and panel refusals show in the status line",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Tests for the Order row, shared phase/node names, the one-message placement move and outcome-only announcement on success and refusal",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/AttachForm.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/SidePanes.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/wiring.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/MoveAnnouncement.test.tsx"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Guide stories (moving a hook, keyboard Order row), Components status stories, Interactions drag stories; two new docs stills registered",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Guide.stories.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Interactions.stories.tsx",
+        "tooling/scripts/capture-docs-images.mjs"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "attach-a-hook delta: MODIFIED move requirement, ADDED drag/keyboard requirement (folds at completion)",
+      "files": [
+        "specs/623-drag-hooks-between-anchors/drag-hooks-between-anchors.spec.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "guide Move a hook section, root and spec-kit Unreleased Added lines",
+      "files": [
+        "apps/website/src/content/docs/docs/guides/pipeline-builder.mdx",
+        "CHANGELOG.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "jest 3367 pass, compile, webview tsc, python 1550 OK, living validate clean, test:visual 38 pre-existing pixel diffs (baselines predate #797), headless Chrome drag/keyboard/refusal/narrow/reduced-motion checked",
+      "files": [
+        "specs/623-drag-hooks-between-anchors/tasks.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npx jest --silent",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.7,
+      "result": "Tests:       3367 passed, 3367 total · Snapshots:   0 total · Time:        69.948 s"
+    },
+    {
+      "what": "compile",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "> speckit-companion@0.34.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview typecheck",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.3,
+      "result": "no output"
+    },
+    {
+      "what": "python builder + hook move tests",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 98.9,
+      "result": "---------------------------------------------------------------------- · Ran 1550 tests in 98.736s · OK (skipped=8)"
+    },
+    {
+      "what": "living specs validate",
+      "command": "python3 apps/speckit-extension/scripts/living_validate.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.5,
+      "result": "✓ 49 spec(s) checked, nothing to report."
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 14 bodies match parts and carry the timing fence, 7 match golden"
+    },
+    {
+      "what": "headless Chrome on the builder Storybook: a real mouse drag of a hook onto a node card sends one moveHook at 1200px, at 380px and with reduced motion; dragging an extension hook and dropping on one are refused with the reason; the form Order row shows Move down aria-disabled at the last place and wraps in a narrow pane",
+      "command": "node scratchpad/check-hooks.mjs (SB_PORT=6031)",
+      "result": "all as expected; screenshots read"
+    },
+    {
+      "what": "npm run test:visual",
+      "command": "npm run test:visual",
+      "result": "exit 0 with 38 pixel diffs across Situations stories; baselines date from 2026-09-19 and predate the stacked-layout change, and no Situations story renders a drag affordance, so none come from this change; not re-blessed",
+      "warnings": [
+        "38 pre-existing pixel diffs"
+      ]
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Pipeline Builder pixel baselines are stale against main (38 diffs, baselines from 2026-09-19); they need a deliberate re-bless in their own change",
+      "step": "implement"
+    },
+    {
+      "note": "doctor: 0 problems, 8 warnings. Drift on six capabilities from earlier merged commits (#797, #799, #800, #804, #805, #806, #812), not this run; three worker task finishes folded in one burst (append-only, not repairable); the step shape note is informational. No issue opened: nothing problem-severity.",
+      "step": "implement"
+    },
+    {
+      "note": "Review gaps left open after two rounds (low): a queued removal snapshots its Undo shape before earlier queued writes land; every move rebuilds the plan to validate its target; a non-move refusal answering just before a move can revert the form; a malformed hook the reader skips shifts the drawn count; a refused drag clears a pending Undo; adding (not moving) a hook at a phase that shares a node name still lands on the node; a moved entry leaves a comment written above it behind; a newly created anchor uses 2-space indent in a 4-space file.",
+      "step": "implement"
+    }
+  ]
+}
