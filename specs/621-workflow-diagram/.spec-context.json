@@ -1,0 +1,375 @@
+{
+  "workflow": "companion",
+  "specName": "A diagram of the specs workflow, for the site",
+  "branch": "docs/699-workflow-diagram",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T12:39:14.708Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:40:21.129Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:40:30.509Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:40:37.048Z"
+    },
+    {
+      "step": "specify",
+      "substep": "persist-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:40:37.388Z"
+    },
+    {
+      "step": "specify",
+      "substep": "branch",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:41:32.990Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T12:41:52.428Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T12:42:03.037Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T12:42:03.199Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T12:42:03.359Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T12:42:03.518Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T12:42:14.498Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:44:10.168Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:44:20.547Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:44:30.406Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:44:41.363Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:50:21.752Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:51:21.096Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:51:21.121Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:51:21.273Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:52:25.122Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "review rounds closed; site builds, no overflow at 1280 or 390, clips:check and living_validate clean",
+  "coverage": {
+    "FR-001": {
+      "title": "One diagram with the five steps left to right, each naming what it produces"
+    },
+    "FR-002": {
+      "title": "Living-spec loop above the steps: narrowed load, reuse, worker slice, reviewed fold"
+    },
+    "FR-003": {
+      "title": "Where workers attach: area readers, document writers, groundwork waves, per-story workers, the join"
+    },
+    "FR-004": {
+      "title": "Converge as an optional pass after implement, no status of its own"
+    },
+    "FR-005": {
+      "title": "One line explaining the run total counts active time"
+    },
+    "FR-006": {
+      "title": "Every word is real text"
+    },
+    "FR-007": {
+      "title": "Uses the site tokens and reads on the dark theme"
+    },
+    "FR-008": {
+      "title": "Stacks vertically at 390px with no horizontal scroll"
+    },
+    "FR-009": {
+      "title": "Reading order makes sense as text alone"
+    },
+    "FR-010": {
+      "title": "On the Introduction, shown or linked from Pick a pipeline and Living specs"
+    },
+    "FR-011": {
+      "title": "Claims nothing the living specs do not state"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "no README embed: GitHub strips live HTML",
+    "no standalone page in root docs/: the site does not render it",
+    "no CHANGELOG entry: the site belongs to neither product",
+    "no light theme: the site has none"
+  ],
+  "context": [
+    "source: capabilities/companion-pipeline/run-a-spec-through-the-pipeline.spec.md",
+    "source: capabilities/companion-pipeline/split-work-across-workers.spec.md",
+    "source: capabilities/living-specs-engine/load-specs-for-a-change.spec.md",
+    "source: capabilities/living-specs-engine/fold-a-finished-change-back.spec.md",
+    "source: capabilities/run-record/record-a-run.spec.md",
+    "source: PR #813 (converge), PR #804 (active-time totals)",
+    "area: apps/website/src/components/docs (MediaSlot, GuidedStep pattern)",
+    "constraint: site is dark only, Constellation tokens in apps/website/src/styles/tokens.css",
+    "constraint: no living spec registers the website pages"
+  ],
+  "intent": "One real-text diagram of the Companion run on the docs site: five steps, the living-spec loop above, the implement fan-out below, optional converge, active-time note",
+  "approach": "An Astro docs component of real HTML styled with the site tokens, embedded on Introduction and Living specs, linked from Pick a pipeline",
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Built the workflow diagram component: living-spec loop, five steps, implement fan-out, optional converge, notes",
+      "files": [
+        "apps/website/src/components/docs/WorkflowDiagram.astro"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added a One run, start to finish section with the diagram to the Introduction",
+      "files": [
+        "apps/website/src/content/docs/docs/index.mdx"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Embedded the diagram at the top of How a run folds back on Living specs",
+      "files": [
+        "apps/website/src/content/docs/docs/discussions/living-specs.mdx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Linked the diagram section from The two that ship on Pick a pipeline",
+      "files": [
+        "apps/website/src/content/docs/docs/discussions/pick-a-pipeline.mdx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Built the site and shot the diagram at 1280 and 390; page width equals viewport at both; fixed Starlight prose margins via not-content",
+      "files": [
+        "apps/website/src/styles/docs.css",
+        "apps/website/src/components/docs/WorkflowDiagram.astro"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Checked every label against the living specs (narrowing wording and the delta reviewer corrected); clips:check and living_validate clean",
+      "files": [
+        "apps/website/src/components/docs/WorkflowDiagram.astro"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "website build",
+      "command": "cd apps/website && npm run build",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 4.1,
+      "result": "07:51:36 [@astrojs/vercel] Copying static files to .vercel/output/static · 07:51:36 [build] Server built in 2.78s · 07:51:36 [build] Complete!"
+    },
+    {
+      "what": "media manifest check",
+      "command": "npm run clips:check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.2,
+      "result": "  not built locally 16 · Not built locally: content/media/feature-clips/*/renders/ is gitignored (content/media/.gitignore). These rebuild with `npm run render` in the composition directory, and a fresh clone will always list them. · OK every output in the manifest exists and both READMEs agree with it."
+    },
+    {
+      "what": "living spec shape",
+      "command": "python3 apps/speckit-extension/scripts/living_validate.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.5,
+      "result": "✓ 49 spec(s) checked, nothing to report."
+    },
+    {
+      "what": "no horizontal overflow at 1280 and 390",
+      "command": "node /private/tmp/claude-501/-Users-alfredoperez-dev-GitHub-speckit-companion/8803a166-0592-4951-a70c-8ac14c7260c7/scratchpad/shoot.cjs",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 18.9,
+      "result": "intro 390 {\"doc\":390,\"vw\":390,\"fig\":350} · living 1280 {\"doc\":1280,\"vw\":1280,\"fig\":660} · living 390 {\"doc\":390,\"vw\":390,\"fig\":350}"
+    },
+    {
+      "what": "Read the diagram screenshots at 1280 and 390: five columns wide, one column narrow, every label legible, no text in images",
+      "result": "pass"
+    },
+    {
+      "what": "website build after review fixes",
+      "command": "cd apps/website && npm run build",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.8,
+      "result": "08:10:18 [@astrojs/vercel] Copying static files to .vercel/output/static · 08:10:18 [build] Server built in 2.74s · 08:10:18 [build] Complete!"
+    },
+    {
+      "what": "no horizontal overflow at 1280 and 390 after review fixes",
+      "command": "node /private/tmp/claude-501/-Users-alfredoperez-dev-GitHub-speckit-companion/8803a166-0592-4951-a70c-8ac14c7260c7/scratchpad/shoot.cjs",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 19.0,
+      "result": "intro 390 {\"doc\":390,\"vw\":390,\"fig\":350} · living 1280 {\"doc\":1280,\"vw\":1280,\"fig\":660} · living 390 {\"doc\":390,\"vw\":390,\"fig\":350}"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Built the diagram as a Starlight docs component of real HTML, embedded on the Introduction and Living specs and linked from Pick a pipeline",
+      "why": "The site already embeds docs visuals as components; a page in the root docs/ folder is not rendered by the site, and a README cannot embed live HTML",
+      "rejected": "A standalone HTML page in docs/, or an SVG with baked-in text"
+    },
+    {
+      "decision": "Laid the diagram out with a container query on its own width",
+      "why": "The docs column narrows when the sidebars open, so the viewport width says nothing about the space the figure has",
+      "rejected": "A viewport media query"
+    },
+    {
+      "decision": "Taught the site prose rules to skip .not-content, the opt-out Starlight already honours",
+      "why": "The site docs.css spaced every p, ul and li inside the figure by 1.7em, which no component could override without !important",
+      "rejected": "Raising specificity or !important inside the component"
+    },
+    {
+      "decision": "Drew converge as a dashed optional card under implement",
+      "why": "It runs after implement, owns no status and completion does not wait on it; PR #813 is still open, so it is the one box to revisit if that changes",
+      "rejected": "A sixth step in the pipeline row"
+    },
+    {
+      "decision": "After two review rounds (code-review and Codex), Completed became implement outcome placed beside it by grid, converge moved outside the run, and the delta reviewer was dropped from the diagram",
+      "why": "Implement completes the spec itself so nothing follows it; a completed spec takes no converge writes; the delta reviewer is found-not-proposed, not in any living spec",
+      "rejected": "Numbering Complete as a fifth command; converge inside the implement band"
+    },
+    {
+      "decision": "Kept --text-muted for the worker lines and kept titles as paragraphs",
+      "why": "On the site the muted token is about 7:1 on the ground, and headings inside the figure would add noise to the page outline",
+      "rejected": "Codex suggestions to switch the token and add headings"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "A real-text diagram of the Companion run on the docs site: living-spec loop above, four steps and Completed, the implement fan-out below, converge as an optional pass, notes on active time"
+    }
+  },
+  "concerns": [
+    {
+      "note": "Doctor BRIEFED: livingSpecs.loaded is empty. The load ran at specify and matched nothing, because no capability registers apps/website; the diagram wording was checked by hand against companion-pipeline, living-specs-engine and run-record instead.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor DRIFT: 20 capabilities show real drift from commits already on main (#804, #799, #797, #805, #806 and others); none from this run, left for living-sync.",
+      "step": "implement"
+    },
+    {
+      "note": "This change resolved no living-spec capability, so nothing was loaded before it and nothing was folded after it. Either the areas it touched belong to no capability yet, or a capability claims them and no requirement describes them — `living-validate` names which."
+    }
+  ]
+}

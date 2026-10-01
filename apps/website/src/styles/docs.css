@@ -208,8 +208,9 @@ body {
 
 /* The gap between two paragraphs has to beat the gap between two lines inside
    one, or a run of them reads as a single block of grey. Line height is 1.65,
-   so the block margin sits just above it. */
-.sl-markdown-content :is(p, ul, ol) {
+   so the block margin sits just above it. A component marked .not-content, as
+   Starlight's own rules allow, sets its own spacing. */
+.sl-markdown-content :is(p, ul, ol):not(:where(.not-content *)) {
   margin-block: 1.7em;
 }
 
@@ -277,15 +278,15 @@ body {
 
 /* Lists. The browser's 40px indent is furniture; a marker needs about half of
    that, and the saved space goes back to the measure. */
-.sl-markdown-content :is(ul, ol) {
+.sl-markdown-content :is(ul, ol):not(:where(.not-content *)) {
   padding-inline-start: 1.15rem;
 }
 
-.sl-markdown-content :is(ul, ol) :is(ul, ol) {
+.sl-markdown-content :is(ul, ol) :is(ul, ol):not(:where(.not-content *)) {
   margin-block: 0.3rem;
 }
 
-.sl-markdown-content li + li {
+.sl-markdown-content li + li:not(:where(.not-content *)) {
   margin-top: 0.2rem;
 }
 

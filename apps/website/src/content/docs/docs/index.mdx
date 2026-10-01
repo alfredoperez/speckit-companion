@@ -7,6 +7,7 @@ sidebar:
 ---
 
 import MediaSlot from '../../../components/docs/MediaSlot.astro';
+import WorkflowDiagram from '../../../components/docs/WorkflowDiagram.astro';
 
 SpecKit Companion lets you read, review and track your specs in VS Code. A **spec** is a markdown file that describes what to build before your AI assistant builds it. [Spec Kit](https://github.com/github/spec-kit), the open source tool behind the `specify` command, has your assistant write those files.
 
@@ -57,6 +58,12 @@ It also brings the `/speckit.companion.*` commands, a Resume button, a closing `
 />
 
 Either half works alone. With only the VS Code extension you get the viewer, comments and sidebar. A spec made without the second half just has less recorded on it.
+
+## One run, start to finish
+
+A Companion run turns a feature request into a spec, a plan, a task list and code. Where a step has several independent pieces, it can hand them to workers. When living specs are on, they are read before the work starts and updated when it ends.
+
+<WorkflowDiagram />
 
 ## What it does not do
 
