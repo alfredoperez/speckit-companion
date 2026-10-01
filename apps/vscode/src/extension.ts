@@ -35,6 +35,7 @@ import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, mergeNotificationSettings, removeRetiredSettings } from './core/settingsMigration';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown, reportInstalledOnce, trackPanelOpened } from './core/telemetry';
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
+import { suggestIntegrationProvider } from './speckit/integrationProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
 import { registerSpecShapeDiagnostics } from './features/specs/specShapeDiagnostics';
 
@@ -95,7 +96,8 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // Prompt for AI provider selection if not configured
-    if (!isProviderConfigured()) {
+    const providerWasConfigured = isProviderConfigured();
+    if (!providerWasConfigured) {
         outputChannel.appendLine('[Extension] AI provider not configured, prompting user...');
         const selectedProvider = await promptForProviderSelection();
         if (!selectedProvider) {
@@ -287,6 +289,8 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         })
     );
+
+    if (providerWasConfigured) { void suggestIntegrationProvider(context, outputChannel); }
 
     // Validate provider/permission combination after activation completes (non-blocking)
     setTimeout(() => { void validatePermissionMode(context); }, 0);

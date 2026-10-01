@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **Move a node to another phase from its panel.** A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the edge of the one you pick nearest where it was, so you no longer have to drag it or remove and re-add it.
+- **SpecKit Companion suggests the assistant your project was set up for.** Spec Kit records which assistant a project was set up for in `.specify/integration.json`. When that is not the assistant your AI provider setting names, SpecKit Companion now says so when it starts and offers to switch, or to keep your current one. It never switches on its own, and once you keep your choice it does not ask again for that project. A project set up for an assistant SpecKit Companion has no provider for shows nothing.
 
 ### Fixed
 - **Move to phase… works in a narrow Pipeline Builder.** In a side panel the node's panel now scrolls, so the button is always reachable, and its list opens inside the panel on the side with room, showing every phase instead of being cut off at the edge.

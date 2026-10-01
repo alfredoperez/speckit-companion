@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { AIProviders } from '../core/constants';
 import { detectHostIde, HostIde } from '../ai-providers/ideChatProvider';
+import type { AIProviderType } from '../ai-providers/aiProvider';
 
 /**
  * The spec-kit CLI accepted agent identifier the upgrade command passes as
@@ -46,6 +47,27 @@ export function resolveSpecKitAgent(provider: string | undefined, host: HostIde)
         return IDE_CHAT_HOST_TO_AGENT[host] ?? IDE_CHAT_HOST_TO_AGENT.unknown;
     }
     return PROVIDER_TO_AGENT[provider ?? ''] ?? DEFAULT_AGENT;
+}
+
+// The first provider listed for an agent wins.
+const AGENT_TO_PROVIDER: ReadonlyMap<string, AIProviderType> = (() => {
+    const map = new Map<string, AIProviderType>();
+    for (const [provider, agent] of Object.entries(PROVIDER_TO_AGENT)) {
+        if (!map.has(agent)) { map.set(agent, provider as AIProviderType); }
+    }
+    return map;
+})();
+
+/** The provider to suggest for the project's Spec Kit integration agent, or undefined when there is nothing to suggest. */
+export function resolveIntegrationProvider(
+    configured: AIProviderType,
+    host: HostIde,
+    integrationAgent: string
+): AIProviderType | undefined {
+    if (configured === AIProviders.IDE_CHAT && host === 'windsurf') { return undefined; }
+    if (configured !== AIProviders.IDE_CHAT && !Object.prototype.hasOwnProperty.call(PROVIDER_TO_AGENT, configured)) { return undefined; }
+    if (resolveSpecKitAgent(configured, host) === integrationAgent) { return undefined; }
+    return AGENT_TO_PROVIDER.get(integrationAgent);
 }
 
 /**

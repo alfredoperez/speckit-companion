@@ -30,6 +30,42 @@ A `speckit.aiProvider` value that matches no supported provider SHALL be treated
 - **WHEN** settings still hold the old id
 - **THEN** the extension activates and dispatches through Claude Code
 
+### A project set up for another assistant gets a suggestion, never a switch
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts, apps/vscode/src/extension.ts -->
+
+At activation the extension SHALL read the default integration from `.specify/integration.json` (`default_integration`, else `integration`). When that agent differs from the one `speckit.aiProvider` resolves to and a provider maps directly to it, the extension SHALL show one message that names both assistants and offers **Switch to** that provider and **Keep** the current one. The extension SHALL NOT change the provider unless the user picks Switch.
+
+#### Scenario: the project was set up for another assistant
+- **WHEN** `speckit.aiProvider` is `claude` and `.specify/integration.json` names `copilot`
+- **THEN** a message says the project was set up for GitHub Copilot CLI while Claude Code is in use, offers **Switch to GitHub Copilot CLI** and **Keep Claude Code**, and dispatch stays on Claude Code until a button is pressed
+
+### Switch updates the setting
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts -->
+
+Choosing Switch SHALL write the suggested provider to `speckit.aiProvider` in user settings, or in workspace settings when a workspace value is the one in charge. The new provider takes effect after a reload, as any provider change does.
+
+#### Scenario: the user switches
+- **WHEN** they choose **Switch to GitHub Copilot CLI**
+- **THEN** `speckit.aiProvider` becomes `copilot` and the reload prompt for a provider change appears
+
+### Keep or a dismissal is remembered for that pair
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts -->
+
+Choosing Keep, or closing the message, SHALL be remembered in the workspace for that integration and provider pair, and the message SHALL NOT show again for the same pair. A different pair SHALL be asked about once.
+
+#### Scenario: the user keeps their setting
+- **WHEN** they choose **Keep Claude Code** and reload the window
+- **THEN** no message appears and dispatch stays on Claude Code
+
+### An integration with nothing to suggest shows nothing
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts, apps/vscode/src/extension.ts -->
+
+An agent no provider maps directly to (such as `cursor-agent` or `windsurf`), a provider Spec Kit has no agent for (Wibey), IDE Chat on Windsurf, a matching integration, a missing, unreadable or malformed `.specify/integration.json`, and an activation where the user has just picked their first provider SHALL leave `speckit.aiProvider` alone and show nothing.
+
+#### Scenario: the integration has no provider here
+- **WHEN** `.specify/integration.json` names an agent such as `cursor-agent` that no provider maps to
+- **THEN** the setting is used unchanged and nothing is shown
+
 ### Switching provider takes effect after a reload
 <!-- touches: apps/vscode/src/extension.ts, apps/vscode/src/ai-providers/aiProviderFactory.ts -->
 
