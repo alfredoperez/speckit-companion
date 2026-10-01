@@ -21,7 +21,7 @@ Most of what used to be narrated here now lives in living specs — validated by
 | Anything that regenerates `content/media/web/` — a retheme, a re-render, `clips:render`, `clips:stills`, `lightwell` | Commit the regenerated files. `content/media/web/` is **tracked**, deliberately: a deploy can't rebuild it, and while it was ignored the live site rendered every clip and screenshot as a broken image. `npm run clips:sync` copies them into the site, and the site's own build runs it too. |
 | The GitHub Copilot app canvas under `apps/copilot-canvas/` | `apps/copilot-canvas/README.md` and, if the structure moved, the canvas paragraph in `docs/architecture.md`. It ships in neither extension and takes no version bump, but a change to what a Copilot app user sees gets a line under `[Unreleased]` in the root `CHANGELOG.md`. Its tests run with `npm run test:canvas`. |
 | The marketing/docs site under `apps/website/` | `apps/website/README.md` and, if the structure moved, the website paragraph in `docs/architecture.md`. It belongs to neither product's feature list, so **not** the root README, **not** `apps/speckit-extension/README.md`, and **not** either CHANGELOG. |
-| A new surface ships: an app, a panel, a provider, or a top-level feature path | Add its path glob and checks to `.claude/skills/e2e-desktop/surface-map.yml`. `/qa-release` scopes each release from that map, lists any changed path it does not cover as "no QA mapping", and `/publish*` refuse to tag without its report. |
+| A new surface ships: an app, a panel, a provider, or a top-level feature path | Add its path glob and checks to `.claude/skills/release-qa/surface-map.yml`. `/release-qa` scopes each release from that map, lists any changed path it does not cover as "no QA mapping", and `/publish*` refuse to tag without its report. |
 | Webview component with a sibling `.stories.tsx` | Update the stories in the same change to cover the new state/variant. Storybook is the visual baseline — stale stories are worse than missing stories because they lie. If a non-trivial component changes materially and no `.stories.tsx` exists, add one in the same PR. |
 
 ## Feature → README section map
@@ -42,7 +42,7 @@ Most of what used to be narrated here now lives in living specs — validated by
 
 ## Per-release checklist (run before tagging a version)
 
-> This checklist is for the **VS Code extension** (`/publish`/`/ship`, `v*` tag). The **spec-kit extension** has its own flow — see `/publish-speckit-ext` and `apps/speckit-extension/docs/publishing.md` (prefixed `speckit-ext-v*` tag, `.zip` archive, catalog issue).
+> This checklist is for the **VS Code extension** (`/publish`, `v*` tag), the last step of `/release-loop`. The **spec-kit extension** has its own flow — see `/publish-speckit-ext` and `apps/speckit-extension/docs/publishing.md` (prefixed `speckit-ext-v*` tag, `.zip` archive, catalog issue).
 
 1. Run `git diff $(git describe --tags --abbrev=0)..HEAD -- README.md` to see what was already updated since the last tag.
 2. Cross-check `CHANGELOG.md` entries since the last release against the map above.

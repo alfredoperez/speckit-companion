@@ -114,5 +114,5 @@ assets/mascot/explore/
 # Screenshots from `npm run canvas:shots`
 .canvas-shots/
 
-.claude/skills/e2e-desktop/.bin/
-.claude/skills/e2e-desktop/canvas-harness/node_modules/
+.claude/skills/release-qa/.bin/
+.claude/skills/release-qa/canvas-harness/node_modules/

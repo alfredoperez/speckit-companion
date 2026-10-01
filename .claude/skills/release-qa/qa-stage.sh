@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stage the desktop half of /qa-release so Claude Desktop only clicks. Prints READY and the handoff path, or NOT READY and the first gate that failed.
+# Stage the desktop half of /release-qa so Claude Desktop only clicks. Prints READY and the handoff path, or NOT READY and the first gate that failed.
 # Usage: qa-stage.sh <run-name>      e.g. qa-stage.sh 2026-10-01
 # Claude Code runs this on the Mac. It never touches your VS Code settings or profiles.
 set -euo pipefail

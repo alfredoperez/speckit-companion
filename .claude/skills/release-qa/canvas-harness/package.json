@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Drives the real GitHub Copilot runtime headlessly against the SpecKit Companion canvas for the e2e-desktop QA.",
+  "description": "Drives the real GitHub Copilot runtime headlessly against the SpecKit Companion canvas for /release-qa.",
   "dependencies": {
     "@github/copilot-sdk": "1.0.15"
   }
