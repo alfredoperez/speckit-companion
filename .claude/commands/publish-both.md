@@ -26,7 +26,7 @@ Release **both extensions in one pass** by running the two existing flows sequen
 1. **Preflight** — abort with a clear message if any fails:
    - Working tree must be clean (`git status --porcelain` empty).
    - Branch must be `main`.
-   - QA gate: apply the Release gate in `.claude/commands/qa-release.md` (a QA report for the current HEAD with `verdict: ship` and no open FAIL). If it does not pass, stop and tell the user to run `/qa-release`; continue only on their explicit override. This is the only gate: the phases skip theirs.
+   - QA gate: apply the Release gate in `.claude/commands/release-qa.md` (a `QA Report*.md` in the vault for the current HEAD with `verdict: ship` and no open FAIL). If it does not pass, stop and tell the user to run `/release-qa`; continue only on their explicit override. This is the only gate: the phases skip theirs.
 2. **Ask for both target versions up front** in a single question, showing both current versions. Do not ask again inside the phases.
 3. **Phase 1 — spec-kit extension.** Read `.claude/commands/publish-speckit-ext.md` and execute it exactly, using the version from step 2 instead of prompting. Ends with the `speckit-ext-vX.Y.Z` release cut, `companion-latest/companion.zip` refreshed, and the scratch-dir install verified.
 4. **Checkpoint.** Before any VS Code step, confirm all three, and **stop here** if any fails:

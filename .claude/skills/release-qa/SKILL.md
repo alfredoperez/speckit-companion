@@ -1,6 +1,6 @@
 ---
-name: e2e-desktop
-description: Release-scoped QA of SpecKit Companion on the real Mac, run once at the end of a batch of fixes. Reads what is being released (the diff since the last v* tag plus the Unreleased changelogs), turns changed paths into a checklist through surface-map.yml, runs every automated gate with Bash first, then spends desktop time only on what needs eyes (VS Code through computer use, the GitHub Copilot app canvas, a terminal run) on top of a fixed baseline, and writes one QA report note into the Obsidian vault with a ship / fix-first verdict. Use when the user says "/qa-release", "qa release", "run QA", "QA the release", "/e2e-desktop", "run the desktop e2e", or wants VS Code, canvas and terminal timing runs instead of auto mode.
+name: release-qa
+description: Release-scoped QA of SpecKit Companion on the real Mac, run once at the end of a batch of fixes. Reads what is being released (the diff since the last v* tag plus the Unreleased changelogs), turns changed paths into a checklist through surface-map.yml, runs every automated gate with Bash first, then spends desktop time only on what needs eyes (VS Code through computer use, the GitHub Copilot app canvas, a terminal run) on top of a fixed baseline, and writes one QA report note into the Obsidian vault with a ship / fix-first verdict. Use when the user says "/release-qa", "release qa", "qa release", "run QA", "QA the release", "run the desktop e2e", or wants VS Code, canvas and terminal timing runs instead of auto mode.
 compatibility: Claude Code on the Mac runs this skill (Bash, the `code`, `specify` and `claude` CLIs, Swift command line tools, the `obsidian` skill). Claude Desktop with computer use only clicks, from the handoff qa-stage.sh writes.
 metadata:
   author: alfredo
@@ -11,7 +11,7 @@ metadata:
 
 One run per release, never per ticket, and issue-agnostic: it reads what is being released, not a ticket list. Claude Code runs this skill on the Mac and does every bit of setup, typing, polling and timing. Claude Desktop only clicks and looks, from a handoff Claude Code writes: its Bash is a Linux sandbox with no `code`, `specify` or `gh`, and VS Code is click-only for it. QA never edits this repo; failures become fix candidates in the report. The repo stays untouched; the throwaway `.vsix` goes into the results folder.
 
-`/qa-release` is the entry point. This skill holds the flow; `surface-map.yml` holds the checks; the helper scripts in this folder do the mechanical parts.
+`/release-qa` is the entry point, and step 3 of `/release-loop`. This skill holds the flow; `surface-map.yml` holds the checks; the helper scripts in this folder do the mechanical parts.
 
 ## What each tool can do here
 
@@ -27,7 +27,7 @@ Consequences, designed in: settings are written to a file by Bash, the AI provid
 
 ```bash
 REPO=/Users/alfredoperez/dev/GitHub/speckit-companion
-SKILL=$REPO/.claude/skills/e2e-desktop
+SKILL=$REPO/.claude/skills/release-qa
 VAULT=$HOME/dev/GitHub/obsidian-vault
 DATE=$(date +%Y-%m-%d)
 RUN=$(date +%Y-%m-%d-%H%M)
@@ -57,7 +57,7 @@ Then build the checklist:
 3. Each Unreleased bullet is a claim the release makes. Name the check that would show it; a bullet no check reaches gets one extra desktop check of its own. An empty Unreleased section goes in the report as such.
 4. Write the checklist to `$RESULTS/checks.md` (`| check | kind | why | status | note |`). Every later step updates the status as it goes, and the report table is built from this file.
 
-`/qa-release recheck` is the re-run after fixes: it repeats the automated gates and only the checks that ended FAIL or BLOCKED, and carries a PASS over only when nothing changed since then matches its surface.
+`/release-qa recheck` is the re-run after fixes: it repeats the automated gates and only the checks that ended FAIL or BLOCKED, and carries a PASS over only when nothing changed since then matches its surface.
 
 ## Step 1. Automated gates, Bash only
 

@@ -6,21 +6,23 @@ argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | 
 
 ## What this does
 
-A **self-hosting build loop** for `speckit-companion`. For each ticket, in strict sequence:
+A **self-hosting build loop** for `speckit-companion`, and step 2 of `/release-loop`.
 
-> **Two modes.** The default (below) is the full loop: one issue per ticket, fixed by running `/speckit-companion-auto` on itself. **`--light`** ([Light mode](#light-mode---light)) drops the issue, the spec pipeline, and the sequencing for small mechanical changes, and fans out parallel worktree agents instead. It keeps the code review, tests, and CI. Light mode trades away the dogfooding signal — pick it deliberately, not by default.
+> **Every ticket runs the full loop by default:** one issue, one `/speckit-companion-auto` run, one ticket at a time. **`--light`** ([Light mode](#light-mode---light)) is only for mechanical fixes whose cause and change are already known: a regex, a doc, a manifest. Never pick it to go faster; if you are unsure, it is a full-loop ticket.
+
+For each ticket, in strict sequence:
 
 1. **Fresh `main`** — pull, and if the pull changed `apps/speckit-extension/`, refresh the installed companion commands so this ticket runs on the previous ticket's merge.
 2. **Auto** — confirm the bug still reproduces, then run `/speckit-companion-auto`. Its project hooks (`.specify/companion.yml`, after implement's `handoff`) do the self-review, `/code-review` + `/codex:review` in parallel (max two rounds), the commit, and the PR.
-3. **Merge** — squash-merge once CI is green.
+3. **Merge** — squash-merge once every CI check has finished and passed.
 4. **Learnings** — log the review findings to the Review Ledger, route each kept lesson to where it fires, tick the ticket in the live queue.
 5. **Next ticket.**
 
-After all tickets: one closing `/install-local`, then one **run report** (markdown, via the vault `obsidian` skill, flat in `Projects/speckit companion/` under a descriptive name; the vault has no `reports/` folder) of everything fixed, in plain language, the **new lessons** captured, and any **architecture/skill flags** worth promoting. It ends by pointing at `/qa-release`, which tests the whole batch once; this loop never desktop-tests a ticket. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
+After all tickets: one closing `/install-local`, then one **run report** (markdown, via the vault `obsidian` skill, flat in `Projects/speckit companion/` under a descriptive name; the vault has no `reports/` folder) of everything fixed, in plain language, the **new lessons** captured, and any **architecture/skill flags** worth promoting. It ends by pointing at `/release-qa`, which tests the whole batch once; this loop never desktop-tests a ticket. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
 
 ## Locked defaults
 
-- **Merge:** auto-merge, no per-ticket stop. You review via the final report; `/qa-release` covers the batch afterwards.
+- **Merge:** auto-merge, no per-ticket stop. You review via the final report; `/release-qa` covers the batch afterwards.
 - **Auto runs in the main loop, not a subagent.** Its review hook dispatches `/code-review` and `/codex:review` as two subagents; inside a subagent that nesting fails and the hook falls back to `/code-review` alone, silently dropping Codex. Keep the main context lean another way: after each ticket, re-derive state from `git`/`gh` and the ticket's result line, not from the transcript.
 - **The auto hooks are the review gate.** Don't add a second `/code-review` pass on top — that's what the old loop did, and it reviewed every ticket twice.
 - **Sequential only.** Never parallelize — each ticket must run on the previous ticket's merged commands. (`--light` lifts this. See [Light mode](#light-mode---light).)
@@ -41,7 +43,7 @@ If `$ARGUMENTS` is empty, list open issues and ask which to run.
 
 # Light mode (`--light`)
 
-For changes that are **small and already understood** — a wrong regex, a stale doc, a missing emission, a manifest tweak. It drops the ceremony, not the safety: the code review, the tests, and CI all stay, because those are what actually catch bugs. What it drops is the paperwork.
+Only for **mechanical** changes whose cause and fix are already settled: a wrong regex, a stale doc, a missing emission, a manifest tweak. The code review, the tests, and CI all stay; the issue, the spec pipeline, and the sequencing go.
 
 ## What light mode changes
 
@@ -59,21 +61,21 @@ For changes that are **small and already understood** — a wrong regex, a stale
 
 **The spec pipeline is the dogfooding.** Running the Companion workflow on itself is the entire reason this loop exists — it's how the broken `adopt` command, the no-op reconciler, and the packaging gap were found. Light mode trades that signal away.
 
-So light mode is a **named exception for small changes, never the default.** If a task turns out to be bigger than it looked — it needs a design decision, or it touches derived state / lifecycle / capture — **stop and escalate it to the full loop**. Don't push a large change through light mode because it was already started there.
+So light mode is a **named exception for mechanical changes, never the default and never a shortcut for speed.** If a task turns out to be bigger than it looked — it needs a design decision, or it touches derived state / lifecycle / capture — **stop and escalate it to the full loop**. Don't push a large change through light mode because it was already started there.
 
 **Growing past your named file set is NOT by itself an escalation trigger.** Chasing one root cause into more files is the job: #442 started as "a wrong path constant" and ended up also fixing the skills list the sidebar renders — because it was one bug (the registry lied, and a consumer ignored it anyway), and stopping at the named files would have shipped half of it. The test is *"is this still one coherent defect?"*, not *"is this still three files?"* Escalate when the **decision** grows (a new design call, a behavior the user has to choose), not when the **blast radius** does. If the file set widens, say so in the PR body and re-check disjointness against the other in-flight branches.
 
 ## Choosing light vs full
 
-**Light is fine when** the fix is mechanical and the *what* is settled: a parsing bug with a known cause, a doc that contradicts the code, a missing file emission, a manifest/menu change, deleting dead code.
+**Light is allowed only when** the fix is mechanical and the *what* is settled: a parsing bug with a known cause, a doc that contradicts the code, a missing file emission, a manifest/menu change, deleting dead code. Everything else is a full-loop ticket.
 
-**Use the full loop when** any of these is true:
+**It is always the full loop when** any of these is true:
 - The fix needs a design decision (the issue asks "should we…?").
 - It touches **derived state**, lifecycle/status writing, or capture (`.spec-context.json`) — this repo's worst bug class lives there.
 - It's user-facing UI/UX with a visual judgment to make.
 - You can't name the files it will touch before starting.
 
-> A user-visible **bug** can still be light — but give it the full `/code-review` treatment (including the re-review pass on logic-changing fixes) even while skipping the spec ceremony. Skipping paperwork is not the same as skipping scrutiny.
+> When a mechanical fix is also a user-visible **bug**, light mode still gives it the full `/code-review` treatment, including the re-review pass on logic-changing fixes. Skipping paperwork is not the same as skipping scrutiny.
 
 ## Parallel worktrees — the four collisions
 
@@ -116,12 +118,12 @@ If a subagent returns `escalate` — the task was bigger than it looked — **do
 Open a PR per branch (`/create-pr` conventions). Since there's no issue, **the PR body must carry the why** — what was broken, how you know, how to verify. No `Closes #N`. (The review already happened in L2; if an L2 fix changed real logic, re-run `/code-review` on it before opening the PR.)
 
 ### L4. Merge — main loop, sequential
-Merge **one at a time**, confirming CI green on each (`gh pr checks`). After each merge, the next PR is behind `main` — if GitHub reports a conflict or the branch is stale, rebase it before merging. (This is the tax for parallel branches; it's cheap when the file sets are disjoint, which is why L0 gates on that.)
+Merge **one at a time**, only after every CI check on it has finished and passed (`gh pr checks`; a pending check is not a pass). After each merge, the next PR is behind `main` — if GitHub reports a conflict or the branch is stale, rebase it before merging. (This is the tax for parallel branches; it's cheap when the file sets are disjoint, which is why L0 gates on that.)
 
 ### L5. Close out — main loop
 - **One** `install-local`, then `git restore package.json package-lock.json .specify/`. Your living-spec capabilities are safe from this: they live in `living-specs.yml` at the repo root, outside the folder that gets restored.
 - **One** learnings distill for the whole batch (same routing rules as the full loop: checklist / `CLAUDE.md` proposal / this file / issue candidate). An empty distill is the norm.
-- **Chat summary**, not an HTML brief: what shipped, anything escalated, and `/qa-release` as the next step.
+- **Chat summary**, not an HTML brief: what shipped, anything escalated, and `/release-qa` as the next step.
 
 ---
 
@@ -170,7 +172,10 @@ Then write one result line for the ticket (PR, spec dir, summary, findings, suba
 #### 3. Merge + cleanup — main loop
 ```bash
 gh pr checks <PR> --watch || true     # let CI finish
+gh pr checks <PR>                     # every check must now read pass; pending or fail means no merge
 ```
+Merge only when every check has finished and passed. Never merge with a check still pending.
+
 **Review-gate check.** If this ticket is **review-gated** (the `⏸️ Review-gated` group, or `--review-merge`), do **not** merge. Post the PR link and a one-line summary, record it as "merged: NO — awaiting your review," and move to the next ticket.
 
 Otherwise:
@@ -212,15 +217,15 @@ Write **one markdown run report** (via the vault `obsidian` skill) flat in `~/de
 - **🏗️ Architecture / skill flags** — the promotion candidates from step 4b, each with a one-line "promote to `CLAUDE.md` / ADR / which skill?" suggestion.
 - **Needs attention** — skipped tickets and why, PRs left in review, CI gaps.
 - The final installed version.
-- **Next:** run `/qa-release` for the batch.
+- **Next:** run `/release-qa` for the batch.
 
-End the chat response with a tight summary: tickets processed, merged vs in-review vs skipped, subagents dispatched vs expected, the installed version, lessons-captured count, a pointer to the report, and `/qa-release` as the next step.
+End the chat response with a tight summary: tickets processed, merged vs in-review vs skipped, subagents dispatched vs expected, the installed version, lessons-captured count, a pointer to the report, and `/release-qa` as the next step.
 
 ## Guardrails
 
 - **Never start a ticket on a dirty tree.** Stop and report instead.
 - **Never parallelize tickets in the full loop** — each ticket must run on the previous one's merged commands. (`--light` parallelizes *because* it has no such gate; it must still use `isolation: "worktree"` and the disjoint-file check.)
-- **Never force-merge red checks.** Leave the PR open and report it.
+- **Never force-merge red checks, and never merge while a check is pending.** Leave the PR open and report it.
 - **Auto-merge is on by default** (per this loop's design). If the user passed `--review-merge` in `$ARGUMENTS`, pause for a thumbs-up before each `gh pr merge` instead.
 - **Never run auto in a subagent** — its review hook can't nest subagents and silently drops Codex.
 - **Two review rounds is the ceiling** (auto's hook enforces it); anything still open goes into the PR body or a follow-up issue.

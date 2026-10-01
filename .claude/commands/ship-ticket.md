@@ -8,12 +8,12 @@ argument-hint: "<issue # e.g. 292>  (optional — defaults to the current branch
 
 The **post-build tail** for a ticket you built yourself in SpecKit Companion (GUI / `/speckit.companion.*`). It does **not** rebuild — it takes the committed work on the current feature branch and ships it: review, PR, merge, learnings, reinstall. It is `/fix-tickets` steps 3–8 with the build skipped.
 
-Use `/fix-tickets` when you want the loop to build the fix too. Use **`/ship-ticket`** when the code already exists on a branch and you just want the review→merge tail.
+Use `/fix-tickets` when you want the loop to build the fix too. Use **`/ship-ticket`** when the code already exists on a branch and you just want the review→merge tail. Both are step 2 of `/release-loop`.
 
 ## Locked defaults
 
 - **Never rebuild.** The branch already has the work; this command only reviews/ships it.
-- **Never merge red checks.** Leave the PR open and report.
+- **Never merge red or pending checks.** Leave the PR open and report.
 - **Auto-merge on** unless `--review-merge` is passed (then pause for a thumbs-up before `gh pr merge`).
 - **`/code-review` is the review gate** — high effort, findings applied; re-run it on any fix that itself changes real logic (the fix commit is the least-reviewed code).
 - **Heavy steps run in subagents** (review, distilling learnings); the main loop only does git/gh/decisions.
@@ -71,7 +71,10 @@ Capture the PR number/URL.
 ### 3. Merge + cleanup — main loop
 ```bash
 gh pr checks <PR> --watch || true
+gh pr checks <PR>                     # every check must now read pass; pending or fail means no merge
 ```
+Merge only when every check has finished and passed. Never merge with a check still pending.
+
 **Review-gate:** if `--review-merge` was passed, do **not** merge — post the PR link + a one-line summary, record "merged: NO — awaiting your review," and stop. Otherwise:
 ```bash
 gh pr merge <PR> --squash --delete-branch
@@ -102,12 +105,12 @@ specify extension list                            # confirm "companion" at the n
 git restore .specify/                             # gitignored dev-install copies — never commit these (living-specs.yml is at the repo root, so it is untouched)
 ```
 The `.claude/` command emissions are **committed real files** (not gitignored like `.specify/`), and the merged PR should already carry the updated ones. If the reinstall leaves `.claude/` dirty (`git status`), that means the PR shipped without re-emitting — **surface it, don't silently restore or commit on main**; the emission belongs in the feature PR.
-End with a tight summary: issue shipped, PR link, merged / in-review / blocked, new installed version, **whether the spec-kit extension was reinstalled**, lessons-captured count, and `/qa-release` as the next step for the batch.
+End with a tight summary: issue shipped, PR link, merged / in-review / blocked, new installed version, **whether the spec-kit extension was reinstalled**, lessons-captured count, and `/release-qa` as the next step for the batch.
 
 ## Guardrails
 
 - **Never rebuild** — that's `/fix-tickets`' job. This ships what's already on the branch.
-- **Never merge red checks.** Report instead.
+- **Never merge red or pending checks.** Report instead.
 - **Never commit version bumps or `.specify/` regenerated artifacts** into the feature PR (install-local's bump is throwaway — restore it).
 - **Reinstall the spec-kit extension when the branch touched `apps/speckit-extension/**`** — `/install-local` only covers the VS Code side; `specify extension remove companion && specify extension add ./apps/speckit-extension --dev` is what makes the new `/speckit.companion.*` commands resolvable in Claude Code. Restore the gitignored `.specify/` copies; never commit them on main.
 - Always reply to + resolve any PR review threads after fixing.

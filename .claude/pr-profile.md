@@ -12,14 +12,14 @@ Title rule: `type(scope): summary` — **issue refs go in the body (`Closes #N`)
 
 ### VS Code extension (the GUI · `.vsix`)
 Paths: `apps/vscode/src/**`, `apps/vscode/webview/**`, `package.json`, root `README.md`, root `CHANGELOG.md`, `assets/**`, `apps/vscode/tests/**`, `docs/**`, `CLAUDE.md`, `.vscodeignore`, `.storybook/**`
-- **Version**: `package.json` `version` · **Release**: `/ship` or `/publish` → `v*` tag → Marketplace/OpenVSX
+- **Version**: `package.json` `version` · **Release**: `/release-loop` (ends in `/publish`) → `v*` tag → Marketplace/OpenVSX
 - Sub-areas to name in the checklist:
   - **settings** — `package.json` `contributes.configuration` (+ matching README Configuration section)
   - **commands / menus** — `package.json` `contributes.commands|menus|submenus`, `apps/vscode/src/features/specs/specCommands.ts`
   - **webview** — `apps/vscode/webview/**` (+ any sibling `*.stories.tsx` for changed components)
   - **dispatch / providers** — `apps/vscode/src/ai-providers/**`
   - **viewer / sidebar** — `apps/vscode/src/features/spec-viewer/**`, `apps/vscode/src/features/specs/specExplorerProvider.ts`
-  - **version** — `package.json` `version` → ⚠️ **flag if bumped in a feature PR** (bumps belong to `/ship`)
+  - **version** — `package.json` `version` → ⚠️ **flag if bumped in a feature PR** (bumps belong to `/publish`, the last step of `/release-loop`)
 
 ### SpecKit extension (`id: companion` · spec-kit catalog)
 Paths: `apps/speckit-extension/**`
@@ -71,7 +71,7 @@ Re-check these red-flag words against the **new** behavior: "no … behavior", "
 
 ## Quality gates (PR-level)
 
-- **No version bump** in a feature PR (version bumps ride `/ship` or `/publish-speckit-ext`) → ⚠️ if `package.json` or `extension.yml` version changed.
+- **No version bump** in a feature PR (version bumps ride `/publish` or `/publish-speckit-ext`, run by `/release-loop`) → ⚠️ if `package.json` or `extension.yml` version changed.
 - **Extension isolation**: no new runtime dependence on `.claude/**` or `.specify/**` from `apps/vscode/src/` (those aren't shipped in the `.vsix`). Committed `.specify/`/`.cursor/`/`.windsurf/`/`.agents/`/`.gemini/`/`.qwen/`/`.github/{agents,prompts}/speckit.*` are IDE-chat test fixtures, not runtime deps.
 - **Demo fixtures restored**: `specs/_00_demo-specified` / `_01_demo-planned` / `_02_demo-tasked` must be at their committed baseline (`git restore` test-time mutations) → ⚠️ if their `.spec-context.json` is dirtied.
 - **Spec files included**: the PR's `specs/<NNN>-*/` artifacts and any modified `.spec-context.json` are committed; the spec's status is `completed` before merge (only `_NN_demo-*` fixtures stay active).

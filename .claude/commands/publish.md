@@ -16,7 +16,7 @@ description: Publish a new version of the extension
 
 Help the user publish a new version of the extension by:
 
-0. QA gate. Apply the Release gate in `.claude/commands/qa-release.md` before anything else: a QA report for the current HEAD with `verdict: ship` and no open FAIL. If it does not pass, stop and tell the user to run `/qa-release`; continue only on their explicit override. Skip it when `/publish-both` already ran it in its preflight.
+0. QA gate. Apply the Release gate in `.claude/commands/release-qa.md` before anything else: a `QA Report*.md` in the vault for the current HEAD with `verdict: ship` and no open FAIL. If it does not pass, stop and tell the user to run `/release-qa`; continue only on their explicit override. Skip it when `/publish-both` already ran it in its preflight.
 1. First check if there are uncommitted changes. If yes, abort with a warning.
 2. Ask the user for the new version number (show current version).
 3. Get the previous version tag and analyze commits since then to generate a changelog.
