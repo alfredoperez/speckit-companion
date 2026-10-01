@@ -118,3 +118,20 @@ A workflow document SHALL show a stale banner, and a mark on its rail entry, whe
 #### Scenario: a finished spec
 - **WHEN** the same file times occur on a completed spec
 - **THEN** no banner and no stale mark appear
+
+### A bug report opens read-only, its reports as the rail
+<!-- touches: apps/vscode/src/features/spec-viewer/specViewerProvider.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts, apps/vscode/src/features/bugs/bugReports.ts, apps/vscode/webview/src/spec-viewer/editor/readOnly.ts -->
+
+Opening a bug from the sidebar SHALL show its folder under `.specify/bugs/` in one viewer tab titled `Bug: <title>`, reused for every report of that bug, with Assessment, Fix and Test as the rail and a missing report disabled. The header SHALL show the title and the latest outcome as the badge, or `BUG` without one. The panel SHALL be read-only: no step footer, run strip or Overview, no line, comment or checkbox edits, no run record read or written, and no file under `.specify/bugs/` changed.
+
+#### Scenario: all three reports
+- **WHEN** a bug with an assessment, a fix and a verified test is opened
+- **THEN** the viewer lands on the Assessment, Fix and Test are on the rail, and the badge reads `VERIFIED`
+
+#### Scenario: an assessment only
+- **WHEN** a bug with only an assessment is opened
+- **THEN** Fix and Test show as not created and cannot be opened
+
+#### Scenario: nothing is written
+- **WHEN** the reader clicks a checkbox or hovers a line in a bug report
+- **THEN** nothing changes on disk, no comment control appears, and no `.spec-context.json` is created

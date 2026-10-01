@@ -1,5 +1,7 @@
 # Operating a panel — Living Spec
 
+<!-- reviewed: 2437bc6e -->
+
 ## Purpose
 
 The controls a person clicks, tabs to and waits on are shared across every panel, and so is the floor those panels owe someone who navigates by keyboard, reads by screen reader, or has asked the system for less motion. Written once here, it holds everywhere; written per panel, the newest panel is always the one that forgot.

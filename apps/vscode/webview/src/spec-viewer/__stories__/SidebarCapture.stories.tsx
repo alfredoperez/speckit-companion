@@ -631,3 +631,46 @@ export const B5ReadmeTriptych: Story = {
         </CaptureFrame>
     ),
 };
+
+// ── B6 · bug reports: the real fixture bugs, built here so B1-B5 stay unchanged ──
+
+const bugRows: SidebarRow[] = [
+    { id: 'bug-group', depth: 0, label: 'Bugs (2)', icon: 'bug', twistie: 'expanded' },
+    {
+        id: 'bug-cart-total-skips-first',
+        depth: 1,
+        label: 'cartTotal skips the first cart item',
+        description: 'assess · fix · test · verified',
+        icon: 'bug',
+        twistie: 'expanded',
+    },
+    { id: 'bug-cart-total-skips-first-assessment', depth: 2, label: 'Assessment', icon: 'markdown' },
+    { id: 'bug-cart-total-skips-first-fix', depth: 2, label: 'Fix', icon: 'markdown' },
+    { id: 'bug-cart-total-skips-first-test', depth: 2, label: 'Test', icon: 'markdown' },
+    {
+        id: 'bug-slug-keeps-spaces',
+        depth: 1,
+        label: 'toSlug only replaces the first space',
+        description: 'assess · valid',
+        icon: 'bug',
+        twistie: 'collapsed',
+    },
+];
+
+export const B6BugReports: Story = {
+    name: 'B6 · Bug reports',
+    render: () => {
+        const specs = specsPane(false);
+        return (
+            <CaptureFrame>
+                <SidebarShell
+                    panes={[
+                        { ...specs, rows: [...specs.rows, ...bugRows] },
+                        { ...livingSpecsPane(), collapsed: true },
+                        { ...steeringPane(), collapsed: true },
+                    ]}
+                />
+            </CaptureFrame>
+        );
+    },
+};

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { CONTEXT_KEYS, setContextKey } from './core/utils/contextKeys';
 
 // AI Providers
@@ -38,6 +39,7 @@ import { getConfiguredProviderType } from './ai-providers/aiProvider';
 import { suggestIntegrationProvider } from './speckit/integrationProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
 import { registerSpecShapeDiagnostics } from './features/specs/specShapeDiagnostics';
+import { bugDirectoryOf } from './features/bugs/bugReports';
 
 let aiProvider: IAIProvider;
 let extensionContext: vscode.ExtensionContext;
@@ -413,6 +415,32 @@ export async function activate(context: vscode.ExtensionContext) {
             livingSpecsWatcher.onDidChange(refreshOpenLiving);
             livingSpecsWatcher.onDidCreate(refreshOpenLiving);
             wiring.push(livingSpecsWatcher, refreshLivingSpecs);
+
+            // Bug reports sit outside the spec directories the tree and viewer watchers cover.
+            const bugsWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, '.specify/bugs/**')
+            );
+            const refreshBugs = trailing(() => specExplorer.refresh(), 150);
+            const changedBugs = new Set<string>();
+            const refreshOpenBugs = trailing(() => {
+                changedBugs.forEach(bug => void specViewer.refreshIfDisplaying(bug));
+                changedBugs.clear();
+            }, 300);
+            const onBugChange = (uri: vscode.Uri) => {
+                refreshBugs.call();
+                // A report, a bug folder, or the bugs folder itself; stray files like .DS_Store redraw nothing.
+                const name = path.basename(uri.fsPath);
+                const isFolderEvent = name === 'bugs' || name === '.specify' || path.basename(path.dirname(uri.fsPath)) === 'bugs';
+                const changed = bugDirectoryOf(uri.fsPath) ?? (isFolderEvent ? uri.fsPath : undefined);
+                if (changed) {
+                    changedBugs.add(changed);
+                    refreshOpenBugs.call();
+                }
+            };
+            bugsWatcher.onDidCreate(onBugChange);
+            bugsWatcher.onDidChange(onBugChange);
+            bugsWatcher.onDidDelete(onBugChange);
+            wiring.push(bugsWatcher, refreshBugs, refreshOpenBugs);
         };
         wireCompanionSurfaces();
         context.subscriptions.push(

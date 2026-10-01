@@ -5,6 +5,7 @@
  */
 
 import type { VSCodeApi } from './types';
+import { isReadOnlyPage } from './editor/readOnly';
 
 declare const vscode: VSCodeApi;
 
@@ -69,6 +70,10 @@ export function setupCheckboxToggle(): void {
         }
 
         const checkbox = target as HTMLInputElement;
+        if (isReadOnlyPage()) {
+            checkbox.checked = !checkbox.checked;
+            return;
+        }
         const lineNum = parseInt(checkbox.dataset.line || '0', 10);
         if (!lineNum) return;
 

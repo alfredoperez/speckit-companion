@@ -95,6 +95,23 @@ The tree SHALL list the specs found under the directories named in `speckit.spec
 - **WHEN** the run record beside a spec is rewritten by a command the extension did not run
 - **THEN** the row's icon, description and group update without a manual refresh
 
+### Bug reports sit in their own group
+<!-- touches: apps/vscode/src/features/specs/specExplorerProvider.ts, apps/vscode/src/features/bugs/bugReports.ts, apps/vscode/src/extension.ts -->
+
+Each folder under `.specify/bugs/` holding an `assessment.md`, `fix.md` or `test.md` SHALL appear as one row in a collapsed **Bugs** group after the lifecycle groups, shown only when such a folder exists. A bug row SHALL show the report's title, else its slug, and the reports present plus the latest outcome: test result, else fix status, else assessment verdict. It SHALL expand into Assessment, Fix and Test, a missing one reading `not created`. The filter SHALL narrow bugs like specs, the sort SHALL never reorder them, and the group SHALL follow the files on disk.
+
+#### Scenario: a bug assessed, fixed and tested
+- **WHEN** a bug folder holds all three reports and the test result is verified
+- **THEN** its row reads `assess · fix · test · verified`
+
+#### Scenario: an assessment only
+- **WHEN** a bug folder holds only `assessment.md` with the verdict valid
+- **THEN** its row reads `assess · valid`, and its Fix and Test rows read `not created`
+
+#### Scenario: bugs but no specs
+- **WHEN** the workspace has bug reports and no specs
+- **THEN** the tree shows the Bugs group on its own
+
 ## Uncovered
 
 - How spec directories are resolved from `speckit.specDirectories` patterns (nested layouts, change roots) is core behaviour this capability only consumes.

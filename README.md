@@ -79,6 +79,7 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 ### Also in the box
 
 - **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
+- **Bug reports from Spec Kit's bug flow.** With the `bug` extension installed, each bug's assessment, fix and test reports show up in a Bugs group in the sidebar, with the latest outcome, and open read-only in the viewer. [Sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar)
 - **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/anatomy/anatomy-of-the-spec-viewer)
 
 <!-- Rendered from content/media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key

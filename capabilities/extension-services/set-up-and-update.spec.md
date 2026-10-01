@@ -1,6 +1,6 @@
 # Set Up and Update — Living Spec
 
-<!-- reviewed: a9d91434 -->
+<!-- reviewed: 2437bc6e -->
 ## Purpose
 
 Getting the VS Code extension from "just installed" to "ready to work", and keeping it current afterwards. Without this a new user lands in an empty sidebar with no idea that a CLI, a project init or a provider choice is still missing, and an existing user never learns a new version shipped.

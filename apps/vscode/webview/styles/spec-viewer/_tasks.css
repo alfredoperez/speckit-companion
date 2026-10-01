@@ -144,6 +144,18 @@
   border-radius: var(--radius-sm);
 }
 
+body[data-read-only="true"] #markdown-content li.task-item:hover {
+  background: transparent;
+  margin: 0;
+  padding: 5px 0;
+  padding-right: 24px;
+}
+
+body[data-read-only="true"] #markdown-content li.task-item input[type="checkbox"] {
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Completed task - keep readable, checkmark is enough */
 #markdown-content li.task-item.checked {
   /* No opacity change - keep fully visible */

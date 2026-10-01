@@ -1,0 +1,969 @@
+{
+  "workflow": "companion",
+  "specName": "Bug reports in the sidebar and viewer (read-only)",
+  "branch": "feat/785-bug-reports-read-only",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T13:18:12.139Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:18:48.713Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:19:43.082Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:19:54.537Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:19:54.841Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T13:20:26.371Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T13:20:50.194Z"
+    },
+    {
+      "step": "plan",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:20:58.428Z"
+    },
+    {
+      "step": "plan",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:21:04.742Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:27:24.762Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:27:46.681Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:28:12.221Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:29:31.827Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:29:44.405Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T13:29:50.667Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:30:31.022Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:30:40.461Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:30:40.588Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T13:30:50.374Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:31:35.165Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:31:39.107Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:32:13.242Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:32:36.185Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:34:47.432Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:34:51.310Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:38:23.993Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:38:28.137Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:39:13.280Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:39:13.408Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:39:42.492Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:39:42.609Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:39:42.729Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:39:55.966Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:40:12.595Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:40:12.725Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:40:12.853Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:40:12.976Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:40:13.093Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:40:13.212Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:40:13.328Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:43:32.063Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:43:32.087Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:43:32.186Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:45:39.634Z"
+    },
+    {
+      "step": "implement",
+      "substep": "doctor",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T13:47:16.577Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "comment-on-a-spec",
+      "move-a-spec-forward",
+      "read-a-spec",
+      "review-a-living-spec",
+      "work-through-a-document",
+      "webview-safety",
+      "act-on-a-spec",
+      "attach-a-hook",
+      "browse-specs",
+      "keep-living-specs-current",
+      "pick-a-workflow",
+      "protect-the-run-record",
+      "read-the-pipeline",
+      "reshape-a-step",
+      "see-where-a-spec-stands",
+      "switch-workflows-and-build",
+      "see-changes-from-disk",
+      "choose-an-assistant",
+      "keep-the-companion-extension-current",
+      "open-the-sidebar",
+      "set-up-and-update",
+      "share-anonymous-usage",
+      "browse-steering-files",
+      "find-a-living-spec",
+      "produce-the-docs-media"
+    ],
+    "loadedRequirements": {
+      "comment-on-a-spec": [],
+      "move-a-spec-forward": [
+        "A running converge shows in flight on the entry that carries implement's progress"
+      ],
+      "read-a-spec": [
+        "A spec has one viewer tab",
+        "Opening a spec lands on the Overview, opening a document lands on that document",
+        "The viewer follows the files on disk"
+      ],
+      "review-a-living-spec": [
+        "A living spec opens as a capability, not as a run",
+        "Approve all and Remove can be undone for five seconds"
+      ],
+      "work-through-a-document": [
+        "The viewer keeps the reader's place"
+      ],
+      "webview-safety": [
+        "Text from outside is read as words, never as markup",
+        "Text from outside never lands inside a tag through string building",
+        "A link that points at a script does nothing"
+      ],
+      "act-on-a-spec": [
+        "Hover and right-click offer the same menu, filtered to what applies",
+        "Several specs can be changed in one action",
+        "Resume hands the spec back to the assistant from where it stopped"
+      ],
+      "attach-a-hook": [],
+      "browse-specs": [
+        "Specs are grouped by lifecycle, each group with a live count",
+        "A spec row says where the spec stands without relying on color",
+        "Expanding a spec lists its pipeline's documents, each with its own state",
+        "Clicking a row opens it in the spec viewer",
+        "One toolbar button collapses or expands every spec row",
+        "The tree follows the files on disk"
+      ],
+      "keep-living-specs-current": [
+        "Checks and syncs are handed to the assistant, scoped to where they were launched"
+      ],
+      "pick-a-workflow": [],
+      "protect-the-run-record": [],
+      "read-the-pipeline": [],
+      "reshape-a-step": [],
+      "see-where-a-spec-stands": [],
+      "switch-workflows-and-build": [],
+      "see-changes-from-disk": [
+        "The folders in `speckit.specDirectories` are the ones watched"
+      ],
+      "choose-an-assistant": [],
+      "keep-the-companion-extension-current": [
+        "A missing extension is pointed out wherever the user would need it"
+      ],
+      "open-the-sidebar": [
+        "The container shows the views the workspace and settings call for",
+        "An empty Specs view offers exactly one next step",
+        "The Specs toolbar holds the same actions in the same order",
+        "A missing Companion extension is flagged until it is installed"
+      ],
+      "set-up-and-update": [
+        "Start-up offers the next missing setup step"
+      ],
+      "share-anonymous-usage": [
+        "Two switches gate every event"
+      ],
+      "browse-steering-files": [
+        "Authoring actions ask the assistant to do the writing",
+        "Only steering documents can be refined or deleted from the tree"
+      ],
+      "find-a-living-spec": [
+        "The view walks a new project from nothing to a first capability"
+      ],
+      "produce-the-docs-media": [
+        "A change to what the screens look like runs the whole chain"
+      ]
+    },
+    "skipped": [
+      {
+        "name": "browse-specs",
+        "reason": "requirement Bug reports sit in their own group added directly in this change"
+      },
+      {
+        "name": "read-a-spec",
+        "reason": "requirement A bug report opens read-only, its reports as the rail added directly in this change"
+      },
+      {
+        "name": "comment-on-a-spec",
+        "reason": "spec comments unchanged; bug panels offer none, stated in read-a-spec"
+      },
+      {
+        "name": "move-a-spec-forward",
+        "reason": "spec footer and step movement unchanged; bug panels have no footer"
+      },
+      {
+        "name": "review-a-living-spec",
+        "reason": "living-spec panels unchanged; only a routing branch beside them"
+      },
+      {
+        "name": "webview-safety",
+        "reason": "only a constant body attribute added; no outside text reaches markup"
+      },
+      {
+        "name": "act-on-a-spec",
+        "reason": "spec row actions unchanged; bug rows use their own context values"
+      },
+      {
+        "name": "attach-a-hook",
+        "reason": "read for context only"
+      },
+      {
+        "name": "keep-living-specs-current",
+        "reason": "read for context only"
+      },
+      {
+        "name": "pick-a-workflow",
+        "reason": "read for context only"
+      },
+      {
+        "name": "protect-the-run-record",
+        "reason": "bug reports write no run record; run record contract unchanged"
+      },
+      {
+        "name": "read-the-pipeline",
+        "reason": "read for context only"
+      },
+      {
+        "name": "reshape-a-step",
+        "reason": "read for context only"
+      },
+      {
+        "name": "see-where-a-spec-stands",
+        "reason": "read for context only"
+      },
+      {
+        "name": "switch-workflows-and-build",
+        "reason": "read for context only"
+      },
+      {
+        "name": "see-changes-from-disk",
+        "reason": "spec-directory watching unchanged; bug watcher stated in browse-specs"
+      },
+      {
+        "name": "choose-an-assistant",
+        "reason": "read for context only"
+      },
+      {
+        "name": "keep-the-companion-extension-current",
+        "reason": "install surfaces unchanged"
+      },
+      {
+        "name": "set-up-and-update",
+        "reason": "read for context only"
+      },
+      {
+        "name": "share-anonymous-usage",
+        "reason": "no telemetry event added for bug reports"
+      },
+      {
+        "name": "browse-steering-files",
+        "reason": "read for context only"
+      },
+      {
+        "name": "find-a-living-spec",
+        "reason": "read for context only"
+      },
+      {
+        "name": "produce-the-docs-media",
+        "reason": "existing captures untouched; new stories only"
+      }
+    ],
+    "synced": [
+      "open-the-sidebar",
+      "work-through-a-document"
+    ]
+  },
+  "last_action": "22/22 tasks done; full jest 195 suites green; compile, webview typecheck, living validate clean",
+  "coverage": {
+    "FR-001": {
+      "title": "Discover one bug report per .specify/bugs/<slug>/ folder with which reports exist",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/vscode/src/features/bugs/__tests__/bugReports.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Read title and Verdict/Severity/Status/Result from report headers, lenient",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/vscode/src/features/bugs/__tests__/bugReports.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Sidebar shows bugs in their own group, nothing when none",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/specExplorerBugs.test.ts"
+      ]
+    },
+    "FR-004": {
+      "title": "Bug entry names present stages in words and latest outcome",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/specExplorerBugs.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "Bug entry expands to Assessment/Fix/Test rows, missing reads not created",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/specExplorerBugs.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "Clicking a bug opens it in the viewer with three tabs, one tab per bug",
+      "tasks": [
+        "T007",
+        "T008",
+        "T014"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Bug view is read-only: no footer, dispatch, run record or writes",
+      "tasks": [
+        "T007",
+        "T009",
+        "T010",
+        "T011",
+        "T012",
+        "T013",
+        "T014"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts",
+        "apps/vscode/webview/src/spec-viewer/editor/__tests__/readOnly.test.ts"
+      ]
+    },
+    "FR-008": {
+      "title": "Sidebar and viewer refresh on .specify/bugs changes",
+      "tasks": [
+        "T004",
+        "T014"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "Bug folder names validated inside .specify/bugs",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/vscode/src/features/bugs/__tests__/bugReports.test.ts"
+      ]
+    },
+    "FR-010": {
+      "title": "Storybook story of a bug report from real text",
+      "tasks": [
+        "T015",
+        "T016"
+      ]
+    },
+    "FR-011": {
+      "title": "Living specs, site docs and changelog describe bug reports",
+      "tasks": [
+        "T017",
+        "T018",
+        "T019",
+        "T020",
+        "T021"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 14,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "no Assess/Fix/Test dispatch buttons or copy-next-command",
+    "no run record for bugs",
+    "no install offer for the bug extension",
+    "no changes under apps/speckit-extension",
+    "no version bumps"
+  ],
+  "context": [
+    "living spec: browse-specs",
+    "living spec: open-the-sidebar",
+    "living spec: read-a-spec",
+    "living spec: find-a-living-spec",
+    "area: apps/vscode/src/features/specs (Specs tree)",
+    "area: apps/vscode/src/features/spec-viewer + apps/vscode/webview/src/spec-viewer (viewer, living mode precedent)",
+    "constraint: real report formats from the bug extension v1.0.0, fixtures at apps/vscode/tests/fixtures/bug-reports",
+    "constraint: read-only, no run record, no writes under .specify/bugs"
+  ],
+  "intent": "Show Spec Kit bug reports (.specify/bugs/<slug>/) in the sidebar and open them read-only in the spec viewer",
+  "decisions": [
+    {
+      "decision": "Bugs group inside the Specs view, after Archived",
+      "why": "Specs view already groups work items; no container or toolbar change; bugs have no number or lifecycle so they stay out of lifecycle groups",
+      "rejected": "a separate Bugs view"
+    },
+    {
+      "decision": "Specs filter applies to bugs; sort does not",
+      "why": "a filter that ignored bugs would hide the No specs match clear-filter welcome",
+      "rejected": "bugs ignore the filter"
+    },
+    {
+      "decision": "New read-only bug mode beside living mode in the viewer",
+      "why": "living mode hides the rail and adds living footer/renderer; the plain spec path backfills .spec-context.json",
+      "rejected": "reuse living mode or the spec path"
+    },
+    {
+      "decision": "Allow-list of read messages for bug panels plus data-read-only on the page",
+      "why": "toggleCheckbox/editLine/removeLine write the file; one gate is checkable",
+      "rejected": "guard each write handler"
+    },
+    {
+      "decision": "Parse the real bug extension v1.0.0 format: bold-label header bullets, no front matter",
+      "why": "read from installed command files and a real headless run",
+      "rejected": "front matter parsing"
+    },
+    {
+      "decision": "Checkbox gate on a read-only page uses isReadOnlyPage(), not isReadOnly()",
+      "why": "isReadOnly() is also true for completed/archived specs, which must keep ticking per work-through-a-document",
+      "rejected": "gate on isReadOnly()"
+    },
+    {
+      "decision": "show() opens any .specify/bugs report path read-only even without the bug flag",
+      "why": "openFile and other callers that open a report path must never fall into the spec path that backfills .spec-context.json",
+      "rejected": "trust every caller to pass { bug: true }"
+    },
+    {
+      "decision": "The install CTA row only shows when specs exist",
+      "why": "open-the-sidebar ties the pinned row to a tree with specs; a bugs-only tree keeps that contract",
+      "rejected": "show the CTA above a lone Bugs group"
+    },
+    {
+      "decision": "Bug folder containment is checked on the real path",
+      "why": "a symlinked folder under .specify/bugs could otherwise point outside it",
+      "rejected": "string check on the folder name"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Bugs group in the Specs tree plus a read-only bug mode in the viewer, one parser module, one watcher",
+      "key_finding": "The normal viewer path writes a backfill .spec-context.json on first open, so bugs need their own mode, and checkbox/line edits write the file unless blocked"
+    },
+    "tasks": {
+      "summary": "22 tasks: foundational reader + watcher, sidebar story, viewer story, docs/stories phase, polish"
+    },
+    "implement": {
+      "summary": "Bugs group in the Specs tree and a read-only bug mode in the viewer, built on real bug-extension reports"
+    }
+  },
+  "approach": "A pure features/bugs module scans .specify/bugs and parses the report headers; the Specs tree adds a Bugs group after the lifecycle groups; the viewer gets a read-only bug mode beside living mode with the three reports on the rail, an allow-list of read messages, and data-read-only on the page; a .specify/bugs watcher refreshes both.",
+  "currentTask": "T022",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Bug report reader: scan .specify/bugs, header parse, stages/outcome, viewer documents",
+      "files": [
+        "apps/vscode/src/features/bugs/bugReports.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "SpecViewerState.bug flag (panel key is already the bug folder)",
+      "files": [
+        "apps/vscode/src/protocol/viewer.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "13 BDD tests for the reader against the real fixtures, traversal and lenient parsing",
+      "files": [
+        "apps/vscode/src/features/bugs/__tests__/bugReports.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Debounced .specify/bugs/** watcher refreshing the Specs tree and the open bug panel, folder delete marks it gone",
+      "files": [
+        "apps/vscode/src/extension.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Bugs group, bug rows and report rows in the Specs tree; bugs-only root; filter covers bugs; CTA only with specs",
+      "files": [
+        "apps/vscode/src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "10 BDD tree tests on the real fixtures: group, rows, click args, missing reports, filter, bugs-only and empty roots",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/specExplorerBugs.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Bug report viewer stories (All reports, Assessment only) mount the real App read-only on the fixture reports",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/__stories__/BugReport.stories.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Sidebar story B6 shows the Bugs group with both fixture bugs; B1-B5 untouched",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Living spec requirement: bug reports sit in their own Bugs group, with three scenarios",
+      "files": [
+        "capabilities/sidebar/browse-specs.spec.md"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Living spec requirement: a bug report opens read-only with its reports as the rail, three scenarios",
+      "files": [
+        "capabilities/spec-viewer/read-a-spec.spec.md"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Sidebar docs page: short Bug reports section under Specs",
+      "files": [
+        "apps/website/src/content/docs/docs/anatomy/the-sidebar.mdx"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Viewer docs page: short section on reading a bug report read-only",
+      "files": [
+        "apps/website/src/content/docs/docs/anatomy/anatomy-of-the-spec-viewer.mdx"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Changelog: one Added line for bug reports in the sidebar and viewer",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "speckit.viewSpecDocument accepts { bug } and passes it to show",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/specViewerCommands.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "generateHtml takes a trailing readOnly flag that writes data-read-only on body",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/html/generator.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Bug panels accept only seven read messages; every other message is dropped with one log line",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "isReadOnly is true for a data-read-only page; isReadOnlyPage added for page-only checks",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/editor/readOnly.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Checkbox toggle is reverted and not sent on a read-only page; completed specs still tick",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/actions.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Line and row add buttons and the hover tint hidden under body[data-read-only]",
+      "files": [
+        "apps/vscode/webview/styles/spec-viewer/_line-actions.css"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "showBug and updateBugContent render a bug folder read-only, routed through every update, refresh, title and moved path, with no run record or telemetry",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "BDD tests for the bug panel against the real fixtures, plus isReadOnly and checkbox tests",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts",
+        "apps/vscode/webview/src/spec-viewer/editor/__tests__/readOnly.test.ts"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Full jest 195/3364 green, compile and webview typecheck clean, living_validate clean, drift resolved by two deltas plus reviewed accepts",
+      "files": [
+        "capabilities/**"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npx jest --silent",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.6,
+      "result": "Tests:       3364 passed, 3364 total · Snapshots:   0 total · Time:        69.908 s"
+    },
+    {
+      "what": "extension compile",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "> speckit-companion@0.34.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview typecheck",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.3,
+      "result": "no output"
+    },
+    {
+      "what": "living specs validate",
+      "command": "python3 apps/speckit-extension/scripts/living_validate.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.6,
+      "result": "✓ 49 spec(s) checked, nothing to report."
+    },
+    {
+      "what": "Storybook render of the three new stories in Chrome: real report text, title header, VERIFIED/VALID badge, tab switching, Fix/Test disabled when missing, Bugs group in the sidebar frame",
+      "command": "storybook dev + browser",
+      "result": "renders as specified",
+      "warnings": [
+        "storybook build fails on a pre-existing missing DESIGN.md import in Design.mdx, unrelated"
+      ]
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Doctor: implement recorded one internal boundary and 10 task finishes landed in two bursts (worker appends folded together); append-only, durations for those tasks are not trustworthy",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 2 capture calls in this run exited without an outcome (cause unknown); every task and step still recorded",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: drift on main from earlier PRs (attach-a-hook, choose-an-assistant, find-a-living-spec, operating-a-panel, read-the-pipeline, reading-a-panel); not this branch, left for living-sync",
+      "step": "implement"
+    },
+    {
+      "note": "Ran implement and the reviews inside a subagent session, so nested review subagents may be limited",
+      "step": "implement"
+    }
+  ]
+}
