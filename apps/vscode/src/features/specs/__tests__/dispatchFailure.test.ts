@@ -174,8 +174,9 @@ describe('a step whose command runs', () => {
         expect(showErrorMessage).not.toHaveBeenCalled();
     });
 
-    it('watches nothing when the command was typed without shell integration', async () => {
+    it('watches nothing when the user clicked Run and the command was typed without shell integration', async () => {
         jest.useFakeTimers({ doNotFake: ['setImmediate', 'nextTick'] });
+        (vscode.window.showInformationMessage as jest.Mock).mockResolvedValueOnce('Run');
         try {
             const terminal = mock.createMockTerminal({ shellIntegration: false });
             const watch = watchStepDispatch({ specDir, step: 'plan', fromStep: 'specify' });
@@ -272,6 +273,50 @@ describe('limits on what counts as a command that never ran', () => {
         const ctx = readRecord();
         expect(ctx.status).toBe('specified');
         expect(ctx.currentStep).toBe('specify');
+    });
+
+    it('puts the run back when its terminal is closed while the shell still holds the command', async () => {
+        const terminal = mock.createMockTerminal({ name: 'SpecKit - Plan', shellIntegration: false });
+        const watch = watchStepDispatch({ specDir, step: 'plan', fromStep: 'specify' });
+        await startStep(specDir, 'plan', 'extension');
+        watch.started();
+
+        const dispatched = watch.run(async () => {
+            await runInTerminal(terminal, 'claude "/speckit-plan specs/012-login"');
+            return terminal;
+        });
+        await settle();
+        mock.__fireCloseTerminal(terminal);
+
+        await expect(dispatched).rejects.toThrow('closed before its command ran');
+        expect(terminal.__typed()).toEqual([]);
+        expect(readRecord().status).toBe('specified');
+        expect(readRecord().currentStep).toBe('specify');
+    });
+
+    it('still puts the run back when the command fails right after a long wait for the user to answer the shell', async () => {
+        const terminal = mock.createMockTerminal({ shellIntegration: false });
+        const watch = watchStepDispatch({ specDir, step: 'plan', fromStep: 'specify' });
+        await startStep(specDir, 'plan', 'extension');
+        watch.started();
+        const dispatched = watch.run(async () => {
+            await runInTerminal(terminal, 'laude');
+            return terminal;
+        });
+        await settle();
+
+        const now = jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 5 * 60_000);
+        try {
+            terminal.__activateShellIntegration();
+            await dispatched;
+            mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 127);
+            for (let i = 0; i < 100 && showErrorMessage.mock.calls.length === 0; i++) await settle();
+        } finally {
+            now.mockRestore();
+        }
+
+        expect(readRecord().status).toBe('specified');
+        expect(showErrorMessage.mock.calls[0][0]).toContain('did not run');
     });
 
     it('watches the terminal a successful dispatch returns', async () => {

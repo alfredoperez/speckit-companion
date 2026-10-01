@@ -3,10 +3,12 @@ import { Timing } from '../../constants';
 import {
     executeCommandInHiddenTerminal,
     ExecuteInHiddenTerminalOptions,
+    RUN_ANYWAY,
     runInTerminal,
     shellIntegrationExpected,
     shellRunIn,
     waitForShellIntegration,
+    WAITING_FOR_ANSWER_NOTICE,
 } from '../terminalUtils';
 
 const mock = vscode as unknown as {
@@ -17,6 +19,13 @@ const mock = vscode as unknown as {
 };
 
 const getConfiguration = vscode.workspace.getConfiguration as jest.Mock;
+const showInformationMessage = vscode.window.showInformationMessage as jest.Mock;
+
+function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>(r => { resolve = r; });
+    return { promise, resolve };
+}
 const defaultGetConfiguration = getConfiguration.getMockImplementation();
 
 function setShellIntegrationSetting(value: unknown): void {
@@ -36,6 +45,7 @@ describe('runInTerminal', () => {
         mock.env.shell = '/bin/zsh';
         setShellIntegrationSetting(true);
         (vscode.window.withProgress as jest.Mock).mockClear();
+        showInformationMessage.mockReset();
     });
 
     afterEach(() => {
@@ -61,39 +71,28 @@ describe('runInTerminal', () => {
             expect(run.ended).toBeDefined();
         });
 
-        it('falls back to typing the command once the wait runs out and integration never came', async () => {
+        it('never types on its own, however long the shell keeps it waiting', async () => {
             const terminal = mock.createMockTerminal({ shellIntegration: false });
-            const pending = runInTerminal(terminal, 'claude "/speckit-plan specs/012"');
+            const settled = jest.fn();
+            void runInTerminal(terminal, 'claude "/speckit-plan specs/012"').then(settled);
 
-            await jest.advanceTimersByTimeAsync(Timing.shellIntegrationTimeoutMs - 1);
-            expect(terminal.sendText).not.toHaveBeenCalled();
+            await jest.advanceTimersByTimeAsync(10 * 60_000);
 
-            await jest.advanceTimersByTimeAsync(1);
-            const run = await pending;
-
-            expect(terminal.sendText).toHaveBeenCalledWith('claude "/speckit-plan specs/012"', true);
-            expect(run.via).toBe('send-text');
-            expect(run.ended).toBeUndefined();
+            expect(terminal.__typed()).toEqual([]);
+            expect(settled).not.toHaveBeenCalled();
+            terminal.__activateShellIntegration();
         });
 
-        it('waits long enough for a person to answer a question the shell asks at startup', () => {
-            expect(Timing.shellIntegrationTimeoutMs).toBeGreaterThanOrEqual(60_000);
-        });
-
-        it('shows a notice explaining the wait once it drags on', async () => {
-            const terminal = mock.createMockTerminal({ name: 'SpecKit - Claude Code', shellIntegration: false });
+        it('runs the command the moment integration activates, even after the notice is up', async () => {
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
             const pending = runInTerminal(terminal, 'claude');
-
-            await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs - 1);
-            expect(vscode.window.withProgress).not.toHaveBeenCalled();
-            await jest.advanceTimersByTimeAsync(1);
-            expect(vscode.window.withProgress).toHaveBeenCalledWith(
-                expect.objectContaining({ title: expect.stringContaining('"SpecKit - Claude Code" terminal') }),
-                expect.any(Function),
-            );
+            await jest.advanceTimersByTimeAsync(90_000);
+            expect(showInformationMessage).toHaveBeenCalled();
 
             terminal.__activateShellIntegration();
-            await pending;
+            const run = await pending;
+            expect(terminal.__typed()).toEqual([{ via: 'executeCommand', text: 'claude', enter: true }]);
+            expect(run.via).toBe('shell-integration');
         });
 
         it('shows no notice when the shell is ready quickly', async () => {
@@ -103,16 +102,137 @@ describe('runInTerminal', () => {
             terminal.__activateShellIntegration();
             await pending;
             await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs * 2);
-            expect(vscode.window.withProgress).not.toHaveBeenCalled();
+            expect(showInformationMessage).not.toHaveBeenCalled();
         });
 
-        it('gives a hidden terminal only the short wait, with no notice', async () => {
+        it('fails without typing when the terminal is closed before its shell is ready', async () => {
+            const terminal = mock.createMockTerminal({ name: 'SpecKit - Plan', shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude');
+            const failed = expect(pending).rejects.toThrow('"SpecKit - Plan" terminal was closed before its command ran');
+            await jest.advanceTimersByTimeAsync(30_000);
+            mock.__fireCloseTerminal(terminal);
+            await failed;
+            expect(terminal.__typed()).toEqual([]);
+        });
+    });
+
+    describe('the notice while the shell keeps a command waiting', () => {
+        it('appears after the short delay as one short sentence with a Run button', async () => {
             const terminal = mock.createMockTerminal({ shellIntegration: false });
-            const pending = runInTerminal(terminal, 'claude', { hidden: true });
-            await jest.advanceTimersByTimeAsync(Timing.shellStartFallbackMs);
+            void runInTerminal(terminal, 'claude');
+
+            await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs - 1);
+            expect(showInformationMessage).not.toHaveBeenCalled();
+            await jest.advanceTimersByTimeAsync(1);
+
+            expect(showInformationMessage).toHaveBeenCalledTimes(1);
+            expect(showInformationMessage).toHaveBeenCalledWith(
+                'The SpecKit terminal is waiting for an answer. Answer it there, or click Run.',
+                'Run',
+            );
+            expect(WAITING_FOR_ANSWER_NOTICE.length).toBeLessThanOrEqual(80);
+            expect(vscode.window.withProgress).not.toHaveBeenCalled();
+            terminal.__activateShellIntegration();
+        });
+
+        it('sends the command when the user clicks Run', async () => {
+            const click = deferred<string | undefined>();
+            showInformationMessage.mockReturnValueOnce(click.promise);
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude "$(cat /tmp/prompt.md)"');
+
+            await jest.advanceTimersByTimeAsync(120_000);
+            expect(terminal.__typed()).toEqual([]);
+
+            click.resolve(RUN_ANYWAY);
+            const run = await pending;
+            expect(terminal.sendText).toHaveBeenCalledWith('claude "$(cat /tmp/prompt.md)"', true);
+            expect(terminal.__typed()).toHaveLength(1);
+            expect(run.via).toBe('send-text');
+        });
+
+        it('keeps a typed-but-not-entered command unentered when Run is clicked', async () => {
+            showInformationMessage.mockResolvedValueOnce(RUN_ANYWAY);
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude "/speckit-plan"', { autoExecute: false });
+            await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs);
+            await pending;
+            expect(terminal.sendText).toHaveBeenCalledWith('claude "/speckit-plan"', false);
+        });
+
+        it('does nothing when Run is clicked after integration already ran the command', async () => {
+            const click = deferred<string | undefined>();
+            showInformationMessage.mockReturnValueOnce(click.promise);
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude');
+            await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs);
+
+            terminal.__activateShellIntegration();
+            await pending;
+            click.resolve(RUN_ANYWAY);
+            await flush();
+
+            expect(terminal.__typed()).toEqual([{ via: 'executeCommand', text: 'claude', enter: true }]);
+        });
+
+        it('does nothing when the notice is dismissed, and keeps waiting', async () => {
+            showInformationMessage.mockResolvedValueOnce(undefined);
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude');
+            await jest.advanceTimersByTimeAsync(60_000);
+            expect(terminal.__typed()).toEqual([]);
+
+            terminal.__activateShellIntegration();
+            await pending;
+            expect(terminal.__commands()).toEqual(['claude']);
+        });
+
+        it('keeps a Run item in the status bar after the toast is dismissed, which sends the command when clicked', async () => {
+            showInformationMessage.mockResolvedValueOnce(undefined);
+            const registerCommand = vscode.commands.registerCommand as jest.Mock;
+            const createStatusBarItem = vscode.window.createStatusBarItem as jest.Mock;
+            const terminal = mock.createMockTerminal({ name: 'SpecKit - Constitution', shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude');
+            await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs + 60_000);
+
+            const item = createStatusBarItem.mock.results[createStatusBarItem.mock.results.length - 1].value;
+            expect(item.show).toHaveBeenCalled();
+            expect(item.tooltip).toContain('"SpecKit - Constitution" terminal');
+            const [, onRun] = registerCommand.mock.calls.find(([id]) => id === item.command)!;
+            expect(terminal.__typed()).toEqual([]);
+
+            onRun();
             await pending;
             expect(terminal.sendText).toHaveBeenCalledWith('claude', true);
-            expect(vscode.window.withProgress).not.toHaveBeenCalled();
+            expect(item.dispose).toHaveBeenCalled();
+        });
+
+        it('removes the status bar Run item once the shell reports ready', async () => {
+            const createStatusBarItem = vscode.window.createStatusBarItem as jest.Mock;
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude');
+            await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs);
+            const item = createStatusBarItem.mock.results[createStatusBarItem.mock.results.length - 1].value;
+            expect(item.dispose).not.toHaveBeenCalled();
+
+            terminal.__activateShellIntegration();
+            await pending;
+            expect(item.dispose).toHaveBeenCalled();
+        });
+
+        it('shows a hidden terminal so its question can be answered, and still types nothing', async () => {
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude', { hidden: true });
+            await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs);
+
+            expect(terminal.show).toHaveBeenCalledWith(true);
+            expect(showInformationMessage).toHaveBeenCalledWith(WAITING_FOR_ANSWER_NOTICE, RUN_ANYWAY);
+            await jest.advanceTimersByTimeAsync(5 * 60_000);
+            expect(terminal.__typed()).toEqual([]);
+
+            terminal.__activateShellIntegration();
+            await pending;
+            expect(terminal.__commands()).toEqual(['claude']);
         });
     });
 
@@ -136,7 +256,18 @@ describe('runInTerminal', () => {
             const pending = runInTerminal(terminal, 'claude');
             await jest.advanceTimersByTimeAsync(Timing.shellStartFallbackMs);
             await pending;
-            expect(vscode.window.withProgress).not.toHaveBeenCalled();
+            expect(showInformationMessage).not.toHaveBeenCalled();
+        });
+
+        it('types the command after the short wait in a shell that never reports, with no Run notice', async () => {
+            mock.env.shell = '/bin/sh';
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude');
+            await jest.advanceTimersByTimeAsync(Timing.shellStartFallbackMs);
+            const run = await pending;
+            expect(terminal.sendText).toHaveBeenCalledWith('claude', true);
+            expect(run.via).toBe('send-text');
+            expect(showInformationMessage).not.toHaveBeenCalled();
         });
 
         it.each(['/bin/sh', '/usr/local/bin/nu', '/bin/tcsh'])('expects no integration from %s', shell => {
@@ -332,14 +463,16 @@ describe('executeCommandInHiddenTerminal', () => {
         expect(outputChannel.appendLine).not.toHaveBeenCalledWith(expect.stringContaining('Command was:'));
     });
 
-    it('types the command and reports no exit code when integration never arrives', async () => {
+    it('types the command and reports no exit code in a shell that cannot report readiness', async () => {
+        mock.env.shell = '/bin/sh';
         const terminal = mock.createMockTerminal({ shellIntegration: false });
         createTerminal.mockImplementation(() => terminal);
         const pending = executeCommandInHiddenTerminal(baseOptions);
-        await jest.advanceTimersByTimeAsync(Timing.shellIntegrationTimeoutMs + Timing.shellStartFallbackMs);
+        await jest.advanceTimersByTimeAsync(Timing.shellStartFallbackMs * 2);
         const result = await pending;
         expect(terminal.sendText).toHaveBeenCalledWith('echo hello', true);
         expect(result.exitCode).toBeUndefined();
         expect(outputChannel.appendLine).toHaveBeenCalledWith('[Test] Shell integration not available, using fallback mode');
+        mock.env.shell = '';
     });
 });

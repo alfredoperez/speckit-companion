@@ -14,7 +14,7 @@ export interface ShellRun {
 export interface RunInTerminalOptions {
     /** False types the command without pressing Enter, so the user runs it. */
     autoExecute?: boolean;
-    /** A hidden terminal gets no "waiting for the terminal" notice. */
+    /** A hidden terminal is shown once its shell keeps the command waiting, so a question there can be answered. */
     hidden?: boolean;
 }
 
@@ -101,18 +101,53 @@ function watchExecutionEnd(
     return new Promise(resolve => pendingEnds.set(execution, { terminal, resolve }));
 }
 
-/** Show a notice while the wait drags on, so a shell asking a question at startup is noticed. */
-function noticeWhileWaiting(terminal: vscode.Terminal, waiting: Promise<unknown>): void {
-    const timer = setTimeout(() => {
-        void vscode.window.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: `Waiting for the "${terminal.name}" terminal to finish starting. If it is asking a question, answer it there.`,
-            },
-            () => waiting,
-        );
-    }, Timing.shellWaitNoticeMs);
-    void waiting.finally(() => clearTimeout(timer));
+export const WAITING_FOR_ANSWER_NOTICE = 'The SpecKit terminal is waiting for an answer. Answer it there, or click Run.';
+export const RUN_ANYWAY = 'Run';
+
+type ShellReady = 'integration' | 'run' | 'closed';
+
+let waitCount = 0;
+
+/** A dismissed or unseen toast must not strand the command, so a Run item stays in the status bar until the wait ends. */
+function runItemInStatusBar(terminal: vscode.Terminal, onRun: () => void): vscode.Disposable {
+    const id = `speckit.runWaitingTerminalCommand.${++waitCount}`;
+    const command = vscode.commands.registerCommand(id, onRun);
+    const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
+    item.text = '$(play) Run SpecKit command';
+    item.tooltip = `The "${terminal.name}" terminal is waiting for an answer. Click to run its command now.`;
+    item.command = id;
+    item.show();
+    return { dispose: () => { item.dispose(); command.dispose(); } };
+}
+
+/** No time limit: a person may take any time to answer a startup question, so only integration, a Run click or a close ends the wait. */
+function waitForPromptOrRun(terminal: vscode.Terminal, hidden: boolean): Promise<ShellReady> {
+    return new Promise<ShellReady>(resolve => {
+        let settled = false;
+        const subscriptions: vscode.Disposable[] = [];
+        const finish = (how: ShellReady) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(noticeTimer);
+            subscriptions.forEach(s => s.dispose());
+            resolve(how);
+        };
+        subscriptions.push(vscode.window.onDidChangeTerminalShellIntegration(e => {
+            if (e.terminal === terminal) finish('integration');
+        }));
+        if (typeof vscode.window.onDidCloseTerminal === 'function') {
+            subscriptions.push(vscode.window.onDidCloseTerminal(closed => {
+                if (closed === terminal) finish('closed');
+            }));
+        }
+        const noticeTimer = setTimeout(() => {
+            if (hidden) terminal.show(true);
+            subscriptions.push(runItemInStatusBar(terminal, () => finish('run')));
+            void Promise.resolve(vscode.window.showInformationMessage(WAITING_FOR_ANSWER_NOTICE, RUN_ANYWAY)).then(choice => {
+                if (choice === RUN_ANYWAY) finish('run');
+            });
+        }, Timing.shellWaitNoticeMs);
+    });
 }
 
 /** The one way the extension runs a terminal command: nothing is typed until the shell is at its prompt. */
@@ -130,14 +165,13 @@ export async function runInTerminal(
     }
 
     if (!terminal.shellIntegration) {
-        // A hidden terminal cannot be answered, so it never waits long for a prompt the user cannot see.
-        const expected = shellIntegrationExpected() && !hidden;
-        const waiting = waitForShellIntegration(
-            terminal,
-            expected ? Timing.shellIntegrationTimeoutMs : Timing.shellStartFallbackMs,
-        );
-        if (expected) noticeWhileWaiting(terminal, waiting);
-        await waiting;
+        if (shellIntegrationExpected()) {
+            if (terminal.exitStatus || (await waitForPromptOrRun(terminal, hidden)) === 'closed') {
+                throw new Error(`The "${terminal.name}" terminal was closed before its command ran.`);
+            }
+        } else {
+            await waitForShellIntegration(terminal, Timing.shellStartFallbackMs);
+        }
     }
 
     const run: ShellRun = { startedAt: Date.now(), via: 'send-text' };
@@ -189,7 +223,14 @@ export async function executeCommandInHiddenTerminal(
         hideFromUser: true
     });
 
-    const run = await runInTerminal(terminal, commandLine, { hidden: true });
+    let run: ShellRun;
+    try {
+        run = await runInTerminal(terminal, commandLine, { hidden: true });
+    } catch (error) {
+        if (tempFilePath) await fs.promises.unlink(tempFilePath).catch(() => {});
+        await cleanupFn?.().catch(() => {});
+        throw error;
+    }
 
     if (run.ended) {
         const exitCode = await run.ended;

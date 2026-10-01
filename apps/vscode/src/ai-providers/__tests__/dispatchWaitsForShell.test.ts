@@ -1,4 +1,6 @@
+import * as fs from 'fs';
 import * as vscode from 'vscode';
+import { Timing } from '../../core/constants';
 import { ClaudeCodeProvider } from '../claudeCodeProvider';
 import { QwenCliProvider } from '../qwenCliProvider';
 
@@ -54,6 +56,45 @@ describe('a terminal provider dispatching into a shell that is still starting', 
         terminal.__activateShellIntegration();
         await dispatched;
         expect(terminal.__commands()).toEqual([expect.stringMatching(/^claude .*"\/speckit-constitution"$/)]);
+    });
+
+    it('Run Setup types nothing past the old one-minute cap, and sends the whole command when Run is clicked', async () => {
+        jest.useFakeTimers();
+        let click!: (choice: string) => void;
+        (vscode.window.showInformationMessage as jest.Mock).mockReturnValueOnce(new Promise(resolve => { click = resolve; }));
+        try {
+            const provider = new ClaudeCodeProvider({} as vscode.ExtensionContext, { appendLine: jest.fn() } as unknown as vscode.OutputChannel);
+            const dispatched = provider.executeInTerminal('/speckit-constitution', 'SpecKit - Constitution');
+            await jest.advanceTimersByTimeAsync(90_000);
+            expect(terminal.__typed()).toEqual([]);
+
+            click('Run');
+            await dispatched;
+            expect(terminal.sendText).toHaveBeenCalledTimes(1);
+            expect(terminal.sendText).toHaveBeenCalledWith('claude "$(cat "/tmp/prompt.md")"', true);
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('still removes the prompt file when the waiting terminal is closed', async () => {
+        jest.useFakeTimers();
+        const unlink = jest.spyOn(fs.promises, 'unlink').mockResolvedValue(undefined);
+        try {
+            const provider = new ClaudeCodeProvider({} as vscode.ExtensionContext, { appendLine: jest.fn() } as unknown as vscode.OutputChannel);
+            const dispatched = provider.executeInTerminal('/speckit-constitution', 'SpecKit - Constitution');
+            const failed = expect(dispatched).rejects.toThrow('closed before its command ran');
+            await jest.advanceTimersByTimeAsync(10_000);
+            (vscode as any).__fireCloseTerminal(terminal);
+            await failed;
+
+            await jest.advanceTimersByTimeAsync(Timing.tempFileCleanupDelay);
+            expect(unlink).toHaveBeenCalledWith('/tmp/prompt.md');
+            expect(terminal.__typed()).toEqual([]);
+        } finally {
+            unlink.mockRestore();
+            jest.useRealTimers();
+        }
     });
 
     it('a default-pattern CLI provider waits the same way', async () => {

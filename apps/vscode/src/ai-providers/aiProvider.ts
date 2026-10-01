@@ -81,18 +81,20 @@ export async function dispatchSlashCommandViaTempFile(opts: {
             : cliInvocation;
     }
 
-    await runInTerminal(terminal, line, { autoExecute });
-
-    if (tempFilePath) {
-        const fileToClean = tempFilePath;
-        setTimeout(async () => {
-            try {
-                await fs.promises.unlink(fileToClean);
-                outputChannel.appendLine(`[${logPrefix}] Cleaned up prompt file: ${fileToClean}`);
-            } catch (e) {
-                outputChannel.appendLine(`[${logPrefix}] Failed to cleanup temp file: ${e}`);
-            }
-        }, Timing.tempFileCleanupDelay);
+    try {
+        await runInTerminal(terminal, line, { autoExecute });
+    } finally {
+        if (tempFilePath) {
+            const fileToClean = tempFilePath;
+            setTimeout(async () => {
+                try {
+                    await fs.promises.unlink(fileToClean);
+                    outputChannel.appendLine(`[${logPrefix}] Cleaned up prompt file: ${fileToClean}`);
+                } catch (e) {
+                    outputChannel.appendLine(`[${logPrefix}] Failed to cleanup temp file: ${e}`);
+                }
+            }, Timing.tempFileCleanupDelay);
+        }
     }
 }
 

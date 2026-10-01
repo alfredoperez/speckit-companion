@@ -32,19 +32,6 @@ For a CLI provider, dispatch SHALL open a new terminal in the second editor colu
 - **WHEN** the inlined line would exceed the shell's limit
 - **THEN** nothing is sent and an error names PowerShell or Git Bash as the fix
 
-### Nothing is typed into a shell that is not at its prompt
-<!-- touches: apps/vscode/src/core/utils/terminalUtils.ts, apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/ai-providers/cliTerminalProvider.ts, apps/vscode/src/ai-providers/claudeCodeProvider.ts, apps/vscode/src/ai-providers/geminiCliProvider.ts, apps/vscode/src/ai-providers/wibeyCliProvider.ts -->
-
-Every command the extension runs in a terminal SHALL wait until the shell is at its prompt, because a shell that asks a question at startup takes whatever is typed first as its answer. In bash, zsh, fish or PowerShell with shell integration on, the command SHALL run through integration once it activates, waiting up to a minute with the terminal shown and a notice to answer any question there. Any other shell, an older editor or a hidden terminal SHALL get the command typed after a few seconds, with no notice. A second command for the same terminal SHALL wait for the first to finish, since integration interrupts a running command.
-
-#### Scenario: the shell asks to update before its first prompt
-- **WHEN** Plan is dispatched and the new terminal's shell is waiting on "Would you like to update? [Y/n]"
-- **THEN** nothing is typed until the user answers, and then the whole `claude …` line runs
-
-#### Scenario: shell integration is turned off
-- **WHEN** `terminal.integrated.shellIntegration.enabled` is false
-- **THEN** the command is typed after a few seconds, and no exit code is available for it
-
 ### A missing CLI stops the dispatch and says how to get it
 <!-- touches: apps/vscode/src/ai-providers/cliTerminalProvider.ts, apps/vscode/src/core/utils/installUtils.ts -->
 
