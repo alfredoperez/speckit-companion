@@ -375,6 +375,33 @@ export const DossierFastPathFolded: Story = {
     },
 };
 
+// Converge after implement: listed as its own phase and counted in the active total, the wait before it billed to none.
+export const DossierWithConverge: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            status: 'implemented',
+            stepHistory: {
+                specify: { startedAt: '2026-07-02T10:00:00.000Z', completedAt: '2026-07-02T10:05:00.000Z', durationTrusted: true },
+                plan: { startedAt: '2026-07-02T10:05:00.000Z', completedAt: '2026-07-02T10:12:00.000Z', durationTrusted: true },
+                tasks: { startedAt: '2026-07-02T10:12:00.000Z', completedAt: '2026-07-02T10:15:00.000Z', durationTrusted: true },
+                implement: { startedAt: '2026-07-02T10:15:00.000Z', completedAt: '2026-07-02T10:24:00.000Z', durationTrusted: true },
+                converge: { startedAt: '2026-07-02T10:30:00.000Z', completedAt: '2026-07-02T10:33:00.000Z', durationTrusted: true },
+            },
+            timing: {
+                measuredPhases: 4,
+                expectedPhases: 4,
+                complete: true,
+                startedAt: '2026-07-02T10:00:00.000Z',
+                endedAt: '2026-07-02T10:33:00.000Z',
+                elapsedMs: 27 * 60_000,
+            },
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // Log-only payload: no durable-context fields at all — the dossier renders
 // nothing above the collapsed "Run log" disclosure, which carries the work.
 export const DossierLogOnly: Story = {

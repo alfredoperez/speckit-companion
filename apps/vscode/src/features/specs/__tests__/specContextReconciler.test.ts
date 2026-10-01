@@ -246,3 +246,55 @@ describe('reconciled status never skips the mark-complete gate', () => {
         expect(result?.status).not.toBe('completed');
     });
 });
+
+describe('a spec on converge reads as implement', () => {
+    const convergeHistory = [
+        h({ step: 'implement', from: { step: 'tasks', substep: null } }),
+        h({ step: 'implement', kind: 'complete', at: '2026-04-29T00:05:00Z' }),
+        h({ step: 'converge', from: { step: 'implement', substep: null }, at: '2026-04-29T00:06:00Z' }),
+    ];
+
+    it('leaves currentStep converge at implemented alone', () => {
+        const ctx = makeContext({ currentStep: 'converge', status: 'implemented', history: convergeHistory });
+        expect(reconcile(ctx)).toBeNull();
+    });
+
+    it('never settles implementing forward while converge is current', () => {
+        const ctx = makeContext({ currentStep: 'converge', status: 'implementing', history: convergeHistory });
+        expect(reconcile(ctx)).toBeNull();
+    });
+
+    it("repairs an unrecognised status on converge to implement's pair", () => {
+        const ctx = makeContext({
+            currentStep: 'converge',
+            status: 'not-a-real-status' as SpecContext['status'],
+            history: convergeHistory,
+        });
+        const result = reconcile(ctx);
+        expect(result?.status).toBe('implemented');
+        expect(result?.currentStep).toBe('converge');
+    });
+
+    it('accepts converge after implement in the drift check', () => {
+        const ctx = makeContext({ currentStep: 'converge', status: 'implemented', history: convergeHistory.slice(0, 2) });
+        expect(detectCurrentStepDrift(ctx)).toBeNull();
+    });
+
+    it('accepts implement after converge in the drift check', () => {
+        const ctx = makeContext({
+            currentStep: 'implement',
+            status: 'implemented',
+            history: [...convergeHistory, h({ step: 'converge', kind: 'complete', at: '2026-04-29T00:07:00Z' })],
+        });
+        expect(detectCurrentStepDrift(ctx)).toBeNull();
+    });
+
+    it('still flags converge drifting ahead of an earlier step', () => {
+        const ctx = makeContext({
+            currentStep: 'converge',
+            status: 'ready-to-implement',
+            history: [h({ step: 'tasks', kind: 'complete' })],
+        });
+        expect(detectCurrentStepDrift(ctx)).toBe('converge');
+    });
+});

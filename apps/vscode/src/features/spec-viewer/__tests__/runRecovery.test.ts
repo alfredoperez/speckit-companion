@@ -44,6 +44,22 @@ describe('computeRunRecovery (issue #418)', () => {
         }).show).toBe(true);
     });
 
+    it('gives converge its own read-heavy threshold while the spec is implementing', () => {
+        expect(quietThresholdMinutes('converge')).toBe(45);
+        expect(computeRunRecovery({
+            currentStep: 'converge', status: 'implementing',
+            newestActivityMs: minsAgo(40), nowMs: NOW,
+        }).show).toBe(false);
+        expect(computeRunRecovery({
+            currentStep: 'converge', status: 'implementing',
+            newestActivityMs: minsAgo(50), nowMs: NOW,
+        }).show).toBe(true);
+    });
+
+    it('falls back to the default threshold for a prototype key', () => {
+        expect(quietThresholdMinutes('constructor')).toBe(quietThresholdMinutes('some-added-step'));
+    });
+
     it('hides when there is no activity timestamp', () => {
         expect(computeRunRecovery({
             currentStep: 'implement', status: 'implementing',

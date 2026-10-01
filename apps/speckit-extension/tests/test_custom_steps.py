@@ -91,7 +91,7 @@ class AProjectCanAddAStep(unittest.TestCase):
 
     def test_the_shipped_steps_are_still_there(self):
         known = sc.known_steps(self.spec)
-        for step in ("specify", "plan", "tasks", "implement"):
+        for step in ("specify", "plan", "tasks", "implement", "converge"):
             self.assertIn(step, known)
 
     def test_a_project_with_no_steps_of_its_own_knows_only_the_shipped_ones(self):
@@ -145,6 +145,67 @@ class AProjectCanAddAStep(unittest.TestCase):
         self.assertIn("review", done.stderr)
         self.assertEqual(self.read()["currentStep"], "implement")
 
+
+class ConvergeIsRecordedLikeAnyOtherStep(unittest.TestCase):
+    """Converge owns no status: its start and finish never move the spec's status."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix="converge-step-")
+        self.spec = Path(self.tmp.name) / "specs" / "001-x"
+        self.spec.mkdir(parents=True)
+        self.addCleanup(self.tmp.cleanup)
+
+    def context(self, status: str) -> None:
+        base = {"specName": "x", "currentStep": "implement", "status": status, "history": []}
+        (self.spec / ".spec-context.json").write_text(json.dumps(base), encoding="utf-8")
+
+    def write(self, kind: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(SCRIPTS / "write-context.py"), "--feature-dir", str(self.spec),
+             "--step", "converge", "--kind", kind, "--by", "extension"],
+            capture_output=True, text=True)
+
+    def read(self) -> dict:
+        return json.loads((self.spec / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def converge_kinds(self) -> list:
+        return [h["kind"] for h in self.read()["history"] if h["step"] == "converge"]
+
+    def test_start_and_finish_at_implemented_leave_the_status_alone(self):
+        self.context("implemented")
+        self.write("start")
+        self.write("complete")
+        recorded = self.read()
+        self.assertEqual(self.converge_kinds(), ["start", "complete"])
+        self.assertEqual(recorded["currentStep"], "converge")
+        self.assertEqual(recorded["status"], "implemented")
+        self.assertTrue(all(h["by"] == "extension" for h in recorded["history"]))
+
+    def test_a_refired_hook_adds_nothing(self):
+        self.context("implemented")
+        for kind in ("start", "complete", "start", "complete"):
+            self.write(kind)
+        self.assertEqual(self.converge_kinds(), ["start", "complete"])
+        self.assertEqual(self.read()["status"], "implemented")
+
+    def test_a_completed_spec_is_not_written(self):
+        self.context("completed")
+        self.write("start")
+        self.write("complete")
+        recorded = self.read()
+        self.assertEqual(recorded["history"], [])
+        self.assertEqual(recorded["currentStep"], "implement")
+        self.assertEqual(recorded["status"], "completed")
+
+
+    def test_implement_can_still_finish_after_converge_ran_mid_implement(self):
+        self.context("implementing")
+        self.write("start")
+        subprocess.run(
+            [sys.executable, str(SCRIPTS / "write-context.py"), "--feature-dir", str(self.spec),
+             "--step", "implement", "--advance", "--by", "extension"],
+            capture_output=True, text=True)
+        self.assertEqual(self.read()["status"], "implemented")
 
 if __name__ == "__main__":
     unittest.main()

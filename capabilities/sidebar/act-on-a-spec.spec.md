@@ -1,7 +1,6 @@
 # Act on a Spec — Living Spec
 
-<!-- reviewed: aebf4657 -->
-
+<!-- reviewed: dee80029 -->
 ## Purpose
 
 A person moves a spec through its life from the tree: finish it, shelve it, bring it back, pick it up where it stopped, or get rid of it. Without these actions the only way to change a spec's standing is to hand-edit its run record.

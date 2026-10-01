@@ -27,7 +27,7 @@ from check_report import Report
 PIPELINE_STEPS = ["specify", "plan", "tasks", "implement"]
 # Full lifecycle order — overlap handling must see clarify/analyze spans too,
 # exactly like the viewer's STEP_NAMES.
-STEP_NAMES = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
+STEP_NAMES = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "converge"]
 # Same trust rule as the viewer's deriveStepHistory (`isTrustedBoundaryWriter`).
 _TRUSTED_BOUNDARY_WRITERS = frozenset({"extension", "cli", "derive", "user", "ai"})
 
@@ -57,6 +57,8 @@ NEVER_PROMPT = [
     "speckit.companion.after-plan.md",
     "speckit.companion.after-tasks.md",
     "speckit.companion.after-implement.md",
+    "speckit.companion.before-converge.md",
+    "speckit.companion.after-converge.md",
     "speckit.companion.living-drift.md",
     "speckit.companion.living-sync.md",
     "speckit.companion.living-coverage.md",

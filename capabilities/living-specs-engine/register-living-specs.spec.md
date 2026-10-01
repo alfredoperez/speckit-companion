@@ -1,5 +1,7 @@
 # Register living specs — Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 A project turns living specs on by listing its capabilities in one registry file: which code each capability owns and where its spec lives. Everything else in the feature reads that registry, so a registry that is wrong, half-written or out of step with the files on disk breaks every other living-spec command at once.

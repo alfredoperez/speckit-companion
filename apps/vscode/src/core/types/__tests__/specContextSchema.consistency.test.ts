@@ -20,6 +20,11 @@ describe('spec-context.schema.json stays in sync with the TS contract', () => {
         expect(schema.properties.currentStep.enum).toEqual([...STEP_NAMES]);
     });
 
+    it('historyEntry step enum matches STEP_NAMES, converge after implement', () => {
+        expect(schema.$defs.historyEntry.properties.step.enum).toEqual([...STEP_NAMES]);
+        expect(STEP_NAMES.indexOf('converge')).toBe(STEP_NAMES.indexOf('implement') + 1);
+    });
+
     it('status enum matches STATUSES (same values + order)', () => {
         expect(schema.properties.status.enum).toEqual([...STATUSES]);
     });

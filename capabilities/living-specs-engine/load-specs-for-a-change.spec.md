@@ -1,5 +1,7 @@
 # Load specs for a change — Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 Before a feature is drafted, the assistant should already know how the area it touches behaves. This capability answers "which durable rules describe these files?" and hands over only those, so nobody re-explains the codebase and no run is briefed with a whole file when three requirements would do.

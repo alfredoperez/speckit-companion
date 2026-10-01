@@ -93,3 +93,15 @@ A region that fails while rendering SHALL be replaced by a notice pointing at th
 #### Scenario: a malformed record
 - **WHEN** one region's recorded data makes it throw while rendering
 - **THEN** the page shows a notice in place of the Overview and the document, rail and footer still work
+
+### Converge is timed when it runs and never counted as missing
+
+The run overview SHALL list Converge after Implement only when the run recorded it, never count it toward timing coverage, and add a trusted converge span to the total of a run whose expected phases are all measured.
+
+#### Scenario: a spec that never ran converge
+- **WHEN** the Overview renders a run with no converge entries
+- **THEN** no Converge entry shows and timing coverage reads as it did before
+
+#### Scenario: converge ran after implement
+- **WHEN** a fully measured run adds a trusted two-minute converge an hour after implement finished
+- **THEN** Converge reads 2m after Implement and the total grows by two minutes, not by the hour between them

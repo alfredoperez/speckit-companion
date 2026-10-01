@@ -1,4 +1,4 @@
-import { renderPreamble } from '../promptPreamble';
+import { isKnownStep, renderPreamble } from '../promptPreamble';
 import { HISTORY_ENTRY_BY, STATUSES, STEP_NAMES } from '../../core/types/specContext';
 
 const SPEC_DIR = 'specs/001-example';
@@ -30,7 +30,7 @@ describe('who closes a step, per pipeline', () => {
     // after-step hooks. The preamble must not restate a weaker rule beside it —
     // the completion append is first-writer-wins, so an `ai` complete landing
     // first would permanently block the hook's close (the #509 failure).
-    for (const step of STEP_NAMES) {
+    for (const step of STEP_NAMES.filter(isKnownStep)) {
         it(`defers ${step} entirely to the command body under companion`, () => {
             const preamble = renderPreamble(step, SPEC_DIR, AT, true);
             expect(preamble).toContain("command's body carries the full");

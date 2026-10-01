@@ -6,7 +6,7 @@ The extension follows spec-kit's bundled-extension pattern exactly: a **lifecycl
 /speckit.specify  →  after_specify hook  →  speckit.companion.after-specify  →  write-context.py  →  .spec-context.json
 ```
 
-## The eighteen commands
+## The twenty-three commands
 
 Everything the extension declares, by family. The README's [Commands](../README.md#commands) table is the short version; this page is the detail. Both are checked against the extension's own command list on every build, so neither can fall behind a rename.
 
@@ -16,7 +16,7 @@ Everything the extension declares, by family. The README's [Commands](../README.
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
 | [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
 | [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-show`, `speckit.companion.living-validate`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
-| [Hooks](#lifecycle-hooks) | `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement` |
+| [Hooks](#lifecycle-hooks) | `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge` |
 
 ## Diagnostics
 
@@ -68,12 +68,14 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 | `after_plan` | `speckit.companion.after-plan` | `false` (auto-runs) | Record plan completion (`currentStep=plan`, `status=planned`) into `.spec-context.json` |
 | `after_tasks` | `speckit.companion.after-tasks` | `false` (auto-runs) | Record tasks completion (`currentStep=tasks`, `status=ready-to-implement`) into `.spec-context.json` |
 | `after_implement` | `speckit.companion.after-implement` | `false` (auto-runs) | Per-task journaling on implement (`currentStep=implement`); `status=implemented` when all tasks checked |
+| `before_converge` | `speckit.companion.before-converge` | `false` (auto-runs) | Record converge start (`currentStep=converge`, status unchanged) into `.spec-context.json` |
+| `after_converge` | `speckit.companion.after-converge` | `false` (auto-runs) | Record converge finish (`currentStep=converge`, status unchanged) into `.spec-context.json` |
 
 `optional: false` means the agent runs it **automatically** with no prompt. (For contrast, the bundled `git` extension's `after_specify` commit hook is `optional: true`, so it only *offers* to run.)
 
 ## `speckit.companion.after-specify`
 
-The first command. It carries no business logic itself — it resolves the active feature and invokes the writer script, mirroring `speckit.git.feature.md`. The three commands below follow the same pattern.
+The first command. It carries no business logic itself — it resolves the active feature and invokes the writer script, mirroring `speckit.git.feature.md`. The other hook commands below follow the same pattern.
 
 **What the agent runs:**
 
@@ -85,7 +87,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --step specify --
 
 | Flag | Default | Meaning |
 |------|---------|---------|
-| `--step` | `specify` | Canonical step (`specify`/`clarify`/`plan`/`tasks`/`analyze`/`implement`). A non-canonical value (incl. legacy `done`) is a no-op. |
+| `--step` | `specify` | Canonical step (`specify`/`clarify`/`plan`/`tasks`/`analyze`/`implement`/`converge`). A non-canonical value (incl. legacy `done`) is a no-op. |
 | `--status` | `specified` | Canonical lifecycle status written to the file. |
 | `--by` | `extension` | Authorship tag on the appended transition. |
 | `--feature-dir` | — | Explicit target dir; otherwise resolved (see [how-it-works.md](./how-it-works.md#active-directory-resolution)). |
@@ -123,6 +125,26 @@ Runs after `/speckit.implement` in task-sync mode: it appends one transition per
 
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --step implement --status implemented --by extension --tasks-file specs/<NNN>-<slug>/tasks.md
+```
+
+## `speckit.companion.before-converge`
+
+Runs before `/speckit.converge`. Resolves the active feature and records converge's start. Converge owns no status, so the call passes no `--status` and the spec's status never moves. A re-fired hook adds nothing, and a `completed` or `archived` spec is not written.
+
+**What the agent runs:**
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --step converge --kind start --by extension
+```
+
+## `speckit.companion.after-converge`
+
+Runs after `/speckit.converge`. Records converge's finish, again with no `--status`, so the viewer can show how long converge took. When converge appended convergence tasks, the status stays where it was and `/speckit.companion.status` names the next one. Idempotent, like the start.
+
+**What the agent runs:**
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --step converge --kind complete --by extension
 ```
 
 ## Derive-from-files fallback

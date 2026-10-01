@@ -36,5 +36,23 @@ class TheEvalReadsTheSchema(unittest.TestCase):
         self.assertEqual(list(statuses), props["status"]["enum"])
 
 
+
+class ConvergeReadsAsImplement(unittest.TestCase):
+    def _status(self, last_step: str, current: str) -> str:
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            entry = {"step": last_step, "substep": None, "kind": "complete", "by": "extension", "at": "2026-10-01T10:00:00Z"}
+            ctx = {"specName": "x", "currentStep": current, "status": "implemented", "history": [entry]}
+            (Path(tmp) / ".spec-context.json").write_text(json.dumps(ctx), encoding="utf-8")
+            rows = _load().run_checks(Path(tmp)).rows
+        return next(s for s, cid, _ in rows if cid == "last-entry-matches-currentStep")
+
+    def test_converge_and_implement_count_as_the_same_step(self):
+        self.assertEqual(self._status("converge", "implement"), "PASS")
+        self.assertEqual(self._status("implement", "converge"), "PASS")
+
+    def test_converge_after_an_earlier_step_still_fails(self):
+        self.assertEqual(self._status("tasks", "converge"), "FAIL")
+
 if __name__ == "__main__":
     unittest.main()

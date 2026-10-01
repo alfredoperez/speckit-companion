@@ -1,5 +1,7 @@
 # Customize the pipeline: Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 A team attaches its own work to the Companion commands, reorders or replaces their sections, or swaps the whole configuration, without forking a command. It all lives in `.specify/companion.yml` and `.specify/companion/`, so an upgrade of the extension never loses it.

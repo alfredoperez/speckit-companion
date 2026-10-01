@@ -11,17 +11,18 @@ export interface NotifierContext {
     stepHistory?: Record<string, StepHistoryLike> | null;
 }
 
-const STEP_LABELS: Record<string, string> = {
-    specify: 'Specify',
-    clarify: 'Clarify',
-    plan: 'Plan',
-    tasks: 'Tasks',
-    analyze: 'Analyze',
-    implement: 'Implement',
-};
+const STEP_LABELS: ReadonlyMap<string, string> = new Map([
+    ['specify', 'Specify'],
+    ['clarify', 'Clarify'],
+    ['plan', 'Plan'],
+    ['tasks', 'Tasks'],
+    ['analyze', 'Analyze'],
+    ['implement', 'Implement'],
+    ['converge', 'Converge'],
+]);
 
 export function labelFor(step: string): string {
-    return STEP_LABELS[step] ?? step.charAt(0).toUpperCase() + step.slice(1);
+    return STEP_LABELS.get(step) ?? step.charAt(0).toUpperCase() + step.slice(1);
 }
 
 function specNumberFromDir(specDir: string): string {

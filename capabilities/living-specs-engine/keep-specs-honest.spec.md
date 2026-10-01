@@ -1,5 +1,7 @@
 # Keep specs honest — Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 A living spec is only worth reading if it still matches the code and is shaped the way every reader assumes. These commands tell a person where code moved and the spec did not, fold direct edits back in one pass, check the shape of what is written, and show which requirements have a test. All of them are signals: they report and never block a run.

@@ -50,11 +50,15 @@ The footer SHALL offer at most one forward button, labelled with the next step's
 ### Regenerate re-runs the step the run is on
 <!-- touches: apps/vscode/src/features/spec-viewer/footerActions.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
 
-Regenerate SHALL be offered when the step being read has started and the spec is not completed or archived. It SHALL re-run the run's current step, not the tab or sub-document being read, recording a fresh start for that step before sending its command.
+Regenerate SHALL be offered when the step being read has started and the spec is not completed or archived, and never while the run's current step is converge, which the viewer does not start. It SHALL re-run the run's current step, not the tab or sub-document being read, recording a fresh start for that step before sending its command.
 
 #### Scenario: regenerate from a sub-document
 - **WHEN** the person presses Regenerate while reading the data model and the run is on plan
 - **THEN** the plan command is sent and a plan start is recorded
+
+#### Scenario: converge is the current step
+- **WHEN** an `implemented` spec's current step is `converge`
+- **THEN** the footer offers no Regenerate
 
 ### Closing and reopening a spec happens only at the end of the run
 <!-- touches: apps/vscode/src/features/spec-viewer/footerActions.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
@@ -107,3 +111,15 @@ While a spec's viewer is open, a step that goes from running to complete SHALL r
 #### Scenario: plan completes while the viewer is open
 - **WHEN** the run record gains a completion for plan
 - **THEN** one notification reads "Spec 041 · Plan complete"
+
+### A running converge shows in flight on the entry that carries implement's progress
+
+While converge is started and not finished, the rail entry that carries implement's progress SHALL show it in flight, with the spinning glyph, a `converge` label and a timer counting from converge's recorded start, even when the spec's status is already `implemented`.
+
+#### Scenario: converge starts after implement
+- **WHEN** a converge start is recorded on an `implemented` spec
+- **THEN** the Tasks entry shows the spinning glyph, the `converge` label and a timer
+
+#### Scenario: converge finishes
+- **WHEN** the converge finish is recorded
+- **THEN** the glyph, label and timer are gone on the next refresh

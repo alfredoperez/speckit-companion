@@ -22,14 +22,15 @@
 import { isInFlightStatus } from '../../core/types/specContext';
 
 /** Per-step quiet thresholds, in minutes, before the affordance appears. */
-const STEP_QUIET_MINUTES: Record<string, number> = {
-    specify: 45,
-    clarify: 45,
-    plan: 45,
-    analyze: 40,
-    tasks: 30,
-    implement: 25,
-};
+const STEP_QUIET_MINUTES: ReadonlyMap<string, number> = new Map([
+    ['specify', 45],
+    ['clarify', 45],
+    ['plan', 45],
+    ['analyze', 40],
+    ['tasks', 30],
+    ['implement', 25],
+    ['converge', 45],
+]);
 
 /** Fallback threshold for any step not listed above. */
 const DEFAULT_QUIET_MINUTES = 40;
@@ -89,8 +90,7 @@ const HIDDEN: RunRecoveryState = { show: false, mode: 'stalled', message: '', mi
 
 /** Threshold (minutes) for a given step. */
 export function quietThresholdMinutes(step: string | undefined): number {
-    if (step && step in STEP_QUIET_MINUTES) return STEP_QUIET_MINUTES[step];
-    return DEFAULT_QUIET_MINUTES;
+    return (step && STEP_QUIET_MINUTES.get(step)) || DEFAULT_QUIET_MINUTES;
 }
 
 /**

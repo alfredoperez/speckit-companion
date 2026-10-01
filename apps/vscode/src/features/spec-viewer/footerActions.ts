@@ -16,6 +16,7 @@
 
 import {
     FooterAction,
+    lifecycleStepFor,
     SpecContext,
     StepHistoryEntry,
     StepName,
@@ -113,7 +114,7 @@ function shouldShowApprove(
     // "Complete" button the moment every task box gets ticked, before
     // status actually flips to `implemented` — unless the project placed a
     // real step after implement, which is a forward action and not a duplicate.
-    if (step === 'implement' && !hasDispatchableNext(workflowSteps, step)) return false;
+    if (lifecycleStepFor(step) === 'implement' && !hasDispatchableNext(workflowSteps, step)) return false;
     // Approve must target the spec's actual current step. When the user
     // navigates backward via the stepper, dispatching the next step from
     // a past tab would re-run already-completed phases.
@@ -218,6 +219,8 @@ export const FOOTER_ACTIONS: FooterAction[] = [
         tooltip: 'Re-run only the current step',
         visibleWhen: (ctx, step, stepHistory) => {
             if (isTerminal(ctx.status)) return false;
+            // The viewer never starts converge, so it never re-runs it either.
+            if (ctx.currentStep === 'converge' || step === 'converge') return false;
             const entry = stepHistory[step];
             return !!entry?.startedAt;
         },

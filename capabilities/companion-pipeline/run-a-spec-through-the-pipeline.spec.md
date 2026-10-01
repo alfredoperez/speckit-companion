@@ -1,5 +1,7 @@
 # Run a spec through the pipeline: Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 A person describes a change and the Companion commands carry it from spec to finished code: specify, plan, tasks, implement, completed. Without this the steps would not know what each other wrote, a run could land on top of finished work, and nothing would say when a spec is done.

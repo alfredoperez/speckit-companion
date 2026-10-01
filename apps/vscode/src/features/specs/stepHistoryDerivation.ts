@@ -519,8 +519,19 @@ export function deriveTimingSummary(
     if (!sequenceValid) return { ...base, complete: false };
 
     const startedAt = entries[0].startedAt;
-    const endedAt = entries[entries.length - 1].completedAt as string;
-    const [runStart, runEnd] = [Date.parse(startedAt), Date.parse(endedAt)];
+    let endedAt = entries[entries.length - 1].completedAt as string;
+    let runEnd = Date.parse(endedAt);
+    // A measured step ordered after the last expected phase (converge) extends the run; the wait before it is billed to none.
+    const lastExpectedIdx = Math.max(...expected.map(name => STEP_NAMES.indexOf(name as StepName)));
+    for (const name of lastExpectedIdx < 0 ? [] : STEP_NAMES.slice(lastExpectedIdx + 1)) {
+        const entry = stepHistory[name];
+        if (expected.includes(name) || entry?.durationTrusted !== true || !entry.completedAt) continue;
+        const [start, end] = [Date.parse(entry.startedAt), Date.parse(entry.completedAt)];
+        if (start < runEnd || !(end > start)) continue;
+        endedAt = entry.completedAt;
+        runEnd = end;
+    }
+    const runStart = Date.parse(startedAt);
     // Every measured phase inside the run counts, clarify and analyze included; the waits between them do not.
     const elapsedMs = Object.values(stepHistory).reduce((sum, entry) => {
         if (entry?.durationTrusted !== true || !entry.completedAt) return sum;

@@ -31,7 +31,7 @@ Every writer SHALL read the record, change only its own fields, and keep every o
 ### A spec is never dragged backward
 <!-- touches: apps/speckit-extension/scripts/spec_context.py, apps/speckit-extension/scripts/write-context.py, apps/speckit-extension/scripts/derive-from-files.py -->
 
-A write for an earlier step SHALL leave alone a spec already at a later step or at `implemented`, `completed` or `archived`. A spec at `completed` or `archived` is closed to every lifecycle and task write. Per-task finishes are still accepted at `implemented`, and a step the project added is not ranked against the built-in order.
+A write for an earlier step SHALL leave alone a spec already at a later step or at `implemented`, `completed` or `archived`. A spec at `completed` or `archived` is closed to every lifecycle and task write. Per-task finishes are still accepted at `implemented`, and neither converge nor a step the project added is ranked against the built-in order. A spec whose current step is `converge` ranks as implement.
 
 #### Scenario: a late hook resolves to a shipped spec
 - **WHEN** an after-specify capture lands on a spec whose status is `completed`
@@ -40,6 +40,10 @@ A write for an earlier step SHALL leave alone a spec already at a later step or 
 #### Scenario: a finish arrives for a step the spec has passed
 - **WHEN** a step is advanced on a spec already beyond it
 - **THEN** the finish is journaled and `status` and `currentStep` stay where they were
+
+#### Scenario: implement finishes after a converge that ran mid-implement
+- **WHEN** implement is advanced on an `implementing` spec whose current step is `converge`
+- **THEN** the spec moves to `implemented`
 
 ### Only mark-complete sets a spec to completed
 <!-- touches: apps/speckit-extension/scripts/write-context.py, apps/speckit-extension/scripts/capture.py -->

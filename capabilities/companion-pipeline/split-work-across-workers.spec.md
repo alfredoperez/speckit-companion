@@ -1,5 +1,7 @@
 # Split work across workers: Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 A step that has several independent pieces of work hands each one to its own worker instead of doing them one after another. Without this a plan reads every code area in sequence, a build works one user story at a time, and two workers writing the same file at once corrupt the run record.

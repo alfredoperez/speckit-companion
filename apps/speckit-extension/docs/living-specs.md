@@ -171,7 +171,9 @@ The block is optional and project-wide — there is no per-capability form, beca
 
 ### A note on `/speckit.converge`
 
-Checked against the pinned spec-kit release: it ships no `/speckit.converge` command, so there is nothing here that overlaps or duplicates it. `/speckit.companion.doctor` reports on a *run's* health — unfinished steps, unjournaled tasks, a step that closed having verified nothing — which is a different question from reconciling a spec with its code, the job `living-drift` and `living-sync` already own. If converge ships upstream later, the overlap to look at is with those two, not with the doctor.
+Spec Kit now ends its loop with `/speckit.converge`. After implement it checks the code against one feature's `spec.md`, `plan.md` and `tasks.md`, appends a Convergence phase of new tasks to `tasks.md` when something is missing, and otherwise reports "Converged". You run implement and converge again until it converges. Companion records converge in the spec's `.spec-context.json` through two hooks, `speckit.companion.before-converge` and `speckit.companion.after-converge`, which stamp its start and finish without changing the spec's status. Like every step, converge keeps one start and one finish, so the first pass is the one timed.
+
+Converge and the living-spec commands answer different questions. Converge closes the gap between the code and a single feature's own documents, and only by adding tasks. `living-drift` and `living-sync` keep the long-lived capability specs under `capabilities/` honest about the code, across every feature that ever touched it. A spec that converged can still leave a capability spec drifted, and the reverse. `/speckit.companion.doctor` is a third question again: whether a run recorded itself properly.
 
 ## Retiring a capability
 

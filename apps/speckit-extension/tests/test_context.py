@@ -819,6 +819,62 @@ class StatusResolveTests(unittest.TestCase):
             self.assertEqual(res["nextActionLabel"], "Pipeline complete", status)
             (self.fd / ".spec-context.json").unlink()
 
+    def _converge_ctx(self, status: str, *tasks: str, step: str = "converge") -> None:
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        (self.fd / "tasks.md").write_text(_tasks(*tasks))
+        wc.update_context(self.fd, "implement", "implemented", "extension")
+        ctx = _ctx(self.fd)
+        ctx["currentStep"] = step
+        ctx["status"] = status
+        (self.fd / ".spec-context.json").write_text(json.dumps(ctx))
+
+    def test_converge_with_open_tasks_names_the_next_task(self) -> None:
+        self._converge_ctx("implemented", "- [x] **T001** a", "- [ ] **T002** appended by converge")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["source"], "state")
+        self.assertEqual(res["currentStep"], "converge")
+        self.assertEqual(res["nextTask"], "T002")
+        self.assertEqual(res["nextStep"], "implement")
+        self.assertEqual(res["nextCommand"], "speckit.implement")
+        self.assertEqual(res["nextActionLabel"], "Continue implementation at T002")
+        self.assertFalse(res["complete"])
+
+    def test_converge_while_implementing_names_the_next_task(self) -> None:
+        self._converge_ctx("implementing", "- [x] **T001** a", "- [ ] **T002** b")
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["nextTask"], "T002")
+        self.assertNotIn("Finish", res["nextActionLabel"])
+
+    def test_converge_with_no_open_task_is_pipeline_complete(self) -> None:
+        self._converge_ctx("implemented", "- [x] **T001** a")
+        res = status_mod.resolve(self.fd)
+        self.assertTrue(res["complete"])
+        self.assertEqual(res["nextActionLabel"], "Pipeline complete")
+        self.assertIsNone(res["nextCommand"])
+
+    def test_converge_on_a_closed_spec_is_pipeline_complete(self) -> None:
+        for status in ("completed", "archived"):
+            self._converge_ctx(status, "- [x] **T001** a", "- [ ] **T002** b")
+            res = status_mod.resolve(self.fd)
+            self.assertTrue(res["complete"], status)
+            self.assertEqual(res["nextActionLabel"], "Pipeline complete", status)
+
+    def test_after_converge_a_task_close_on_implement_still_names_the_next_task(self) -> None:
+        self._converge_ctx("implemented", "- [x] **T001** a", "- [ ] **T002** b", step="implement")
+        ctx = _ctx(self.fd)
+        ctx["history"].append({"step": "converge", "substep": None, "kind": "complete", "by": "extension", "at": "2026-10-01T10:00:00Z"})
+        (self.fd / ".spec-context.json").write_text(json.dumps(ctx))
+        res = status_mod.resolve(self.fd)
+        self.assertEqual(res["nextTask"], "T002")
+        self.assertFalse(res["complete"])
+
+    def test_implement_at_implemented_with_open_tasks_stays_pipeline_complete(self) -> None:
+        self._converge_ctx("implemented", "- [x] **T001** a", "- [ ] **T002** b", step="implement")
+        res = status_mod.resolve(self.fd)
+        self.assertTrue(res["complete"])
+        self.assertEqual(res["nextActionLabel"], "Pipeline complete")
+
     def test_no_files_is_empty(self) -> None:
         res = status_mod.resolve(self.fd)
         self.assertTrue(res["empty"])

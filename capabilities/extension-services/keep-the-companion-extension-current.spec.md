@@ -1,6 +1,6 @@
 # Keep the Companion Extension Current — Living Spec
 
-<!-- reviewed: a9d91434 -->
+<!-- reviewed: dee80029 -->
 ## Purpose
 
 The Companion workflow, the Activity panel and living specs only work when the Companion spec-kit extension is installed in the open project, at a version that matches the VS Code extension. This capability notices when it is missing or behind, says so in the right places, and installs or updates it in one click. Without it users meet features that silently do nothing.

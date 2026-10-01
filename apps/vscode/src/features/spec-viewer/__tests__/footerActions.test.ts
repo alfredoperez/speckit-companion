@@ -170,3 +170,37 @@ describe('a step placed after implement is dispatchable (US3)', () => {
         expect(ids(shipped)).not.toContain('approve');
     });
 });
+
+describe('a spec on converge keeps the implement footer', () => {
+    const entry = (step: string, kind: 'start' | 'complete', at: string) => ({
+        step, substep: null, kind, from: { step: null, substep: null }, by: 'extension', at,
+    });
+    const onConverge = (status: SpecContext['status'], convergeDone: boolean) => ({
+        workflow: 'speckit-companion', specName: 'converge', branch: 'main',
+        currentStep: 'converge', status,
+        history: [
+            entry('implement', 'start', '2026-07-21T10:00:00.000Z'),
+            entry('implement', 'complete', '2026-07-21T10:05:00.000Z'),
+            entry('converge', 'start', '2026-07-21T10:06:00.000Z'),
+            ...(convergeDone ? [entry('converge', 'complete', '2026-07-21T10:08:00.000Z')] : []),
+        ],
+    }) as unknown as SpecContext;
+
+    it('offers Mark Completed and Archive at implemented, with no forward button or Regenerate', () => {
+        const ids = footerIds(onConverge('implemented', true));
+        expect(ids).toEqual(expect.arrayContaining(['complete', 'archive']));
+        expect(ids).not.toContain('approve');
+        expect(ids).not.toContain('regenerate');
+    });
+
+    it('offers no Regenerate when the implement tab is read while converge is current', () => {
+        const ids = deriveViewerState(onConverge('implemented', false), 'implement', WORKFLOW_STEPS).footer.map(a => a.id);
+        expect(ids).not.toContain('regenerate');
+    });
+
+    it('offers no Approve while converge runs at implementing', () => {
+        const ids = footerIds(onConverge('implementing', false));
+        expect(ids).not.toContain('approve');
+        expect(ids).not.toContain('complete');
+    });
+});

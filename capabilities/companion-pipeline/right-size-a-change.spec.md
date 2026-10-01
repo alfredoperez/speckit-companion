@@ -1,5 +1,7 @@
 # Right-size a change: Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 Not every change deserves four documents and two review stops. The pipeline sizes each change once, records the verdict, and every later step reads it, so a small change gets a short path and a large one gets more warning, never less work.

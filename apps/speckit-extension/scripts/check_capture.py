@@ -25,7 +25,7 @@ from check_quality import _derive_trusted_spans
 from check_report import Report
 
 # Inline fallbacks (used only when the schema can't be read).
-_FALLBACK_STEPS = ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
+_FALLBACK_STEPS = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "converge"]
 _FALLBACK_STATUSES = [
     "draft", "specifying", "specified", "planning", "planned", "tasking",
     "ready-to-implement", "implementing", "implemented", "completed", "archived",
@@ -159,7 +159,8 @@ def run_checks(spec_dir: Path) -> Report:
     # last entry's step matches currentStep (terminal statuses may sit past it).
     if history:
         last_step = history[-1].get("step")
-        ok = last_step == cur or ctx.get("status") in ("completed", "archived")
+        same = {last_step, cur} <= {"implement", "converge"} or last_step == cur
+        ok = same or ctx.get("status") in ("completed", "archived")
         r.add(ok, "last-entry-matches-currentStep",
               f"last history step={last_step}, currentStep={cur}")
 

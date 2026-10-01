@@ -1,6 +1,7 @@
 import { STATUS_OWNING_STEP, isInFlightStatus, isSettledStatus, type Status } from '../../../src/core/types/specContext';
 
 export const IMPLEMENT_STEP = 'implement';
+export const CONVERGE_STEP = 'converge';
 
 export { isSettledStatus };
 
@@ -35,4 +36,12 @@ export function isStepInFlight(stepName: string, run: StepRunState): boolean {
     return stepName === IMPLEMENT_STEP
         && run.currentStep === IMPLEMENT_STEP
         && (run.taskCompletionPercent ?? 0) < 100;
+}
+
+/** Converge owns no status, so it reads as running from its history alone: a start with no finish on an unshipped spec. */
+export function isConvergeInFlight(run: StepRunState): boolean {
+    const entry = run.stepHistory?.[CONVERGE_STEP];
+    if (!entry?.startedAt || entry.completedAt) return false;
+    if (run.stepBadges?.[CONVERGE_STEP] === 'completed') return false;
+    return run.status !== 'completed' && run.status !== 'archived';
 }

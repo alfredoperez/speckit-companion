@@ -1,4 +1,35 @@
-import { inFlightStepFor, isSettledStatus, isStepInFlight } from '../stepInFlight';
+import { inFlightStepFor, isConvergeInFlight, isSettledStatus, isStepInFlight } from '../stepInFlight';
+
+describe('isConvergeInFlight', () => {
+    const started = { startedAt: '2026-10-01T10:00:00Z', completedAt: null };
+    const finished = { startedAt: '2026-10-01T10:00:00Z', completedAt: '2026-10-01T10:02:00Z' };
+
+    it('reads a converge start with no finish as running while the spec sits at implemented', () => {
+        expect(isConvergeInFlight({ status: 'implemented', currentStep: 'converge', stepHistory: { converge: started } })).toBe(true);
+    });
+
+    it('reads a finished converge as not running', () => {
+        expect(isConvergeInFlight({ status: 'implemented', currentStep: 'converge', stepHistory: { converge: finished } })).toBe(false);
+    });
+
+    it('reads converge as not running once the spec is completed or archived', () => {
+        for (const status of ['completed', 'archived']) {
+            expect(isConvergeInFlight({ status, currentStep: 'converge', stepHistory: { converge: started } })).toBe(false);
+        }
+    });
+
+    it('reads converge as not running once its badge says completed', () => {
+        expect(isConvergeInFlight({
+            status: 'implemented',
+            stepBadges: { converge: 'completed' },
+            stepHistory: { converge: started },
+        })).toBe(false);
+    });
+
+    it('reads a run that never started converge as not running', () => {
+        expect(isConvergeInFlight({ status: 'implemented', currentStep: 'implement', stepHistory: { implement: finished } })).toBe(false);
+    });
+});
 
 describe('inFlightStepFor', () => {
     it('names the running step for each in-flight status', () => {

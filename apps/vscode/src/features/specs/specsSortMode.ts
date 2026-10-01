@@ -52,17 +52,18 @@ function compareByNumberThenName(a: SortableSpec, b: SortableSpec): number {
 }
 
 // Workflow order for the status sort. Missing/unknown steps sink to the end.
-const STEP_ORDER: Record<string, number> = {
-    specify: 0,
-    plan: 1,
-    tasks: 2,
-    implement: 3,
-    done: 4,
-};
+const STEP_ORDER: ReadonlyMap<string, number> = new Map([
+    ['specify', 0],
+    ['plan', 1],
+    ['tasks', 2],
+    ['implement', 3],
+    ['converge', 3],
+    ['done', 4],
+]);
 
 function stepRank(step: string | undefined): number {
     if (!step) return Number.MAX_SAFE_INTEGER;
-    const rank = STEP_ORDER[step];
+    const rank = STEP_ORDER.get(step);
     return rank === undefined ? Number.MAX_SAFE_INTEGER : rank;
 }
 

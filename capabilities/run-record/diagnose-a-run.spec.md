@@ -1,5 +1,7 @@
 # Diagnose a Run — Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 A run that looked fine can still have closed a step nobody finished, ticked tasks nobody journaled, or claimed a clean result nothing checked. The doctor command reads a finished or stalled run and says what actually happened, so "the pipeline will not advance" or "it never marked complete" gets an answer instead of a guess.
