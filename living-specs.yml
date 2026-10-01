@@ -28,6 +28,10 @@ capabilities:
   - apps/vscode/src/core/utils/terminalUtils.ts
   - apps/vscode/src/speckit/detector.ts
   spec: capabilities/ai-providers/send-a-command-to-the-assistant.spec.md
+- name: wait-for-the-shell
+  match:
+  - apps/vscode/src/core/utils/terminalUtils.ts
+  spec: capabilities/ai-providers/wait-for-the-shell.spec.md
 - name: recover-a-step-that-never-ran
   match:
   - apps/vscode/src/features/specs/dispatchFailure.ts

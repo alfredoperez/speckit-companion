@@ -1,7 +1,6 @@
 # Choose an Assistant — Living Spec
 
-<!-- reviewed: aebf4657 -->
-
+<!-- reviewed: a9d91434 -->
 ## Purpose
 
 The extension never runs an AI itself. It hands work to the assistant the user already has, so everything else depends on knowing which one that is and how much freedom it gets. Without this, every dispatch would guess at a CLI that may not exist or skip permission prompts the user wanted.

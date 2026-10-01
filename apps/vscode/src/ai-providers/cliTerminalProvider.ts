@@ -220,9 +220,11 @@ export abstract class CliTerminalProvider implements IAIProvider {
             });
             terminal.show();
 
-            await runInTerminal(terminal, plan.commandLine, { autoExecute });
-
-            this.scheduleCleanup(plan.tempFiles);
+            try {
+                await runInTerminal(terminal, plan.commandLine, { autoExecute });
+            } finally {
+                this.scheduleCleanup(plan.tempFiles);
+            }
             return terminal;
         } catch (error) {
             this.outputChannel.appendLine(`[${this.logPrefix}] ERROR: ${error}`);
