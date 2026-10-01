@@ -1,0 +1,396 @@
+---
+// Every sentence restates a living spec in capabilities/ companion-pipeline, living-specs-engine, run-record or spec-viewer: change those first.
+interface Props {
+  caption?: string;
+}
+
+const {
+  caption = 'One Companion run, from a feature request to finished code. Living specs are read on the way in and written back on the way out; implement hands each large user story to its own worker.',
+} = Astro.props;
+---
+
+<figure class="wfd not-content">
+  <div class="wfd__frame">
+    <div class="wfd__band wfd__band--living">
+      <p class="wfd__eyebrow">Living specs, when the project turns them on</p>
+      <ol class="wfd__loop" role="list">
+        <li class="wfd__card wfd__card--in">
+          <p class="wfd__tag">Going in</p>
+          <p class="wfd__title">Load only what applies</p>
+          <p>Specify loads only the requirements for the files the change touches and records which capabilities they came from. Plan reuses that list. Each implement worker gets the requirements for its own files.</p>
+        </li>
+        <li class="wfd__card wfd__card--store">
+          <p class="wfd__tag">In the repo</p>
+          <p class="wfd__title">One lasting spec per capability</p>
+          <p>Requirements and scenarios that outlive any one change.</p>
+        </li>
+        <li class="wfd__card wfd__card--out">
+          <p class="wfd__tag">Coming out</p>
+          <p class="wfd__title">Fold the changes back</p>
+          <p>The feature spec says what the change added, modified, removed or renamed. At completion the fold writes that into each capability's spec. A malformed change is refused for its own capability only. Folding twice changes nothing.</p>
+        </li>
+      </ol>
+    </div>
+
+    <ol class="wfd__steps" role="list">
+      <li class="wfd__step">
+        <p class="wfd__num">01</p>
+        <p class="wfd__name">Specify</p>
+        <p class="wfd__out">The spec and its requirements checklist. Sizes the change.</p>
+        <p class="wfd__workers">Several code areas: up to four readers, extra areas share one.</p>
+      </li>
+      <li class="wfd__step">
+        <p class="wfd__num">02</p>
+        <p class="wfd__name">Plan</p>
+        <p class="wfd__out">The plan, with research, data model and contracts as the size warrants.</p>
+        <p class="wfd__workers">Several areas or documents: readers per area, then a writer per design document.</p>
+      </li>
+      <li class="wfd__step">
+        <p class="wfd__num">03</p>
+        <p class="wfd__name">Tasks</p>
+        <p class="wfd__out">The task list, laid out in waves. Every file has one owning phase.</p>
+        <p class="wfd__workers">No workers. One pass.</p>
+      </li>
+      <li class="wfd__step wfd__step--implement">
+        <p class="wfd__num">04</p>
+        <p class="wfd__name">Implement</p>
+        <p class="wfd__out">The code and its tests. Ticks each task and runs the project's own checks.</p>
+        <p class="wfd__workers">Workers for groundwork and for each large story, below.</p>
+      </li>
+    </ol>
+
+    <div class="wfd__band wfd__band--fanout">
+      <p class="wfd__eyebrow">Inside implement</p>
+      <ol class="wfd__fan" role="list">
+        <li class="wfd__card">
+          <p class="wfd__tag">First</p>
+          <p class="wfd__title">Shared groundwork, in waves</p>
+          <p>The work every story depends on. A wave of four or more tasks goes to up to four workers, a smaller one is built in place, and the next wave waits for every worker.</p>
+        </li>
+        <li class="wfd__card">
+          <p class="wfd__tag">Then</p>
+          <p class="wfd__title">One worker per large story</p>
+          <ul class="wfd__chips" role="list" aria-label="For example">
+            <li class="wfd__chip">P1 story: worker</li>
+            <li class="wfd__chip">P2 story: worker</li>
+            <li class="wfd__chip wfd__chip--inline">Small story: no worker</li>
+          </ul>
+          <p>A story that owns five or more files gets a worker and the requirements for its files. Stories never share a file.</p>
+        </li>
+        <li class="wfd__card">
+          <p class="wfd__tag">Join</p>
+          <p class="wfd__title">Check, then merge</p>
+          <p>Each worker appends its own finishes and reports what it built, never file contents. The run checks each claim is on disk, then merges the finishes and ticks the tasks one at a time.</p>
+        </li>
+      </ol>
+    </div>
+
+    <div class="wfd__step wfd__step--done" role="group" aria-label="Completed">
+      <p class="wfd__num">Then</p>
+      <p class="wfd__name">Completed</p>
+      <p class="wfd__out">Once every task is checked and the checks pass, implement marks the spec completed. Mark-complete is the same path, for recovery.</p>
+      <p class="wfd__workers">Folds the living-spec changes back.</p>
+    </div>
+
+    <div class="wfd__card wfd__card--optional" role="group" aria-label="Optional: Spec Kit's converge">
+      <p class="wfd__tag">Optional, outside the run</p>
+      <p class="wfd__title">Spec Kit's converge</p>
+      <p>On a spec not yet completed, usually one a stock Spec Kit run leaves at implemented, converge checks the code against the spec, plan and tasks, then adds a phase of tasks or reports converged. It never changes the status, and completion does not wait for it.</p>
+    </div>
+  </div>
+
+  <ul class="wfd__notes" role="list">
+    <li><strong>Time.</strong> A step counts only when its start and finish were both recorded by a writer the run trusts, and it ends at its own first finish. A wait between steps counts toward nothing.</li>
+    <li><strong>A small change.</strong> Specify writes a short plan and task list itself, and the run goes straight to implement.</li>
+    <li><strong>One piece of work, or no way to start workers?</strong> The step does it itself and writes the same files.</li>
+  </ul>
+
+  <figcaption class="wfd__caption">{caption}</figcaption>
+</figure>
+
+<style>
+  .wfd {
+    container-type: inline-size;
+    margin: var(--space-20) 0 0;
+  }
+
+  .wfd__frame {
+    display: grid;
+    gap: var(--space-16);
+    padding: var(--space-16);
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-sm);
+  }
+
+  .wfd :global(:where(p, ol, ul, li)) {
+    margin: 0;
+  }
+
+  .wfd ol,
+  .wfd ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .wfd p {
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+    overflow-wrap: anywhere;
+  }
+
+  .wfd__eyebrow,
+  .wfd__tag,
+  .wfd__num {
+    font-family: var(--font-mono);
+    letter-spacing: var(--ls-eyebrow-sm);
+    text-transform: uppercase;
+  }
+
+  .wfd .wfd__eyebrow {
+    font-size: var(--fs-micro);
+    color: var(--text-muted);
+    margin-bottom: var(--space-10);
+  }
+
+  .wfd .wfd__tag {
+    font-size: var(--fs-micro);
+    color: var(--accent);
+  }
+
+  .wfd .wfd__title,
+  .wfd .wfd__name {
+    font-size: var(--fs-ui);
+    font-weight: var(--fw-semibold);
+    color: var(--text-primary);
+  }
+
+  .wfd__band {
+    padding: var(--space-14);
+    border-radius: var(--radius-sm);
+  }
+
+  .wfd__band--living {
+    background: var(--accent-a07);
+    border: 1px solid var(--border-accent);
+  }
+
+  .wfd__band--fanout {
+    background: var(--ground);
+    border: 1px solid var(--border-card);
+  }
+
+  .wfd__loop,
+  .wfd__fan,
+  .wfd__steps {
+    display: grid;
+    gap: var(--space-12);
+  }
+
+  .wfd__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-12);
+    background: var(--panel);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-button-sm);
+  }
+
+  .wfd__card--store {
+    border-color: var(--border-accent-strong);
+  }
+
+  .wfd__card--optional {
+    position: relative;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+  }
+
+  .wfd__card--optional .wfd__tag {
+    color: var(--text-muted);
+  }
+
+  .wfd__step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-12);
+    background: var(--ground);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-button-sm);
+  }
+
+  .wfd__step--implement,
+  .wfd__step--done {
+    border-color: var(--border-accent-strong);
+  }
+
+  .wfd .wfd__num {
+    font-size: var(--fs-micro);
+    color: var(--accent);
+  }
+
+  .wfd .wfd__workers {
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--rule);
+    color: var(--text-muted);
+  }
+
+  /* The plain content line is the fallback where alternative text is unsupported, which hides the glyph from screen readers. */
+  .wfd__step + .wfd__step::before,
+  .wfd__fan > li + li::before,
+  .wfd__step--done::before {
+    content: '↓';
+    content: '↓' / '';
+    position: absolute;
+    top: calc(-1 * var(--space-12));
+    left: 50%;
+    transform: translate(-50%, -15%);
+    font-size: var(--fs-ui-sm);
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .wfd__step--done::before {
+    top: calc(-1 * var(--space-16));
+  }
+
+  .wfd__fan > li {
+    position: relative;
+  }
+
+  .wfd__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    margin: var(--space-4) 0 var(--space-4);
+  }
+
+  .wfd__chip {
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+    padding: 0 var(--space-8);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-pill);
+    background: var(--accent-solid-a12);
+  }
+
+  .wfd__chip--inline {
+    background: transparent;
+    border-color: var(--border-strong);
+    color: var(--text-muted);
+  }
+
+  .wfd__notes {
+    display: grid;
+    gap: var(--space-6);
+    margin-top: var(--space-12);
+  }
+
+  .wfd__notes li {
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+  }
+
+  .wfd__notes strong {
+    color: var(--text-primary);
+    font-weight: var(--fw-semibold);
+  }
+
+  .wfd__caption {
+    margin-top: var(--space-8);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+    color: var(--text-muted);
+  }
+
+  /* Laid out by the figure's own width, since the docs column narrows when the sidebars open. */
+  @container (min-width: 600px) {
+    .wfd__frame {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      column-gap: var(--space-12);
+    }
+
+    .wfd__band--living,
+    .wfd__band--fanout,
+    .wfd__card--optional {
+      grid-column: 1 / -1;
+    }
+
+    .wfd__steps {
+      grid-column: 1 / 5;
+      grid-row: 2;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .wfd__step--done {
+      grid-column: 5;
+      grid-row: 2;
+    }
+
+    .wfd__step + .wfd__step::before,
+    .wfd__step--done::before,
+    .wfd__fan > li + li::before {
+      content: '→';
+      content: '→' / '';
+      top: 50%;
+      left: calc(-1 * var(--space-12) / 2);
+      transform: translate(-50%, -50%);
+    }
+
+    .wfd__loop {
+      grid-template-columns: 2fr 1fr 2fr;
+    }
+
+    .wfd__card--in,
+    .wfd__card--out {
+      position: relative;
+    }
+
+    .wfd__card--in::after,
+    .wfd__card--out::after {
+      position: absolute;
+      bottom: calc(-1 * (var(--space-14) + var(--space-16)));
+      font-size: var(--fs-ui-sm);
+      line-height: 1;
+      color: var(--accent);
+    }
+
+    .wfd__card--in::after {
+      content: '↓ into the steps';
+      content: '↓ into the steps' / '';
+      left: var(--space-12);
+    }
+
+    .wfd__card--out::after {
+      content: '↑ from completion';
+      content: '↑ from completion' / '';
+      right: var(--space-12);
+    }
+
+    .wfd__fan {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    /* A notch on the band's top edge, under Implement, the fourth of five columns. */
+    .wfd__band--fanout {
+      position: relative;
+    }
+
+    .wfd__band--fanout::before {
+      content: '';
+      position: absolute;
+      top: calc(-1 * var(--space-16) - 1px);
+      left: 70%;
+      width: 1px;
+      height: var(--space-16);
+      background: var(--border-accent-strong);
+    }
+  }
+</style>

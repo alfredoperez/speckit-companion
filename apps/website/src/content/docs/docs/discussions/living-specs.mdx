@@ -7,6 +7,7 @@ sidebar:
 ---
 
 import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+import WorkflowDiagram from '../../../../components/docs/WorkflowDiagram.astro';
 
 Keep one lasting spec for each part of your code, updated by the runs that change it. Here is why. A feature spec describes one change. Once it ships it is a record of something that happened. A year later, current behavior is the sum of thirty specs minus the parts later specs undid.
 
@@ -85,6 +86,10 @@ Drift, coverage, show, validate and move are scripts, so their answers are repea
 />
 
 ## How a run folds back
+
+The band across the top of this diagram is the loop: a run reads the requirements that apply when it starts and writes its changes back when it completes.
+
+<WorkflowDiagram caption="Where living specs meet a run. Specify records the capabilities that apply, plan reuses that list, each implement worker gets the requirements for its own files, and completion folds the changes back." />
 
 A **delta** is a block a run adds to its own feature spec to say what it changed about a capability.
 
