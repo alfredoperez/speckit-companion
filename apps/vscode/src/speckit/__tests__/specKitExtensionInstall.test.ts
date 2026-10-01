@@ -177,35 +177,45 @@ describe('specKitExtensionInstall', () => {
     });
 
     describe('runInstallSpecKitExtension', () => {
+        const createTerminal = vscode.window.createTerminal as jest.Mock;
+        /** Every command the terminals opened since `from` were given to run, in order. */
+        const commandsSince = (from: number): string[] =>
+            createTerminal.mock.results.slice(from).flatMap(r => r.value.__commands() as string[]);
+        const { createMockTerminal } = vscode as unknown as { createMockTerminal: (o?: object) => unknown };
+        const defaultCreateTerminal = createTerminal.getMockImplementation();
+
+        beforeEach(() => {
+            createTerminal.mockImplementation(() => createMockTerminal({ autoExitCode: 0 }));
+        });
+
+        afterEach(() => {
+            createTerminal.mockImplementation(defaultCreateTerminal);
+        });
+
         it('adds --force when the extension is already installed, so Update can overwrite it', async () => {
-            const sendText = jest.fn();
-            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
+            const from = createTerminal.mock.results.length;
             (isCompanionInstalled as jest.Mock).mockReturnValueOnce(true);
             await runInstallSpecKitExtension('/work/project');
-            expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
+            expect(commandsSince(from)).toContain(buildInstallCommand({ force: true }));
         });
 
         it('adds --force when only the spec-kit registry still lists it, since that is what the CLI refuses on', async () => {
-            const sendText = jest.fn();
-            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
+            const from = createTerminal.mock.results.length;
             (isCompanionInstalled as jest.Mock).mockReturnValueOnce(false);
             (readInstalledCompanionVersion as jest.Mock).mockReturnValueOnce('0.20.2');
             await runInstallSpecKitExtension('/work/project');
-            expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
+            expect(commandsSince(from)).toContain(buildInstallCommand({ force: true }));
         });
 
         it('keeps --force when the probe cannot reach the CLI, and does not remember that as an answer', async () => {
-            const sendText = jest.fn();
-            (vscode.window.createTerminal as jest.Mock)
-                .mockReturnValueOnce({ show: jest.fn(), sendText })
-                .mockReturnValueOnce({ show: jest.fn(), sendText });
+            const from = createTerminal.mock.results.length;
             (isCompanionInstalled as jest.Mock).mockReturnValue(true);
             __resetForceProbe();
             const probesBefore = execMock.mock.calls.length;
             execMock.mockImplementationOnce((...args: unknown[]) =>
                 done(args)(Object.assign(new Error('command not found: specify'), { stderr: 'command not found' }), null));
             await runInstallSpecKitExtension('/work/project');
-            expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand({ force: true }));
+            expect(commandsSince(from)).toContain(buildInstallCommand({ force: true }));
             // The next click asks again rather than carrying a guess for the session.
             await runInstallSpecKitExtension('/work/project');
             expect(execMock.mock.calls.length - probesBefore).toBe(2);
@@ -214,19 +224,17 @@ describe('specKitExtensionInstall', () => {
         });
 
         it('leaves --force off on a CLI whose `extension add` has no such option (issue #420)', async () => {
-            const sendText = jest.fn();
-            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText });
+            const from = createTerminal.mock.results.length;
             (isCompanionInstalled as jest.Mock).mockReturnValueOnce(true);
             __resetForceProbe();
             execMock.mockImplementation((...args: unknown[]) =>
                 done(args)(null, { stdout: 'Usage: specify extension add [OPTIONS] SOURCE\n  --from TEXT\n', stderr: '' }));
             await runInstallSpecKitExtension('/work/project');
-            expect(sendText.mock.calls.map(c => c[0])).toContain(buildInstallCommand());
+            expect(commandsSince(from)).toContain(buildInstallCommand());
             __resetForceProbe();
         });
 
         it('reports an install in flight so a mid-install empty directory is not read as uninstalled', async () => {
-            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show: jest.fn(), sendText: jest.fn() });
             clearInstallInFlight();
             expect(isInstallInFlight()).toBe(false);
             await runInstallSpecKitExtension('/work/project');
@@ -236,39 +244,50 @@ describe('specKitExtensionInstall', () => {
         });
 
         it('opens a terminal scoped to the workspace via cwd, echoes the prereq, then runs the install', async () => {
-            const sendText = jest.fn();
-            const show = jest.fn();
-            (vscode.window.createTerminal as jest.Mock).mockReturnValueOnce({ show, sendText });
+            const from = createTerminal.mock.results.length;
 
             await runInstallSpecKitExtension('/work/project');
 
-            expect(show).toHaveBeenCalled();
+            expect(createTerminal.mock.results[from].value.show).toHaveBeenCalled();
             // The workspace root is passed as the terminal's structured `cwd`, never
             // interpolated into a `cd "..."` shell string — a path with `"`/`` ` ``/`$`/`\`
             // can't break the quoting or inject shell.
             expect(vscode.window.createTerminal).toHaveBeenCalledWith(
                 expect.objectContaining({ cwd: '/work/project' })
             );
-            const sent = sendText.mock.calls.map(c => c[0] as string);
+            const sent = commandsSince(from);
             expect(sent.some(line => line.startsWith('cd '))).toBe(false);
             // Prereq is echoed (printed, not auto-run) — a raw `#` comment is unreliable
             // in interactive zsh (INTERACTIVE_COMMENTS off), so echo is used instead.
-            expect(sent.some(line => line.startsWith('echo "Prerequisite') && line.includes(CLI_PREREQ_COMMAND))).toBe(true);
+            expect(sent[0].startsWith('echo "Prerequisite') && sent[0].includes(CLI_PREREQ_COMMAND)).toBe(true);
             expect(sent.some(line => line.startsWith('#'))).toBe(false);
-            expect(sent).toContain(buildInstallCommand());
+            expect(sent[1]).toBe(buildInstallCommand());
+        });
+
+        it('runs the install only after the echo has finished, since a new command interrupts a running one', async () => {
+            const { __fireShellExecutionEnd } = vscode as unknown as { __fireShellExecutionEnd: (t: unknown, e: unknown, code: number) => void };
+            createTerminal.mockImplementation(() => createMockTerminal());
+            const from = createTerminal.mock.results.length;
+
+            const pending = runInstallSpecKitExtension('/work/project');
+            await new Promise(resolve => setImmediate(resolve));
+            const terminal = createTerminal.mock.results[from].value;
+            expect(terminal.__commands()).toHaveLength(1);
+
+            __fireShellExecutionEnd(terminal, terminal.executions[0], 0);
+            await pending;
+            expect(terminal.__commands()).toEqual([expect.stringMatching(/^echo "Prerequisite/), buildInstallCommand()]);
         });
 
         it('omits cwd (no cd) when no workspace root is given', async () => {
-            const sendText = jest.fn();
-            const createTerminal = vscode.window.createTerminal as jest.Mock;
-            createTerminal.mockReturnValueOnce({ show: jest.fn(), sendText });
+            const from = createTerminal.mock.results.length;
 
             await runInstallSpecKitExtension(undefined);
 
             const calls = createTerminal.mock.calls;
             const options = calls[calls.length - 1][0];
             expect(options).not.toHaveProperty('cwd');
-            const sent = sendText.mock.calls.map(c => c[0] as string);
+            const sent = commandsSince(from);
             expect(sent.some(line => line.startsWith('cd '))).toBe(false);
             expect(sent).toContain(buildInstallCommand());
         });

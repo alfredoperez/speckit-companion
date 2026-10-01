@@ -97,9 +97,8 @@ describe('SpecKitDetector', () => {
 
         function lastSentText(): string {
             const results = mockWindow.createTerminal.mock.results;
-            const terminal = results[results.length - 1].value;
-            const calls = terminal.sendText.mock.calls;
-            return calls[calls.length - 1][0];
+            const commands: string[] = results[results.length - 1].value.__commands();
+            return commands[commands.length - 1];
         }
 
         beforeEach(() => {

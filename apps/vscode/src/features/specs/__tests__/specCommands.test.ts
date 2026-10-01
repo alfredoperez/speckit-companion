@@ -44,6 +44,9 @@ jest.mock('../stepLifecycle', () => ({
     setStatus: jest.fn().mockResolvedValue(true),
     forceStatus: jest.fn().mockResolvedValue(true),
     reactivate: jest.fn().mockResolvedValue(undefined),
+    retractStepStart: jest.fn().mockResolvedValue(true),
+    runPositionOf: jest.requireActual('../stepLifecycle').runPositionOf,
+    runUntouchedSince: jest.requireActual('../stepLifecycle').runUntouchedSince,
 }));
 
 jest.mock('../selectionContextKeys', () => ({

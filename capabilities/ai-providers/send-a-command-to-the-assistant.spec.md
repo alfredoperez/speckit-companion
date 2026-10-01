@@ -22,7 +22,7 @@ Commands are written once in dot form (`speckit.plan`). At dispatch the name SHA
 ### A terminal provider runs the command in a terminal beside the editor
 <!-- touches: apps/vscode/src/ai-providers/cliTerminalProvider.ts, apps/vscode/src/ai-providers/claudeCodeProvider.ts, apps/vscode/src/ai-providers/geminiCliProvider.ts, apps/vscode/src/ai-providers/codexCliProvider.ts -->
 
-For a CLI provider, dispatch SHALL open a new terminal in the second editor column at the workspace root, wait for the shell, and run the provider's CLI with the prompt. The prompt body SHALL travel through a temporary file that is deleted shortly afterwards, so long prompts never land in the scrollback. On `cmd.exe`, which cannot read a file into an argument, the prompt SHALL be inlined, and a prompt too long for one command line SHALL fail with a message telling the user to switch shells.
+For a CLI provider, dispatch SHALL open a new terminal in the second editor column at the workspace root, wait until the shell is at its prompt, and run the provider's CLI with the prompt. The prompt body SHALL travel through a temporary file that is deleted shortly afterwards, so long prompts never land in the scrollback. On `cmd.exe`, which cannot read a file into an argument, the prompt SHALL be inlined, and a prompt too long for one command line SHALL fail with a message telling the user to switch shells.
 
 #### Scenario: a step is run with Qwen Code
 - **WHEN** the user runs Plan with provider `qwen`
@@ -31,6 +31,19 @@ For a CLI provider, dispatch SHALL open a new terminal in the second editor colu
 #### Scenario: a long prompt under cmd.exe
 - **WHEN** the inlined line would exceed the shell's limit
 - **THEN** nothing is sent and an error names PowerShell or Git Bash as the fix
+
+### Nothing is typed into a shell that is not at its prompt
+<!-- touches: apps/vscode/src/core/utils/terminalUtils.ts, apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/ai-providers/cliTerminalProvider.ts, apps/vscode/src/ai-providers/claudeCodeProvider.ts, apps/vscode/src/ai-providers/geminiCliProvider.ts, apps/vscode/src/ai-providers/wibeyCliProvider.ts -->
+
+Every command the extension runs in a terminal SHALL wait until the shell is at its prompt, because a shell that asks a question at startup takes whatever is typed first as its answer. In bash, zsh, fish or PowerShell with shell integration on, the command SHALL run through integration once it activates, waiting up to a minute with the terminal shown and a notice to answer any question there. Any other shell, an older editor or a hidden terminal SHALL get the command typed after a few seconds, with no notice. A second command for the same terminal SHALL wait for the first to finish, since integration interrupts a running command.
+
+#### Scenario: the shell asks to update before its first prompt
+- **WHEN** Plan is dispatched and the new terminal's shell is waiting on "Would you like to update? [Y/n]"
+- **THEN** nothing is typed until the user answers, and then the whole `claude …` line runs
+
+#### Scenario: shell integration is turned off
+- **WHEN** `terminal.integrated.shellIntegration.enabled` is false
+- **THEN** the command is typed after a few seconds, and no exit code is available for it
 
 ### A missing CLI stops the dispatch and says how to get it
 <!-- touches: apps/vscode/src/ai-providers/cliTerminalProvider.ts, apps/vscode/src/core/utils/installUtils.ts -->
@@ -107,9 +120,9 @@ A dispatched pipeline step SHALL be prefixed with a marked block telling the ass
 - **THEN** the message is the slash command alone and the block arrives as system prompt
 
 ### Dispatch is one way, and only the run record says a step finished
-<!-- touches: apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/ai-providers/ideChatProvider.ts, apps/vscode/src/ai-providers/claudePanelProvider.ts -->
+<!-- touches: apps/vscode/src/ai-providers/aiProvider.ts, apps/vscode/src/ai-providers/ideChatProvider.ts, apps/vscode/src/ai-providers/claudePanelProvider.ts, apps/vscode/src/core/utils/terminalUtils.ts -->
 
-A dispatch that succeeds SHALL mean only that the assistant was handed the command, never that the step ran, finished or succeeded. Nothing SHALL be read back from the terminal, the chat or the panel. A step SHALL be treated as finished only once its completion has been written into the spec's run record.
+A dispatch that succeeds SHALL mean only that the assistant was handed the command, never that the step ran, finished or succeeded. Nothing SHALL be read back from the chat or the panel, and from a terminal only the exit code shell integration reports for the command, which is used solely to notice a command that never ran. A step SHALL be treated as finished only once its completion has been written into the spec's run record, and an exit code of zero SHALL never count as one.
 
 #### Scenario: the chat never runs the command
 - **WHEN** the command is submitted to the editor's chat and the assistant ignores it

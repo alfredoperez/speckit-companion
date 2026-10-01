@@ -8,6 +8,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { runInTerminal } from '../../core/utils/terminalUtils';
 import {
     WorkflowConfig,
     CheckpointConfig,
@@ -99,7 +100,7 @@ export async function executeCommit(
         });
 
         terminal.show();
-        terminal.sendText(`git add -A && git commit -m "${commitMessage.replace(/"/g, '\\"')}"`);
+        await runInTerminal(terminal, `git add -A && git commit -m "${commitMessage.replace(/"/g, '\\"')}"`);
 
         // Update checkpoint status
         await updateCheckpointStatus(featureDir, 'commit', 'completed');
@@ -150,7 +151,7 @@ export async function executePR(
         });
 
         terminal.show();
-        terminal.sendText(`gh pr create --title "${prTitle.replace(/"/g, '\\"')}" --fill`);
+        await runInTerminal(terminal, `gh pr create --title "${prTitle.replace(/"/g, '\\"')}" --fill`);
 
         // Update checkpoint status
         await updateCheckpointStatus(featureDir, 'pr', 'completed');

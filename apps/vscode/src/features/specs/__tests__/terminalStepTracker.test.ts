@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { track, register, _resetForTests } from '../terminalStepTracker';
+import { track, untrack, register, _resetForTests } from '../terminalStepTracker';
 
 const mockCompleteStep = jest.fn().mockResolvedValue(undefined);
 
@@ -43,6 +43,14 @@ describe('terminalStepTracker', () => {
         await listener!(term);
         await listener!(term);
         expect(mockCompleteStep).toHaveBeenCalledTimes(1);
+    });
+
+    it('records nothing when an untracked-again terminal closes', async () => {
+        const term = {} as vscode.Terminal;
+        track(term, '/specs/foo', 'plan');
+        untrack(term);
+        await listener!(term);
+        expect(mockCompleteStep).not.toHaveBeenCalled();
     });
 
     it('does nothing when track() is called with undefined terminal', async () => {

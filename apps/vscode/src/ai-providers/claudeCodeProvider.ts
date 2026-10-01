@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { AIProviders } from '../core/constants';
-import { waitForShellReady } from '../core/utils/terminalUtils';
+import { runInTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { dispatchSlashCommandViaTempFile, buildPromptDispatchCommand, AIExecutionResult, toSlashCommand } from './aiProvider';
 import { CliTerminalProvider, DispatchContext, DispatchPlan } from './cliTerminalProvider';
@@ -171,9 +171,8 @@ export class ClaudeCodeProvider extends CliTerminalProvider {
             location: { viewColumn: vscode.ViewColumn.Two },
         });
         terminal.show();
-        await waitForShellReady(terminal);
         const permissionFlag = getPermissionFlagForProvider(AIProviders.CLAUDE);
-        terminal.sendText(`claude ${permissionFlag}`.trim(), true);
+        await runInTerminal(terminal, `claude ${permissionFlag}`.trim());
         return terminal;
     }
 }

@@ -20,7 +20,7 @@ const STEP_LABELS: Record<string, string> = {
     implement: 'Implement',
 };
 
-function labelFor(step: string): string {
+export function labelFor(step: string): string {
     return STEP_LABELS[step] ?? step.charAt(0).toUpperCase() + step.slice(1);
 }
 

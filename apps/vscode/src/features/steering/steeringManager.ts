@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { getAIProvider } from '../../extension';
 import { ConfigManager } from '../../core/utils/configManager';
-import { waitForShellReady } from '../../core/utils/terminalUtils';
+import { runInTerminal } from '../../core/utils/terminalUtils';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
 
 export class SteeringManager {
@@ -182,8 +182,7 @@ Analyze the document and:
         const config = vscode.workspace.getConfiguration('speckit');
         const mode = config.get<string>('claudePermissionMode', 'bypassPermissions');
         const permissionFlag = mode === 'bypassPermissions' ? '--permission-mode bypassPermissions ' : '';
-        await waitForShellReady(terminal);
-        terminal.sendText(`claude ${permissionFlag}"/init"`);
+        await runInTerminal(terminal, `claude ${permissionFlag}"/init"`);
     }
 
     async createUserSteeringFile() {

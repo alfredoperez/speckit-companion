@@ -1,5 +1,7 @@
 # Browse Steering Files — Living Spec
 
+<!-- reviewed: aebf4657 -->
+
 ## Purpose
 
 The Steering view gathers the standing instructions an assistant and Spec Kit already read into one tree beside the specs, so a person can find, open and start them without knowing each provider's file layout. Without it those files are scattered across the project, the home directory and the Spec Kit install.

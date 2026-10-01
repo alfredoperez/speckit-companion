@@ -43,6 +43,10 @@ The footer SHALL offer at most one forward button, labelled with the next step's
 - **WHEN** the current step is in flight
 - **THEN** the forward button is absent and the footer reads "Step running, actions unlock when it settles"
 
+#### Scenario: the command never ran
+- **WHEN** the dispatched command exits non-zero before the step records anything
+- **THEN** the step stops reading as running and the forward button that sent it is offered again
+
 ### Regenerate re-runs the step the run is on
 <!-- touches: apps/vscode/src/features/spec-viewer/footerActions.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
 

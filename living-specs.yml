@@ -25,8 +25,14 @@ capabilities:
   match:
   - apps/vscode/src/ai-providers/**
   - apps/vscode/src/core/utils/installUtils.ts
+  - apps/vscode/src/core/utils/terminalUtils.ts
   - apps/vscode/src/speckit/detector.ts
   spec: capabilities/ai-providers/send-a-command-to-the-assistant.spec.md
+- name: recover-a-step-that-never-ran
+  match:
+  - apps/vscode/src/features/specs/dispatchFailure.ts
+  - apps/vscode/src/features/specs/terminalStepTracker.ts
+  spec: capabilities/ai-providers/recover-a-step-that-never-ran.spec.md
 - name: customize-the-pipeline
   match:
   - apps/speckit-extension/fragments/**

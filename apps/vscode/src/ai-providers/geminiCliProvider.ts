@@ -3,7 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { AIProviders } from '../core/constants';
-import { waitForShellReady, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
+import { runInTerminal, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
 import { IAIProvider, AIExecutionResult, toSlashCommand } from './aiProvider';
@@ -83,8 +83,7 @@ export class GeminiCliProvider implements IAIProvider {
             const initDelay = GeminiCliProvider.INIT_DELAY_MS;
 
             // Wait for shell to be ready, then start Gemini in interactive mode
-            await waitForShellReady(terminal);
-            terminal.sendText('gemini', true);
+            await runInTerminal(terminal, 'gemini');
 
             // After Gemini initializes, send the prompt then Enter separately
             setTimeout(() => {
