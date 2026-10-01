@@ -217,6 +217,18 @@ def _hook_line(hook: dict) -> str:
     return "{ " + ", ".join(pairs) + " }"
 
 
+def _check_hook(hook: dict) -> None:
+    """Refuse a hook that names nothing to run."""
+    if hook.get("type") not in ("command", "prompt", "node", "skill"):
+        raise ConfigWriteError(f"unknown hook type '{hook.get('type')}'")
+    if hook["type"] in ("node", "skill") and not str(hook.get("ref", "")).strip():
+        raise ConfigWriteError(f"a {hook['type']} hook needs a ref")
+    if hook["type"] == "prompt" and not str(hook.get("text", "")).strip():
+        raise ConfigWriteError("a prompt hook needs its text")
+    if hook["type"] == "command" and not str(hook.get("run", "")).strip():
+        raise ConfigWriteError("a command hook needs something to run")
+
+
 def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str:
     """Return `text` with one hook appended under `commands.<command>.hooks.<when>.<anchor>`.
 
@@ -226,14 +238,7 @@ def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str
     """
     if when not in ("before", "after"):
         raise ConfigWriteError(f"a hook runs before or after, not '{when}'")
-    if hook.get("type") not in ("command", "prompt", "node", "skill"):
-        raise ConfigWriteError(f"unknown hook type '{hook.get('type')}'")
-    if hook["type"] in ("node", "skill") and not str(hook.get("ref", "")).strip():
-        raise ConfigWriteError(f"a {hook['type']} hook needs a ref")
-    if hook["type"] == "prompt" and not str(hook.get("text", "")).strip():
-        raise ConfigWriteError("a prompt hook needs its text")
-    if hook["type"] == "command" and not str(hook.get("run", "")).strip():
-        raise ConfigWriteError("a command hook needs something to run")
+    _check_hook(hook)
 
     lines = text.splitlines()
     trailing_newline = text.endswith("\n") or not text
@@ -279,6 +284,7 @@ def add_hook(text: str, command: str, when: str, anchor: str, hook: dict) -> str
             block = emit(step, *("hooks", when, anchor)[depth:])
             out = lines[:at + 1] + block + lines[at + 1:]
             return "\n".join(out) + ("\n" if trailing_newline else "")
+        _open_block(lines, found)
         at, indent = found, step
         end = _block_end(lines, found, step, end)
 
@@ -358,11 +364,7 @@ def replace_hook(text: str, command: str, when: str, anchor: str,
             f"{command}: there is no hook {index + 1} {when} {anchor}")
 
     at = items[index]
-    # An entry may run onto continuation lines; take them with it.
-    stop = at + 1
-    while stop < len(lines) and not _is_blank(lines[stop]) \
-            and _indent_of(lines[stop]) > item_indent:
-        stop += 1
+    stop = _entry_end(lines, at, item_indent)
 
     if hook is None:
         out = lines[:at] + lines[stop:]
@@ -375,6 +377,114 @@ def replace_hook(text: str, command: str, when: str, anchor: str,
     else:
         out = lines[:at] + [f"{' ' * item_indent}- {_hook_line(hook)}"] + lines[stop:]
     return "\n".join(out) + ("\n" if trailing_newline else "")
+
+
+def _entry_end(lines: list, at: int, item_indent: int) -> int:
+    """Where the entry starting at `at` stops, past continuation lines and the comments between them."""
+    stop = at + 1
+    for i in range(at + 1, len(lines)):
+        if _is_blank(lines[i]):
+            continue
+        if _indent_of(lines[i]) <= item_indent:
+            break
+        stop = i + 1
+    return stop
+
+
+def _indented(block: list, indent: int) -> list:
+    return [" " * indent + line for line in block]
+
+
+#: Stands in for the moved entry while `add_hook` builds an anchor that is not there yet.
+_MOVING = {"type": "command", "run": "speckit-companion-moving-hook"}
+
+
+def move_hook(text: str, command: str, from_when: str, from_anchor: str,
+              from_index: int, when: str, anchor: str, to_index=None,
+              hook=None) -> str:
+    """Move one hook in a single edit, its lines verbatim unless `hook` replaces them; `to_index` None puts it last."""
+    if when not in ("before", "after"):
+        raise ConfigWriteError(f"a hook runs before or after, not '{when}'")
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+    items, item_indent, _key, _key_indent = _hook_items(lines, command, from_when, from_anchor)
+    if from_index < 0 or from_index >= len(items):
+        raise ConfigWriteError(
+            f"{command}: there is no hook {from_index + 1} {from_when} {from_anchor}")
+    same = (from_when, from_anchor) == (when, anchor)
+    if same and len(items) == 1 or same and to_index == from_index \
+            or same and to_index is None and from_index == len(items) - 1:
+        raise ConfigWriteError(f"{command}: that hook is already there")
+
+    at = items[from_index]
+    stop = _entry_end(lines, at, item_indent)
+    if hook is None:
+        block = [line[min(item_indent, _indent_of(line)):] for line in lines[at:stop]]
+    else:
+        _check_hook(hook)
+        block = [f"- {_hook_line(hook)}"]
+    rest = lines[:at] + lines[stop:]
+
+    # `_content_end`, not `_block_end`, so the comments after an emptied anchor stay.
+    remaining, _ind, key, key_indent = _hook_items(rest, command, from_when, from_anchor)
+    if not remaining and key is not None:
+        end = _content_end(rest, key, _block_end(rest, key, key_indent, len(rest)))
+        rest = rest[:key] + rest[end:]
+
+    targets, target_indent, target_key, _ti = _hook_items(rest, command, when, anchor)
+    written = _KEY.match(rest[target_key]) if target_key is not None else None
+    if not targets and written and written.group(3).strip() not in ("", "{}", "[]"):
+        raise ConfigWriteError(
+            f"{command}: the hooks {when} {anchor} are written on one line, so a hook cannot "
+            "be placed among them here — edit companion.yml directly")
+    if not targets:
+        if to_index not in (None, 0):
+            raise ConfigWriteError(f"{command}: there is no place {to_index + 1} {when} {anchor}")
+        body = "\n".join(rest) + ("\n" if trailing_newline else "")
+        rest = add_hook(body, command, when, anchor, _MOVING).splitlines()
+        targets, target_indent, _t, _ti = _hook_items(rest, command, when, anchor)
+        placed = _indented(block, target_indent)
+        out = rest[:targets[0]] + placed + rest[targets[0] + 1:]
+        return "\n".join(out) + ("\n" if trailing_newline else "")
+
+    place = len(targets) if to_index is None else to_index
+    if place < 0 or place > len(targets):
+        raise ConfigWriteError(f"{command}: there is no place {place + 1} {when} {anchor}")
+    insert_at = (targets[place] if place < len(targets)
+                 else _entry_end(rest, targets[-1], target_indent))
+    out = rest[:insert_at] + _indented(block, target_indent) + rest[insert_at:]
+    return "\n".join(out) + ("\n" if trailing_newline else "")
+
+
+def check_hook_target(project_root: str, command: str, anchor: str, boundary: str = "") -> None:
+    """Refuse an anchor the built plan does not resolve, or resolves to a boundary other than `boundary`."""
+    import importlib
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    build = importlib.import_module("build-pipeline")
+    import hook_render
+
+    try:
+        build.use_project_hook_nodes(project_root)
+        plan, _warnings = build.plan_build(build.load_config(project_root))
+    except Exception as err:  # noqa: BLE001 — any failure to read is a refusal here
+        raise ConfigWriteError(
+            f"the pipeline could not be read, so the hook was not moved: {err}") from err
+    entry = plan.get(command)
+    if entry is None:
+        raise ConfigWriteError(f"there is no step called {command}")
+    phases = entry.get("phases") or []
+    nodes = {n for p in phases for n in p["nodes"]}
+    names = {p["name"] for p in phases}
+    resolved = hook_render.resolve_anchor(anchor, command, nodes, names)
+    if not resolved:
+        raise ConfigWriteError(
+            f"{command} has no node or phase called '{anchor}', so a hook there would not run")
+    if boundary and resolved != boundary:
+        raise ConfigWriteError(
+            f"{command}: '{anchor}' names a {resolved} as well as a {boundary}, and a hook "
+            f"attached to it runs at the {resolved}. Attach it to the {resolved} instead.")
 
 
 def check_workflow(project_root: str, name: str) -> None:
@@ -1082,6 +1192,12 @@ def main() -> int:
                     help="replace the hook at this index under --when/--anchor")
     ap.add_argument("--remove-index", type=int,
                     help="remove the hook at this index under --when/--anchor")
+    ap.add_argument("--move-from", nargs=3, metavar=("WHEN", "ANCHOR", "INDEX"),
+                    help="move the hook at this address to --when/--anchor in one write")
+    ap.add_argument("--to-index", type=int,
+                    help="where a moved hook lands among the target's hooks; omit for last")
+    ap.add_argument("--boundary", choices=("node", "phase"),
+                    help="what the target anchor is meant to be, refused if it resolves otherwise")
     ap.add_argument("--workflow",
                     help="switch to this workflow; empty switches back to companion.yml")
     ap.add_argument("--new-workflow", help="create this workflow and switch to it")
@@ -1129,6 +1245,21 @@ def main() -> int:
             print("[config] now running "
                   + (f"'{args.workflow}'" if args.workflow.strip()
                      else "this project's own companion.yml"))
+            return 0
+
+        if args.move_from:
+            if not (args.command and args.when and args.anchor):
+                raise ConfigWriteError("moving a hook needs --command, --when and --anchor")
+            from_when, from_anchor, from_index = args.move_from
+            if not from_index.lstrip("-").isdigit():
+                raise ConfigWriteError(f"'{from_index}' is not a hook's index")
+            hook = ({"type": args.hook, "ref": args.ref, "run": args.run, "text": args.text}
+                    if args.hook else None)
+            check_hook_target(project, args.command, args.anchor, args.boundary or "")
+            save_config(path, move_hook(read_config(path), args.command, from_when, from_anchor,
+                                        int(from_index), args.when, args.anchor,
+                                        args.to_index, hook))
+            print(f"[config] {args.command}: hook moved to {args.when} {args.anchor}")
             return 0
 
         if args.remove_index is not None:
