@@ -96,7 +96,7 @@ while IFS= read -r prof; do
 done <<< "$PROFILES"
 
 say "recorder"
-nohup "$HERE/record-windows.sh" "$RESULTS/shots" "qa-$NAME" > "$RESULTS/recorder.log" 2>&1 &
+nohup "$HERE/record-windows.sh" "$RESULTS/shots" "qa-$NAME|two-roots" > "$RESULTS/recorder.log" 2>&1 &
 sleep 20
 ls "$RESULTS/shots"/*.png >/dev/null 2>&1 || fail "the recorder captured nothing (Screen Recording permission for the terminal?)"
 

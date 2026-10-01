@@ -83,7 +83,7 @@ What staging has to get right, each learned the hard way:
 - `speckit.permissionMode` is machine-scoped, so a workspace `settings.json` cannot set it. The user's Claude Code already runs in auto mode, which is what the timed run relies on.
 - A fresh `--user-data-dir` asks the user to log in again, and a long one breaks VS Code's socket path. Use the user's own VS Code.
 - `code --new-window` reuses the last-used profile; `--profile Default` avoids that, and the stage fails if a QA window lands in another profile.
-- `screencapture -R` grabs whatever floats on top. `record-windows.sh` captures by window id instead, and `screencapture` refuses dot-file names.
+- `screencapture -R` grabs whatever floats on top. `record-windows.sh` captures every QA window by id instead (guessing the front one missed most of a run), and `screencapture` refuses dot-file names.
 - Close QA windows with their own close button (`AXCloseButton`), never with a keystroke: a keystroke goes to whichever app is in front.
 
 A stuck prompt the clicks cannot answer is a FAIL finding for that check; unblock it through the headless fallback and continue.
