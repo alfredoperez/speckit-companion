@@ -109,6 +109,90 @@ describe('SpecKitDetector', () => {
             (vscode.workspace as any).workspaceFolders = undefined;
         });
 
+        describe('initializeWorkspace', () => {
+            it('initializes for the configured agent with --integration', async () => {
+                mockProvider('codex');
+                await SpecKitDetector.getInstance().initializeWorkspace();
+                expect(lastSentText()).toBe('specify init . --integration codex');
+            });
+
+            it('falls back to --ai for a CLI that only lists --ai', async () => {
+                mockProvider('codex');
+                mockExecAsync.mockResolvedValue({ stdout: LEGACY_HELP, stderr: '' });
+                await SpecKitDetector.getInstance().initializeWorkspace();
+                expect(lastSentText()).toBe('specify init . --ai codex');
+            });
+
+            it('uses --integration when the CLI help cannot be read', async () => {
+                mockProvider('claude');
+                mockExecAsync.mockRejectedValue(new Error('spawn failed'));
+                await SpecKitDetector.getInstance().initializeWorkspace();
+                expect(lastSentText()).toBe('specify init . --integration claude');
+            });
+
+            it('prefers --integration on a CLI that lists both flags', async () => {
+                mockProvider('codex');
+                mockExecAsync.mockResolvedValue({ stdout: `${INTEGRATION_HELP}\n${LEGACY_HELP}`, stderr: '' });
+                await SpecKitDetector.getInstance().initializeWorkspace();
+                expect(lastSentText()).toBe('specify init . --integration codex');
+            });
+
+            it('names the same agent Upgrade Project does', async () => {
+                mockProvider('gemini');
+                await SpecKitDetector.getInstance().initializeWorkspace();
+                const initAgent = lastSentText().match(/--integration (\S+)/)?.[1];
+                await SpecKitDetector.getInstance().upgradeProject();
+                expect(lastSentText().match(/--integration (\S+)/)?.[1]).toBe(initAgent);
+            });
+        });
+
+        describe('IDE Chat on Windsurf', () => {
+            const env = vscode.env as { uriScheme?: string; appName?: string };
+            let saved: { uriScheme?: string; appName?: string };
+
+            beforeEach(() => {
+                saved = { uriScheme: env.uriScheme, appName: env.appName };
+                env.uriScheme = 'windsurf';
+                env.appName = 'Windsurf';
+                mockProvider('ide-chat');
+            });
+
+            afterEach(() => {
+                env.uriScheme = saved.uriScheme;
+                env.appName = saved.appName;
+            });
+
+            it('passes --ai windsurf on a CLI that still lists --ai', async () => {
+                mockExecAsync.mockResolvedValue({ stdout: LEGACY_HELP, stderr: '' });
+                const detector = SpecKitDetector.getInstance();
+                await detector.initializeWorkspace();
+                expect(lastSentText()).toBe('specify init . --ai windsurf');
+                await detector.upgradeProject();
+                expect(lastSentText()).toBe('specify init --here --force --ai windsurf');
+            });
+
+            it('runs init with no agent flag on a CLI that lists both flags', async () => {
+                mockExecAsync.mockResolvedValue({ stdout: `${INTEGRATION_HELP}\n${LEGACY_HELP}`, stderr: '' });
+                await SpecKitDetector.getInstance().initializeWorkspace();
+                expect(lastSentText()).toBe('specify init .');
+            });
+
+            it('runs init with no agent flag on a CLI that only takes --integration', async () => {
+                const detector = SpecKitDetector.getInstance();
+                await detector.initializeWorkspace();
+                expect(lastSentText()).toBe('specify init .');
+                await detector.upgradeProject();
+                expect(lastSentText()).toBe('specify init --here --force');
+            });
+
+            it('runs Upgrade All with no agent flag after reinstalling the CLI', async () => {
+                await SpecKitDetector.getInstance().upgradeAll();
+                const sent = lastSentText();
+                expect(sent.endsWith('&& specify init --here --force')).toBe(true);
+                expect(sent).not.toContain('windsurf');
+            });
+        });
+
         describe('upgradeProject', () => {
             it('dispatches the configured non-Claude agent, never claude-code (US1)', async () => {
                 mockProvider('codex');

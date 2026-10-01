@@ -4,10 +4,15 @@ import * as fs from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { CONTEXT_KEYS, setContextKey } from '../core/utils/contextKeys';
-import { getConfiguredSpecKitAgent } from './specKitAgent';
+import { getConfiguredSpecKitAgent, specKitInitAgentArgs, SpecKitAgentFlag } from './specKitAgent';
 import { runInTerminal } from '../core/utils/terminalUtils';
 
 const execAsync = promisify(exec);
+
+function initCommand(base: string, flag: SpecKitAgentFlag): string {
+    const agentArgs = specKitInitAgentArgs(getConfiguredSpecKitAgent(), flag);
+    return agentArgs ? `${base} ${agentArgs}` : base;
+}
 
 /**
  * Service for detecting SpecKit CLI installation and workspace initialization
@@ -190,9 +195,10 @@ export class SpecKitDetector {
             return;
         }
 
+        const agentFlag = await this.detectAgentFlag();
         const terminal = vscode.window.createTerminal({ name: 'Initialize SpecKit', cwd: workspaceFolder.uri });
         terminal.show();
-        await runInTerminal(terminal, 'specify init .');
+        await runInTerminal(terminal, initCommand('specify init .', agentFlag));
 
         const selection = await vscode.window.showInformationMessage(
             'Initializing SpecKit... Reload window once complete.',
@@ -229,7 +235,7 @@ export class SpecKitDetector {
      * The flag this CLI uses to pick the agent: `--integration` on current spec-kit,
      * `--ai` on older CLIs that do not list it. An unreadable help falls back to the current flag.
      */
-    private async detectAgentFlag(): Promise<'--integration' | '--ai'> {
+    private async detectAgentFlag(): Promise<SpecKitAgentFlag> {
         try {
             const { stdout } = await execAsync('specify init --help', { timeout: 5000 });
             return /--integration(?![\w-])/.test(stdout) || !/--ai(?![\w-])/.test(stdout) ? '--integration' : '--ai';
@@ -252,7 +258,7 @@ export class SpecKitDetector {
         const agentFlag = await this.detectAgentFlag();
         const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit Project', cwd: workspaceFolder.uri });
         terminal.show();
-        await runInTerminal(terminal, `specify init --here --force ${agentFlag} ${getConfiguredSpecKitAgent()}`);
+        await runInTerminal(terminal, initCommand('specify init --here --force', agentFlag));
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading project files... Reload window after upgrade completes.',
@@ -277,7 +283,7 @@ export class SpecKitDetector {
         const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit (All)', cwd: workspaceFolder.uri });
         terminal.show();
         await runInTerminal(terminal, 'uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git && ' +
-            `specify init --here --force --integration ${getConfiguredSpecKitAgent()}`);
+            initCommand('specify init --here --force', '--integration'));
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading SpecKit CLI and project files... Reload window after upgrade completes.',

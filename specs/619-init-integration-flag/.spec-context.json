@@ -1,0 +1,403 @@
+{
+  "workflow": "companion",
+  "specName": "Initialize Workspace sets up the chosen assistant",
+  "branch": "fix/789-init-integration-workspace",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T11:07:15.497Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:07:38.838Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:08:11.316Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:08:26.531Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:08:26.871Z"
+    },
+    {
+      "step": "specify",
+      "substep": "branch",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:09:01.778Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T11:09:14.562Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T11:09:23.914Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T11:09:24.075Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T11:09:24.230Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T11:09:24.382Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T11:09:44.096Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:10:06.964Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:10:29.686Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:11:02.384Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:11:30.191Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:11:38.333Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:12:54.067Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:14:05.500Z"
+    },
+    {
+      "step": "implement",
+      "substep": "living-review",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:15:58.364Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:16:16.646Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:16:16.671Z"
+    },
+    {
+      "step": "implement",
+      "substep": "living-fold",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:16:16.816Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "send-a-command-to-the-assistant",
+      "choose-an-assistant",
+      "keep-the-companion-extension-current",
+      "open-the-sidebar",
+      "set-up-and-update",
+      "share-anonymous-usage"
+    ],
+    "loadedRequirements": {
+      "send-a-command-to-the-assistant": [
+        "IDE Chat sends the command to the editor's own chat"
+      ],
+      "choose-an-assistant": [
+        "A project set up for another assistant gets a suggestion, never a switch",
+        "An integration with nothing to suggest shows nothing"
+      ],
+      "keep-the-companion-extension-current": [],
+      "open-the-sidebar": [],
+      "set-up-and-update": [
+        "Start-up offers the next missing setup step",
+        "CLI install, init and upgrade run in a terminal the user can watch"
+      ],
+      "share-anonymous-usage": []
+    },
+    "skipped": [
+      {
+        "name": "send-a-command-to-the-assistant",
+        "reason": "dispatch is unchanged; only the init command text changed"
+      },
+      {
+        "name": "choose-an-assistant",
+        "reason": "the provider choice and integration.json suggestion are unchanged"
+      },
+      {
+        "name": "keep-the-companion-extension-current",
+        "reason": "companion install and update are untouched"
+      },
+      {
+        "name": "open-the-sidebar",
+        "reason": "the welcome view still offers Initialize Workspace the same way"
+      },
+      {
+        "name": "share-anonymous-usage",
+        "reason": "no telemetry change"
+      }
+    ],
+    "synced": [
+      "set-up-and-update"
+    ]
+  },
+  "last_action": "5/6 tasks done, 3269 tests pass, compile clean; living-spec fold next",
+  "coverage": {
+    "FR-001": {
+      "title": "Initialize Workspace names the resolved agent with --integration on a CLI that supports it",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/detector.test.ts::initializes for the configured agent with --integration"
+      ]
+    },
+    "FR-002": {
+      "title": "Initialize Workspace uses --ai only when the CLI help lists --ai and not --integration",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/detector.test.ts::falls back to --ai for a CLI that only lists --ai",
+        "uses --integration when the CLI help cannot be read"
+      ]
+    },
+    "FR-003": {
+      "title": "Initialize Workspace keeps . , no --force, and never pastes the workspace path",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/detector.test.ts::never pastes the workspace path into the command text"
+      ]
+    },
+    "FR-004": {
+      "title": "windsurf gets --ai windsurf when the CLI lists --ai, else no agent flag",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/specKitAgent.test.ts::passes no agent flag for windsurf on a CLI that only takes --integration",
+        "apps/vscode/src/speckit/__tests__/detector.test.ts::passes --ai windsurf on a CLI that still lists --ai"
+      ]
+    },
+    "FR-005": {
+      "title": "Init, Upgrade Project and Upgrade All share one agent-argument rule",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/detector.test.ts::names the same agent Upgrade Project does",
+        "runs Upgrade All with no agent flag after reinstalling the CLI"
+      ]
+    },
+    "FR-006": {
+      "title": "No switch-integration UI and no specify integration calls"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "No switch-integration UI",
+    "No specify integration calls",
+    "No change to the integration.json suggestion"
+  ],
+  "context": [
+    "living spec: set-up-and-update",
+    "living spec: choose-an-assistant",
+    "area: apps/vscode/src/speckit",
+    "constraint: Upgrade Project help-probe fallback stays as is"
+  ],
+  "intent": "Initialize Workspace passes the chosen assistant with the flag the installed Spec Kit understands, and Windsurf never gets a flag Spec Kit rejects",
+  "approach": "One pure helper builds the init agent arguments (Windsurf: --ai when listed, else none) and all three init call sites read it",
+  "currentTask": "T006",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added specKitInitAgentArgs: agent args per CLI flag, nothing for windsurf on --integration",
+      "files": [
+        "apps/vscode/src/speckit/specKitAgent.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "BDD tests for the helper on both flags, windsurf and every mapped agent",
+      "files": [
+        "apps/vscode/src/speckit/__tests__/specKitAgent.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Initialize Workspace probes the flag and passes the agent; all three init sites build args through one helper",
+      "files": [
+        "apps/vscode/src/speckit/detector.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Detector tests for init on both CLI shapes, unreadable help, agent parity, and Windsurf on init and both upgrades",
+      "files": [
+        "apps/vscode/src/speckit/__tests__/detector.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Root CHANGELOG Unreleased Fixed line for Initialize Workspace",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Folded the init flag and Windsurf rules into set-up-and-update after review",
+      "files": [
+        "capabilities/extension-services/set-up-and-update.spec.md",
+        "specs/619-init-integration-flag/init-integration-flag.spec.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "full jest suite",
+      "command": "npx jest --silent",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 43.3,
+      "result": "Tests:       3270 passed, 3270 total · Snapshots:   0 total · Time:        42.433 s"
+    },
+    {
+      "what": "type-check and build",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.6,
+      "result": "> speckit-companion@0.34.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "living specs validate",
+      "command": "python3 apps/speckit-extension/scripts/living_validate.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.5,
+      "result": "✓ 48 spec(s) checked, nothing to report."
+    },
+    {
+      "what": "full jest suite after review fixes",
+      "command": "npx jest --silent",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 22.7,
+      "result": "Tests:       3272 passed, 3272 total · Snapshots:   0 total · Time:        52.306 s"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Windsurf on a CLI without --ai runs the init with no agent flag",
+      "why": "Current Spec Kit rejects --ai and does not list windsurf, so any flag fails; the picker is what Initialize Workspace did before",
+      "rejected": "Always passing --ai windsurf, which errors on a current CLI"
+    },
+    {
+      "decision": "Upgrade All passes --integration without probing",
+      "why": "It reinstalls the CLI first, so the CLI is always current",
+      "rejected": "Probing help before the reinstall, which reads the old CLI"
+    },
+    {
+      "decision": "A CLI whose help lists both flags is treated as current, so Windsurf gets the picker there",
+      "why": "Matches the one probe every init site already uses; the spec now says so",
+      "rejected": "A second probe result for --ai just for Windsurf"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Initialize Workspace names the configured agent with the flag the CLI takes; Windsurf never gets a flag Spec Kit rejects"
+    }
+  },
+  "concerns": [
+    {
+      "note": "Doctor DRIFT: 24 capability warnings all trace to commits already on main (#781, #787, #797, #799, #804-#806), not to this branch; left for a separate drift pass",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor TRACE: one capture call without an outcome is the write-context.py --help lookup made during this run, self-inflicted and harmless",
+      "step": "implement"
+    },
+    {
+      "note": "Review gap kept open: if the help probe cannot run (PATH or 5s timeout) Initialize Workspace sends --integration, which an older --ai-only CLI found by the terminal shell would reject; same rule Upgrade Project already follows",
+      "step": "implement"
+    }
+  ]
+}

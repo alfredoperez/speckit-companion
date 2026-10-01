@@ -3,12 +3,20 @@ import { AIProviders } from '../core/constants';
 import { detectHostIde, HostIde } from '../ai-providers/ideChatProvider';
 import type { AIProviderType } from '../ai-providers/aiProvider';
 
-/**
- * The spec-kit CLI accepted agent identifier the upgrade command passes as
- * `specify init … --ai <agent>`. `claude-code` is NOT a member of this set —
- * the resolver never emits it.
- */
+/** The spec-kit agent id passed to `specify init`; the resolver never emits `claude-code`. */
 export type SpecKitAgent = string;
+
+/** The flag a `specify` CLI takes to pick the agent: `--ai` on older CLIs, `--integration` since. */
+export type SpecKitAgentFlag = '--integration' | '--ai';
+
+// Agents only the old `--ai` flag knows; `specify integration list` does not name them.
+const AI_FLAG_ONLY_AGENTS: ReadonlySet<SpecKitAgent> = new Set(['windsurf']);
+
+/** The agent arguments for `specify init`, or '' when this CLI has no flag for the agent and its own picker must ask. */
+export function specKitInitAgentArgs(agent: SpecKitAgent, flag: SpecKitAgentFlag): string {
+    if (flag === '--integration' && AI_FLAG_ONLY_AGENTS.has(agent)) { return ''; }
+    return `${flag} ${agent}`;
+}
 
 /** Safe fallback for any unrecognized / missing provider value. */
 const DEFAULT_AGENT = 'claude';
@@ -72,7 +80,7 @@ export function resolveIntegrationProvider(
 
 /**
  * Impure wrapper: reads `speckit.aiProvider`, detects the host, and resolves the
- * agent. Both upgrade dispatch sites call this so neither can hardcode an agent.
+ * agent. The init and upgrade dispatch sites call this so none can hardcode an agent.
  */
 export function getConfiguredSpecKitAgent(): SpecKitAgent {
     const provider = vscode.workspace.getConfiguration('speckit').get<string>('aiProvider');

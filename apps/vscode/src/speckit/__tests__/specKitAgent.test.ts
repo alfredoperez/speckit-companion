@@ -1,4 +1,4 @@
-import { resolveSpecKitAgent, resolveIntegrationProvider, PROVIDER_TO_AGENT } from '../specKitAgent';
+import { resolveSpecKitAgent, resolveIntegrationProvider, specKitInitAgentArgs, PROVIDER_TO_AGENT } from '../specKitAgent';
 import { HostIde } from '../../ai-providers/ideChatProvider';
 
 const ANY_HOST: HostIde = 'vscode';
@@ -85,6 +85,27 @@ describe('resolveSpecKitAgent', () => {
                 }
             }
         });
+    });
+});
+
+describe('specKitInitAgentArgs', () => {
+    it('names the agent with whichever flag the CLI takes', () => {
+        expect(specKitInitAgentArgs('codex', '--integration')).toBe('--integration codex');
+        expect(specKitInitAgentArgs('codex', '--ai')).toBe('--ai codex');
+    });
+
+    it('passes windsurf with --ai on a CLI that still lists it', () => {
+        expect(specKitInitAgentArgs('windsurf', '--ai')).toBe('--ai windsurf');
+    });
+
+    it('passes no agent flag for windsurf on a CLI that only takes --integration', () => {
+        expect(specKitInitAgentArgs('windsurf', '--integration')).toBe('');
+    });
+
+    it('keeps every agent a provider maps to on --integration', () => {
+        for (const agent of [...new Set(Object.values(PROVIDER_TO_AGENT)), 'cursor-agent']) {
+            expect(specKitInitAgentArgs(agent, '--integration')).toBe(`--integration ${agent}`);
+        }
     });
 });
 

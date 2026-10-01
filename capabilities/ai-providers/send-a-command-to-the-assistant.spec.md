@@ -1,5 +1,7 @@
 # Send a Command to the Assistant — Living Spec
 
+<!-- reviewed: dca0b55b -->
+
 ## Purpose
 
 Every button that runs a step ends here: a command name and its arguments become something the chosen assistant actually executes, in a terminal, the editor's chat, or the Claude Code panel. Each assistant spells commands differently and accepts input differently. Get this wrong and the user sees a terminal that prints help text, a chat that does not recognize the command, or nothing at all.

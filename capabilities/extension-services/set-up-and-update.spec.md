@@ -32,15 +32,15 @@ At start-up the extension SHALL work out whether the `specify` CLI is on the mac
 ### CLI install, init and upgrade run in a terminal the user can watch
 <!-- touches: apps/vscode/src/speckit/detector.ts, apps/vscode/src/speckit/cliCommands.ts -->
 
-Installing the CLI, initialising the workspace and the upgrade choices (`SpecKit: Upgrade` offers Upgrade All, Upgrade Project, Upgrade CLI and Update spec-kit Extension) SHALL each run as a command in a visible integrated terminal and offer a window reload for when it finishes. The project upgrade SHALL refresh the scaffolding for the currently configured AI provider. The project upgrade SHALL pick the agent with `--integration`, and fall back to `--ai` only for an older CLI whose init help does not list `--integration`. Commands that act on a project SHALL refuse with a message when no folder is open.
+Installing the CLI, initialising the workspace and the upgrade choices (`SpecKit: Upgrade` offers Upgrade All, Upgrade Project, Upgrade CLI and Update spec-kit Extension) SHALL each run as a command in a visible integrated terminal and offer a window reload for when it finishes. Commands that act on a project SHALL refuse with a message when no folder is open.
 
 #### Scenario: upgrading a project
-- **WHEN** the user picks Upgrade Project with Claude as the provider
-- **THEN** a terminal opens at the project root and re-runs the project init in place for that provider, and a message offers Reload Window
+- **WHEN** the user picks Upgrade Project
+- **THEN** a terminal opens at the project root and re-runs the project init in place, and a message offers Reload Window
 
-#### Scenario: upgrading a project with an older CLI
-- **WHEN** the installed `specify init --help` lists `--ai` but not `--integration`
-- **THEN** the terminal command names the provider's agent with `--ai` instead
+#### Scenario: no folder is open
+- **WHEN** the user runs Initialize Workspace or Upgrade Project with no folder open
+- **THEN** a message says a folder is needed and no terminal opens
 
 ### Settings saved by an older version never break start-up
 <!-- touches: apps/vscode/src/core/settingsMigration.ts, apps/vscode/src/extension.ts -->
@@ -76,3 +76,33 @@ The update notification SHALL offer Update, View Changelog and Skip. Update inst
 #### Scenario: a version was skipped
 - **WHEN** the user skipped 1.4.0 and 1.5.0 is later published
 - **THEN** 1.4.0 is never offered again and 1.5.0 is
+
+### Initialize Workspace and Upgrade Project name the configured provider's agent with `--integration`
+<!-- touches: apps/vscode/src/speckit/detector.ts, apps/vscode/src/speckit/specKitAgent.ts -->
+
+Initialize Workspace and Upgrade Project SHALL name the agent the configured AI provider resolves to with `--integration`, and use `--ai` only when the installed CLI's init help lists `--ai` and not `--integration`. Upgrade All reinstalls the CLI first, so it uses `--integration` without checking the help.
+
+#### Scenario: a current CLI
+- **WHEN** the provider is Codex and the user runs Initialize Workspace against a CLI whose init help lists `--integration`
+- **THEN** the terminal runs `specify init . --integration codex`
+
+#### Scenario: an older CLI
+- **WHEN** the installed `specify init --help` lists `--ai` but not `--integration`
+- **THEN** Initialize Workspace and Upgrade Project name the provider's agent with `--ai` instead
+
+#### Scenario: Upgrade All on an older CLI
+- **WHEN** the user picks Upgrade All while the installed CLI's init help lists only `--ai`
+- **THEN** the init that follows the reinstall names the agent with `--integration`
+
+### Windsurf is named with `--ai` or not at all
+<!-- touches: apps/vscode/src/speckit/detector.ts, apps/vscode/src/speckit/specKitAgent.ts -->
+
+An agent current Spec Kit no longer lists as an integration (`windsurf`, which IDE Chat on Windsurf resolves to) SHALL be passed as `--ai windsurf` when the installed CLI's init help lists `--ai` and not `--integration`, and otherwise with no agent flag, so Spec Kit's own picker asks instead of the command failing on an unknown option.
+
+#### Scenario: IDE Chat on Windsurf with an older CLI
+- **WHEN** the provider is IDE Chat on Windsurf and the CLI's init help lists `--ai` and not `--integration`
+- **THEN** Initialize Workspace and Upgrade Project carry `--ai windsurf`
+
+#### Scenario: IDE Chat on Windsurf with a current CLI
+- **WHEN** the provider is IDE Chat on Windsurf and the CLI's init help lists only `--integration`
+- **THEN** Initialize Workspace runs `specify init .`, and Upgrade Project and Upgrade All carry no agent flag
