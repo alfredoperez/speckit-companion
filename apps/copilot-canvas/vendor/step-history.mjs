@@ -7,7 +7,8 @@ var STEP_NAMES = [
   "plan",
   "tasks",
   "analyze",
-  "implement"
+  "implement",
+  "converge"
 ];
 var DEFAULT_PIPELINE_STEPS = ["specify", "plan", "tasks", "implement"];
 
@@ -236,8 +237,18 @@ function deriveTimingSummary(stepHistory, expectedPhases = DEFAULT_PIPELINE_STEP
   );
   if (!sequenceValid) return { ...base, complete: false };
   const startedAt = entries[0].startedAt;
-  const endedAt = entries[entries.length - 1].completedAt;
-  const [runStart, runEnd] = [Date.parse(startedAt), Date.parse(endedAt)];
+  let endedAt = entries[entries.length - 1].completedAt;
+  let runEnd = Date.parse(endedAt);
+  const lastExpectedIdx = Math.max(...expected.map((name) => STEP_NAMES.indexOf(name)));
+  for (const name of lastExpectedIdx < 0 ? [] : STEP_NAMES.slice(lastExpectedIdx + 1)) {
+    const entry = stepHistory[name];
+    if (expected.includes(name) || entry?.durationTrusted !== true || !entry.completedAt) continue;
+    const [start, end] = [Date.parse(entry.startedAt), Date.parse(entry.completedAt)];
+    if (start < runEnd || !(end > start)) continue;
+    endedAt = entry.completedAt;
+    runEnd = end;
+  }
+  const runStart = Date.parse(startedAt);
   const elapsedMs = Object.values(stepHistory).reduce((sum, entry) => {
     if (entry?.durationTrusted !== true || !entry.completedAt) return sum;
     const [start, end] = [Date.parse(entry.startedAt), Date.parse(entry.completedAt)];

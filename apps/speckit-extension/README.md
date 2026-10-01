@@ -266,6 +266,8 @@ These run automatically when their lifecycle event fires. They keep `.spec-conte
 | `speckit.companion.after-plan` | `after_plan` | Plan completion (`planned`) |
 | `speckit.companion.after-tasks` | `after_tasks` | Tasks completion (`ready-to-implement`) |
 | `speckit.companion.after-implement` | `after_implement` | Per-task journaling on implement (`implemented` when every task is checked) |
+| `speckit.companion.before-converge` | `before_converge` | Converge start (no status change) |
+| `speckit.companion.after-converge` | `after_converge` | Converge finish (no status change) |
 
 Full reference: [docs/commands.md](./docs/commands.md). This table is checked against the extension's own command list on every build, so a command can't be added without appearing here.
 
@@ -293,7 +295,7 @@ Verify with `specify extension list` (`companion` present), then run a real `/sp
                                               →  .spec-context.json  (append-only history[])  →  GUI lights up
 ```
 
-Each lifecycle hook appends one entry to the canonical `history[]` and advances `currentStep` / `status`. Inside implement, each completed task is journaled as a substep, so the viewer never mistakes a single task for the whole step finishing. When no hook fired, `derive-from-files.py` rebuilds the same shape from the artifacts on disk, tagged `by: "derive"`. Full chain, the writer's guarantees, and the canonical schema: [docs/how-it-works.md](./docs/how-it-works.md).
+Each lifecycle hook appends one entry to the canonical `history[]` and advances `currentStep` / `status`; the converge hooks move `currentStep` only, since converge owns no status. Inside implement, each completed task is journaled as a substep, so the viewer never mistakes a single task for the whole step finishing. When no hook fired, `derive-from-files.py` rebuilds the same shape from the artifacts on disk, tagged `by: "derive"`. Full chain, the writer's guarantees, and the canonical schema: [docs/how-it-works.md](./docs/how-it-works.md).
 
 ## Docs & links
 

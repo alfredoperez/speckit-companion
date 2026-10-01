@@ -142,6 +142,44 @@ describe('OverviewTiming', () => {
         expect(host.textContent).not.toContain('active');
     });
 
+    describe('a run that converged after implement', () => {
+        const at = (minute: number) => `2026-09-30T10:${String(minute).padStart(2, '0')}:00.000Z`;
+        const pair = (step: HistoryEntry['step'], start: number, end: number): HistoryEntry[] => [
+            { step, substep: null, kind: 'start', by: 'extension', at: at(start) },
+            { step, substep: null, kind: 'complete', by: 'extension', at: at(end) },
+        ];
+        const record: HistoryEntry[] = [
+            ...pair('specify', 0, 4), ...pair('plan', 5, 9), ...pair('tasks', 10, 12),
+            ...pair('implement', 13, 20), ...pair('converge', 30, 32),
+        ];
+        const renderRun = (history: HistoryEntry[], currentStep: 'implement' | 'converge') => {
+            const stepHistory = deriveStepHistory(history, currentStep, 'implemented');
+            const host = document.createElement('div');
+            render(h(OverviewTiming, {
+                state: base({ status: 'implemented', history, stepHistory, timing: deriveTimingSummary(stepHistory) }),
+            }), host);
+            return host;
+        };
+        const phaseNames = (host: HTMLElement) => Array.from(host.querySelectorAll('.dossier-timing__name'))
+            .map(node => node.textContent);
+
+        it('lists Converge after Implement with its duration and counts it in the active total', () => {
+            const host = renderRun(record, 'converge');
+            expect(phaseNames(host)).toEqual(['Specify', 'Plan', 'Tasks', 'Implement', 'Converge']);
+            const converge = Array.from(host.querySelectorAll('.dossier-timing__phase'))
+                .find(node => node.querySelector('.dossier-timing__name')?.textContent === 'Converge');
+            expect(converge?.querySelector('.dossier-timing__duration')?.textContent).toBe('2m');
+            expect(host.textContent).toContain('19m active');
+            expect(host.textContent).not.toContain('Timing coverage');
+        });
+
+        it('renders a run without converge exactly as before', () => {
+            const host = renderRun(record.slice(0, -2), 'implement');
+            expect(phaseNames(host)).toEqual(['Specify', 'Plan', 'Tasks', 'Implement']);
+            expect(host.textContent).toContain('17m active');
+        });
+    });
+
     describe('a spec that sat idle between specify and plan', () => {
         const qaRecord: HistoryEntry[] = [
             { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-09-30T20:23:24.574Z' },

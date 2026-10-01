@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 - **Move a node to another phase from its panel.** A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the edge of the one you pick nearest where it was, so you no longer have to drag it or remove and re-add it.
 - **SpecKit Companion suggests the assistant your project was set up for.** Spec Kit records which assistant a project was set up for in `.specify/integration.json`. When that is not the assistant your AI provider setting names, SpecKit Companion now says so when it starts and offers to switch, or to keep your current one. It never switches on its own, and once you keep your choice it does not ask again for that project. A project set up for an assistant SpecKit Companion has no provider for shows nothing.
 
+- **The viewer shows Spec Kit's converge step.** When you run `/speckit.converge` after implement, the Tasks entry in the viewer's rail shows it running, with its timer, and the Overview lists Converge after Implement with how long it took. A spec that ran converge still offers Mark Completed and Archive. Converge never changes a spec's status, and the viewer has no button to start it.
+
 ### Fixed
 - **Move to phase… works in a narrow Pipeline Builder.** In a side panel the node's panel now scrolls, so the button is always reachable, and its list opens inside the panel on the side with room, showing every phase instead of being cut off at the edge.
 - **Move to phase… opens in the right place with reduced motion on.** With the system's reduce-motion setting turned on, the list of phases opened far from its button, off the top of the panel; it now opens right under it.

@@ -366,3 +366,67 @@ describe('StepTab — #229 in-flight sync glyph', () => {
         }
     });
 });
+
+describe('StepTab — converge in flight on the percent host', () => {
+    afterEach(() => {
+        viewerState.value = null;
+    });
+
+    const implementDone = { startedAt: '2026-10-01T10:00:00Z', completedAt: '2026-10-01T10:20:00Z' };
+    const tasksDone = { startedAt: '2026-10-01T09:50:00Z', completedAt: '2026-10-01T09:55:00Z' };
+    const convergeProps = (converge: { startedAt: string; completedAt: string | null }, over: Partial<StepTabProps> = {}) => baseProps({
+        doc: doc('tasks', true, 'Tasks'),
+        index: 2,
+        currentDoc: 'tasks',
+        currentStep: 'converge',
+        taskCompletionPercent: 100,
+        isPercentHost: true,
+        stepHistory: { tasks: tasksDone, implement: implementDone, converge },
+        ...over,
+    });
+
+    it('shows the sync glyph, a converge label and one timer while converge runs at implemented', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        viewerState.value = { status: 'implemented', highlights: ['specify', 'plan', 'tasks'], activeSubstep: null } as any;
+        const c = renderTab(convergeProps({ startedAt: '2026-10-01T10:30:00Z', completedAt: null }));
+        try {
+            expect(c.querySelector('button')!.className).toContain('in-flight');
+            expect(c.querySelector('.step-status .step-status__sync')).not.toBeNull();
+            expect(c.querySelector('.step-tab__percent')).toBeNull();
+            expect(c.querySelector('.step-tab__substep')?.textContent).toBe('converge');
+            expect(c.querySelectorAll('.step-tab__elapsed')).toHaveLength(1);
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('drops the glyph, label and timer once converge records its finish', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        viewerState.value = { status: 'implemented', highlights: ['specify', 'plan', 'tasks'], activeSubstep: null } as any;
+        const c = renderTab(convergeProps({ startedAt: '2026-10-01T10:30:00Z', completedAt: '2026-10-01T10:32:00Z' }));
+        try {
+            expect(c.querySelector('button')!.className).not.toContain('in-flight');
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('.step-tab__substep')).toBeNull();
+            expect(c.querySelector('.step-tab__elapsed')).toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('leaves a tab that is not the percent host untouched while converge runs', () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        viewerState.value = { status: 'implemented', highlights: ['specify', 'plan', 'tasks'], activeSubstep: null } as any;
+        const c = renderTab(convergeProps(
+            { startedAt: '2026-10-01T10:30:00Z', completedAt: null },
+            { doc: doc('plan', true, 'Plan'), index: 1, currentDoc: 'plan', isPercentHost: false },
+        ));
+        try {
+            expect(c.querySelector('.step-status__sync')).toBeNull();
+            expect(c.querySelector('.step-tab__substep')).toBeNull();
+            expect(c.querySelector('.step-tab__elapsed')).toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+});

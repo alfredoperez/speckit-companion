@@ -1,5 +1,7 @@
 # Fold a finished change back — Living Spec
 
+<!-- reviewed: dee80029 -->
+
 ## Purpose
 
 A feature spec is a proposal that ends when the feature ships. Folding writes what the feature changed into the durable spec of each capability it touched, at the moment the feature is marked complete, so the living spec stays the record. A fold that writes to the wrong spec, writes twice, or quietly writes nothing is how a living spec stops being trusted.

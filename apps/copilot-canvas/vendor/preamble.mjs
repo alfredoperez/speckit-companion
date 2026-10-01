@@ -7,7 +7,8 @@ var STEP_NAMES = [
   "plan",
   "tasks",
   "analyze",
-  "implement"
+  "implement",
+  "converge"
 ];
 var STATUSES = [
   "draft",

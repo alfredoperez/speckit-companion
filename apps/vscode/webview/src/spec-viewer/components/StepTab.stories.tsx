@@ -100,6 +100,30 @@ export const ImplementRunning: Story = {
     },
 };
 
+// Converge running after implement: the spec stays implemented while the host tab spins, labels it and times it.
+export const ConvergeRunning: Story = {
+    render: () => {
+        seedStatus('implemented');
+        const now = Date.now();
+        return (
+            <StepTab
+                {...base}
+                doc={mockDoc('tasks', true, 'Tasks')}
+                index={2}
+                currentDoc="tasks"
+                currentStep="converge"
+                taskCompletionPercent={100}
+                isPercentHost
+                stepHistory={{
+                    tasks: { startedAt: new Date(now - 30 * 60_000).toISOString(), completedAt: new Date(now - 28 * 60_000).toISOString() },
+                    implement: { startedAt: new Date(now - 27 * 60_000).toISOString(), completedAt: new Date(now - 5 * 60_000).toISOString() },
+                    converge: { startedAt: new Date(now - 48_000).toISOString(), completedAt: null },
+                }}
+            />
+        );
+    },
+};
+
 // A settled spec never spins, whatever the percent says — a stalled 95% still reads as done.
 export const CompletedWithStalledPercent: Story = {
     render: () => {

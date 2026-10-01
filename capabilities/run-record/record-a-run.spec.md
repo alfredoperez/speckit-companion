@@ -35,7 +35,7 @@ The run record SHALL be the file `.spec-context.json` in the spec's own folder, 
 ### Step and status move together along one vocabulary
 <!-- touches: apps/vscode/src/core/types/**, apps/speckit-extension/scripts/spec_context.py, apps/speckit-extension/scripts/write-context.py -->
 
-`currentStep` SHALL be one of `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, and `status` one of `draft`, `specifying`, `specified`, `planning`, `planned`, `tasking`, `ready-to-implement`, `implementing`, `implemented`, `completed`, `archived`. Finishing a step SHALL set the status that step owns (`specified`, `planned`, `ready-to-implement`, `implemented`); `clarify` and `analyze` record only their finish. Starting a step moves `currentStep` and leaves `status` alone unless the caller names one. A finished spec is expressed in `status`, never as a `currentStep` of `done`.
+`currentStep` SHALL be one of `specify`, `clarify`, `plan`, `tasks`, `analyze`, `implement`, `converge`, and `status` one of `draft`, `specifying`, `specified`, `planning`, `planned`, `tasking`, `ready-to-implement`, `implementing`, `implemented`, `completed`, `archived`. Finishing a step SHALL set the status that step owns (`specified`, `planned`, `ready-to-implement`, `implemented`); `clarify` and `analyze` record only their finish. Starting a step moves `currentStep` and leaves `status` alone unless the caller names one. A finished spec is expressed in `status`, never as a `currentStep` of `done`.
 
 #### Scenario: a project adds its own step
 - **WHEN** a project declares an extra step and a run records its start and finish
@@ -109,3 +109,11 @@ A capture SHALL write to the spec the command is actually working on: the folder
 #### Scenario: a task sync names one spec while the active pointer names another
 - **WHEN** a tasks file and an explicit feature directory disagree
 - **THEN** nothing is written and the mismatch is reported
+
+### Converge never changes a spec's status
+
+Recording a converge start or finish SHALL leave `status` where it was, in either direction, so a spec at `implemented` stays `implemented` even when converge appends tasks.
+
+#### Scenario: converge runs on an implemented spec
+- **WHEN** Spec Kit's converge fires its before and after hooks on a spec at `implemented`
+- **THEN** history gains one converge start and one converge finish stamped by the extension, and the status is still `implemented`

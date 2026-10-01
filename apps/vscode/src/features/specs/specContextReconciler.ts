@@ -18,6 +18,7 @@ import {
     completedStatusForStep,
     HistoryEntry,
     inFlightStatusForStep,
+    lifecycleStepFor,
     SpecContext,
     STATUSES,
     STATUS_OWNING_STEP,
@@ -41,12 +42,13 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
     // by whether the last history entry for currentStep was a completion
     // (`from.step === currentStep`).
     if (!(STATUSES as string[]).includes(result.status)) {
-        const completed = isStepCompletedInHistory(result.history, result.currentStep);
+        const lifecycleStep = lifecycleStepFor(result.currentStep);
+        const completed = isStepCompletedInHistory(result.history, lifecycleStep);
         // A step the project added maps to no canonical status, so there is
         // nothing to repair it to — leave the spec's status alone.
         const repaired = completed
-            ? completedStatusForStep(result.currentStep)
-            : inFlightStatusForStep(result.currentStep);
+            ? completedStatusForStep(lifecycleStep)
+            : inFlightStatusForStep(lifecycleStep);
         if (repaired) {
             result = { ...result, status: repaired };
             changed = true;
@@ -65,7 +67,7 @@ export function reconcile(ctx: SpecContext): SpecContext | null {
     // and roll `currentStep` back to whatever step that completed status
     // belongs to.
     const owner = stepOwningCompletedStatus(result.status);
-    if (owner && owner !== result.currentStep) {
+    if (owner && owner !== lifecycleStepFor(result.currentStep)) {
         result = { ...result, currentStep: owner };
         changed = true;
     }
@@ -134,7 +136,7 @@ function stepOwningCompletedStatus(status: SpecContext['status']): StepName | nu
 export function detectCurrentStepDrift(ctx: SpecContext): StepName | null {
     if (!ctx.history || ctx.history.length === 0) return null;
     const last = ctx.history[ctx.history.length - 1];
-    return last.step === ctx.currentStep ? null : ctx.currentStep;
+    return lifecycleStepFor(last.step) === lifecycleStepFor(ctx.currentStep) ? null : ctx.currentStep;
 }
 
 /**

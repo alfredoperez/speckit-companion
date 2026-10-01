@@ -348,6 +348,27 @@ class OpenStepJudgedByItsOwnCadence(unittest.TestCase):
         self.assertEqual(dc._dangling_steps(ctx, self._now(10, 0)), [])
         self.assertEqual([s for s, _ in dc._dangling_steps(ctx, self._now(59, 0))], ["implement"])
 
+    def _converge_ctx(self, status):
+        return {"currentStep": "converge", "status": status, "history": [
+            {"step": "implement", "substep": None, "kind": "start", "at": self._at(0, 0)},
+            {"step": "implement", "substep": None, "kind": "complete", "at": self._at(5, 0)},
+            {"step": "converge", "substep": None, "kind": "start", "at": self._at(6, 0)},
+        ]}
+
+    def test_gives_an_open_converge_at_implemented_the_in_flight_grace(self):
+        ctx = self._converge_ctx("implemented")
+        self.assertEqual(dc._dangling_steps(ctx, self._now(10, 0)), [])
+        self.assertEqual([s for s, _ in dc._dangling_steps(ctx, self._now(59, 0))], ["converge"])
+
+    def test_names_an_open_converge_on_a_closed_spec(self):
+        dangling = dc._dangling_steps(self._converge_ctx("completed"), self._now(10, 0))
+        self.assertEqual([s for s, _ in dangling], ["converge"])
+
+    def test_flags_an_ai_complete_on_converge(self):
+        ctx = self._converge_ctx("implemented")
+        ctx["history"].append({"step": "converge", "substep": None, "kind": "complete", "by": "ai", "at": self._at(9, 0)})
+        self.assertEqual([a[0] for a in dc._attribution_anomalies(ctx)], ["converge"])
+
 
 class ThinBoundaryStep(unittest.TestCase):
     """A step logging one boundary for its whole span is labelled, not measured."""

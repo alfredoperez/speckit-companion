@@ -12,7 +12,7 @@
     "selectedAt": { "type": "string", "format": "date-time" },
     "currentStep": {
       "type": "string",
-      "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
+      "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement", "converge"]
     },
     "status": {
       "type": "string",
@@ -147,7 +147,7 @@
       "properties": {
         "step": {
           "type": "string",
-          "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement"]
+          "enum": ["specify", "clarify", "plan", "tasks", "analyze", "implement", "converge"]
         },
         "substep": { "type": ["string", "null"] },
         "task": { "type": "string" },

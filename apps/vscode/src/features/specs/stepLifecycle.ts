@@ -11,6 +11,7 @@ import {
     completedStatusForStep,
     HistoryEntryBy,
     inFlightStatusForStep,
+    lifecycleStepFor,
     SpecContext,
     STATUS_OWNING_STEP,
     STEP_NAMES,
@@ -112,6 +113,8 @@ export async function setStatus(
         await updateSpecContext(
             specDir,
             ctx => {
+                // Only converge's own hook closes converge; a finish stamped here would bill the wait to it.
+                if (ctx.currentStep === 'converge') return { ...ctx, status };
                 const at = new Date().toISOString();
                 const next = appendTransition(
                     { ...ctx, status },
@@ -189,12 +192,14 @@ export async function reactivate(
         await updateSpecContext(
             specDir,
             ctx => {
-                const status = inFlightStatusForStep(ctx.currentStep) ?? ctx.status;
+                // A reactivated converge spec goes back to implement, so converge's own span is never re-closed.
+                const step = lifecycleStepFor(ctx.currentStep);
+                const status = inFlightStatusForStep(step) ?? ctx.status;
                 const at = new Date().toISOString();
                 return appendTransition(
-                    { ...ctx, status },
+                    { ...ctx, currentStep: step, status },
                     {
-                        step: ctx.currentStep,
+                        step,
                         substep: null,
                         kind: 'complete',
                         by,

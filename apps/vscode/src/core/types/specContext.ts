@@ -11,7 +11,8 @@ export type StepName =
     | 'plan'
     | 'tasks'
     | 'analyze'
-    | 'implement';
+    | 'implement'
+    | 'converge';
 
 export const STEP_NAMES: StepName[] = [
     'specify',
@@ -20,6 +21,7 @@ export const STEP_NAMES: StepName[] = [
     'tasks',
     'analyze',
     'implement',
+    'converge',
 ];
 
 export type Status =
@@ -86,8 +88,10 @@ export function isSettledStatus(status?: string | null): boolean {
  * that the spec is closed. The step settles at `implemented`, and only the
  * user's Mark Completed advances that to `completed` — a copy of this map that
  * returns `completed` here silently skips that gate.
+ *
+ * `converge` owns no status, so starting or finishing it keeps the spec's status.
  */
-export const STEP_STATUS: Readonly<Record<StepName, { inFlight: Status; completed: Status }>> = {
+export const STEP_STATUS: Readonly<Partial<Record<StepName, { inFlight: Status; completed: Status }>>> = {
     specify: { inFlight: 'specifying', completed: 'specified' },
     clarify: { inFlight: 'specifying', completed: 'specified' },
     plan: { inFlight: 'planning', completed: 'planned' },
@@ -104,6 +108,11 @@ export function inFlightStatusForStep(step: StepName): Status | undefined {
 /** The status a step advances to when it finishes, or undefined for a step outside the lifecycle set. */
 export function completedStatusForStep(step: StepName): Status | undefined {
     return STEP_STATUS[step]?.completed;
+}
+
+/** The lifecycle step a step belongs to: converge runs inside implement, every other step is its own. */
+export function lifecycleStepFor(step: StepName): StepName {
+    return step === 'converge' ? 'implement' : step;
 }
 
 /**

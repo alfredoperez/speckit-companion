@@ -37,6 +37,7 @@ const STEP_LABELS: Record<StepName, string> = {
     tasks: 'Tasks',
     analyze: 'Analyze',
     implement: 'Implement',
+    converge: 'Converge',
 };
 
 function stepLabel(step: StepName | string | null | undefined): string {

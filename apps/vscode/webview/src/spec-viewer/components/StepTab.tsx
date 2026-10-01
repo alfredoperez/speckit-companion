@@ -1,6 +1,6 @@
 import type { SpecDocument, StalenessMap } from '../types';
 import { viewerState } from '../signals';
-import { IMPLEMENT_STEP, isStepInFlight } from '../stepInFlight';
+import { CONVERGE_STEP, IMPLEMENT_STEP, isConvergeInFlight, isStepInFlight } from '../stepInFlight';
 import { ElapsedTimer } from './ElapsedTimer';
 
 const DOC_TO_STEP: Record<string, string> = {
@@ -61,7 +61,8 @@ export function StepTab(props: StepTabProps) {
     };
     // The percent host stands in for implement when the rail has no implement entry.
     const hostsRunningImplement = !!isPercentHost && isStepInFlight(IMPLEMENT_STEP, run);
-    const isWorking = isStepInFlight(stepName, run) || hostsRunningImplement;
+    const hostsRunningConverge = !!isPercentHost && !hostsRunningImplement && isConvergeInFlight(run);
+    const isWorking = isStepInFlight(stepName, run) || hostsRunningImplement || hostsRunningConverge;
     const isLocked = runningStepIndex != null
         && index > runningStepIndex
         && !isViewing
@@ -115,14 +116,15 @@ export function StepTab(props: StepTabProps) {
         ? `${baseTooltip} (disabled while ${activeStep} is running)`
         : baseTooltip;
 
-    // A hosted implement run already carries its progress in the percent label.
-    const runEntry = stepHistory?.[stepName];
+    // A hosted implement run already carries its progress in the percent label; a hosted converge times itself.
+    const runEntry = hostsRunningConverge ? stepHistory?.[CONVERGE_STEP] : stepHistory?.[stepName];
     const runningStartedAt = canonicalState === 'in-flight'
         && runEntry?.startedAt
         && !runEntry.completedAt
         && !hostsRunningImplement
         ? runEntry.startedAt
         : null;
+    const substep = hostsRunningConverge ? CONVERGE_STEP : vsSubstep;
 
     return (
         <button
@@ -154,7 +156,7 @@ export function StepTab(props: StepTabProps) {
                     {taskCompletionPercent}%
                 </span>
             )}
-            {vsSubstep && <span class="step-tab__substep">{vsSubstep}</span>}
+            {substep && <span class="step-tab__substep">{substep}</span>}
             {runningStartedAt && <ElapsedTimer startedAt={runningStartedAt} />}
             {isStale && <span class="stale-badge">!</span>}
         </button>

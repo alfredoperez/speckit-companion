@@ -39,7 +39,7 @@ from task_sync import parse_task_markers  # noqa: E402
 
 #: Steps whose boundaries the extension stamps; an `ai` complete there is an
 #: anomaly, because it lands first and permanently blocks the hook's close.
-EXTENSION_STEPS = {"specify", "plan", "tasks", "implement"}
+EXTENSION_STEPS = {"specify", "plan", "tasks", "implement", "converge"}
 #: Steps the AI self-closes. An `extension` complete here is the mirror anomaly.
 AI_STEPS = {"clarify", "analyze"}
 
@@ -144,7 +144,7 @@ def _dangling_steps(ctx: dict, now: datetime | None = None) -> list:
     """
     log = log_entries(ctx)
     current = ctx.get("currentStep")
-    terminal = ctx.get("status") in ("completed", "archived", "implemented")
+    status = ctx.get("status")
     now = now or datetime.now(timezone.utc)
     started, completed = {}, set()
     for e in log:
@@ -159,7 +159,9 @@ def _dangling_steps(ctx: dict, now: datetime | None = None) -> list:
     for step, at in started.items():
         if step in completed:
             continue
-        if step == current and not terminal:
+        # Converge runs after implement settled, so only a closed spec ends its grace.
+        settled = status in ("completed", "archived") or (status == "implemented" and step != "converge")
+        if step == current and not settled:
             grace, last = _cadence_grace(log, step)
             ts = last or parse_time(at)
             if ts is None or (now - ts).total_seconds() < grace:

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { StepCompletionNotifier, NotifierContext } from '../stepCompletionNotifier';
+import { StepCompletionNotifier, NotifierContext, labelFor } from '../stepCompletionNotifier';
 import { StepHistoryEntry } from '../../../core/types/specContext';
 
 jest.mock('vscode');
@@ -61,6 +61,25 @@ describe('StepCompletionNotifier', () => {
                 'Spec 074 · Plan complete',
                 'Open spec'
             );
+        });
+
+        it('names converge "Converge" when it completes', () => {
+            const notifier = new StepCompletionNotifier();
+
+            const first = ctx({ converge: entry('2026-04-23T11:00:00Z', null) });
+            notifier.observe(SPEC_DIR, null, first);
+
+            const second = ctx({ converge: entry('2026-04-23T11:00:00Z', '2026-04-23T11:04:00Z') });
+            notifier.observe(SPEC_DIR, first, second);
+
+            expect(showInfo).toHaveBeenCalledWith(
+                'Spec 074 · Converge complete',
+                'Open spec'
+            );
+        });
+
+        it('labels a prototype-key step by its own name', () => {
+            expect(labelFor('constructor')).toBe('Constructor');
         });
 
         it('does not re-notify for the same completion on subsequent observes', () => {

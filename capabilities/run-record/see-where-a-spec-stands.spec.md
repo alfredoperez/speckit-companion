@@ -44,11 +44,15 @@ When a record exists but names a step whose document is missing, or the folder h
 ### The next action follows the spec's own workflow
 <!-- touches: apps/speckit-extension/scripts/status-context.py -->
 
-The next action SHALL be: the next step's command when the current step is finished, the current step's command when it is still in progress, the next unticked task when inside implement, and "Pipeline complete" when the spec is `implemented`, `completed` or `archived` or has no tasks left. The command offered belongs to the workflow the record names, so a Companion spec continues on Companion commands and a stock spec on stock ones.
+The next action SHALL be: the next step's command when the current step is finished, the current step's command when it is still in progress, the next unticked task when inside implement or converge, and "Pipeline complete" when the spec is `completed` or `archived`, has no tasks left, or is `implemented` and never ran converge. An `implemented` spec that ran converge still names its next unticked task, because converge appends tasks after implement settles. The command offered belongs to the workflow the record names, so a Companion spec continues on Companion commands and a stock spec on stock ones.
 
 #### Scenario: a Companion spec finished planning
 - **WHEN** the record has `workflow: companion` and status `planned`
 - **THEN** the next command is the Companion tasks command
+
+#### Scenario: converge appended tasks
+- **WHEN** the record is at `implemented` with `currentStep: converge` and the task list has an unticked task
+- **THEN** status names that task as the next action rather than "Pipeline complete"
 
 ### Resume dispatches the next command and carries the decisions along
 <!-- touches: apps/speckit-extension/commands/speckit.companion.resume.md, apps/speckit-extension/scripts/status-context.py -->
@@ -71,11 +75,15 @@ A record SHALL be reconstructable from the spec folder when hooks never ran: the
 ### The editor repairs a record that contradicts itself
 <!-- touches: apps/vscode/src/features/specs/specContextReconciler.ts -->
 
-On reading a record the editor SHALL repair an unrecognised status from what history shows, move `currentStep` back to the step that owns a completed status, and settle a lagging in-progress status once history shows the step complete. It never does that last step for implement, where finishing stays a deliberate action, and it never invents history entries. When `currentStep` does not match the last history entry it logs a warning instead.
+On reading a record the editor SHALL repair an unrecognised status from what history shows, move `currentStep` back to the step that owns a completed status, and settle a lagging in-progress status once history shows the step complete. It never does that last step for implement, where finishing stays a deliberate action, and it never invents history entries. When `currentStep` does not match the last history entry it logs a warning instead. Converge counts as implement in every one of these checks, so an `implemented` spec whose current step is `converge` is neither rewritten nor warned about.
 
 #### Scenario: a record claims planning began when only specify ran
 - **WHEN** a record reads `currentStep: plan` with `status: specified`
 - **THEN** `currentStep` is set back to `specify`
+
+#### Scenario: converge is running on an implemented spec
+- **WHEN** a record reads `currentStep: converge` with `status: implemented`
+- **THEN** the editor rewrites nothing and logs no warning
 
 ### Records written by older versions still open
 <!-- touches: apps/vscode/src/features/specs/specContextReader.ts, apps/speckit-extension/scripts/spec_context.py -->

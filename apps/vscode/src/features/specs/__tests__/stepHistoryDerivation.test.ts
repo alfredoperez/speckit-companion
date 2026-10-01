@@ -721,6 +721,96 @@ describe('deriveTimingSummary', () => {
         expect(timing.elapsedMs).toBe(19 * 60 * 1000);
     });
 
+    describe('converge after implement', () => {
+        const fourPhases = {
+            specify: measured('2026-07-01T10:00:00Z', '2026-07-01T10:05:00Z'),
+            plan: measured('2026-07-01T10:05:00Z', '2026-07-01T10:12:00Z'),
+            tasks: measured('2026-07-01T10:12:00Z', '2026-07-01T10:15:00Z'),
+            implement: measured('2026-07-01T10:15:00Z', '2026-07-01T10:24:00Z'),
+        };
+
+        it('extends the total and the end by a trusted converge span, leaving the wait before it out', () => {
+            const timing = deriveTimingSummary({
+                ...fourPhases,
+                converge: measured('2026-07-01T10:30:00Z', '2026-07-01T10:33:00Z'),
+            });
+            expect(timing).toEqual({
+                measuredPhases: 4,
+                expectedPhases: 4,
+                complete: true,
+                startedAt: '2026-07-01T10:00:00Z',
+                endedAt: '2026-07-01T10:33:00Z',
+                elapsedMs: 27 * 60 * 1000,
+            });
+        });
+
+        it('leaves an untrusted converge out of the total', () => {
+            const timing = deriveTimingSummary({
+                ...fourPhases,
+                converge: { startedAt: '2026-07-01T10:30:00Z', completedAt: '2026-07-01T10:33:00Z', durationTrusted: false },
+            });
+            expect(timing.endedAt).toBe('2026-07-01T10:24:00Z');
+            expect(timing.elapsedMs).toBe(24 * 60 * 1000);
+        });
+
+        it('leaves a converge still running out of the total', () => {
+            const timing = deriveTimingSummary({
+                ...fourPhases,
+                converge: { startedAt: '2026-07-01T10:30:00Z', completedAt: null, durationTrusted: false },
+            });
+            expect(timing.endedAt).toBe('2026-07-01T10:24:00Z');
+            expect(timing.elapsedMs).toBe(24 * 60 * 1000);
+        });
+
+        it('adds nothing to a run that never converged', () => {
+            const timing = deriveTimingSummary(fourPhases);
+            expect(timing.endedAt).toBe('2026-07-01T10:24:00Z');
+            expect(timing.elapsedMs).toBe(24 * 60 * 1000);
+            expect(timing.measuredPhases).toBe(4);
+        });
+
+        it('adds no converge to a run whose expected phases are not all measured', () => {
+            const timing = deriveTimingSummary({
+                implement: fourPhases.implement,
+                converge: measured('2026-07-01T10:30:00Z', '2026-07-01T10:33:00Z'),
+            });
+            expect(timing).toEqual({ measuredPhases: 1, expectedPhases: 4, complete: false });
+        });
+
+        it('keeps implement and converge trusted for a normal implement-then-converge record', () => {
+            const history: HistoryEntry[] = [
+                tx({ step: 'specify', kind: 'start', at: '2026-07-21T10:00:00Z' }),
+                tx({ step: 'specify', kind: 'complete', at: '2026-07-21T10:04:00Z' }),
+                tx({ step: 'plan', kind: 'start', at: '2026-07-21T10:05:00Z' }),
+                tx({ step: 'plan', kind: 'complete', at: '2026-07-21T10:09:00Z' }),
+                tx({ step: 'tasks', kind: 'start', at: '2026-07-21T10:10:00Z' }),
+                tx({ step: 'tasks', kind: 'complete', at: '2026-07-21T10:12:00Z' }),
+                tx({ step: 'implement', kind: 'start', at: '2026-07-21T10:13:00Z' }),
+                tx({ step: 'implement', kind: 'complete', at: '2026-07-21T10:20:00Z' }),
+                tx({ step: 'converge', kind: 'start', at: '2026-07-21T10:30:00Z' }),
+                tx({ step: 'converge', kind: 'complete', at: '2026-07-21T10:32:00Z' }),
+            ];
+            const steps = deriveStepHistory(history, 'converge', 'implemented');
+            expect(steps.implement.durationTrusted).toBe(true);
+            expect(steps.converge.durationTrusted).toBe(true);
+            const timing = deriveTimingSummary(steps);
+            expect(timing.measuredPhases).toBe(4);
+            expect(timing.endedAt).toBe('2026-07-21T10:32:00Z');
+            expect(timing.elapsedMs).toBe((4 + 4 + 2 + 7 + 2) * 60 * 1000);
+        });
+
+        it('leaves a converge in flight with no finish and no duration', () => {
+            const steps = deriveStepHistory([
+                tx({ step: 'implement', kind: 'start', at: '2026-07-21T10:13:00Z' }),
+                tx({ step: 'implement', kind: 'complete', at: '2026-07-21T10:20:00Z' }),
+                tx({ step: 'converge', kind: 'start', at: '2026-07-21T10:30:00Z' }),
+            ], 'converge', 'implemented');
+            expect(steps.converge.completedAt).toBeNull();
+            expect(steps.converge.durationTrusted).toBe(false);
+            expect(steps.implement.durationTrusted).toBe(true);
+        });
+    });
+
     it('keeps partial timing as coverage and never a total', () => {
         const timing = deriveTimingSummary({
             implement: measured('2026-07-01T10:15:00Z', '2026-07-01T10:21:30Z'),

@@ -71,6 +71,25 @@ describe('comparators.status', () => {
         expect(items.map(s => s.name)).toEqual(['071-b', '072-c', '070-a']);
     });
 
+    it('ranks converge with implement, ties broken by numeric prefix', () => {
+        const items = specs('070-a', '071-b', '072-c', '073-d');
+        const statuses = {
+            'specs/070-a': 'converge',
+            'specs/071-b': 'implement',
+            'specs/072-c': 'done',
+            'specs/073-d': 'tasks',
+        };
+        items.sort(comparators.status(ctxWith({}, statuses)));
+        expect(items.map(s => s.name)).toEqual(['073-d', '071-b', '070-a', '072-c']);
+    });
+
+    it('sinks a prototype-key status to the end like an unknown one', () => {
+        const items = specs('070-a', '071-b');
+        const statuses = { 'specs/070-a': 'constructor', 'specs/071-b': 'plan' };
+        items.sort(comparators.status(ctxWith({}, statuses)));
+        expect(items.map(s => s.name)).toEqual(['071-b', '070-a']);
+    });
+
     it('sinks specs with missing status to the end', () => {
         const items = specs('070-a', '071-b', '072-c');
         const statuses = {

@@ -1,6 +1,6 @@
 # Browse Specs — Living Spec
 
-<!-- reviewed: aebf4657 -->
+<!-- reviewed: dee80029 -->
 ## Purpose
 
 The Specs view is where a person finds a spec and sees where it stands without opening it. Without it, the only way to know which specs are in flight, finished or stalled is to read each folder's run record by hand.

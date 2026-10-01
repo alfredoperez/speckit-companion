@@ -4,6 +4,8 @@ import {
     startSubstep,
     completeSubstep,
     forceStatus,
+    reactivate,
+    setStatus,
 } from '../stepLifecycle';
 
 const SPEC_DIR = '/workspace/specs/061-extension-lifecycle-writes';
@@ -16,6 +18,7 @@ const mockSetSubstepStarted: jest.Mock<any, any> = jest.fn();
 const mockSetSubstepCompleted: jest.Mock<any, any> = jest.fn();
 
 jest.mock('../specContextWriter', () => ({
+    appendTransition: jest.requireActual('../specContextWriter').appendTransition,
     updateSpecContext: (...args: unknown[]) => mockUpdateSpecContext(...args),
     setStepStarted: (...args: unknown[]) => mockSetStepStarted(...args),
     setStepCompleted: (...args: unknown[]) => mockSetStepCompleted(...args),
@@ -85,6 +88,51 @@ describe('stepLifecycle', () => {
                 undefined,
                 false
             );
+        });
+    });
+
+    describe('reactivate', () => {
+        const mutated = async (currentStep: string, history: unknown[] = []) => {
+            await reactivate(SPEC_DIR, 'user');
+            const [, mutate] = mockUpdateSpecContext.mock.calls[0];
+            return mutate({ currentStep, status: 'completed', history });
+        };
+
+        it('reopens a completed implement spec at implementing', async () => {
+            const next = await mutated('implement');
+            expect(next.currentStep).toBe('implement');
+            expect(next.status).toBe('implementing');
+        });
+
+        it('reopens a completed spec on converge at implementing, back on implement', async () => {
+            const convergeDone = { step: 'converge', substep: null, kind: 'complete', by: 'extension', at: '2026-07-21T10:08:00.000Z' };
+            const next = await mutated('converge', [convergeDone]);
+            expect(next.status).toBe('implementing');
+            expect(next.currentStep).toBe('implement');
+            const added = next.history.slice(1);
+            expect(added).toHaveLength(1);
+            expect(added[0].step).toBe('implement');
+        });
+    });
+
+    describe('setStatus', () => {
+        const mutated = async (currentStep: string) => {
+            await setStatus(SPEC_DIR, 'completed', 'user');
+            const [, mutate] = mockUpdateSpecContext.mock.calls[0];
+            return mutate({ currentStep, status: 'implemented', history: [] });
+        };
+
+        it('closes the current step when it sets the status', async () => {
+            const next = await mutated('implement');
+            expect(next.status).toBe('completed');
+            expect(next.history).toHaveLength(1);
+            expect(next.history[0]).toMatchObject({ step: 'implement', kind: 'complete' });
+        });
+
+        it('never stamps a converge finish, so an unfinished converge is not billed the wait', async () => {
+            const next = await mutated('converge');
+            expect(next.status).toBe('completed');
+            expect(next.history).toHaveLength(0);
         });
     });
 

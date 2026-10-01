@@ -1,0 +1,1340 @@
+{
+  "workflow": "companion",
+  "specName": "Record and show Spec Kit's converge step",
+  "branch": "feat/788-converge-step",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T11:28:39.069Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:29:19.828Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:30:06.543Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:30:24.252Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:30:24.590Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-01T11:30:51.890Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T11:31:01.808Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:37:26.979Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:37:56.338Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:37:56.462Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:38:59.068Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:39:11.047Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T11:39:21.093Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:39:21.242Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:40:22.465Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:40:31.104Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:40:31.248Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-01T11:40:39.884Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:41:33.396Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:41:47.146Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:41:57.997Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:46:00.102Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:46:42.533Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:46:42.707Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:48:17.517Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T039",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:48:30.776Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:49:26.122Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:49:26.202Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:50:59.710Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:50:59.835Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:51:59.852Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:51:59.984Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:00.118Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:00.244Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:00.369Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:00.497Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:12.462Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:28.842Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:28.975Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:29.104Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:29.234Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:29.356Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:29.485Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:29.614Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:29.741Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:52:29.865Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:53:21.513Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:53:21.645Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:53:35.626Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:53:35.764Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:53:35.892Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:53:36.018Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:54:46.711Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:54:46.853Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:55:38.084Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T037",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:56:56.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T038",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T11:56:56.430Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T040",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:04:30.472Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:04:30.498Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:04:30.607Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:29:42.393Z"
+    },
+    {
+      "step": "implement",
+      "substep": "doctor",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-01T12:33:57.330Z"
+    }
+  ],
+  "unattended": true,
+  "livingSpecs": {
+    "loaded": [
+      "find-a-living-spec",
+      "comment-on-a-spec",
+      "move-a-spec-forward",
+      "see-what-the-run-recorded",
+      "run-a-spec-through-the-pipeline",
+      "read-a-spec",
+      "review-a-living-spec",
+      "webview-safety",
+      "work-through-a-document",
+      "keep-specs-honest",
+      "register-living-specs",
+      "right-size-a-change",
+      "see-where-a-spec-stands",
+      "act-on-a-spec",
+      "attach-a-hook",
+      "browse-specs",
+      "customize-the-pipeline",
+      "diagnose-a-run",
+      "fold-a-finished-change-back",
+      "keep-living-specs-current",
+      "load-specs-for-a-change",
+      "pick-a-workflow",
+      "protect-the-run-record",
+      "read-the-pipeline",
+      "record-a-run",
+      "reshape-a-step",
+      "split-work-across-workers",
+      "switch-workflows-and-build",
+      "see-changes-from-disk",
+      "produce-the-docs-media",
+      "release-the-spec-kit-extension",
+      "choose-an-assistant",
+      "keep-the-companion-extension-current",
+      "open-the-sidebar",
+      "set-up-and-update",
+      "share-anonymous-usage"
+    ],
+    "loadedRequirements": {
+      "find-a-living-spec": [
+        "A feature spec links to the living specs its run read and updated"
+      ],
+      "comment-on-a-spec": [],
+      "move-a-spec-forward": [
+        "Each rail entry shows the state of its step",
+        "Implement progress is counted from the task checkboxes"
+      ],
+      "see-what-the-run-recorded": [
+        "The Overview is a reading of the record, and nothing on it acts",
+        "Each region's head carries the count worth skimming",
+        "What something else measured is kept apart from what the run claimed",
+        "Coverage has three states, and the gaps come first",
+        "A phase claims a duration only when both ends were recorded"
+      ],
+      "run-a-spec-through-the-pipeline": [
+        "Stock spec-kit keeps working beside Companion"
+      ],
+      "read-a-spec": [
+        "Any document that exists can be opened at any time"
+      ],
+      "review-a-living-spec": [],
+      "webview-safety": [
+        "Text from outside is read as words, never as markup",
+        "Text from outside never lands inside a tag through string building",
+        "A link that points at a script does nothing"
+      ],
+      "work-through-a-document": [],
+      "keep-specs-honest": [],
+      "register-living-specs": [],
+      "right-size-a-change": [],
+      "see-where-a-spec-stands": [
+        "Status reports the step, the status, the decisions and the next action",
+        "A missing or broken record is read from the files instead",
+        "The files win when the record contradicts them",
+        "The next action follows the spec's own workflow",
+        "Resume dispatches the next command and carries the decisions along",
+        "The editor repairs a record that contradicts itself",
+        "Records written by older versions still open"
+      ],
+      "act-on-a-spec": [],
+      "attach-a-hook": [],
+      "browse-specs": [
+        "Expanding a spec lists its pipeline's documents, each with its own state"
+      ],
+      "customize-the-pipeline": [],
+      "diagnose-a-run": [],
+      "fold-a-finished-change-back": [],
+      "keep-living-specs-current": [],
+      "load-specs-for-a-change": [],
+      "pick-a-workflow": [],
+      "protect-the-run-record": [
+        "History only grows",
+        "A write merges into the record and never replaces it",
+        "A spec is never dragged backward",
+        "Only mark-complete sets a spec to completed",
+        "Two writers at once both land"
+      ],
+      "read-the-pipeline": [],
+      "record-a-run": [
+        "Each spec folder holds one run record with a fixed core",
+        "History is a log of step and task boundaries",
+        "Step and status move together along one vocabulary",
+        "What the run decided, checked and worried about is kept beside the log",
+        "Timestamps say when the write happened",
+        "A capture finds its spec, or skips without failing the command"
+      ],
+      "reshape-a-step": [],
+      "split-work-across-workers": [],
+      "switch-workflows-and-build": [],
+      "see-changes-from-disk": [],
+      "produce-the-docs-media": [],
+      "release-the-spec-kit-extension": [
+        "A command file is built from its sources, never edited by hand",
+        "The release archive carries exactly the scripts the shipped commands reach for",
+        "The declared command list is the authority for what is installed and documented",
+        "The spec-kit extension releases under its own tag and a stable download address"
+      ],
+      "choose-an-assistant": [],
+      "keep-the-companion-extension-current": [],
+      "open-the-sidebar": [],
+      "set-up-and-update": [],
+      "share-anonymous-usage": []
+    },
+    "skipped": [
+      {
+        "name": "find-a-living-spec",
+        "reason": "converge changes no living-spec link from a feature spec"
+      },
+      {
+        "name": "comment-on-a-spec",
+        "reason": "review comments are untouched"
+      },
+      {
+        "name": "run-a-spec-through-the-pipeline",
+        "reason": "the Companion pipeline steps are unchanged; converge hooks fire only from stock /speckit.converge"
+      },
+      {
+        "name": "read-a-spec",
+        "reason": "documents open as before; only the rail entry state changed"
+      },
+      {
+        "name": "review-a-living-spec",
+        "reason": "living spec review is untouched"
+      },
+      {
+        "name": "webview-safety",
+        "reason": "the converge label is a fixed string rendered as text, no outside text reaches markup"
+      },
+      {
+        "name": "work-through-a-document",
+        "reason": "document reading flow is untouched"
+      },
+      {
+        "name": "keep-specs-honest",
+        "reason": "drift and validation rules are untouched; check_quality only learned the step name"
+      },
+      {
+        "name": "register-living-specs",
+        "reason": "the registry is untouched"
+      },
+      {
+        "name": "right-size-a-change",
+        "reason": "size classification is untouched"
+      },
+      {
+        "name": "act-on-a-spec",
+        "reason": "sidebar actions are unchanged; Mark Completed and Archive still work on a converge spec"
+      },
+      {
+        "name": "attach-a-hook",
+        "reason": "Pipeline Builder hooks are untouched"
+      },
+      {
+        "name": "browse-specs",
+        "reason": "sidebar listing is unchanged; converge only ranks with implement in the status sort"
+      },
+      {
+        "name": "customize-the-pipeline",
+        "reason": "companion.yml customisation is untouched"
+      },
+      {
+        "name": "diagnose-a-run",
+        "reason": "the doctor's checks keep their meaning; converge is just another extension-stamped step"
+      },
+      {
+        "name": "fold-a-finished-change-back",
+        "reason": "the fold is untouched"
+      },
+      {
+        "name": "keep-living-specs-current",
+        "reason": "untouched"
+      },
+      {
+        "name": "load-specs-for-a-change",
+        "reason": "untouched"
+      },
+      {
+        "name": "pick-a-workflow",
+        "reason": "workflow choice is untouched"
+      },
+      {
+        "name": "read-the-pipeline",
+        "reason": "Pipeline Builder reading is untouched"
+      },
+      {
+        "name": "reshape-a-step",
+        "reason": "untouched"
+      },
+      {
+        "name": "split-work-across-workers",
+        "reason": "worker fan-out is untouched"
+      },
+      {
+        "name": "switch-workflows-and-build",
+        "reason": "untouched"
+      },
+      {
+        "name": "see-changes-from-disk",
+        "reason": "file watching is untouched"
+      },
+      {
+        "name": "produce-the-docs-media",
+        "reason": "no generated media changed; a Storybook story was added for later stills"
+      },
+      {
+        "name": "release-the-spec-kit-extension",
+        "reason": "the declared command list stays the authority; two commands were added under the same gate"
+      },
+      {
+        "name": "choose-an-assistant",
+        "reason": "untouched"
+      },
+      {
+        "name": "keep-the-companion-extension-current",
+        "reason": "untouched"
+      },
+      {
+        "name": "open-the-sidebar",
+        "reason": "untouched"
+      },
+      {
+        "name": "set-up-and-update",
+        "reason": "untouched"
+      },
+      {
+        "name": "share-anonymous-usage",
+        "reason": "no telemetry change"
+      }
+    ],
+    "synced": [
+      "move-a-spec-forward",
+      "protect-the-run-record",
+      "record-a-run",
+      "see-what-the-run-recorded",
+      "see-where-a-spec-stands"
+    ]
+  },
+  "last_action": "40/40 tasks done; jest 3309, python 1533, gates green",
+  "coverage": {
+    "FR-001": {
+      "title": "Run record accepts converge after implement in TS vocabulary, schema and Python mirror",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003",
+        "T005"
+      ],
+      "tests": [
+        "apps/vscode/src/core/types/__tests__/specContextSchema.consistency.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Recording converge never changes status",
+      "tasks": [
+        "T001",
+        "T003",
+        "T007"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_custom_steps.py"
+      ]
+    },
+    "FR-003": {
+      "title": "Converge is optional: not an expected phase, completion does not depend on it",
+      "tasks": [
+        "T001",
+        "T020"
+      ]
+    },
+    "FR-004": {
+      "title": "before_converge/after_converge hooks record start/finish, idempotent, never failing",
+      "tasks": [
+        "T007",
+        "T008",
+        "T009",
+        "T011",
+        "T015"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_custom_steps.py",
+        "apps/speckit-extension/tests/test_command_emissions.py"
+      ]
+    },
+    "FR-005": {
+      "title": "Converge ends at its own first finish; gap after implement billed to no phase",
+      "tasks": [
+        "T018",
+        "T020"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/stepHistoryDerivation.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "Implement host rail entry shows converge in flight with glyph, label and timer",
+      "tasks": [
+        "T016",
+        "T017",
+        "T019",
+        "T021"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/__tests__/stepInFlight.test.ts",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/StepTab.test.tsx"
+      ]
+    },
+    "FR-007": {
+      "title": "Overview timing lists Converge after Implement, duration only when trusted",
+      "tasks": [
+        "T018"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "FR-008": {
+      "title": "Measured converge span counts toward total active time",
+      "tasks": [
+        "T018",
+        "T020"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/stepHistoryDerivation.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "currentStep converge keeps implement footer gates, status next action and repair",
+      "tasks": [
+        "T024",
+        "T025",
+        "T026",
+        "T028",
+        "T029",
+        "T030",
+        "T034"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/specContextReconciler.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/footerActions.test.ts",
+        "apps/speckit-extension/tests/test_context.py"
+      ]
+    },
+    "FR-010": {
+      "title": "Quiet-run strip and step notification know converge",
+      "tasks": [
+        "T004",
+        "T027",
+        "T031",
+        "T032"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/stepCompletionNotifier.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/runRecovery.test.ts"
+      ]
+    },
+    "FR-011": {
+      "title": "No button or menu entry starts converge",
+      "tasks": [
+        "T025",
+        "T029"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/footerActions.test.ts"
+      ]
+    },
+    "FR-012": {
+      "title": "Stale docs note replaced; README hook table lists the new hooks",
+      "tasks": [
+        "T013",
+        "T014",
+        "T036"
+      ]
+    },
+    "FR-013": {
+      "title": "Storybook story shows converge on the rail and in Overview timing",
+      "tasks": [
+        "T022",
+        "T023"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 26,
+    "projectedTasks": 22,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "No Converge button or menu entry",
+    "No Companion converge command or pipeline node",
+    "Converge appending tasks does not move the spec back from implemented",
+    "No version bumps"
+  ],
+  "context": [
+    "living spec: record-a-run",
+    "living spec: see-where-a-spec-stands",
+    "living spec: protect-the-run-record",
+    "living spec: move-a-spec-forward",
+    "living spec: see-what-the-run-recorded",
+    "living spec: release-the-spec-kit-extension",
+    "area: apps/vscode/src/core/types (step vocabulary)",
+    "area: apps/speckit-extension/scripts (writer, status, quality ports)",
+    "area: apps/vscode/webview/src/spec-viewer (rail, Overview timing)",
+    "area: apps/speckit-extension/extension.yml + commands (capture hooks)",
+    "constraint: converge owns no status and never drags a spec backward",
+    "constraint: a step ends at its own first finish; waits billed to no phase"
+  ],
+  "intent": "Record Spec Kit converge runs in .spec-context.json and show them on the rail and in the Overview timing",
+  "decisions": [
+    {
+      "decision": "converge is a sub-phase of implement after implement in step order, owning no status",
+      "why": "spec-kit runs it only after implement; owning implement statuses would drag implemented specs backward",
+      "rejected": "a converging status of its own"
+    },
+    {
+      "decision": "record converge via before_converge/after_converge hooks to two new companion capture commands",
+      "why": "stock converge already fires both, so the extension stamps the real boundaries and the span is trusted",
+      "rejected": "a preset override of the stock converge command"
+    },
+    {
+      "decision": "currentStep moves to converge; lifecycleStepFor maps converge to implement for the reconciler, drift check, footer gates and reactivate",
+      "why": "converge can only read in flight as the current step, and the repair pass would otherwise roll it back on every read",
+      "rejected": "keeping currentStep on implement"
+    },
+    {
+      "decision": "Python STEP_ORDER gains converge but _is_more_advanced refuses it only at completed/archived",
+      "why": "the consistency test mirrors STEP_NAMES, and the regression guard would otherwise refuse every converge write at implemented",
+      "rejected": "leaving converge out of STEP_ORDER"
+    },
+    {
+      "decision": "a trusted converge span after implement counts in the run total but not in timing coverage",
+      "why": "converge is real work, while a run without it must still read fully timed",
+      "rejected": "ending the total at implement"
+    },
+    {
+      "decision": "Regenerate is hidden whenever converge is the current step",
+      "why": "the user scoped out any way to start converge from the viewer; re-running it is starting it",
+      "rejected": "re-running converge through a project-defined step"
+    },
+    {
+      "decision": "reactivate on a converge spec moves currentStep back to implement",
+      "why": "reactivate stamps a complete on the current step, which would otherwise re-close converge and stretch its span",
+      "rejected": "mapping only the status"
+    },
+    {
+      "decision": "quiet thresholds, notifier labels and sort ranks became Maps",
+      "why": "they are keyed by step text read from .spec-context.json, and an object literal answers prototype keys",
+      "rejected": "adding a converge key to the object literals"
+    },
+    {
+      "decision": "rank a converge currentStep as implement in the Python regression guard",
+      "why": "with converge at 6, an implement start or advance after a mid-implement converge was refused and the spec could not reach implemented",
+      "rejected": "ranking converge equal to implement in STEP_ORDER, which the consistency test pins to STEP_NAMES order"
+    },
+    {
+      "decision": "status names the next open task once converge has run and the current step is implement or converge",
+      "why": "a task close puts currentStep back on implement while the spec stays implemented",
+      "rejected": "counting any converge entry regardless of step, which overrode disk reconciliation"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: vocabulary + hooks + readers treat converge as implement + rail/Overview display",
+      "key_finding": "the Python regression guard and the editor reconciler would each have silently undone a converge record at implemented"
+    },
+    "tasks": {
+      "summary": "40 tasks: foundational vocabulary (2 waves), US1 hooks, US2 viewer, US3 readers, polish docs + validation"
+    },
+    "implement": {
+      "summary": "converge recorded via before/after hooks, in the shared vocabulary as part of implement, shown on the rail and in the Overview timing"
+    }
+  },
+  "approach": "Register before/after converge hooks that stamp converge start/finish without a status; add converge after implement to the shared step vocabulary and its Python mirror; teach implement-aware readers that converge belongs to implement; show converge in flight on the implement host rail entry and in the Overview timing.",
+  "currentTask": "T040",
+  "task_summaries": {
+    "T002": {
+      "status": "DONE",
+      "did": "Added converge to both step enums in spec-context.schema.json",
+      "files": [
+        "apps/vscode/src/core/types/spec-context.schema.json"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Add converge: 'Converge' to STEP_LABELS map",
+      "files": [
+        "apps/vscode/src/features/specs/lastTransition.ts"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "Added converge to StepName/STEP_NAMES, made STEP_STATUS partial, added lifecycleStepFor",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added converge to CANONICAL_STEPS and STEP_ORDER (6); a converge write is refused only at shipped statuses",
+      "files": [
+        "apps/speckit-extension/scripts/spec_context.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Pinned the history step enum to STEP_NAMES with converge right after implement",
+      "files": [
+        "apps/vscode/src/core/types/__tests__/specContextSchema.consistency.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Self-close test iterates prompt steps only, so converge never reaches the preamble step maps",
+      "files": [
+        "apps/vscode/src/ai-providers/__tests__/promptPreambleSelfClose.test.ts"
+      ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "Replaced the stale converge note: what converge does, how it is recorded, how it differs from living-drift/living-sync and the doctor",
+      "files": [
+        "apps/speckit-extension/docs/living-specs.md"
+      ]
+    },
+    "T039": {
+      "status": "DONE",
+      "did": "Added user-facing changelog lines for the viewer and the spec-kit extension",
+      "files": [
+        "CHANGELOG.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Reconciler tests: converge at implemented untouched, drift accepts converge/implement interleave",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/specContextReconciler.test.ts"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Reconciler rollback, status repair and drift check read converge as implement",
+      "files": [
+        "apps/vscode/src/features/specs/specContextReconciler.ts"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Footer tests: converge at implemented offers Mark Completed and Archive, no Approve or Regenerate; no Approve at implementing",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/footerActions.test.ts"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Approve gate treats converge as implement; Regenerate hidden while converge is current",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/footerActions.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Tests pin converge running from history at implemented, and not once finished, shipped or badged complete",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/__tests__/stepInFlight.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Tests pin the percent host's glyph, converge label and single timer while converge runs, and none after or on other tabs",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/StepTab.test.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Tests pin converge extending the total only when trusted, the idle wait excluded, and Converge listed after Implement in the Overview",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/stepHistoryDerivation.test.ts",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Added isConvergeInFlight, read from converge history and ignoring the settled status",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/stepInFlight.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "A trusted step after the last expected phase now extends the run total and end, the wait before it billed to none",
+      "files": [
+        "apps/vscode/src/features/specs/stepHistoryDerivation.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "The percent host shows the sync glyph, a converge label and a timer from converge's start while it runs",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/StepTab.tsx"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Reactivate on converge reopens at implementing back on implement, closing implement not converge",
+      "files": [
+        "apps/vscode/src/features/specs/stepLifecycle.ts",
+        "apps/vscode/src/features/specs/__tests__/stepLifecycle.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Converge start/finish tests: status unchanged at implemented, repeat adds nothing, completed refused",
+      "files": [
+        "apps/speckit-extension/tests/test_custom_steps.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "before-converge hook command records converge start with no status",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.before-converge.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "after-converge hook command records converge finish with no status",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.after-converge.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "converge added to the capture fallback step list",
+      "files": [
+        "apps/speckit-extension/scripts/check_capture.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Declared both converge commands and before_converge/after_converge hooks",
+      "files": [
+        "apps/speckit-extension/extension.yml"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "converge in the quality STEP_NAMES mirror and both commands in the never-prompt roster",
+      "files": [
+        "apps/speckit-extension/scripts/check_quality.py"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "README hook table lists both converge hooks",
+      "files": [
+        "apps/speckit-extension/README.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "commands.md: family row, lifecycle rows, a section per hook, converge in --step, count now twenty-three",
+      "files": [
+        "apps/speckit-extension/docs/commands.md"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Reinstalled dev extension; registry and hook file carry only converge additions; emission, manifest and build checks pass",
+      "files": [
+        ".specify/extensions/.registry",
+        ".specify/extensions.yml"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Added the ConvergeRunning story: the Tasks host spinning with a converge label and timer at implemented",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/StepTab.stories.tsx"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Added the DossierWithConverge story: a measured Converge after Implement counted in a 27m active total",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/ActivityPanel.stories.tsx"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Tests: notifier reads Converge complete, run recovery uses the converge threshold at implementing",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/stepCompletionNotifier.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/runRecovery.test.ts"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "Converge quiet threshold of 45 minutes; thresholds moved to a Map",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/runRecovery.ts"
+      ]
+    },
+    "T032": {
+      "status": "DONE",
+      "did": "Converge label added; step labels moved to a Map",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/stepCompletionNotifier.ts"
+      ]
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Sort ranks converge with implement; step order moved to a Map so prototype keys sink",
+      "files": [
+        "apps/vscode/src/features/specs/specsSortMode.ts",
+        "apps/vscode/src/features/specs/__tests__/specsSortMode.test.ts"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Status tests: converge with open tasks names the next task, none or closed says Pipeline complete, implement unchanged",
+      "files": [
+        "apps/speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Status ranks converge with implement and reports its next unticked task ahead of the implemented terminal",
+      "files": [
+        "apps/speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "Doctor stamps converge as an extension step and gives an open converge at implemented the in-flight grace",
+      "files": [
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T037": {
+      "status": "DONE",
+      "did": "Authored record-a-run and see-where-a-spec-stands deltas in the feature spec for the fold",
+      "files": [
+        "specs/620-converge-step/converge-step.spec.md"
+      ]
+    },
+    "T038": {
+      "status": "DONE",
+      "did": "Authored move-a-spec-forward and see-what-the-run-recorded deltas in the feature spec for the fold",
+      "files": [
+        "specs/620-converge-step/converge-step.spec.md"
+      ]
+    },
+    "T040": {
+      "status": "DONE",
+      "did": "Full jest 3309 pass (after updating the companion command count 21->23), compile + webview tsc clean, python 1533 OK, all CI gate scripts 0, living_validate clean",
+      "files": [
+        "apps/vscode/src/ai-providers/__tests__/codexPromptResolver.test.ts"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "extension compile",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.6,
+      "result": "> speckit-companion@0.34.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview typecheck",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "no output"
+    },
+    {
+      "what": "command emissions gate",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 23 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "living specs validate",
+      "command": "python3 apps/speckit-extension/scripts/living_validate.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.6,
+      "result": "✓ 49 spec(s) checked, nothing to report."
+    },
+    {
+      "what": "full jest suite",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.4,
+      "result": "Snapshots:   0 total · Time:        70.727 s · Ran all test suites."
+    },
+    {
+      "what": "spec-kit extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 117.9,
+      "result": "---------------------------------------------------------------------- · Ran 1533 tests in 117.659s · OK (skipped=8)"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The writer keeps one start and one finish per step, so only the first converge pass of an implement/converge loop is timed; later passes leave no trace and do not show in flight",
+      "step": "implement"
+    },
+    {
+      "note": "Converge run while the spec is still implementing makes implement read as finished on the rail (the converge start closes implement), an off-label order spec-kit forbids",
+      "step": "implement"
+    },
+    {
+      "note": "Mark Completed or Archive while converge is current sets the status without a history entry, so the sidebar last-activity time stays at the converge boundary",
+      "step": "implement"
+    },
+    {
+      "note": "The quiet-run strip only appears for converge while the spec is implementing; a converge hung at implemented shows a running timer with no recovery strip",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 19 task finishes were journaled in bursts (worker appends folded in batches), so per-task durations are not trustworthy; history is append-only so this stays"
+    }
+  ]
+}
