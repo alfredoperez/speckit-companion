@@ -26,6 +26,7 @@ import {
 } from './specContextWriter';
 import { Status } from '../../core/types/specContext';
 import { deriveSpecName } from '../../core/utils/specDisplayName';
+import { readSpecContextSyncSafe } from './specContextReader';
 
 let outputChannel: vscode.OutputChannel | undefined;
 
@@ -232,7 +233,9 @@ export function runUntouchedSince(ctx: SpecContext | null | undefined, position:
 /** Back to `from`, keeping the stray start; a settled step it left is re-stamped complete so its forward button returns. */
 export function restoreRunPosition(ctx: SpecContext, step: string, from: RunPosition): SpecContext {
     const back: SpecContext = { ...ctx, status: from.status, currentStep: from.currentStep };
+    // A project-added step is not ranked against the built-in order, so a re-stamped earlier completion would read as closing it.
     const settledElsewhere = from.currentStep !== step
+        && STEP_NAMES.includes(step as StepName)
         && STEP_NAMES.includes(from.currentStep)
         && from.status === completedStatusForStep(from.currentStep);
     return settledElsewhere ? setStepCompleted(back, from.currentStep, 'extension') : back;
@@ -251,6 +254,8 @@ export async function retractStepStart(
     if (unchangedByStart) return false;
     let retracted = false;
     try {
+        // updateSpecContext publishes whatever it is handed, so a record that moved on or disappeared is not written at all.
+        if (!runUntouchedSince(readSpecContextSyncSafe(specDir), started)) return false;
         await updateSpecContext(
             specDir,
             ctx => {

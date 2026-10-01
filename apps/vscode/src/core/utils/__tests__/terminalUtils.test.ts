@@ -106,12 +106,12 @@ describe('runInTerminal', () => {
             expect(vscode.window.withProgress).not.toHaveBeenCalled();
         });
 
-        it('shows no notice for a hidden terminal', async () => {
+        it('gives a hidden terminal only the short wait, with no notice', async () => {
             const terminal = mock.createMockTerminal({ shellIntegration: false });
             const pending = runInTerminal(terminal, 'claude', { hidden: true });
-            await jest.advanceTimersByTimeAsync(Timing.shellWaitNoticeMs * 2);
-            terminal.__activateShellIntegration();
+            await jest.advanceTimersByTimeAsync(Timing.shellStartFallbackMs);
             await pending;
+            expect(terminal.sendText).toHaveBeenCalledWith('claude', true);
             expect(vscode.window.withProgress).not.toHaveBeenCalled();
         });
     });
@@ -128,6 +128,25 @@ describe('runInTerminal', () => {
             await pending;
 
             expect(terminal.sendText).toHaveBeenCalledWith('specify init .', true);
+        });
+
+        it('shows no notice while waiting on a shell that cannot report', async () => {
+            setShellIntegrationSetting(false);
+            const terminal = mock.createMockTerminal({ shellIntegration: false });
+            const pending = runInTerminal(terminal, 'claude');
+            await jest.advanceTimersByTimeAsync(Timing.shellStartFallbackMs);
+            await pending;
+            expect(vscode.window.withProgress).not.toHaveBeenCalled();
+        });
+
+        it.each(['/bin/sh', '/usr/local/bin/nu', '/bin/tcsh'])('expects no integration from %s', shell => {
+            mock.env.shell = shell;
+            expect(shellIntegrationExpected()).toBe(false);
+        });
+
+        it.each(['/bin/zsh', '/bin/bash', '/opt/homebrew/bin/fish', 'C:\\Program Files\\PowerShell\\7\\pwsh.exe'])('expects integration from %s', shell => {
+            mock.env.shell = shell;
+            expect(shellIntegrationExpected()).toBe(true);
         });
 
         it('treats cmd.exe as a shell without integration', () => {

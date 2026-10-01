@@ -642,7 +642,7 @@ function registerPhaseCommands(
                     prompt += refinementContext;
                 }
                 const cmdPipeline = await resolveSpecPipeline(targetDir);
-                const watch = watchStepDispatch({ specDir: targetDir, step: cmd.name, outputChannel });
+                const watch = watchStepDispatch({ specDir: targetDir, step: cmd.name, label: cmd.title, outputChannel });
                 if (shouldRecordStepStart(cmdPipeline, cmd.name)) {
                     await startStep(targetDir, cmd.name as StepName, 'extension');
                 }
@@ -652,11 +652,10 @@ function registerPhaseCommands(
                     step: cmd.name,
                     specDir: toWorkspaceRelative(targetDir),
                 });
-                const terminal = await getAIProvider().executeInTerminal(wrapped, `SpecKit - ${cmd.title}`);
+                const terminal = await watch.run(() => getAIProvider().executeInTerminal(wrapped, `SpecKit - ${cmd.title}`));
                 if (shouldRecordStepStart(cmdPipeline, cmd.name)) {
                     trackTerminal(terminal, targetDir, cmd.name as StepName);
                 }
-                void watch.attach(terminal);
             })
         );
     }
@@ -700,7 +699,7 @@ async function executeWorkflowStep(
     // `updateSpecContext` also serializes per file, but awaiting here keeps the
     // single start-write ordered ahead of dispatch. A write failure must not
     // block dispatch (R002), so the error is logged, not thrown.
-    const watch = watchStepDispatch({ specDir: targetDir, step, completesFromStep: true, outputChannel });
+    const watch = watchStepDispatch({ specDir: targetDir, step, label: title, completesFromStep: true, outputChannel });
     try {
         await updateStepProgress(targetDir, step, pipelineSteps.map(s => s.name));
     } catch (err) {
@@ -728,7 +727,7 @@ async function executeWorkflowStep(
     // step and starts this one). A second start-write here is what raced with
     // that one and could drop the start marker — so there is exactly one
     // start-write per step now.
-    const terminal = await dispatchStep(
+    const terminal = await watch.run(() => dispatchStep(
         {
             baseCommand,
             step,
@@ -742,14 +741,13 @@ async function executeWorkflowStep(
             logPrefix: 'SpecKit',
             run: prompt => getAIProvider().executeInTerminal(prompt, `SpecKit - ${title}`, dispatchOptions),
         },
-    );
+    ));
     if (!terminal) {
         return;
     }
     if (shouldRecordStepStart(pipelineSteps, step)) {
         trackTerminal(terminal, targetDir, step as StepName);
     }
-    void watch.attach(terminal);
 
     // Execute checkpoints after implement step
     if (step === WorkflowSteps.IMPLEMENT) {

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { Timing } from '../constants';
 import { AIExecutionResult } from '../../ai-providers/aiProvider';
-import { detectShell } from './shellDetection';
+import * as path from 'path';
 
 /** One command handed to a terminal; only a shell-integration run has `ended` (its exit code, or undefined if the terminal closed). */
 export interface ShellRun {
@@ -30,14 +30,19 @@ function shellIntegrationApiAvailable(): boolean {
     return typeof vscode.window.onDidChangeTerminalShellIntegration === 'function';
 }
 
-/** False when no readiness signal can come: an editor without the API, integration turned off, or cmd.exe. */
+const INTEGRATED_SHELLS = new Set(['bash', 'zsh', 'fish', 'pwsh', 'powershell']);
+
+/** Only the shells VS Code injects integration into can report ready; others (sh, nu, cmd) get no signal to wait for. */
 export function shellIntegrationExpected(): boolean {
     if (!shellIntegrationApiAvailable()) return false;
     const enabled = vscode.workspace
         .getConfiguration('terminal.integrated')
         ?.get<unknown>('shellIntegration.enabled');
     if (enabled === false) return false;
-    return detectShell() !== 'cmd';
+    const shellPath = vscode.env.shell;
+    if (!shellPath) return true;
+    const name = path.basename(shellPath.replace(/\\/g, '/')).toLowerCase().replace(/\.exe$/, '');
+    return INTEGRATED_SHELLS.has(name);
 }
 
 const delay = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
@@ -64,26 +69,36 @@ export function waitForShellIntegration(terminal: vscode.Terminal, timeoutMs: nu
     });
 }
 
+const pendingEnds = new Map<vscode.TerminalShellExecution, { terminal: vscode.Terminal; resolve: (code: number | undefined) => void }>();
+let endListenersRegistered = false;
+
+function settle(execution: vscode.TerminalShellExecution, code: number | undefined): void {
+    const pending = pendingEnds.get(execution);
+    if (!pending) return;
+    pendingEnds.delete(execution);
+    pending.resolve(code);
+}
+
+function ensureEndListeners(): void {
+    if (endListenersRegistered) return;
+    endListenersRegistered = true;
+    vscode.window.onDidEndTerminalShellExecution(e => settle(e.execution, e.exitCode));
+    if (typeof vscode.window.onDidCloseTerminal === 'function') {
+        vscode.window.onDidCloseTerminal(closed => {
+            for (const [execution, pending] of pendingEnds) {
+                if (pending.terminal === closed) settle(execution, undefined);
+            }
+        });
+    }
+}
+
 function watchExecutionEnd(
     terminal: vscode.Terminal,
     execution: vscode.TerminalShellExecution,
 ): Promise<number | undefined> | undefined {
     if (typeof vscode.window.onDidEndTerminalShellExecution !== 'function') return undefined;
-    return new Promise(resolve => {
-        const disposables: vscode.Disposable[] = [];
-        const finish = (code: number | undefined) => {
-            disposables.forEach(d => d?.dispose());
-            resolve(code);
-        };
-        disposables.push(vscode.window.onDidEndTerminalShellExecution(e => {
-            if (e.execution === execution) finish(e.exitCode);
-        }));
-        if (typeof vscode.window.onDidCloseTerminal === 'function') {
-            disposables.push(vscode.window.onDidCloseTerminal(t => {
-                if (t === terminal) finish(undefined);
-            }));
-        }
-    });
+    ensureEndListeners();
+    return new Promise(resolve => pendingEnds.set(execution, { terminal, resolve }));
 }
 
 /** Show a notice while the wait drags on, so a shell asking a question at startup is noticed. */
@@ -115,11 +130,13 @@ export async function runInTerminal(
     }
 
     if (!terminal.shellIntegration) {
-        const timeoutMs = shellIntegrationExpected()
-            ? Timing.shellIntegrationTimeoutMs
-            : Timing.shellStartFallbackMs;
-        const waiting = waitForShellIntegration(terminal, timeoutMs);
-        if (!hidden) noticeWhileWaiting(terminal, waiting);
+        // A hidden terminal cannot be answered, so it never waits long for a prompt the user cannot see.
+        const expected = shellIntegrationExpected() && !hidden;
+        const waiting = waitForShellIntegration(
+            terminal,
+            expected ? Timing.shellIntegrationTimeoutMs : Timing.shellStartFallbackMs,
+        );
+        if (expected) noticeWhileWaiting(terminal, waiting);
         await waiting;
     }
 

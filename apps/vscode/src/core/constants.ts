@@ -115,6 +115,8 @@ export const Timing = {
     shellWaitNoticeMs: 2000,
     /** Longest wait for the previous command in the same terminal to finish */
     previousCommandWaitMs: 3000,
+    /** A step command that exits with an error within this long of starting is treated as never having run */
+    dispatchFailureWindowMs: 60000,
     /** Delay before cleaning up temporary prompt files */
     tempFileCleanupDelay: 30000,
     /** Delay before disposing terminal after execution */

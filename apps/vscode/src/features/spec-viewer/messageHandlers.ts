@@ -395,7 +395,7 @@ async function handleRegenerate(
     : undefined;
 
   if (stepDef && targetStepName) {
-    const watch = watchStepDispatch({ specDir: specDirectory, step: targetStepName, outputChannel: deps.outputChannel });
+    const watch = watchStepDispatch({ specDir: specDirectory, step: targetStepName, label: stepDef.label, outputChannel: deps.outputChannel });
     if (shouldRecordStepStart(steps, targetStepName)) {
       await startStep(specDirectory, targetStepName, "extension");
     }
@@ -460,6 +460,7 @@ async function handleApprove(
     const watch = watchStepDispatch({
       specDir: specDirectory,
       step: nextStep.name,
+      label: nextStep.label,
       fromStep: currentName,
       outputChannel: deps.outputChannel,
     });
@@ -489,7 +490,7 @@ async function executeStepInTerminal(
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
   const targetPath = instance?.state.changeRoot || specDirectory;
-  const terminal = await dispatchStep(
+  await watch.run(() => dispatchStep(
     {
       baseCommand: step.command,
       step: step.name,
@@ -502,8 +503,7 @@ async function executeStepInTerminal(
       logPrefix: 'SpecViewer',
       run: prompt => deps.executeInTerminal(prompt),
     },
-  );
-  void watch.attach(terminal);
+  ));
 }
 
 /**

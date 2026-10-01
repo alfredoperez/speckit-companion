@@ -9,7 +9,7 @@ import { startStep } from '../stepLifecycle';
 import { register, track, _resetForTests } from '../terminalStepTracker';
 import { getFooterActions } from '../../spec-viewer/footerActions';
 import { deriveStepHistory } from '../stepHistoryDerivation';
-import { FooterActionIds } from '../../../core/constants';
+import { FooterActionIds, Timing } from '../../../core/constants';
 
 const mock = vscode as unknown as {
     createMockTerminal: (o?: { name?: string; shellIntegration?: boolean }) => any;
@@ -239,5 +239,111 @@ describe('a spec with no run record before the dispatch', () => {
         // A settled status is the gate the viewer's in-flight check reads first; the rolled-back attempt derives no plan entry, so no timer or lock.
         expect(isSettledStatus(ctx.status)).toBe(true);
         expect(deriveStepHistory(ctx.history, ctx.currentStep, ctx.status).plan).toBeUndefined();
+    });
+});
+
+describe('limits on what counts as a command that never ran', () => {
+    beforeEach(() => {
+        writeRecord({ currentStep: 'specify', status: 'specified', history: [boundary('specify', 'start', 0), boundary('specify', 'complete', 5)] });
+    });
+
+    it('leaves the step alone when an interactive session exits with an error long after it started', async () => {
+        const terminal = mock.createMockTerminal();
+        const { reported } = await approvePlan(terminal);
+        const later = Date.now() + Timing.dispatchFailureWindowMs + 1000;
+        const now = jest.spyOn(Date, 'now').mockReturnValue(later);
+        try {
+            mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 130);
+            await reported;
+        } finally {
+            now.mockRestore();
+        }
+        expect(readRecord().status).toBe('planning');
+        expect(showErrorMessage).not.toHaveBeenCalled();
+    });
+
+    it('puts the run back when the dispatch itself throws, and lets the error through', async () => {
+        const watch = watchStepDispatch({ specDir, step: 'plan', fromStep: 'specify' });
+        await startStep(specDir, 'plan', 'extension');
+        watch.started();
+
+        await expect(watch.run(() => Promise.reject(new Error('Codex CLI is not installed')))).rejects.toThrow('not installed');
+
+        const ctx = readRecord();
+        expect(ctx.status).toBe('specified');
+        expect(ctx.currentStep).toBe('specify');
+    });
+
+    it('watches the terminal a successful dispatch returns', async () => {
+        const terminal = mock.createMockTerminal();
+        const watch = watchStepDispatch({ specDir, step: 'plan', label: 'Plan it', fromStep: 'specify' });
+        await startStep(specDir, 'plan', 'extension');
+        watch.started();
+        const returned = await watch.run(async () => {
+            await runInTerminal(terminal, 'laude');
+            return terminal;
+        });
+        expect(returned).toBe(terminal);
+
+        mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 127);
+        for (let i = 0; i < 100 && showErrorMessage.mock.calls.length === 0; i++) await new Promise(r => setTimeout(r, 10));
+
+        expect(readRecord().status).toBe('specified');
+        expect(showErrorMessage.mock.calls[0][0]).toContain('Plan it did not run');
+    });
+});
+
+describe('a project-added step whose command never runs', () => {
+    it('is put back without an earlier completion, so it gains no duration and plan can move forward again', async () => {
+        writeRecord({ currentStep: 'plan', status: 'planned', history: [boundary('plan', 'start', 0), boundary('plan', 'complete', 5)] });
+        const terminal = mock.createMockTerminal();
+        const watch = watchStepDispatch({ specDir, step: 'review' });
+        const ctx = readRecord();
+        writeRecord({ ...ctx, currentStep: 'review' as never, history: [...ctx.history, { step: 'review' as never, substep: null, kind: 'start', by: 'extension', at: at(6) }] });
+        watch.started();
+        await runInTerminal(terminal, 'claude');
+        const reported = watch.attach(terminal);
+
+        mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 127);
+        await reported;
+
+        const after = readRecord();
+        expect(after.currentStep).toBe('plan');
+        expect(after.status).toBe('planned');
+        expect(after.history).toHaveLength(3);
+        const review = deriveStepHistory(after.history, after.currentStep, after.status).review;
+        expect(review?.completedAt).toBe(review?.startedAt);
+        expect(getFooterActions(after, after.currentStep).map(a => a.id)).toContain(FooterActionIds.APPROVE);
+    });
+});
+
+describe('a first dispatch with no record and no step to fall back to', () => {
+    it('still tells the user the command did not run', async () => {
+        const terminal = mock.createMockTerminal();
+        const watch = watchStepDispatch({ specDir, step: 'specify' });
+        await startStep(specDir, 'specify', 'extension');
+        watch.started();
+        await runInTerminal(terminal, 'laude');
+        const reported = watch.attach(terminal);
+
+        mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 127);
+        await reported;
+
+        expect(showErrorMessage.mock.calls[0][0]).toContain('Specify did not run');
+        expect(showErrorMessage.mock.calls[0][0]).not.toContain('no longer shown as running');
+    });
+});
+
+describe('a record that disappeared while the command ran', () => {
+    it('is not recreated', async () => {
+        writeRecord({ currentStep: 'specify', status: 'specified', history: [boundary('specify', 'start', 0), boundary('specify', 'complete', 5)] });
+        const terminal = mock.createMockTerminal();
+        const { reported } = await approvePlan(terminal);
+        fs.rmSync(path.join(specDir, '.spec-context.json'));
+
+        mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 127);
+        await reported;
+
+        expect(fs.existsSync(path.join(specDir, '.spec-context.json'))).toBe(false);
     });
 });

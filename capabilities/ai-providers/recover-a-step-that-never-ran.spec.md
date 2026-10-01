@@ -9,7 +9,7 @@ Pressing a step's button records the step as started before its command reaches 
 ### A command that exits non-zero before anything is recorded puts the run back
 <!-- touches: apps/vscode/src/features/specs/dispatchFailure.ts, apps/vscode/src/features/specs/stepLifecycle.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts, apps/vscode/src/features/specs/specCommands.ts -->
 
-When a step dispatched from the viewer (forward or Regenerate) or the sidebar runs through shell integration and its command exits non-zero while the run record still stands exactly where the dispatch's own start left it, the extension SHALL return `status` and `currentStep` to where they stood before the dispatch. A zero exit, an exit after anything was recorded, and a command typed without shell integration SHALL change nothing, because only a record nobody has touched proves the command never got going.
+When a step dispatched from the viewer (forward or Regenerate) or the sidebar fails to hand over its command, or its command exits non-zero within a minute of starting, while the run record still stands exactly where the dispatch's own start left it, the extension SHALL return `status` and `currentStep` to where they stood before the dispatch. A zero exit, a later exit, an exit after anything was recorded, and a command typed without shell integration SHALL change nothing, because an interactive assistant that quits with an error after working has run.
 
 #### Scenario: the CLI never starts
 - **WHEN** Plan is pressed on a `specified` spec and the terminal reports `command not found` with exit code 127
@@ -18,6 +18,10 @@ When a step dispatched from the viewer (forward or Regenerate) or the sidebar ru
 #### Scenario: the assistant ran, then failed
 - **WHEN** the step recorded a substep before the CLI exited non-zero
 - **THEN** the record is left as it is
+
+#### Scenario: the assistant is quit with Ctrl+C an hour in
+- **WHEN** the session exits 130 long after it started and nothing was recorded
+- **THEN** the step stays as it is
 
 #### Scenario: a re-run that fails
 - **WHEN** Regenerate on a `planned` spec dispatches plan and the command exits non-zero
@@ -48,4 +52,5 @@ A dispatch put back this way SHALL raise one error naming the step, the terminal
 ## Uncovered
 
 - A retried step reuses the failed attempt's start, because a step is started once, so its timer and duration count from the first attempt.
+- A project-added step that never ran keeps its stray start, which the history derivation reads as a zero-length finished span because it is not ranked against the built-in order.
 - Without shell integration no exit code is available, and a dispatch that never ran still reads as running until the user sets the status.
