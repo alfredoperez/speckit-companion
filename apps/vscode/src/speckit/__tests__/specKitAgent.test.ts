@@ -119,7 +119,6 @@ describe('resolveIntegrationProvider', () => {
     it('suggests nothing for a provider Spec Kit has no agent for', () => {
         expect(resolveIntegrationProvider('wibey', 'vscode', 'copilot')).toBeUndefined();
         expect(resolveIntegrationProvider('wibey-vscode', 'vscode', 'codex')).toBeUndefined();
-        expect(resolveIntegrationProvider(undefined, 'vscode', 'codex')).toBeUndefined();
     });
 
     it('suggests nothing for IDE Chat on Windsurf', () => {

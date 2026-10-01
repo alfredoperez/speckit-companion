@@ -1,12 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-    AIProviderType,
-    PROVIDER_PATHS,
-    getConfiguredProviderType,
-    getProviderDisplayName,
-} from '../ai-providers/aiProvider';
+import { getConfiguredProviderType, getProviderDisplayName } from '../ai-providers/aiProvider';
 import { detectHostIde } from '../ai-providers/ideChatProvider';
 import { resolveIntegrationProvider } from './specKitAgent';
 
@@ -40,7 +35,7 @@ function readIntegrationAgent(root: string, log: (message: string) => void): str
         return undefined;
     }
     const agent = parseIntegrationAgent(text);
-    if (!agent) { log('[integration] .specify/integration.json names no default integration; no provider suggestion'); }
+    if (!agent) { log('[integration] .specify/integration.json is not valid JSON or names no default integration; no provider suggestion'); }
     return agent;
 }
 
@@ -49,11 +44,7 @@ function keptPairs(context: vscode.ExtensionContext): string[] {
     return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
 }
 
-/**
- * When the project's Spec Kit integration names a different agent than `speckit.aiProvider`
- * resolves to, suggest switching. The provider changes only when the user picks Switch;
- * Keep or a dismissal is remembered for that pair in this workspace.
- */
+/** Suggests the provider the project's Spec Kit integration names; only a Switch click changes the setting. */
 export async function suggestIntegrationProvider(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel): Promise<void> {
     const log = (message: string) => outputChannel.appendLine(message);
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -64,13 +55,13 @@ export async function suggestIntegrationProvider(context: vscode.ExtensionContex
 
     const configured = getConfiguredProviderType();
     const target = resolveIntegrationProvider(configured, detectHostIde(), agent);
-    if (!target || !(target in PROVIDER_PATHS)) { return; }
+    if (!target) { return; }
 
     const pair = `${agent}|${configured}`;
     if (keptPairs(context).includes(pair)) { return; }
 
     const configuredName = getProviderDisplayName(configured);
-    const targetName = getProviderDisplayName(target as AIProviderType);
+    const targetName = getProviderDisplayName(target);
     const switchLabel = `Switch to ${targetName}`;
     const keepLabel = `Keep ${configuredName}`;
 

@@ -58,9 +58,9 @@ Choosing Keep, or closing the message, SHALL be remembered in the workspace for 
 - **THEN** no message appears and dispatch stays on Claude Code
 
 ### An integration with nothing to suggest shows nothing
-<!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts -->
+<!-- touches: apps/vscode/src/speckit/integrationProvider.ts, apps/vscode/src/speckit/specKitAgent.ts, apps/vscode/src/extension.ts -->
 
-An agent no provider maps directly to (such as `cursor-agent` or `windsurf`), a provider Spec Kit has no agent for (Wibey), IDE Chat on Windsurf, a matching integration, and a missing, unreadable or malformed `.specify/integration.json` SHALL leave `speckit.aiProvider` alone and show nothing.
+An agent no provider maps directly to (such as `cursor-agent` or `windsurf`), a provider Spec Kit has no agent for (Wibey), IDE Chat on Windsurf, a matching integration, a missing, unreadable or malformed `.specify/integration.json`, and an activation where the user has just picked their first provider SHALL leave `speckit.aiProvider` alone and show nothing.
 
 #### Scenario: the integration has no provider here
 - **WHEN** `.specify/integration.json` names an agent such as `cursor-agent` that no provider maps to

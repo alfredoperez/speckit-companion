@@ -96,7 +96,8 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // Prompt for AI provider selection if not configured
-    if (!isProviderConfigured()) {
+    const providerWasConfigured = isProviderConfigured();
+    if (!providerWasConfigured) {
         outputChannel.appendLine('[Extension] AI provider not configured, prompting user...');
         const selectedProvider = await promptForProviderSelection();
         if (!selectedProvider) {
@@ -109,7 +110,6 @@ export async function activate(context: vscode.ExtensionContext) {
     // Initialize providers and managers
     aiProvider = AIProviderFactory.getProvider(context, outputChannel);
     outputChannel.appendLine(`[Extension] Using AI provider: ${aiProvider.name}`);
-    void suggestIntegrationProvider(context, outputChannel);
 
     // Anonymous, PII-free telemetry. Gated on both `speckit.telemetry` and VS
     // Code's global telemetry level; fires nothing while the PostHog project key
@@ -289,6 +289,8 @@ export async function activate(context: vscode.ExtensionContext) {
             }
         })
     );
+
+    if (providerWasConfigured) { void suggestIntegrationProvider(context, outputChannel); }
 
     // Validate provider/permission combination after activation completes (non-blocking)
     setTimeout(() => { void validatePermissionMode(context); }, 0);

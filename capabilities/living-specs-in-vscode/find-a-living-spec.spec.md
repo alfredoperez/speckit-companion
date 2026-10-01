@@ -1,7 +1,5 @@
 # Find a Living Spec — Living Spec
 
-<!-- reviewed: b924da12 -->
-
 ## Purpose
 
 A living spec is only useful if a person can reach it from wherever they are: the sidebar, the file they are editing, or the run that touched it. This capability covers the Living Specs view, the status bar indicator, the Open Living Spec picker, and the links a feature spec's overview carries. Without it the specs exist on disk and nobody knows which one describes the code in front of them, or which ones have fallen behind.
