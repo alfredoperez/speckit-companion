@@ -51,7 +51,8 @@ Most of what used to be narrated here now lives in living specs — validated by
 5. Verify `package.json` `contributes.configuration["speckit.aiProvider"].enum` matches the README provider matrix (count + names).
 6. Verify `package.json` `engines.vscode` matches the README "VS Code" badge.
 7. Re-render any screenshot whose UI changed in this release and refresh its caption if the value prop shifted. **Keep screenshot filenames stable — overwrite in place, never rename or delete** (see the gotcha in `CLAUDE.md`).
-8. Run `npm run clips:check`. Broken must be zero — a broken count is a 404 on the published Marketplace listing, not a to-do item.
+8. Give the release its image on the site's changelog: copy the best still of the release's headline feature (a generated docs still, or a real-app screenshot) to `apps/website/public/changelog/vscode-<version>-<slug>.png` and add its `vscode@<version>` entry to `RELEASE_MEDIA` in `apps/website/src/components/changelog/releaseMedia.ts`, with alt text and a one-line caption. Do the same with `speckit@<version>` for a spec-kit extension release that has something to show. The site build fails on a key that matches no release, so add it in the release commit, after the version heading exists.
+9. Run `npm run clips:check`. Broken must be zero — a broken count is a 404 on the published Marketplace listing, not a to-do item.
 
 ## README conventions
 
