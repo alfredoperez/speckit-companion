@@ -455,15 +455,14 @@ export type BuilderToExtensionMessage =
         note?: string;
         /** Set to replace the hook already at this index rather than add one. */
         editIndex?: number;
-        /**
-         * Where this hook was before, when the edit moved it to another boundary.
-         *
-         * One message rather than a `removeHook` followed by an `addHook`: each
-         * message is routed on its own, so the two read-modify-writes of
-         * `companion.yml` overlapped — and a refused add left the hook gone with
-         * nothing offering it back.
-         */
-        movedFrom?: { anchor: string; when: HookWhen; index: number };
+    }
+    /** Move a hook in one write; `to.index` absent puts it last, `hook` carries an edit made in the same save. */
+    | {
+        type: 'moveHook';
+        command: string;
+        from: { when: HookWhen; anchor: string; index: number };
+        to: { when: HookWhen; anchor: string; index?: number; boundary: 'node' | 'phase' };
+        hook?: { hookType: HookType; value: string; note?: string };
     }
     /** Take a hook out. A hook could only ever be added before this. */
     | { type: 'removeHook'; command: string; anchor: string; when: HookWhen; index: number }

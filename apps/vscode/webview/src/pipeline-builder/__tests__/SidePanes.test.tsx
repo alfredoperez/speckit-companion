@@ -903,9 +903,13 @@ describe('the hook form asks for the placement first', () => {
         await choose(host, 'Resolve the spec folder');
         await send(host);
 
+        expect(made).toHaveLength(1);
         expect(made[0].anchor).toBe('resolve-dir');
+        expect(made[0].boundary).toBe('node');
         expect(made[0].editIndex).toBeUndefined();
         expect(made[0].movedFrom).toEqual({ anchor: 'draft-spec', when: 'before', index: 1 });
+        // One move carries the content too, so the panel never needs a second write.
+        expect(made[0]).toMatchObject({ hookType: 'skill', value: 'create-pr' });
     });
 
     it('does not carry the old index across a change of side', async () => {
@@ -914,9 +918,11 @@ describe('the hook form asks for the placement first', () => {
         await choose(host, 'after');
         await send(host);
 
+        expect(made).toHaveLength(1);
         expect(made[0].when).toBe('after');
         expect(made[0].editIndex).toBeUndefined();
         expect(made[0].movedFrom?.when).toBe('before');
+        expect(made[0]).toMatchObject({ anchor: 'draft-spec', boundary: 'node', value: 'create-pr' });
     });
 });
 

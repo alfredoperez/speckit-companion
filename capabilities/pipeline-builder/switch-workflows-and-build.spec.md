@@ -1,5 +1,7 @@
 # Switch Workflows and Build — Living Spec
 
+<!-- reviewed: 07d9b077 -->
+
 ## Purpose
 
 Configuration is the source of truth and the commands the assistant reads are derived from it. A person needs to know which whole configuration is in force, whether the built commands are behind it, and what the last change or build actually did, without leaving the panel.

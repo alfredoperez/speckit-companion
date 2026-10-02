@@ -613,6 +613,31 @@ export const StatusAfterARefusal: Story = {
     ),
 };
 
+export const StatusAfterARefusedHookDrag: Story = {
+    name: 'Status line · a hook drag that was refused',
+    render: () => (
+        <div class="builder">
+            <StatusLine
+                status={{
+                    tone: 'warning',
+                    text: 'Registered by the git extension in .specify/extensions.yml. '
+                        + 'It runs here, and is not moved or edited in this panel.',
+                }}
+                onUndo={noop} onDismiss={noop} />
+        </div>
+    ),
+};
+
+export const StatusAfterAHookMove: Story = {
+    name: 'Status line · a hook moved',
+    render: () => (
+        <div class="builder">
+            <StatusLine status={{ tone: 'done', text: 'Hook moved up after complete',
+                detail: 'Build to apply' }} onUndo={noop} onDismiss={noop} />
+        </div>
+    ),
+};
+
 // A menu row that is offered and impossible, which is how a phase menu can keep
 // teaching what a phase can do while saying why it cannot do it here.
 export const MenuWithAnImpossibleRow: Story = {

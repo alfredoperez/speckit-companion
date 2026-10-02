@@ -1142,6 +1142,31 @@
       "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'The board in a side panel'. Shown on the site's guides/pipeline-builder page."
     },
     {
+      "id": "builder-move-hook",
+      "name": "Pipeline Builder: moving a hook",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/builder-move-hook.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/builder-move-hook.png": "A hook being dragged above another, with the drop line showing where it lands."
+      },
+      "referencedBy": {},
+      "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'Moving a hook'. Shown on the site's guides/pipeline-builder page."
+    },
+    {
       "id": "viewer-removed-doc",
       "name": "Spec viewer: document moved or deleted",
       "kind": "still",

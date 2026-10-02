@@ -21,6 +21,7 @@ import * as path from 'path';
 import {
     applyRepair,
     createWorkflow,
+    moveHook,
     readPipelineGraph,
     removeHook,
     resolveConfigRepairScript,
@@ -192,6 +193,27 @@ describe('what each write asks for', () => {
             { type: 'prompt', when: 'after', anchor: 'draft', text: 'x', editIndex: 0 });
         const args = lastArgs();
         expect(args[args.indexOf('--edit-index') + 1]).toBe('0');
+    });
+
+    it('moves a hook in one call with both addresses and what the target is', async () => {
+        succeeds();
+        await moveHook(SCRIPT, ROOT, 'plan', { when: 'after', anchor: 'draft', index: 0 },
+            { when: 'before', anchor: 'review', index: 0, boundary: 'node' });
+        expect(lastArgs()).toEqual([
+            '--command', 'plan', '--move-from', 'after', 'draft', '0',
+            '--when', 'before', '--anchor', 'review', '--boundary', 'node', '--to-index', '0',
+        ]);
+    });
+
+    it('leaves the place out to put a moved hook last, and carries an edit when there is one', async () => {
+        succeeds();
+        await moveHook(SCRIPT, ROOT, 'plan', { when: 'after', anchor: 'draft', index: 1 },
+            { when: 'after', anchor: 'author', boundary: 'phase' },
+            { type: 'command', run: 'npm test' });
+        const args = lastArgs();
+        expect(args).not.toContain('--to-index');
+        expect(args.slice(args.indexOf('--hook'))).toEqual(
+            ['--hook', 'command', '--ref', '', '--run', 'npm test', '--text', '']);
     });
 
     it('removes a hook by its whole address', async () => {

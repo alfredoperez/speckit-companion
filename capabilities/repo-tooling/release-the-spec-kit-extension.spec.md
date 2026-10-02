@@ -1,7 +1,6 @@
 # Release the spec-kit extension — Living Spec
 
-<!-- reviewed: dee80029 -->
-
+<!-- reviewed: 07d9b077 -->
 ## Purpose
 
 A maintainer turns the extension's sources into the command files and the archive a user installs. Without these rules a release ships a command that calls a script the archive lacks, a hand edit vanishes on the next build, or a release tag publishes the wrong product.

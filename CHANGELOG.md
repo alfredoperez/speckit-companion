@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Drag a hook to move it in the Pipeline Builder.** Drop one of your hooks before or after another node, on a phase, or above or below another hook to change the order they run in, and the change is written to `companion.yml` in one step, keeping the rest of the file as you wrote it. From the keyboard, the hook's form has Move up and Move down, and changing where it runs moves it the same way. Hooks from an installed extension, and a move to somewhere the step has no place for, are refused with the reason.
 - **Move a node to another phase from its panel.** A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the edge of the one you pick nearest where it was, so you no longer have to drag it or remove and re-add it.
 - **SpecKit Companion suggests the assistant your project was set up for.** Spec Kit records which assistant a project was set up for in `.specify/integration.json`. When that is not the assistant your AI provider setting names, SpecKit Companion now says so when it starts and offers to switch, or to keep your current one. It never switches on its own, and once you keep your choice it does not ask again for that project. A project set up for an assistant SpecKit Companion has no provider for shows nothing.
 

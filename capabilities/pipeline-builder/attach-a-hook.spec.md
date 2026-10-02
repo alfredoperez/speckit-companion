@@ -40,11 +40,15 @@ Every kind SHALL offer **Choose…** listing what this project has for it, while
 ### A hook can be changed, moved or taken out
 <!-- touches: apps/vscode/webview/src/pipeline-builder/AttachForm.tsx, apps/vscode/src/features/pipeline-builder/builderPanel.ts, apps/vscode/src/features/specs/pipelineGraph.ts -->
 
-Clicking one of the project's hooks SHALL open the form filled from it, with **Remove** offered. Saving without moving it SHALL replace it in place. Saving it to another anchor or side SHALL move it as one change, and if the hook cannot be taken off its old place nothing SHALL be added at the new one. A hook an extension registered, or a parked hook, SHALL offer no edit.
+Clicking one of the project's hooks SHALL open the form filled from it, with **Remove** offered. Saving without moving it SHALL replace it in place. Saving it to another anchor or side SHALL move it in one write, carrying any change to what it runs, and close the form, and a move that is refused SHALL leave the configuration exactly as it was. A hook an extension registered, or a parked hook, SHALL offer no edit.
+
+#### Scenario: a move carries an edit
+- **WHEN** a hook after one node is given a new command and saved to run before another node
+- **THEN** the configuration holds it only before the new node, running the new command, and the form closes
 
 #### Scenario: a move is refused
-- **WHEN** the removal half of a move is refused
-- **THEN** the hook stays where it was and no second copy appears
+- **WHEN** a hook is saved to another anchor while the shipped workflow is in force
+- **THEN** the hook stays where it was, no second copy appears, and the panel says why
 
 ### Hooks are written to the configuration in force
 <!-- touches: apps/vscode/src/features/pipeline-builder/builderPanel.ts, apps/vscode/src/features/specs/pipelineGraph.ts -->
@@ -54,3 +58,74 @@ A hook SHALL be written to `.specify/companion.yml`, or to the named workflow's 
 #### Scenario: the project is on a named workflow
 - **WHEN** a hook is added while a named workflow is in force
 - **THEN** it is written to that workflow's file and the block heading names that file
+
+### A project hook can be dragged to another place on its step
+<!-- touches: apps/vscode/webview/src/pipeline-builder/Canvas.tsx, apps/vscode/webview/src/pipeline-builder/hookMoves.ts, apps/vscode/webview/src/pipeline-builder/index.tsx, apps/vscode/webview/styles/pipeline-builder.css -->
+
+One of the project's hooks SHALL drop onto another hook's upper or lower half, a node card's upper or lower half, a dotted slot, a hook block or a phase heading, and run from there after one write.
+
+#### Scenario: moving to another node
+- **WHEN** a hook after one node is dropped on the upper half of another node's card
+- **THEN** the configuration holds it before that node and not after the first, and the status line says where it went
+
+#### Scenario: reordering at one anchor
+- **WHEN** the third hook after a node is dropped on the upper half of the first
+- **THEN** it runs first there and the status line says it moved up
+
+### A move changes only the moved hook's lines
+<!-- touches: apps/speckit-extension/scripts/config_write.py -->
+
+A move SHALL keep the moved entry's exact text and leave every other line of the configuration as it was, comments included, apart from an anchor key the move emptied.
+
+#### Scenario: moving an anchor's only hook
+- **WHEN** the only hook at an anchor is moved to another anchor in a file with comments
+- **THEN** the diff touches only that entry's lines and removes the emptied anchor key, and every comment is unchanged
+
+### The hook form moves a hook one place up or down
+<!-- touches: apps/vscode/webview/src/pipeline-builder/AttachForm.tsx, apps/vscode/webview/src/pipeline-builder/index.tsx -->
+
+The hook form SHALL offer **Move up** and **Move down** on an **Order** row for a project hook, each moving it one place within its side and anchor and keeping the form open on it, and each SHALL be unavailable with its reason at the matching edge.
+
+#### Scenario: moving from the keyboard
+- **WHEN** Move up is pressed on the second of two hooks in its form
+- **THEN** it becomes the first and the form still shows it
+
+#### Scenario: already first
+- **WHEN** the form is open on the first hook at its anchor
+- **THEN** Move up is unavailable and says the hook is already first
+
+### A move is announced only once its write answers
+<!-- touches: apps/vscode/webview/src/pipeline-builder/index.tsx, apps/vscode/webview/src/pipeline-builder/AttachForm.tsx, apps/vscode/src/features/pipeline-builder/builderPanel.ts -->
+
+The status line and the form's live region SHALL say nothing about a move until its write answers, then read the outcome on success and the reason on refusal.
+
+#### Scenario: a refused move from the form
+- **WHEN** Move down is pressed and the write is refused
+- **THEN** the live region never says the hook moved and reads the refusal's reason
+
+### Extension and parked hooks neither drag nor take a drop
+<!-- touches: apps/vscode/webview/src/pipeline-builder/Canvas.tsx -->
+
+A hook an extension registered, or a parked hook, SHALL take no drop, and a drag started on one SHALL not start and SHALL show the reason in the status line.
+
+#### Scenario: dragging an extension's hook
+- **WHEN** a drag starts on a hook the git extension registered
+- **THEN** nothing moves and the status line says the git extension registered it and it is not moved in this panel
+
+### A drop in another step's lane is refused before anything is written
+<!-- touches: apps/vscode/webview/src/pipeline-builder/Canvas.tsx -->
+
+A hook SHALL move only within its own step, and a drop in another step's lane SHALL write nothing and say why in the status line.
+
+#### Scenario: dropping in another step
+- **WHEN** a hook of the plan step is dropped in the implement lane
+- **THEN** the configuration is unchanged and the status line says a hook moves within its own step
+
+### A move to a place the step does not have is refused before it is written
+<!-- touches: apps/speckit-extension/scripts/config_write.py, apps/vscode/src/features/specs/pipelineGraph.ts -->
+
+The writer SHALL refuse a move to a node or phase the step does not have, or to a name that resolves to a different boundary than the one dropped on, and leave the file as it was.
+
+#### Scenario: a phase that shares a node's name
+- **WHEN** a hook is dropped on the `orchestrate` phase of a step that also has an `orchestrate` node
+- **THEN** the move is refused with the reason and the file is byte for byte unchanged
