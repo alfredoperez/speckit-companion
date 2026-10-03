@@ -63,8 +63,8 @@ import spec406 from '../../../../../specs/406-living-spec-components/spec.md?raw
 import plan406 from '../../../../../specs/406-living-spec-components/plan.md?raw';
 import tasks406 from '../../../../../specs/406-living-spec-components/tasks.md?raw';
 import ctx406Raw from '../../../../../specs/406-living-spec-components/.spec-context.json?raw';
-import readASpecLiving from '../../../../../capabilities/spec-viewer/read-a-spec.spec.md?raw';
-import moveASpecForwardLiving from '../../../../../capabilities/spec-viewer/move-a-spec-forward.spec.md?raw';
+import readASpecLiving from './__fixtures__/living/read-a-spec.spec.md?raw';
+import moveASpecForwardLiving from './__fixtures__/living/move-a-spec-forward.spec.md?raw';
 import spec393 from './__fixtures__/specs/393-implement-button-lost/spec.md?raw';
 import plan393 from './__fixtures__/specs/393-implement-button-lost/plan.md?raw';
 import tasks393 from './__fixtures__/specs/393-implement-button-lost/tasks.md?raw';
@@ -172,7 +172,7 @@ export const LivingComponents406: Story = {
 /**
  * The requirement outline (#672 Wave 1), driven through the real renderer.
  *
- * `read-a-spec` is one of the repository's largest living specs — the case the
+ * `read-a-spec` is a large living spec — the case the
  * outline exists for. Open it from the Overview's living-spec chip: the viewer's
  * own "On this page" outline lists every requirement rather than the document's
  * three section headings, each row carrying a coverage dot and, once markers are
