@@ -16,6 +16,8 @@ describe('formatCommandForProvider', () => {
         });
     }
 
+    beforeEach(() => mockCommandFormat('auto'));
+
     describe('when commandFormat is "dash"', () => {
         beforeEach(() => mockCommandFormat('dash'));
 

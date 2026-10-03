@@ -18,8 +18,9 @@ import {
 
 /** `promisify(exec)` calls `exec(cmd, options, cb)`, so the callback is always the last argument. */
 const done = (args: unknown[]) => args[args.length - 1] as (e: unknown, r: unknown) => void;
-const execMock = jest.fn((...args: unknown[]) =>
-    done(args)(null, { stdout: 'Usage: specify extension add [OPTIONS]\n  --force\n', stderr: '' }));
+const helpWithForce = (...args: unknown[]) =>
+    done(args)(null, { stdout: 'Usage: specify extension add [OPTIONS]\n  --force\n', stderr: '' });
+const execMock = jest.fn(helpWithForce);
 jest.mock('child_process', () => ({ exec: (...args: unknown[]) => execMock(...args) }));
 
 jest.mock('../../features/settings/companionPresetReconciler', () => ({
@@ -38,6 +39,15 @@ const { createMockExtensionContext } = vscode as unknown as {
 };
 
 describe('specKitExtensionInstall', () => {
+    beforeEach(() => {
+        execMock.mockReset().mockImplementation(helpWithForce);
+        (isCompanionInstalled as jest.Mock).mockReset().mockReturnValue(false);
+        (readInstalledCompanionVersion as jest.Mock).mockReset().mockReturnValue(undefined);
+        __resetForceProbe();
+        clearInstallInFlight();
+        noteUpdateDispatched({ state: 'current' });
+    });
+
     describe('buildInstallCommand', () => {
         it('installs from the release URL while the catalog form is off', () => {
             // Guard the launch-time invariant: until the catalog lists the extension,
@@ -210,7 +220,6 @@ describe('specKitExtensionInstall', () => {
         it('keeps --force when the probe cannot reach the CLI, and does not remember that as an answer', async () => {
             const from = createTerminal.mock.results.length;
             (isCompanionInstalled as jest.Mock).mockReturnValue(true);
-            __resetForceProbe();
             const probesBefore = execMock.mock.calls.length;
             execMock.mockImplementationOnce((...args: unknown[]) =>
                 done(args)(Object.assign(new Error('command not found: specify'), { stderr: 'command not found' }), null));
@@ -219,19 +228,15 @@ describe('specKitExtensionInstall', () => {
             // The next click asks again rather than carrying a guess for the session.
             await runInstallSpecKitExtension('/work/project');
             expect(execMock.mock.calls.length - probesBefore).toBe(2);
-            __resetForceProbe();
-            (isCompanionInstalled as jest.Mock).mockReturnValue(false);
         });
 
         it('leaves --force off on a CLI whose `extension add` has no such option (issue #420)', async () => {
             const from = createTerminal.mock.results.length;
             (isCompanionInstalled as jest.Mock).mockReturnValueOnce(true);
-            __resetForceProbe();
             execMock.mockImplementation((...args: unknown[]) =>
                 done(args)(null, { stdout: 'Usage: specify extension add [OPTIONS] SOURCE\n  --from TEXT\n', stderr: '' }));
             await runInstallSpecKitExtension('/work/project');
             expect(commandsSince(from)).toContain(buildInstallCommand());
-            __resetForceProbe();
         });
 
         it('reports an install in flight so a mid-install empty directory is not read as uninstalled', async () => {
