@@ -1,6 +1,6 @@
 ---
 title: Your first spec
-description: 'Install SpecKit Companion, open a project, create a spec and read what the first step wrote: in the viewer, on the Overview and in the sidebar.'
+description: 'What you do to go from installing SpecKit Companion to a written spec, and what you see along the way: the viewer, review comments, progress, the Overview, and how to move around.'
 sidebar:
   hidden: true
   label: Your first spec
@@ -8,196 +8,184 @@ sidebar:
 
 import Button from '../../../../components/Button.astro';
 import CodeLine from '../../../../components/CodeLine.astro';
-import MediaSlot from '../../../../components/docs/MediaSlot.astro';
-import JourneyIntro from '../../../../components/journey/JourneyIntro.astro';
-import JourneyStep from '../../../../components/journey/JourneyStep.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
 import ShotNeeded from '../../../../components/journey/ShotNeeded.astro';
 import WorkflowChoice from '../../../../components/journey/WorkflowChoice.astro';
-import WorkingIf from '../../../../components/journey/WorkingIf.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
 
 export const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
 export const COMPANION_COMMAND = 'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
 
-Go from nothing installed to a written spec you can read. You will run the first step of the loop, specify, and see what it leaves behind. New to the method? GitHub Spec Kit explains it in [Spec-driven development](https://github.com/github/spec-kit/blob/main/spec-driven.md).
+This page covers the start of a spec: installing SpecKit Companion, creating a spec, and what the first step, specify, leaves behind. Each section says what you do and what you see. The method itself comes from GitHub Spec Kit, which explains it in [Spec-driven development](https://github.com/github/spec-kit/blob/main/spec-driven.md).
 
-<JourneyIntro
-  time="About 10 minutes"
-  needs={['VS Code', 'Spec Kit 0.9.5 or newer', 'An AI assistant', 'A project folder']}
-  covered={['install', 'constitution', 'specify']}
-  mapCaption="This page covers the first three stops. The rest of the loop gets a page each."
-/>
-
-<JourneyStep id="install">
+## Install both halves
 
 SpecKit Companion comes in two halves. The VS Code extension is the part you look at. The Companion Spec Kit extension records each run, so the viewer has something to show.
 
-<div slot="action">
+<Actions>
   <Button href={MARKETPLACE} external size="md" data-analytics="install_click_vscode" data-analytics-placement="first-spec">Get it on the Marketplace</Button>
   <p>Then, from your project root:</p>
   <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="first-spec" />
   <p>If <code>specify extension</code> is missing, your Spec Kit CLI is the PyPI build. <a href="/docs/install">Install</a> has the one-line fix.</p>
-</div>
+</Actions>
 
-<div slot="result">
+<YouSee>
 
 `specify extension list` shows **SpecKit Companion**, and a SpecKit icon has joined the activity bar.
 
-</div>
+</YouSee>
 
-<MediaSlot
-  slot="media"
-  feature="live-install-extension-list"
-  caption="The check that the second half took: companion is listed and enabled."
-/>
+<DocFigure src="live-install-extension-list.png" caption="Companion is listed and enabled, so the second half is in place." />
 
-</JourneyStep>
+## Open a project
 
-<JourneyStep id="open-a-project">
+Open the folder you want to work in and click the SpecKit icon. In a folder that has never run `specify init`, the Specs view offers **Initialize Workspace**. It sets the project up for the assistant named in your AI provider setting, so choose that first.
 
-Open the folder you want to work in and click the SpecKit icon. In a folder that has never run `specify init`, the Specs view offers **Initialize Workspace**. It sets the project up for the assistant named in your AI provider setting, so pick that first.
-
-<div slot="action">
-  <p>Click <strong>Initialize Workspace</strong>.</p>
-</div>
-
-<div slot="result">
+<YouSee>
 
 A **Configure Constitution** prompt. The constitution holds the project's ground rules. You write it once per project, and every spec after it is checked against it. Then a **Create New Spec** button.
 
-</div>
+</YouSee>
 
 <ShotNeeded
-  slot="media"
   shows="The Specs view in a folder with no Spec Kit setup, offering Initialize Workspace."
-  source="Live VS Code capture, dark theme, on an empty folder."
+  source="Live VS Code capture, light theme, on an empty folder."
 />
 
-<MediaSlot
-  slot="media"
-  feature="live-provider-picker"
-  caption="The AI provider setting decides which assistant receives every step."
-/>
+<DocFigure src="live-provider-picker.png" recapture caption="The AI provider setting decides which assistant receives every step." />
 
-</JourneyStep>
+## Create a spec
 
-<JourneyStep id="create-a-spec">
-
-Click `+` in the Specs view, or run **SpecKit: New Spec** from the command palette. The panel asks for two things. First, how the spec should run:
+Click `+` in the Specs view, or run **SpecKit: New Spec** from the command palette. The panel asks how the spec should run:
 
 <WorkflowChoice />
 
-Then the brief. Say what the problem is, who has it and what done looks like, in a few sentences. You can paste a Jira or GitHub link instead, or attach an image.
+Then write the brief: what the problem is, who has it and what done looks like, in a few sentences. You can paste a Jira or GitHub link instead, or attach an image. Press <kbd>Cmd</kbd> + <kbd>Enter</kbd> or click **Create Spec**, or click **Auto** to run every step.
 
-<div slot="action">
-  <p>Press <kbd>Cmd</kbd> + <kbd>Enter</kbd> or click <strong>Create Spec</strong>. Click <strong>Auto</strong> instead to run the whole loop.</p>
-</div>
-
-<div slot="result">
+<YouSee>
 
 A new spec under **Active** in the Specs view, with the workflow you picked recorded on it.
 
-</div>
+</YouSee>
 
-<MediaSlot
-  slot="media"
-  feature="live-create-spec"
-  caption="Workflow first, then the brief. Auto sits beside Create Spec."
-/>
+<DocFigure src="live-create-spec.png" recapture caption="Workflow first, then the brief. Auto sits beside Create Spec." />
 
-</JourneyStep>
-
-<JourneyStep id="watch-specify-run">
+## Watch specify run
 
 Create Spec sends the specify command to your assistant, in its terminal or its chat. SpecKit Companion never reads the chat. It watches the files the step writes.
 
 With SpecKit Companion, specify also sizes the change. A small one, up to 5 files and 10 tasks, gets its plan and task list in the same pass. Anything bigger stops after the spec.
 
-<div slot="result">
+<YouSee>
 
 While it runs, the viewer footer says **Step running, actions unlock when it settles**. When it settles, Specification is checked in the rail, and Plan and Tasks stay hollow until their documents exist.
 
-</div>
+</YouSee>
 
 <ShotNeeded
-  slot="media"
   shows="Your assistant's terminal running /speckit.companion.specify, beside the viewer showing Step running."
-  source="Live VS Code capture, dark theme, mid-run."
+  source="Live VS Code capture, light theme, mid-run."
 />
 
-<MediaSlot
-  slot="media"
-  feature="run-in-flight"
-  caption="After specify: Specification is checked, Plan and Tasks wait for their documents."
+<DocFigure src="run-in-flight-x16x9.png" caption="After specify: Specification is checked, and Plan and Tasks wait for their documents." />
+
+## Read the spec
+
+Click the spec's name in the sidebar. `spec.md` opens as a page, with the workflow's steps in a rail beside it.
+
+<YouSee>
+
+The user stories, requirements and success criteria your assistant wrote, laid out to read rather than edit. Requirements show as labelled rows, and Given, When and Then stand out in each scenario.
+
+</YouSee>
+
+<DocFigure src="spec-viewer-x16x9.png" caption="The spec as a page, not a file." />
+
+## Review with comments
+
+Hover any line and click the comment button that appears. Type your note and it pins under that line as **Pending**. When you are done, press **Refine (N)** in the footer to send every pending comment on the document to your assistant in one prompt.
+
+<YouSee>
+
+Each comment quotes its line and section in the prompt, and the assistant edits the file in place. Sent comments flip to **Applied** and stay as history. Applied means sent, not checked, so read the change yourself.
+
+</YouSee>
+
+<DocFigure
+  src="inline-comments-16x9.png"
+  alt="A spec in the viewer with two review cards pinned under their lines, one pending and one applied, and the comment composer open on line 4."
+  caption="Comments pin to the line they are about. The composer offers quick actions for the kind of line you are on."
 />
 
-</JourneyStep>
+<DocFigure src="panel-review.png" caption="A pending comment, expanded: Refine sends it, Edit and Delete change it." />
 
-<JourneyStep id="read-the-spec">
+Comments are saved in `.spec-context.json` next to the spec, so the review travels with your branch.
 
-Click the spec's name in the sidebar. `spec.md` opens as a page, with the workflow's steps in a rail beside it. Hover any line to leave a comment on it.
+## Track progress
 
-<div slot="result">
+Three places tell you where a spec is: the rail, the sidebar and the footer. You don't have to do anything to keep them current; they follow the files the run writes.
 
-The user stories, requirements and success criteria your assistant wrote, laid out to read. The footer names the next step, with **Next: Plan** above the button.
+<YouSee>
 
-</div>
+In the rail, a check when a step's document exists, a spinner and a timer while it runs, and a lock on documents a running step has not reached. During implement, the Tasks tab shows a live percentage from the checked boxes in `tasks.md`.
 
-<MediaSlot
-  slot="media"
-  feature="spec-viewer"
-  caption="The spec as a page, not a file."
+In the sidebar, a spec in flight shows its last finished task and how long ago, like `T004 · 2h ago`.
+
+In the footer, the next step by name, with **Next: Plan** above the button. There is no forward button while a step runs.
+
+</YouSee>
+
+<DocFigure src="panel-step-rail.png" caption="Tasks grouped by phase, each with its checkbox, and the rail showing which documents are done." />
+
+<DocFigure
+  src="figure-mid-run.png"
+  recapture
+  alt="The viewer while Plan runs: Specification is checked, and the Plan tab shows a spinner and its running time, 1m 18s."
+  caption="While a step runs, its tab spins and keeps time."
 />
 
-</JourneyStep>
-
-<JourneyStep id="open-the-overview">
+## Read the Overview
 
 Click **Overview**, the first entry in the rail. It appears once the run has recorded something, and it fills in as each step lands.
 
-<div slot="result">
+<YouSee>
 
 The intent of the change, how long each step took, the approach, where in the code it works and how big it is. Later steps add what must stay true, each decision and what it rejected, and which tests cover which requirement.
 
-</div>
+</YouSee>
 
-<MediaSlot
-  slot="media"
-  feature="overview"
+<DocFigure
+  src="overview-16x9.png"
+  alt="The Overview of a finished run: intent, run timing, approach and size, a requirement to task to test table, decisions with what each rejected, and the verified checks."
   caption="A finished run's Overview. After your first specify, only the top of it is filled in."
 />
 
-</JourneyStep>
+## Navigate
 
-<JourneyStep id="find-it-in-the-sidebar" layout="side">
+### The sidebar
 
-The Specs view lists every spec by state: **Active** first, then **Completed**. Expand one to see each document and whether it exists yet. Hover it for its status and last activity.
+The SpecKit icon opens four views.
 
-<div slot="result">
+- **Specs** groups your specs as **Active**, **Completed** and **Archived**, each with a count. Expand a spec to see each document and whether it exists yet. A **Bugs** group appears once Spec Kit's bug extension has written a report.
+- **Living Specs** lists the lasting spec for each capability, with a coverage count and a drift warning. It appears with the Companion Spec Kit extension.
+- **Steering** gathers the standing files your assistant reads, plus Spec Kit's constitution, scripts and templates.
+- **Settings & Feedback** holds the Pipeline Builder, settings and feedback links. It stays hidden until you turn on `speckit.views.settings.visible`.
 
-Your spec under **Active**, with Specification checked and Plan and Tasks not created yet.
+<DocFigure src="sidebar-triptych.png" caption="Specs tracks your work, Steering lists the standing files, and Living Specs lists the specs that outlive any one change." />
 
-</div>
+[The sidebar](/docs/anatomy/the-sidebar) covers every icon, mark and hover action.
 
-<MediaSlot
-  slot="media"
-  feature="specs-sidebar"
-  caption="Every spec, by state, with each document's progress."
-/>
+### Inside the viewer
 
-</JourneyStep>
+- **The rail** has the Overview at the top, then one tab per document step. Supporting documents, such as Checklist, Research and Data Model, sit under the step that wrote them. Clicking a tab only changes what you read. It never moves the run.
+- **On this page** lists the document's headings and follows where you are.
+- **Links between documents** open in the viewer. A link to `tasks.md` from the plan opens Tasks at the heading it names, a link to another spec opens that spec, and a link to a source file opens it in the editor beside the viewer.
 
-<WorkingIf>
+<DocFigure src="workflow-documents-poster.png" caption="The plan, with Research and Data Model under it in the rail and its headings in On this page." />
 
-- `specify extension list` shows companion.
-- Your spec is under **Active**, with the workflow you picked.
-- `spec.md` opens in the viewer with Specification checked.
-- The Overview shows your intent and how long Specify took.
-- A `.spec-context.json` file sits next to `spec.md`. That is the run record, and it travels with your branch.
+[Inside the viewer](/docs/anatomy/anatomy-of-the-spec-viewer) covers the header, the footer and every state of the rail.
 
-</WorkingIf>
+## What comes next
 
-## Where it goes next
-
-Your spec has finished its first step. The rest of the loop runs the same way: **plan**, then **tasks**, then **implement**, one step at a time from the viewer footer, or all at once with Auto. After implement you can run Spec Kit's own `/speckit.converge` from your assistant, and repeat implement and converge until the code matches the spec. The viewer shows converge in the rail and on the Overview, but it has no button to start it.
-
-Each of those steps gets its own page next, starting with Specify.
+Your spec has finished its first step. The rest of the loop runs the same way: plan, then tasks, then implement, one step at a time from the viewer footer, or all at once with Auto. After implement you can run Spec Kit's own `/speckit.converge` from your assistant, and repeat implement and converge until the code matches the spec. The viewer shows converge in the rail and on the Overview, but it has no button to start it. Each step has its own page under **Each step**.

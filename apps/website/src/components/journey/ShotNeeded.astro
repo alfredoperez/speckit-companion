@@ -1,10 +1,9 @@
 ---
 /*
-  A reserved frame for a screenshot that has not been captured yet. It is
-  hatched and labelled so it can never pass for a finished picture, and it
-  names what the shot must show and where it comes from, so whoever captures
-  it does not have to guess. Sized to the capture aspect (1836x1164), or
-  portrait for a tall view, so the page does not reflow when the real one lands.
+  A reserved frame for a screenshot that has not been captured yet. Same 16:9
+  light frame as DocFigure, so the page does not reflow when the real still
+  lands, but hatched and labelled so it can never pass for a finished picture.
+  It names what the shot must show and how it gets made.
 */
 interface Props {
   /** What the finished screenshot shows, in one sentence. */
@@ -12,13 +11,12 @@ interface Props {
   /** How it gets made, e.g. a live VS Code capture or a Storybook story. */
   source: string;
   caption?: string;
-  shape?: 'landscape' | 'portrait';
 }
 
-const { shows, source, caption, shape = 'landscape' } = Astro.props;
+const { shows, source, caption } = Astro.props;
 ---
 
-<figure class:list={["shot-needed", `shot-needed--${shape}`, "not-content"]}>
+<figure class="shot-needed not-content">
   <div class="shot-needed__frame" role="img" aria-label={`Screenshot not captured yet: ${shows}`}>
     <p class="shot-needed__flag">Screenshot to capture</p>
     <p class="shot-needed__shows">{shows}</p>
@@ -29,30 +27,23 @@ const { shows, source, caption, shape = 'landscape' } = Astro.props;
 
 <style>
   .shot-needed {
-    margin: 0;
+    margin: 1.1rem 0 1.6rem;
   }
 
+  /* The frame is light in both site themes, like every DocFigure, so its text
+     colours are fixed rather than read from the theme. */
   .shot-needed__frame {
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 0.45rem;
-    aspect-ratio: 1836 / 1164;
-    padding: 1.25rem 1.5rem;
+    aspect-ratio: 16 / 9;
+    padding: 1.25rem 8%;
     background:
-      repeating-linear-gradient(
-        -45deg,
-        transparent 0 10px,
-        color-mix(in srgb, var(--text-dim) 9%, transparent) 10px 11px
-      ),
-      var(--ground);
-    border: 1.5px dashed var(--border-strong);
-    border-radius: var(--radius-sm);
-  }
-
-  .shot-needed--portrait .shot-needed__frame {
-    aspect-ratio: 3 / 5;
-    max-height: 30rem;
+      repeating-linear-gradient(-45deg, transparent 0 10px, rgb(24 20 45 / 0.05) 10px 11px),
+      #eeedf3;
+    border: 1.5px dashed #a9a3c4;
+    border-radius: var(--radius-md);
   }
 
   .shot-needed__flag {
@@ -61,8 +52,8 @@ const { shows, source, caption, shape = 'landscape' } = Astro.props;
     padding: 0.15rem 0.55rem;
     font-size: var(--fs-mono);
     font-weight: var(--fw-semibold);
-    color: var(--ground);
-    background: var(--text-muted);
+    color: #ffffff;
+    background: #5b5578;
     border-radius: var(--radius-pill);
   }
 
@@ -72,18 +63,18 @@ const { shows, source, caption, shape = 'landscape' } = Astro.props;
     font-size: var(--fs-body);
     font-weight: var(--fw-semibold);
     line-height: 1.45;
-    color: var(--text-primary);
+    color: #1a1630;
   }
 
   .shot-needed__source {
     margin: 0;
     font-size: var(--fs-ui-sm);
     line-height: var(--lh-ui);
-    color: var(--text-muted);
+    color: #4a4566;
   }
 
   .shot-needed__caption {
-    margin-top: 0.5rem;
+    margin-top: 0.55rem;
     font-size: var(--fs-ui-sm);
     line-height: var(--lh-ui);
     color: var(--text-muted);

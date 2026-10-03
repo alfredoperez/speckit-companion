@@ -1,0 +1,52 @@
+---
+// What the screen shows once the action above it lands. One short paragraph, set apart from the instructions.
+interface Props {
+  label?: string;
+}
+
+const { label = 'What you see' } = Astro.props;
+---
+
+<div class="you-see">
+  <p class="you-see__label">{label}</p>
+  <div class="you-see__text"><slot /></div>
+</div>
+
+<style>
+  .you-see {
+    max-width: var(--measure-prose);
+    margin-block: 1rem;
+    padding: 0.65rem 0.9rem;
+    background: var(--panel);
+    border: 1px solid var(--border-card);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 var(--radius-button-sm) var(--radius-button-sm) 0;
+  }
+
+  .you-see .you-see__label {
+    margin: 0 0 0.15rem;
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--accent);
+  }
+
+  .you-see .you-see__text {
+    margin: 0;
+  }
+
+  .you-see .you-see__text :global(p) {
+    margin: 0;
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+  }
+
+  .you-see .you-see__text :global(p + p) {
+    margin-top: 0.4rem;
+  }
+
+  .you-see .you-see__text :global(strong) {
+    color: var(--text-primary);
+    font-weight: var(--fw-semibold);
+  }
+</style>

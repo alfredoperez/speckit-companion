@@ -1,11 +1,6 @@
 import { defineRouteMiddleware } from '@astrojs/starlight/route-data';
 import type { StarlightRouteData } from '@astrojs/starlight/route-data';
-import {
-  FIRST_SPEC_STEPS,
-  FIRST_SPEC_TAIL,
-  JOURNEY_TREE,
-  MOCKUP_ID,
-} from './components/journey/journey';
+import { JOURNEY_TREE, MOCKUP_ID } from './components/journey/journey';
 
 type Link = Extract<StarlightRouteData['sidebar'][number], { type: 'link' }>;
 
@@ -40,16 +35,4 @@ export const onRequest = defineRouteMiddleware((context) => {
 
   const at = links.findIndex((link) => link.isCurrent);
   route.pagination = { prev: links[at - 1], next: links[at + 1] };
-
-  if (route.toc) {
-    route.toc.items = [
-      route.toc.items[0],
-      ...[...FIRST_SPEC_STEPS, ...FIRST_SPEC_TAIL].map((item) => ({
-        depth: 2,
-        slug: item.id,
-        text: item.title,
-        children: [],
-      })),
-    ];
-  }
 });
