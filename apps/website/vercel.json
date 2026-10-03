@@ -3,7 +3,7 @@
   "framework": "astro",
   "buildCommand": "npm run build",
   "installCommand": "npm ci",
-  "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ] && exit 0; [ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ] && exit 1; git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- . ../../content/media/web ../../content/media/manifest.json",
+  "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ] && exit 0; [ -z \"$VERCEL_GIT_PREVIOUS_SHA\" ] && exit 1; git diff --quiet \"$VERCEL_GIT_PREVIOUS_SHA\" HEAD -- . ../../content/media/web ../../content/media/manifest.json ../../assets/icons/moss.svg",
   "git": {
     "deploymentEnabled": {
       "**": false,

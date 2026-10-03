@@ -14,4 +14,4 @@ Each provider logo is a trademark of its respective owner (Anthropic, Google, Gi
 
 ## SpecKit Companion original artwork
 
-`assets/icons/moss.svg` and `assets/icons/seedling.svg` are original artwork by the SpecKit Companion project, MIT-licensed with the rest of the repository.
+`assets/icons/moss.svg`, `moss-16.svg`, `moss-mono.svg` and `seedling.svg` are original artwork by the SpecKit Companion project, MIT-licensed with the rest of the repository.

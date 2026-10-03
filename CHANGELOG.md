@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **The moss mascot is the new logo.** The SpecKit icon in the activity bar and the logo in the Copilot app board's header are now the small moss character instead of the seedling and the double chevron.
+
 ### Fixed
 - **The Copilot app board no longer covers itself with the prompt it sent.** Sending a step now shows a short note that fades, with the full prompt behind Show prompt and Copy (it stays up to paste when there is no chat session), and in a workspace without SpecKit Companion the Companion and Auto choices now look disabled.
 

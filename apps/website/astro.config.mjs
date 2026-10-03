@@ -70,7 +70,7 @@ export default defineConfig({
       // component and favicon links, because docs pages do not go through
       // BaseLayout.astro and would otherwise carry no analytics at all.
       //
-      // SiteTitle puts the MascotMark in the docs header, so the mark appears
+      // SiteTitle puts the LogoMark (the moss mascot) in the docs header, so it appears
       // on both halves of the site. It renders the component rather than the
       // `logo` config option, which would need a second copy of the mark as a
       // file on disk.

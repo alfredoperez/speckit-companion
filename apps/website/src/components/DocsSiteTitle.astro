@@ -10,13 +10,12 @@ import LogoMark from './LogoMark.astro';
   purpose: that option takes a path to a raster or SVG *file*, which would mean a
   second copy of the mark on disk, drifting from LogoMark.astro the first time
   either one changes. The override renders the one component, inline, so the mark
-  in the docs header is the same six paths as the mark in the nav and inherits
-  the same brand colours from the token file.
+  in the docs header is the same artwork as the mark in the nav.
 
   The title text and its href come from Starlight's route data, so the site
   title stays configured in astro.config.mjs and is not restated here.
 
-  Geometry matches SiteNav.astro: a 22px mark, a 10px gap, and the same weight
+  Geometry matches SiteNav.astro: a 24px mark, a 10px gap, and the same weight
   and letter spacing on the words. Colour is the one deliberate difference:
   Starlight paints its own title in the accent, and matching --text-primary here
   keeps the two headers reading as one bar.
@@ -25,7 +24,7 @@ const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 ---
 
 <a class="docs-site-title" href={siteTitleHref}>
-  <LogoMark size={22} />
+  <LogoMark size={24} />
   <span translate="no">{siteTitle}</span>
 </a>
 

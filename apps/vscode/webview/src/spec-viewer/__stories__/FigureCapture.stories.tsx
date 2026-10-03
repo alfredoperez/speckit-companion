@@ -13,7 +13,7 @@
  * The frame is the figure style guide as code (vault: Projects/speckit
  * companion/marketing/Figure style guide.md). It shows the product, so its
  * chrome is the site's: Constellation tokens (website/src/styles/tokens.css)
- * and the chevron wordmark (website/src/components/LogoMark.astro). It is read
+ * and the moss-mascot wordmark (assets/icons/moss.svg). It is read
  * on the blog, so its text is Geist, the blog's reading face.
  *
  * Figures are ALWAYS shot in the violet palette, whatever `activeCapturePalette`

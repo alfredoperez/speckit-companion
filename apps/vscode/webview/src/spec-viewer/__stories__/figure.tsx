@@ -13,6 +13,7 @@ import mascotWaving from '../../../../../website/public/mascot/waving-256.png';
 import mascotReading from '../../../../../website/public/mascot/reading-256.png';
 import mascotThinking from '../../../../../website/public/mascot/thinking-256.png';
 import mascotCelebrating from '../../../../../website/public/mascot/celebrating-256.png';
+import mossMark from '../../../../../../assets/icons/moss.svg';
 import geistRegular from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-Regular.ttf';
 import geistMedium from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-Medium.ttf';
 import geistSemiBold from '../../../../../../content/media/feature-clips/step-rail/assets/fonts/Geist-SemiBold.ttf';
@@ -50,29 +51,11 @@ export const GEIST_FACES = `
 
 export const FIGURE_FONT = "'Geist', system-ui, sans-serif";
 
-// The site's mark: a double chevron with a check tucked inside the right one.
-// Path data copied from website/src/components/LogoMark.astro, the chosen
-// artwork in a 678 box, untouched. Change it there first.
-const MARK = {
-    right: 'M315.34 2.18C357.67-2.1 377.91 28.2 404.93 55.31L482.8 133.14L584.21 234.53C601.87 252.07 622.52 271.31 638.57 289.69C653.83 307.16 658.46 343.01 650.95 364.47C648.62 371.12 645.39 380.51 640.87 385.94C624.36 405.78 605.54 424.08 587.31 442.34L491.88 537.59L413.56 616.25C397.49 632.33 378.97 652.1 361.28 665.59C353.78 670.27 348.83 673.06 340.12 675.38C323.13 679.82 305.08 677.36 289.9 668.53C276.51 660.64 266.85 647.7 263.09 632.62C258.98 616.27 261.62 598.96 270.42 584.58C275.97 575.34 297.94 555.48 307 546.47L425.48 430.74C443.2 413.37 470.93 389 484.23 369.28C494.14 354.6 493.56 326.31 484.76 310.65C474.11 291.72 448.59 270.61 432.2 255.13L340.5 167.44C319.08 147.2 295.75 125.87 276.08 103.89C270.29 97.42 266.87 89.05 264.67 80.64C260.26 63.99 262.77 46.26 271.63 31.49C281.68 14.84 296.99 6.45 315.34 2.18z',
-    armTop: 'M170.9 232.63L89.44 153.61C72.98 137.67 46.88 115.02 34.44 96.61C9.21 59.25 36.58 2.46 82.89 1.29C113.53 0.52 130.63 23.82 150.46 43.28C156.76 49.48 162.92 55.91 169.12 62.22C197.56 91.23 226.29 119.94 255.31 148.36C265.23 158.37 331.99 223.45 332.76 229.72C327 240.01 262.65 300.94 250.99 310.16C225.07 285.72 196.37 257.63 170.9 232.63z',
-    elbowTop: 'M255.31 148.36C265.23 158.37 331.99 223.45 332.76 229.72C327 240.01 262.65 300.94 250.99 310.16C225.07 285.72 196.37 257.63 170.9 232.63C182.57 222.24 194.88 208.93 205.94 197.69L255.31 148.36z',
-    armBottom: 'M169.67 451.43C195.29 425.65 225.42 394.59 251.81 369.89C259.8 376.73 331.49 446.43 332.55 451.22C327.33 461.58 267.72 520.38 254.9 533.4C217.03 571.66 179.03 609.89 141.17 648.15C124.85 664.65 110.3 677.32 85.8 677.01C71.59 676.84 56.35 671.51 46.27 661.13C34.73 649.07 28.38 632.97 28.59 616.27C29.14 581.69 58.75 560.4 81.65 537.76L169.67 451.43z',
-    elbowBottom: 'M169.67 451.43C195.29 425.65 225.42 394.59 251.81 369.89C259.8 376.73 331.49 446.43 332.55 451.22C327.33 461.58 267.72 520.38 254.9 533.4C247.76 528.06 238.53 518.09 231.94 511.6L198.44 478.94C188.92 469.52 180.03 459.91 169.67 451.43z',
-    check: 'M403.53 293.71C410.8 296.72 428.95 311.41 420 319.53C410.87 327.82 352.9 390.82 345.5 391.67C337.78 389.59 326.89 376.49 320.97 370.33C305.4 355.01 285.95 346.93 316.27 328.27C321.28 325.19 339.21 345.41 344.31 349.18L345.51 350.05C357.26 337.99 391.83 301.3 403.53 293.71z',
-};
-
+// The site's mark, the moss mascot; its 32 box pads the creature, hence the size and negative margin.
 export function Wordmark() {
     return (
         <div style={`display: flex; align-items: center; gap: 12px; font: 600 17px/1 ${FIGURE_FONT}; letter-spacing: -0.01em; color: ${T.textPrimary}; white-space: nowrap; flex-shrink: 0;`}>
-            <svg width="24" height="24" viewBox="0 0 678 678" fill="none" aria-hidden="true" style="display: block;">
-                <path fill={T.textPrimary} d={MARK.right} />
-                <path fill={T.accent} d={MARK.armTop} />
-                <path fill={T.textPrimary} d={MARK.elbowTop} />
-                <path fill={T.accent} d={MARK.armBottom} />
-                <path fill={T.textPrimary} d={MARK.elbowBottom} />
-                <path fill={T.textPrimary} d={MARK.check} />
-            </svg>
+            <img src={mossMark} width={30} height={30} alt="" style="display: block; margin: -4px -3px -4px -4px;" />
             SpecKit Companion
         </div>
     );
