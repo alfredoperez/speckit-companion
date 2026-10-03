@@ -1,0 +1,133 @@
+---
+/*
+  The three ways the Create New Spec panel can start a spec, as a decision:
+  what each one runs, and when to pick it. Two are workflows in the Workflow
+  menu; Auto is a button beside Create Spec that runs a Companion spec hands-off.
+*/
+const choices = [
+  {
+    name: 'SpecKit Companion',
+    where: 'Workflow menu',
+    runs: ['specify', 'plan', 'tasks', 'implement', 'mark-complete'],
+    when: 'You want the spec sized to the change and closed for you when the work is done. Pre-selected once the Companion extension is installed.',
+  },
+  {
+    name: 'Spec Kit',
+    where: 'Workflow menu',
+    runs: ['specify', 'plan', 'tasks', 'implement'],
+    when: 'You want stock Spec Kit, exactly as GitHub ships it. You mark the spec complete yourself.',
+  },
+  {
+    name: 'Auto',
+    where: 'Button beside Create Spec',
+    runs: ['specify', 'plan', 'tasks', 'implement', 'mark-complete'],
+    when: 'You want a Companion spec run start to finish with no pauses. Your assistant runs it as one command, so there is nothing to pause.',
+  },
+];
+---
+
+<dl class="jchoice not-content">
+  {
+    choices.map((choice) => (
+      <div class="jchoice__row">
+        <dt class="jchoice__name">
+          {choice.name}
+          <span class="jchoice__where">{choice.where}</span>
+        </dt>
+        <dd class="jchoice__runs">
+          <span class="sr-only">Runs: </span>
+          {choice.runs.map((step) => (
+            <code>{step}</code>
+          ))}
+        </dd>
+        <dd class="jchoice__when">{choice.when}</dd>
+      </div>
+    ))
+  }
+</dl>
+
+<style>
+  .jchoice {
+    margin: 0.9rem 0 0;
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+  }
+
+  .jchoice__row {
+    display: grid;
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: 0.35rem 1rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .jchoice__row + .jchoice__row {
+    border-top: 1px solid var(--rule);
+  }
+
+  .jchoice__name {
+    grid-row: span 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-size: var(--fs-ui);
+    font-weight: var(--fw-bold);
+    color: var(--text-primary);
+  }
+
+  .jchoice__where {
+    font-size: var(--fs-mono);
+    font-weight: var(--fw-regular);
+    color: var(--text-muted);
+  }
+
+  .jchoice__runs,
+  .jchoice__when {
+    margin: 0;
+  }
+
+  .jchoice__runs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .jchoice__runs code {
+    padding: 0.05rem 0.4rem;
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    color: var(--text-body);
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+
+  .jchoice__when {
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+  }
+
+  @media (max-width: 34rem) {
+    .jchoice__row {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .jchoice__name {
+      grid-row: auto;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

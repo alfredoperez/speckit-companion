@@ -1,0 +1,111 @@
+---
+/*
+  Where the stem ends: a sprout instead of a number, and the checks that say
+  the whole page worked. Each item is something the reader can look at, not
+  something to take on trust. The default slot is a plain markdown list.
+*/
+interface Props {
+  title?: string;
+  id?: string;
+}
+
+const { title = "It's working if", id = 'its-working-if' } = Astro.props;
+---
+
+<section class="jworking not-content" aria-labelledby={id}>
+  <div class="jworking__rail" aria-hidden="true">
+    <svg class="jworking__sprout" viewBox="0 0 32 32">
+      <path class="stem" d="M16 30V15" />
+      <path class="leaf" d="M16 17c-1-5-5-7.5-10-7 0 5 4 8 10 7Z" />
+      <path class="leaf" d="M16 14c.5-5.5 4.5-9 11-9 0 6.5-4.5 10-11 9Z" />
+    </svg>
+  </div>
+  <div class="jworking__main">
+    <h2 class="jworking__title" id={id}>{title}</h2>
+    <div class="jworking__list"><slot /></div>
+  </div>
+</section>
+
+<style>
+  .jworking {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    column-gap: 1.1rem;
+  }
+
+  .jworking__rail {
+    display: flex;
+    justify-content: center;
+    margin-top: -0.6rem;
+  }
+
+  .jworking__sprout {
+    width: 2rem;
+    height: 2rem;
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .jworking__sprout .leaf {
+    fill: color-mix(in srgb, var(--green-leaf) 35%, transparent);
+    stroke-width: 1.5;
+  }
+
+  .jworking__main {
+    padding: 0.9rem 1.1rem 1rem;
+    background: var(--panel);
+    border: 1px solid color-mix(in srgb, var(--green) 40%, var(--border-card));
+    border-radius: var(--radius-md);
+  }
+
+  .jworking .jworking__title {
+    margin: 0;
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-black);
+    letter-spacing: var(--ls-h2-stat);
+    color: var(--text-primary);
+    scroll-margin-top: 5rem;
+  }
+
+  .jworking__list :global(ul) {
+    margin: 0.6rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .jworking__list :global(li) {
+    position: relative;
+    margin: 0;
+    padding-left: 1.6rem;
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+  }
+
+  .jworking__list :global(li + li) {
+    margin-top: 0.45rem;
+  }
+
+  /* The leaf-as-checkmark from the mascot, as the list marker. */
+  .jworking__list :global(li)::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.2em;
+    width: 1rem;
+    height: 1rem;
+    background: var(--green);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 9.2c2.2-.3 3.8.6 4.9 2.6C8.6 7.4 11 4.3 14.3 2.4c-4.4.4-7.6 3.4-8.6 6.4C4.9 8.3 3.6 8.4 2 9.2Z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 9.2c2.2-.3 3.8.6 4.9 2.6C8.6 7.4 11 4.3 14.3 2.4c-4.4.4-7.6 3.4-8.6 6.4C4.9 8.3 3.6 8.4 2 9.2Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  @media (max-width: 40rem) {
+    .jworking {
+      grid-template-columns: 1.75rem minmax(0, 1fr);
+      column-gap: 0.75rem;
+    }
+  }
+</style>

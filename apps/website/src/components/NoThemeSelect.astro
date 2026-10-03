@@ -1,3 +1,9 @@
 ---
-// Replaces Starlight's ThemeSelect with nothing. Dark only, no picker.
+// Replaces Starlight's ThemeSelect. Dark only, no picker, except on the journey mockup.
+import ThemeToggle from './journey/ThemeToggle.astro';
+import { MOCKUP_ID } from './journey/journey';
+
+const previewsLight = Astro.locals.starlightRoute?.id === MOCKUP_ID;
 ---
+
+{previewsLight && <ThemeToggle />}

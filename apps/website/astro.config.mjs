@@ -81,7 +81,9 @@ export default defineConfig({
         SiteTitle: './src/components/DocsSiteTitle.astro',
         Head: './src/components/DocsHead.astro',
       },
-      customCss: ['./src/styles/docs.css'],
+      customCss: ['./src/styles/docs.css', './src/styles/journey.css'],
+      // Swaps in the proposed journey sidebar on the "Your first spec" mockup only.
+      routeMiddleware: './src/routeData.ts',
       social: [
         {
           icon: 'github',

@@ -1,0 +1,315 @@
+---
+/*
+  One stop on a journey page. A numbered node sits on a green stem that runs
+  down the whole page, so the steps read as one path rather than a stack of
+  boxes. Each step says what to do, what proves it worked, then shows it.
+
+  Slots:
+    default   one to three short paragraphs
+    action    the click, command or keystroke
+    result    what the reader should see when it took
+    media     MediaSlot or ShotNeeded; full column width, or beside the text
+              with layout="side" for a tall shot such as the sidebar
+*/
+import { stepNumber, stepTitle } from './journey';
+
+interface Props {
+  id: string;
+  layout?: 'stack' | 'side';
+  resultLabel?: string;
+}
+
+const { id, layout = 'stack', resultLabel = 'You should see' } = Astro.props;
+const n = stepNumber(id);
+const title = stepTitle(id);
+const hasAction = Astro.slots.has('action');
+const hasResult = Astro.slots.has('result');
+const hasMedia = Astro.slots.has('media');
+---
+
+<section class:list={['jstep', `jstep--${layout}`]} aria-labelledby={`${id}`}>
+  <div class="jstep__rail" aria-hidden="true">
+    <span class="jstep__node">{n}</span>
+    <span class="jstep__stem"><span class="jstep__growth"></span></span>
+  </div>
+
+  <div class="jstep__main">
+    <h2 class="jstep__title" id={id}>
+      <span class="sr-only">Step {n}: </span>{title}
+    </h2>
+
+    <div class="jstep__body">
+      <div class="jstep__text">
+        <div class="jstep__prose"><slot /></div>
+
+        {
+          hasAction && (
+            <div class="jstep__action">
+              <slot name="action" />
+            </div>
+          )
+        }
+
+        {
+          hasResult && (
+            <div class="jstep__result">
+              <p class="jstep__result-label">{resultLabel}</p>
+              <div class="jstep__result-text">
+                <slot name="result" />
+              </div>
+            </div>
+          )
+        }
+      </div>
+
+      {
+        hasMedia && (
+          <div class="jstep__media">
+            <slot name="media" />
+          </div>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .jstep {
+    --node: 2rem;
+    --rail-gap: 1.1rem;
+    display: grid;
+    grid-template-columns: var(--node) minmax(0, 1fr);
+    column-gap: var(--rail-gap);
+    margin: 0;
+  }
+
+  /* The stem runs from under this node to the next one, so the gap between two
+     steps belongs to the rail and the path never breaks. */
+  .jstep__rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .jstep__node {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--node);
+    height: var(--node);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-medium);
+    color: var(--green);
+    background: var(--ground);
+    border: 1.5px solid var(--green);
+    border-radius: 50%;
+  }
+
+  .jstep__stem {
+    position: relative;
+    flex: 1;
+    width: 2px;
+    margin-top: 0.35rem;
+    background: var(--rule);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .jstep__growth {
+    position: absolute;
+    inset: 0;
+    background: var(--green);
+    transform-origin: top;
+  }
+
+  /* The one moving thing on the page: the stem grows as the reader moves down
+     it. Without scroll timelines, or with reduced motion, it is simply grown. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .jstep__growth {
+        animation: jstep-grow linear both;
+        animation-timeline: view();
+        animation-range: entry 40% cover 70%;
+      }
+    }
+  }
+
+  @keyframes jstep-grow {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
+  }
+
+  .jstep__main {
+    min-width: 0;
+    padding-bottom: 3rem;
+    container-type: inline-size;
+  }
+
+  .jstep .jstep__title {
+    margin: 0;
+    padding-top: 0.1rem;
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-black);
+    line-height: 1.3;
+    letter-spacing: var(--ls-h2-stat);
+    color: var(--text-primary);
+    scroll-margin-top: 5rem;
+  }
+
+  .jstep__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin-top: 0.5rem;
+  }
+
+  .jstep__text {
+    min-width: 0;
+    max-width: var(--measure-prose);
+  }
+
+  .jstep .jstep__prose :global(p),
+  .jstep .jstep__prose :global(ul) {
+    margin: 0;
+    font-size: var(--fs-body);
+    line-height: var(--lh-prose);
+    color: var(--text-body);
+  }
+
+  .jstep .jstep__prose :global(* + p),
+  .jstep .jstep__prose :global(* + ul),
+  .jstep .jstep__prose :global(* + .jchoice) {
+    margin-top: 0.75rem;
+  }
+
+  /* MDX wraps the named slot in its own div, so the column layout sits on that
+     wrapper too or the gap never reaches the button, command and notes. */
+  .jstep__action {
+    margin-top: 1rem;
+  }
+
+  .jstep .jstep__action,
+  .jstep .jstep__action :global(> div) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .jstep .jstep__action :global(> div > *) {
+    margin: 0;
+  }
+
+  .jstep .jstep__action :global(> div > p + .code-line) {
+    margin-top: -0.25rem;
+  }
+  .jstep .jstep__action :global(p) {
+    margin: 0;
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+  }
+
+  .jstep .jstep__action :global(.code-line) {
+    max-width: 100%;
+  }
+
+  .jstep__result {
+    margin-top: 1rem;
+    padding: 0.7rem 0.9rem;
+    background: color-mix(in srgb, var(--green) 7%, transparent);
+    border-left: 2px solid var(--green);
+    border-radius: 0 var(--radius-button-sm) var(--radius-button-sm) 0;
+  }
+
+  .jstep .jstep__result-label {
+    margin: 0 0 0.2rem;
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--green);
+  }
+
+  .jstep .jstep__result-text {
+    margin-top: 0;
+  }
+
+  .jstep .jstep__result-text :global(p) {
+    margin: 0;
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+  }
+
+  .jstep .jstep__result-text :global(p + p) {
+    margin-top: 0.4rem;
+  }
+
+  .jstep .jstep__result-text :global(strong),
+  .jstep .jstep__prose :global(strong) {
+    color: var(--text-primary);
+    font-weight: var(--fw-semibold);
+  }
+
+  .jstep :global(kbd) {
+    display: inline-block;
+    padding: 0.05em 0.4em;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--text-primary);
+    background: var(--panel);
+    border: 1px solid var(--border-panel);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+  }
+
+  .jstep__media {
+    display: grid;
+    gap: 1rem;
+    min-width: 0;
+  }
+
+  .jstep .jstep__media :global(figure) {
+    margin: 0;
+  }
+
+  /* A tall shot goes beside the text once there is room, so it reads at the
+     size it has on screen instead of filling the column top to bottom. */
+  @container (min-width: 34rem) {
+    .jstep--side .jstep__body {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 14rem);
+      align-items: start;
+      column-gap: 1.5rem;
+    }
+
+    .jstep--side .jstep__media :global(.mslot__img) {
+      max-height: 30rem;
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .jstep {
+      --node: 1.75rem;
+      --rail-gap: 0.75rem;
+    }
+
+    .jstep__main {
+      padding-bottom: 2.25rem;
+    }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+</style>

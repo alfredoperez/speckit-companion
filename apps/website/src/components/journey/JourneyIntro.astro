@@ -1,0 +1,75 @@
+---
+/*
+  The top of a journey page, under its title: how long it takes, what to have
+  ready, and where the page sits on the spec journey.
+*/
+import JourneyMap from './JourneyMap.astro';
+
+interface Props {
+  time: string;
+  needs: string[];
+  covered: string[];
+  mapCaption?: string;
+}
+
+const { time, needs, covered, mapCaption } = Astro.props;
+---
+
+<div class="jintro not-content">
+  <dl class="jintro__facts">
+    <div>
+      <dt>Takes</dt>
+      <dd>{time}</dd>
+    </div>
+    <div>
+      <dt>You need</dt>
+      <dd>
+        <ul role="list">
+          {needs.map((need) => <li>{need}</li>)}
+        </ul>
+      </dd>
+    </div>
+  </dl>
+  <JourneyMap covered={covered} caption={mapCaption} />
+</div>
+
+<style>
+  .jintro {
+    margin: 1.1rem 0 2.5rem;
+  }
+
+  .jintro__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2.25rem;
+    margin: 0;
+  }
+
+  .jintro__facts dt {
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--text-muted);
+  }
+
+  .jintro__facts dd {
+    margin: 0.15rem 0 0;
+    font-size: var(--fs-ui);
+    color: var(--text-primary);
+  }
+
+  .jintro__facts ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .jintro__facts li {
+    padding: 0.05rem 0.55rem;
+    font-size: var(--fs-ui-sm);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-pill);
+  }
+</style>

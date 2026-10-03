@@ -1,8 +1,16 @@
 ---
-// Replaces Starlight's ThemeProvider. The site has one theme, so there is
-// nothing to read from storage and nothing to restore.
+// Replaces Starlight's ThemeProvider. The site has one theme, except the journey mockup, which previews a light palette.
+import { MOCKUP_ID } from './journey/journey';
+
+const previewsLight = Astro.locals.starlightRoute?.id === MOCKUP_ID;
+
+const followChoice = `(() => {
+  let stored = null;
+  try { stored = localStorage.getItem('sc-theme'); } catch {}
+  const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  document.documentElement.dataset.theme = stored || (prefersLight ? 'light' : 'dark');
+})();`;
+const pinDark = `document.documentElement.dataset.theme = 'dark';`;
 ---
 
-<script is:inline>
-  document.documentElement.dataset.theme = 'dark';
-</script>
+<script is:inline set:html={previewsLight ? followChoice : pinDark} />
