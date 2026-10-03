@@ -64,5 +64,6 @@ If the file on screen is moved or deleted, the viewer switches to a document tha
 ## Good to know
 
 - **Broken run record.** If `.spec-context.json` cannot be parsed, the viewer shows the spec read-only and offers **Reset context**, which backs the file up first.
+- **Show terminal is for terminals.** A spec you ran from Companion shows the assistant its last step went to in the header, and a **Show terminal** button while that terminal is still open. An assistant that runs in a chat panel shows its name and no button: VS Code does not tell an extension which chat panel picked up a command. After a reload the name stays and the button is gone.
 - **Offline.** Syntax highlighting and Mermaid load from a CDN, so offline you get plain code and diagram source.
 - **Living specs and bug reports** open in the same viewer with a different frame. See [Reading a spec](/docs/results/reading-a-spec).

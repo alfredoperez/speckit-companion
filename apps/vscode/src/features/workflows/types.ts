@@ -179,6 +179,8 @@ export interface FeatureWorkflowContext {
     checkpointStatus?: Record<CheckpointId, CheckpointStatus>;
     /** Human-readable spec name derived from directory slug */
     specName?: string;
+    /** Provider id of the assistant the last dispatched step went to */
+    assistant?: string;
     /** Git branch name associated with this spec (audit trail — branch when the spec was created) */
     branch?: string;
     /** Active feature branch where implementation runs (set when branchStage matches) */

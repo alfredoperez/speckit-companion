@@ -6,7 +6,7 @@ argument-hint: "[recheck]"
 
 ## What this does
 
-QA for a release, once, at the end of a batch. It is issue-agnostic: it reads what is being released (the diff since the last `v*` tag and the `## [Unreleased]` sections of both changelogs), not a ticket list. It is step 3 of `/release-loop` (and `recheck` is step 6); `/publish`, `/publish-both` and `/publish-speckit-ext` refuse to tag without its report.
+QA for a release, once, at the end of a batch. It is issue-agnostic: it reads what is being released (the diff since the last `v*` tag and the `## [Unreleased]` sections of both changelogs), not a ticket list. It is step 3 of `/release-loop` (and `recheck` is step 6); every `/publish*` command refuses to tag without its report.
 
 ## Run
 
@@ -23,7 +23,7 @@ The result is one note, `Projects/speckit companion/QA Report <YYYY-MM-DD>.md` i
 The publish commands run this before they tag. The gate passes only when all three hold:
 
 1. The newest `Projects/speckit companion/QA Report*.md` in `~/dev/GitHub/obsidian-vault` exists.
-2. Its `head` frontmatter equals `git rev-parse --short HEAD`, or every commit in `git log <head>..HEAD --format=%s` is a release commit (`chore: bump version to …` or `chore(speckit-ext): release …`). Anything else means the report is for other code.
+2. Its `head` frontmatter equals `git rev-parse --short HEAD`, or every commit in `git log <head>..HEAD --format=%s` is a release commit (`chore: bump version to …`, or `chore(speckit-ext): release …`, `chore(claude-mod): release …` or `chore(canvas): release …`). Anything else means the report is for other code.
 3. It says `verdict: ship` and `fails: 0`.
 
 When it does not pass, stop and say why in one line: no report, a report for another sha (name both), or the open FAIL checks. The fix is `/release-qa` (or `/release-qa recheck` after fixes).

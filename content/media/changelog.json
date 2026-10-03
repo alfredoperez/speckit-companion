@@ -1,0 +1,68 @@
+{
+  "_readme": "Screenshots for the site's /changelog page, keyed by release (<product>@<version>, product vscode or speckit) then by the media id a highlight names in its <!-- area: …; pr: …; media: … --> comment. file is a repo-relative PNG under apps/website/public/ or docs/screenshots/generated/. alt is required. highlight is optional, in the image's own pixels, and is drawn over the image by the page. The site build fails on an unknown id, a missing alt or file, an unused shot, or a key that matches no release. See apps/website/src/components/changelog/releaseMedia.ts.",
+  "vscode@0.35.0": {
+    "move-to-phase": {
+      "file": "apps/website/public/changelog/vscode-0.35.0-move-to-phase.png",
+      "alt": "A node panel in the Pipeline Builder with Move to phase… open, listing gather, author and classify, each marked Joins the end of it.",
+      "caption": "Move to phase… lists the phases the node is not in.",
+      "highlight": { "x": 10, "y": 535, "w": 455, "h": 390 }
+    },
+    "side-panel": {
+      "file": "docs/screenshots/generated/builder-side-panel.png",
+      "alt": "The Pipeline Builder docked in a narrow side panel, with the specify step's phases and nodes stacked above the plan step.",
+      "caption": "In a side panel the steps stack one under the next."
+    },
+    "move-hook": {
+      "file": "docs/screenshots/generated/builder-move-hook.png",
+      "alt": "The implement step in the Pipeline Builder, with an npm test command hook being dragged into the after slot of Mark the spec complete, a green line marking where it will land.",
+      "caption": "Drop a hook where it should run; the green line shows where it lands.",
+      "highlight": { "x": 125, "y": 600, "w": 1045, "h": 165 }
+    },
+    "run-overview": {
+      "file": "docs/screenshots/generated/overview.png",
+      "alt": "The Overview of a completed spec, with the run overview row reading Specify 5m 40s, Plan 7m 36s, Tasks 3m 25s and Implement 34m 45s, and 51m 28s active.",
+      "caption": "Each step is timed to its own finish, and the total is active time.",
+      "highlight": { "x": 620, "y": 505, "w": 1625, "h": 155 }
+    },
+    "removed-doc": {
+      "file": "docs/screenshots/generated/viewer-removed-doc.png",
+      "alt": "The spec viewer showing the Specification under a notice that reads Plan was moved or deleted, so Specification is showing.",
+      "caption": "A removed document is named, not skipped over in silence.",
+      "highlight": { "x": 450, "y": 190, "w": 1965, "h": 110 }
+    }
+  },
+  "vscode@0.34.0": {
+    "copilot-board": {
+      "file": "apps/website/public/changelog/vscode-0.34.0-copilot-board.png",
+      "alt": "The SpecKit Companion board in the GitHub Copilot app: the list of specs on the left, and Persist Todos open on the right with its four finished steps and a This spec is finished card.",
+      "caption": "Every spec with its pipeline and the next thing to do.",
+      "highlight": { "x": 755, "y": 310, "w": 1625, "h": 510 }
+    },
+    "copilot-tasks": {
+      "file": "apps/website/public/canvas/tasks.png",
+      "alt": "The Copilot app board with a spec in Implementing, its Tasks tab open at 3 of 6, showing Phase 1 Setup with a checked task and the files it touched.",
+      "caption": "Task progress updates live as the agent works.",
+      "highlight": { "x": 755, "y": 850, "w": 1580, "h": 625 }
+    },
+    "copilot-new-spec": {
+      "file": "apps/website/public/canvas/new-spec.png",
+      "alt": "The Copilot app board's New spec form, with Companion, Spec Kit and Auto workflow choices above a box to describe the feature and a Specify button.",
+      "caption": "New spec asks for a workflow, the same way VS Code does.",
+      "highlight": { "x": 15, "y": 160, "w": 2390, "h": 270 }
+    }
+  },
+  "vscode@0.33.0": {
+    "pipeline-builder": {
+      "file": "apps/website/public/changelog/vscode-0.33.0-pipeline-builder.png",
+      "alt": "The Pipeline Builder panel, showing the specify and plan steps as columns of phases and nodes with an attached hook.",
+      "caption": "The pipeline your project actually runs, step by step."
+    }
+  },
+  "vscode@0.29.0": {
+    "overview-dossier": {
+      "file": "apps/website/public/changelog/vscode-0.29.0-overview.png",
+      "alt": "The spec viewer Overview, annotated: intent, expectations, verified checks, decisions and coverage.",
+      "caption": "What a future session needs, in the order it needs it."
+    }
+  }
+}

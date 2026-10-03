@@ -358,6 +358,10 @@ export interface NavState {
     installPrompt?: InstallPrompt | null;
     /** Run-recovery affordance for a quiet in-flight run (issue #418). */
     runRecovery?: { show: boolean; mode: 'stalled' | 'stale'; message: string; minutesQuiet: number };
+    /** Display name of the assistant the spec's last step was sent to; feature spec panels only. */
+    assistantName?: string;
+    /** True while the spec has a live terminal Companion opened. */
+    hasTerminal?: boolean;
 }
 
 /**
@@ -468,6 +472,9 @@ export type ViewerToExtensionMessage =
       }
     | {
           type: 'approve';
+      }
+    | {
+          type: 'showTerminal';
       }
     | {
           type: 'clarify';

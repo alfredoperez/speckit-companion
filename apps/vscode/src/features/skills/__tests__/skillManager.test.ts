@@ -8,12 +8,18 @@ jest.mock('../../../ai-providers/aiProvider', () => ({
     getProviderPaths: jest.fn(),
 }));
 
+jest.mock('os', () => ({
+    ...jest.requireActual('os'),
+    homedir: jest.fn(),
+}));
+
 import { getProviderPaths } from '../../../ai-providers/aiProvider';
 
 const mockGetProviderPaths = getProviderPaths as jest.MockedFunction<typeof getProviderPaths>;
+const mockHomedir = os.homedir as jest.MockedFunction<typeof os.homedir>;
 
-function setProviderSkillsDir(skillsDir: string): void {
-    mockGetProviderPaths.mockReturnValue({ skillsDir } as ReturnType<typeof getProviderPaths>);
+function setProviderSkillsDir(skillsDir: string, userSkillsDir: string = skillsDir): void {
+    mockGetProviderPaths.mockReturnValue({ skillsDir, userSkillsDir } as ReturnType<typeof getProviderPaths>);
 }
 
 function writeSkill(root: string, skillsDir: string, name: string): void {
@@ -83,6 +89,25 @@ describe('SkillManager', () => {
 
             expect(await createManager().getSkillList('project')).toEqual([]);
             expect(await createManager().getSkillList('user')).toEqual([]);
+        });
+    });
+
+    describe('listing user skills', () => {
+        it('uses the provider-specific user skills directory', async () => {
+            const userRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-manager-user-'));
+            mockHomedir.mockReturnValue(userRoot);
+            try {
+                setProviderSkillsDir('.omp/skills', '.omp/agent/skills');
+                writeSkill(userRoot, '.omp/agent/skills', 'user-omp-skill');
+                writeSkill(userRoot, '.omp/skills', 'wrong-omp-skill');
+
+                await expect(createManager().getSkillList('user')).resolves.toEqual([
+                    expect.objectContaining({ name: 'user-omp-skill', type: 'user' }),
+                ]);
+            } finally {
+                mockHomedir.mockReset();
+                fs.rmSync(userRoot, { recursive: true, force: true });
+            }
         });
     });
 });

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
 import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
 import { buildSpecRow, parseSpecContext, phaseTimings, sortSpecs, timingSummaryText } from '../spec-rules.mjs';
-import { OPEN_NOTE, availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, openStatus, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
+import { OPEN_NOTE, availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, nextSpecNumber, openStatus, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const GRAMMAR = join(REPO, 'apps/vscode/tests/fixtures/task-grammar');
@@ -252,6 +252,52 @@ describe('specify prompt', () => {
         const lines = buildSpecifyPrompt({ description: 'x', workflow: 'companion', root, now: AT }).prompt.split('\n');
         assert.equal(lines[0], '/speckit.companion.specify x');
         assert.match(lines[2], /If \/speckit\.companion\.specify is not a command here, read `\.github\/skills\/speckit-companion-specify\/SKILL\.md`/);
+    });
+});
+
+describe('numbering a new spec', () => {
+    const withFolders = (...names) => {
+        const root = workspace({ companion: true });
+        for (const name of names) mkdirSync(join(root, 'specs', name));
+        return root;
+    };
+
+    it('takes the highest numbered folder plus one and ignores the fixture folders', () => {
+        assert.equal(nextSpecNumber(withFolders('_00_demo-specified', '_07_demo-living', '004-export-csv', '012-dark-mode')), '013');
+    });
+
+    it('starts at 001 when only fixture folders exist', () => {
+        assert.equal(nextSpecNumber(withFolders('_00_demo-specified', '_06_new-thing')), '001');
+        assert.equal(nextSpecNumber(workspace({ companion: false })), '001');
+    });
+
+    it('counts the way the Spec Kit script does: four-digit folders count, timestamp folders do not', () => {
+        assert.equal(nextSpecNumber(withFolders('999-last', '1000-next', '20260319-143022-user-auth', '42-too-short')), '1001');
+    });
+
+    it('reads every configured spec directory', () => {
+        const root = withFolders('003-a');
+        mkdirSync(join(root, 'docs/specs/020-b'), { recursive: true });
+        assert.equal(nextSpecNumber(root, ['specs', 'docs/specs', 'missing']), '021');
+    });
+
+    it('names the number in the New spec prompt, after the command and before the lifecycle preamble', () => {
+        const root = withFolders('_03_demo-living', '041-profile-photo');
+        for (const workflow of ['companion', 'speckit', 'auto']) {
+            const { prompt } = buildSpecifyPrompt({ description: 'x', workflow, root, now: AT });
+            const rule = prompt.indexOf('Name the new spec folder `042-<short-name>`');
+            assert.ok(rule > 0, workflow);
+            assert.ok(rule < prompt.indexOf('<!-- speckit-companion:context-update -->'), workflow);
+            assert.match(prompt, /Folders that start with `_` are fixtures, so do not count them or copy their naming\./);
+            assert.match(prompt, /If a branch script in this run reports a higher feature number, use that number instead\./);
+        }
+    });
+
+    it('leaves numbering to the command in a workspace that numbers by timestamp', () => {
+        const root = withFolders('041-profile-photo');
+        writeFileSync(join(root, '.specify/init-options.json'), JSON.stringify({ branch_numbering: 'timestamp' }));
+        assert.equal(nextSpecNumber(root), null);
+        assert.doesNotMatch(buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root, now: AT }).prompt, /Name the new spec folder/);
     });
 });
 

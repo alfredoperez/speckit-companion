@@ -5,8 +5,12 @@ import * as os from 'os';
 import * as yaml from 'js-yaml';
 import type { AgentFrontmatter, InstalledPlugin, InstalledPluginsFile } from '../../core/types/config';
 import { handleError } from '../../core/errors';
-import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
+import { getConfiguredProviderType, getProviderPaths } from '../../ai-providers/aiProvider';
 import { AIProviders } from '../../core/constants';
+
+function readsClaudeAgents(providerType: string): boolean {
+    return providerType === AIProviders.CLAUDE || providerType === AIProviders.CLAUDE_VSCODE;
+}
 
 export interface AgentInfo {
     name: string;
@@ -131,31 +135,29 @@ export class AgentManager {
      */
     async getAgentList(type: 'project' | 'user' | 'plugin' | 'all' = 'all'): Promise<AgentInfo[]> {
         const agents: AgentInfo[] = [];
+        const providerType = getConfiguredProviderType();
+        const { agentsDir, userAgentsDir = agentsDir } = getProviderPaths();
+        const excludeKfc = readsClaudeAgents(providerType);
 
-        // Get project agents (excluding kfc built-in agents)
-        if (type === 'project' || type === 'all') {
-            if (this.workspaceRoot) {
-                const projectAgentsPath = path.join(this.workspaceRoot, '.claude/agents');
-                const projectAgents = await this.getAgentsFromDirectory(
-                    projectAgentsPath,
-                    'project',
-                    true  // exclude kfc directory
-                );
-                agents.push(...projectAgents);
-            }
+        if (agentsDir && (type === 'project' || type === 'all') && this.workspaceRoot) {
+            const projectAgents = await this.getAgentsFromDirectory(
+                path.join(this.workspaceRoot, agentsDir),
+                'project',
+                excludeKfc,
+            );
+            agents.push(...projectAgents);
         }
 
-        // Get user agents
-        if (type === 'user' || type === 'all') {
-            const userAgentsPath = path.join(os.homedir(), '.claude/agents');
-            const userAgents = await this.getAgentsFromDirectory(userAgentsPath, 'user');
+        if (userAgentsDir && (type === 'user' || type === 'all')) {
+            const userAgents = await this.getAgentsFromDirectory(
+                path.join(os.homedir(), userAgentsDir),
+                'user',
+            );
             agents.push(...userAgents);
         }
 
-        // Get plugin agents
-        if (type === 'plugin' || type === 'all') {
-            const pluginAgents = await this.getPluginAgents();
-            agents.push(...pluginAgents);
+        if ((type === 'plugin' || type === 'all') && readsClaudeAgents(providerType)) {
+            agents.push(...await this.getPluginAgents());
         }
 
         return agents;
@@ -267,16 +269,17 @@ export class AgentManager {
      * Check if agent exists
      */
     checkAgentExists(agentName: string, location: 'project' | 'user'): boolean {
-        const basePath = location === 'project' 
-            ? (this.workspaceRoot ? path.join(this.workspaceRoot, '.claude/agents/kfc') : null)
-            : path.join(os.homedir(), '.claude/agents');
+        const providerType = getConfiguredProviderType();
+        const { agentsDir, userAgentsDir = agentsDir } = getProviderPaths();
+        const basePath = location === 'project'
+            ? this.workspaceRoot && agentsDir
+                ? path.join(this.workspaceRoot, readsClaudeAgents(providerType) ? '.claude/agents/kfc' : agentsDir)
+                : null
+            : userAgentsDir
+                ? path.join(os.homedir(), userAgentsDir)
+                : null;
 
-        if (!basePath) {
-            return false;
-        }
-
-        const agentPath = path.join(basePath, `${agentName}.md`);
-        return fs.existsSync(agentPath);
+        return !!basePath && fs.existsSync(path.join(basePath, `${agentName}.md`));
     }
 
     /**

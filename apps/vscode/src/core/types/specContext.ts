@@ -380,6 +380,8 @@ export interface SpecContext {
      * rides every later event for this spec, enabling a per-spec funnel.
      */
     telemetryInstanceId?: string;
+    /** Provider id the most recent Companion-dispatched step was sent to. Never a display name. */
+    assistant?: string;
     /**
      * Per-task summaries (skill-authored). Loosely typed at the raw on-disk
      * layer because writers emit varied shapes; the reader normalizes them and

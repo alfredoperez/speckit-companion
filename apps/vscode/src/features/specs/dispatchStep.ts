@@ -15,6 +15,7 @@
  */
 
 import * as vscode from 'vscode';
+import { noteSpecDispatch } from './specAssistant';
 import { formatCommandForProvider, getConfiguredProviderType } from '../../ai-providers/aiProvider';
 import { buildPrompt } from '../../ai-providers/promptBuilder';
 import { getSpecTelemetryContext, phaseTelemetryId, sendTelemetryEvent } from '../../core/telemetry';
@@ -133,9 +134,10 @@ export async function dispatchStep<T>(
         return null;
     }
 
+    const providerId = getConfiguredProviderType();
     const specTelemetry = getSpecTelemetryContext(request.specDirectory);
     sendTelemetryEvent('phase.dispatched', {
-        providerId: getConfiguredProviderType(),
+        providerId,
         phase: phaseTelemetryId(request.step),
         ...(specTelemetry.specInstanceId ? { specInstanceId: specTelemetry.specInstanceId } : {}),
     });
@@ -154,5 +156,7 @@ export async function dispatchStep<T>(
         specDir: request.promptSpecDir,
     });
 
-    return deps.run(prompt);
+    const result = await deps.run(prompt);
+    noteSpecDispatch(request.specDirectory, result, providerId);
+    return result;
 }

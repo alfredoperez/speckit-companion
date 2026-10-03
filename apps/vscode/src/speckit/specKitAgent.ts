@@ -27,6 +27,7 @@ const DEFAULT_AGENT = 'claude';
  */
 export const PROVIDER_TO_AGENT: Record<string, SpecKitAgent> = {
     [AIProviders.CLAUDE]: 'claude',
+    [AIProviders.OMP]: 'omp',
     [AIProviders.CLAUDE_VSCODE]: 'claude',
     [AIProviders.GEMINI]: 'gemini',
     [AIProviders.COPILOT]: 'copilot',

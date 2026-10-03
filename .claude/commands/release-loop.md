@@ -1,6 +1,6 @@
 ---
 allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(cp:*), Bash(mkdir:*), Bash(date:*), Bash(open:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
-description: Run the whole SpecKit Companion release loop — pick a batch, fix it, QA it, ask every decision in one round, recheck, write the release report, and publish after approval. Sequences /fix-tickets, /ship-ticket, /release-qa and /publish.
+description: Run the whole SpecKit Companion release loop — pick a batch, fix it, QA it, ask every decision in one round, recheck, write the release report, and publish after approval. Sequences /fix-tickets, /ship-ticket, /release-qa and /publish-all.
 argument-hint: "[issue numbers e.g. '237 238' | 'open']"
 ---
 
@@ -50,4 +50,4 @@ Open it in Obsidian, then stop and ask the user to approve it. Nothing is publis
 
 ## 8. Release
 
-Only after approval: `/publish`, or `/publish-both` when `apps/speckit-extension/` changed since its last `speckit-ext-v*` tag. Their QA gate reads the step 6 report. Then run the follow-ups the user chose: the catalog update (`/submit-catalog-update`, minor or major spec-kit releases only) and the Awesome Copilot listing (`apps/copilot-canvas/README.md` says how).
+Only after approval: `/publish-all`. It finds which of the four deliverables changed since their last release, asks every version in one question, and runs the spec-kit extension, the VS Code extension, the Claude Code mod and the Copilot canvas in that order. Its QA gate reads the step 6 report. The canvas pull request and the Anthropic directory submission still wait on the user: the first for an explicit go, the second for them to send it. Then run the follow-up the user chose: the catalog update (`/submit-catalog-update`, minor or major spec-kit releases only).

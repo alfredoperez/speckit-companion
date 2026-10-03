@@ -1,6 +1,7 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { DEFAULT_SPEC_DIRS } from './spec-rules.mjs';
 import { isKnownStep, renderPreamble, renderSpecifyCreationLifecyclePreamble } from './vendor/preamble.mjs';
 
 export const STEP_COMMANDS = ['plan', 'tasks', 'implement'];
@@ -111,11 +112,49 @@ export function resolveSpecify(workflow, installed) {
     return { command: workflow === 'auto' ? 'speckit.companion.auto' : 'speckit.companion.specify', effective: 'companion' };
 }
 
+function usesTimestampNumbering(root) {
+    try {
+        return JSON.parse(readFileSync(join(root, '.specify', 'init-options.json'), 'utf8')).branch_numbering === 'timestamp';
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * The number the next spec folder takes, counted the way Spec Kit's `create-new-feature` script counts: the highest `NNN-` folder
+ * plus one, skipping timestamp folders. A `_NN_` fixture folder never matches. Null when the workspace numbers by timestamp.
+ */
+export function nextSpecNumber(root, specDirs = DEFAULT_SPEC_DIRS) {
+    if (usesTimestampNumbering(root)) return null;
+    let highest = 0;
+    for (const specDir of specDirs) {
+        let entries;
+        try {
+            entries = readdirSync(join(root, specDir), { withFileTypes: true });
+        } catch {
+            continue;
+        }
+        for (const entry of entries) {
+            if (!entry.isDirectory() || /^\d{8}-\d{6}-/.test(entry.name)) continue;
+            const number = Number(entry.name.match(/^(\d{3,})-/)?.[1] ?? 0);
+            if (number > highest) highest = number;
+        }
+    }
+    return String(highest + 1).padStart(3, '0');
+}
+
+/** The numbering rule New spec carries, so the agent neither reuses a number nor counts on from the `_NN_` fixture folders. */
+export function numberingRule(root, specDirs = DEFAULT_SPEC_DIRS) {
+    const next = nextSpecNumber(root, specDirs);
+    if (!next) return null;
+    return `Name the new spec folder \`${next}-<short-name>\`: ${next} is one more than the highest numbered spec folder. Folders that start with \`_\` are fixtures, so do not count them or copy their naming. If a branch script in this run reports a higher feature number, use that number instead.`;
+}
+
 /**
  * A new spec starts from a description, not a folder: specify mints the folder itself. The message is what VS Code writes to
- * its temp file, kept inline: the command line with the description, then the lifecycle preamble that seeds `.spec-context.json`.
+ * its temp file, kept inline: the command line with the description, the folder number, then the lifecycle preamble that seeds `.spec-context.json`.
  */
-export function buildSpecifyPrompt({ description, workflow, root, now = new Date() }) {
+export function buildSpecifyPrompt({ description, workflow, root, specDirs = DEFAULT_SPEC_DIRS, now = new Date() }) {
     const text = String(description ?? '').replace(/\r\n?/g, '\n').trim();
     if (!text) throw new Error('Describe the feature to specify.');
     const installed = isCompanionInstalled(root);
@@ -123,6 +162,8 @@ export function buildSpecifyPrompt({ description, workflow, root, now = new Date
     const instructions = commandInstructions(root, command.replace(/^speckit\.(companion\.)?/, ''), command.startsWith('speckit.companion') ? 'companion' : 'speckit');
     let message = `/${command} ${text}`;
     if (instructions) message += `\n\nIf /${command} is not a command here, read \`${instructions}\` and follow it with the feature description above.`;
+    const numbering = numberingRule(root, specDirs);
+    if (numbering) message += `\n\n${numbering}`;
     const preamble = renderSpecifyCreationLifecyclePreamble(effective, null, now.toISOString(), effective === 'companion' && installed, writerPath(root), null);
     return { prompt: `${message}\n\n${preamble}`, command, workflow: effective };
 }

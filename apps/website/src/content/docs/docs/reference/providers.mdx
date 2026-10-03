@@ -24,6 +24,7 @@ Spec Kit records the assistant a project was set up for in `.specify/integration
 | Wibey CLI (`wibey`) | `wibey` in a terminal |
 | Wibey (VS Code) (`wibey-vscode`) | The Wibey chat panel, no terminal |
 | Antigravity (`antigravity`) | `agy` in an interactive terminal |
+| Oh My Pi (`omp`) | `omp` in a terminal |
 
 ## What each one reads
 
@@ -39,6 +40,7 @@ Paths are relative to your project. IDE Chat owns none of these.
 | OpenCode | `AGENTS.md` | none | `.opencode/agent/*.md` | none | none | `.opencode/opencode.jsonc` |
 | Wibey, CLI and VS Code | `AGENTS.md` | none | `.wibey/agents/*.md` | `.wibey/skills/` | `.wibey/hooks/hooks.json` | `.wibey/.mcp.json` |
 | Antigravity | `AGENTS.md` | none | none | none | none | none |
+| Oh My Pi | `AGENTS.md` | none | `.omp/agents/*.md` | `.omp/skills/` | `.omp/hooks/pre/*.ts`, `.omp/hooks/post/*.ts` | `.omp/mcp.json` |
 
 The Steering view reads user-level MCP config from your home folder at the same relative path. Permission behavior is a separate setting: see [Configuration](/docs/reference/configuration#permission-mode).
 

@@ -186,10 +186,14 @@ export interface ProviderPaths {
     steeringPattern: string;
     /** Directory for agent definitions */
     agentsDir: string;
+    /** User-home-relative directory for agent definitions; defaults to agentsDir */
+    userAgentsDir?: string;
     /** Pattern for agent files */
     agentsPattern: string;
     /** Directory for skill definitions */
     skillsDir: string;
+    /** User-home-relative directory for skill definitions; defaults to skillsDir */
+    userSkillsDir?: string;
     /** Pattern for skill folders (each containing SKILL.md) */
     skillsPattern: string;
     /** Path to MCP config file (relative to home) */
@@ -235,6 +239,27 @@ const _PROVIDER_PATHS_RAW: Record<AIProviderType, ProviderPaths> = {
         quickPickDescription: 'Full feature support: steering, agents, hooks, and MCP',
         supportsInteractivePermissions: true,
         autoApproveFlag: '--permission-mode bypassPermissions ',
+    },
+    [AIProviders.OMP]: {
+        steeringFile: 'AGENTS.md',
+        globalSteeringFile: '.omp/agent/AGENTS.md',
+        steeringDir: '',
+        steeringPattern: 'AGENTS.md',
+        agentsDir: '.omp/agents',
+        userAgentsDir: '.omp/agent/agents',
+        agentsPattern: '*.md',
+        skillsDir: '.omp/skills',
+        userSkillsDir: '.omp/agent/skills',
+        skillsPattern: '*/SKILL.md',
+        mcpConfigPath: '.omp/mcp.json',
+        configDir: '.omp',
+        supportsHooks: true,
+        displayName: 'Oh My Pi',
+        commandFormat: 'dot',
+        quickPickIcon: '$(hubot)',
+        quickPickDescription: 'Interactive terminal agent with steering, agents, skills, hooks, and MCP support',
+        supportsInteractivePermissions: true,
+        autoApproveFlag: '--auto-approve ',
     },
     [AIProviders.GEMINI]: {
         steeringFile: 'GEMINI.md',
@@ -543,6 +568,12 @@ export function getConfiguredProviderType(): AIProviderType {
     // settings): an unknown key would make PROVIDER_PATHS[type] undefined and
     // throw at every call site. Fall back to the default provider instead.
     return configured in PROVIDER_PATHS ? configured : AIProviders.CLAUDE;
+}
+
+const KNOWN_PROVIDER_TYPES: readonly AIProviderType[] = Object.values(AIProviders);
+
+export function coerceProviderType(value: unknown): AIProviderType | undefined {
+    return KNOWN_PROVIDER_TYPES.find(type => type === value);
 }
 
 /**

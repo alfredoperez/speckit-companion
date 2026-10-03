@@ -26,12 +26,12 @@
       },
       {
         "id": "provider-fanout",
-        "label": "Eleven CLIs, one seam",
+        "label": "Twelve providers, one seam",
         "focus": [
           "registry",
           "agents"
         ],
-        "note": "Every agent sits behind one registry. Adding a twelfth CLI touches the registry and nothing else."
+        "note": "Every provider sits behind one registry. Adding a thirteenth provider touches the registry and nothing else."
       },
       {
         "id": "state",
@@ -133,7 +133,7 @@
     {
       "id": "agents",
       "type": "external",
-      "label": "11 AI CLIs",
+      "label": "12 AI providers",
       "sublabel": "Claude, Codex, Copilot\u2026",
       "pos": [
         910,
@@ -294,10 +294,10 @@
     },
     {
       "dot": "emerald",
-      "title": "Eleven CLIs behind one registry",
+      "title": "Twelve providers behind one registry",
       "items": [
         "Claude, Codex, Copilot, Gemini, OpenCode and more",
-        "A twelfth provider touches the registry and nothing else"
+        "A thirteenth provider touches the registry and nothing else"
       ]
     },
     {

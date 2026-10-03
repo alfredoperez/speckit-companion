@@ -25,6 +25,7 @@ describe('providerDispatchesToTerminal', () => {
     it('returns true for terminal-CLI providers', () => {
         for (const type of [
             AIProviders.CLAUDE,
+            AIProviders.OMP,
             AIProviders.GEMINI,
             AIProviders.COPILOT,
             AIProviders.CODEX,

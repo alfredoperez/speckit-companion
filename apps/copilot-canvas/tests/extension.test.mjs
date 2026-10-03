@@ -44,3 +44,19 @@ describe('what the extension tells the agent about opening the board', () => {
         }
     });
 });
+
+describe('what the extension tells the agent about the board\'s actions', () => {
+    const action = async (name) => (await loadExtension()).canvases[0].actions.find(a => a.name === name);
+
+    it('tells the agent to list specs through the board instead of reading spec files', async () => {
+        const { description } = await action('list_specs');
+        assert.match(description, /^List the specs on the board/);
+        assert.match(description, /Use this to answer any question about which specs exist or where they stand, instead of reading files under specs\//);
+    });
+
+    it('tells the agent to focus the board whenever the user names a spec', async () => {
+        const { description } = await action('focus_spec');
+        assert.match(description, /Call this whenever the user names a spec or asks to see, show or open one/);
+        assert.match(description, /instead of reading its files under specs\//);
+    });
+});

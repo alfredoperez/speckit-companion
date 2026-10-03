@@ -41,7 +41,7 @@ export class SkillManager {
      */
     async getSkillList(type: SkillType | 'all' = 'all'): Promise<SkillInfo[]> {
         const skills: SkillInfo[] = [];
-        const { skillsDir } = getProviderPaths();
+        const { skillsDir, userSkillsDir = skillsDir } = getProviderPaths();
 
         // Get project skills
         if (skillsDir && (type === 'project' || type === 'all')) {
@@ -52,8 +52,8 @@ export class SkillManager {
         }
 
         // Get user skills
-        if (skillsDir && (type === 'user' || type === 'all')) {
-            const userSkillsPath = path.join(os.homedir(), skillsDir);
+        if (userSkillsDir && (type === 'user' || type === 'all')) {
+            const userSkillsPath = path.join(os.homedir(), userSkillsDir);
             skills.push(...await this.getSkillsFromDirectory(userSkillsPath, 'user'));
         }
 

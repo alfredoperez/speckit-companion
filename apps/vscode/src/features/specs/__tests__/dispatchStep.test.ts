@@ -1,10 +1,12 @@
 import * as vscode from 'vscode';
 import { dispatchStep, resetCompanionFallbackWarnings } from '../dispatchStep';
 import { resolveDispatchWithFallback } from '../profileDispatch';
+import { noteSpecDispatch } from '../specAssistant';
 import { sendTelemetryEvent } from '../../../core/telemetry';
 import { buildPrompt } from '../../../ai-providers/promptBuilder';
 import { formatCommandForProvider } from '../../../ai-providers/aiProvider';
 
+jest.mock('../specAssistant', () => ({ noteSpecDispatch: jest.fn() }));
 jest.mock('../profileDispatch', () => ({ resolveDispatchWithFallback: jest.fn() }));
 jest.mock('../../../core/telemetry', () => ({
     sendTelemetryEvent: jest.fn(),
@@ -139,5 +141,23 @@ describe('dispatchStep', () => {
         expect(d.run).not.toHaveBeenCalled();
         expect(sendTelemetryEvent).not.toHaveBeenCalled();
         expect(result).toBeNull();
+        expect(noteSpecDispatch).not.toHaveBeenCalled();
+    });
+
+    it('notes the dispatch with what the provider returned, once the run resolves', async () => {
+        resolved.mockReturnValue({ command: 'speckit.companion.plan', fellBack: false });
+
+        await dispatchStep(request, deps());
+
+        expect(noteSpecDispatch).toHaveBeenCalledWith('/ws/specs/001-x', 'terminal', 'claude');
+    });
+
+    it('notes nothing when the provider throws before anything was sent', async () => {
+        resolved.mockReturnValue({ command: 'speckit.companion.plan', fellBack: false });
+        const run = jest.fn().mockRejectedValue(new Error('no CLI'));
+
+        await expect(dispatchStep(request, deps(run))).rejects.toThrow('no CLI');
+
+        expect(noteSpecDispatch).not.toHaveBeenCalled();
     });
 });

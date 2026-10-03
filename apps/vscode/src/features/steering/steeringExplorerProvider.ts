@@ -58,8 +58,8 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             this.agentProjectWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
         }
 
-        if (providerPaths.agentsDir) {
-            const userAgentsPath = path.join(os.homedir(), providerPaths.agentsDir);
+        if (providerPaths.userAgentsDir ?? providerPaths.agentsDir) {
+            const userAgentsPath = path.join(os.homedir(), providerPaths.userAgentsDir ?? providerPaths.agentsDir);
             try {
                 const pattern = providerPaths.agentsPattern || '*.md';
                 this.agentUserWatcher = vscode.workspace.createFileSystemWatcher(
@@ -84,8 +84,8 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             this.skillProjectWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
         }
 
-        if (providerPaths.skillsDir) {
-            const userSkillsPath = path.join(os.homedir(), providerPaths.skillsDir);
+        if (providerPaths.userSkillsDir ?? providerPaths.skillsDir) {
+            const userSkillsPath = path.join(os.homedir(), providerPaths.userSkillsDir ?? providerPaths.skillsDir);
             try {
                 this.skillUserWatcher = vscode.workspace.createFileSystemWatcher(
                     new vscode.RelativePattern(userSkillsPath, '**/SKILL.md')

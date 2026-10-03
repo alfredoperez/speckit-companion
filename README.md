@@ -55,7 +55,7 @@ A spec with recorded activity opens on its Overview: why the spec exists, its co
 
 ### A sidebar that scales
 
-Specs grouped by lifecycle with live status per document, resume-where-you-left-off on hover, filter and sort, multi-select bulk actions, and views for living capability specs and AI steering documents. A workspace with hundreds of finished specs opens to a short, readable list.
+Specs grouped by lifecycle with live status per document, the assistant each spec was last sent to, resume-where-you-left-off on hover, filter and sort, multi-select bulk actions, and views for living capability specs and AI steering documents. A workspace with hundreds of finished specs opens to a short, readable list.
 
 ![The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath](docs/screenshots/generated/specs-sidebar.gif)
 
@@ -80,6 +80,7 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 - **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
 - **Bug reports from Spec Kit's bug flow.** With the `bug` extension installed, each bug's assessment, fix and test reports show up in a Bugs group in the sidebar, with the latest outcome, and open read-only in the viewer. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
+- **Know which assistant has which spec.** A spec you run from Companion shows the assistant's name on its sidebar row and in the viewer header, and Show Terminal brings its terminal to the front while that terminal is open. It cannot jump to a chat panel or tell you an assistant is waiting for an answer. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
 - **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer)
 
 <!-- Rendered from content/media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
@@ -137,7 +138,7 @@ Install **SpecKit Companion** from the VS Code Marketplace, then add the [compan
 
 ## Works with your AI
 
-Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](https://speckit-companion.dev/docs/reference/providers).
+Dispatches to Claude Code, Oh My Pi, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](https://speckit-companion.dev/docs/reference/providers).
 
 In the GitHub Copilot app, the [spec board canvas](https://speckit-companion.dev/docs/processes/copilot-app/) shows every spec's pipeline and tasks live next to the chat, and runs the next step from a button.
 

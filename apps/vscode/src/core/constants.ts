@@ -17,6 +17,7 @@ export const Commands = {
     specsFilter: 'speckit.specs.filter',
     specsFilterClear: 'speckit.specs.filter.clear',
     specsSort: 'speckit.specs.sort',
+    specsShowTerminal: 'speckit.specs.showTerminal',
     delete: 'speckit.delete',
     installCli: 'speckit.installCli',
     initWorkspace: 'speckit.initWorkspace',
@@ -264,6 +265,7 @@ export const SpecStatuses = {
  */
 export const AIProviders = {
     CLAUDE: 'claude',
+    OMP: 'omp',
     GEMINI: 'gemini',
     COPILOT: 'copilot',
     CODEX: 'codex',

@@ -12,17 +12,17 @@ description: Publish a new version of the extension
 
 ## Your task
 
-> **Scope: the VS Code extension only.** For the **spec-kit extension** (`apps/speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag (a `v*` tag here would wrongly publish to the Marketplace).
+> **Scope: the VS Code extension only.** For the **spec-kit extension** (`apps/speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag (a `v*` tag here would wrongly publish to the Marketplace). The Claude Code mod and the Copilot canvas ship with `/publish-mod` and `/publish-canvas`; `/publish-all` runs every flow in order.
 
 Help the user publish a new version of the extension by:
 
-0. QA gate. Apply the Release gate in `.claude/commands/release-qa.md` before anything else: a `QA Report*.md` in the vault for the current HEAD with `verdict: ship` and no open FAIL. If it does not pass, stop and tell the user to run `/release-qa`; continue only on their explicit override. Skip it when `/publish-both` already ran it in its preflight.
+0. QA gate. Apply the Release gate in `.claude/commands/release-qa.md` before anything else: a `QA Report*.md` in the vault for the current HEAD with `verdict: ship` and no open FAIL. If it does not pass, stop and tell the user to run `/release-qa`; continue only on their explicit override. Skip it when `/publish-all` already ran it in its preflight.
 1. First check if there are uncommitted changes. If yes, abort with a warning.
 2. Ask the user for the new version number (show current version).
 3. Get the previous version tag and analyze commits since then to generate a changelog.
 4. Update CHANGELOG.md by adding a new section at the top (after the header) with:
-   - `## [X.X.X] - YYYY-MM-DD` format
-   - Generated changelog with sections for New Features, Bug Fixes, and Improvements
+   - `## [X.X.X] - YYYY-MM-DD` format, then one plain lead sentence for the release
+   - The format in `docs/doc-sync.md` ("Changelog voice"): the big features under `### Highlights`, one `#### <Feature title>` block each with its `<!-- area: …; pr: …; media: … -->` comment, and every other entry as one bullet under Added / Fixed / Changed / Security ending with its full PR link and an `<!-- area: … -->` tag
    - Keep all previous versions' changelogs intact
 5. Run the release checklist in `docs/doc-sync.md` ("Per-release checklist") before anything is committed, and stop on a failure:
    - `npm run clips:check` must report 0 broken.
