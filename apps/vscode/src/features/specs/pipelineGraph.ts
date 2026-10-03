@@ -113,6 +113,28 @@ export function removeHook(
     ]);
 }
 
+/** A hook's address in the configuration. */
+interface HookPlace { when: 'before' | 'after'; anchor: string; index: number }
+
+/** Move one hook in a single write, with any content edit; returns the reason on refusal. */
+export function moveHook(
+    script: string,
+    workspaceRoot: string,
+    command: string,
+    from: HookPlace,
+    to: Omit<HookPlace, 'index'> & { index?: number; boundary: 'node' | 'phase' },
+    hook?: Omit<HookDraft, 'when' | 'anchor' | 'editIndex'>,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, [
+        '--command', command,
+        '--move-from', from.when, from.anchor, String(from.index),
+        '--when', to.when, '--anchor', to.anchor, '--boundary', to.boundary,
+        ...(to.index === undefined ? [] : ['--to-index', String(to.index)]),
+        ...(hook ? ['--hook', hook.type, '--ref', hook.ref ?? '', '--run', hook.run ?? '',
+            '--text', hook.text ?? ''] : []),
+    ]);
+}
+
 /**
  * Save a step's phase grouping, and its order alongside when both change.
  *

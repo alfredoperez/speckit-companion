@@ -9,7 +9,7 @@
 
 **[See it running](https://speckit-companion.dev)** · **[Docs](https://speckit-companion.dev/docs/)** · **[Getting started](https://speckit-companion.dev/docs/start/getting-started/)** · **[Changelog](https://speckit-companion.dev/changelog/)**
 
-**What's new in 0.34.0:** a spec board for the GitHub Copilot app that shows every spec's pipeline beside the chat and runs the next step from a button. Living specs get Approve all with Undo, New marks for requirements a branch added, and links between the requirements that lean on each other. The viewer opens the document you click from the Overview, and the update notification now installs the new version. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
+**What's new in 0.35.0:** move a node to another phase and drag hooks between steps in the Pipeline Builder, which now also works in a narrow side panel. Step times show the work and not the wait, links between spec documents open in the viewer, and commands wait until the terminal is ready instead of losing their first letter. Spec Kit's converge step and its bug reports now show up too. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
 
 The site shows each feature as a short clip of the real thing — the Overview a finished run leaves behind, inline review, living specs — rather than describing it.
 
@@ -140,6 +140,8 @@ Install **SpecKit Companion** from the VS Code Marketplace, then add the [compan
 Dispatches to Claude Code, Oh My Pi, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](https://speckit-companion.dev/docs/reference/providers).
 
 In the GitHub Copilot app, the [spec board canvas](https://speckit-companion.dev/docs/guides/copilot-app/) shows every spec's pipeline and tasks live next to the chat, and runs the next step from a button.
+
+In the Claude Code terminal, the [SpecKit Companion mod](https://speckit-companion.dev/docs/guides/claude-code/) shows where the run stands above the prompt and in a pane beside the transcript, with `/spec` to switch specs.
 
 ## Docs
 

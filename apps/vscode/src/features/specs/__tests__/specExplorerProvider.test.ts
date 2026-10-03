@@ -86,23 +86,29 @@ function clearWorkspaceFolder() {
     (vscode.workspace as any).workspaceFolders = undefined;
 }
 
+function resetCollaboratorMocks() {
+    jest.clearAllMocks();
+    (resolveSpecDirectories as jest.Mock).mockReset().mockResolvedValue([]);
+    (hasDuplicateNames as jest.Mock).mockReset().mockReturnValue(new Set());
+    (readSpecContextSyncSafe as jest.Mock).mockReset().mockReturnValue(undefined);
+    (isCompanionInstalled as jest.Mock).mockReset().mockReturnValue(true);
+    (mockFs.readdirSync as jest.Mock).mockReset().mockReturnValue([]);
+    (mockFs.statSync as jest.Mock).mockReset().mockReturnValue({ mtime: new Date(0) });
+    (mockFs.existsSync as jest.Mock).mockReset().mockReturnValue(false);
+    (mockFs.readFileSync as jest.Mock).mockReset().mockReturnValue('');
+}
+
 describe('SpecExplorerProvider', () => {
     let provider: SpecExplorerProvider;
     let context: vscode.ExtensionContext;
     let outputChannel: vscode.OutputChannel;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        resetCollaboratorMocks();
         context = createMockContext();
         outputChannel = createMockOutputChannel();
         provider = new SpecExplorerProvider(context, outputChannel);
         setupWorkspaceFolder();
-
-        // Default fs mocks
-        (mockFs.readdirSync as jest.Mock).mockReturnValue([]);
-        (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: new Date(0) });
-        (mockFs.existsSync as jest.Mock).mockReturnValue(false);
-        (mockFs.readFileSync as jest.Mock).mockReturnValue('');
     });
 
     afterEach(() => {
@@ -1205,16 +1211,18 @@ describe('SpecExplorerProvider — pinned Companion install CTA', () => {
     let outputChannel: vscode.OutputChannel;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        resetCollaboratorMocks();
         context = createMockContext();
         outputChannel = createMockOutputChannel();
         setupWorkspaceFolder();
-        (mockFs.readdirSync as jest.Mock).mockReturnValue([]);
-        (mockFs.statSync as jest.Mock).mockReturnValue({ mtime: new Date(0) });
         (resolveSpecDirectories as jest.Mock).mockResolvedValue([
             { name: '070-a', path: 'specs/070-a' },
         ]);
         (readSpecContextSyncSafe as jest.Mock).mockReturnValue({ status: 'active', specName: 'A' });
+    });
+
+    afterEach(() => {
+        clearWorkspaceFolder();
     });
 
     it('prepends the CTA row when the spec-kit extension is not installed', async () => {

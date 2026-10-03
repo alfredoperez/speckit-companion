@@ -164,13 +164,13 @@ export const Marks: Story = {
     render: () => (
         <Page
             title="Marks and mascot"
-            lede="Two marks, two jobs. The chevron wordmark is the product and goes on anything that shows the product. The mascot is the brand's character and goes on heroes, banners, and the caption of a figure. They never merge into one lockup."
+            lede="One character, two jobs. The small moss mark plus the name is the wordmark and goes on anything that shows the product. The painted mascot poses are the brand's character and go on heroes, banners, and the caption of a figure."
         >
             <h2 style={H2}>The wordmark</h2>
             <div style={`display: flex; align-items: center; gap: 48px; padding: 28px 32px; background: ${T.panel}; border: 1px solid ${T.borderPanel}; border-radius: 12px; width: fit-content;`}>
                 <Wordmark />
                 <span style={`font: 400 13px/1.5 Geist, system-ui, sans-serif; color: ${T.textMuted}; max-width: 44ch;`}>
-                    Double chevron with a check inside the right one, then "SpecKit Companion" as one word, weight 600, letter-spacing -0.01em. Path data from website/src/components/LogoMark.astro. Always top right on a figure, always this size.
+                    The small moss mascot (assets/icons/moss.svg), then "SpecKit Companion", weight 600, letter-spacing -0.01em. Below 24px use the simplified cut, assets/icons/moss-16.svg. Always top right on a figure, always this size.
                 </span>
             </div>
             <h2 style={H2}>The mascot, by pose</h2>

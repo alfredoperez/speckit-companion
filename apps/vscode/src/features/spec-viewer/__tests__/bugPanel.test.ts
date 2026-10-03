@@ -106,7 +106,12 @@ function snapshot(dir: string): Record<string, string> {
     return Object.fromEntries(fs.readdirSync(dir).map(name => [name, fs.readFileSync(path.join(dir, name), 'utf-8')]));
 }
 
-const settle = () => new Promise(resolve => setTimeout(resolve, 80));
+async function until(condition: () => boolean, timeoutMs = 2000): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (!condition() && Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+}
 
 describe('Bug report panel', () => {
     let provider: SpecViewerProvider;
@@ -133,6 +138,9 @@ describe('Bug report panel', () => {
     });
 
     afterEach(() => {
+        for (const result of (vscode.window.createWebviewPanel as jest.Mock).mock.results) {
+            result.value.__fireDispose();
+        }
         (vscode.workspace as any).workspaceFolders = undefined;
     });
 
@@ -302,8 +310,9 @@ describe('Bug report panel', () => {
             await provider.show(path.join(CART, 'assessment.md'), { bug: true });
             const panel = lastPanel();
 
+            const renders = (generateHtml as jest.Mock).mock.calls.length;
             await panel.__receive({ type: 'switchDocument', documentType: 'test' });
-            await settle();
+            await until(() => (generateHtml as jest.Mock).mock.calls.length > renders);
 
             expect(lastRender()[ARG.docType]).toBe('test');
             expect(droppedMessages()).toHaveLength(0);

@@ -2478,6 +2478,16 @@ details.template-instructions {
   padding-right: 24px;
   border-radius: var(--radius-sm);
 }
+body[data-read-only=true] #markdown-content li.task-item:hover {
+  background: transparent;
+  margin: 0;
+  padding: 5px 0;
+  padding-right: 24px;
+}
+body[data-read-only=true] #markdown-content li.task-item input[type=checkbox] {
+  cursor: default;
+  pointer-events: none;
+}
 #markdown-content li.task-item.checked {
 }
 #markdown-content li.task-item.checked .task-text {
@@ -3477,13 +3487,17 @@ li.line .line-comment-slot {
 body[data-spec-status=completed] .line-add-btn,
 body[data-spec-status=completed] .row-add-btn,
 body[data-spec-status=archived] .line-add-btn,
-body[data-spec-status=archived] .row-add-btn {
+body[data-spec-status=archived] .row-add-btn,
+body[data-read-only=true] .line-add-btn,
+body[data-read-only=true] .row-add-btn {
   display: none !important;
 }
 body[data-spec-status=completed] .line:hover,
 body[data-spec-status=completed] li.line:hover,
 body[data-spec-status=archived] .line:hover,
-body[data-spec-status=archived] li.line:hover {
+body[data-spec-status=archived] li.line:hover,
+body[data-read-only=true] .line:hover,
+body[data-read-only=true] li.line:hover {
   background: transparent;
 }
 

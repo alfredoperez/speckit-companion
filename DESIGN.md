@@ -47,15 +47,15 @@ This is the taste half of the style guide. The visual half is rendered in Storyb
 
 | Surface | Reading face | Colour | Mark | Source of truth |
 |---|---|---|---|---|
-| **The website**, speckit-companion.dev | Figtree, JetBrains Mono for labels, Instrument Serif italic for one word per heading | Constellation, dark only | chevron wordmark | `apps/website/src/styles/tokens.css`, `apps/website/src/components/LogoMark.astro` |
+| **The website**, speckit-companion.dev | Figtree, JetBrains Mono for labels, Instrument Serif italic for one word per heading | Constellation, dark only | moss-mascot wordmark | `apps/website/src/styles/tokens.css`, `apps/website/src/components/LogoMark.astro` |
 | **The VS Code extension** | the host editor's font | the user's VS Code theme; captures use a capture palette | none inside the product | [Tokens](#tokens) below (the viewer), `.storybook/capture-theme.ts` (captures) |
-| **Content**: articles, figures, carousels, heroes, clips | Geist for reading, JetBrains Mono for metadata | depends on the asset, below | chevron wordmark on product imagery, mascot on illustrated art | this file, the kaiju skills |
+| **Content**: articles, figures, carousels, heroes, clips | Geist for reading, JetBrains Mono for metadata | depends on the asset, below | moss-mascot wordmark on product imagery, painted mascot poses on illustrated art | this file, the kaiju skills |
 
 Two other identities exist and stay in their lane. Command Center (Geist, void black) never appears in public work. The blog's own display face, Space Grotesk, belongs to the blog's chrome and never to an asset placed in a post.
 
 ### What a content asset borrows
 
-- **A figure** (a product screenshot in an article) shows the product, so its chrome is the site's: Constellation tokens and the chevron wordmark. It is read on the blog, so its text is Geist. That is the one deliberate cross. Captures inside a figure are always the violet palette. The mascot stands at the caption. Rules and variations: Style Guide / Figure.
+- **A figure** (a product screenshot in an article) shows the product, so its chrome is the site's: Constellation tokens and the moss-mascot wordmark. It is read on the blog, so its text is Geist. That is the one deliberate cross. Captures inside a figure are always the violet palette. The mascot stands at the caption. Rules and variations: Style Guide / Figure.
 - **A hero** (the image above an article title) is generated art, and it is the one place the brand goes warm: ivory paper, navy ink, black brush lettering, one scarce emerald, the mascot as a caretaker. It carries the "Spec Kit · Companion" lockup with the mascot beside it, and it is the only asset that does. Profile: `create-image/references/branded-editorial-hero.md`, ivory variant.
 - **A banner or marketplace asset** still uses the night-forest identity in the [Generated art](#generated-art) section below: near-black navy, cyan glow, scarce emerald, the moss sprite. It predates Constellation and has not been retired.
 - **A clip or GIF** is a capture in motion and follows the active capture palette, with Geist for any set type.
@@ -63,11 +63,11 @@ Two other identities exist and stay in their lane. Command Center (Geist, void b
 
 ### The mascot
 
-The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, white catchlights, a tiny smile, and a small two-leaf sprout on its head. It cradles a radiant glowing emerald seedling at its chest (the sprout's leaf bends into a checkmark: spec → grown, verified). Style variants live in `assets/mascot/`; fourteen web-ready poses ship in `apps/website/public/mascot/`. It is the brand's character, never its logo: it appears in scenes (heroes, banners), at the caption of a figure, and on the site's pages. It never merges with the chevron wordmark, and it is never the subject of an image.
+The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, white catchlights, a tiny smile, and a small two-leaf sprout on its head. It cradles a radiant glowing emerald seedling at its chest (the sprout's leaf bends into a checkmark: spec → grown, verified). Style variants live in `assets/mascot/`; fourteen web-ready poses ship in `apps/website/public/mascot/`. The painted poses appear in scenes (heroes, banners), at the caption of a figure, and on the site's pages, and are never the subject of an image. The logo is the same character drawn small: `assets/icons/moss.svg` from 24px up, `assets/icons/moss-16.svg` (round body, sprout, two big eyes) for the favicon and anything at 16px, and `assets/icons/moss-mono.svg`, a single-colour silhouette with the eyes cut out, for the VS Code activity bar, which renders icons as a mask. The Marketplace icon (`icon.png`) is its own art and stays as it is.
 
 ### Always
 
-- The chevron wordmark reads "SpecKit Companion", one word, weight 600 or heavier, letter-spacing -0.01em.
+- The wordmark is the small moss mark plus "SpecKit Companion", one word, weight 600 or heavier, letter-spacing -0.01em.
 - A title names the screen; a caption makes the point; the prose says what to do with it. No sentence appears in two of the three.
 - One fixture spec across every figure in an article.
 - Outlines on a screenshot are measured from a selector, never placed by eye. Green means "this is where it is", violet means "this is the point", one violet per figure.
@@ -101,7 +101,7 @@ The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, whi
 | A hero or carousel prompt | the kaiju `create-image` profiles, `branded-editorial-hero` and `editorial-brush-marker` |
 | Generated banner art | [Generated art](#generated-art) |
 | How the writing sounds | the kaiju `writing` skill, `core-voice.md` |
-| Which images are stale after a change | `capabilities/repo-tooling/produce-the-docs-media.spec.md` |
+| Which images are stale after a change | [docs/visual-assets.md](docs/visual-assets.md) |
 
 ## Generated art
 

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <!-- The 16px cut of moss.svg: round body, sprout, two big eyes, nothing finer than a pixel. -->
+  <path d="M8 4.8V2.6" stroke="#2E4A12" stroke-width="1.4" stroke-linecap="round"/>
+  <ellipse cx="5.4" cy="2" rx="2.5" ry="1.25" transform="rotate(22 5.4 2)" fill="#86C83F" stroke="#2E4A12" stroke-width=".6"/>
+  <ellipse cx="10.6" cy="2" rx="2.5" ry="1.25" transform="rotate(-22 10.6 2)" fill="#86C83F" stroke="#2E4A12" stroke-width=".6"/>
+  <circle cx="8" cy="9.9" r="5.5" fill="#6FB236" stroke="#2E4A12" stroke-width="1"/>
+  <ellipse cx="6" cy="9.5" rx="1" ry="1.6" fill="#14200A"/>
+  <ellipse cx="10" cy="9.5" rx="1" ry="1.6" fill="#14200A"/>
+</svg>

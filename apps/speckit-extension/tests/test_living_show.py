@@ -172,21 +172,17 @@ class DisabledOrUnconfigured(LivingShowBase):
                 self.assertEqual(json.loads(out).get("capabilities", []), [])
 
 
-class CountsAgreeWithTheRepoItself(unittest.TestCase):
+class CountsAgreeWithTheRegistry(unittest.TestCase):
     """The printed count is the coverage denominator and the viewer's outline count.
 
-    Run against this repository's own registry rather than a fixture: three
-    readers agreeing on a hand-written sample proves less than three readers
-    agreeing on 14 real specs, and a drift here is what makes a row contradict
-    the badge beside it.
+    A drift here is what makes a row contradict the badge beside it.
     """
 
-    REPO = Path(__file__).resolve().parents[3]
+    REPO = Path(__file__).resolve().parent / "fixtures" / "requirement-slices" / "links"
 
     def test_every_capability_prints_the_number_of_requirements_it_has(self):
         living = rsp.load_living(str(self.REPO))
-        if not living.get("enabled"):
-            self.skipTest("living specs are off for this repository")
+        self.assertTrue(living.get("enabled"))
         for name in rsp.capability_names(living):
             with self.subTest(capability=name):
                 shown = rsp.show_headings(name, living, str(self.REPO))

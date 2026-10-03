@@ -38,6 +38,16 @@ export interface ReleaseImage {
 }
 
 export const RELEASE_MEDIA: Record<string, ReleaseImage> = {
+  'vscode@0.35.0': {
+    src: '/changelog/vscode-0.35.0-move-to-phase.png',
+    alt: 'A node panel in the Pipeline Builder with Move to phase… open, listing gather, author and classify, each marked Joins the end of it.',
+    caption: 'Move to phase…, one of the Pipeline Builder changes in this release.',
+  },
+  'vscode@0.34.0': {
+    src: '/changelog/vscode-0.34.0-copilot-board.png',
+    alt: 'The SpecKit Companion board in the GitHub Copilot app: the list of specs beside the chat, with one spec open on its pipeline and task progress.',
+    caption: 'The spec board for the GitHub Copilot app, the release this version shipped it in.',
+  },
   'vscode@0.33.0': {
     src: '/changelog/vscode-0.33.0-pipeline-builder.png',
     alt: 'The Pipeline Builder panel, showing the specify and plan steps as columns of phases and nodes with an attached hook.',

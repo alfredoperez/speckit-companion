@@ -8,7 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-10-03
+
 ### Added
+- **A hook moves in one write.** The configuration writer can now move a hook to another place, or up and down among the hooks at one place, as a single change. The hook keeps the text it was written with, every other line of the file stays as it was, and a move to a node or phase the step does not have is refused with nothing written. Before this a move was a removal and then an addition, so an addition that was refused left the hook gone.
 - **Spec Kit's converge step is recorded.** Running `/speckit.converge` used to leave no trace in the run record, because converge was not a step it knew. Two new hooks now record when converge starts and finishes, so its time shows beside the other steps. Converge never changes the spec's status, a spec that ran it can still be marked complete, and the status command points at the next task when converge added some.
 
 ### Fixed

@@ -130,7 +130,6 @@ def docs(files: list) -> dict:
         "docs_top_level_md": len([f for f in md if f.startswith("docs/") and f.count("/") == 1]),
         "words_root_changelog": words(["CHANGELOG.md"]),
         "words_ext_changelog": words(["apps/speckit-extension/CHANGELOG.md"]),
-        "words_living_specs": words([f for f in md if f.endswith(".spec.md") and not f.startswith("specs/")]),
         "install_instruction_locations": sorted(
             f for f in files
             if re.search(r"\.(md|mdx|astro)$", f) and not f.startswith("specs/")
@@ -179,18 +178,6 @@ def suites() -> dict:
     return out
 
 
-def living() -> dict:
-    r = subprocess.run(["python3", "apps/speckit-extension/scripts/living_validate.py", "--json"],
-                       cwd=ROOT, capture_output=True, text=True)
-    try:
-        report = json.loads(r.stdout)
-    except ValueError:
-        return {"available": False}
-    counts = collections.Counter(f["code"] for f in report.get("findings", []))
-    return {"available": True, "specs_checked": report.get("checked", 0),
-            "findings": dict(counts), "findings_total": sum(counts.values())}
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--suites", action="store_true", help="also time both test suites (~4 min)")
@@ -207,7 +194,6 @@ def main() -> int:
         "duplication": duplication(files),
         "docs": docs(files),
         "tests": tests(files),
-        "living_specs": living(),
     }
     if args.suites:
         report["suites"] = suites()

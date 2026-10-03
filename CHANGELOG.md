@@ -5,9 +5,20 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **Follow a Spec Kit run from inside Claude Code.** A new Claude Code mod shows the spec you are following above the prompt, such as `Plan done · Tasks 7/12 · Implement running`, and a pane beside the transcript with each step's time, the total active time and the tasks ticking off. `/spec` lists the recent specs and switches which one it follows, and where nothing is drawn, such as `claude -p`, it answers in text. It reads the same run record as the VS Code viewer and the Copilot app board, and never writes. Install it with `claude plugin marketplace add alfredoperez/speckit-companion`, then `claude plugin install speckit-companion@speckit-companion`.
+
+### Changed
+- **The moss mascot is the new logo.** The SpecKit icon in the activity bar and the logo in the Copilot app board's header are now the small moss character instead of the seedling and the double chevron.
+
+### Fixed
+- **The Copilot app board no longer covers itself with the prompt it sent.** Sending a step now shows a short note that fades, with the full prompt behind Show prompt and Copy (it stays up to paste when there is no chat session), and in a workspace without SpecKit Companion the Companion and Auto choices now look disabled.
+
+## [0.35.0] - 2026-10-03
+
+### Added
+- **Drag a hook to move it in the Pipeline Builder.** Drop one of your hooks before or after another node, on a phase, or above or below another hook to change the order they run in, and the change is written to `companion.yml` in one step, keeping the rest of the file as you wrote it. From the keyboard, the hook's form has Move up and Move down, and changing where it runs moves it the same way. Hooks from an installed extension, and a move to somewhere the step has no place for, are refused with the reason.
 - **Move a node to another phase from its panel.** A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the edge of the one you pick nearest where it was, so you no longer have to drag it or remove and re-add it.
 - **SpecKit Companion suggests the assistant your project was set up for.** Spec Kit records which assistant a project was set up for in `.specify/integration.json`. When that is not the assistant your AI provider setting names, SpecKit Companion now says so when it starts and offers to switch, or to keep your current one. It never switches on its own, and once you keep your choice it does not ask again for that project. A project set up for an assistant SpecKit Companion has no provider for shows nothing.
-
 - **The viewer shows Spec Kit's converge step.** When you run `/speckit.converge` after implement, the Tasks entry in the viewer's rail shows it running, with its timer, and the Overview lists Converge after Implement with how long it took. A spec that ran converge still offers Mark Completed and Archive. Converge never changes a spec's status, and the viewer has no button to start it.
 - **Bug reports show up in the sidebar.** When you use Spec Kit's bug extension, the Specs view lists each bug in a Bugs group, named by its title, with the reports it has and the latest outcome, like `assess · fix · test · verified`. Click one to read its assessment, fix and test reports in the viewer. Bug reports are read-only: the viewer offers no actions on them and changes nothing on disk.
 

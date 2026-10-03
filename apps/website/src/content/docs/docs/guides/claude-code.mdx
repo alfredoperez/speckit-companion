@@ -1,0 +1,36 @@
+---
+title: Follow a run in Claude Code
+description: A Claude Code mod that shows where your Spec Kit run stands, above the prompt and in a pane beside the transcript, with /spec to switch specs.
+sidebar:
+  label: Claude Code mod
+  order: 9
+---
+
+If you run the Spec Kit commands in the Claude Code terminal, the SpecKit Companion mod keeps the run in view while you work. It reads the same run record as the VS Code viewer and the [Copilot app board](/docs/guides/copilot-app), so the three always agree on steps, times and task counts.
+
+## What you get
+
+- **A band above the prompt.** The spec you are following and where its run stands, such as `042-export-csv · Plan done · Tasks 7/12 · Implement running`.
+- **A pane beside the transcript.** The four steps with the time each one took, the total active time, and the task list by phase with the task in flight marked. Tasks tick off as the agent finishes them.
+- **`/spec` to switch.** Bare `/spec` lists the most recent specs to pick from. `/spec 42` or `/spec export-csv` follows that spec, and `/spec auto` goes back to following the latest one.
+
+Step times follow the same rules as the viewer: a step ends at its own finish, the waits between steps count toward nothing, and the total is the time the steps were actually running.
+
+The mod only reads. It never writes a spec file or sends a prompt, so you still run `/speckit-companion-plan`, `/speckit-implement` and the rest yourself.
+
+## Install it
+
+You need Claude Code 2.1.287 or later (`claude --version`). In your shell:
+
+```bash
+claude plugin marketplace add alfredoperez/speckit-companion
+claude plugin install speckit-companion@speckit-companion
+```
+
+In a session that is already open, run `/reload-plugins`. Then run `/plugin`: the line under the tabs lists `speckit-companion` among the active mods.
+
+## Where it shows
+
+The pane opens beside the transcript by itself in a terminal at least 144 columns wide. In a narrower one it waits until you run `/spec`, then sits above the prompt. The Code tab of the Claude Desktop app shows the band and the pane too.
+
+The VS Code extension's chat panel and `claude -p` draw nothing a mod adds. There `/spec` answers in text instead: the spec you are following, its band line, and the recent specs. In VS Code itself, the SpecKit Companion extension already shows all of this.

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "The feature asset bundle contract. One entry per feature id; every surface reads its assets from here. Paths are repo-relative POSIX paths. A path is listed even when the file does not exist yet: this file states the target shape, and scripts/check-media-manifest.mjs reports the gap. Contract prose: capabilities/repo-tooling/produce-the-docs-media.spec.md.",
+  "about": "The feature asset bundle contract. One entry per feature id; every surface reads its assets from here. Paths are repo-relative POSIX paths. A path is listed even when the file does not exist yet: this file states the target shape, and scripts/check-media-manifest.mjs reports the gap. Contract prose: docs/media-manifest.md.",
   "conventions": {
     "captureSize": "1836x1164",
     "captureAspect": "1.577:1",
@@ -303,7 +303,7 @@
           "README.md"
         ]
       },
-      "notes": "The sidebar is a presentational recreation, not a live TreeView capture. See capabilities/repo-tooling/produce-the-docs-media.spec.md."
+      "notes": "The sidebar is a presentational recreation, not a live TreeView capture. See docs/visual-assets.md."
     },
     {
       "id": "run-in-flight",
@@ -1140,6 +1140,31 @@
       },
       "referencedBy": {},
       "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'The board in a side panel'. Shown on the site's guides/pipeline-builder page."
+    },
+    {
+      "id": "builder-move-hook",
+      "name": "Pipeline Builder: moving a hook",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/builder-move-hook.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/builder-move-hook.png": "A hook being dragged above another, with the drop line showing where it lands."
+      },
+      "referencedBy": {},
+      "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'Moving a hook'. Shown on the site's guides/pipeline-builder page."
     },
     {
       "id": "viewer-removed-doc",

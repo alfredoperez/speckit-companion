@@ -2,12 +2,10 @@
 /* Design tokens come from vendor/viewer.css, the VS Code viewer's own sheet (loaded first).
    Only what the board adds on top lives here. */
 :root {
-    --brand-violet: #a78bfa;
     --review-ink: #c9adf5;
     --focus: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 body.vscode-light {
-    --brand-violet: #7c3aed;
     --review-ink: #5b30b0;
 }
 
@@ -78,8 +76,6 @@ button { font: inherit; color: inherit; }
 .brand-mark { flex: none; }
 .brand { flex: 1; min-width: 0; }
 .brand h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; line-height: 1.2; color: var(--text-primary); }
-.mark-pale { fill: var(--text-primary); }
-.mark-violet { fill: var(--brand-violet); }
 .brand-sub { margin: 0; font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
@@ -96,7 +92,12 @@ button { font: inherit; color: inherit; }
     font-size: 13px;
 }
 .new-spec-workflow { max-width: 320px; }
-.new-spec-workflow button:disabled { color: var(--text-muted); cursor: not-allowed; }
+.new-spec-workflow button:disabled {
+    color: var(--text-muted);
+    background: repeating-linear-gradient(135deg, transparent 0 5px, color-mix(in srgb, var(--border) 70%, transparent) 5px 6px);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
 .new-spec-hint { margin: 0; color: var(--text-body); font-size: 12px; }
 .new-spec-row { display: flex; gap: 8px; align-items: flex-start; }
 .new-spec textarea {
@@ -390,8 +391,12 @@ button { font: inherit; color: inherit; }
     position: fixed;
     left: 50%;
     bottom: 16px;
+    z-index: 10;
+    display: grid;
+    gap: 8px;
+    width: max-content;
     max-width: min(560px, calc(100vw - 32px));
-    padding: 8px 14px;
+    padding: 8px 8px 8px 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     background: var(--bg-elevated);
@@ -399,12 +404,32 @@ button { font: inherit; color: inherit; }
     color: var(--text-primary);
     font-size: 13px;
     opacity: 0;
-    pointer-events: none;
+    visibility: hidden;
     transform: translate(-50%, 8px);
-    transition: opacity 160ms ease, transform 160ms ease;
+    transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
 }
-.toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
-.toast code { font: 12px var(--font-mono); overflow-wrap: anywhere; }
+.toast.is-visible { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; }
+.toast-row { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.toast-msg { flex: 1; min-width: 0; margin: 0; }
+.toast-msg code { font: 12px var(--font-mono); overflow-wrap: anywhere; }
+.toast-actions { display: flex; flex: none; align-items: center; gap: 4px; }
+.toast-actions:empty { display: none; }
+.toast-actions .btn-chip { min-height: 24px; padding: 1px 8px; font-size: 12px; }
+.toast-close { min-height: 24px; padding: 0 6px; border-color: transparent; color: var(--text-muted); font-size: 16px; line-height: 1; }
+.toast-close:hover:not(:disabled) { color: var(--text-primary); }
+.toast-prompt {
+    max-height: min(160px, 30vh);
+    margin: 0 6px 0 0;
+    padding: 8px 10px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-inset);
+    color: var(--text-body);
+    font: 11.5px/1.45 var(--font-mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
 
 /* ---------- narrow panel: one pane at a time ---------- */
 
