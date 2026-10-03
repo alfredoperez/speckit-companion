@@ -1,0 +1,180 @@
+---
+
+description: "Task list for the Dark Mode Toggle feature"
+---
+
+# Tasks: Dark Mode Toggle
+
+**Input**: Design documents from `/specs/001-dark-mode-toggle/`
+
+**Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/ (theme-storage, theme-store-api, toggle-ui), quickstart.md
+
+**Tests**: Included for the store and the init script only. The constitution (IV) requires a `node:test` for every exported store function, and plan.md D6 requires an init-script parity test. UI checks are manual, per quickstart.md. No browser test runner is allowed (constitution I).
+
+**Organization**: Grouped by user story. Foundational work is shared by all three stories.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies on incomplete tasks)
+- **[Story]**: US1 = switch, US2 = remember, US3 = keyboard and screen reader
+- Paths are relative to the repository root. Flat layout: `index.html`, `src/`.
+
+## Phase 1: Setup
+
+**Purpose**: Capture the "before" so FR (light unchanged) can be checked later.
+
+- [X] T001 Run `npm test` at the repo root and confirm `src/store.test.js` passes before any edit. Record the baseline pass count.
+- [X] T002 Serve the app with `python3 -m http.server 8080`, open `http://localhost:8080/`, add two todos and complete one, then save a screenshot of the unchanged light page to `specs/001-dark-mode-toggle/baseline-light.png`. T012 compares against it.
+
+---
+
+## Phase 2: Foundational (Blocking Prerequisites)
+
+**Purpose**: The pure store, the pre-paint init script, and its wiring. The `data-theme` attribute must be valid by first paint (contracts/toggle-ui.md, Root attribute) before any story can work.
+
+**⚠️ CRITICAL**: No user story work starts until this phase is complete.
+
+- [X] T003 [P] Write failing tests in `src/theme-store.test.js` (use `node:test` and `node:assert/strict`, same style as `src/store.test.js`, with a fake in-memory `storage` object). Cover every row of the behavior table in contracts/theme-store-api.md: `loadTheme` with `"dark"` stored → `'dark'`, `"blue"` → `null`, nothing stored → `null`, `getItem` throws → `null`; `saveTheme('dark', s)` writes `dark` under `THEME_KEY` and returns `true`, `setItem` throws → `false`, `saveTheme('blue', s)` writes nothing and returns `false`; `resolveTheme('light', true)` → `'light'`, `resolveTheme(null, true)` → `'dark'`, `resolveTheme(null, false)` → `'light'`; `nextTheme('light')` → `'dark'` and `nextTheme('dark')` → `'light'`. Import from `./theme-store.js`. Run `npm test` and confirm these fail.
+- [X] T004 Create `src/theme-store.js` per contracts/theme-store-api.md. ES module, no imports, no DOM access. Export `THEME_KEY = 'tiny-todo.theme'`, `loadTheme(storage = globalThis.localStorage)`, `saveTheme(theme, storage = globalThis.localStorage)`, `resolveTheme(saved, systemPrefersDark)`, `nextTheme(current)`. Constraints from data-model.md: the value is exactly `"light"` or `"dark"`, stored as the bare string (no JSON); anything else counts as absent; `getItem` errors are caught and treated as absent; `setItem` errors are caught and `saveTheme` returns `false`; an invalid theme is never written. Run `npm test` and confirm T003 passes.
+- [X] T005 [P] Create `src/theme-init.js` as a classic script (no `import`, no `export`; it must run in a plain `<script>` tag). In an IIFE: read `localStorage.getItem('tiny-todo.theme')` inside `try/catch` (a throw means absent); accept only `"light"` or `"dark"`; otherwise use `window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches` to pick `"dark"`, else `"light"`; then `document.documentElement.setAttribute('data-theme', value)`. The key literal must be exactly `tiny-todo.theme`. Add a one-line comment saying the logic mirrors `resolveTheme` in `src/theme-store.js` and why (a classic script cannot import).
+- [X] T006 Edit `index.html`: add `<script src="src/theme-init.js"></script>` inside `<head>` immediately after `<meta charset="utf-8">` and before the `<link rel="stylesheet" href="src/style.css">`. It must be external (not inline) and not `type="module"`, so it blocks and runs before first paint (research.md D3).
+
+**Checkpoint**: `npm test` passes. Loading the page sets `data-theme` on `<html>` (check in DevTools). Nothing looks different yet.
+
+---
+
+## Phase 3: User Story 1 - Switch between light and dark appearance (Priority: P1) 🎯 MVP
+
+**Goal**: A header toggle flips the whole app between light and dark, instantly, with no reload.
+
+**Independent Test**: Open the app with two todos (one completed). Click **Dark mode**: header, input, button and both todos turn dark at once. The completed todo is still struck through and readable. Click again: everything returns to light, identical to `baseline-light.png`.
+
+### Implementation for User Story 1
+
+- [X] T007 [US1] In `src/style.css`, replace the hard-coded colors with custom properties. Add `:root { --bg: #ffffff; --text: #1b1b1b; --text-muted: #767676; --focus: #0b5cad; color-scheme: light; }` and `:root[data-theme="dark"] { --bg: #121212; --text: #e8e8e8; --text-muted: #9a9a9a; --surface: #1e1e1e; --border: #8a8a8a; --placeholder: #a0a0a0; --focus: #7ab7ff; color-scheme: dark; }` (values from contracts/toggle-ui.md, CSS token contract). Change `body` to `background: var(--bg); color: var(--text);` and `li.done` to `color: var(--text-muted);`, keeping `text-decoration: line-through`. No hard-coded color may remain outside the two token blocks. Do NOT add light-mode rules for `input` or `button` (research.md D2: light stays unchanged).
+- [X] T008 [US1] In `src/style.css` (after T007), add: (a) dark-only control overrides under `:root[data-theme="dark"]`: `input { background: var(--surface); color: var(--text); border: 1px solid var(--border); }`, `input::placeholder { color: var(--placeholder); }`, `button { background: var(--surface); color: var(--text); border: 1px solid var(--border); }`; (b) `header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }` so the toggle wraps under the title on narrow screens; (c) `.theme-icon::before { content: "☀"; }` and `#theme-toggle[aria-pressed="true"] .theme-icon::before { content: "☾"; }` so state shows without color (sun when off, moon when on); (d) toggle colors via tokens: `#theme-toggle { background: var(--bg); color: var(--text); }`. No `transition` anywhere (research.md D8).
+- [X] T009 [US1] Edit `index.html`: change the header to `<header><h1>Tiny Todo</h1><button type="button" id="theme-toggle" aria-pressed="false"><span aria-hidden="true" class="theme-icon"></span><span>Dark mode</span></button></header>`. The accessible name stays `Dark mode` in both states (contracts/toggle-ui.md). It must sit after the `<h1>` and before `<main>`.
+- [X] T010 [P] [US1] Create `src/theme.js` (ES module, DOM wiring, no exported logic). Import `nextTheme` from `./theme-store.js`. On startup: find `#theme-toggle`, read `document.documentElement.dataset.theme` (already set by `theme-init.js`, do not resolve again), and set `aria-pressed` to `String(current === 'dark')`. On click: `const next = nextTheme(document.documentElement.dataset.theme)`, set `data-theme` to `next` and `aria-pressed` to `String(next === 'dark')`, synchronously, so rapid clicks always follow the last click. Do not import or touch `src/store.js` (FR-009). Saving is added in T014.
+- [X] T011 [US1] Edit `src/app.js`: add `import './theme.js';` as the first line. Change nothing else in the file.
+- [X] T012 [US1] Verify per quickstart.md step 3: the toggle flips light and dark with no reload, the completed todo stays struck through and readable in both, and the light page matches `specs/001-dark-mode-toggle/baseline-light.png` apart from the new toggle button in the header.
+
+**Checkpoint**: User Story 1 works alone. The choice is not remembered yet.
+
+---
+
+## Phase 4: User Story 2 - Remember the chosen appearance (Priority: P2)
+
+**Goal**: The chosen appearance survives a reopen, with no flash. First visit follows the system setting.
+
+**Independent Test**: Choose dark, reload: dark with no light flash. Choose light, reload: light. With no saved value and the system set to dark, the app opens dark; after clicking the toggle, the explicit choice wins.
+
+### Tests for User Story 2
+
+- [ ] T013 [US2] Extend `src/theme-store.test.js` with the init-script parity tests from research.md D3 and D6. (a) Assert `THEME_KEY` equals the key literal used in `src/theme-init.js` (read the file with `node:fs` and match `tiny-todo.theme`). (b) Run `src/theme-init.js` in a `node:vm` context with a fake `localStorage`, a fake `matchMedia` and a fake `document.documentElement.setAttribute` that records the value. For each case, assert the recorded `data-theme` equals `resolveTheme(loadTheme(fakeStorage), systemPrefersDark)`: saved `light` with system dark, saved `dark` with system light, invalid saved value, nothing saved with system dark, nothing saved with system light, `getItem` throws, and `matchMedia` undefined (expect `light`). Run `npm test` and confirm it passes against T005.
+
+### Implementation for User Story 2
+
+- [ ] T014 [US2] Edit `src/theme.js`: import `saveTheme` alongside `nextTheme`, and in the click handler call `saveTheme(next)` after applying `data-theme` and `aria-pressed`. Ignore the return value (`false` only means "not remembered"; research.md D5). The first click with no saved value saves the opposite of the effective theme (data-model.md, State transitions).
+- [ ] T015 [US2] Verify per quickstart.md steps 4 and 5: dark persists across reload with no light flash (including CPU throttled 6x), light persists, first visit with emulated `prefers-color-scheme: dark` opens dark with `aria-pressed="true"`, and clicking then reloading with emulation still dark opens light. Also run the "Corrupt value" and "Blocked storage" rows of quickstart.md step 7.
+
+**Checkpoint**: Stories 1 and 2 both work.
+
+---
+
+## Phase 5: User Story 3 - Operate the toggle without a mouse (Priority: P2)
+
+**Goal**: A keyboard or screen reader user can find the toggle, change the appearance, and know the current state.
+
+**Independent Test**: Tab to the toggle (after the title, before the add input), press Enter and Space, and see the theme flip with a visible focus ring in both themes. VoiceOver announces "Dark mode, toggle button" with a pressed state.
+
+### Implementation for User Story 3
+
+- [ ] T016 [US3] In `src/style.css`, add focus and size rules: `#theme-toggle { min-width: 44px; min-height: 44px; }` (WCAG 2.5.5); `:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }` for `#theme-toggle`, and for `input` and `button` under `:root[data-theme="dark"]` so the native ring is not lost against the dark control colors. Focus ring contrast must be at least 3:1: `#0b5cad` on `#ffffff` = 6.67 and `#7ab7ff` on `#121212` = 8.96 (research.md D10).
+- [ ] T017 [US3] Re-check the palette with the contrast one-liner in quickstart.md step 8 for each pair in research.md D10. Expect at least 4.5 for text pairs (`#1b1b1b`/`#ffffff`, `#e8e8e8`/`#121212`, `#767676`/`#ffffff`, `#9a9a9a`/`#121212`, `#e8e8e8`/`#1e1e1e`, `#a0a0a0`/`#1e1e1e`) and at least 3 for non-text pairs (`#767676`/`#ffffff`, `#8a8a8a`/`#1e1e1e`, `#0b5cad`/`#ffffff`, `#7ab7ff`/`#121212`). If any pair fails, adjust the token in `src/style.css` and update the table in `specs/001-dark-mode-toggle/research.md` D10 to match.
+- [ ] T018 [US3] Verify per quickstart.md step 6: tab order, visible focus ring in both themes, Enter and Space both flip the theme, and VoiceOver (Cmd+F5) announces the name `Dark mode` unchanged after switching, with pressed or not pressed.
+
+**Checkpoint**: All three stories work independently.
+
+---
+
+## Phase 6: Polish & Cross-Cutting Concerns
+
+**Purpose**: Final gates against the spec's success criteria and the constitution.
+
+- [ ] T019 Run `npm test` and confirm all tests pass, including the unchanged `src/store.test.js` (FR-009). The count must be the T001 baseline plus the new theme tests.
+- [ ] T020 Run the remaining quickstart.md step 7 rows on the served app: rapid toggling (click 11 times, the final state and the `localStorage` value match the 11th click), 500 todos (toggle visible in under 100 ms in the Performance panel, SC-002), and no network request while toggling (FR-010).
+- [ ] T021 Confirm constitution I and III: run `grep -rnE "https?://" index.html src` and expect no runtime imports from the network, and confirm theme code writes only the `tiny-todo.theme` key and never reads or writes `tiny-todo.items`.
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: none. Start immediately.
+- **Foundational (Phase 2)**: after Setup. Blocks all stories.
+- **US1 (Phase 3)**: after Foundational. MVP.
+- **US2 (Phase 4)**: after Foundational. T014 edits `src/theme.js`, so it runs after T010 (US1). T013 needs only Foundational.
+- **US3 (Phase 5)**: after Foundational. T016 edits `src/style.css`, so it runs after T007 and T008. The verification tasks T017 and T018 need US1.
+- **Polish (Phase 6)**: after all stories.
+
+### Task-Level Dependencies
+
+- T004 after T003 (tests fail first, then pass).
+- T006 after T005. T009 after T006 (same file `index.html`).
+- T008 after T007. T016 after T008 (same file `src/style.css`).
+- T011 after T010.
+- T013 after T004 and T005. T014 after T010.
+
+### Same-File Conflicts (do not mark [P])
+
+- `index.html`: T006, T009
+- `src/style.css`: T007, T008, T016
+- `src/theme.js`: T010, T014
+- `src/theme-store.test.js`: T003, T013
+
+---
+
+## Parallel Opportunities
+
+- **Foundational**: T003 (`src/theme-store.test.js`) and T005 (`src/theme-init.js`) touch different files and can run together.
+- **US1**: T010 (`src/theme.js`) can run beside T007 to T009 (`src/style.css`, `index.html`).
+- **Across stories**: once Foundational is done, T013 (US2 tests) can run beside US1 work.
+
+```text
+# Foundational, together:
+Task: "Write failing tests in src/theme-store.test.js"
+Task: "Create src/theme-init.js classic script"
+
+# US1, together:
+Task: "Tokens and dark overrides in src/style.css (T007, then T008)"
+Task: "Create src/theme.js DOM wiring (T010)"
+```
+
+---
+
+## Implementation Strategy
+
+### MVP First (User Story 1 only)
+
+1. Phase 1: Setup (baseline test run and screenshot)
+2. Phase 2: Foundational (store, init script, head wiring)
+3. Phase 3: User Story 1
+4. **Stop and validate**: toggle flips the whole app, light matches the baseline screenshot
+5. Demo. The choice is not remembered yet, which is expected.
+
+### Incremental Delivery
+
+1. Setup + Foundational: store tested, `data-theme` set before paint
+2. Add US1: working switch (MVP)
+3. Add US2: persistence and first-visit default
+4. Add US3: focus ring, 44px target, contrast and screen reader checks
+5. Polish: full test run, failure modes, constitution gates
+
+---
+
+## Notes
+
+- 4 new files (`src/theme-store.js`, `src/theme-store.test.js`, `src/theme-init.js`, `src/theme.js`) and 3 edited (`index.html`, `src/style.css`, `src/app.js`), matching plan.md. `baseline-light.png` is a spec-folder artifact only.
+- Not done on purpose (research.md D9): following live system changes, multi-tab sync, a "follow system" option, keyboard access for todo items.
+- Commit after each task or logical group. This project has no git repository, so skip commits unless one is added.
