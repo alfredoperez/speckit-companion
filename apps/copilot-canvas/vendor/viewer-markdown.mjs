@@ -387,9 +387,11 @@ function preprocessCallouts(markdown) {
   ];
   for (const { regex, type, label } of patterns) {
     markdown = markdown.replace(regex, (_, content) => {
-      const trimmedContent = content.trim();
+      const [first, ...rest] = content.trim().split("\n");
+      const head = first.includes('<details class="template-instructions">') ? first : parseInline(first);
+      const body = [head, ...rest].join("\n");
       return `
-<div class="callout callout-${type}"><span class="callout-icon"></span><div class="callout-content"><strong class="callout-label">${label}:</strong> ${trimmedContent}</div></div>
+<div class="callout callout-${type}"><span class="callout-icon"></span><div class="callout-content"><strong class="callout-label">${label}:</strong> ${body}</div></div>
 `;
     });
   }
@@ -397,7 +399,7 @@ function preprocessCallouts(markdown) {
     markdown = markdown.replace(regex, (_, content) => {
       const cleanContent = content.split("\n").map((line) => line.replace(/^>\s?/, "")).join(" ").trim();
       return `
-<div class="callout callout-${type}"><span class="callout-icon"></span><div class="callout-content"><strong class="callout-label">${label}:</strong> ${cleanContent}</div></div>
+<div class="callout callout-${type}"><span class="callout-icon"></span><div class="callout-content"><strong class="callout-label">${label}:</strong> ${parseInline(cleanContent)}</div></div>
 `;
     });
   }

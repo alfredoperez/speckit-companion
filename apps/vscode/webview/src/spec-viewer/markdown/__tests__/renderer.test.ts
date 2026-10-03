@@ -205,3 +205,45 @@ describe('task lines — id and markers render as metadata chips', () => {
         expect(html).not.toContain('stroke="#ffffff"');
     });
 });
+
+describe('a callout line', () => {
+    it('renders inline code in a Purpose line instead of showing the backticks', () => {
+        const html = renderMarkdown('## Phase 1: Setup\n\n**Purpose**: Wire `getProjectRoot()` into the sidebar.\n');
+        expect(html).toContain('callout-purpose');
+        expect(html).toContain('<code');
+        expect(html).not.toContain('`getProjectRoot()`');
+    });
+
+    it('escapes markup written in the line', () => {
+        const html = renderMarkdown('**Note**: Never use <script>alert(1)</script> here.\n');
+        expect(html).not.toContain('<script>');
+    });
+
+    it('shows markup written on the line as text, never as elements', () => {
+        const html = renderMarkdown('**Note**: <div onclick="x()">click</div> and <span>more</span>\n');
+        expect(html).not.toContain('<div onclick');
+        expect(html).toContain('&lt;div onclick');
+    });
+
+    it('leaves a phase header that follows a checkpoint as a phase header', () => {
+        const html = renderMarkdown('**Checkpoint**: done\n## Phase 2: Next\n\n- [ ] T001 first\n');
+        expect(html).toContain('class="phase-header"');
+        expect(html).not.toContain('&lt;div class="phase-header"');
+    });
+
+    it('keeps the line numbers below a callout that wraps onto a second line', () => {
+        const source = [
+            '## Phase 1: Setup',
+            '',
+            '**Purpose**: Wire `the thing` into',
+            'the sidebar and more.',
+            '',
+            '- [ ] T001 first',
+            '- [ ] T002 second',
+        ].join('\n');
+        const html = renderMarkdown(source);
+
+        expect(html).toMatch(/data-line="6"[^>]*>(?:(?!data-line="7").)*T001/s);
+        expect(html).toMatch(/data-line="7"[^>]*>(?:(?!data-line="8").)*T002/s);
+    });
+});
