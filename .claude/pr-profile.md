@@ -46,10 +46,10 @@ If the diff matches the left, the right-hand doc(s) **must** be in the diff too 
 | Change | Required doc |
 |---|---|
 | New/changed AI provider | README "Supported AI Providers" matrix + provider count + `package.json` `speckit.aiProvider` enum |
-| New canonical workflow status | the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) badge tiers + README "Status vocabulary" |
+| New canonical workflow status | the site's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) badge tiers + README "Status vocabulary" |
 | New/changed configuration setting | README "Configuration" section |
-| Sidebar action / right-click menu | the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) + README "Sidebar at a Glance" |
-| Viewer statuses / badges / buttons / step tabs | the site's spec viewer anatomy (`apps/website/src/content/docs/docs/anatomy/anatomy-of-the-spec-viewer.mdx`) |
+| Sidebar action / right-click menu | the site's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) + README "Sidebar at a Glance" |
+| Viewer statuses / badges / buttons / step tabs | the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx`) |
 | Template profiles / preset reconciler / timing partial / `templateProfile` setting | `apps/speckit-extension/docs/node-model.md` |
 | `.spec-context.json` capture / lifecycle hooks / `write-context.py` / timing | the capture tests under `apps/speckit-extension/tests/`, plus `docs/architecture.md` "Data flow" when a writer rule changes |
 | Project structure / modules / architecture | `docs/architecture.md` |

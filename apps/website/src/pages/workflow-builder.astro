@@ -23,7 +23,7 @@ import { Image } from 'astro:assets';
    confident caption is the claim the ledger blocks. */
 import builderPreview from '../assets/workflow-builder-preview.png';
 
-const PICK_A_PIPELINE = '/docs/discussions/pick-a-pipeline/';
+const WORKFLOWS_DOC = '/docs/start/spec-driven-development/#the-two-workflows-that-ship';
 
 const today = [
   {
@@ -117,12 +117,12 @@ const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_WORKFLOW_BUILDER;
         }
       </div>
 
-      <a class="guide-link" href={PICK_A_PIPELINE}>read the pick-a-pipeline guide &rarr;</a>
+      <a class="guide-link" href={WORKFLOWS_DOC}>read about the two workflows &rarr;</a>
     </div>
   </section>
 
   <Fragment slot="back">
-    <a href={PICK_A_PIPELINE}>pick a pipeline</a>
+    <a href={WORKFLOWS_DOC}>the two workflows</a>
     <a href="/docs/">all the docs</a>
     <a href="/">back to the landing page</a>
   </Fragment>
