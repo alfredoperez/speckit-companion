@@ -37,6 +37,16 @@ async function settle(): Promise<void> {
     for (let i = 0; i < 20; i++) await new Promise(resolve => setImmediate(resolve));
 }
 
+/** Resolves when the background report shows its error, which is after it has finished writing the record. */
+function nextErrorShown(): Promise<void> {
+    return new Promise(resolve => {
+        showErrorMessage.mockImplementationOnce(() => {
+            resolve();
+            return Promise.resolve(undefined);
+        });
+    });
+}
+
 /** The viewer's approve path from a settled specify: watch, start plan, run its command. Returns the report's settlement. */
 async function approvePlan(terminal: any): Promise<{ reported: Promise<void> }> {
     const watch = watchStepDispatch({ specDir, step: 'plan', fromStep: 'specify' });
@@ -296,6 +306,7 @@ describe('limits on what counts as a command that never ran', () => {
 
     it('still puts the run back when the command fails right after a long wait for the user to answer the shell', async () => {
         const terminal = mock.createMockTerminal({ shellIntegration: false });
+        const shown = nextErrorShown();
         const watch = watchStepDispatch({ specDir, step: 'plan', fromStep: 'specify' });
         await startStep(specDir, 'plan', 'extension');
         watch.started();
@@ -310,7 +321,7 @@ describe('limits on what counts as a command that never ran', () => {
             terminal.__activateShellIntegration();
             await dispatched;
             mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 127);
-            for (let i = 0; i < 100 && showErrorMessage.mock.calls.length === 0; i++) await settle();
+            await shown;
         } finally {
             now.mockRestore();
         }
@@ -321,6 +332,7 @@ describe('limits on what counts as a command that never ran', () => {
 
     it('watches the terminal a successful dispatch returns', async () => {
         const terminal = mock.createMockTerminal();
+        const shown = nextErrorShown();
         const watch = watchStepDispatch({ specDir, step: 'plan', label: 'Plan it', fromStep: 'specify' });
         await startStep(specDir, 'plan', 'extension');
         watch.started();
@@ -331,7 +343,7 @@ describe('limits on what counts as a command that never ran', () => {
         expect(returned).toBe(terminal);
 
         mock.__fireShellExecutionEnd(terminal, terminal.executions[0], 127);
-        for (let i = 0; i < 100 && showErrorMessage.mock.calls.length === 0; i++) await new Promise(r => setTimeout(r, 10));
+        await shown;
 
         expect(readRecord().status).toBe('specified');
         expect(showErrorMessage.mock.calls[0][0]).toContain('Plan it did not run');
