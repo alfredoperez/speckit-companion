@@ -138,7 +138,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     async function specify(description, workflow) {
         let built;
         try {
-            built = buildSpecifyPrompt({ description, workflow: workflow ?? specifyChoices(state.root).default, root: state.root });
+            built = buildSpecifyPrompt({ description, workflow: workflow ?? specifyChoices(state.root).default, root: state.root, specDirs: state.specDirs });
         } catch (error) {
             throw Object.assign(error, { status: 400 });
         }
