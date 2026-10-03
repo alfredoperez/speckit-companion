@@ -12,11 +12,12 @@
  * `.specify/extensions/companion/CHANGELOG.md` is generated and gitignored. It is
  * never read here.
  *
+ * A release leads with its `### Highlights`, one section per `####` block with
+ * its screenshots, then lists its small entries grouped by area, one line each.
+ * Screenshots come from content/media/changelog.json; see releaseMedia.ts.
+ *
  * Unreleased blocks are kept, not dropped, and rendered in their own block above
  * the released timeline so nothing in there can be mistaken for shipped.
- *
- * To illustrate a release with an image, see the instructions at the top of
- * ./components/changelog/releaseMedia.ts. Nothing about that touches this file.
  */
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 
@@ -34,10 +35,12 @@ import LogoMark from '../components/LogoMark.astro';
 import SiteIcons from '../components/SiteIcons.astro';
 import ogCard from '../../../../docs/screenshots/generated/og-card.png';
 import ReleaseCard from '../components/changelog/ReleaseCard.astro';
+import type { RenderedEntry, RenderedGroup } from '../components/changelog/ReleaseCard.astro';
 import { mergeReleases, parseChangelog, unreleasedOf } from '../components/changelog/parseChangelog';
 import type { Release } from '../components/changelog/parseChangelog';
-import { assertMediaKeysResolve, imageFor } from '../components/changelog/releaseMedia';
+import { mediaKey, resolveMedia } from '../components/changelog/releaseMedia';
 import { leadFor } from '../components/changelog/releaseLead';
+import { AREAS, areaLabel, areaRank } from '../components/changelog/changelogAreas';
 
 const vscodeStream = parseChangelog(vscodeChangelog, 'vscode', 'VS Code extension');
 const speckitStream = parseChangelog(speckitChangelog, 'speckit', 'Spec Kit extension');
@@ -45,27 +48,92 @@ const speckitStream = parseChangelog(speckitChangelog, 'speckit', 'Spec Kit exte
 const streams = [vscodeStream, speckitStream];
 const released = mergeReleases(streams);
 const unreleased = unreleasedOf(streams);
+const everyRelease = [...unreleased, ...released];
 
-assertMediaKeysResolve([...released, ...unreleased]);
+const media = resolveMedia(everyRelease);
+
+// A release that tags any entry is written in the new shape and should tag them all; older ones lean on the keyword map.
+let guessedOld = 0;
+for (const release of everyRelease) {
+  const current = release.unreleased || release.entries.some((entry) => !entry.areaGuessed);
+  const items = [...release.highlights.map((h) => ({ ...h, lead: h.title })), ...release.entries];
+  for (const item of items) {
+    if (!item.areaGuessed) continue;
+    if (!current) {
+      guessedOld += 1;
+      continue;
+    }
+    console.warn(
+      `[changelog] ${mediaKey(release.product, release.version)} "${item.lead.slice(0, 60)}" has no area tag, filed under ${item.area} by keyword.`
+    );
+  }
+}
+if (guessedOld > 0) {
+  console.warn(`[changelog] ${guessedOld} entries in older releases have no area tag and were filed by keyword.`);
+}
 
 const processor = await createMarkdownProcessor({});
-const renderRelease = async (release: Release) => ({
-  ...release,
-  lead: leadFor(release),
-  sections: await Promise.all(
-    release.sections.map(async (section) => ({
-      title: section.title,
-      html: (await processor.render(section.markdown)).code,
-    }))
-  ),
-});
-
-const renderedUnreleased = await Promise.all(unreleased.map(renderRelease));
-const renderedReleased = await Promise.all(released.map(renderRelease));
+const renderBlock = async (markdown: string) => (markdown ? (await processor.render(markdown)).code : '');
+const renderInline = async (markdown: string) =>
+  (await renderBlock(markdown)).trim().replace(/^<p>/, '').replace(/<\/p>$/, '');
 
 const latestIds = new Set(
   ['vscode', 'speckit'].map((product) => released.find((r) => r.product === product)?.id)
 );
+
+const renderRelease = async (release: Release, openAlso: boolean) => {
+  const shots = media.get(mediaKey(release.product, release.version));
+  const byArea = new Map<string, RenderedEntry[]>();
+  for (const entry of release.entries) {
+    const list = byArea.get(entry.area) ?? [];
+    list.push({
+      type: entry.type,
+      leadHtml: await renderInline(entry.lead),
+      restHtml: await renderBlock(entry.rest),
+      prs: entry.prs,
+    });
+    byArea.set(entry.area, list);
+  }
+  const groups: RenderedGroup[] = [...byArea.entries()]
+    .sort(([a], [b]) => areaRank(a) - areaRank(b))
+    .map(([area, entries]) => ({ area, label: areaLabel(area), entries }));
+
+  return {
+    id: release.id,
+    product: release.product,
+    productLabel: release.productLabel,
+    version: release.version,
+    date: release.date,
+    unreleased: release.unreleased,
+    latest: latestIds.has(release.id),
+    lead: leadFor(release),
+    highlights: await Promise.all(
+      release.highlights.map(async (highlight) => ({
+        id: highlight.id,
+        title: highlight.title,
+        html: await renderBlock(highlight.markdown),
+        area: highlight.area,
+        areaLabel: areaLabel(highlight.area),
+        prs: highlight.prs,
+        shots: highlight.media.map((id) => shots!.get(id)!),
+      }))
+    ),
+    groups,
+    entryCount: release.entries.length,
+    openAlso,
+  };
+};
+
+const renderedUnreleased = await Promise.all(unreleased.map((release) => renderRelease(release, true)));
+const renderedReleased = await Promise.all(released.map((release, index) => renderRelease(release, index < 4 || release.entries.length <= 3)));
+
+const areaCounts = new Map<string, number>();
+for (const release of everyRelease) {
+  for (const item of [...release.highlights, ...release.entries]) {
+    areaCounts.set(item.area, (areaCounts.get(item.area) ?? 0) + 1);
+  }
+}
+const areaChips = AREAS.filter((area) => areaCounts.has(area.id));
 
 const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.src;
 ---
@@ -113,28 +181,30 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         <p class="cl-eyebrow">RELEASE HISTORY</p>
         <h1>Changelog</h1>
         <p class="cl-lede">
-          Two halves that meet in one file. The Spec Kit extension rides your runs and writes
-          <code>.spec-context.json</code>; the VS Code extension reads it and turns it into a
-          workspace. They install independently and they're versioned independently, so each one
-          keeps its own release notes. Both streams are merged below, newest first, and every entry
-          is badged with the half and the version it belongs to.
-        </p>
-        <p class="cl-note">
-          The entries are read from the two <code>CHANGELOG.md</code> files when this page is built,
-          so what's here is what's in the repo.
+          Release notes for the VS Code extension and the Spec Kit extension, newest first.
         </p>
       </header>
 
-      <div class="cl-filter" role="group" aria-label="Filter releases by product">
-        <button type="button" class="cl-pill is-active" data-filter="all" aria-pressed="true">
-          Both
-        </button>
-        <button type="button" class="cl-pill" data-filter="vscode" aria-pressed="false">
-          VS Code extension
-        </button>
-        <button type="button" class="cl-pill" data-filter="speckit" aria-pressed="false">
-          Spec Kit extension
-        </button>
+      <div class="cl-filters">
+        <div class="cl-filter" role="group" aria-label="Filter releases by product">
+          <button type="button" class="cl-pill is-active" data-filter="all" aria-pressed="true">
+            Both
+          </button>
+          <button type="button" class="cl-pill" data-filter="vscode" aria-pressed="false">
+            VS Code<span class="cl-pill-more"> extension</span>
+          </button>
+          <button type="button" class="cl-pill" data-filter="speckit" aria-pressed="false">
+            Spec Kit<span class="cl-pill-more"> extension</span>
+          </button>
+        </div>
+
+        <div class="cl-areas" role="group" aria-label="Filter changes by area">
+          <button type="button" class="cl-area is-active" data-area="all" aria-pressed="true">All areas</button>
+          {areaChips.map((area) => (
+            <button type="button" class="cl-area" data-area={area.id} aria-pressed="false">{area.label}</button>
+          ))}
+        </div>
+        <p class="cl-empty" hidden>Nothing in this area for the product you picked.</p>
       </div>
 
       {renderedUnreleased.length > 0 && (
@@ -147,9 +217,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
             </p>
           </div>
           <div class="cl-list">
-            {renderedUnreleased.map((release) => (
-              <ReleaseCard {...release} image={imageFor(release)} />
-            ))}
+            {renderedUnreleased.map((release) => <ReleaseCard {...release} />)}
           </div>
         </section>
       )}
@@ -159,12 +227,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           <h2 class="cl-group-title">Released</h2>
         </div>
         <div class="cl-list">
-          {renderedReleased.map((release) => (
-            <div class:list={['cl-row', latestIds.has(release.id) && 'is-latest']} data-product={release.product}>
-              {latestIds.has(release.id) && <p class="cl-latest">LATEST</p>}
-              <ReleaseCard {...release} image={imageFor(release)} />
-            </div>
-          ))}
+          {renderedReleased.map((release) => <ReleaseCard {...release} />)}
         </div>
       </section>
 
@@ -183,49 +246,134 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
     </div>
 
     <script is:inline>
-      // A permalink to a collapsed release must show it, on load and on later hash changes.
+      // A permalink to a release or a highlight inside a collapsed list must show it.
       (function () {
         function openHash() {
           if (!location.hash) return;
-          var card = document.querySelector(location.hash.replace(/[^#\w.-]/g, ''));
-          if (!card) return;
-          var box = card.querySelector('details');
+          var target = document.querySelector(location.hash.replace(/[^#\w.-]/g, ''));
+          if (!target) return;
+          var box = target.closest('details') || target.querySelector('details.cl-also');
           if (box) box.open = true;
-          card.scrollIntoView();
+          target.scrollIntoView();
         }
         window.addEventListener('hashchange', openHash);
         openHash();
       })();
 
+      // Product and area filters. Both apply together; the area is kept in ?area= so a filtered view can be shared.
       (function () {
         var body = document.body;
-        var buttons = Array.prototype.slice.call(document.querySelectorAll('.cl-pill'));
-        if (!buttons.length) return;
+        var state = { product: 'all', area: 'all' };
+        var productButtons = Array.prototype.slice.call(document.querySelectorAll('.cl-pill'));
+        var areaButtons = Array.prototype.slice.call(document.querySelectorAll('.cl-area'));
+        var empty = document.querySelector('.cl-empty');
+        var each = function (root, selector, fn) {
+          Array.prototype.forEach.call(root.querySelectorAll(selector), fn);
+        };
 
-        function syncGroups() {
-          Array.prototype.forEach.call(document.querySelectorAll('[data-group]'), function (group) {
-            var visible = group.querySelectorAll('.cl-release:not([hidden])').length;
-            group.hidden = visible === 0;
-          });
-        }
-
-        function apply(value) {
-          body.setAttribute('data-filter', value);
-          Array.prototype.forEach.call(document.querySelectorAll('.cl-release'), function (card) {
-            card.hidden = value !== 'all' && card.getAttribute('data-product') !== value;
-          });
+        function press(buttons, attr, value) {
           buttons.forEach(function (button) {
-            var active = button.getAttribute('data-filter') === value;
+            var active = button.getAttribute(attr) === value;
             button.classList.toggle('is-active', active);
             button.setAttribute('aria-pressed', active ? 'true' : 'false');
           });
-          syncGroups();
         }
 
-        buttons.forEach(function (button) {
-          button.addEventListener('click', function () {
-            apply(button.getAttribute('data-filter'));
+        function apply() {
+          body.setAttribute('data-filter', state.product);
+          var anyArea = state.area === 'all';
+          var shown = 0;
+          each(document, '.cl-release', function (card) {
+            var productOk = state.product === 'all' || card.getAttribute('data-product') === state.product;
+            each(card, '[data-area]', function (item) {
+              item.hidden = !anyArea && item.getAttribute('data-area') !== state.area;
+            });
+            var also = card.querySelector('.cl-also');
+            var alsoHas = also && also.querySelector('.cl-entry:not([hidden])');
+            if (also) {
+              also.hidden = !alsoHas;
+              if (!anyArea && alsoHas) also.open = true;
+            }
+            var has = anyArea || card.querySelector('.cl-hl:not([hidden])') || alsoHas;
+            card.hidden = !productOk || !has;
+            if (!card.hidden) shown += 1;
           });
+          each(document, '[data-group]', function (group) {
+            group.hidden = group.querySelectorAll('.cl-release:not([hidden])').length === 0;
+          });
+          if (empty) empty.hidden = shown > 0;
+          press(productButtons, 'data-filter', state.product);
+          press(areaButtons, 'data-area', state.area);
+        }
+
+        productButtons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            state.product = button.getAttribute('data-filter');
+            apply();
+          });
+        });
+
+        areaButtons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            state.area = button.getAttribute('data-area');
+            var url = new URL(location.href);
+            if (state.area === 'all') url.searchParams.delete('area');
+            else url.searchParams.set('area', state.area);
+            history.replaceState(null, '', url);
+            apply();
+          });
+        });
+
+        var initial = new URLSearchParams(location.search).get('area');
+        if (initial && document.querySelector('.cl-area[data-area="' + initial.replace(/[^\w-]/g, '') + '"]')) {
+          state.area = initial;
+          apply();
+        }
+      })();
+
+      // Carousels: scroll-snap does the moving; buttons, dots and arrow keys drive it. No autoplay.
+      (function () {
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+        Array.prototype.forEach.call(document.querySelectorAll('.cl-carousel'), function (carousel) {
+          var track = carousel.querySelector('.cl-track');
+          var slides = track.querySelectorAll('.cl-slide');
+          var dots = carousel.querySelectorAll('.cl-dot');
+          var prev = carousel.querySelector('[data-step="-1"]');
+          var next = carousel.querySelector('[data-step="1"]');
+          var current = 0;
+
+          function go(index) {
+            index = Math.max(0, Math.min(slides.length - 1, index));
+            track.scrollTo({ left: index * track.clientWidth, behavior: reduce.matches ? 'auto' : 'smooth' });
+          }
+
+          function sync() {
+            current = Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+            Array.prototype.forEach.call(dots, function (dot, i) {
+              dot.setAttribute('aria-current', i === current ? 'true' : 'false');
+            });
+            Array.prototype.forEach.call(slides, function (slide, i) {
+              slide.setAttribute('aria-hidden', i === current ? 'false' : 'true');
+            });
+            prev.disabled = current === 0;
+            next.disabled = current === slides.length - 1;
+          }
+
+          var frame = 0;
+          track.addEventListener('scroll', function () {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(sync);
+          });
+          prev.addEventListener('click', function () { go(current - 1); });
+          next.addEventListener('click', function () { go(current + 1); });
+          Array.prototype.forEach.call(dots, function (dot) {
+            dot.addEventListener('click', function () { go(Number(dot.getAttribute('data-index'))); });
+          });
+          carousel.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowLeft') { event.preventDefault(); go(current - 1); }
+            if (event.key === 'ArrowRight') { event.preventDefault(); go(current + 1); }
+          });
+          sync();
         });
       })();
     </script>
@@ -297,6 +445,11 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
         --hero-grid: radial-gradient(circle, rgba(167, 139, 250, 0.07) 1px, rgba(10, 9, 19, 0) 1px);
         --shadow-figure: 0 12px 28px rgb(0 0 0 / 0.45);
+        --scrim: rgb(10 9 19 / 0.62);
+
+        --tag-added: #7ee0b5;
+        --tag-fixed: #f2c879;
+        --tag-security: #f59e8b;
 
         --radius-pill: 999px;
         --radius-md: 12px;
@@ -306,6 +459,10 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       * {
         box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
       }
 
       body {
@@ -325,10 +482,16 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         color: var(--accent-hover);
       }
 
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
       code {
         font-family: var(--font-mono);
         font-size: 0.92em;
         color: #cfc9e8;
+        overflow-wrap: anywhere;
       }
 
       .cl-shell {
@@ -366,7 +529,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       /* Head */
       .cl-head {
-        padding: 56px 48px 64px;
+        padding: 56px 48px 48px;
         background-image: var(--hero-grid);
         background-size: 26px 26px;
         border-top: 1px solid var(--rule);
@@ -390,27 +553,26 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       .cl-lede {
         max-width: 660px;
-        margin: 0 0 16px;
+        margin: 0;
         color: var(--text-body);
         font-size: var(--fs-lead);
         line-height: var(--lh-prose);
       }
 
-      .cl-note {
-        max-width: 660px;
-        margin: 0;
-        color: var(--text-dim);
-        font-size: var(--fs-ui-sm);
-        line-height: var(--lh-ui);
+      /* Filters */
+      .cl-filters {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        padding: 0 48px 48px;
       }
 
-      /* Filter */
       .cl-filter {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
         width: fit-content;
-        margin: 0 48px;
+        max-width: 100%;
         padding: 6px;
         background: rgba(10, 9, 19, 0.6);
         border: 1px solid var(--border-accent);
@@ -439,6 +601,41 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         font-weight: var(--fw-bold);
       }
 
+      .cl-areas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .cl-area {
+        padding: 5px 12px;
+        background: none;
+        border: 1px solid var(--border-panel);
+        border-radius: var(--radius-pill);
+        color: var(--text-body);
+        font-family: var(--font-sans);
+        font-size: var(--fs-ui-sm);
+        font-weight: var(--fw-medium);
+        cursor: pointer;
+      }
+
+      .cl-area:hover {
+        border-color: var(--border-strong);
+        color: var(--text-primary);
+      }
+
+      .cl-area.is-active {
+        background: rgba(139, 92, 246, 0.16);
+        border-color: var(--accent-solid);
+        color: var(--text-primary);
+      }
+
+      .cl-empty {
+        margin: 8px 0 0;
+        color: var(--text-body);
+        font-size: var(--fs-ui);
+      }
+
       /* Groups */
       .cl-unreleased,
       .cl-released {
@@ -446,9 +643,6 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         border-top: 1px solid var(--rule);
       }
 
-      .cl-unreleased {
-        margin-top: 56px;
-      }
 
       .cl-group-head {
         margin-bottom: 24px;
@@ -480,54 +674,22 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       .cl-list {
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 20px;
       }
 
-      .cl-row {
-        position: relative;
-      }
-
-      .cl-latest {
-        position: absolute;
-        top: -8px;
-        left: 22px;
-        margin: 0;
-        padding: 2px 7px;
-        background: var(--ground);
-        border: 1px solid var(--border-strong);
-        border-radius: var(--radius-pill);
-        color: var(--accent);
-        font-family: var(--font-mono);
-        font-size: var(--fs-chip);
-        letter-spacing: var(--ls-chip);
-      }
-
-      /* Release card */
+      /* Release */
       .cl-release {
-        padding: 22px;
+        min-width: 0;
+        padding: 28px;
         background: var(--panel);
         border: 1px solid var(--border-card);
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius-md);
+        scroll-margin-top: 16px;
       }
 
       .cl-unreleased .cl-release {
         border-style: dashed;
         border-color: var(--border-panel);
-      }
-
-      .cl-release[hidden] {
-        display: none;
-      }
-
-      .cl-release-head {
-        padding-bottom: 18px;
-        border-bottom: 1px solid var(--rule);
-        cursor: pointer;
-        list-style: none;
-      }
-
-      .cl-release-head::-webkit-details-marker {
-        display: none;
       }
 
       .cl-release-head-top {
@@ -538,40 +700,11 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         gap: 10px;
       }
 
-      .cl-release-head-right {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      /* The one line visible before a reader expands the card. It has to
-         stand on its own, since the sections below it start collapsed. */
-      .cl-lead {
-        margin: 10px 0 0;
-        color: var(--text-body);
-        font-size: var(--fs-ui);
-        line-height: var(--lh-ui);
-      }
-
-      .cl-chevron {
-        width: 8px;
-        height: 8px;
-        flex-shrink: 0;
-        border-right: 1.5px solid var(--text-dim);
-        border-bottom: 1.5px solid var(--text-dim);
-        transform: rotate(45deg);
-        transition: transform 0.15s ease;
-      }
-
-      details[open] > .cl-release-head .cl-chevron {
-        transform: rotate(-135deg);
-      }
-
       .cl-release-title {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         margin: 0;
         font-size: var(--fs-body);
       }
@@ -595,58 +728,309 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       }
 
       .cl-version {
-        font-size: var(--fs-body);
-        font-weight: var(--fw-bold);
+        font-size: var(--fs-h3);
+        font-weight: var(--fw-black);
+        letter-spacing: -0.01em;
         color: var(--text-primary);
+      }
+
+      .cl-latest {
+        padding: 2px 8px;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-pill);
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: var(--fs-micro);
+        font-weight: var(--fw-medium);
+        letter-spacing: var(--ls-chip);
+        text-transform: uppercase;
       }
 
       .cl-date {
         font-family: var(--font-mono);
         font-size: var(--fs-mono);
-        color: var(--text-dim);
+        color: var(--text-muted);
       }
 
       .cl-date:hover {
         color: var(--accent);
       }
 
-      /* Release image seam */
-      .cl-figure {
-        margin: 20px 0 0;
+      .cl-lead {
+        max-width: 720px;
+        margin: 12px 0 0;
+        color: var(--text-body);
+        font-size: var(--fs-body);
+        line-height: var(--lh-prose);
       }
 
-      .cl-figure-frame {
+      /* Highlight */
+      .cl-hl {
+        margin-top: 28px;
+        padding-top: 28px;
+        border-top: 1px solid var(--rule);
+        scroll-margin-top: 16px;
+      }
+
+      .cl-hl-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 8px 12px;
+        margin-bottom: 10px;
+      }
+
+      .cl-hl-title {
+        margin: 0;
+        font-size: var(--fs-h3);
+        font-weight: var(--fw-bold);
+        line-height: 1.3;
+        letter-spacing: -0.01em;
+      }
+
+      .cl-area-chip {
+        padding: 2px 10px;
+        border: 1px solid var(--border-accent);
+        border-radius: var(--radius-pill);
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+        white-space: nowrap;
+      }
+
+      .cl-hl-body {
+        max-width: 720px;
+        color: var(--text-body);
+        font-size: var(--fs-body);
+        line-height: var(--lh-prose);
+      }
+
+      .cl-hl-prs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 14px 0 0;
+      }
+
+      .cl-pr {
+        display: inline-block;
+        padding: 1px 7px;
+        margin-left: 4px;
+        border: 1px solid var(--border-panel);
+        border-radius: var(--radius-pill);
+        color: var(--accent);
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+        line-height: 1.6;
+        white-space: nowrap;
+        vertical-align: 1px;
+      }
+
+      .cl-hl-prs .cl-pr {
+        margin-left: 0;
+      }
+
+      .cl-pr:hover {
+        border-color: var(--accent-solid);
+      }
+
+      /* Screenshot: every image in one 16:9 frame, a highlight drawn over it */
+      .cl-shot {
+        margin: 18px 0 0;
+      }
+
+      .cl-frame {
+        position: relative;
+        aspect-ratio: 16 / 9;
         overflow: hidden;
-        background: var(--panel);
+        background:
+          radial-gradient(circle, rgba(167, 139, 250, 0.06) 1px, transparent 1px) 0 0 / 22px 22px,
+          #120f22;
         border: 1px solid var(--border-panel);
         border-radius: var(--radius-md);
         box-shadow: var(--shadow-figure);
       }
 
-      .cl-figure img {
+      .cl-frame-image {
+        position: absolute;
+        display: block;
+        overflow: hidden;
+      }
+
+      .cl-frame-image img {
         display: block;
         width: 100%;
-        height: auto;
+        height: 100%;
       }
 
-      .cl-figure figcaption {
-        margin-top: 8px;
-        color: var(--text-dim);
+      .cl-mark {
+        position: absolute;
+        border: 2px solid var(--accent);
+        border-radius: 10px;
+        box-shadow:
+          0 0 0 4px rgba(167, 139, 250, 0.22),
+          0 0 0 100vmax var(--scrim);
+        pointer-events: none;
+      }
+
+      .cl-shot figcaption {
+        margin-top: 10px;
+        color: var(--text-body);
         font-size: var(--fs-ui-sm);
+        line-height: var(--lh-ui);
       }
 
-      /* Entries, as written in the source files */
-      .cl-body {
-        padding-top: 18px;
+      /* Carousel */
+      .cl-carousel {
+        margin-top: 18px;
       }
 
-      .cl-section + .cl-section {
-        margin-top: 20px;
+      .cl-track {
+        display: flex;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        border-radius: var(--radius-md);
       }
 
-      .cl-section-title {
-        margin: 0 0 8px;
-        color: var(--text-dim);
+      .cl-track::-webkit-scrollbar {
+        display: none;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .cl-track {
+          scroll-behavior: smooth;
+        }
+      }
+
+      .cl-slide {
+        flex: 0 0 100%;
+        min-width: 0;
+        margin: 0;
+        scroll-snap-align: start;
+      }
+
+      .cl-slide .cl-frame {
+        box-shadow: none;
+      }
+
+      .cl-carousel-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-top: 12px;
+      }
+
+      .cl-car-btn {
+        display: inline-grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        background: none;
+        border: 1px solid var(--border-strong);
+        border-radius: var(--radius-pill);
+        color: var(--text-primary);
+        font-size: var(--fs-ui);
+        cursor: pointer;
+      }
+
+      .cl-car-btn:hover:not(:disabled) {
+        border-color: var(--accent-solid);
+      }
+
+      .cl-car-btn:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+
+      .cl-dots {
+        display: flex;
+        gap: 4px;
+      }
+
+      .cl-dot {
+        position: relative;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        background: none;
+        border: 0;
+        cursor: pointer;
+      }
+
+      .cl-dot::after {
+        content: '';
+        position: absolute;
+        inset: 8px;
+        border-radius: var(--radius-pill);
+        background: var(--border-strong);
+      }
+
+      .cl-dot[aria-current='true']::after {
+        background: var(--accent);
+      }
+
+      /* Also in this release */
+      .cl-also {
+        margin-top: 28px;
+        border-top: 1px solid var(--rule);
+      }
+
+      .cl-also-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 18px 0 4px;
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .cl-also-head::-webkit-details-marker {
+        display: none;
+      }
+
+      .cl-also-title {
+        color: var(--text-primary);
+        font-size: var(--fs-ui);
+        font-weight: var(--fw-bold);
+      }
+
+      .cl-also-count {
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+      }
+
+      .cl-chevron {
+        width: 8px;
+        height: 8px;
+        margin-left: auto;
+        flex-shrink: 0;
+        border-right: 1.5px solid var(--text-muted);
+        border-bottom: 1.5px solid var(--text-muted);
+        transform: rotate(45deg);
+        transition: transform 0.15s ease;
+      }
+
+      details[open] > .cl-also-head .cl-chevron {
+        transform: rotate(-135deg);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .cl-chevron {
+          transition: none;
+        }
+      }
+
+      .cl-group {
+        margin-top: 16px;
+      }
+
+      .cl-group-label {
+        margin: 0 0 6px;
+        color: var(--text-muted);
         font-family: var(--font-mono);
         font-size: var(--fs-micro);
         font-weight: var(--fw-medium);
@@ -654,23 +1038,92 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         text-transform: uppercase;
       }
 
-      .cl-prose {
+      .cl-entries {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .cl-entry {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 12px;
+        padding: 7px 0;
+        border-top: 1px solid rgba(29, 25, 48, 0.7);
+      }
+
+      .cl-entry:first-child {
+        border-top: 0;
+      }
+
+      .cl-tag {
+        padding-top: 3px;
         color: var(--text-muted);
-        font-size: var(--fs-ui-sm);
+        font-family: var(--font-mono);
+        font-size: var(--fs-micro);
+        letter-spacing: var(--ls-chip);
+        text-transform: uppercase;
+      }
+
+      .cl-tag--added {
+        color: var(--tag-added);
+      }
+
+      .cl-tag--fixed {
+        color: var(--tag-fixed);
+      }
+
+      .cl-tag--security,
+      .cl-tag--breaking {
+        color: var(--tag-security);
+      }
+
+      .cl-entry-line {
+        color: var(--text-primary);
+        font-size: var(--fs-ui);
         line-height: var(--lh-ui);
       }
 
-      .cl-prose ul {
-        margin: 0;
+      .cl-entry-line strong {
+        font-weight: var(--fw-semibold);
+      }
+
+      .cl-more {
+        margin-top: 2px;
+      }
+
+      .cl-more > summary {
+        width: fit-content;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-size: var(--fs-mono);
+        cursor: pointer;
+      }
+
+      .cl-more > summary:hover {
+        color: var(--accent);
+      }
+
+      .cl-more > .cl-prose {
+        margin-top: 6px;
+        color: var(--text-body);
+        font-size: var(--fs-ui-sm);
+      }
+
+      /* Prose, as written in the source files */
+      .cl-prose {
+        line-height: var(--lh-ui);
+        overflow-wrap: break-word;
+      }
+
+      .cl-prose ul,
+      .cl-prose ol {
+        margin: 6px 0;
         padding-left: 18px;
       }
 
       .cl-prose li + li {
-        margin-top: 10px;
-      }
-
-      .cl-prose li::marker {
-        color: var(--text-dim);
+        margin-top: 6px;
       }
 
       .cl-prose p {
@@ -690,12 +1143,13 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         margin: 8px 0;
         padding-left: 14px;
         border-left: 1px solid var(--rule);
-        color: var(--text-dim);
       }
 
       .cl-prose pre {
+        max-width: 100%;
         margin: 10px 0;
         padding: 12px 16px;
+        overflow-x: auto;
         border: 1px solid var(--rule);
         border-radius: var(--radius-button-sm);
         font-size: var(--fs-mono);
@@ -704,6 +1158,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       .cl-prose pre code {
         color: inherit;
+        overflow-wrap: normal;
       }
 
       .cl-prose table {
@@ -743,20 +1198,54 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       @media (max-width: 700px) {
         .cl-nav,
         .cl-head,
+        .cl-filters,
         .cl-unreleased,
         .cl-released,
         .cl-foot {
-          padding-left: 20px;
-          padding-right: 20px;
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+
+        .cl-unreleased,
+        .cl-released {
+          padding-top: 40px;
+          padding-bottom: 40px;
+        }
+
+        .cl-release {
+          padding: 18px 16px;
         }
 
         .cl-filter {
-          margin-left: 20px;
-          margin-right: 20px;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          width: 100%;
         }
 
-        .cl-latest {
-          left: 16px;
+        .cl-pill {
+          padding: 8px 10px;
+        }
+
+        .cl-pill-more {
+          display: none;
+        }
+
+        .cl-area {
+          padding: 4px 10px;
+          font-size: var(--fs-mono);
+        }
+
+        .cl-entry {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 2px;
+        }
+
+        .cl-tag {
+          padding-top: 0;
+        }
+
+        .cl-hl-title {
+          font-size: 18px;
         }
       }
     </style>

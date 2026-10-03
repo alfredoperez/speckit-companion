@@ -21,8 +21,8 @@ Help the user publish a new version of the extension by:
 2. Ask the user for the new version number (show current version).
 3. Get the previous version tag and analyze commits since then to generate a changelog.
 4. Update CHANGELOG.md by adding a new section at the top (after the header) with:
-   - `## [X.X.X] - YYYY-MM-DD` format
-   - Generated changelog with sections for New Features, Bug Fixes, and Improvements
+   - `## [X.X.X] - YYYY-MM-DD` format, then one plain lead sentence for the release
+   - The format in `docs/doc-sync.md` ("Changelog voice"): the big features under `### Highlights`, one `#### <Feature title>` block each with its `<!-- area: …; pr: …; media: … -->` comment, and every other entry as one bullet under Added / Fixed / Changed / Security ending with its full PR link and an `<!-- area: … -->` tag
    - Keep all previous versions' changelogs intact
 5. Run the release checklist in `docs/doc-sync.md` ("Per-release checklist") before anything is committed, and stop on a failure:
    - `npm run clips:check` must report 0 broken.

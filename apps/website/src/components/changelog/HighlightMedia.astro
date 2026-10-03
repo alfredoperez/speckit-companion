@@ -1,0 +1,73 @@
+---
+/**
+ * A highlight's screenshots: one framed image, or a scroll-snap carousel when
+ * there are several. Every image sits in the same 16:9 frame, and a highlight
+ * box is drawn over it rather than baked into the file.
+ */
+import type { Shot } from './releaseMedia';
+
+interface Props {
+  shots: Shot[];
+  label: string;
+}
+
+const { shots, label } = Astro.props;
+const many = shots.length > 1;
+
+const pct = (n: number) => `${n}%`;
+const imageStyle = (shot: Shot) =>
+  `left:${pct(shot.image.left)};top:${pct(shot.image.top)};width:${pct(shot.image.width)};height:${pct(shot.image.height)}`;
+const boxStyle = (shot: Shot) =>
+  shot.box
+    ? `left:${pct(shot.box.left)};top:${pct(shot.box.top)};width:${pct(shot.box.width)};height:${pct(shot.box.height)}`
+    : '';
+---
+
+{!many && shots[0] && (
+  <figure class="cl-shot">
+    <div class="cl-frame">
+      <a class="cl-frame-image" href={shots[0].src} style={imageStyle(shots[0])} aria-label={`Open full size: ${shots[0].alt}`}>
+        <img src={shots[0].src} alt={shots[0].alt} width={shots[0].width} height={shots[0].height} loading="lazy" decoding="async" />
+        {shots[0].box && <span class="cl-mark" style={boxStyle(shots[0])} aria-hidden="true"></span>}
+      </a>
+    </div>
+    {shots[0].caption && <figcaption>{shots[0].caption}</figcaption>}
+  </figure>
+)}
+
+{many && (
+  <div class="cl-carousel" role="region" aria-roledescription="carousel" aria-label={label}>
+    <div class="cl-track" tabindex="0" aria-label={`${label}, ${shots.length} screenshots. Use the arrow keys to move between them.`}>
+      {shots.map((shot, index) => (
+        <figure class="cl-slide cl-shot" role="group" aria-roledescription="slide" aria-label={`${index + 1} of ${shots.length}`}>
+          <div class="cl-frame">
+            <a class="cl-frame-image" href={shot.src} style={imageStyle(shot)} aria-label={`Open full size: ${shot.alt}`} tabindex="-1">
+              <img src={shot.src} alt={shot.alt} width={shot.width} height={shot.height} loading="lazy" decoding="async" />
+              {shot.box && <span class="cl-mark" style={boxStyle(shot)} aria-hidden="true"></span>}
+            </a>
+          </div>
+          {shot.caption && <figcaption>{shot.caption}</figcaption>}
+        </figure>
+      ))}
+    </div>
+    <div class="cl-carousel-controls">
+      <button type="button" class="cl-car-btn" data-step="-1" aria-label="Previous screenshot">
+        <span aria-hidden="true">←</span>
+      </button>
+      <div class="cl-dots">
+        {shots.map((shot, index) => (
+          <button
+            type="button"
+            class="cl-dot"
+            data-index={index}
+            aria-label={`Screenshot ${index + 1} of ${shots.length}${shot.caption ? `: ${shot.caption}` : ''}`}
+            aria-current={index === 0 ? 'true' : 'false'}
+          ></button>
+        ))}
+      </div>
+      <button type="button" class="cl-car-btn" data-step="1" aria-label="Next screenshot">
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
+  </div>
+)}
