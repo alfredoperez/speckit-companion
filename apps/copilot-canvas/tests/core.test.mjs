@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
 import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
+import { buildSpecRow, parseSpecContext, phaseTimings, sortSpecs, timingSummaryText } from '../spec-rules.mjs';
 import { OPEN_NOTE, availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, openStatus, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
@@ -294,5 +295,64 @@ describe('opening the canvas', () => {
         assert.ok(status.endsWith(OPEN_NOTE));
         assert.match(OPEN_NOTE, /wait for the user's next instruction/);
         assert.match(OPEN_NOTE, /do not start any work/);
+    });
+});
+
+describe('shared rules the Claude Code mod bundles', () => {
+    const at = minutes => new Date(Date.UTC(2026, 0, 1, 10, minutes)).toISOString();
+    const step = (name, kind, minutes) => ({ step: name, kind, by: 'extension', at: at(minutes) });
+
+    it('ends each step at its own finish and bills the wait before the next step to none', () => {
+        const ctx = {
+            status: 'implemented',
+            currentStep: 'implement',
+            history: [
+                step('specify', 'start', 0), step('specify', 'complete', 4),
+                step('plan', 'start', 10), step('plan', 'complete', 19),
+                step('tasks', 'start', 20), step('tasks', 'complete', 22),
+                step('implement', 'start', 30), step('implement', 'complete', 45),
+            ],
+        };
+        const timings = phaseTimings(ctx);
+        assert.deepEqual(timings.phases.map(p => [p.step, p.durationMs / 60000]), [['specify', 4], ['plan', 9], ['tasks', 2], ['implement', 15]]);
+        assert.equal(timings.totalMs / 60000, 30);
+        assert.equal(timingSummaryText(timings), '30m active');
+    });
+
+    it('gives no total until every step is measured, and marks the step in flight', () => {
+        const timings = phaseTimings({ status: 'planning', currentStep: 'plan', history: [step('specify', 'start', 0), step('specify', 'complete', 4), step('plan', 'start', 10)] });
+        assert.equal(timings.totalMs, null);
+        assert.deepEqual(timings.phases.map(p => [p.step, p.inFlight]), [['specify', false], ['plan', true]]);
+        assert.equal(timingSummaryText(timings), 'Timing coverage: 1 of 4 phases');
+    });
+
+    it('builds the row the mod gets from $.fs texts the same as scanSpec reads it from disk', () => {
+        const id = 'specs/_02_demo-tasked';
+        const dir = join(REPO, id);
+        const fromDisk = scanSpec(REPO, id);
+        const fromText = buildSpecRow({
+            id,
+            ctx: parseSpecContext(readFileSync(join(dir, '.spec-context.json'), 'utf8')),
+            specText: readFileSync(join(dir, 'spec.md'), 'utf8'),
+            files: { spec: 'spec.md', plan: 'plan.md', tasks: 'tasks.md' },
+            tasksText: readFileSync(join(dir, 'tasks.md'), 'utf8'),
+            updatedAt: fromDisk.updatedAt,
+        });
+        assert.deepEqual(fromText, fromDisk);
+    });
+
+    it('sorts by last recorded activity before file time, and reads a broken record as none', () => {
+        const rows = sortSpecs([
+            { name: 'a', lastActivity: null, updatedAt: '2026-02-01T00:00:00.000Z' },
+            { name: 'b', lastActivity: '2026-03-01T00:00:00.000Z', updatedAt: null },
+        ]);
+        assert.deepEqual(rows.map(r => r.name), ['b', 'a']);
+        assert.equal(parseSpecContext('{"status": '), null);
+        assert.equal(parseSpecContext('[]'), null);
+    });
+
+    it('treats a status named like an Object.prototype key as an unknown status', () => {
+        assert.equal(specStatusLabel('constructor'), 'Constructor');
+        assert.equal(deriveStepBadges({ status: 'toString', history: [] }).specify, 'not-started');
     });
 });

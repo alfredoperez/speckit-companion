@@ -7,6 +7,7 @@ checks:
   # auto: Bash only, runs before any desktop time.
   jest: { kind: auto, run: "npm test" }
   canvas-tests: { kind: auto, run: "npm run test:canvas" }
+  mod-tests: { kind: auto, run: "npm run test:mod && claude plugin validate --strict ./apps/claude-mod" }
   clips-check: { kind: auto, run: "npm run clips:check", pass: "0 broken" }
   docs-build: { kind: auto, run: "cd apps/website && npm run build && npx astro check" }
   speckit-ext-tests: { kind: auto, run: "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py' && python3 apps/speckit-extension/scripts/check_shape_parity.py" }
@@ -26,6 +27,7 @@ checks:
   popups: { kind: desktop, recipe: "VS Code pass › Popups", what: "each notification the diff touches (grep the changed files for `showInformationMessage|showWarningMessage|showErrorMessage`) appears once, reads plainly, and its buttons work" }
   provider-dispatch: { kind: desktop, recipe: "VS Code pass › Provider dispatch", what: "provider picker lists the configured providers; one dispatch reaches the terminal (terminal-run or vscode-run already counts as the dispatch)" }
   canvas-open: { kind: desktop, recipe: "Copilot canvas pass › Bare open", what: "open the canvas three times without editing anything: the board checks pass on the first open, the board renders on the next two, and the sandbox `git status --short` never changes" }
+  mod-terminal: { kind: desktop, recipe: "Claude Code mod pass", what: "start `claude --plugin-dir ./apps/claude-mod` in a project with specs in a terminal at least 144 columns wide: the band names the latest spec, the pane opens beside the transcript, `/spec` lists specs and switching one updates both, and checking a task in its tasks.md ticks the band within a few seconds" }
   canvas-new-spec: { kind: desktop, recipe: "Copilot canvas pass › Full run", what: "New spec once per workflow (stock Spec Kit and Companion); the chat receives the matching command each time" }
   site-pages: { kind: desktop, recipe: "Website pages", what: "serve with `npm run preview` in apps/website and look at each changed page in a browser" }
   builder: { kind: desktop, recipe: "VS Code pass › Pipeline builder", what: "phase menu opens, Add step adds a step, the builder holds at a narrow width" }
@@ -49,6 +51,10 @@ surfaces:
   - name: Copilot canvas
     paths: ["apps/copilot-canvas/**", ".github/extensions/**"]
     checks: [canvas-tests, canvas-open, canvas-new-spec]
+
+  - name: Claude Code mod
+    paths: ["apps/claude-mod/**", ".claude-plugin/**", "apps/copilot-canvas/spec-rules.mjs"]
+    checks: [mod-tests, mod-terminal]
 
   - name: website
     paths: ["apps/website/**"]

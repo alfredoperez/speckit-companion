@@ -42,6 +42,14 @@ jobs:
             exit 1
           }
 
+      # test:canvas also runs mod:build, so a rules change that skipped the rebuild shows up here.
+      - name: Claude Code mod bundle and fixtures are current
+        run: |
+          git diff --exit-code -- apps/claude-mod/hooks/vendor apps/claude-mod/tests/fixtures || {
+            echo "::error::apps/claude-mod is stale. Run npm run mod:build and commit the result."
+            exit 1
+          }
+
   capture-suite:
     runs-on: ubuntu-latest
 
