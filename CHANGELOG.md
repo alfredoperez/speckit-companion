@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **The Copilot app board no longer covers itself with the prompt it sent.** Sending a step now shows a short note that fades, with the full prompt behind Show prompt and Copy (it stays up to paste when there is no chat session), and in a workspace without SpecKit Companion the Companion and Auto choices now look disabled.
+
 ## [0.35.0] - 2026-10-03
 
 ### Added

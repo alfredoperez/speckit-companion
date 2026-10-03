@@ -55,6 +55,9 @@ const els = {
     search: $('search'),
     refresh: $('refresh'),
     toast: $('toast'),
+    toastMsg: $('toast-msg'),
+    toastActions: $('toast-actions'),
+    toastPrompt: $('toast-prompt'),
     newSpec: $('new-spec'),
     newSpecToggle: $('new-spec-toggle'),
     newSpecText: $('new-spec-text'),
@@ -90,12 +93,86 @@ async function api(path, body) {
     return data;
 }
 
-function toast(...parts) {
-    els.toast.replaceChildren(...parts);
-    els.toast.classList.add('is-visible');
+const TOAST_MS = 4000;
+
+function hideToast() {
     clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => els.toast.classList.remove('is-visible'), 3200);
+    els.toast.classList.remove('is-visible');
 }
+
+function armToast() {
+    clearTimeout(toast.timer);
+    if (!toast.pinned) toast.timer = setTimeout(hideToast, TOAST_MS);
+}
+
+/** A short line that fades; with `prompt`, the full prompt sits behind Show prompt and Copy. `pinned` keeps it up. */
+function showToast({ message, prompt = null, pinned = false }) {
+    toast.pinned = pinned;
+    els.toastMsg.replaceChildren(...[message].flat());
+    els.toastPrompt.textContent = prompt ?? '';
+    els.toastPrompt.hidden = !(prompt && pinned);
+    els.toastActions.replaceChildren(...(prompt ? promptActions(prompt) : []));
+    els.toast.classList.add('is-visible');
+    armToast();
+}
+
+function toast(...message) {
+    showToast({ message });
+}
+
+async function copyText(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function promptActions(prompt) {
+    const label = () => (els.toastPrompt.hidden ? 'Show prompt' : 'Hide prompt');
+    const toggle = el('button', {
+        class: 'btn btn-chip',
+        type: 'button',
+        'aria-controls': 'toast-prompt',
+        'aria-expanded': String(!els.toastPrompt.hidden),
+        onclick: () => {
+            els.toastPrompt.hidden = !els.toastPrompt.hidden;
+            toggle.setAttribute('aria-expanded', String(!els.toastPrompt.hidden));
+            toggle.textContent = label();
+            if (!els.toastPrompt.hidden) {
+                toast.pinned = true;
+                armToast();
+            }
+        },
+    }, label());
+    const copy = el('button', {
+        class: 'btn btn-chip',
+        type: 'button',
+        onclick: async () => { copy.textContent = await copyText(prompt) ? 'Copied' : 'Copy failed'; },
+    }, 'Copy');
+    const close = el('button', { class: 'btn btn-icon toast-close', type: 'button', 'aria-label': 'Dismiss', onclick: hideToast }, '×');
+    return [toggle, copy, close];
+}
+
+async function reportSend(prompt, sent) {
+    if (sent) {
+        const command = prompt.split(/\s/, 1)[0];
+        showToast({ message: command.startsWith('/') ? ['Sent ', el('code', {}, command), ' to the chat'] : 'Sent your question to the chat', prompt });
+        return;
+    }
+    const copied = await copyText(prompt);
+    showToast({
+        message: copied ? 'No chat session here, so the prompt was copied. Paste it into the chat.' : 'No chat session here. Copy the prompt and paste it into the chat.',
+        prompt,
+        pinned: true,
+    });
+}
+
+els.toast.addEventListener('pointerenter', () => clearTimeout(toast.timer));
+els.toast.addEventListener('pointerleave', armToast);
+els.toast.addEventListener('focusin', () => clearTimeout(toast.timer));
+els.toast.addEventListener('focusout', (event) => { if (!els.toast.contains(event.relatedTarget)) armToast(); });
 
 function relativeTime(iso) {
     if (!iso) return '';
@@ -193,12 +270,9 @@ async function run(command, button) {
         const { prompt, sent } = await api('/api/run', { spec: spec.id, command });
         if (sent) {
             button.classList.add('sent');
-            toast('Sent to chat: ', el('code', {}, prompt));
             setTimeout(() => button.classList.remove('sent'), 2400);
-        } else {
-            await navigator.clipboard?.writeText(prompt).catch(() => {});
-            toast('No agent session here. Copied: ', el('code', {}, prompt));
         }
+        await reportSend(prompt, sent);
     } catch (error) {
         toast(`Could not send: ${error.message}`);
     } finally {
@@ -384,6 +458,7 @@ function renderSpecifyChoices() {
         role: 'radio',
         'aria-checked': choice.id === state.workflow ? 'true' : 'false',
         disabled: !choice.available,
+        'aria-disabled': choice.available ? null : 'true',
         title: choice.reason ?? WORKFLOW_NOTES[choice.id],
         onclick: () => {
             state.workflow = choice.id;
@@ -469,14 +544,11 @@ els.newSpec.addEventListener('submit', async (event) => {
     try {
         const { prompt, sent } = await api('/api/specify', { description, workflow: state.workflow });
         if (sent) {
-            toast('Sent to chat: ', el('code', {}, prompt));
             els.newSpecText.value = '';
             els.newSpec.hidden = true;
             els.newSpecToggle.setAttribute('aria-expanded', 'false');
-        } else {
-            await navigator.clipboard?.writeText(prompt).catch(() => {});
-            toast('No agent session here. Copied: ', el('code', {}, prompt));
         }
+        await reportSend(prompt, sent);
     } catch (error) {
         toast(`Could not send: ${error.message}`);
     }
