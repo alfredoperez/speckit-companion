@@ -47,12 +47,12 @@ Behaviour lives in the code and its tests, so a behaviour change updates its tes
 
 1. Run `git diff $(git describe --tags --abbrev=0)..HEAD -- README.md` to see what was already updated since the last tag.
 2. Cross-check `CHANGELOG.md` entries since the last release against the map above.
-3. For every CHANGELOG bullet under "New Features," confirm a README section was touched. If not, add one.
+3. For every highlight and every Added entry in the new version, confirm a README section was touched. If not, add one.
 4. Update the "What's new" block at the top of README: the version in its lead sentence, and its three lines to the new release's own highlights.
 5. Verify `package.json` `contributes.configuration["speckit.aiProvider"].enum` matches the README provider matrix (count + names).
 6. Verify `package.json` `engines.vscode` matches the README "VS Code" badge.
 7. Re-render any screenshot whose UI changed in this release and refresh its caption if the value prop shifted. **Keep screenshot filenames stable — overwrite in place, never rename or delete** (see the gotcha in `CLAUDE.md`).
-8. Give the release its image on the site's changelog: copy the best still of the release's headline feature (a generated docs still, or a real-app screenshot) to `apps/website/public/changelog/vscode-<version>-<slug>.png` and add its `vscode@<version>` entry to `RELEASE_MEDIA` in `apps/website/src/components/changelog/releaseMedia.ts`, with alt text and a one-line caption. Do the same with `speckit@<version>` for a spec-kit extension release that has something to show. The site build fails on a key that matches no release, so add it in the release commit, after the version heading exists.
+8. Give each highlight its screenshots on the site's changelog. Name them in the highlight's comment (`media: builder-move-hook, builder-side-panel`) and add one entry per shot under the release's `vscode@<version>` key in `content/media/changelog.json`: `file` (a generated still under `docs/screenshots/generated/`, or a real-app screenshot copied to `apps/website/public/changelog/`), `alt`, a one-line `caption`, and a `highlight` box `{x, y, w, h}` in the image's own pixels around the changed area when there is a clear one. Several shots make a carousel. Do the same under `speckit@<version>` for a spec-kit extension release that has something to show. The site build fails on a media id with no entry, a missing alt or file, a shot no highlight names, and a key that matches no release, so add it in the release commit, after the version heading exists, and run `cd apps/website && npm run build`.
 9. Run `npm run clips:check`. Broken must be zero — a broken count is a 404 on the published Marketplace listing, not a to-do item.
 
 ## README conventions
@@ -70,3 +70,25 @@ A doc under `docs/` stays under 3,000 words. That's where the repo's healthy doc
 ## Changelog voice
 
 Changelog entries are **release notes for users**, not commit messages. Lead with the observable change — what a user can now do, or what stopped going wrong. Keep the things users actually touch: setting keys (`speckit.defaultWorkflow`), command names (`/speckit.companion.resume`), config files they edit, and the install commands they run. **Drop internal file and symbol names** — `promptBuilder.ts`, `sync_tasks()`, `write-context.py --task …`, on-disk field names like `history[]`/`transitions[]`. Those belong in the commit message or PR description. The test: would the entry make sense to someone who has never opened `apps/vscode/src/`? If it only lands for someone who has, it's too deep — move the mechanism out and keep the effect. Applies to both changelogs (root and `apps/speckit-extension/`).
+
+Both files stay readable on GitHub and the Marketplace, and the site's changelog page is built from the same text. A release has this shape:
+
+```markdown
+## [0.35.0] - 2026-10-03
+
+One plain sentence that says what the release is about.
+
+### Highlights
+
+#### Drag a hook to move it
+Two or three sentences in the voice above: what you can do now, and what stops going wrong.
+<!-- area: pipeline-builder; pr: 818; media: move-hook -->
+
+### Fixed
+- **Move to phase… works in a narrow Pipeline Builder.** One or two sentences on what changed. ([#805](https://github.com/alfredoperez/speckit-companion/pull/805)) <!-- area: pipeline-builder -->
+```
+
+- **Highlights are the big features**, each its own `####` block, and each gets a section on the site with its screenshots (per-release checklist step 8). The comment is for the site only: `area`, one or more `pr` numbers, and the `media` ids. A feature that is not worth a picture and a paragraph is not a highlight.
+- **Everything else is one bullet** under Added, Fixed, Changed or Security: a bold lead sentence that stands alone (the site shows only that line, with the rest behind More), then the full PR link, then `<!-- area: … -->`. Never a section of its own.
+- **Every entry links its PR**, highlight or bullet. When a fix spans PRs, list each.
+- **Areas**: `spec-viewer`, `overview`, `sidebar`, `create-spec`, `pipeline-builder`, `pipeline` (the Companion pipeline's commands), `copilot-app`, `living-specs`, `run-record`, `assistants` (assistants and terminals), `install` (install and updates), `docs`. The list lives in `apps/website/src/components/changelog/changelogAreas.ts`; an entry without a tag is filed by a keyword map there, and the site build names it so it can be tagged.

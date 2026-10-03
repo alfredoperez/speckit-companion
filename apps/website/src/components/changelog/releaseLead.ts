@@ -1,17 +1,16 @@
 /**
- * The one-line summary shown in a release card's header, before the card is
- * expanded. The card's body sits inside a collapsed `<details>`, so without
- * this line a reader scanning the page sees only a version and a date.
+ * The one-line summary shown in a release's header, under its version.
  *
- * Nothing here invents a claim. The lead is either a hand-written override
- * below, for a release whose first line doesn't stand alone, or the plain
- * text of the release's own first bullet — most releases already lead each
+ * Nothing here invents a claim. The lead is, in order: a hand-written override
+ * below; the plain paragraph written straight under the version heading in
+ * CHANGELOG.md, which is where a new release states its lead; or the plain
+ * text of the release's own first bullet — most older releases lead each
  * bullet with a bold plain-sentence summary, which is exactly this line.
  *
  * HOW TO OVERRIDE A RELEASE'S LEAD
  *
- *   Add one entry to LEAD_OVERRIDES below, keyed the same way releaseMedia.ts
- *   keys RELEASE_MEDIA: `<product>@<version>`, product one of `vscode` or
+ *   Add one entry to LEAD_OVERRIDES below, keyed the same way
+ *   content/media/changelog.json keys releases: `<product>@<version>`, product one of `vscode` or
  *   `speckit`, version written exactly as in that product's CHANGELOG.md
  *   heading (or the literal `unreleased`).
  */
@@ -77,5 +76,6 @@ function derivedLeadOf(release: Release): string | null {
 export function leadFor(release: Release): string {
   const override = LEAD_OVERRIDES[mediaKey(release.product, release.version)];
   if (override) return override;
+  if (release.intro) return withFullStop(toPlainText(release.intro));
   return derivedLeadOf(release) ?? 'See what changed below.';
 }

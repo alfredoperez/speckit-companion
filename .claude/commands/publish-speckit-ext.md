@@ -24,7 +24,7 @@ Release the **spec-kit extension** (`apps/speckit-extension/`, `id: companion`) 
 
 0. **QA gate.** Apply the Release gate in `.claude/commands/release-qa.md` before anything else: a `QA Report*.md` in the vault for the current HEAD with `verdict: ship` and no open FAIL. If it does not pass, stop and tell the user to run `/release-qa`; continue only on their explicit override. Skip it when `/publish-both` already ran it in its preflight.
 1. **Bump** `apps/speckit-extension/extension.yml` `extension.version` (semver). Confirm the target version with the user.
-2. **Update** `apps/speckit-extension/CHANGELOG.md` — add a dated section for the new version; keep prior versions. End-user-friendly bullets.
+2. **Update** `apps/speckit-extension/CHANGELOG.md` — add a dated section for the new version; keep prior versions. End-user-friendly entries in the format in `docs/doc-sync.md` ("Changelog voice"): highlights under `### Highlights`, one-line bullets with their PR link for the rest.
 3. **Readiness checklist** (the catalog guide's gates):
    - `id` lowercase-hyphen; `description` **< 100 chars**; `homepage` present; `license` field **and** a `LICENSE` file in `apps/speckit-extension/`; `tags` 2–5.
    - **Every `provides.commands[].file` exists** AND every command markdown under `apps/speckit-extension/commands/` is listed in `provides.commands`.

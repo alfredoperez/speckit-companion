@@ -1,13 +1,35 @@
 ---
 /**
- * One release, from one of the two CHANGELOG.md files.
- *
- * The entry HTML arrives already rendered from the page, which owns the single
- * markdown processor. Nothing in here rewrites entry text: release notes are
- * shown as their file wrote them, internal names and all.
+ * One release: its header and lead, a section per highlight, then the small
+ * entries grouped by area, one line each. The HTML arrives already rendered
+ * from the page, which owns the single markdown processor.
  */
-import type { ProductId } from './parseChangelog';
-import type { ReleaseImage } from './releaseMedia';
+import HighlightMedia from './HighlightMedia.astro';
+import type { PrLink, ProductId } from './parseChangelog';
+import type { Shot } from './releaseMedia';
+
+export interface RenderedHighlight {
+  id: string;
+  title: string;
+  html: string;
+  area: string;
+  areaLabel: string;
+  prs: PrLink[];
+  shots: Shot[];
+}
+
+export interface RenderedEntry {
+  type: string;
+  leadHtml: string;
+  restHtml: string;
+  prs: PrLink[];
+}
+
+export interface RenderedGroup {
+  area: string;
+  label: string;
+  entries: RenderedEntry[];
+}
 
 interface Props {
   id: string;
@@ -16,50 +38,91 @@ interface Props {
   version: string | null;
   date: string | null;
   unreleased: boolean;
+  latest?: boolean;
   lead: string;
-  sections: { title: string | null; html: string }[];
-  image?: ReleaseImage;
+  highlights: RenderedHighlight[];
+  groups: RenderedGroup[];
+  entryCount: number;
+  openAlso: boolean;
 }
 
-const { id, product, productLabel, version, date, unreleased, lead, sections, image } = Astro.props;
+const { id, product, productLabel, version, date, unreleased, latest, lead, highlights, groups, entryCount, openAlso } =
+  Astro.props;
+
+const prLabel = (pr: PrLink) => (/\/issues\//.test(pr.url) ? `Issue ${pr.number}` : `Pull request ${pr.number}`);
+const alsoTitle = highlights.length > 0 ? 'Also in this release' : 'In this release';
 ---
 
 <article class="cl-release" id={id} data-product={product} data-unreleased={unreleased ? 'true' : 'false'}>
-  <details class="cl-details" open={unreleased}>
-    <summary class="cl-release-head">
-      <div class="cl-release-head-top">
-        <h2 class="cl-release-title">
-          <span class:list={['cl-product', `cl-product--${product}`]}>{productLabel}</span>
-          <span class="cl-version">{unreleased ? 'Not released yet' : version}</span>
-        </h2>
-        <span class="cl-release-head-right">
-          {date && (
-            <a class="cl-date" href={`#${id}`} onclick="event.stopPropagation()">
-              <time datetime={date}>{date}</time>
-            </a>
-          )}
-          <span class="cl-chevron" aria-hidden="true"></span>
-        </span>
-      </div>
-      <p class="cl-lead">{lead}</p>
-    </summary>
-
-    {image && (
-      <figure class="cl-figure">
-        <div class="cl-figure-frame">
-          <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
-        </div>
-        {image.caption && <figcaption>{image.caption}</figcaption>}
-      </figure>
-    )}
-
-    <div class="cl-body">
-      {sections.map((section) => (
-        <section class="cl-section">
-          {section.title && <h3 class="cl-section-title">{section.title}</h3>}
-          <div class="cl-prose" set:html={section.html} />
-        </section>
-      ))}
+  <header class="cl-release-head">
+    <div class="cl-release-head-top">
+      <h2 class="cl-release-title">
+        <span class:list={['cl-product', `cl-product--${product}`]}>{productLabel}</span>
+        <span class="cl-version">{unreleased ? 'Not released yet' : version}</span>
+        {latest && <span class="cl-latest">Latest</span>}
+      </h2>
+      {date && (
+        <a class="cl-date" href={`#${id}`} aria-label={`Link to ${productLabel} ${version}`}>
+          <time datetime={date}>{date}</time>
+        </a>
+      )}
     </div>
-  </details>
+    <p class="cl-lead">{lead}</p>
+  </header>
+
+  {highlights.map((highlight) => (
+    <section class="cl-hl" id={highlight.id} data-area={highlight.area}>
+      <div class="cl-hl-head">
+        <h3 class="cl-hl-title">{highlight.title}</h3>
+        <span class="cl-area-chip">{highlight.areaLabel}</span>
+      </div>
+      <div class="cl-hl-body cl-prose" set:html={highlight.html} />
+      {highlight.shots.length > 0 && <HighlightMedia shots={highlight.shots} label={`${highlight.title}, screenshots`} />}
+      {highlight.prs.length > 0 && (
+        <p class="cl-hl-prs">
+          {highlight.prs.map((pr) => (
+            <a class="cl-pr" href={pr.url} aria-label={prLabel(pr)}>#{pr.number}</a>
+          ))}
+        </p>
+      )}
+    </section>
+  ))}
+
+  {entryCount > 0 && (
+    <details class="cl-also" open={openAlso}>
+      <summary class="cl-also-head">
+        <span class="cl-also-title">{alsoTitle}</span>
+        <span class="cl-also-count">{entryCount} {entryCount === 1 ? 'change' : 'changes'}</span>
+        <span class="cl-chevron" aria-hidden="true"></span>
+      </summary>
+      <div class="cl-also-body">
+        {groups.map((group) => (
+          <section class="cl-group" data-area={group.area}>
+            <h4 class="cl-group-label">{group.label}</h4>
+            <ul class="cl-entries">
+              {group.entries.map((entry) => (
+                <li class="cl-entry" data-area={group.area}>
+                  <span class:list={['cl-tag', `cl-tag--${entry.type.toLowerCase()}`]}>{entry.type}</span>
+                  <div class="cl-entry-main">
+                    <span class="cl-entry-line">
+                      <span set:html={entry.leadHtml} />
+                      {entry.prs.map((pr) => (
+                        <a class="cl-pr" href={pr.url} aria-label={prLabel(pr)}>#{pr.number}</a>
+                      ))}
+                    </span>
+                    {entry.restHtml && (
+                      <details class="cl-more">
+                        <summary>More</summary>
+                        <div class="cl-prose" set:html={entry.restHtml} />
+                      </details>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </details>
+  )}
 </article>

@@ -59,6 +59,8 @@ The web outputs are the only ones that get copied. `node apps/website/scripts/sy
 
 The mascot art travels on its own track. `node tooling/scripts/build-mascot-assets.mjs` derives the site's WebP and PNG poses from `assets/mascot/poses/` straight into `apps/website/public/mascot/`, with its own small manifest of per-pose pixel dimensions beside them. It doesn't pass through `content/media/manifest.json`, because nothing it produces is a clip output and no README references it. The manifest's `mascot-hero` entry covers a different file: the illustrated `apps/speckit-extension/assets/hero.png` that the Spec Kit extension README embeds.
 
+The changelog page keeps its own index, `content/media/changelog.json`: one entry per screenshot, keyed by release and by the media id a changelog highlight names, with its alt text and an optional highlight box the page draws over the image. It points at stills that already exist, under `docs/screenshots/generated/` or `apps/website/public/`, and copies nothing; the site build checks it against both CHANGELOG files. The per-release checklist in `docs/doc-sync.md` says when to add to it.
+
 Everything else is referenced in place. `docs/screenshots/generated/` is never copied anywhere, which is why the manifest distinguishes web outputs from README outputs rather than treating them as one pile.
 
 ## Published filenames can't move
