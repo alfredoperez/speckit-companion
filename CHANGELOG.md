@@ -12,6 +12,9 @@ Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.
 A new Claude Code mod shows the spec you are following above the prompt, such as `Plan done · Tasks 7/12 · Implement running`, and a pane beside the transcript with each step's time, the total active time and the tasks ticking off. `/spec` lists the recent specs and switches which one it follows, and where nothing is drawn, such as `claude -p`, it answers in text. It reads the same run record as the VS Code viewer and the Copilot app board, and never writes. Install it with `claude plugin marketplace add alfredoperez/speckit-companion`, then `claude plugin install speckit-companion@speckit-companion`.
 <!-- area: assistants; pr: 832 -->
 
+### Added
+- **Oh My Pi is a provider.** Set `speckit.aiProvider` to `omp` and spec commands run in an `omp` terminal, where the agent can still ask before it acts unless `speckit.permissionMode` is `auto-approve`. The Steering view lists its `AGENTS.md`, agents, skills, hooks and MCP config from `.omp/`. For every provider, the Agents list now shows that provider's own agents instead of Claude Code's. ([#819](https://github.com/alfredoperez/speckit-companion/pull/819)) <!-- area: assistants -->
+
 ### Changed
 - **The moss mascot is the new logo.** The SpecKit icon in the activity bar and the logo in the Copilot app board's header are now the small moss character instead of the seedling and the double chevron. ([#831](https://github.com/alfredoperez/speckit-companion/pull/831)) <!-- area: other -->
 

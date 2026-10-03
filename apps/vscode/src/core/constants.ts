@@ -264,6 +264,7 @@ export const SpecStatuses = {
  */
 export const AIProviders = {
     CLAUDE: 'claude',
+    OMP: 'omp',
     GEMINI: 'gemini',
     COPILOT: 'copilot',
     CODEX: 'codex',

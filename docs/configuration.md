@@ -17,7 +17,7 @@ Controls whether AI CLIs run with permission prompts (safe) or bypass them (YOLO
 | `"interactive"` | The CLI prompts before taking actions (recommended) |
 | `"auto-approve"` | (YOLO) Skip all permission prompts. Faster but no review of tool calls. |
 
-This applies to all providers that support it: Claude (`--permission-mode bypassPermissions`), Copilot (`--yolo`), and Qwen (`--yolo`). Gemini and Codex ignore this setting.
+This applies to all providers that support it: Claude (`--permission-mode bypassPermissions`), Oh My Pi (`--auto-approve`), Copilot (`--yolo`), and Qwen (`--yolo`). Gemini and Codex ignore this setting.
 
 > **Copilot exception**: GitHub Copilot CLI cannot surface permission prompts in `-p` mode. Even with `permissionMode: "interactive"`, the extension auto-switches Copilot to auto-approve at dispatch time, because otherwise the terminal would silently hang waiting for a prompt that never appears. This is enforced at runtime; dismissing the startup warning toast does not re-enable interactive mode for Copilot.
 
@@ -105,7 +105,7 @@ Controls whether the extension prepends a short context-update preamble to every
 | `true` (default) | Prepend a marker-wrapped preamble that instructs the AI to keep `.spec-context.json` current, including canonical substeps (e.g., `plan.research`, `plan.design`, `implement.run-tests`). |
 | `false` | Send the raw `/speckit.<step>` command with no preamble. Useful if your AI ignores it or you're debugging raw prompts. |
 
-The preamble adds roughly 200 to 300 tokens per dispatch and is identical across all providers (Claude, Gemini, Copilot, Codex, Qwen). Extension-side step-boundary writes remain the hard guarantee for `startedAt` / `completedAt`: this preamble unlocks finer-grained substep tracking.
+The preamble adds roughly 200 to 300 tokens per dispatch and is identical across all providers (Claude, Oh My Pi, Gemini, Copilot, Codex, Qwen). Extension-side step-boundary writes remain the hard guarantee for `startedAt` / `completedAt`: this preamble unlocks finer-grained substep tracking.
 
 ## Completion Notifications
 
@@ -245,7 +245,7 @@ A workflow whose commands are implemented as Claude Code skills (e.g. `/myflow:*
 
 | Property | Required | Description |
 |----------|----------|-------------|
-| `supportedAiProviders` | No | Array of provider ids the workflow supports: `claude`, `gemini`, `copilot`, `codex`, `qwen`, `opencode`, `ide-chat`, `claude-vscode`. Omit or leave empty for all providers. An unknown id matches no real provider, hiding the workflow everywhere. |
+| `supportedAiProviders` | No | Array of provider ids the workflow supports: `claude`, `omp`, `gemini`, `copilot`, `codex`, `qwen`, `opencode`, `ide-chat`, `claude-vscode`, `wibey`, `wibey-vscode`, `antigravity`. Omit or leave empty for all providers. An unknown id matches no real provider, hiding the workflow everywhere. |
 
 The built-in default workflow has no declaration and is always available, so at least one workflow is always selectable regardless of provider.
 

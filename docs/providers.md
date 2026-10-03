@@ -5,14 +5,14 @@ SpecKit Companion dispatches spec commands to the AI assistant you already use. 
 <!-- Column count must match the `speckit.aiProvider` enum length in package.json.
      The docs-consistency test in apps/vscode/tests/integration/docs-consistency.test.ts enforces this on every `npm test`. -->
 
-| Feature | Claude Code | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat | Claude in VS Code | Wibey CLI | Wibey (VS Code) | Antigravity |
-|---------|-------------|-------------------|------------|-----------|-----------|----------|----------|-------------------|-----------|-----------------|-------------|
-| **Steering File** | CLAUDE.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md | Not supported | CLAUDE.md | AGENTS.md | AGENTS.md | AGENTS.md |
-| **Steering Path** | .claude/steering/ | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md | Not supported | .claude/steering/ | Project root | Project root | Project root |
-| **Agents** | .claude/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md | Not supported | .claude/agents/*.md | .wibey/agents/*.md | .wibey/agents/*.md | Not supported |
-| **Hooks** | .claude/settings.json | Not supported | Not supported | Not supported | Not supported | Not supported | Not supported | .claude/settings.json | .wibey/hooks/hooks.json | .wibey/hooks/hooks.json | Not supported |
-| **MCP Servers** | .claude/settings.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc | Not supported | .claude/settings.json | .wibey/.mcp.json | .wibey/.mcp.json | Not supported |
-| **CLI Command** | `claude` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` | Built-in editor chat (Copilot / Composer / Cascade) | Claude Code GUI panel (no terminal) | `wibey` | Wibey chat panel (no terminal) | `agy` |
+| Feature | Claude Code | Oh My Pi | GitHub Copilot CLI | Gemini CLI | Codex CLI | Qwen Code | OpenCode | IDE Chat | Claude in VS Code | Wibey CLI | Wibey (VS Code) | Antigravity |
+|---------|-------------|-----------|-------------------|------------|-----------|-----------|----------|----------|-------------------|-----------|-----------------|-------------|
+| **Steering File** | CLAUDE.md | AGENTS.md | .github/copilot-instructions.md | GEMINI.md | AGENTS.md | QWEN.md | AGENTS.md | Not supported | CLAUDE.md | AGENTS.md | AGENTS.md | AGENTS.md |
+| **Steering Path** | .claude/steering/ | Hierarchical AGENTS.md | .github/instructions/*.instructions.md | Hierarchical GEMINI.md | Hierarchical AGENTS.md | .qwen/steering/ | Hierarchical AGENTS.md | Not supported | .claude/steering/ | Project root | Project root | Project root |
+| **Agents** | .claude/agents/*.md | .omp/agents/*.md | .github/agents/*.agent.md | Limited support | Hierarchical AGENTS.md | Not supported | .opencode/agent/*.md | Not supported | .claude/agents/*.md | .wibey/agents/*.md | .wibey/agents/*.md | Not supported |
+| **Hooks** | .claude/settings.json | .omp/hooks/pre/*.ts, .omp/hooks/post/*.ts | Not supported | Not supported | Not supported | Not supported | Not supported | Not supported | .claude/settings.json | .wibey/hooks/hooks.json | .wibey/hooks/hooks.json | Not supported |
+| **MCP Servers** | .claude/settings.json | .omp/mcp.json | ~/.copilot/mcp-config.json | ~/.gemini/settings.json | ~/.codex/config.toml | ~/.qwen/settings.json | ~/.opencode/opencode.jsonc | Not supported | .claude/settings.json | .wibey/.mcp.json | .wibey/.mcp.json | Not supported |
+| **CLI Command** | `claude` | `omp` | `ghcs` / `gh copilot` | `gemini` | `codex` | `qwen` | `opencode` | Built-in editor chat (Copilot / Composer / Cascade) | Claude Code GUI panel (no terminal) | `wibey` | Wibey chat panel (no terminal) | `agy` |
 
 Permission behavior (interactive vs. auto-approve) is a separate setting; see [Configuration](./configuration.md#permission-mode).
 

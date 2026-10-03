@@ -50,7 +50,7 @@ describe('docs consistency', () => {
       // The architecture doc must claim a provider count that matches the enum.
       // We accept any English digit phrasing ("8 supported providers", "eight providers ship", etc.).
       const wordForCount: Record<number, string> = {
-        5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven',
+        5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve',
       };
       const expectedWord = wordForCount[count];
       const hasNumeric = new RegExp(`\\b${count}\\b[^.\\n]*provider`, 'i').test(arch);
@@ -58,6 +58,17 @@ describe('docs consistency', () => {
         ? new RegExp(`\\b${expectedWord}\\b[^.\\n]*provider`, 'i').test(arch)
         : false;
       expect(hasNumeric || hasWord).toBe(true);
+    });
+
+    it('custom workflows accept every selectable provider id', () => {
+      const pkg = JSON.parse(read('package.json'));
+      const cfg = pkg.contributes.configuration;
+      const properties = Array.isArray(cfg)
+        ? Object.assign({}, ...cfg.map((c: { properties?: object }) => c.properties ?? {}))
+        : (cfg.properties ?? {});
+      const workflowProviders = properties['speckit.customWorkflows'].items.properties
+        .supportedAiProviders.items.enum;
+      expect(workflowProviders).toEqual(expect.arrayContaining(enumValues));
     });
 
     it('every speckit.* setting is window- or machine-scoped, so the migration needs no folder tier', () => {
@@ -78,6 +89,7 @@ describe('docs consistency', () => {
       // Map enum ids to expected source files. "ide-chat" → ideChatProvider; "claude-vscode" → claudePanelProvider.
       const idToFile: Record<string, string> = {
         claude: 'claudeCodeProvider.ts',
+        omp: 'ompProvider.ts',
         'claude-vscode': 'claudePanelProvider.ts',
         gemini: 'geminiCliProvider.ts',
         copilot: 'copilotCliProvider.ts',
