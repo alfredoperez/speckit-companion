@@ -34,6 +34,7 @@ describe('board page', { concurrency: false }, async () => {
     let browser;
     let page;
     const sent = [];
+    let sessionUp = true;
 
     before(async () => {
         root = mkdtempSync(join(tmpdir(), 'canvas-page-'));
@@ -46,7 +47,7 @@ describe('board page', { concurrency: false }, async () => {
         for (const name of ['spec.md', 'plan.md', 'tasks.md', 'research.md', 'data-model.md']) cpSync(join(TEAMBOARD, name), join(rich, name));
         cpSync(join(TEAMBOARD, 'spec-context.completed.json'), join(rich, '.spec-context.json'));
         mkdirSync(join(root, '.specify/extensions/companion'), { recursive: true });
-        board = await createSpecServer({ root, send: async (prompt) => { sent.push(prompt); return true; } });
+        board = await createSpecServer({ root, send: async (prompt) => { sent.push(prompt); return sessionUp; } });
         browser = await launch();
         if (!browser) return;
         page = await browser.newPage({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark' });
@@ -62,6 +63,7 @@ describe('board page', { concurrency: false }, async () => {
     });
 
     const shot = async (name) => { if (SHOTS && page) await page.screenshot({ path: join(SHOTS, `${name}.png`), fullPage: false }); };
+    const toastShown = () => page.waitForFunction(() => getComputedStyle(document.getElementById('toast')).opacity === '1');
     const skipWithoutChrome = (t) => { if (!page) { t.skip('no Chrome to drive'); return true; } return false; };
 
     it('lists every spec and filters active ones by default', async (t) => {
@@ -96,8 +98,55 @@ describe('board page', { concurrency: false }, async () => {
         await page.waitForSelector('.toast.is-visible');
         assert.equal(sent.at(-1)?.split('\n')[0], '/speckit.tasks specs/_01_demo-planned');
         assert.match(await page.locator('.command-hint').textContent(), /uses the Spec Kit workflow/);
-        assert.match(await page.locator('.toast').textContent(), /Sent to chat/);
+        assert.equal((await page.locator('#toast-msg').textContent()).trim(), 'Sent /speckit.tasks to the chat');
+        assert.equal(await page.locator('#toast-prompt').isVisible(), false, 'the full prompt stays folded away');
+        const box = await page.locator('#toast').boundingBox();
+        assert.ok(box.height < 60, `the sent notice is one line, got ${box.height}px`);
+        await page.waitForSelector('.next .btn-primary:not(:disabled)');
+        await toastShown();
         await shot('04-run-sent');
+        await page.locator('#toast').waitFor({ state: 'hidden', timeout: 6000 });
+    });
+
+    it('keeps the full prompt one click away after a send', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        await page.click('.next .btn-primary');
+        await page.waitForSelector('.toast.is-visible');
+        await page.click('#toast-actions button:has-text("Show prompt")');
+        const prompt = page.locator('#toast-prompt');
+        assert.ok(await prompt.isVisible());
+        assert.equal(await prompt.textContent(), sent.at(-1));
+        assert.equal(await page.getAttribute('#toast-actions [aria-controls="toast-prompt"]', 'aria-expanded'), 'true');
+        const box = await page.locator('#toast').boundingBox();
+        assert.ok(box.height < 860 * 0.4, `the open prompt stays compact, got ${box.height}px`);
+        assert.ok(await prompt.evaluate(node => node.scrollHeight > node.clientHeight), 'the long prompt scrolls inside its box');
+        await toastShown();
+        await shot('04c-prompt-open');
+        await page.click('#toast-actions [aria-label="Dismiss"]');
+        await page.locator('#toast').waitFor({ state: 'hidden', timeout: 1000 });
+    });
+
+    it('keeps the prompt up to paste when there is no chat session to send to', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        sessionUp = false;
+        try {
+            await page.click('.next .btn-primary');
+            await page.waitForSelector('.toast.is-visible');
+            assert.match(await page.locator('#toast-msg').textContent(), /^No chat session here\b.*paste it into the chat\.$/i);
+            assert.ok(await page.locator('#toast-prompt').isVisible(), 'the prompt shows without a click');
+            assert.equal(await page.locator('#toast-prompt').textContent(), sent.at(-1));
+            assert.equal(await page.locator('#toast-actions button:has-text("Copy")').count(), 1);
+            const box = await page.locator('#toast').boundingBox();
+            assert.ok(box.height < 860 * 0.4, `the failure notice stays compact, got ${box.height}px`);
+            await toastShown();
+            await shot('04b-run-not-sent');
+            await page.waitForTimeout(4500);
+            assert.ok(await page.locator('#toast').isVisible(), 'the failure notice does not fade');
+            await page.click('#toast-actions [aria-label="Dismiss"]');
+            await page.locator('#toast').waitFor({ state: 'hidden', timeout: 1000 });
+        } finally {
+            sessionUp = true;
+        }
     });
 
     it('updates the open spec when a file changes on disk', async (t) => {
@@ -156,8 +205,12 @@ describe('board page', { concurrency: false }, async () => {
             await stockPage.goto(stock.url);
             await stockPage.waitForSelector('#new-spec-toggle');
             await stockPage.click('#new-spec-toggle');
-            const states = await stockPage.locator('#new-spec-workflow button').evaluateAll(buttons => buttons.map(b => [b.textContent.trim(), b.disabled]));
-            assert.deepEqual(states, [['Companion', true], ['Spec Kit', false], ['Auto', true]]);
+            const states = await stockPage.locator('#new-spec-workflow button').evaluateAll(buttons => buttons.map(b => [b.textContent.trim(), b.disabled, b.getAttribute('aria-disabled')]));
+            assert.deepEqual(states, [['Companion', true, 'true'], ['Spec Kit', false, null], ['Auto', true, 'true']]);
+            const looks = await stockPage.locator('#new-spec-workflow button').evaluateAll(buttons => buttons.map(b => [getComputedStyle(b).opacity, getComputedStyle(b).cursor]));
+            assert.deepEqual(looks, [['0.6', 'not-allowed'], ['1', 'pointer'], ['0.6', 'not-allowed']]);
+            const focusable = await stockPage.locator('#new-spec-workflow button').evaluateAll(buttons => buttons.map(b => { b.focus(); return document.activeElement === b; }));
+            assert.deepEqual(focusable, [false, true, false], 'disabled choices take no focus');
             assert.equal((await stockPage.locator('#new-spec-workflow [aria-checked="true"]').textContent()).trim(), 'Spec Kit');
             assert.match(await stockPage.locator('#new-spec-hint').textContent(), /not installed/);
             if (SHOTS) await stockPage.screenshot({ path: join(SHOTS, '09-new-spec-stock.png') });

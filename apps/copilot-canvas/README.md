@@ -51,7 +51,7 @@ npm run test:canvas    # node:test suites for parsing, rendering, the server, an
 npm run canvas:shots   # the page suite again, saving a screenshot of each state to .canvas-shots/
 ```
 
-The page suite drives the board in the installed Google Chrome through `playwright-core` (already a dev dependency) and skips itself when there is no Chrome. It covers what the Copilot app would show: the list and filters, opening a spec on its Overview, the rendered tasks, a run button reaching the chat, a live update after a file change, the agent focusing a spec, the one-pane layout on a narrow panel, and light mode.
+The page suite drives the board in the installed Google Chrome through `playwright-core` (already a dev dependency) and skips itself when there is no Chrome. It covers what the Copilot app would show: the list and filters, opening a spec on its Overview, the rendered tasks, a run button reaching the chat (and the prompt kept up to paste when there is no chat session), a live update after a file change, the agent focusing a spec, the one-pane layout on a narrow panel, and light mode.
 
 `canvas:dev` runs the same server the canvas uses, without the Copilot app. Run buttons print the prompt and copy it to the clipboard instead of sending it. Add `&theme=light` or `&theme=dark` to the URL to force a theme.
 
