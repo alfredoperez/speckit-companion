@@ -156,6 +156,9 @@ export function SpecHeader() {
         : (vs ? formatStatusLabel(vs.status) : ns.badgeText);
     const statusClass = vs?.status ?? ns.specStatus ?? null;
 
+    const assistantName = meta ? undefined : ns.assistantName;
+    const hasTerminal = !meta && !!ns.hasTerminal;
+
     const hasContext = !!(badgeText || ns.specContextName);
     if (!badgeText && !ns.createdDate && !ns.specContextName) return null;
 
@@ -173,7 +176,7 @@ export function SpecHeader() {
                             {ns.specContextName}
                         </h1>
                     )}
-                    {(badgeText || ns.branch || ns.createdDate || meta) && (
+                    {(badgeText || ns.branch || ns.createdDate || meta || assistantName || hasTerminal) && (
                         <div class="spec-header-badges">
                             {badgeText && !(meta && badgeText === 'DRAFT') && (
                                 <span
@@ -193,6 +196,26 @@ export function SpecHeader() {
                                 <span class="spec-header-date" aria-label={`Created ${ns.createdDate}`}>
                                     {ns.createdDate}
                                 </span>
+                            )}
+                            {assistantName && (
+                                <span
+                                    class="spec-header-branch spec-header-assistant"
+                                    title={`Last sent to ${assistantName}`}
+                                >
+                                    <span class="codicon codicon-hubot" aria-hidden="true"></span>
+                                    <span class="spec-header-branch__name">{assistantName}</span>
+                                </span>
+                            )}
+                            {hasTerminal && (
+                                <button
+                                    type="button"
+                                    class="spec-header-update-btn spec-header-update-btn--quiet spec-header-terminal-btn"
+                                    title="Show the terminal this spec is running in"
+                                    onClick={() => vscode.postMessage({ type: 'showTerminal' })}
+                                >
+                                    <span class="codicon codicon-terminal" aria-hidden="true"></span>
+                                    Show terminal
+                                </button>
                             )}
                             {meta && <LivingFacts meta={meta} adopted={ns.livingOverview?.requirements.filter(r => r.adopted).length ?? 0} />}
                         </div>

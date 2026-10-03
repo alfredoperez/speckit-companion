@@ -34,6 +34,7 @@
     "last_action": { "type": "string" },
     "profile": { "type": "string", "enum": ["standard", "turbo"] },
     "telemetryInstanceId": { "type": "string" },
+    "assistant": { "type": "string" },
     "task_summaries": { "type": "object" },
     "step_summaries": { "type": "object" },
     "intent": { "type": "string" },

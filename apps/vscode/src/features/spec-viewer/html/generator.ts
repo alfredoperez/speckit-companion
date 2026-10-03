@@ -55,7 +55,9 @@ export function generateHtml(
     livingOverview?: LivingOverview | null,
     livingUndo?: LivingUndo | null,
     removedDocument?: string | null,
-    readOnly: boolean = false
+    readOnly: boolean = false,
+    assistantName?: string,
+    hasTerminal: boolean = false
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -108,6 +110,8 @@ export function generateHtml(
         lastUpdatedDate: lastUpdatedDate ?? null,
         specContextName: contextSpecName ?? null,
         branch: contextBranch ?? null,
+        assistantName,
+        hasTerminal,
         currentStep: currentStep ?? null,
         filePath: currentFilePath ?? null,
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),

@@ -14,6 +14,7 @@ import {
   buildPrompt,
 } from "../../ai-providers/promptBuilder";
 import {
+  Commands,
   ConfigKeys,
   FooterActionIds,
   SpecStatuses,
@@ -180,6 +181,9 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     },
     setStatus: async (_msg, dir, _deps) => {
       await vscode.commands.executeCommand('speckit.specs.setStatus', { specPath: toWorkspaceRelativeSpecPath(dir) });
+    },
+    showTerminal: async (_msg, dir) => {
+      await vscode.commands.executeCommand(Commands.specsShowTerminal, dir);
     },
     livingUpdate: (_msg, dir, deps) => handleLivingUpdate(dir, deps),
     livingSyncAll: async () => {

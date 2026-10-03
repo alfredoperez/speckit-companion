@@ -52,6 +52,35 @@ export const ActiveDraft: Story = {
     },
 };
 
+export const WithAssistant: Story = {
+    name: 'Assistant recorded',
+    render: () => {
+        navState.value = mockNavState({
+            badgeText: 'PLANNING',
+            createdDate: 'Apr 6, 2026',
+            specContextName: 'New Feature',
+            branch: 'feat/new-feature',
+            assistantName: 'Claude Code',
+        });
+        return <SpecHeader />;
+    },
+};
+
+export const WithAssistantAndTerminal: Story = {
+    name: 'Assistant and a live terminal',
+    render: () => {
+        navState.value = mockNavState({
+            badgeText: 'IMPLEMENTING',
+            createdDate: 'Apr 6, 2026',
+            specContextName: 'New Feature',
+            branch: 'feat/new-feature',
+            assistantName: 'Gemini CLI',
+            hasTerminal: true,
+        });
+        return <SpecHeader />;
+    },
+};
+
 export const MinimalTitle: Story = {
     render: () => {
         navState.value = mockNavState({

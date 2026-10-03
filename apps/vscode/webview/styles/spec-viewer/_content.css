@@ -462,6 +462,17 @@ body[data-has-spec-context="true"] #markdown-content h1:first-of-type {
     font-size: 12px;
 }
 
+.spec-header-terminal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.spec-header-terminal-btn .codicon {
+    font-size: 12px;
+}
+
 /* Created-date inline with the badge cluster — glance metadata, not a heading.
    The leading middot is a pseudo-element so it doesn't pollute the DOM tree
    or screen-reader output (already aria-labelled on the parent). */

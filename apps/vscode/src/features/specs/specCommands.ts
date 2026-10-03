@@ -25,6 +25,8 @@ import { startStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
 import { watchStepDispatch } from './dispatchFailure';
+import { getSpecTerminal } from './specTerminals';
+import { noteSpecDispatch } from './specAssistant';
 import type { StepName, Status } from '../../core/types/specContext';
 import { SpecsFilterState } from './specsFilterState';
 import { SpecsSortState } from './specsSortState';
@@ -40,6 +42,13 @@ function toWorkspaceRelative(absOrRel: string): string {
     if (!ws) return absOrRel;
     const rel = path.relative(ws, absOrRel);
     return rel && !rel.startsWith('..') ? rel : absOrRel;
+}
+
+function resolveSpecDirArg(target: SpecTreeItem | string | undefined): string | undefined {
+    if (!target) return undefined;
+    if (typeof target === 'string') return target;
+    const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    return ws ? path.join(ws, target.specPath || `specs/${target.label}`) : undefined;
 }
 
 // Statuses the force-status picker offers; the transient `tasking` and the out-of-band `draft`/`archived` are excluded.
@@ -310,6 +319,13 @@ export function registerSpecKitCommands(
         })
     );
 
+    context.subscriptions.push(
+        vscode.commands.registerCommand(Commands.specsShowTerminal, (target?: SpecTreeItem | string) => {
+            const specDir = resolveSpecDirArg(target);
+            return specDir ? getSpecTerminal(specDir)?.show() : undefined;
+        })
+    );
+
     // Resume the pipeline from the sidebar — dispatch /speckit.companion.resume
     // for the spec, which resolves the next step and continues with recorded
     // decisions in scope. Provider-agnostic via executeSlashCommand.
@@ -335,11 +351,15 @@ export function registerSpecKitCommands(
                 return;
             }
             outputChannel.appendLine(`[SpecKit] Resume triggered for: ${relativePath}`);
-            await getAIProvider().executeSlashCommand(
+            const assistant = getConfiguredProviderType();
+            const terminal = await getAIProvider().executeSlashCommand(
                 `/speckit.companion.resume ${relativePath}`,
                 'SpecKit - Resume',
                 true
             );
+            if (workspaceRoot) {
+                noteSpecDispatch(path.join(workspaceRoot, relativePath), terminal, assistant);
+            }
         })
     );
 
@@ -652,7 +672,9 @@ function registerPhaseCommands(
                     step: cmd.name,
                     specDir: toWorkspaceRelative(targetDir),
                 });
+                const assistant = getConfiguredProviderType();
                 const terminal = await watch.run(() => getAIProvider().executeInTerminal(wrapped, `SpecKit - ${cmd.title}`));
+                noteSpecDispatch(targetDir, terminal, assistant);
                 if (shouldRecordStepStart(cmdPipeline, cmd.name)) {
                     trackTerminal(terminal, targetDir, cmd.name as StepName);
                 }
@@ -853,11 +875,15 @@ function registerCustomCommand(
             }
 
             outputChannel.appendLine(`[SpecKit] Custom command triggered: ${commandText}`);
-            await getAIProvider().executeSlashCommand(
+            const assistant = getConfiguredProviderType();
+            const terminal = await getAIProvider().executeSlashCommand(
                 commandText,
                 `SpecKit - ${selectedCommand.label}`,
                 selectedCommand.autoExecute
             );
+            if (targetDir) {
+                noteSpecDispatch(targetDir, terminal, assistant);
+            }
         })
     );
 }

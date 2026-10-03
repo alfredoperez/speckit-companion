@@ -33,7 +33,8 @@ function specsTitleActions(): Array<{ id: string; group: string }> {
 }
 
 /** The five lifecycle spec-row context values, as a `when`-clause regex fragment. */
-const SPEC_ROW_WHEN = 'viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/';
+const SPEC_ROW_WHEN = 'viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/';
+const SPEC_TERMINAL_WHEN = 'viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)\\+terminal$/';
 
 describe('sidebar contributions', () => {
     describe('view names', () => {
@@ -86,6 +87,7 @@ describe('sidebar contributions', () => {
             ['speckit.group.reactivateAll', 'Reactivate All'],
             ['speckit.steering.create', 'New Steering Document…'],
             ['speckit.specs.copyName', 'Copy Spec Name'],
+            ['speckit.specs.showTerminal', 'Show Terminal'],
             ['speckit.specs.copyPath', 'Copy Spec Path'],
             ['speckit.specs.revealInExplorer', 'Reveal in VS Code Explorer'],
             ['speckit.specs.reveal', 'Reveal in File Manager'],
@@ -215,6 +217,7 @@ describe('sidebar contributions', () => {
             ['speckit.specs.copyPath', '3_copy'],
             ['speckit.revealItemInExplorer', '4_reveal'],
             ['speckit.revealItemInOS', '4_reveal'],
+            ['speckit.specs.showTerminal', '4_reveal'],
             ['speckit.delete', '5_danger'],
         ] as const;
 
@@ -258,6 +261,39 @@ describe('sidebar contributions', () => {
             expect(right).toEqual(hover);
         });
 
+        it('offers Show Terminal last in the reveal group of both menus, only on a row with a live terminal', () => {
+            const hover = rowMenu.find(e => e.command === 'speckit.specs.showTerminal')!;
+            const right = itemContext.find(e => e.command === 'speckit.specs.showTerminal')!;
+            expect(hover.group).toBe('4_reveal@3');
+            expect(right.group).toBe(hover.group);
+            expect(hover.when).toBe(SPEC_TERMINAL_WHEN);
+            expect(right.when).toBe(`view == ${SPECS_VIEW} && ${SPEC_TERMINAL_WHEN}`);
+        });
+
+        it('keeps Show Terminal out of the command palette, where it has no row to act on', () => {
+            expect(commandPalette.some(e => e.command === 'speckit.specs.showTerminal' && e.when === 'false')).toBe(true);
+        });
+
+        it('keeps every other spec row action on a row with a live terminal', () => {
+            const lifecycle = /viewItem\s*(==|=~)\s*\/?\^?spec-\(?(active|tasks-done|implemented|completed|archived)/;
+            const clauses = [...itemContext, ...rowMenu]
+                .filter(e => e.command !== 'speckit.specs.showTerminal' && e.when && lifecycle.test(e.when))
+                .map(e => e.when!);
+            expect(clauses.length).toBeGreaterThan(0);
+            for (const when of clauses) {
+                expect(when).not.toMatch(/viewItem == spec-(active|tasks-done|implemented|completed|archived)\b/);
+                const patterns = [...when.matchAll(/viewItem =~ \/(\^spec-\([^/]*)\//g)].map(m => new RegExp(m[1]));
+                expect(patterns.length).toBeGreaterThan(0);
+                for (const pattern of patterns) {
+                    const plain = ['active', 'tasks-done', 'implemented', 'completed', 'archived']
+                        .map(v => `spec-${v}`)
+                        .filter(v => pattern.test(v));
+                    expect(plain.length).toBeGreaterThan(0);
+                    for (const value of plain) expect(pattern.test(`${value}+terminal`)).toBe(true);
+                }
+            }
+        });
+
         it('isolates delete in the danger group and nowhere else', () => {
             const deletes = [...rowMenu, ...itemContext].filter(e => e.command === 'speckit.delete');
             expect(deletes.length).toBeGreaterThan(0);
@@ -282,14 +318,14 @@ describe('sidebar contributions', () => {
         it('keeps Resume gated on active/tasks-done and the installed extension (no beta gate)', () => {
             const resume = itemContext.find(e => e.command === 'speckit.specs.resume')!;
             expect(resume.when).toBe(
-                `view == ${SPECS_VIEW} && (viewItem == spec-active || viewItem == spec-tasks-done) && speckit.companion.installed`
+                `view == ${SPECS_VIEW} && viewItem =~ /^spec-(active|tasks-done)(\\+terminal)?$/ && speckit.companion.installed`
             );
         });
 
         it.each([
-            ['speckit.markCompleted', 'viewItem == spec-active || viewItem == spec-tasks-done || viewItem == spec-implemented'],
-            ['speckit.archive', 'viewItem =~ /^spec-(active|tasks-done|implemented|completed)$/'],
-            ['speckit.reactivate', 'viewItem == spec-completed || viewItem == spec-archived'],
+            ['speckit.markCompleted', 'viewItem =~ /^spec-(active|tasks-done|implemented)(\\+terminal)?$/'],
+            ['speckit.archive', 'viewItem =~ /^spec-(active|tasks-done|implemented|completed)(\\+terminal)?$/'],
+            ['speckit.reactivate', 'viewItem =~ /^spec-(completed|archived)(\\+terminal)?$/'],
         ])('%s keeps its lifecycle gate', (command, gate) => {
             const entry = itemContext.find(e => e.command === command && e.when.includes(`view == ${SPECS_VIEW}`))!;
             expect(entry.when).toContain(gate);
