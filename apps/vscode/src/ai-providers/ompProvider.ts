@@ -28,7 +28,7 @@ export class OmpProvider extends CliTerminalProvider {
     protected readonly cliBinary = 'omp';
     protected readonly installHint = {
         displayName: 'Oh My Pi CLI',
-        installUrl: 'https://github.com/open-horizon-labs/oh-omp#installation',
+        installUrl: 'https://github.com/can1357/oh-my-pi#install',
     };
     protected readonly defaultTerminalTitle = 'SpecKit - Oh My Pi';
     protected readonly headlessTerminalName = 'Oh My Pi Background';
