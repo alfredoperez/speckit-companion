@@ -1,0 +1,173 @@
+/* Processes prototypes. Loaded by the Processes stories only. */
+
+.pp-stage {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.pp-caption {
+    max-width: 96ch;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+.pp-caption__tag {
+    margin-right: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    font-weight: 650;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.pp-stage--viewer { height: calc(100vh - 32px); }
+
+/* `contain` makes this box the containing block for the viewer's fixed footer. */
+.pp-stage--viewer .pp-stage__body {
+    flex: 1;
+    min-height: 0;
+    contain: layout;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.pp-stage--viewer :is(.viewer-container, .spec-editor) { height: 100%; }
+.pp-stage--viewer .actions { max-width: calc(100% - 40px); }
+
+.pp-stage--sidebar { width: max-content; }
+.pp-stage--sidebar .pp-caption { max-width: none; width: 0; min-width: 100%; }
+
+.pp-sidebars {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-5);
+}
+
+.pp-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.pp-sidebar__label {
+    color: var(--text-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+.pp-sidebar__box {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+/* VS Code splits the height between open panes and each one scrolls on its own. */
+.pp-sidebar--even .sk-sidebar .pane.expanded { flex: 1 1 0; }
+
+/* Rail: a step's own result, and the icon mark a report tab carries. */
+.pp-step-result {
+    margin-left: auto;
+    padding-left: var(--space-2);
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+}
+
+.pp-tone--success { color: var(--success); }
+.pp-tone--warning { color: var(--warning); }
+.pp-tone--error { color: var(--error); }
+.pp-tone--info { color: var(--info); }
+
+.pp-rail-icon {
+    flex-shrink: 0;
+    width: 16px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.step-tab.current .pp-rail-icon { color: var(--accent); }
+
+/* Landing view: spans the reading column and the outline column. */
+.pp-stage .content-area > #markdown-content.pp-wide {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 1040px;
+}
+
+.pp-glance .ag-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* The step a card came from is a label, and the accent hue is too dim for small type in some dark themes. */
+.pp-glance .ag-card__eyebrow { color: var(--text-muted); }
+
+@container viewer (max-width: 760px) {
+    .pp-glance .ag-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* The gallery has no tone for needs-clarification; here it reads as a warning. */
+.pp-verdict--warning :is(.ag-section--neutral, .ag-meta__chips .ag-chip--neutral) {
+    --tone: var(--warning);
+    --tone-bg: var(--warning-subtle);
+}
+
+/* New bug, New idea */
+.pp-create .spec-editor-content,
+.pp-create .editor-container { flex: none; min-height: 0; }
+.pp-create .spec-editor-textarea { flex: none; min-height: 0; height: 150px; }
+.pp-create .spec-editor-textarea.pp-short { flex: none; min-height: 0; height: 68px; }
+
+.pp-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pp-field-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: var(--space-4);
+}
+
+.pp-optional {
+    margin-left: var(--space-1);
+    color: var(--text-muted);
+    font-size: 0.85em;
+    font-weight: 400;
+}
+
+.pp-slug {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    border: 1px solid var(--vscode-input-border, var(--border));
+    border-radius: var(--radius-sm);
+    background-color: var(--vscode-input-background);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+}
+
+.pp-slug__root {
+    flex: none;
+    padding: 6px 0 6px 10px;
+    color: var(--text-muted);
+}
+
+.pp-input {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 10px 6px 0;
+    border: 0;
+    background: transparent;
+    color: var(--vscode-input-foreground);
+    font: inherit;
+}
+
+.pp-create .pp-select { flex: none; padding: 6px 8px; }
+.pp-create .workflow-pitch { margin: 0; }
+.pp-next__glyph { flex-shrink: 0; color: var(--info); line-height: 1.5; }
+
+/* A bug or idea folder path is the row's identity here, so it is not clipped the way a branch name is. */
+.pp-stage .spec-header-branch { max-width: none; }
