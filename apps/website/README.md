@@ -31,7 +31,7 @@ Pages are reference, not tutorials: they say what you do and what you see. The b
 - `Actions` holds the command or button of a section, above the prose. Commands go in `CodeLine`, which has the copy button.
 - `YouSee` is the short "What you see" note after an action.
 - `DocFigure` puts every screenshot in the same 16:9 light frame. It takes a file name from `docs/screenshots/generated/`, `content/media/web/`, `docs/screenshots/` or `public/canvas/`, and fails the build on a missing file or missing alt text. `recapture` marks a dark capture that is standing in until a light one exists; `grep -rn recapture src/content` lists them.
-- `ShotNeeded` reserves a frame for a screenshot that has not been taken yet.
+- A screenshot that does not exist yet is left out of the page. There is no placeholder frame.
 
 Choices between options go in a table, not in a paragraph of conditions. Paragraphs are never hard-wrapped.
 

@@ -308,7 +308,7 @@ body {
 
 /* A framed screenshot directly under a heading needs the gap a paragraph would
    get, or the frame crowds the heading it belongs to. */
-.sl-markdown-content .sl-heading-wrapper + figure:is(.dfig, .shot-needed) {
+.sl-markdown-content .sl-heading-wrapper + figure.dfig {
   margin-top: 1rem;
 }
 

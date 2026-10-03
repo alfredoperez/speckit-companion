@@ -7,7 +7,6 @@ import Button from '../../../../components/Button.astro';
 import CodeLine from '../../../../components/CodeLine.astro';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
-import ShotNeeded from '../../../../components/journey/ShotNeeded.astro';
 import WorkflowChoice from '../../../../components/journey/WorkflowChoice.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
 
@@ -45,11 +44,6 @@ A **Configure Constitution** prompt. The constitution holds the project's ground
 
 </YouSee>
 
-<ShotNeeded
-  shows="The Specs view in a folder with no Spec Kit setup, offering Initialize Workspace."
-  source="Live VS Code capture, light theme, on an empty folder."
-/>
-
 <DocFigure src="live-provider-picker.png" recapture caption="The AI provider setting decides which assistant receives every step." />
 
 ## Create a spec
@@ -80,16 +74,11 @@ While it runs, the viewer footer says **Step running, actions unlock when it set
 
 </YouSee>
 
-<ShotNeeded
-  shows="Your assistant's terminal running /speckit.companion.specify, beside the viewer showing Step running."
-  source="Live VS Code capture, light theme, mid-run."
-/>
-
 <DocFigure src="run-in-flight-x16x9.png" caption="After specify: Specification is checked, and Plan and Tasks wait for their documents." />
 
 ## Read the spec
 
-Click the spec's name in the sidebar. `spec.md` opens as a page, with the workflow's steps in a rail beside it.
+Click the spec's name in the sidebar. The spec opens as a page, with the workflow's steps in a rail beside it.
 
 <YouSee>
 

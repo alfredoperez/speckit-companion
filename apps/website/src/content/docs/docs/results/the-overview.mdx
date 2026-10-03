@@ -68,10 +68,10 @@ When some phases have no time, the head reads "Timing coverage: N of M phases", 
 
 | Evidence reads | Meaning |
 | --- | --- |
-| "N tests" | The linked test files exist |
+| "N tests" | The requirement names N tests, and every file is on disk |
 | "No test linked" | The requirement names no test |
-| "N tests not found" | It names tests whose files are missing |
-| "K of N found" | Some of the named files exist |
+| "N tests not found" | It names N tests, and none of the files is on disk |
+| "K of N found" | It names N tests, and only K of the files are on disk |
 
 The check is that the file exists. Nothing runs the test.
 

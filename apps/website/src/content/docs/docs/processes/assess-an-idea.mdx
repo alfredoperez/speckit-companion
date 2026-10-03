@@ -1,33 +1,60 @@
 ---
 title: Assess an idea
-description: What you can learn about an idea from its first step, before you commit to building it.
+description: Spec Kit's assess extension takes an idea through five stages to a go, needs-clarification or kill verdict before it becomes a spec.
 ---
 
-import DocFigure from '../../../../components/journey/DocFigure.astro';
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
 
-There is no separate command for sizing up an idea. You run [Specify](/docs/steps/specify) on it and stop there. A spec costs minutes and no code, and it tells you most of what you need to decide.
+<Actions>
+  <CodeLine command="specify extension add assess" />
+  <p>This adds Spec Kit's assess extension to the project. Where your Spec Kit has bundles, <code>specify bundle install assess</code> adds the extension and a guided workflow together.</p>
+</Actions>
 
-## What one specify run tells you
+Assessment answers "is this worth building?" before the spec steps answer "how do we build it?". It is Spec Kit's own process, separate from specify, plan and tasks. You enter it on purpose, and it never changes source code. The input is just an idea: pasted text, a URL, a ticket, or a pointer at code that already exists.
 
-| You want to know | Where to look |
-| --- | --- |
-| How big is it? | The sizing line on [the Overview](/docs/results/the-overview), such as `Sized simple: 6 files, 8 tasks projected`. The Companion workflow writes it. |
-| What is still unclear? | The open questions the spec marks in its own text |
-| What would done look like? | The acceptance scenarios and success criteria in the spec |
-| Does it touch something that already has a spec? | The living specs listed beside the intent on the Overview, when [living specs](/docs/results/living-specs) are on |
+## The five stages
 
-<DocFigure src="panel-read.png" caption="The top of the Overview: the intent, the approach, where it works and how the change was sized." />
+You run each one in your assistant, in order, usually once.
 
-## Dig further without building
-
-These are Spec Kit's own commands. Each sits under **Other actions** in the viewer footer, on the tab it is about.
-
-| Action | Tab | What it does |
+| Command | What it does | Writes |
 | --- | --- | --- |
-| **Clarify** | Specification | Asks you questions to settle what the spec left open |
-| **Checklist** | Plan | Generates a quality checklist for the plan |
-| **Analyze** | Tasks | Cross-checks the spec, the plan and the tasks for consistency |
+| `/speckit.assess.intake` | Captures the raw idea | `intake.md` |
+| `/speckit.assess.research` | Gathers evidence about users, the market and prior art, including evidence against the idea | `research.md` |
+| `/speckit.assess.define` | Defines the problem: users, goals, non-goals, success metrics and the cost of doing nothing | `problem.md` |
+| `/speckit.assess.shape` | Shapes two or three options with their size and trade-offs, and recommends one or none | `concept.md` |
+| `/speckit.assess.decide` | Scores the idea and gives the verdict | `decision.md` |
 
-## If the answer is no
+Name the idea once and reuse the name, for example `/speckit.assess.intake "Let users work offline" slug=offline-mode`, then `/speckit.assess.research slug=offline-mode`.
 
-Leave the spec where it is, or shelve it: hover it in the sidebar, open **More Actions…** and choose **Archive**. It moves to the Archived group and can be reactivated later.
+The order is not rigid. Define can run straight from your input, without intake or research. Shape and decide both need `problem.md`.
+
+## What it writes
+
+Each idea gets its own folder, `.specify/assessments/<slug>/`, with one markdown file per stage. The commands write only there.
+
+## The verdict
+
+| Verdict | What it means | What you do next |
+| --- | --- | --- |
+| **go** | The problem is valid, the evidence is adequate and a concept is shaped | Hand the summary in `decision.md` to `/speckit.specify` yourself. See [Specify](/docs/steps/specify). |
+| **needs-clarification** | Something is missing. A go without a shaped concept is downgraded to this. | Fill the gap in the file that has it, by editing it or asking your assistant, then have the decision revised. You do not rerun the stage. |
+| **kill** | Not worth building | Nothing. The reason is on record, which is a good outcome. |
+
+Most ideas should be killed or parked before shape.
+
+## In SpecKit Companion
+
+<YouSee label="Not shown yet">
+
+SpecKit Companion does not list or render assessments. There is no group for them in the sidebar and no view in the viewer, so you read the files under `.specify/assessments/` as plain markdown.
+
+</YouSee>
+
+Once a go becomes a spec through `/speckit.specify`, that spec shows up in the Specs view like any other.
+
+## Related
+
+- [Spec-driven development](/docs/start/spec-driven-development) covers the steps a go verdict leads into.
+- [Fix a bug](/docs/processes/fix-a-bug) is Spec Kit's other process outside the spec steps.
