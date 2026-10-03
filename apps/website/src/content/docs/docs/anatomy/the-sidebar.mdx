@@ -34,7 +34,7 @@ A fresh install shows Specs and Steering. Living Specs appears with the Companio
 1. **Toolbar.** Refresh, Filter, Sort, Collapse All or Expand All, Open Pipeline Builder and New Spec. Pipeline Builder needs the Companion Spec Kit extension.
 2. **Groups.** **Active**, **Completed** and **Archived**, each with a count. Empty groups are hidden.
 3. **Spec row.** The name comes from the folder, so `515-readable-spec-names` reads "Readable Spec Names". Click the name to open the viewer. Click the chevron to only expand.
-4. **Description line.** For a spec in flight, the last finished task and how long ago anything happened, like `T004 · 22h ago`.
+4. **Description line.** For a spec in flight, the last finished task and how long ago anything happened, like `T004 · 22h ago`. A spec you ran from Companion also names the assistant its last step went to, like `T004 · 22h ago · Claude Code`.
 5. **Document rows.** One per document, each with its own mark.
 6. **Hover actions.** **Resume** when it applies, and **More Actions…**. Right-click opens the same menu.
 
@@ -57,7 +57,7 @@ A fresh install shows Specs and Steering. Living Specs appears with the Companio
 | Hollow circle | The file exists and the workflow has not reached it |
 | `not created` | The file is not on disk yet |
 
-**Resume** finds where the spec stopped and sends one command to your assistant. It needs the Companion Spec Kit extension. **More Actions…** offers Mark Complete, Archive, Reactivate, copy and reveal actions, and Delete. **Set Status…** is the way out for a spec the buttons will not move.
+**Resume** finds where the spec stopped and sends one command to your assistant. It needs the Companion Spec Kit extension. **More Actions…** offers Mark Complete, Archive, Reactivate, copy and reveal actions, and Delete. **Set Status…** is the way out for a spec the buttons will not move. **Show Terminal** appears while the terminal Companion opened for the spec is still open, and brings it to the front.
 
 <MediaSlot
   feature="live-sidebar-more-actions"
@@ -97,6 +97,7 @@ Five rows: Pipeline Builder, Open Settings, Report a Bug, Request a Feature and 
 - **Empty workspace.** One welcome block offers **Create your first spec** and **Open a live sample**.
 - **Install badge.** Without the Companion Spec Kit extension, a dot on the SpecKit icon reads "Install SpecKit Companion". It clears once the extension is present.
 - **Upgrades** live in the Command Palette: `SpecKit: Upgrade…`.
+- **Which assistant.** The name on a row is the assistant Companion last sent that spec to. A step you type straight into an assistant is not recorded, and neither is the first step of a new spec, which runs before the spec folder exists. Companion cannot jump to a chat panel, because VS Code does not say which panel picked up a command, and it does not mark a spec as waiting for your answer.
 - **Several at once.** Shift-click or cmd-click to select specs, then mark, archive or reactivate them together.
 
 ## Next

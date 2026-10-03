@@ -490,6 +490,12 @@
         "category": "SpecKit"
       },
       {
+        "command": "speckit.specs.showTerminal",
+        "title": "Show Terminal",
+        "category": "SpecKit",
+        "icon": "$(terminal)"
+      },
+      {
         "command": "speckit.livingSpecs.drift",
         "title": "Check for Drift",
         "category": "SpecKit",
@@ -668,57 +674,62 @@
       "view/item/context": [
         {
           "command": "speckit.specs.resume",
-          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done) && speckit.companion.installed",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done)(\\+terminal)?$/ && speckit.companion.installed",
           "group": "inline"
         },
         {
           "submenu": "speckit.specs.rowMenu",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/",
           "group": "inline@9"
         },
         {
           "command": "speckit.specs.setStatus",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/",
           "group": "1_status@1"
         },
         {
           "command": "speckit.markCompleted",
-          "when": "view == speckit.views.explorer && (viewItem == spec-active || viewItem == spec-tasks-done || viewItem == spec-implemented)",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented)(\\+terminal)?$/",
           "group": "2_lifecycle@1"
         },
         {
           "command": "speckit.archive",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed)(\\+terminal)?$/",
           "group": "2_lifecycle@2"
         },
         {
           "command": "speckit.reactivate",
-          "when": "view == speckit.views.explorer && (viewItem == spec-completed || viewItem == spec-archived)",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(completed|archived)(\\+terminal)?$/",
           "group": "2_lifecycle@3"
         },
         {
           "command": "speckit.specs.copyName",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/",
           "group": "3_copy@1"
         },
         {
           "command": "speckit.specs.copyPath",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/",
           "group": "3_copy@2"
         },
         {
           "command": "speckit.revealItemInExplorer",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/",
           "group": "4_reveal@1"
         },
         {
           "command": "speckit.revealItemInOS",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/",
           "group": "4_reveal@2"
         },
         {
+          "command": "speckit.specs.showTerminal",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)\\+terminal$/",
+          "group": "4_reveal@3"
+        },
+        {
           "command": "speckit.delete",
-          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)$/",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/",
           "group": "5_danger@1"
         },
         {
@@ -834,17 +845,17 @@
         },
         {
           "command": "speckit.markCompleted",
-          "when": "viewItem == spec-active || viewItem == spec-tasks-done || viewItem == spec-implemented",
+          "when": "viewItem =~ /^spec-(active|tasks-done|implemented)(\\+terminal)?$/",
           "group": "2_lifecycle@1"
         },
         {
           "command": "speckit.archive",
-          "when": "viewItem =~ /^spec-(active|tasks-done|implemented|completed)$/",
+          "when": "viewItem =~ /^spec-(active|tasks-done|implemented|completed)(\\+terminal)?$/",
           "group": "2_lifecycle@2"
         },
         {
           "command": "speckit.reactivate",
-          "when": "viewItem == spec-completed || viewItem == spec-archived",
+          "when": "viewItem =~ /^spec-(completed|archived)(\\+terminal)?$/",
           "group": "2_lifecycle@3"
         },
         {
@@ -862,6 +873,11 @@
         {
           "command": "speckit.revealItemInOS",
           "group": "4_reveal@2"
+        },
+        {
+          "command": "speckit.specs.showTerminal",
+          "when": "viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)\\+terminal$/",
+          "group": "4_reveal@3"
         },
         {
           "command": "speckit.delete",
@@ -950,6 +966,10 @@
         },
         {
           "command": "speckit.specs.copyName",
+          "when": "false"
+        },
+        {
+          "command": "speckit.specs.showTerminal",
           "when": "false"
         },
         {

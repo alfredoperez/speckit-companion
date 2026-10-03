@@ -371,3 +371,78 @@ describe('the new fact', () => {
         cleanup(container);
     });
 });
+
+describe('the assistant a spec was sent to', () => {
+    it('shows the name it was given', () => {
+        navState.value = mockNavState({ specContextName: 'Payments Core', assistantName: 'Claude Code' });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-assistant')?.textContent).toBe('Claude Code');
+
+        cleanup(container);
+    });
+
+    it('is absent when none was recorded', () => {
+        navState.value = mockNavState({ specContextName: 'Payments Core', branch: 'main' });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-assistant')).toBeNull();
+        expect(container.querySelector('.spec-header-terminal-btn')).toBeNull();
+
+        cleanup(container);
+    });
+
+    it('still renders when the name is the only header fact', () => {
+        navState.value = mockNavState({
+            specContextName: 'Payments Core',
+            badgeText: null,
+            branch: null,
+            createdDate: null,
+            assistantName: 'Codex CLI',
+        });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-assistant')).not.toBeNull();
+
+        cleanup(container);
+    });
+
+    it('is not shown on a living spec', () => {
+        navState.value = mockNavState({
+            livingMode: true,
+            livingMeta: livingMeta(),
+            assistantName: 'Claude Code',
+            hasTerminal: true,
+        });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-assistant')).toBeNull();
+        expect(container.querySelector('.spec-header-terminal-btn')).toBeNull();
+
+        cleanup(container);
+    });
+});
+
+describe('the Show terminal button', () => {
+    it('asks the extension to reveal the terminal', () => {
+        const postMessage = jest.fn();
+        (globalThis as unknown as { vscode: unknown }).vscode = { postMessage };
+        navState.value = mockNavState({ specContextName: 'Payments Core', hasTerminal: true });
+        const container = renderInto();
+
+        container.querySelector<HTMLButtonElement>('.spec-header-terminal-btn')?.click();
+
+        expect(postMessage).toHaveBeenCalledWith({ type: 'showTerminal' });
+
+        cleanup(container);
+    });
+
+    it('is absent without a live terminal', () => {
+        navState.value = mockNavState({ specContextName: 'Payments Core', assistantName: 'Claude Code' });
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-terminal-btn')).toBeNull();
+
+        cleanup(container);
+    });
+});

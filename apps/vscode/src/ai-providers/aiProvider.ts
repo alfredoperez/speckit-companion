@@ -570,6 +570,12 @@ export function getConfiguredProviderType(): AIProviderType {
     return configured in PROVIDER_PATHS ? configured : AIProviders.CLAUDE;
 }
 
+const KNOWN_PROVIDER_TYPES: readonly AIProviderType[] = Object.values(AIProviders);
+
+export function coerceProviderType(value: unknown): AIProviderType | undefined {
+    return KNOWN_PROVIDER_TYPES.find(type => type === value);
+}
+
 /**
  * Prompt user to select their AI provider and save the selection.
  * Shows a QuickPick with available providers and saves choice to global settings.

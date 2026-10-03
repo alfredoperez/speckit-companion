@@ -927,3 +927,48 @@ describe('specs title-bar handlers', () => {
         expect(sortState.setMode).not.toHaveBeenCalled();
     });
 });
+
+describe('speckit.specs.showTerminal command handler', () => {
+    const { rememberSpecTerminal, _resetForTests } = jest.requireActual('../specTerminals');
+    const liveTerminal = () => ({ show: jest.fn(), exitStatus: undefined }) as any;
+    const handlerFor = () => captureCommandHandlers(createMockContext()).get('speckit.specs.showTerminal')!;
+
+    beforeEach(() => {
+        _resetForTests();
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = undefined;
+    });
+
+    it('shows the terminal of the spec row it was invoked on', () => {
+        const terminal = liveTerminal();
+        rememberSpecTerminal('/ws/specs/001-a', terminal);
+
+        handlerFor()({ label: '001-a', specPath: 'specs/001-a' });
+
+        expect(terminal.show).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows the terminal of a spec directory passed as a path', () => {
+        const terminal = liveTerminal();
+        rememberSpecTerminal('/ws/specs/001-a', terminal);
+
+        handlerFor()('/ws/specs/001-a');
+
+        expect(terminal.show).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves another spec\'s terminal alone', () => {
+        const other = liveTerminal();
+        rememberSpecTerminal('/ws/specs/002-b', other);
+
+        expect(() => handlerFor()({ label: '001-a', specPath: 'specs/001-a' })).not.toThrow();
+        expect(other.show).not.toHaveBeenCalled();
+    });
+
+    it('does nothing for a spec with no remembered terminal', () => {
+        expect(() => handlerFor()('/ws/specs/001-a')).not.toThrow();
+    });
+});

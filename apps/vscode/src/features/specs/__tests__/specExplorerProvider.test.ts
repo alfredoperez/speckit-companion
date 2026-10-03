@@ -8,6 +8,7 @@ import {
     isSpecGroupItem,
 } from '../specExplorerProvider';
 import { SpecsFilterState } from '../specsFilterState';
+import { rememberSpecTerminal, _resetForTests as resetSpecTerminals } from '../specTerminals';
 
 // Mock fs module
 jest.mock('fs');
@@ -422,6 +423,21 @@ describe('SpecExplorerProvider', () => {
             expect(specs[0].label).toBe('My Feature');
             expect(specs[0].description).toBe('specs/a');
         });
+
+        it('keeps the assistant beside the folder on a duplicate-named spec', async () => {
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([
+                { name: 'my-feature', path: 'specs/a/my-feature' },
+            ]);
+            (hasDuplicateNames as jest.Mock).mockReturnValue(new Set(['my-feature']));
+            (readSpecContextSyncSafe as jest.Mock).mockReturnValue({
+                workflow: 'default',
+                status: 'draft',
+                assistant: 'codex',
+            });
+            const groups = await provider.getChildren();
+            const specs = await provider.getChildren(groups[0]);
+            expect(specs[0].description).toBe('specs/a · Codex CLI');
+        });
     });
 
     describe('spec item icons based on active state and context', () => {
@@ -779,6 +795,44 @@ describe('SpecExplorerProvider', () => {
             });
             expect(row.description).toBe('just now');
             expect(row.description).not.toMatch(/plan/i);
+        });
+
+        it('adds the recorded assistant after the task and time', async () => {
+            const at = new Date(Date.now() - 30 * 1000).toISOString();
+            const row = await getSpecRow({
+                workflow: 'default',
+                currentStep: 'plan',
+                status: 'planned',
+                assistant: 'gemini',
+                history: [{ step: 'plan', substep: null, kind: 'start', by: 'extension', at }],
+            });
+            expect(row.description).toBe('just now · Gemini CLI');
+            expect(row.tooltip).toContain('Assistant: Gemini CLI');
+        });
+
+        it('shows the assistant alone when the spec has no history', async () => {
+            const row = await getSpecRow({ workflow: 'default', status: 'specifying', assistant: 'claude' });
+            expect(row.description).toBe('Claude Code');
+        });
+
+        it.each(['constructor', 'Some Other Tool', 42])(
+            'shows no assistant for the unrecognised recorded value %p',
+            async value => {
+                const row = await getSpecRow({ workflow: 'default', status: 'specifying', assistant: value });
+                expect(row.description).toBeUndefined();
+            },
+        );
+
+        it('marks a row whose terminal is still open, and only that row', async () => {
+            const terminal = { exitStatus: undefined, show: jest.fn() } as unknown as vscode.Terminal;
+            rememberSpecTerminal(path.join(WORKSPACE_ROOT, 'specs/my-feature'), terminal);
+            const open = await getSpecRow({ workflow: 'default', status: 'specifying' });
+            expect(open.contextValue).toBe('spec-active+terminal');
+            expect(isSpecLifecycleItem(open.contextValue)).toBe(true);
+
+            resetSpecTerminals();
+            const closed = await getSpecRow({ workflow: 'default', status: 'specifying' });
+            expect(closed.contextValue).toBe('spec-active');
         });
 
         // No history → no step-derived description (no stray "—" artifact).
@@ -1200,9 +1254,12 @@ describe('speckit.markCompleted menu eligibility', () => {
             m => m.command === 'speckit.markCompleted' && m.when.includes('viewItem')
         );
         expect(markCompleted).toBeDefined();
-        expect(markCompleted!.when).toContain('spec-active');
-        expect(markCompleted!.when).toContain('spec-tasks-done');
-        expect(markCompleted!.when).toContain('spec-implemented');
+        const pattern = /viewItem =~ \/(.+)\/$/.exec(markCompleted!.when);
+        const matches = new RegExp(pattern![1]);
+        for (const value of ['spec-active', 'spec-tasks-done', 'spec-implemented', 'spec-active+terminal']) {
+            expect(matches.test(value)).toBe(true);
+        }
+        expect(matches.test('spec-completed')).toBe(false);
     });
 });
 

@@ -21,6 +21,7 @@ import {
 } from "./panelStateComputer";
 import { PanelInstance, PanelRegistry } from "./panelRegistry";
 import { getAIProvider } from "../../extension";
+import { getConfiguredProviderType } from "../../ai-providers/aiProvider";
 import {
   calculatePhases,
   calculateTaskCompletion,
@@ -69,6 +70,8 @@ import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests }
 import { enrichLivingSpecs } from "../living-specs/livingSpecsContent";
 import { bugDirectoryOf, bugReportDocuments, bugReportKindOf, isBugsPath, readBugReport } from "../bugs/bugReports";
 import { featureSpecPath } from "../specs/featureSpecPath";
+import { noteSpecDispatch, resolveSpecAssistant } from "../specs/specAssistant";
+import { getSpecTerminal } from "../specs/specTerminals";
 import { StepCompletionNotifier, NotifierContext } from "./stepCompletionNotifier";
 import { StepName, STEP_NAMES, Status, ViewerState as CoreViewerState } from "../../core/types/specContext";
 import {
@@ -663,7 +666,12 @@ export class SpecViewerProvider {
       refreshContextIfDisplaying: ctxPath => this.refreshContextIfDisplaying(ctxPath),
       refreshPanelTitle: dir => this.refreshPanelTitle(dir),
       resolveWorkflowSteps: () => this.resolveWorkflowSteps(specDirectory),
-      executeInTerminal: (prompt: string) => getAIProvider().executeInTerminal(prompt),
+      executeInTerminal: async (prompt: string) => {
+        const assistant = getConfiguredProviderType();
+        const terminal = await getAIProvider().executeInTerminal(prompt);
+        noteSpecDispatch(specDirectory, terminal, assistant);
+        return terminal;
+      },
       outputChannel: this.outputChannel,
       context: this.context,
       offerLivingUndo: (dir, action) => this.offerLivingUndo(dir, action),
@@ -1091,6 +1099,9 @@ export class SpecViewerProvider {
         undefined,     // livingOverview — default
         undefined,     // livingUndo — default
         instance.state.removedDocument,
+        undefined,     // readOnly — default
+        resolveSpecAssistant(featureCtx),
+        getSpecTerminal(specDirectory) !== undefined,
       );
 
       this.outputChannel.appendLine(
@@ -1427,6 +1438,8 @@ export class SpecViewerProvider {
       lastUpdatedDate: derived.lastUpdatedDate,
       specContextName: resolveSpecDisplayName(featureCtx?.specName, specDirectory),
       branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
+      assistantName: resolveSpecAssistant(featureCtx),
+      hasTerminal: getSpecTerminal(specDirectory) !== undefined,
       currentStep: featureCtx?.currentStep ?? resolvedType ?? null,
       filePath: doc?.filePath ?? null,
       docTypeLabel: getDocTypeLabel(featureCtx?.currentStep ?? resolvedType),

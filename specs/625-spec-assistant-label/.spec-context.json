@@ -1,0 +1,679 @@
+{
+  "workflow": "companion",
+  "specName": "Assistant name and Show terminal on a spec",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T20:16:41.594Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:16:54.615Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:18:00.634Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-03T20:18:01.014Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T20:18:10.974Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:21:51.317Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:22:37.097Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:22:37.193Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:23:32.243Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:23:32.542Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T20:24:20.206Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:24:20.332Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:24:20.735Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:24:20.844Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T20:24:28.961Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:25:17.705Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:25:40.327Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:25:42.908Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:26:44.365Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:27:34.277Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T20:28:01.695Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:14:40.957Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:14:41.048Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:15:15.153Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:15:15.253Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:15:42.080Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:16:06.966Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:16:07.037Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:16:07.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:16:07.178Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:16:07.250Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:16:07.320Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:16:07.394Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:16:27.574Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:20:04.125Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:20:04.145Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:20:04.241Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:20:04.698Z"
+    },
+    {
+      "step": "implement",
+      "substep": "complete",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T21:20:10.452Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "all 20 tasks done, full suite passes",
+  "coverage": {
+    "FR-001": {
+      "title": "Record which assistant a dispatched step was sent to",
+      "tasks": [
+        "T002",
+        "T005",
+        "T006",
+        "T014"
+      ],
+      "tests": [
+        "dispatchStep.test.ts",
+        "specAssistant.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Sidebar row shows the recorded assistant name",
+      "tasks": [
+        "T008",
+        "T010"
+      ],
+      "tests": [
+        "specExplorerProvider.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Viewer shows the same assistant name",
+      "tasks": [
+        "T004",
+        "T007",
+        "T009",
+        "T011"
+      ],
+      "tests": [
+        "SpecHeader.test.tsx"
+      ]
+    },
+    "FR-004": {
+      "title": "Sidebar and viewer read the name from one resolved source",
+      "tasks": [
+        "T005",
+        "T007",
+        "T010"
+      ],
+      "tests": [
+        "specAssistant.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "No name for an unrecorded or unknown assistant",
+      "tasks": [
+        "T001",
+        "T005",
+        "T008"
+      ],
+      "tests": [
+        "coerceProviderType.test.ts",
+        "specAssistant.test.ts",
+        "specExplorerProvider.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "Recording never changes lifecycle and never blocks dispatch",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "specAssistant.test.ts",
+        "dispatchStep.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Show terminal offered only while the spec terminal is open",
+      "tasks": [
+        "T003",
+        "T010",
+        "T011",
+        "T012",
+        "T015"
+      ],
+      "tests": [
+        "manifest.test.ts",
+        "SpecHeader.test.tsx",
+        "specExplorerProvider.test.ts"
+      ]
+    },
+    "FR-008": {
+      "title": "Show terminal reveals the most recent spec terminal",
+      "tasks": [
+        "T003",
+        "T014",
+        "T017"
+      ],
+      "tests": [
+        "specTerminals.test.ts",
+        "specCommands.test.ts",
+        "messageHandlers.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "Closing the terminal removes the action without a refresh",
+      "tasks": [
+        "T003",
+        "T018"
+      ],
+      "tests": [
+        "specTerminals.test.ts"
+      ]
+    },
+    "FR-010": {
+      "title": "Docs state the chat-panel and needs-input limits",
+      "tasks": [
+        "T019"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 12,
+    "projectedTasks": 14,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "No jump to an IDE chat panel",
+    "No needs-your-input marker",
+    "No header inside the assistant chat panel"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/specs (dispatchStep, terminalStepTracker, specExplorerProvider)",
+    "area: apps/vscode/src/features/spec-viewer and apps/vscode/webview",
+    "area: apps/vscode/src/ai-providers (provider display names)",
+    "constraint: one fact, one derivation — sidebar and viewer read one resolved assistant name",
+    "constraint: coerce user-authored .spec-context.json values through an allow-list",
+    "constraint: never interpolate user data into an HTML attribute"
+  ],
+  "intent": "Show which assistant a spec was dispatched to and let the developer reveal its terminal",
+  "decisions": [
+    {
+      "decision": "Store the provider id in an additive assistant field, written after the run resolves",
+      "why": "Stable, re-resolved through an allow-list on read, and a failed dispatch records nothing",
+      "rejected": "Memory only, or storing the display name"
+    },
+    {
+      "decision": "One resolver, resolveSpecAssistant, feeds the sidebar row and the viewer navState",
+      "why": "The webview cannot re-derive the name, so the two cannot disagree",
+      "rejected": "The in PROVIDER_PATHS check, which accepts prototype keys"
+    },
+    {
+      "decision": "A separate specTerminals registry keyed by spec directory",
+      "why": "terminalStepTracker completes a step on close and skips some steps",
+      "rejected": "A reverse lookup inside terminalStepTracker"
+    },
+    {
+      "decision": "Gate the row action with a +terminal contextValue suffix",
+      "why": "viewItem is the only per-row gate and manifest.test pins every clause",
+      "rejected": "A global any-terminal key or a selection key"
+    },
+    {
+      "decision": "Note the dispatch inside dispatchStep with a duck-typed terminal check",
+      "why": "One seam covers the sidebar and the viewer, and dispatchStep is generic over what run returns",
+      "rejected": "Each caller registering its own terminal"
+    },
+    {
+      "decision": "Pass the +terminal suffix through the row constructor",
+      "why": "contextValue is read-only on the item and isSpecLifecycleItem strips the suffix",
+      "rejected": "Mutating the item after construction"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Record the provider id at the dispatch seam, resolve it once for both surfaces, track the spec terminal in its own registry",
+      "key_finding": "Viewer dispatches discard the terminal today and Create Spec has no folder to record on"
+    },
+    "tasks": {
+      "summary": "20 tasks: Foundational (7), US1 (4), US2 (7), Polish (2)"
+    },
+    "implement": {
+      "summary": "Assistant name on the sidebar row and viewer header, and a Show Terminal action for a spec with a live terminal"
+    }
+  },
+  "approach": "Record the provider id on the spec after a dispatch resolves and remember the returned terminal in a small registry. One allow-list resolver names the assistant for the sidebar row and the viewer header. A Show Terminal command reveals the newest live terminal and both surfaces refresh when it closes.",
+  "currentTask": "T020",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added coerceProviderType, an allow-list over AIProviders, with tests for prototype keys, non-strings and renamed ids",
+      "files": [
+        "apps/vscode/src/ai-providers/aiProvider.ts",
+        "apps/vscode/src/ai-providers/__tests__/coerceProviderType.test.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added the optional assistant provider-id field to SpecContext and to the spec-context schema",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts",
+        "apps/vscode/src/core/types/spec-context.schema.json"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added the spec terminal registry: remember, newest live lookup, forget on close, change callback, with tests",
+      "files": [
+        "apps/vscode/src/features/specs/specTerminals.ts",
+        "apps/vscode/src/features/specs/__tests__/specTerminals.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added resolveSpecAssistant, recordSpecAssistant and noteSpecDispatch with 15 tests",
+      "files": [
+        "apps/vscode/src/features/specs/specAssistant.ts",
+        "apps/vscode/src/features/specs/__tests__/specAssistant.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "dispatchStep notes the dispatch after the run resolves; tests for resolve, throw and suppressed",
+      "files": [
+        "apps/vscode/src/features/specs/dispatchStep.ts",
+        "apps/vscode/src/features/specs/__tests__/dispatchStep.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Viewer navState carries assistantName and hasTerminal on first paint and on every update",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts",
+        "apps/vscode/src/features/spec-viewer/html/generator.ts",
+        "apps/vscode/src/features/workflows/types.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Row description and tooltip carry the resolved assistant; a row with a live terminal gets the +terminal suffix",
+      "files": [
+        "apps/vscode/src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Row tests: name after task and time, alone, unknown values, duplicate-named spec, terminal marker",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Header renders the assistant chip and the Show terminal button on feature specs, with two stories",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/SpecHeader.tsx",
+        "apps/vscode/webview/styles/spec-viewer/_content.css",
+        "apps/vscode/webview/src/spec-viewer/components/SpecHeader.stories.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Header tests: label shown, absent, sole fact, hidden on living specs; button posts showTerminal",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/SpecHeader.test.tsx"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Documented the label, Show Terminal and the two limits in README, changelog and the site sidebar and viewer pages",
+      "files": [
+        "README.md",
+        "CHANGELOG.md",
+        "apps/website/src/content/docs/docs/anatomy/the-sidebar.mdx",
+        "apps/website/src/content/docs/docs/anatomy/anatomy-of-the-spec-viewer.mdx"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Manifest tests pin the suffix-tolerant row clauses and Show Terminal in both menus",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Viewer tests: showTerminal runs the command, read-only and bug panels drop it",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Registered speckit.specs.showTerminal and noted the dispatch on the clarify, analyze and checklist path",
+      "files": [
+        "apps/vscode/src/features/specs/specCommands.ts",
+        "apps/vscode/src/core/constants.ts",
+        "apps/vscode/src/features/specs/__tests__/specCommands.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Contributed Show Terminal to both row menus and made every spec-row when clause tolerate +terminal",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Selection keys already read the lifecycle value through isSpecLifecycleItem, which strips the suffix; no code change needed",
+      "files": [
+        "apps/vscode/src/features/specs/selectionContextKeys.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Added the showTerminal viewer adapter, left out of the read-only allow-list",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Registered the spec terminal registry to refresh the sidebar and open viewers on change",
+      "files": [
+        "apps/vscode/src/extension.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "NavState gained assistantName and hasTerminal; showTerminal viewer message declared",
+      "files": [
+        "apps/vscode/src/protocol/viewer.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "compile, full jest suite (3492 tests) and vsce package all pass",
+      "files": [
+        "package.json"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "> speckit-companion@0.35.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "unit and integration tests",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.5,
+      "result": "\u001b[1mSnapshots:   \u001b[22m0 total · \u001b[1mTime:\u001b[22m        \u001b[1m\u001b[33m69.879 s\u001b[39m\u001b[22m · \u001b[2mRan all test suites\u001b[22m\u001b[2m.\u001b[22m"
+    },
+    {
+      "what": "vsce package builds the extension",
+      "command": "npm run package",
+      "result": "Packaged speckit-companion-0.35.0.vsix, 335 files"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Create Spec and Auto dispatch before the spec folder exists, so the first step of a new spec records no assistant",
+      "step": "implement"
+    },
+    {
+      "note": "Not exercised in a running Extension Development Host; menus and header verified by unit tests and manifest tests only",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: the story worker's seven task finishes were folded in one burst, so their durations are not trustworthy"
+    }
+  ]
+}

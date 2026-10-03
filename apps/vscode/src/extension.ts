@@ -10,6 +10,7 @@ import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } f
 import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, SpecsFilterState, SpecsSortState } from './features/specs';
 import { LivingSpecsExplorerProvider, registerLivingSpecsCommands, registerLivingSpecsStatusBar } from './features/living-specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
+import { registerSpecTerminals } from './features/specs/specTerminals';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
 import { ensureStandardFamily } from './features/settings/companionPresetReconciler';
@@ -246,6 +247,11 @@ export async function activate(context: vscode.ExtensionContext) {
     // Spec viewer needs to exist before setupFileWatchers so the .spec-context.json
     // watcher can refresh the open viewer when transitions are appended externally.
     const specViewer = registerSpecViewerCommands(context, outputChannel);
+
+    context.subscriptions.push(registerSpecTerminals(() => {
+        specExplorer.refresh();
+        void specViewer.refreshOpenPanels();
+    }));
 
     // Set up file watchers
     setupFileWatchers(context, specExplorer, steeringExplorer, specViewer, outputChannel);

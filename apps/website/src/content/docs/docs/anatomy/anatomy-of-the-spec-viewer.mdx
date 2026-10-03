@@ -18,7 +18,7 @@ The spec viewer shows your spec markdown as a readable page. The file on disk is
 
 ## The tour
 
-1. **Header.** The spec's name, a status badge, the branch and the creation date.
+1. **Header.** The spec's name, a status badge, the branch and the creation date. A spec you ran from Companion adds the assistant its last step went to, and a **Show terminal** button while that terminal is still open.
 2. **Run strip.** Tasks done, requirements traced, checks, active time and a pull request link.
 3. **Step rail.** One tab for each step that writes a document, plus the [Overview](/docs/anatomy/anatomy-of-the-overview) at the top.
 4. **Document.** Your markdown, with requirements, scenarios and tasks drawn as rows and chips.
@@ -101,6 +101,7 @@ Open a bug from the sidebar's **Bugs** group and the viewer shows its reports, w
 - **Two badges are renamed.** The stored status `tasking` shows as **Creating Tasks**, and `ready-to-implement` as **Tasks Created**.
 - **Broken run record.** If `.spec-context.json` cannot be parsed, the viewer shows the spec read-only and offers **Reset context**, which backs the file up first.
 - **Adopted requirements.** In a living spec, requirements drafted from existing code carry an **adopted** badge and an **Approve** control.
+- **Show terminal is for terminals.** An assistant that runs in a chat panel shows its name and no button: VS Code does not tell an extension which chat panel picked up a command. After a reload the name stays and the button is gone.
 - **Offline.** Syntax highlighting and Mermaid load from a CDN, so offline you get plain code and diagram source.
 
 ## Next

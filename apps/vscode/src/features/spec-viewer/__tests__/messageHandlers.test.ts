@@ -468,6 +468,38 @@ describe('messageHandlers - clarify (built-in optional commands)', () => {
     });
 });
 
+describe('messageHandlers - showTerminal', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('runs the Show Terminal command for the spec the panel shows', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'showTerminal' });
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.specs.showTerminal', SPEC_DIR);
+    });
+
+    it('drops the message on a read-only panel', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps({ readOnly: true }));
+
+        await handler({ type: 'showTerminal' });
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+    });
+
+    it('drops the message on a bug report panel', async () => {
+        const deps = createMockDeps({
+            getInstance: jest.fn().mockReturnValue({ state: { specDirectory: SPEC_DIR, bug: true } }),
+        });
+
+        await createMessageHandlers(SPEC_DIR, deps)({ type: 'showTerminal' });
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+    });
+});
+
 describe('messageHandlers - stepperClick', () => {
     beforeEach(() => {
         jest.clearAllMocks();

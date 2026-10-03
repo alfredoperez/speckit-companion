@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { resolveSpecAssistant } from './specAssistant';
+import { getSpecTerminal } from './specTerminals';
 import { BaseTreeDataProvider } from '../../core/providers';
 import {
     resolveSpecPipeline,
@@ -82,8 +84,18 @@ export function lifecycleContextValue(
     }
 }
 
+export const SPEC_TERMINAL_SUFFIX = '+terminal';
+
+/** The lifecycle value of a spec row, with or without the live-terminal suffix. */
+function specLifecycleOf(contextValue: string | undefined): string | undefined {
+    return contextValue?.endsWith(SPEC_TERMINAL_SUFFIX)
+        ? contextValue.slice(0, -SPEC_TERMINAL_SUFFIX.length)
+        : contextValue;
+}
+
 export function isSpecLifecycleItem(contextValue: string | undefined): boolean {
-    return contextValue !== undefined && SPEC_LIFECYCLE_CONTEXT_VALUES.has(contextValue);
+    const lifecycle = specLifecycleOf(contextValue);
+    return lifecycle !== undefined && SPEC_LIFECYCLE_CONTEXT_VALUES.has(lifecycle);
 }
 
 export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
@@ -321,7 +333,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                     this.expandAllSpecs
                         ? vscode.TreeItemCollapsibleState.Expanded
                         : vscode.TreeItemCollapsibleState.Collapsed,
-                    lifecycleContextValue(specContext),
+                    lifecycleContextValue(specContext)
+                        + (getSpecTerminal(specFullPath) ? SPEC_TERMINAL_SUFFIX : ''),
                     this.context,
                     spec.name,
                     undefined,
@@ -340,7 +353,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 );
                 if (duplicateNames.has(spec.name)) {
                     const parentDir = spec.path.substring(0, spec.path.lastIndexOf('/'));
-                    item.description = parentDir;
+                    const assistant = resolveSpecAssistant(specContext);
+                    item.description = assistant ? `${parentDir} · ${assistant}` : parentDir;
                 }
                 // Encode the toggle flag into the item id so VS Code treats
                 // the item as fresh on each toggle and honors the emitted
@@ -779,20 +793,22 @@ class SpecItem extends vscode.TreeItem {
                 this.iconPath = new vscode.ThemeIcon('beaker');
             }
             // The per-document step icons already convey the step, so the row
-            // description keeps only what they can't show — the active task and
-            // the last-active relative time.
+            // description keeps only what they can't show — the active task, the
+            // last-active relative time and the assistant it was sent to.
             const lastTransition = deriveLastTransition(specContext);
-            if (lastTransition) {
-                const kept: string[] = [];
-                if (lastTransition.task) {
-                    kept.push(lastTransition.task);
-                }
-                if (lastTransition.relative) {
-                    kept.push(lastTransition.relative);
-                }
-                if (kept.length > 0) {
-                    this.description = kept.join(' · ');
-                }
+            const assistant = resolveSpecAssistant(specContext);
+            const kept: string[] = [];
+            if (lastTransition?.task) {
+                kept.push(lastTransition.task);
+            }
+            if (lastTransition?.relative) {
+                kept.push(lastTransition.relative);
+            }
+            if (assistant) {
+                kept.push(assistant);
+            }
+            if (kept.length > 0) {
+                this.description = kept.join(' · ');
             }
             const tooltipLines = [label];
             const friendly = specStatusLabel(specContext?.status);
@@ -804,6 +820,9 @@ class SpecItem extends vscode.TreeItem {
                     ? `${lastTransition.label} · ${lastTransition.relative}`
                     : lastTransition.label;
                 tooltipLines.push(`Last activity: ${activity}`);
+            }
+            if (assistant) {
+                tooltipLines.push(`Assistant: ${assistant}`);
             }
             if (isActive) {
                 tooltipLines.push('A workflow step is running now');
