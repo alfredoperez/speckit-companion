@@ -1,0 +1,49 @@
+---
+title: Tasks
+description: The step that breaks a plan into an ordered checklist. How the list is laid out and how the viewer draws it.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="/speckit.companion.tasks" prompt={false} />
+  <p>Or press <strong>Tasks</strong> in the viewer footer, under <code>Next: Tasks</code>. The stock Spec Kit workflow sends <code>/speckit.tasks</code>.</p>
+</Actions>
+
+Tasks turns the plan into `tasks.md`, a checklist in the order the work has to happen. It is the map [Implement](/docs/steps/implement) follows.
+
+## How the list is laid out
+
+| In `tasks.md` | Meaning |
+| --- | --- |
+| `## Phase N: Title` | A phase. The Companion workflow makes one per user story, after a shared setup. |
+| `- [ ] T004 ...` | One task, with its checkbox |
+| `[P]` | The task can run alongside its neighbours |
+| `[US2]` | The user story the task serves |
+| A join line between groups of tasks | Everything above it must finish before anything below starts |
+
+The Companion workflow groups each phase into waves separated by those join lines. Tasks inside a wave are independent of each other.
+
+## When it settles
+
+<YouSee>
+
+**Tasks** is checked in the rail and the badge reads **Tasks Created**. The Tasks tab draws each phase as a header with its tasks under it, and the footer offers **Next: Implement**.
+
+</YouSee>
+
+<DocFigure src="panel-step-rail.png" caption="Tasks grouped by phase, each with its checkbox, and the rail showing which documents are done." />
+
+## Check the list before implementing
+
+**Analyze**, under **Other actions** in the footer, is Spec Kit's command that cross-checks the spec, the plan and the tasks for consistency.
+
+<DocFigure src="live-footer-other-actions.png" recapture caption="The footer on the Tasks tab: Next: Implement, with Other actions open on Analyze." />
+
+## Related
+
+- [Implement](/docs/steps/implement) is the next step.
+- [Reading a spec](/docs/results/reading-a-spec) lists everything the viewer draws from a task list.

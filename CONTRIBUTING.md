@@ -103,7 +103,7 @@ For `chore` commits (version bumps, release prep) the scope is usually omitted.
 |---|---|
 | A new AI provider | "Supported AI Providers" matrix + provider count + `package.json` enum |
 | A new configuration setting | "Configuration" section (JSON example + value table) |
-| A new sidebar action | the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) + the "Sidebar at a Glance" summary in README |
+| A new sidebar action | the site's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) + the "Sidebar at a Glance" summary in README |
 | A new webview UI element | "Reading Specs" subsection + retake the screenshot |
 
 If your change is documented in `CLAUDE.md`'s map but not in the README after your PR, reviewers will ask. Save the round trip.
@@ -122,8 +122,8 @@ If your change is documented in `CLAUDE.md`'s map but not in the README after yo
 Long-form docs live under `docs/` and are linked from the README:
 
 - [docs/architecture.md](docs/architecture.md) — module structure, extension/webview boundaries, build pipeline
-- [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) — sidebar tree-view behaviour: filters, sorts, lifecycle groups, badges, transitions
-- [spec viewer anatomy](https://speckit-companion.dev/docs/anatomy/anatomy-of-the-spec-viewer) — spec viewer behaviour: reading a spec, commenting, moving a spec forward, what the run recorded
+- [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) — sidebar tree-view behaviour: filters, sorts, lifecycle groups, badges, transitions
+- [spec viewer anatomy](https://speckit-companion.dev/docs/navigate/inside-the-viewer) — spec viewer behaviour: reading a spec, commenting, moving a spec forward, what the run recorded
 - `apps/vscode/src/core/types/specContext.ts` — `.spec-context.json` contract (writer rules in [docs/architecture.md](docs/architecture.md#data-flow))
 - [CLAUDE.md](CLAUDE.md) — instructions for AI assistants editing this repo, plus the README docs map and per-release checklist
 

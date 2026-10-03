@@ -1,0 +1,56 @@
+---
+title: Fix a bug
+description: Spec Kit's bug extension assesses, fixes and tests a bug in three commands. SpecKit Companion lists the reports and shows them read-only.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="specify extension add bug" />
+  <p>This adds Spec Kit's bug extension to the project. Where your Spec Kit has bundles, <code>specify bundle install bugfix</code> adds the extension and a guided workflow together.</p>
+</Actions>
+
+A bug does not go through specify, plan and tasks. Spec Kit's bug extension has its own three commands. You run them from your assistant. SpecKit Companion does not start them. It shows the reports they write.
+
+## The three commands
+
+| Command | What it does | Writes |
+| --- | --- | --- |
+| `/speckit.bug.assess` | Reads a bug report, pasted or from a URL, judges whether it is a real bug, finds the suspected code and proposes a fix. Changes no code. | `assessment.md` |
+| `/speckit.bug.fix` | Applies the proposed fix and records exactly what changed. The only one that edits code. | `fix.md` |
+| `/speckit.bug.test` | Runs the reproduction and any added tests again, and records the result. Changes no code. | `test.md` |
+
+Name the bug once and reuse the name, for example `/speckit.bug.assess https://github.com/example/repo/issues/1234 slug=callback-token`, then `/speckit.bug.fix slug=callback-token`.
+
+Each bug gets its own folder, `.specify/bugs/<slug>/`, holding those three files.
+
+## In the sidebar
+
+<YouSee>
+
+A **Bugs** group in the Specs view, after Archived. It appears once at least one report exists. Each row is named by the bug's title and reads the reports it has and the latest outcome, like `assess · fix · test · verified`.
+
+</YouSee>
+
+Expand a bug for Assessment, Fix and Test. A report not written yet reads `not created`.
+
+| The outcome on the row comes from | When |
+| --- | --- |
+| The test report's result | The test report states one |
+| The fix report's status | Otherwise, when the fix report states one |
+| The assessment's verdict | Otherwise |
+
+Filter narrows bugs along with specs. Sort leaves bugs in name order.
+
+## In the viewer
+
+Click a bug or one of its reports. The viewer opens with **Assessment**, **Fix** and **Test** on the rail, and a report that does not exist yet greyed out. The header shows the bug's title, and the badge shows the latest outcome, such as **VERIFIED**, or **BUG** when there is none.
+
+The page is for reading. There is no footer, no Overview and no comment button, so nothing here runs the next command, and the viewer writes nothing to the bug's folder.
+
+## Related
+
+- [The sidebar](/docs/navigate/the-sidebar) covers the rest of the Specs view.
+- [Assess an idea](/docs/processes/assess-an-idea) is Spec Kit's other process outside the spec steps.

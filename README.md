@@ -7,7 +7,7 @@
 
 ### [speckit-companion.dev](https://speckit-companion.dev)
 
-**[See it running](https://speckit-companion.dev)** · **[Docs](https://speckit-companion.dev/docs/)** · **[Getting started](https://speckit-companion.dev/docs/start/getting-started/)** · **[Changelog](https://speckit-companion.dev/changelog/)**
+**[See it running](https://speckit-companion.dev)** · **[Docs](https://speckit-companion.dev/docs/)** · **[Getting started](https://speckit-companion.dev/docs/start/your-first-spec/)** · **[Changelog](https://speckit-companion.dev/changelog/)**
 
 **What's new in 0.35.0:** move a node to another phase and drag hooks between steps in the Pipeline Builder, which now also works in a narrow side panel. Step times show the work and not the wait, links between spec documents open in the viewer, and commands wait until the terminal is ready instead of losing their first letter. Spec Kit's converge step and its bug reports now show up too. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
 
@@ -79,8 +79,8 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 ### Also in the box
 
 - **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
-- **Bug reports from Spec Kit's bug flow.** With the `bug` extension installed, each bug's assessment, fix and test reports show up in a Bugs group in the sidebar, with the latest outcome, and open read-only in the viewer. [Sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar)
-- **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/anatomy/anatomy-of-the-spec-viewer)
+- **Bug reports from Spec Kit's bug flow.** With the `bug` extension installed, each bug's assessment, fix and test reports show up in a Bugs group in the sidebar, with the latest outcome, and open read-only in the viewer. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
+- **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer)
 
 <!-- Rendered from content/media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
      and value on screen is real: change the contributed configuration in package.json
@@ -97,7 +97,7 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 
 The Companion pipeline is assembled: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
 
-Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The steps are columns in run order, with `auto` in the tail of the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached, one line each under the words `before` and `after`, grouped under the mark of whoever registered them — yours, or an installed extension's. Full guide: [Pipeline builder](https://speckit-companion.dev/docs/guides/pipeline-builder).
+Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The steps are columns in run order, with `auto` in the tail of the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached, one line each under the words `before` and `after`, grouped under the mark of whoever registered them — yours, or an installed extension's. Full guide: [Pipeline builder](https://speckit-companion.dev/docs/customize/pipeline-builder).
 
 **One colour means yours.** Hooks, nodes you rewrote and template sections you replaced all carry the same mark, and nothing else does, so what your project changed is answerable at a glance. Click a node to read its instructions right there, with what it writes, what it needs, and whether it can be moved.
 
@@ -129,7 +129,7 @@ When `companion.yml` is newer than the commands built from it, the panel's heade
 
 ## No lock-in, no server
 
-Everything lives in plain files in your repo: the spec markdown plus a `.spec-context.json` per spec. The viewer and your terminal are two front-ends over the same files, so a step driven from either surface shows up in the other, and there is no extension-owned database to migrate away from. The extension dispatches command text to the AI you configure and reads what lands on disk; your prompts and specs never pass through anyone's server. How the pieces fit: [Getting started](https://speckit-companion.dev/docs/start/getting-started).
+Everything lives in plain files in your repo: the spec markdown plus a `.spec-context.json` per spec. The viewer and your terminal are two front-ends over the same files, so a step driven from either surface shows up in the other, and there is no extension-owned database to migrate away from. The extension dispatches command text to the AI you configure and reads what lands on disk; your prompts and specs never pass through anyone's server. How the pieces fit: [Getting started](https://speckit-companion.dev/docs/start/your-first-spec).
 
 ## Install
 
@@ -139,16 +139,16 @@ Install **SpecKit Companion** from the VS Code Marketplace, then add the [compan
 
 Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](https://speckit-companion.dev/docs/reference/providers).
 
-In the GitHub Copilot app, the [spec board canvas](https://speckit-companion.dev/docs/guides/copilot-app/) shows every spec's pipeline and tasks live next to the chat, and runs the next step from a button.
+In the GitHub Copilot app, the [spec board canvas](https://speckit-companion.dev/docs/processes/copilot-app/) shows every spec's pipeline and tasks live next to the chat, and runs the next step from a button.
 
-In the Claude Code terminal, the [SpecKit Companion mod](https://speckit-companion.dev/docs/guides/claude-code/) shows where the run stands above the prompt and in a pane beside the transcript, with `/spec` to switch specs.
+In the Claude Code terminal, the [SpecKit Companion mod](https://speckit-companion.dev/docs/processes/claude-code/) shows where the run stands above the prompt and in a pane beside the transcript, with `/spec` to switch specs.
 
 ## Docs
 
 - [Getting started](./docs/getting-started.md): platform support, sample specs, and running the extension from source (install story: [speckit-companion.dev/docs/install](https://speckit-companion.dev/docs/install))
-- [Spec viewer reference](https://speckit-companion.dev/docs/anatomy/anatomy-of-the-spec-viewer): reading, reviewing, creating, safety affordances
-- [Sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar): every view, icon, and action
-- [Pipeline builder](https://speckit-companion.dev/docs/guides/pipeline-builder): reading the board, attaching hooks, editing a node, reshaping a document, adding a step, and building
+- [Spec viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer): reading, reviewing, creating, safety affordances
+- [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar): every view, icon, and action
+- [Pipeline builder](https://speckit-companion.dev/docs/customize/pipeline-builder): reading the board, attaching hooks, editing a node, reshaping a document, adding a step, and building
 - [Configuration](https://speckit-companion.dev/docs/reference/configuration): all settings, custom workflows, custom commands
 - [Supported AI providers](https://speckit-companion.dev/docs/reference/providers): the compatibility matrix and dispatch styles
 - [Living specs](./apps/speckit-extension/docs/living-specs.md): durable capability specs, drift, sync, adoption

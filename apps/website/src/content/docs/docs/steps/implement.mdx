@@ -1,0 +1,56 @@
+---
+title: Implement
+description: The step that writes the code. How progress shows while it runs, and how a spec ends in each workflow.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="/speckit.companion.implement" prompt={false} />
+  <p>Or press <strong>Implement</strong> in the viewer footer, under <code>Next: Implement</code>. The stock Spec Kit workflow sends <code>/speckit.implement</code>.</p>
+</Actions>
+
+Implement works through `tasks.md` in order and writes the code. It writes no document of its own, so it has no tab in the rail. Its progress shows on the Tasks tab.
+
+## While it runs
+
+<YouSee>
+
+The Tasks tab shows a live percentage, counted from the checked boxes in `tasks.md`. Boxes tick as tasks finish. In the sidebar, the spec's row shows the last finished task and how long ago, like `T004 · 2h ago`.
+
+</YouSee>
+
+<DocFigure src="run-in-flight-x16x9.png" caption="A run in the viewer. During implement, the Tasks tab carries the percentage." />
+
+When a step or a phase of tasks completes, a notification offers **Open spec**. Turn it off with `speckit.notifications.stepComplete`.
+
+## How the Companion workflow runs it
+
+The Companion command records each task the moment it finishes, so a run that stops halfway can pick up at the next unchecked task. On an assistant that can hand work to sub-agents, a user story phase that owns five or more files goes to its own worker. On one that cannot, the tasks are built one after another.
+
+## How it ends
+
+| Workflow | When the last task is checked |
+| --- | --- |
+| SpecKit Companion | The run marks the spec complete itself. It moves to **Completed** in the sidebar. |
+| Spec Kit | The spec stays at **Implemented**, with a yellow beaker in the sidebar, until you press **Mark Completed** in the footer. |
+
+After implement you can run [Converge](/docs/steps/converge) to check the code against the spec.
+
+## If it stops halfway
+
+| You want to | Do this |
+| --- | --- |
+| Carry on where it stopped | Hover the spec in the sidebar and click **Resume**, or run `/speckit.companion.resume` |
+| Know where it is | Run `/speckit.companion.status` |
+| Check that the run did what it says | Run `/speckit.companion.doctor` |
+
+[Track progress](/docs/results/track-progress) covers all three.
+
+## Related
+
+- [The Overview](/docs/results/the-overview) shows what the run recorded, including which checks it ran.
+- [Converge](/docs/steps/converge) is the step after.

@@ -1,0 +1,86 @@
+---
+title: Commands
+description: Every slash command you type in your assistant and every SpecKit command in the VS Code command palette.
+---
+
+There are two kinds of command. **Slash commands** are typed in your assistant's chat or terminal, and they do the work. **Palette commands** are run from the VS Code command palette, and most of them send a slash command for you.
+
+Some assistants spell slash commands with dashes, such as `/speckit-companion-plan`. `speckit.commandFormat` in [Configuration](/docs/reference/configuration) controls which form SpecKit Companion sends.
+
+## The steps
+
+Each workflow has its own family. Both stay installed, and a spec uses the one it was created with.
+
+| Step | Command | Use it when |
+| --- | --- | --- |
+| [Constitution](/docs/steps/constitution) | `/speckit.constitution` | The project has no ground rules yet |
+| [Specify](/docs/steps/specify) | `/speckit.specify`<br />`/speckit.companion.specify` | You have an idea. The Companion one also sizes the change. |
+| [Plan](/docs/steps/plan) | `/speckit.plan`<br />`/speckit.companion.plan` | The spec is ready and you want the design |
+| [Tasks](/docs/steps/tasks) | `/speckit.tasks`<br />`/speckit.companion.tasks` | The plan is ready and you want a task list |
+| [Implement](/docs/steps/implement) | `/speckit.implement`<br />`/speckit.companion.implement` | The tasks are ready and you want them built |
+| [Converge](/docs/steps/converge) | `/speckit.converge` | Implement finished and you want the code checked against the spec |
+| Mark complete | `/speckit.companion.mark-complete` | The work is finished and you want to close the spec. In the Spec Kit workflow, press **Mark Completed**. |
+| [Auto](/docs/steps/auto) | `/speckit.companion.auto` | You want every step run for you, with no pauses. Companion only. |
+
+Where a step has two commands, the first belongs to the Spec Kit workflow and the second to SpecKit Companion.
+
+Spec Kit also has `/speckit.clarify`, `/speckit.checklist` and `/speckit.analyze`. The viewer offers them under **Other actions**.
+
+## Run state
+
+These come from the Companion Spec Kit extension. [Track progress](/docs/results/track-progress) covers them.
+
+| Command | Use it when |
+| --- | --- |
+| `/speckit.companion.status` | You want to know the current step and what to do next |
+| `/speckit.companion.resume` | A run stopped and you want to continue where it left off |
+| `/speckit.companion.doctor` | A run looks wrong and you want a health report |
+
+## Living specs
+
+All seven do nothing until [living specs](/docs/results/living-specs) are turned on.
+
+| Command | What it does |
+| --- | --- |
+| `/speckit.companion.living-adopt` | Drafts a living spec for a code area you name, and registers it |
+| `/speckit.companion.living-sync` | Updates every affected living spec from your current changes |
+| `/speckit.companion.living-drift` | Lists source files changed since each spec was last committed |
+| `/speckit.companion.living-coverage` | Reports which requirements have a test mapped |
+| `/speckit.companion.living-show` | Prints a requirement list, one requirement, or the requirements for one file |
+| `/speckit.companion.living-validate` | Checks the shape of living specs and of a feature spec's deltas |
+| `/speckit.companion.living-move` | Moves a living spec between the central folder and a place beside its code |
+
+## Recording hooks
+
+You do not type these. Spec Kit runs them around its own commands, and they write the run record.
+
+| Command | Runs | Records |
+| --- | --- | --- |
+| `speckit.companion.after-specify` | After specify | Specify finished |
+| `speckit.companion.after-plan` | After plan | Plan finished |
+| `speckit.companion.after-tasks` | After tasks | Tasks finished |
+| `speckit.companion.after-implement` | After implement | Each finished task, and implement finished once every task is checked |
+| `speckit.companion.before-converge` | Before converge | Converge started. The status does not change. |
+| `speckit.companion.after-converge` | After converge | Converge finished. The status does not change. |
+
+`speckit.companion.classify` is also not typed. The workflow runs it to size a change.
+
+## In the command palette
+
+All of these are under the **SpecKit** category.
+
+| Command | What it does |
+| --- | --- |
+| **New Spec** | Opens the Create New Spec panel |
+| **Run Spec Hands-Off (Auto)** | Starts a spec with [Auto](/docs/steps/auto) |
+| **Specify**, **Plan**, **Tasks**, **Implement** | Send that step's command to your assistant |
+| **Clarify**, **Checklist**, **Analyze** | Send Spec Kit's refinement commands |
+| **Constitution** | Sends `/speckit.constitution` |
+| **Run Custom Command** | Lists your [custom commands](/docs/customize/your-own-workflow#custom-commands) |
+| **Initialize SpecKit** | Runs `specify init` in the workspace |
+| **Install SpecKit CLI** | Installs the `specify` command |
+| **Open a Live Sample** | Opens a finished sample run in the viewer |
+| **Upgrade…** | Upgrades the CLI, the project, or both |
+| **SpecKit Settings** | Opens Settings filtered to the extension |
+
+**SpecKit Companion: Open Pipeline Builder** opens the [Pipeline Builder](/docs/customize/pipeline-builder).

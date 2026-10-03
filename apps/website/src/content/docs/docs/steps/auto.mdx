@@ -1,0 +1,47 @@
+---
+title: Run it all with Auto
+description: One command that runs every step of a Companion spec with no pauses, what it needs, and what you can and cannot see while it runs.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="/speckit.companion.auto <what you want to build>" prompt={false} />
+  <p>Or click <strong>Auto</strong> beside <strong>Create Spec</strong> in the Create New Spec panel, or run <strong>SpecKit: Run Spec Hands-Off (Auto)</strong> from the command palette.</p>
+</Actions>
+
+Auto runs specify, plan, tasks, implement and mark-complete in order, without stopping for approval between them. It runs the same step commands you would run one at a time, so the documents come out the same.
+
+<DocFigure src="live-create-spec.png" recapture caption="Auto sits beside Create Spec. It shows when the chosen workflow supports it, which SpecKit Companion does." />
+
+## What it needs
+
+| Requirement | Why |
+| --- | --- |
+| The Companion Spec Kit extension | Auto is one of its commands. See [Install](/docs/install). |
+| The SpecKit Companion workflow | The stock Spec Kit workflow has no Auto button |
+| An assistant that keeps working after a step finishes | In a terminal that runs one command and stops, auto runs the first step and stops there |
+
+## While it runs
+
+<YouSee>
+
+The viewer follows the files, as it does for any run. Tabs check off in the rail as each document lands, the Tasks tab shows the percentage during implement, and the spec moves to **Completed** at the end.
+
+</YouSee>
+
+Auto is one command your assistant follows from start to finish. The editor has no progress bar for it and cannot pause it. To stop it, stop your assistant.
+
+## What it changes about a run
+
+- **Small changes skip two steps.** When [Specify](/docs/steps/specify) sizes the change as simple, it has already written the plan and the task list, so auto goes straight to implement.
+- **Checkpoints do not wait.** Auto marks the run as unattended. A [hook](/docs/customize/hooks) that would normally stop and ask a person records the checkpoint and carries on.
+- **Nobody reviews in between.** If you want to read the spec before it becomes code, run the steps one at a time and use [Review with comments](/docs/steps/review-with-comments).
+
+## Related
+
+- [Track progress](/docs/results/track-progress) covers Resume, for a run that stopped halfway.
+- [The Overview](/docs/results/the-overview) is where you read what an unattended run did.

@@ -1,0 +1,188 @@
+---
+title: Pipeline Builder
+description: 'A board of what your assistant does at each Companion step. What every mark means, and how to edit a node, reshape a document, add a step and build.'
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+The Pipeline Builder draws your Companion workflow as a board. Each step is a lane, and each lane is built from **nodes**, small blocks of instruction your assistant reads. You change them on the board, then build.
+
+Open it from the circuit icon at the top of the Specs view, or run **SpecKit Companion: Open Pipeline Builder**. It needs the Companion Spec Kit extension.
+
+<DocFigure
+  src="builder-board.png"
+  alt="The Pipeline Builder, showing four steps as columns with their phases, nodes and attached hooks."
+  caption="The run reads left to right, in the order it happens. Four steps ship, and a project can add more."
+/>
+
+At the far right, **Outside the run** holds what does not take a turn, such as `auto`, which runs the other steps hands-off.
+
+## What the marks on a lane mean
+
+<DocFigure
+  src="builder-lanes.png"
+  alt="Two lanes of the board, specify and plan, with a changed step, a rewritten node, a gate and an attached hook."
+  caption="Two lanes up close. Anything the project changed carries one color, and nothing else does."
+/>
+
+| Mark | What it means |
+| --- | --- |
+| **specify**, **plan** | A step. Click the name to read its preamble, the text every node in it sits under. |
+| `changed` | This step differs from the workflow as it ships. |
+| `4 nodes · 2 files` | How many nodes it runs and how many files a run produces. Hover names the files. |
+| `Document shape` | The shape of the document this step writes. Click to change it. |
+| **GATHER**, **AUTHOR** | A phase, a group of nodes. |
+| A card | A node: one piece of instruction the assistant reads. |
+| The bar on a card's left edge | Node kind. Heavy writes a deliverable, light reads context or sets up. |
+| `gate` | This node can stop the run. |
+| `held` | This node cannot be reordered, because something after it reads what it writes. |
+| `yours` | You rewrote this node. |
+| `spec.md` in green | A file this node produces. |
+| `before`, `after` | Work attached on that side of a node. |
+| `+` on a dashed rule between cards | Attach work exactly there. |
+| `+` in the gap between two lanes | Add a step there. |
+
+## The header
+
+<DocFigure
+  src="builder-changes.png"
+  alt="The header with the workflow switcher, the changes chip, the hooks tally and Add step."
+  caption="The header: which workflow you are on, what differs from shipped, and how many hooks are attached."
+/>
+
+| Control | What it does |
+| --- | --- |
+| **Workflow** | Names the configuration you are on, and switches to another |
+| Changes chip | `No changes` or `2 steps differ from shipped`. Click it to scroll to the first lane that differs. |
+| Hooks chip | `5 hooks`. Opens the tally of steps, phases, nodes, your hooks and extension hooks. |
+| **Add step** | Appends a step |
+| **Open companion.yml**, **Preview build** | Open the file, or list what a build would change. Docked narrow, both move under `⋯`. |
+
+## Docked beside the editor
+
+Dock the panel narrow and the steps stack one under the next at the panel's width. Nothing is cut off or hidden behind a sideways scroll, and every control works the same.
+
+<DocFigure src="builder-side-panel.png" caption="Docked narrow: the phases of specify at the panel's full width, with plan stacked underneath." />
+
+## Edit a node
+
+| You do | What happens |
+| --- | --- |
+| Click a node | Its panel opens with the instructions, what the node writes, what it needs first and whether it can move |
+| Press **Edit**, change the text and **Save** | Your version is written to `.specify/companion/nodes/` and the node is marked `yours`. The shipped file is untouched. |
+| Press **Preview build** | Lists which commands would change. Nothing is written. |
+| Press **Build** | Writes the command files. The header says what it wrote and when. |
+
+Nothing takes effect until you build. Every write says what it did at the foot of the panel, with an **Undo** until the next write.
+
+<DocFigure
+  src="builder-read-block.png"
+  alt="The side panel showing one node's instructions and facts."
+  caption="A node's panel: the instructions, then what it writes and what it needs."
+/>
+
+To go back, open **More** and choose **Use the shipped node**. The status line offers **Undo**.
+
+## Move a node
+
+Drag a node to reorder it, or use the **Order** row in its panel.
+
+| Control | Result |
+| --- | --- |
+| **Move up**, **Move down** | Steps the node through its phase |
+| **Move to phase…** | Lists the other phases of the step. The node joins the one you pick at the edge nearest where it was: the end of an earlier phase, or the start of a later one. |
+
+A node marked `held` has to stay where it is, and its row says why.
+
+<DocFigure src="builder-move-to-phase.png" caption="The Order row on a node, with the phase list open." />
+
+## Replace or add a node
+
+A node with alternatives has a **Replace** menu, and your hooks move with it.
+
+<DocFigure
+  src="builder-replace.png"
+  alt="The Replace menu offering two alternatives."
+  caption="Replace swaps a node for one of its alternatives."
+/>
+
+**Add node** in a phase's `+` menu offers add-ons that ship switched off, and nodes you removed earlier.
+
+<DocFigure
+  src="builder-add-node.png"
+  alt="The Add node menu."
+  caption="Add node: add-ons that ship switched off, and nodes you removed."
+/>
+
+## Change a phase
+
+The `+` on every phase rule is the one control the board never hides. It offers Add hook, Add node, Rename phase, Split phase and Merge. A row that cannot run is greyed with the reason, such as "one node here, so there is nothing to split off".
+
+<DocFigure
+  src="builder-phase-menu.png"
+  alt="The phase menu open, offering Add hook, Add node, Rename phase, Split phase and Merge."
+  caption="The phase menu."
+/>
+
+[Hooks](/docs/customize/hooks) covers Add hook.
+
+## Reshape a document
+
+The **Document shape** chip on a step lists each `##` section of its template. Pick an alternative for a section, or **As shipped**.
+
+<DocFigure
+  src="builder-template.png"
+  alt="The template panel with one row per section."
+  caption="One row per section of the document the step writes."
+/>
+
+## Add a step
+
+Press **Add step** in the header, or the `+` between two lanes. Give it a name and say where it runs and what it writes. After the next build, your assistant can run it as `/speckit.companion.<name>`.
+
+<DocFigure
+  src="builder-new-step.png"
+  alt="The New step form."
+  caption="A new step: its name, where it runs and what it writes."
+/>
+
+## Switch workflows and start from a preset
+
+A **workflow** here is a whole named configuration. Switching swaps node order, hooks, templates and routing at once, so a one-line fix and a client deliverable can run different workflows in one repository. Nodes and document sections are shared across them.
+
+<DocFigure
+  src="builder-preset.png"
+  alt="The New workflow form, offering three whole configurations to start from as cards."
+  caption="A new workflow starts from what you run today, or from a preset."
+/>
+
+| Start from | For |
+| --- | --- |
+| What you run today | A variation on your current configuration |
+| **Classic spec-kit** | Stock Spec Kit document shapes: prioritized P1/P2/P3 stories, the full Technical Context block. Changes how documents look, not what the run does. |
+| **Brownfield** | Changing an existing system: the spec as a delta, folders numbered against every branch, the task list challenged before it runs, a person opening the result before it counts as done. |
+
+A preset is copied in and yours to change. To compare with the shipped workflow, choose **As shipped** in the **Workflow** dropdown. Your configuration is parked, not deleted.
+
+## Build
+
+**Build** writes the command files your assistant loads, with your hooks, nodes and reshaped templates in place. **Show the log** opens the detail.
+
+A failed build changes nothing. It names the step and leaves the working workflow as it was.
+
+## Files it reads and writes
+
+| Path | What it holds |
+| --- | --- |
+| `.specify/companion.yml` | Your configuration, the source of truth |
+| `.specify/companion/workflows/<name>.yml` | A named configuration you can switch to |
+| `.specify/companion/nodes/<step>/<node>.md` | A node you rewrote, or a step you added |
+| `.specify/companion/fragments/<name>.md` | A document section you wrote |
+| `.specify/extensions/companion/commands/` | What a build produces. Never edited by hand. |
+
+If the panel cannot draw, it offers repairs as buttons, narrowest first. **Open companion.yml** is always there.
+
+## Related
+
+- [Hooks](/docs/customize/hooks) attaches your own work to a node, a phase or a step.
+- [Your own workflow](/docs/customize/your-own-workflow) covers the same file by hand, and workflows written in settings.

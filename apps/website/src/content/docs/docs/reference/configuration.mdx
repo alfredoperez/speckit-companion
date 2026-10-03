@@ -1,27 +1,17 @@
 ---
 title: Configuration
 description: Every setting the extension contributes, with the reasoning behind it.
-sidebar:
-  label: Configuration
-  order: 1
 ---
 
-import MediaSlot from '../../../../components/docs/MediaSlot.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
 
 Every `speckit.*` setting, grouped by what you want to change. Open **Settings** and search `speckit`.
 
-<MediaSlot
-  feature="live-settings-list"
-  caption="Settings filtered to the extension. Every key on this page appears here with its description."
-/>
-
+<DocFigure src="live-settings-list.png" recapture caption="Settings filtered to the extension. Every key on this page appears here with its description." />
 
 ## Choose your AI and how it runs
 
-<MediaSlot
-  feature="live-provider-picker"
-  caption="Setting speckit.aiProvider: one dropdown, every assistant Companion can send commands to."
-/>
+<DocFigure src="live-provider-picker.png" recapture caption="Setting speckit.aiProvider: one dropdown, every assistant Companion can send commands to." />
 
 | Setting | Default | Effect |
 | --- | --- | --- |
@@ -45,12 +35,9 @@ GitHub Copilot CLI cannot show permission prompts in `-p` mode. The extension sw
 | `speckit.defaultWorkflow` | `"speckit"` | The workflow Create New Spec pre-selects: `"speckit"` (stock) or `"companion"` (needs the Companion Spec Kit extension). Only a value you set yourself is honored. Unset, installing the extension makes Companion the pre-selection. |
 | `speckit.customWorkflows` | `[]` | Your own workflows. See [below](#custom-workflows). |
 
-<MediaSlot
-  feature="own-workflow"
-  caption="The workflow is chosen when a spec is created, then recorded on the spec."
-/>
+<DocFigure src="own-workflow-x16x9.png" caption="The workflow is chosen when a spec is created, then recorded on the spec." />
 
-[Pick a pipeline](/docs/discussions/pick-a-pipeline) explains the difference between the two built-ins.
+[Spec-driven development](/docs/start/spec-driven-development#the-two-workflows-that-ship) explains the difference between the two built-ins.
 
 ### Measured impact
 
@@ -72,7 +59,7 @@ Companion specs run about 60 to 68% leaner. Correctness tied: every cell shipped
 | `speckit.views.steering.visible` | `true` | Show the Steering view. |
 | `speckit.views.settings.visible` | `false` | Show the Settings view. |
 | `speckit.notifications.stepComplete` | `true` | Notify when a step or task phase completes, with an **Open spec** action. `false` silences both and keeps the viewer's timer. |
-| `speckit.customCommands` | `[]` | Your own slash commands. See [Custom commands and hooks](/docs/guides/customize). |
+| `speckit.customCommands` | `[]` | Your own slash commands. See [Your own workflow](/docs/customize/your-own-workflow#custom-commands). |
 
 ## Companion and telemetry
 
@@ -88,7 +75,7 @@ There is no toggle for the Companion workflow itself. Once the extension is inst
 
 ## Custom workflows
 
-A custom workflow is any set of steps that runs commands and writes markdown files. The sidebar and viewer rail adapt to whatever you declare. [Pick a pipeline](/docs/discussions/pick-a-pipeline) has the smallest valid example. This is the property reference.
+A custom workflow is any set of steps that runs commands and writes markdown files. The sidebar and viewer rail adapt to whatever you declare. [Your own workflow](/docs/customize/your-own-workflow) has the smallest valid example. This is the property reference.
 
 ```json
 {
@@ -136,6 +123,6 @@ This one is for [Agent Teams Lite](https://github.com/Gentleman-Programming/agen
 
 The chosen workflow is saved to `.spec-context.json` when a spec is created, and every later action uses it. With none chosen, `speckit.defaultWorkflow` applies. Steps whose file is missing show as not started.
 
-## Next
+## Related
 
-[Supported AI providers](/docs/reference/providers) lists what each assistant reads and how it is reached.
+[Providers](/docs/reference/providers) lists what each assistant reads and how it is reached.

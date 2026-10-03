@@ -1,0 +1,60 @@
+---
+title: Assess an idea
+description: Spec Kit's assess extension takes an idea through five stages to a go, needs-clarification or kill verdict before it becomes a spec.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="specify extension add assess" />
+  <p>This adds Spec Kit's assess extension to the project. Where your Spec Kit has bundles, <code>specify bundle install assess</code> adds the extension and a guided workflow together.</p>
+</Actions>
+
+Assessment answers "is this worth building?" before the spec steps answer "how do we build it?". It is Spec Kit's own process, separate from specify, plan and tasks. You enter it on purpose, and it never changes source code. The input is just an idea: pasted text, a URL, a ticket, or a pointer at code that already exists.
+
+## The five stages
+
+You run each one in your assistant, in order, usually once.
+
+| Command | What it does | Writes |
+| --- | --- | --- |
+| `/speckit.assess.intake` | Captures the raw idea | `intake.md` |
+| `/speckit.assess.research` | Gathers evidence about users, the market and prior art, including evidence against the idea | `research.md` |
+| `/speckit.assess.define` | Defines the problem: users, goals, non-goals, success metrics and the cost of doing nothing | `problem.md` |
+| `/speckit.assess.shape` | Shapes two or three options with their size and trade-offs, and recommends one or none | `concept.md` |
+| `/speckit.assess.decide` | Scores the idea and gives the verdict | `decision.md` |
+
+Name the idea once and reuse the name, for example `/speckit.assess.intake "Let users work offline" slug=offline-mode`, then `/speckit.assess.research slug=offline-mode`.
+
+The order is not rigid. Define can run straight from your input, without intake or research. Shape and decide both need `problem.md`.
+
+## What it writes
+
+Each idea gets its own folder, `.specify/assessments/<slug>/`, with one markdown file per stage. The commands write only there.
+
+## The verdict
+
+| Verdict | What it means | What you do next |
+| --- | --- | --- |
+| **go** | The problem is valid, the evidence is adequate and a concept is shaped | Hand the summary in `decision.md` to `/speckit.specify` yourself. See [Specify](/docs/steps/specify). |
+| **needs-clarification** | Something is missing. A go without a shaped concept is downgraded to this. | Fill the gap in the file that has it, by editing it or asking your assistant, then have the decision revised. You do not rerun the stage. |
+| **kill** | Not worth building | Nothing. The reason is on record, which is a good outcome. |
+
+Most ideas should be killed or parked before shape.
+
+## In SpecKit Companion
+
+<YouSee label="Not shown yet">
+
+SpecKit Companion does not list or render assessments. There is no group for them in the sidebar and no view in the viewer, so you read the files under `.specify/assessments/` as plain markdown.
+
+</YouSee>
+
+Once a go becomes a spec through `/speckit.specify`, that spec shows up in the Specs view like any other.
+
+## Related
+
+- [Spec-driven development](/docs/start/spec-driven-development) covers the steps a go verdict leads into.
+- [Fix a bug](/docs/processes/fix-a-bug) is Spec Kit's other process outside the spec steps.

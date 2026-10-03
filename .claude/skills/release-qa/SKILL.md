@@ -182,7 +182,7 @@ Then: `open_application` Visual Studio Code, click the SpecKit activity-bar icon
 
 ### Navigation matrix
 
-For every row: do the action with clicks only, take a computer-use screenshot, assert the expected state, save a `shot.sh` only when it fails or is docs-worthy. Log each row as PASS/FAIL in `$RESULTS/nav-matrix.md` (`| # | action | expected | actual | shot |`). Expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/anatomy/anatomy-of-the-spec-viewer.mdx`); quote it in a FAIL.
+For every row: do the action with clicks only, take a computer-use screenshot, assert the expected state, save a `shot.sh` only when it fails or is docs-worthy. Log each row as PASS/FAIL in `$RESULTS/nav-matrix.md` (`| # | action | expected | actual | shot |`). Expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx`); quote it in a FAIL.
 
 Sidebar entry types (tree: group → spec → document → related doc):
 
