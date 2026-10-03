@@ -35,6 +35,13 @@ jobs:
       - name: Run Copilot canvas tests
         run: npm run test:canvas
 
+      - name: Copilot canvas vendor bundles are current
+        run: |
+          git diff --exit-code -- apps/copilot-canvas/vendor || {
+            echo "::error::apps/copilot-canvas/vendor is stale. Run npm run canvas:build and commit the result."
+            exit 1
+          }
+
   capture-suite:
     runs-on: ubuntu-latest
 
