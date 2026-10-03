@@ -142,6 +142,21 @@ export function createMockFileSystemWatcher(pattern: any) {
     };
 }
 
+const workspaceFoldersEmitter = new EventEmitter<any>();
+const configurationEmitter = new EventEmitter<any>();
+
+/** Report a workspace-folder change, as `onDidChangeWorkspaceFolders` would. */
+export function __fireWorkspaceFoldersChange(): void {
+    workspaceFoldersEmitter.fire({ added: [], removed: [] });
+}
+
+/** Report a settings change touching the given keys, as `onDidChangeConfiguration` would. */
+export function __fireConfigurationChange(...keys: string[]): void {
+    configurationEmitter.fire({
+        affectsConfiguration: (section: string) => keys.some(k => k === section || k.startsWith(`${section}.`)),
+    });
+}
+
 function currentFolders(): any[] | undefined {
     return (workspace as { workspaceFolders?: any[] }).workspaceFolders;
 }
@@ -163,6 +178,8 @@ export const workspace = {
             (f: any) => typeof uri?.fsPath === 'string' && uri.fsPath.startsWith(f.uri.fsPath)
         )
     ),
+    onDidChangeWorkspaceFolders: jest.fn(workspaceFoldersEmitter.event),
+    onDidChangeConfiguration: jest.fn(configurationEmitter.event),
     openTextDocument: jest.fn().mockResolvedValue({}),
     onDidSaveTextDocument: jest.fn().mockReturnValue({ dispose: jest.fn() }),
     findFiles: jest.fn().mockResolvedValue([]),

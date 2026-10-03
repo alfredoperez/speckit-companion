@@ -33,6 +33,7 @@ import { isCompanionInstalled } from './features/settings/companionPresetReconci
 import { Views } from './core';
 import { setupFileWatchers, setupTasksWatcher, setupSpecViewerWatcher } from './features/fileWatchers';
 import { ConfigKeys } from './core/constants';
+import { getProjectRoot, onDidChangeProjectRoot, watchProjectRoot } from './core/projectRoot';
 import { ConfigManager } from './core/utils/configManager';
 import { migrateBetaTriStateSettings, mergeNotificationSettings, removeRetiredSettings } from './core/settingsMigration';
 import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProperties, reportInstallPromptShown, reportInstalledOnce, trackPanelOpened } from './core/telemetry';
@@ -69,6 +70,7 @@ export async function activate(context: vscode.ExtensionContext) {
     setLifecycleOutputChannel(outputChannel);
     context.subscriptions.push(registerTerminalStepTracker(context));
     context.subscriptions.push(registerSpecShapeDiagnostics());
+    context.subscriptions.push(watchProjectRoot(outputChannel));
 
     // Initialize SpecKit detector
     const specKitDetector = SpecKitDetector.getInstance();
@@ -82,7 +84,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     // Show init suggestion when CLI is installed but workspace is not initialized
     // ONLY if a workspace is actually open (US1 fix - 005-speckit-views-enhancement)
-    const hasWorkspace = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0;
+    const hasWorkspace = getProjectRoot() !== undefined;
     if (cliInstalled && !workspaceInitialized && hasWorkspace) {
         showInitSuggestion(context);
     }
@@ -93,8 +95,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
 
     // Check workspace state
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
+    if (!hasWorkspace) {
         outputChannel.appendLine('WARNING: No workspace folder found!');
     }
 
@@ -315,7 +316,7 @@ export async function activate(context: vscode.ExtensionContext) {
         const wireCompanionSurfaces = (): void => {
             wiring.forEach(d => d.dispose());
             wiring = [];
-            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const root = getProjectRoot();
             if (!root) {
                 // No project to install into: the closed folder's answer must not outlive it.
                 updateStatusBar.sync({ state: 'missing' });
@@ -450,7 +451,16 @@ export async function activate(context: vscode.ExtensionContext) {
         };
         wireCompanionSurfaces();
         context.subscriptions.push(
-            vscode.workspace.onDidChangeWorkspaceFolders(() => wireCompanionSurfaces()),
+            onDidChangeProjectRoot(() => {
+                wireCompanionSurfaces();
+                void configManager.loadSettings();
+                steeringExplorer.rebuildProjectWatchers();
+                specExplorer.refresh();
+                steeringExplorer.refresh();
+                livingSpecsExplorer.refresh();
+                void specViewer.refreshOpenPanels();
+                void specKitDetector.detect();
+            }),
             { dispose: () => wiring.forEach(d => d.dispose()) },
         );
     }
@@ -482,7 +492,7 @@ async function fireActivatedEvent(context: vscode.ExtensionContext): Promise<voi
     let specCount = 0;
     let companionInstalled = false;
     try {
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const root = getProjectRoot();
         if (root) {
             specCount = (await resolveSpecDirectories(root)).length;
             companionInstalled = isCompanionInstalled(root);

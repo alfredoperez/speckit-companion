@@ -19,6 +19,7 @@ import {
     FEATURE_CONTEXT_FILE,
 } from './types';
 import { ConfigKeys, WorkflowSteps, AIProviders, COMPANION_WORKFLOW_NAME, SPECKIT_WORKFLOW_NAME } from '../../core/constants';
+import { getProjectRoot } from '../../core/projectRoot';
 import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 
@@ -237,7 +238,7 @@ export function validateWorkflow(config: WorkflowConfig): ValidationResult {
  * lists an option that silently falls back to stock.
  */
 export function isCompanionSelectable(root?: string): boolean {
-    const resolved = root ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const resolved = root ?? getProjectRoot();
     return !!resolved && isCompanionInstalled(resolved);
 }
 

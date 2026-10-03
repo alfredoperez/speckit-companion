@@ -5,6 +5,7 @@ import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { AIProviderType, AIExecutionResult, IAIProvider, buildPromptDispatchCommand, toSlashCommand } from './aiProvider';
 import { Timing } from '../core/constants';
+import { getProjectRoot } from '../core/projectRoot';
 import { runInTerminal, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
@@ -215,7 +216,7 @@ export abstract class CliTerminalProvider implements IAIProvider {
 
             const terminal = vscode.window.createTerminal({
                 name: title,
-                cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+                cwd: getProjectRoot(),
                 location: { viewColumn: vscode.ViewColumn.Two },
             });
             terminal.show();
@@ -266,7 +267,7 @@ export abstract class CliTerminalProvider implements IAIProvider {
 
         return executeCommandInHiddenTerminal({
             commandLine: plan.commandLine,
-            cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+            cwd: getProjectRoot(),
             terminalName: this.headlessTerminalName,
             outputChannel: this.outputChannel,
             logPrefix: this.logPrefix,

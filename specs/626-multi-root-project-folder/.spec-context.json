@@ -1,0 +1,632 @@
+{
+  "workflow": "companion",
+  "specName": "Find the Spec Kit project in a multi-root workspace",
+  "branch": "626-multi-root-project-folder",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T22:12:36.398Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:12:36.583Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:13:19.617Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-03T22:13:19.969Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T22:13:20.141Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:16:19.989Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:16:20.080Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:16:20.168Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:17:16.464Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:17:16.748Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T22:17:16.813Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:17:47.562Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:17:47.898Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:17:47.998Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T22:17:48.063Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:18:57.269Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:18:57.351Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:19:09.034Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:20:17.875Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:20:17.970Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:21:01.611Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:21:08.367Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:21:32.278Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:22:35.317Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:22:50.424Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:23:09.765Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:23:09.849Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:23:09.938Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:26:39.364Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:26:39.384Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:26:39.469Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:26:39.851Z"
+    },
+    {
+      "step": "implement",
+      "substep": "complete",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T22:27:03.720Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "all 14 tasks done, full suite passes",
+  "coverage": {
+    "FR-001": {
+      "title": "One project folder used by every surface",
+      "tasks": [
+        "T003",
+        "T004",
+        "T005",
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T012"
+      ],
+      "tests": [
+        "projectRootUsage.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Detection order: config folder, then specs directory, then first folder",
+      "tasks": [
+        "T003",
+        "T009"
+      ],
+      "tests": [
+        "projectRoot.test.ts",
+        "detector.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "A single-folder workspace behaves as before",
+      "tasks": [
+        "T003",
+        "T014"
+      ],
+      "tests": [
+        "projectRoot.test.ts"
+      ]
+    },
+    "FR-004": {
+      "title": "A setting names the project folder and wins over detection",
+      "tasks": [
+        "T001",
+        "T003",
+        "T010"
+      ],
+      "tests": [
+        "projectRoot.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "An unknown folder in the setting falls back to detection and is reported",
+      "tasks": [
+        "T003"
+      ],
+      "tests": [
+        "projectRoot.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "An ambiguous pick is reported in the output channel",
+      "tasks": [
+        "T003"
+      ],
+      "tests": [
+        "projectRoot.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Setting or workspace folder changes re-resolve and refresh without a reload",
+      "tasks": [
+        "T002",
+        "T003",
+        "T006",
+        "T007",
+        "T012"
+      ],
+      "tests": [
+        "projectRoot.test.ts",
+        "steeringExplorerProvider.test.ts"
+      ]
+    },
+    "FR-008": {
+      "title": "Assistant paths and terminal working directory use the project folder",
+      "tasks": [
+        "T004",
+        "T005",
+        "T007"
+      ],
+      "tests": [
+        "detector.test.ts",
+        "specExplorerProvider.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "The focused editor never changes the project",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "livingSpecsStatusBar.test.ts"
+      ]
+    },
+    "FR-010": {
+      "title": "Docs state the setting, detection and the limits",
+      "tasks": [
+        "T011",
+        "T013"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 40,
+    "projectedTasks": 24,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "No living specs colocated in a second workspace folder",
+    "No several Spec Kit projects in one window at once"
+  ],
+  "context": [
+    "area: apps/vscode/src/core/utils (fileSystemUtils.getWorkspaceRoot, configManager)",
+    "area: apps/vscode/src/features/specs and apps/vscode/src/features/spec-viewer (sidebar, commands, viewer handlers)",
+    "area: apps/vscode/src/features/steering, living-specs, workflows, spec-editor, pipeline-builder, skills, agents",
+    "area: apps/vscode/src/ai-providers and apps/vscode/src/speckit (terminal cwd, detection, install)",
+    "constraint: a resource-scoped setting is read with a resource and a per-folder root never comes from workspaceFolders[0]",
+    "constraint: an inline config default must match the package.json manifest default",
+    "constraint: a probe must distinguish no from could-not-tell"
+  ],
+  "intent": "Resolve one Spec Kit project folder in a multi-root workspace, by detection or a setting, and use it everywhere",
+  "decisions": [
+    {
+      "decision": "One uncached resolver in core, getProjectRoot",
+      "why": "Tests reassign workspace folders with no event and specify init creates the marker silently",
+      "rejected": "A cache cleared by the watcher"
+    },
+    {
+      "decision": "Marker is .specify or the speckit agent files, shared with the detector",
+      "why": "Two probes would let the sidebar and the welcome view disagree",
+      "rejected": "Probing every configured spec directory pattern"
+    },
+    {
+      "decision": "speckit.projectFolder is window scoped and read with no resource",
+      "why": "The choice is per window and a resource read would be circular",
+      "rejected": "resource scope"
+    },
+    {
+      "decision": "Spec file watchers stay window-wide",
+      "why": "They only trigger refreshes and have no teardown plumbing",
+      "rejected": "Re-rooting every watcher"
+    },
+    {
+      "decision": "workflowSelector and pipelineResolution keep the spec owner folder first",
+      "why": "Pinned by tests and correct for a spec opened from another folder",
+      "rejected": "Collapsing to the project root"
+    },
+    {
+      "decision": "Probe with statSync and treat only not-found as absent",
+      "why": "An unreadable folder must not read as an empty one",
+      "rejected": "existsSync"
+    },
+    {
+      "decision": "Checkpoint git and PR commands run in the project root",
+      "why": "They used the first folder as cwd, which is the same assumption being removed",
+      "rejected": "Leaving the guard only"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One core resolver, a window setting, a change event, and a mechanical swap across 36 files",
+      "key_finding": "Roots cached at start-up (ConfigManager, AgentManager, SkillManager, steering watchers) are what break on a change, not the inline reads"
+    },
+    "tasks": {
+      "summary": "14 tasks: Foundational (7, four area swaps in parallel), US1 (2), US2 (2), US3 (1), Polish (2)"
+    },
+    "implement": {
+      "summary": "One project-folder resolver with a setting and change event, used by every surface"
+    }
+  },
+  "approach": "A core resolver picks the project folder from the speckit.projectFolder setting or by detection, with no cache and no disk read for a one-folder workspace. Every inline first-folder read swaps to it, cached roots become getters, and one change event refreshes views, detection and root-bound watchers.",
+  "currentTask": "T014",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added ConfigKeys.projectFolder",
+      "files": [
+        "apps/vscode/src/core/constants.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Mock gained onDidChangeWorkspaceFolders and onDidChangeConfiguration with fire helpers",
+      "files": [
+        "apps/vscode/tests/__mocks__/vscode.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Resolver, marker probe, watcher and change event, with 22 tests on real temp folders",
+      "files": [
+        "apps/vscode/src/core/projectRoot.ts",
+        "apps/vscode/src/core/__tests__/projectRoot.test.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Declared speckit.projectFolder: string, empty default, window scope",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Documented the setting, detection order and the two limits in both configuration references",
+      "files": [
+        "docs/configuration.md",
+        "apps/website/src/content/docs/docs/reference/configuration.mdx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Workflows, spec editor, Pipeline Builder, agents and skills read the project root from the resolver; cached roots are getters",
+      "files": [
+        "apps/vscode/src/features/workflows/workflowSelector.ts",
+        "apps/vscode/src/features/workflows/pipelineResolution.ts",
+        "apps/vscode/src/features/workflows/workflowManager.ts",
+        "apps/vscode/src/features/workflows/checkpointHandler.ts",
+        "apps/vscode/src/features/spec-editor/specEditorProvider.ts",
+        "apps/vscode/src/features/spec-editor/tempFileManager.ts",
+        "apps/vscode/src/features/pipeline-builder/builderPanel.ts",
+        "apps/vscode/src/features/agents/agentManager.ts",
+        "apps/vscode/src/features/skills/skillManager.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Core utilities, Spec Kit helpers and AI providers resolve the project folder through the resolver; ConfigManager resolves at use",
+      "files": [
+        "apps/vscode/src/core/utils/fileSystemUtils.ts",
+        "apps/vscode/src/core/utils/configManager.ts",
+        "apps/vscode/src/speckit/integrationProvider.ts",
+        "apps/vscode/src/speckit/specKitExtensionInstall.ts",
+        "apps/vscode/src/speckit/specKitExtensionInstallCommands.ts",
+        "apps/vscode/src/ai-providers/claudeCodeProvider.ts",
+        "apps/vscode/src/ai-providers/cliTerminalProvider.ts",
+        "apps/vscode/src/ai-providers/geminiCliProvider.ts",
+        "apps/vscode/src/ai-providers/wibeyCliProvider.ts",
+        "apps/vscode/src/ai-providers/codexCliProvider.ts",
+        "apps/vscode/src/ai-providers/claudePanelProvider.ts",
+        "apps/vscode/src/ai-providers/promptBuilder.ts",
+        "apps/vscode/src/ai-providers/initOptions.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Steering and living specs read the project root; steering view gains rebuildProjectWatchers(); status bar claims nothing for a file outside the project",
+      "files": [
+        "apps/vscode/src/features/steering/steeringExplorerProvider.ts",
+        "apps/vscode/src/features/steering/steeringManager.ts",
+        "apps/vscode/src/features/living-specs/livingSpecsCommands.ts",
+        "apps/vscode/src/features/living-specs/livingSpecsExplorerProvider.ts",
+        "apps/vscode/src/features/living-specs/livingSpecsStatusBar.ts",
+        "apps/vscode/src/features/steering/__tests__/steeringExplorerProvider.test.ts",
+        "apps/vscode/src/features/living-specs/__tests__/livingSpecsStatusBar.test.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Architecture doc names the resolver and the setting; changelog entry added",
+      "files": [
+        "docs/architecture.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Specs sidebar, its commands and the viewer read the resolved project root instead of the first workspace folder",
+      "files": [
+        "apps/vscode/src/features/specs/specCommands.ts",
+        "apps/vscode/src/features/specs/specExplorerProvider.ts",
+        "apps/vscode/src/features/specs/pipelineBuildCommands.ts",
+        "apps/vscode/src/features/specs/sampleSpec.ts",
+        "apps/vscode/src/features/specs/selectionContextKeys.ts",
+        "apps/vscode/src/features/spec-viewer/messageHandlers.ts",
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts",
+        "apps/vscode/src/features/spec-viewer/utils.ts",
+        "apps/vscode/src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Guard test: no source file outside the resolver and one viewer lookup reads workspace folders directly",
+      "files": [
+        "apps/vscode/tests/integration/projectRootUsage.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Detector probes the project root with the shared marker and starts init and upgrade terminals there; two-folder test added",
+      "files": [
+        "apps/vscode/src/speckit/detector.ts",
+        "apps/vscode/src/speckit/__tests__/detector.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Activation starts the project-root watcher and, on a change, rewires companion surfaces, rebuilds steering watchers, refreshes views and panels, and re-runs detection",
+      "files": [
+        "apps/vscode/src/extension.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "compile, webview type-check, 3524 jest tests, canvas tests and vsce package all pass",
+      "files": [
+        "package.json"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "> speckit-companion@0.35.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview type-check",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "no output"
+    },
+    {
+      "what": "unit and integration tests",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.1,
+      "result": "\u001b[1mSnapshots:   \u001b[22m0 total · \u001b[1mTime:\u001b[22m        69.541 s, estimated 71 s · \u001b[2mRan all test suites\u001b[22m\u001b[2m.\u001b[22m"
+    },
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 12.9,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 12235.988"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Spec file watchers stay window-wide, so a change in a non-project folder still triggers a refresh",
+      "step": "implement"
+    },
+    {
+      "note": "An open Pipeline Builder panel keeps the root it was opened with until it is reopened",
+      "step": "implement"
+    },
+    {
+      "note": "The probe-error path (unreadable folder) has no test",
+      "step": "implement"
+    },
+    {
+      "note": "Not exercised in a real multi-root Extension Development Host",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: three task finishes were closed in one burst, so their durations are not trustworthy"
+    }
+  ]
+}

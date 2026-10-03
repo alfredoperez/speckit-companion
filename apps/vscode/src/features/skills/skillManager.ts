@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as yaml from 'js-yaml';
 import { getProviderPaths } from '../../ai-providers/aiProvider';
+import { getProjectRoot } from '../../core/projectRoot';
 
 export type SkillType = 'plugin' | 'user' | 'project';
 
@@ -26,14 +27,15 @@ export interface SkillInfo {
 
 export class SkillManager {
     private outputChannel: vscode.OutputChannel;
-    private workspaceRoot: string | undefined;
+    private get workspaceRoot(): string | undefined {
+        return getProjectRoot();
+    }
 
     constructor(
         private context: vscode.ExtensionContext,
         outputChannel: vscode.OutputChannel
     ) {
         this.outputChannel = outputChannel;
-        this.workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     }
 
     /**

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getProjectRoot } from '../projectRoot';
 
 /**
  * File system utilities for consistent file operations
@@ -57,8 +58,7 @@ export class FileSystemUtils {
      * Get the workspace root path
      */
     static getWorkspaceRoot(): string | undefined {
-        const folders = vscode.workspace.workspaceFolders;
-        return folders?.[0]?.uri.fsPath;
+        return getProjectRoot();
     }
 
     /**

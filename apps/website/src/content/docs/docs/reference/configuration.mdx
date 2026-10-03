@@ -56,6 +56,7 @@ Companion specs run about 60 to 68% leaner. Correctness tied: every cell shipped
 | Setting | Default | Effect |
 | --- | --- | --- |
 | `speckit.specDirectories` | `["specs", ".specify/specs"]` | Where specs are found. `specs` lists its children as specs. A trailing wildcard such as `openspec/changes/*` treats each match as a spec folder. `apps/*/specs` lists each match's children. |
+| `speckit.projectFolder` | `""` | In a workspace with several folders, the one Companion treats as the Spec Kit project: a workspace folder name or its path. Empty picks the first folder holding Spec Kit files (`.specify/`), then the first with a `specs/` directory, then the first folder. Applies without a reload. Living specs in another workspace folder are not found, and one window shows one project at a time. |
 | `speckit.views.steering.visible` | `true` | Show the Steering view. |
 | `speckit.views.settings.visible` | `false` | Show the Settings view. |
 | `speckit.notifications.stepComplete` | `true` | Notify when a step or task phase completes, with an **Open spec** action. `false` silences both and keeps the viewer's timer. |

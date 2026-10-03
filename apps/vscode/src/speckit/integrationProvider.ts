@@ -4,6 +4,7 @@ import * as path from 'path';
 import { getConfiguredProviderType, getProviderDisplayName } from '../ai-providers/aiProvider';
 import { detectHostIde } from '../ai-providers/ideChatProvider';
 import { resolveIntegrationProvider } from './specKitAgent';
+import { getProjectRoot } from '../core/projectRoot';
 
 const KEPT_KEY = 'speckit.integrationProviderKept';
 
@@ -47,7 +48,7 @@ function keptPairs(context: vscode.ExtensionContext): string[] {
 /** Suggests the provider the project's Spec Kit integration names; only a Switch click changes the setting. */
 export async function suggestIntegrationProvider(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel): Promise<void> {
     const log = (message: string) => outputChannel.appendLine(message);
-    const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const root = getProjectRoot();
     if (!root) { return; }
 
     const agent = readIntegrationAgent(root, log);

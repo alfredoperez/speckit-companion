@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { DefaultPaths, DefaultViewVisibility } from '../constants';
+import { getProjectRoot } from '../projectRoot';
 
 const CONFIG_FILE_NAME = 'speckit-settings.json';
 
@@ -20,10 +21,11 @@ export interface SpecKitSettings {
 export class ConfigManager {
     private static instance: ConfigManager;
     private settings: SpecKitSettings | null = null;
-    private workspaceFolder: vscode.WorkspaceFolder | undefined;
 
-    private constructor() {
-        this.workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    private constructor() {}
+
+    private get projectRoot(): string | undefined {
+        return getProjectRoot();
     }
 
     static getInstance(): ConfigManager {
@@ -34,12 +36,13 @@ export class ConfigManager {
     }
 
     async loadSettings(): Promise<SpecKitSettings> {
-        if (!this.workspaceFolder) {
+        const root = this.projectRoot;
+        if (!root) {
             return this.getDefaultSettings();
         }
 
         const settingsPath = path.join(
-            this.workspaceFolder.uri.fsPath,
+            root,
             DefaultPaths.settings,
             CONFIG_FILE_NAME
         );
@@ -98,10 +101,11 @@ export class ConfigManager {
     }
 
     getAbsolutePath(type: keyof SpecKitSettings['paths']): string {
-        if (!this.workspaceFolder) {
+        const root = this.projectRoot;
+        if (!root) {
             throw new Error('No workspace folder found');
         }
-        return path.join(this.workspaceFolder.uri.fsPath, this.getPath(type));
+        return path.join(root, this.getPath(type));
     }
 
     private getDefaultSettings(): SpecKitSettings {
@@ -116,12 +120,13 @@ export class ConfigManager {
     }
 
     async saveSettings(settings: SpecKitSettings): Promise<void> {
-        if (!this.workspaceFolder) {
+        const root = this.projectRoot;
+        if (!root) {
             throw new Error('No workspace folder found');
         }
 
         const settingsDir = path.join(
-            this.workspaceFolder.uri.fsPath,
+            root,
             DefaultPaths.settings
         );
         const settingsPath = path.join(settingsDir, CONFIG_FILE_NAME);

@@ -163,6 +163,41 @@ describe('SteeringExplorerProvider', () => {
         });
     });
 
+    describe('project watchers', () => {
+        const watchers = () => (vscode.workspace.createFileSystemWatcher as jest.Mock).mock;
+        const basesFrom = (start: number): string[] =>
+            watchers().calls.slice(start).map(([pattern]) => (pattern as vscode.RelativePattern).base as unknown as string);
+
+        it('watches the project folder from the start', () => {
+            expect(watchers().calls.length).toBeGreaterThan(0);
+            expect(new Set(basesFrom(0))).toEqual(new Set([WORKSPACE]));
+        });
+
+        it('drops the old watchers and watches the new project folder on a rebuild', () => {
+            const before = watchers().results.map(r => r.value);
+            (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/other' } }];
+
+            provider.rebuildProjectWatchers();
+
+            for (const watcher of before) {
+                expect(watcher.dispose).toHaveBeenCalledTimes(1);
+            }
+            const rebuilt = basesFrom(before.length);
+            expect(rebuilt).toHaveLength(before.length);
+            expect(new Set(rebuilt)).toEqual(new Set(['/other']));
+        });
+
+        it('disposes the project watchers with the provider', () => {
+            const created = watchers().results.map(r => r.value);
+
+            provider.dispose();
+
+            for (const watcher of created) {
+                expect(watcher.dispose).toHaveBeenCalledTimes(1);
+            }
+        });
+    });
+
     describe('refresh', () => {
         it('fires once with no artificial loading state', () => {
             const listener = jest.fn();

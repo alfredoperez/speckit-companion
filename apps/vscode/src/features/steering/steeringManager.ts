@@ -5,6 +5,7 @@ import { getAIProvider } from '../../extension';
 import { ConfigManager } from '../../core/utils/configManager';
 import { runInTerminal } from '../../core/utils/terminalUtils';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
+import { getProjectRoot } from '../../core/projectRoot';
 
 export class SteeringManager {
     private configManager: ConfigManager;
@@ -32,13 +33,13 @@ export class SteeringManager {
             return;
         }
 
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const projectRoot = getProjectRoot();
+        if (!projectRoot) {
             vscode.window.showErrorMessage('No workspace folder open');
             return;
         }
 
-        const steeringPath = path.join(workspaceFolder.uri.fsPath, this.getSteeringBasePath());
+        const steeringPath = path.join(projectRoot, this.getSteeringBasePath());
 
         try {
             await vscode.workspace.fs.createDirectory(vscode.Uri.file(steeringPath));
@@ -91,8 +92,8 @@ Please update CLAUDE.md to remove any references to this deleted document.`;
     }
 
     async init() {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const projectRoot = getProjectRoot();
+        if (!projectRoot) {
             vscode.window.showErrorMessage('No workspace folder open');
             return;
         }
@@ -110,7 +111,7 @@ Please update CLAUDE.md to remove any references to this deleted document.`;
             }
         }
 
-        const steeringPath = path.join(workspaceFolder.uri.fsPath, this.getSteeringBasePath());
+        const steeringPath = path.join(projectRoot, this.getSteeringBasePath());
         await vscode.workspace.fs.createDirectory(vscode.Uri.file(steeringPath));
 
         await vscode.window.withProgress({
@@ -149,12 +150,12 @@ Analyze the document and:
     }
 
     async getSteeringDocuments(): Promise<Array<{ name: string, path: string }>> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const projectRoot = getProjectRoot();
+        if (!projectRoot) {
             return [];
         }
 
-        const steeringPath = path.join(workspaceFolder.uri.fsPath, this.getSteeringBasePath());
+        const steeringPath = path.join(projectRoot, this.getSteeringBasePath());
 
         try {
             const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(steeringPath));
@@ -172,7 +173,7 @@ Analyze the document and:
     async createProjectSteeringFile() {
         const terminal = vscode.window.createTerminal({
             name: 'Claude Code - Init',
-            cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+            cwd: getProjectRoot(),
             location: {
                 viewColumn: vscode.ViewColumn.Two
             }

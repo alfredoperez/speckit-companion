@@ -17,6 +17,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { getProjectRoot } from '../core/projectRoot';
 
 export interface InitOptions {
     script: 'sh' | 'ps';
@@ -35,12 +36,11 @@ const cache = new Map<string, InitOptions>();
  * channel.
  */
 export function readInitOptions(outputChannel?: vscode.OutputChannel): InitOptions {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (!workspaceFolder) {
+    const workspaceRoot = getProjectRoot();
+    if (!workspaceRoot) {
         return DEFAULT_OPTIONS;
     }
 
-    const workspaceRoot = workspaceFolder.uri.fsPath;
     const cached = cache.get(workspaceRoot);
     if (cached) {
         return cached;

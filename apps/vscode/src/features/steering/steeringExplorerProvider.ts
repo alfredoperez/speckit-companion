@@ -13,6 +13,7 @@ import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { readCompanionConfigGroups, readCompanionCommands, readCompanionTemplates, isWithinRoot, companionCommandFilePath, COMPANION_STEERING_PATHS } from './companionSteering';
 import { resolveProviderIconKey } from './providerIcon';
 import { detectHostIde } from '../../core/utils/hostIde';
+import { getProjectRoot } from '../../core/projectRoot';
 
 export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem> {
     private steeringManager!: SteeringManager;
@@ -28,7 +29,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
 
     constructor(context: vscode.ExtensionContext) {
         super(context, { name: 'SteeringExplorerProvider' });
-        this.setupCompanionFileWatchers();
+        this.rebuildProjectWatchers();
     }
 
     setSteeringManager(steeringManager: SteeringManager) {
@@ -45,19 +46,46 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         this.setupSkillFileWatchers();
     }
 
+    /** Points the project-folder watchers at the current project root. */
+    rebuildProjectWatchers(): void {
+        this.disposeProjectWatchers();
+        const root = getProjectRoot();
+        if (!root) {
+            return;
+        }
+        const providerPaths = getProviderPaths();
+        if (providerPaths.agentsDir) {
+            const pattern = providerPaths.agentsPattern || '*.md';
+            this.agentProjectWatcher = this.watchProject(root, `${providerPaths.agentsDir}/**/${pattern}`);
+        }
+        if (providerPaths.skillsDir) {
+            this.skillProjectWatcher = this.watchProject(root, `${providerPaths.skillsDir}/**/SKILL.md`);
+        }
+        this.companionConfigWatcher = this.watchProject(root, COMPANION_STEERING_PATHS.config);
+        this.companionInstallWatcher = this.watchProject(root, COMPANION_STEERING_PATHS.manifest);
+    }
+
+    private watchProject(root: string, pattern: string): vscode.FileSystemWatcher {
+        const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, pattern));
+        watcher.onDidCreate(() => this._onDidChangeTreeData.fire());
+        watcher.onDidChange(() => this._onDidChangeTreeData.fire());
+        watcher.onDidDelete(() => this._onDidChangeTreeData.fire());
+        return watcher;
+    }
+
+    private disposeProjectWatchers(): void {
+        this.agentProjectWatcher?.dispose();
+        this.skillProjectWatcher?.dispose();
+        this.companionConfigWatcher?.dispose();
+        this.companionInstallWatcher?.dispose();
+        this.agentProjectWatcher = undefined;
+        this.skillProjectWatcher = undefined;
+        this.companionConfigWatcher = undefined;
+        this.companionInstallWatcher = undefined;
+    }
+
     private setupAgentFileWatchers(): void {
         const providerPaths = getProviderPaths();
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (workspaceFolder && providerPaths.agentsDir) {
-            const pattern = providerPaths.agentsPattern || '*.md';
-            this.agentProjectWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(workspaceFolder, `${providerPaths.agentsDir}/**/${pattern}`)
-            );
-            this.agentProjectWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
-            this.agentProjectWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
-            this.agentProjectWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
-        }
-
         if (providerPaths.userAgentsDir ?? providerPaths.agentsDir) {
             const userAgentsPath = path.join(os.homedir(), providerPaths.userAgentsDir ?? providerPaths.agentsDir);
             try {
@@ -74,16 +102,6 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
 
     private setupSkillFileWatchers(): void {
         const providerPaths = getProviderPaths();
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (workspaceFolder && providerPaths.skillsDir) {
-            this.skillProjectWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(workspaceFolder, `${providerPaths.skillsDir}/**/SKILL.md`)
-            );
-            this.skillProjectWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
-            this.skillProjectWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
-            this.skillProjectWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
-        }
-
         if (providerPaths.userSkillsDir ?? providerPaths.skillsDir) {
             const userSkillsPath = path.join(os.homedir(), providerPaths.userSkillsDir ?? providerPaths.skillsDir);
             try {
@@ -111,34 +129,11 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         }
     }
 
-    private setupCompanionFileWatchers(): void {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
-            return;
-        }
-        this.companionConfigWatcher = vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(workspaceFolder, COMPANION_STEERING_PATHS.config)
-        );
-        this.companionConfigWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
-        this.companionConfigWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
-        this.companionConfigWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
-
-        this.companionInstallWatcher = vscode.workspace.createFileSystemWatcher(
-            new vscode.RelativePattern(workspaceFolder, COMPANION_STEERING_PATHS.manifest)
-        );
-        this.companionInstallWatcher.onDidCreate(() => this._onDidChangeTreeData.fire());
-        this.companionInstallWatcher.onDidChange(() => this._onDidChangeTreeData.fire());
-        this.companionInstallWatcher.onDidDelete(() => this._onDidChangeTreeData.fire());
-    }
-
     dispose(): void {
-        this.agentProjectWatcher?.dispose();
+        this.disposeProjectWatchers();
         this.agentUserWatcher?.dispose();
-        this.skillProjectWatcher?.dispose();
         this.skillUserWatcher?.dispose();
         this.skillPluginsWatcher?.dispose();
-        this.companionConfigWatcher?.dispose();
-        this.companionInstallWatcher?.dispose();
         super.dispose();
     }
 
@@ -165,7 +160,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
 
         const providerType = getConfiguredProviderType();
         const providerPaths = getProviderPaths(providerType);
-        if (vscode.workspace.workspaceFolders && providerPaths.steeringDir) {
+        if (getProjectRoot() !== undefined && providerPaths.steeringDir) {
             const steeringDocs = await this.getProviderSteeringDocuments(providerType, providerPaths);
             if (steeringDocs.length > 0) {
                 items.push(new SteeringItem(
@@ -215,9 +210,9 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             // Return steering documents as children of the header
             const items: SteeringItem[] = [];
 
-            if (vscode.workspace.workspaceFolders && this.steeringManager) {
+            const workspacePath = getProjectRoot();
+            if (workspacePath !== undefined && this.steeringManager) {
                 const steeringDocs = await this.steeringManager.getSteeringDocuments();
-                const workspacePath = vscode.workspace.workspaceFolders[0].uri.fsPath;
 
                 for (const doc of steeringDocs) {
                     // Calculate relative path from workspace root
@@ -288,7 +283,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         projectExists: boolean;
     } {
         const home = os.homedir();
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+        const workspaceRoot = getProjectRoot() || '';
 
         const globalPath = providerPaths.globalSteeringFile
             ? path.join(home, providerPaths.globalSteeringFile)
@@ -312,12 +307,12 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         providerType: AIProviderType,
         providerPaths: ReturnType<typeof getProviderPaths>
     ): Promise<Array<{ name: string; path: string }>> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder || !providerPaths.steeringDir) {
+        const projectRoot = getProjectRoot();
+        if (!projectRoot || !providerPaths.steeringDir) {
             return [];
         }
 
-        const steeringPath = path.join(workspaceFolder.uri.fsPath, providerPaths.steeringDir);
+        const steeringPath = path.join(projectRoot, providerPaths.steeringDir);
 
         try {
             const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(steeringPath));
@@ -347,7 +342,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
      * the References section without an await.
      */
     private getWorkflowReferenceSources(): Array<{ label: string; absPath: string }> {
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const root = getProjectRoot();
         if (!root) return [];
         const workflows = vscode.workspace.getConfiguration('speckit')
             .get<Array<{ steering?: Array<{ label?: string; path?: string }> }>>('customWorkflows', []) ?? [];
@@ -368,7 +363,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
 
     /** Files under a reference source (the .md files in a folder, or the file itself). */
     private getReferenceSourceFiles(absPath: string): SteeringItem[] {
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+        const root = getProjectRoot() ?? '';
         const openItem = (filePath: string): SteeringItem => new SteeringItem(
             path.basename(filePath),
             vscode.TreeItemCollapsibleState.None,
@@ -393,8 +388,8 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
      * Scans .specify/ directory for SpecKit files
      */
     private async getSpecKitFiles(): Promise<SpecKitFilesResult> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const projectRoot = getProjectRoot();
+        if (!projectRoot) {
             return { constitution: null, scripts: [], templates: [] };
         }
 
@@ -405,7 +400,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         };
 
         // Check constitution
-        const constitutionPath = path.join(workspaceFolder.uri.fsPath, SPECKIT_PATHS.CONSTITUTION);
+        const constitutionPath = path.join(projectRoot, SPECKIT_PATHS.CONSTITUTION);
         if (fs.existsSync(constitutionPath)) {
             result.constitution = {
                 name: 'constitution.md',
@@ -415,11 +410,11 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         }
 
         // Check scripts directory (including subdirectories)
-        const scriptsPath = path.join(workspaceFolder.uri.fsPath, SPECKIT_PATHS.SCRIPTS_DIR);
+        const scriptsPath = path.join(projectRoot, SPECKIT_PATHS.SCRIPTS_DIR);
         result.scripts = await this.scanDirectory(scriptsPath, true, 'script');
 
         // Check templates directory
-        const templatesPath = path.join(workspaceFolder.uri.fsPath, SPECKIT_PATHS.TEMPLATES_DIR);
+        const templatesPath = path.join(projectRoot, SPECKIT_PATHS.TEMPLATES_DIR);
         result.templates = await this.scanDirectory(templatesPath, true, 'template');
 
         return result;
@@ -460,7 +455,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
     private async getSpecKitHeaderChildren(): Promise<SteeringItem[]> {
         const items: SteeringItem[] = [];
         const specKitFiles = await this.getSpecKitFiles();
-        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+        const workspacePath = getProjectRoot() || '';
 
         // Constitution
         if (specKitFiles.constitution) {
@@ -509,7 +504,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
      */
     private async getSpecKitScripts(): Promise<SteeringItem[]> {
         const specKitFiles = await this.getSpecKitFiles();
-        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+        const workspacePath = getProjectRoot() || '';
 
         return specKitFiles.scripts.map(script => new SteeringItem(
             script.name,
@@ -531,7 +526,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
      */
     private async getSpecKitTemplates(): Promise<SteeringItem[]> {
         const specKitFiles = await this.getSpecKitFiles();
-        const workspacePath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+        const workspacePath = getProjectRoot() || '';
 
         return specKitFiles.templates.map(template => new SteeringItem(
             template.name,
@@ -596,7 +591,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     arguments: [vscode.Uri.file(projectPath)]
                 }
             ));
-        } else if (vscode.workspace.workspaceFolders && providerPaths.steeringFile) {
+        } else if (getProjectRoot() !== undefined && providerPaths.steeringFile) {
             const create = new SteeringItem(
                 'Create Project Rule',
                 vscode.TreeItemCollapsibleState.None,
@@ -647,7 +642,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
         }
 
         // Settings file
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const workspaceRoot = getProjectRoot();
         if (workspaceRoot) {
             const settingsPath = path.join(workspaceRoot, providerPaths.mcpConfigPath);
             if (fs.existsSync(settingsPath)) {
@@ -860,7 +855,7 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
     }
 
     private companionWorkspaceRoot(): string | undefined {
-        return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        return getProjectRoot();
     }
 
     /** Root Companion node — present only when installed (Configuration + Commands); the not-installed nudge lives in the activity-bar badge, the pinned Specs CTA, and Create Spec. */

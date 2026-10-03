@@ -131,6 +131,22 @@ By default, specs are discovered in `specs/` **and** `.specify/specs/` (the Spec
 
 Simple names (e.g., `specs`) list their children as specs. A pattern ending in a wildcard (e.g., `openspec/changes/*`) treats each match as a spec folder. A pattern ending in a plain name (e.g., `apps/*/specs` in a monorepo) names a folder of specs, so it lists `apps/<project>/specs/001-…` the same way `specs` lists `specs/001-…`.
 
+## Project Folder
+
+In a workspace with several folders, Companion works against one of them: the project folder. With no setting it picks the first folder, in workspace order, that holds Spec Kit files (`.specify/`, or the Spec Kit agent files under `.github/agents/`). If none does, it picks the first folder with a `specs/` directory, and failing that the first folder. A workspace with one folder is unaffected.
+
+To choose the folder yourself, name it by its workspace folder name or its path:
+
+```json
+{
+  "speckit.projectFolder": "project-specs"
+}
+```
+
+The sidebar, the viewer, steering, living specs and every command then use that folder, and assistants start in it. The change applies without a reload, and so does adding or removing a workspace folder. When more than one folder qualifies, the SpecKit output channel says which one was picked. A name that matches no workspace folder is reported there and detection is used instead.
+
+Two things are not covered. Living specs kept in a different workspace folder next to the code are not found: the registry and its paths are read relative to the project folder. And one window shows one Spec Kit project at a time.
+
 ## Custom Workflows
 
 Define alternative workflows with custom steps, output files, and sub-documents. Any SDD methodology that uses commands and produces markdown files can be plugged into SpecKit Companion. The sidebar and progress tracking adapt automatically to your custom workflow.

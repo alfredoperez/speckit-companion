@@ -139,6 +139,22 @@ describe('SpecExplorerProvider', () => {
             expect(children).toEqual([]);
         });
 
+        it('should resolve specs against the workspace folder that holds .specify', async () => {
+            (vscode.workspace as any).workspaceFolders = [
+                { uri: vscode.Uri.file('/first'), name: 'first', index: 0 },
+                { uri: vscode.Uri.file('/second'), name: 'second', index: 1 },
+            ];
+            (mockFs.statSync as jest.Mock).mockImplementation((target: string) => {
+                if (target === path.join('/second', '.specify')) return { mtime: new Date(0) };
+                throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+            });
+
+            await provider.getChildren();
+
+            expect(resolveSpecDirectories).toHaveBeenCalledWith('/second');
+            expect(resolveSpecDirectories).not.toHaveBeenCalledWith('/first');
+        });
+
         it('should return empty array when no specs found', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([]);
             const children = await provider.getChildren();

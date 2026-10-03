@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { readSpecContextSyncSafe } from './specContextReader';
 import { SpecStatuses } from '../../core/constants';
+import { getProjectRoot } from '../../core/projectRoot';
 import { isSpecLifecycleItem } from './specExplorerProvider';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 
@@ -14,7 +15,7 @@ export interface SelectableSpecItem {
 }
 
 function resolveStatus(item: SelectableSpecItem): string {
-    const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const ws = getProjectRoot();
     if (!ws || !item.specPath) return SpecStatuses.ACTIVE;
     const ctx = readSpecContextSyncSafe(path.join(ws, item.specPath));
     return ctx?.status || SpecStatuses.ACTIVE;

@@ -15,6 +15,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { BuildReport } from '../../protocol/pipeline';
+import { getProjectRoot } from '../../core/projectRoot';
 
 /** How long a build may take before it is abandoned. Assembly is fast; a hang is a bug. */
 const BUILD_TIMEOUT_MS = 60_000;
@@ -111,7 +112,7 @@ export function registerPipelineBuildCommands(
      * for the palette, where there is no panel and the alternative is silence.
      */
     const build = async (dryRun: boolean, quiet = false): Promise<BuildReport | null> => {
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const workspaceRoot = getProjectRoot();
         if (!workspaceRoot) {
             void vscode.window.showWarningMessage('Open a workspace folder to build its pipeline.');
             return null;
