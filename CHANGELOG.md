@@ -20,6 +20,8 @@ A new Claude Code mod shows the spec you are following above the prompt, such as
 
 ### Fixed
 - **The Copilot app board no longer covers itself with the prompt it sent.** Sending a step now shows a short note that fades, with the full prompt behind Show prompt and Copy (it stays up to paste when there is no chat session), and in a workspace without SpecKit Companion the Companion and Auto choices now look disabled. ([#827](https://github.com/alfredoperez/speckit-companion/pull/827)) <!-- area: copilot-app -->
+- **New spec on the Copilot app board numbers the spec itself.** The message it sends now names the next number, one more than the highest numbered spec folder, so a new spec no longer reuses a number or picks up the `_NN_` naming of the demo folders. ([#837](https://github.com/alfredoperez/speckit-companion/pull/837)) <!-- area: copilot-app -->
+- **The Copilot agent uses the board to answer questions about specs.** Its list and focus actions now tell it to use them instead of reading the spec files, and to move the board whenever you name a spec. ([#837](https://github.com/alfredoperez/speckit-companion/pull/837)) <!-- area: copilot-app -->
 
 ## [0.35.0] - 2026-10-03
 

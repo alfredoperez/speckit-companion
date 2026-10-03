@@ -49,7 +49,7 @@ const session = await joinSession({
             actions: [
                 {
                     name: 'list_specs',
-                    description: 'List the specs on the board with status, pipeline step badges and task progress. Pass filter "active" to skip completed/archived specs.',
+                    description: 'List the specs on the board with status, pipeline step badges and task progress. Use this to answer any question about which specs exist or where they stand, instead of reading files under specs/. Pass filter "active" to skip completed and archived specs.',
                     inputSchema: {
                         type: 'object',
                         additionalProperties: false,
@@ -76,7 +76,7 @@ const session = await joinSession({
                 },
                 {
                     name: 'focus_spec',
-                    description: 'Select a spec on the board so the user sees its documents and pipeline.',
+                    description: 'Select a spec on the board so the user sees its documents and pipeline. Call this whenever the user names a spec or asks to see, show or open one, instead of reading its files under specs/.',
                     inputSchema: specInput,
                     handler: (ctx) => {
                         try {
