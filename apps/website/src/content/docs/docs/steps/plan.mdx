@@ -1,0 +1,55 @@
+---
+title: Plan
+description: The step that decides how a spec gets built. What it writes, and where its documents show in the viewer.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="/speckit.companion.plan" prompt={false} />
+  <p>Or press <strong>Plan</strong> in the viewer footer, under <code>Next: Plan</code>. The stock Spec Kit workflow sends <code>/speckit.plan</code>.</p>
+</Actions>
+
+Plan reads the spec and decides how to build it: the approach, the files and structure involved, and the technical choices. This is where technology enters. The spec stays about what and why.
+
+## What it writes
+
+| File | What is in it |
+| --- | --- |
+| `plan.md` | A summary, a check against the [constitution](/docs/steps/constitution), and the project structure |
+| `research.md` | What the assistant looked up, and what it chose |
+| `data-model.md` | The entities and their fields |
+| `contracts/` | Interfaces the change exposes |
+
+Only `plan.md` is always written. The Companion workflow writes the others as the size of the change warrants. For a change sized simple, it keeps the summary and folds the rest into it, and [Specify](/docs/steps/specify) has usually written that short plan already.
+
+When [living specs](/docs/results/living-specs) are on, plan reads the specs for the capabilities in scope before it designs anything.
+
+## While it runs, and after
+
+<YouSee>
+
+The **Plan** tab spins and keeps time while the step runs. When it settles, Plan is checked, the badge reads **Planned**, and the supporting documents sit under Plan in the rail. The footer offers **Next: Tasks**.
+
+</YouSee>
+
+<DocFigure src="workflow-documents-poster.png" caption="The plan, with Research and Data Model under it in the rail and its headings in On this page." />
+
+<DocFigure
+  src="figure-mid-run.png"
+  recapture
+  alt="The viewer while Plan runs: Specification is checked, and the Plan tab shows a spinner and its running time, 1m 18s."
+  caption="While plan runs, its tab spins and keeps time."
+/>
+
+## Check the plan before moving on
+
+**Checklist**, under **Other actions** in the footer, is Spec Kit's command for a quality checklist on the plan. If you edit the spec after the plan was written, the plan shows a stale banner with **Regenerate**.
+
+## Related
+
+- [Review with comments](/docs/steps/review-with-comments) works on the plan the same way it does on the spec.
+- [Tasks](/docs/steps/tasks) is the next step.

@@ -1,0 +1,112 @@
+---
+/*
+  One screenshot, framed the same way every time: a 16:9 box on a neutral
+  light ground, the image contained inside it, then a caption. Captures come
+  in many sizes and two themes; the frame is what makes them read as one set,
+  and it is light on the dark site so a light capture always has an edge.
+
+  `src` is a file name under docs/screenshots/generated/, content/media/web/ or
+  docs/screenshots/. Alt text comes from content/media/manifest.json when it
+  describes that file, or from `alt`. A missing file or missing alt fails the
+  build.
+
+  `recapture` marks a still that is a dark live capture standing in until a
+  light one exists. It changes nothing on screen; it is there to be grepped.
+*/
+import manifest from '../../../../../content/media/manifest.json';
+
+interface Props {
+  src: string;
+  caption: string;
+  alt?: string;
+  recapture?: boolean;
+}
+
+const { src, caption, alt: altOverride, recapture = false } = Astro.props;
+
+const stills = {
+  ...import.meta.glob<{ default: ImageMetadata }>('../../../../../docs/screenshots/generated/*.png', {
+    eager: true,
+  }),
+  ...import.meta.glob<{ default: ImageMetadata }>('../../../../../content/media/web/*.png', {
+    eager: true,
+  }),
+  ...import.meta.glob<{ default: ImageMetadata }>('../../../../../docs/screenshots/*.png', {
+    eager: true,
+  }),
+  ...import.meta.glob<{ default: ImageMetadata }>('../../../public/canvas/*.png', {
+    eager: true,
+  }),
+};
+
+const match = Object.entries(stills).find(([key]) => key.endsWith(`/${src}`));
+if (!match) {
+  throw new Error(`DocFigure: no still named "${src}" in docs/screenshots/generated/, content/media/web/, docs/screenshots/ or public/canvas/.`);
+}
+const image = match[1].default;
+
+const described = (manifest.features as Array<{ alt?: Record<string, string> }>)
+  .flatMap((feature) => Object.entries(feature.alt ?? {}))
+  .find(([path]) => path.split('/').pop() === src)?.[1];
+const alt = altOverride ?? described;
+if (!alt) {
+  throw new Error(`DocFigure: "${src}" has no alt text in the media manifest. Pass alt=.`);
+}
+---
+
+<figure class="dfig not-content" data-recapture={recapture ? 'light' : undefined}>
+  <div class="dfig__frame">
+    <img
+      class="dfig__img"
+      src={image.src}
+      width={image.width}
+      height={image.height}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+    />
+  </div>
+  <figcaption class="dfig__caption">{caption}</figcaption>
+</figure>
+
+<style>
+  .dfig {
+    margin: 1.1rem 0 1.6rem;
+  }
+
+  .dfig__frame {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #eeedf3;
+    border: 1px solid #d9d6e4;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  /* Contained, so any capture size fits without cropping. The drop shadow
+     follows the image's own pixels rather than the box, so the screenshot gets
+     an edge and the letterbox around it stays clean. */
+  /* Qualified past docs.css, which gives every content image a dark border,
+     background and auto width. */
+  .dfig .dfig__frame img.dfig__img {
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    position: absolute;
+    inset: 5%;
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    filter: drop-shadow(0 1px 1px rgb(24 20 45 / 0.22)) drop-shadow(0 6px 16px rgb(24 20 45 / 0.1));
+  }
+
+  .dfig__caption {
+    margin-top: 0.55rem;
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+    color: var(--text-muted);
+  }
+</style>

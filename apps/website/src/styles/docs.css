@@ -292,31 +292,10 @@ body {
 
 /* ---------------------------------------------------------------- pictures */
 
-/* A screenshot is the thing the page is about, so it sits in the flow with the
-   same gap a paragraph gets above it and slightly more below, where its caption
-   has to clear the next block. MediaSlot's own margin is a top-only 20px, which
-   left the caption sitting closer to the next heading than to its own picture. */
-.sl-markdown-content figure.mslot {
-  margin-block: 0.9rem 1.2rem;
-}
-
-/* Height, not width, is what makes a screenshot expensive on a docs page. A
-   landscape shot is nowhere near this and is untouched; a tall portrait one,
-   the sidebar captured top to bottom, lands at roughly the size the real
-   sidebar is on screen instead of running past a full viewport. Width goes to
-   auto so the aspect ratio does the arithmetic, and the shot centres in the
-   column rather than hanging off its left edge. */
-.sl-markdown-content figure.mslot .mslot__img {
-  width: auto;
-  max-width: 100%;
-  max-height: 48rem;
-  margin-inline: auto;
-}
-
-/* A page that reaches past MediaSlot for a still it needs by path gets the same
-   object anyway: same hairline, same radius, same ceiling. A dark screenshot on
-   a dark page needs the edge or the reader cannot tell where the product stops. */
-.sl-markdown-content img:not(.mslot__img) {
+/* Screenshots go through DocFigure, which frames them itself. A plain markdown
+   image still gets an edge and a height ceiling, so a dark capture on a dark
+   page shows where the product stops. */
+.sl-markdown-content img {
   display: block;
   width: auto;
   max-width: 100%;
@@ -325,6 +304,12 @@ body {
   border: 1px solid var(--border-panel);
   border-radius: var(--radius-sm);
   background: var(--panel);
+}
+
+/* A framed screenshot directly under a heading needs the gap a paragraph would
+   get, or the frame crowds the heading it belongs to. */
+.sl-markdown-content .sl-heading-wrapper + figure.dfig {
+  margin-top: 1rem;
 }
 
 /* Code. Small, tight, and dense enough that a real install command fits on one

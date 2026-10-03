@@ -1,0 +1,92 @@
+---
+title: The Overview
+description: 'The Overview page region by region, in the order it renders them: what each one shows, what it means, and how far to trust it.'
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+The Overview shows what a run did, on one page: why the spec exists, how long each phase took, what was checked, what was decided and which requirement got which test. Click **Overview**, the first entry in the rail, to open it.
+
+<DocFigure
+  src="overview-annotated-16x9.png"
+  alt="The Overview of a finished run with its per-phase timing called out: run status, expectations, verified checks with their commands, decisions with rejected alternatives, and the coverage table."
+  caption="A finished run. The Run overview strip shows a time for a phase only when both of its ends were recorded."
+/>
+
+It is read from the **run record**, a `.spec-context.json` file next to the spec. Nothing on the page runs or re-checks anything.
+
+## When it appears
+
+| Situation | What you get |
+| --- | --- |
+| A feature spec whose run recorded something | The Overview, as the first entry in the rail |
+| A spec that was never run | No Overview. The spec opens on its document. A status, a current step or your own review comments do not count as a run. |
+| A living spec | Its own overview, not this one |
+| `speckit.viewer.activityPanel` set to `false` | No Overview |
+| The Companion Spec Kit extension is not installed | A thin page and a banner offering the install, because most of what the page reads never gets written |
+
+A region with nothing recorded does not render, so a thin page means a thin record.
+
+## The regions
+
+Each region has a title and, on the right, a count. Skim the counts first. They tell you where to read closely.
+
+| Region | What it shows |
+| --- | --- |
+| Intent | The one sentence the run answers to. Beside it: the approach, the working area, a sizing line such as `Sized simple: 6 files, 8 tasks projected`, and any living specs the run loaded. |
+| Run overview | One entry per phase with the time it took, and the run's total as active time |
+| Expectations | Constraints on one side, declared non-goals on the other |
+| Verified | Each check, the command the assistant said it ran, and the outcome it reported |
+| Decisions | The choice, why, and what was rejected |
+| Coverage | Each requirement, the tasks that delivered it and the tests that exercise it |
+| Run log | Collapsed: the per-phase timeline, per-task records, concerns, files touched and review comments |
+
+<DocFigure src="panel-read.png" caption="The top of the page: intent, the time each phase took, the approach, where it worked, how it was sized, and the expectations." />
+
+## How to read each one
+
+**Intent.** Read it first. If it does not match what you expected, stop there.
+
+**Run overview.** The total is active time: the time the phases took, without the waits between them.
+
+| A phase reads | Meaning |
+| --- | --- |
+| A duration | Both ends of the phase were recorded |
+| Blank | One end is missing. The page declines to guess. It is not a zero. |
+| "folded into Plan" | The run merged this phase into an earlier one |
+| No end yet | The phase is running. Its live timer is on the rail tab. |
+
+When some phases have no time, the head reads "Timing coverage: N of M phases", or "Timing not recorded".
+
+**Expectations.** Something you expected is not in the diff? Check the non-goals before calling it a gap.
+
+**Verified.** The count reads `3 passed`, or `2 passed · 1 warned` when the run reported harmless warnings. This is a report, not a re-run. A green row means the assistant said it passed. Use it to learn which commands to run yourself.
+
+**Decisions.** The first three show and the rest sit behind "Show N more decisions". The rejected line is the useful part. It is what a later session would otherwise rediscover the slow way.
+
+**Coverage.** This table most often carries bad news. Untraced requirements sort first, and six rows show before "Show all N requirements". The count reads `4/7 traced`, in a warning tone until every requirement has evidence.
+
+| Evidence reads | Meaning |
+| --- | --- |
+| "N tests" | The requirement names N tests, and every file is on disk |
+| "No test linked" | The requirement names no test |
+| "N tests not found" | It names N tests, and none of the files is on disk |
+| "K of N found" | It names N tests, and only K of the files are on disk |
+
+The check is that the file exists. Nothing runs the test.
+
+<DocFigure src="coverage-x16x9.png" caption="Requirement to task to test, with every requirement traced." />
+
+**Run log.** Open it when you need to know which files a run touched or what one task did.
+
+## How far to trust it
+
+- **Where it comes from.** The Companion Spec Kit extension writes `.spec-context.json` during runs, and the VS Code extension only reads it. Commit the file and the record travels with the branch.
+- **Timestamps differ in trust.** Step boundaries and per-task finishes are written by a script. Clarify and analyze closes, and the smaller stages inside plan and tasks, are reported by the assistant to the second. The run only says "X active" when specify, plan, tasks and implement all measured cleanly.
+- **The log only grows.** A write that would publish a shorter history is rejected.
+- **The install banner.** Dismiss it once and it stays gone, or set `speckit.companion.installPrompt` to `false`.
+
+## Related
+
+- [Review with comments](/docs/steps/review-with-comments) is how you say a decision here is wrong.
+- [Track progress](/docs/results/track-progress) covers the doctor, which checks whether the record itself can be believed.

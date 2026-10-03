@@ -1,0 +1,60 @@
+---
+title: Steering
+description: What a steering document is, what the Steering view gathers, and why SpecKit Companion never reads any of it when it sends a step.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+A spec says what to build this time. A **steering document** says how this project builds anything: conventions, architecture, testing habits. The Steering view shows the ones your assistant already reads, in one place.
+
+Your assistant, the one you chose in `speckit.aiProvider`, already has a place for those. Claude Code reads `CLAUDE.md`, Codex and OpenCode read `AGENTS.md`, and the others have their own filenames. [Providers](/docs/reference/providers#what-each-one-reads) lists every path. The Steering view adds no new format.
+
+<DocFigure src="sidebar-triptych.png" caption="The Steering view, in the middle, lists the project's constitution, scripts and templates beside the Specs and Living Specs views." />
+
+## What the view shows
+
+Two scopes run through it. **Project** is this repository. **User** is you, on this machine, across every project.
+
+| Section | Shows when |
+| --- | --- |
+| Companion | The Companion Spec Kit extension is installed |
+| Your assistant | Always. Holds Project and User groups for the rule file, Agents, Skills and Settings. |
+| Steering Docs | Your assistant has a steering directory with at least one document |
+| SpecKit Project Files | A [constitution](/docs/steps/constitution), script or template exists |
+| References | A custom workflow declares reference folders that exist |
+
+A missing section means that thing does not exist in this project yet. With IDE Chat there is no assistant-owned configuration, so those sections are empty.
+
+<DocFigure src="live-steering-view.png" recapture caption="The Steering view: the Companion node, your assistant, and the SpecKit project files." />
+
+## What you can do
+
+Every action builds a prompt and hands it to your assistant.
+
+| Action | What happens |
+| --- | --- |
+| **New Steering Document** | Your assistant writes a markdown file into the steering directory |
+| **Refine** | Your assistant improves the document in place |
+| **Delete Steering** | The file is removed, then your assistant cleans up references to it |
+| **Create Project Rule**, **Create User Rule** | Creates or opens your assistant's own rule file, named as it really is, for example `GEMINI.md` |
+
+Refine and Delete appear only on Steering Docs and References. Assistant files and Spec Kit files can be opened and revealed, never deleted from the tree.
+
+## SpecKit Companion does not read them
+
+Nothing under Steering is read when a step is sent. The command carries the spec, not your rules. Your assistant reads its own file on its own, so a rule that is ignored is a question for the assistant. The view can show you `CLAUDE.md`. It cannot make the assistant follow it.
+
+## The Companion node
+
+With the Companion Spec Kit extension installed, a Companion node comes first.
+
+| Row | Opens |
+| --- | --- |
+| **Configuration** | `.specify/companion.yml`. See [Hooks](/docs/customize/hooks). |
+| **Commands** | The `/speckit.companion.*` set from the installed extension |
+| **Templates** | The extension's markdown templates. Hidden when there are none. |
+
+## Related
+
+- [Constitution](/docs/steps/constitution) is the one steering file Spec Kit itself defines.
+- [Review with comments](/docs/steps/review-with-comments) shapes one spec, where steering shapes all of them.

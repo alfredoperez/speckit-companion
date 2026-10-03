@@ -1,0 +1,57 @@
+---
+title: Specify
+description: The first step of a spec. What it writes, how it sizes the change, and what the viewer shows when it finishes.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="/speckit.companion.specify <what you want to build>" prompt={false} />
+  <p>Or click <code>+</code> in the Specs view and press <strong>Create Spec</strong>. The stock Spec Kit workflow sends <code>/speckit.specify</code>.</p>
+</Actions>
+
+Specify turns a short brief into a spec: what is being built, for whom, and how you will know it works. It says nothing about how to build it. That is the plan's job.
+
+<DocFigure src="live-create-spec.png" recapture caption="Create New Spec: the workflow, then the brief. Create Spec sends specify." />
+
+## What it writes
+
+| File | What is in it |
+| --- | --- |
+| The spec, in a new `specs/<number>-<name>/` folder | User stories in priority order with acceptance scenarios, functional requirements, key entities, edge cases and success criteria |
+| `checklists/requirements.md` | A quality checklist the assistant grades the spec against, once |
+
+The stock workflow names the spec `spec.md`. The Companion workflow names it after the folder, `<name>.spec.md`. The viewer opens either as **Specification**.
+
+Where the brief leaves a real question open, the spec marks it in the text and does not guess. **Clarify**, under **Other actions** in the footer, has your assistant ask you those questions and write the answers in.
+
+## How it sizes the change
+
+With the Companion workflow, specify also judges how big the change is. There is no setting for this.
+
+| Verdict | The bar | What specify does |
+| --- | --- | --- |
+| Simple | Up to 5 files and 10 tasks | Writes a short plan and the task list in the same pass. The next step is implement. |
+| Normal | Over that bar | Writes only the spec. You continue with plan, then tasks. |
+| Oversized | Over it by a wide margin, across several parts of the code | Same as normal: only the spec, then the full run. The verdict is recorded. |
+
+The verdict shows on [the Overview](/docs/results/the-overview) as a line such as `Sized simple: 6 files, 8 tasks projected`.
+
+## When it settles
+
+<YouSee>
+
+While it runs, the footer reads **Step running, actions unlock when it settles**. When it settles, **Specification** is checked in the rail, the badge reads **Specified**, and the footer offers **Next: Plan**. After a simple verdict, Plan and Tasks are checked too and the footer offers **Next: Implement**.
+
+</YouSee>
+
+<DocFigure src="step-rail-x16x9.png" caption="After specify: Specification is checked, with its checklist under it. Plan and Tasks wait for their documents." />
+
+## Related
+
+- [Your first spec](/docs/start/your-first-spec) walks through creating one.
+- [Review with comments](/docs/steps/review-with-comments) is how you correct the spec before planning.
+- [Plan](/docs/steps/plan) is the next step.

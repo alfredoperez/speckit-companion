@@ -2,6 +2,60 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import vercel from '@astrojs/vercel';
+import { mkdir, writeFile } from 'node:fs/promises';
+
+// Retired URLs. The docs were regrouped by the spec journey, and every page
+// that moved, merged or split keeps its old address pointing at the page that
+// now holds its content, so a bookmark or a link in a published README never
+// 404s. Targets are final pages, never another redirect.
+//
+// getting-started   became Your first spec; its command table is Commands.
+// pick-a-pipeline   the two workflows are explained with the method itself.
+// the two Pipeline Builder pages (anatomy and guide) are one page now.
+// customize         custom commands stayed with Your own workflow; hooks got
+//                   their own page, which that one links to first.
+const MOVED = {
+  '/docs/start/getting-started': '/docs/start/your-first-spec',
+  '/docs/anatomy/the-sidebar': '/docs/navigate/the-sidebar',
+  '/docs/anatomy/sidebar-and-steering': '/docs/navigate/the-sidebar',
+  '/docs/anatomy/anatomy-of-the-spec-viewer': '/docs/navigate/inside-the-viewer',
+  '/docs/anatomy/anatomy-of-the-overview': '/docs/results/the-overview',
+  '/docs/guides/reading-the-overview': '/docs/results/the-overview',
+  '/docs/anatomy/anatomy-of-the-pipeline-builder': '/docs/customize/pipeline-builder',
+  '/docs/guides/pipeline-builder': '/docs/customize/pipeline-builder',
+  '/docs/guides/customize': '/docs/customize/your-own-workflow',
+  '/docs/guides/steering': '/docs/customize/steering',
+  '/docs/guides/review-and-refine': '/docs/steps/review-with-comments',
+  '/docs/guides/check-a-run': '/docs/results/track-progress',
+  '/docs/guides/copilot-app': '/docs/processes/copilot-app',
+  '/docs/guides/claude-code': '/docs/processes/claude-code',
+  '/docs/guides/living-specs': '/docs/results/living-specs',
+  '/docs/discussions/living-specs': '/docs/results/living-specs',
+  '/docs/guides/pick-a-pipeline': '/docs/start/spec-driven-development',
+  '/docs/discussions/pick-a-pipeline': '/docs/start/spec-driven-development',
+};
+
+// The adapter turns each redirect into a Vercel route that matches the path
+// exactly, so `/docs/guides/steering/` with its trailing slash fell through to
+// the 404 page, and published READMEs link with the slash. A second route for
+// the slash form is a route collision in Astro, so the slash form is covered by
+// a static page at that address which forwards to the same place.
+const forward = (to) =>
+  `<!doctype html><meta charset="utf-8"><title>Moved</title><link rel="canonical" href="https://speckit-companion.dev${to}"><meta http-equiv="refresh" content="0;url=${to}"><meta name="robots" content="noindex"><a href="${to}">This page moved to ${to}</a>`;
+
+/** @type {import('astro').AstroIntegration} */
+const trailingSlashRedirects = {
+  name: 'trailing-slash-redirects',
+  hooks: {
+    'astro:build:generated': async ({ dir }) => {
+      for (const [from, to] of Object.entries(MOVED)) {
+        const folder = new URL(`.${from}/`, dir);
+        await mkdir(folder, { recursive: true });
+        await writeFile(new URL('index.html', folder), forward(to));
+      }
+    },
+  },
+};
 
 /*
   Still a static site: every page prerenders, exactly as before. The adapter is
@@ -28,28 +82,9 @@ export default defineConfig({
   site: 'https://speckit-companion.dev',
   output: 'static',
   trailingSlash: 'ignore',
-  // Retired URLs. Every one of these pages was folded, split or moved rather
-  // than deleted, so the old address keeps working instead of 404ing for
-  // anyone who bookmarked it.
-  //
-  // reading-the-overview  was a narrative retelling of the anatomy page: same
-  //                       regions, same order, same sentences.
-  // sidebar-and-steering  taught two unrelated things on one page. The sidebar
-  //                       half kept the anatomy slot; steering became a guide,
-  //                       which is where a reader arriving at the old URL is
-  //                       least likely to want to land, so it points at the
-  //                       sidebar and that page links on to Steering.
-  // pick-a-pipeline,
-  // living-specs          moved out of Guides into Discussions: both explain a
-  //                       concept rather than walk a job, so they read next to
-  //                       each other instead of next to a recipe.
-  redirects: {
-    '/docs/guides/reading-the-overview': '/docs/anatomy/anatomy-of-the-overview',
-    '/docs/anatomy/sidebar-and-steering': '/docs/anatomy/the-sidebar',
-    '/docs/guides/pick-a-pipeline': '/docs/discussions/pick-a-pipeline',
-    '/docs/guides/living-specs': '/docs/discussions/living-specs',
-  },
+  redirects: MOVED,
   integrations: [
+    trailingSlashRedirects,
     starlight({
       title: 'SpecKit Companion',
       description:
@@ -89,58 +124,79 @@ export default defineConfig({
           href: 'https://github.com/alfredoperez/speckit-companion',
         },
       ],
-      // Four groups, in the order a reader moves through them: get it running,
-      // learn what each surface is showing you, do a specific job, then read
-      // the reasoning behind a choice. The directory is the group, so a new
-      // page lands in the right section by where it's saved and nothing here
-      // has to be edited.
+      // Seven groups, in the order of the spec journey: get set up, find your
+      // way around, run each step, read what a run left, the other ways in,
+      // make it yours, then the dictionaries. Every entry is named here by
+      // slug, because the order is the reading order and the footer's previous
+      // and next buttons walk it. A new page is added to its group below.
       //
-      // docs/start       onboarding. Introduction and Install are named by
-      //                  slug because /docs/ is the section root and cannot
-      //                  sit in a subdirectory; everything after them
-      //                  autogenerates.
-      // docs/anatomy     the surface references. One page per surface, read
-      //                  region by region: what it shows and what it means.
-      // docs/reference   the dictionaries: every setting, the provider
-      //                  matrix, what telemetry sends. Complete and uniform,
-      //                  meant to be looked up rather than read start to end.
-      // docs/guides      how-to. One page per job, read start to finish, no
-      //                  theory.
-      // docs/discussions explanation. Free to digress, no steps: what a
-      //                  workflow is, why living specs exist.
-      //
-      // Every page carries its own `sidebar.label` and `sidebar.order` in
-      // frontmatter, so the nav reads Overview, Spec viewer, Sidebar under the
-      // group that already says Anatomy, while each page keeps its longer title
-      // on the page itself. Without the order key an autogenerated group falls
-      // back to alphabetical, which put Living specs first even though it is
-      // the most advanced guide. The order below is the reading order, which is
-      // also the order the footer's previous and next buttons walk: install it,
-      // learn the surfaces, do a job, then read the "why".
+      // Introduction and Install are /docs/ and /docs/install: the first is the
+      // section root, and the second is linked from two published READMEs.
       sidebar: [
         {
-          label: 'Start here',
+          label: 'Start',
           items: [
             { label: 'Introduction', slug: 'docs' },
+            { label: 'Spec-driven development', slug: 'docs/start/spec-driven-development' },
             { label: 'Install', slug: 'docs/install' },
-            { autogenerate: { directory: 'docs/start' } },
+            { label: 'Your first spec', slug: 'docs/start/your-first-spec' },
           ],
         },
         {
-          label: 'Anatomy',
-          items: [{ autogenerate: { directory: 'docs/anatomy' } }],
+          label: 'Navigate',
+          items: [
+            { label: 'The sidebar', slug: 'docs/navigate/the-sidebar' },
+            { label: 'Inside the viewer', slug: 'docs/navigate/inside-the-viewer' },
+          ],
+        },
+        {
+          label: 'Each step',
+          items: [
+            { label: 'Constitution', slug: 'docs/steps/constitution' },
+            { label: 'Specify', slug: 'docs/steps/specify' },
+            { label: 'Plan', slug: 'docs/steps/plan' },
+            { label: 'Tasks', slug: 'docs/steps/tasks' },
+            { label: 'Implement', slug: 'docs/steps/implement' },
+            { label: 'Converge', slug: 'docs/steps/converge' },
+            { label: 'Review with comments', slug: 'docs/steps/review-with-comments' },
+            { label: 'Run it all with Auto', slug: 'docs/steps/auto' },
+          ],
+        },
+        {
+          label: 'Read the results',
+          items: [
+            { label: 'Reading a spec', slug: 'docs/results/reading-a-spec' },
+            { label: 'The Overview', slug: 'docs/results/the-overview' },
+            { label: 'Track progress', slug: 'docs/results/track-progress' },
+            { label: 'Living specs', slug: 'docs/results/living-specs' },
+          ],
+        },
+        {
+          label: 'Other processes',
+          items: [
+            { label: 'Fix a bug', slug: 'docs/processes/fix-a-bug' },
+            { label: 'Assess an idea', slug: 'docs/processes/assess-an-idea' },
+            { label: 'From the Copilot app', slug: 'docs/processes/copilot-app' },
+            { label: 'From Claude Code', slug: 'docs/processes/claude-code' },
+          ],
+        },
+        {
+          label: 'Customize',
+          items: [
+            { label: 'Pipeline Builder', slug: 'docs/customize/pipeline-builder' },
+            { label: 'Hooks', slug: 'docs/customize/hooks' },
+            { label: 'Your own workflow', slug: 'docs/customize/your-own-workflow' },
+            { label: 'Steering', slug: 'docs/customize/steering' },
+          ],
         },
         {
           label: 'Reference',
-          items: [{ autogenerate: { directory: 'docs/reference' } }],
-        },
-        {
-          label: 'Guides',
-          items: [{ autogenerate: { directory: 'docs/guides' } }],
-        },
-        {
-          label: 'Discussions',
-          items: [{ autogenerate: { directory: 'docs/discussions' } }],
+          items: [
+            { label: 'Commands', slug: 'docs/reference/commands' },
+            { label: 'Configuration', slug: 'docs/reference/configuration' },
+            { label: 'Providers', slug: 'docs/reference/providers' },
+            { label: 'Telemetry', slug: 'docs/reference/telemetry' },
+          ],
         },
       ],
     }),

@@ -1,0 +1,51 @@
+---
+// The click, command or keystroke of a section, stacked with even spacing. Children are Button, CodeLine and short notes.
+---
+
+<div class="doc-actions not-content"><slot /></div>
+
+<style>
+  .doc-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    max-width: 100%;
+    min-width: 0;
+    margin-block: 1rem;
+  }
+
+  .doc-actions :global(> *) {
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .doc-actions :global(p) {
+    margin: 0;
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    color: var(--text-body);
+  }
+
+  .doc-actions :global(p code) {
+    padding: 0.1em 0.36em;
+    font-size: var(--fs-ui-sm);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+  }
+
+  .doc-actions :global(a:not(.btn)) {
+    color: var(--accent);
+  }
+
+  /* The site's filled violet puts white text under AA at this size; a deeper
+     fill clears 4.5:1 without changing the button anywhere else. */
+  .doc-actions :global(.btn--primary) {
+    background: color-mix(in srgb, var(--accent-solid) 80%, black);
+    color: #ffffff;
+  }
+
+  .doc-actions :global(.btn--primary:hover) {
+    background: color-mix(in srgb, var(--accent-solid) 70%, black);
+  }
+</style>

@@ -1,16 +1,13 @@
 ---
 title: Install
 description: Both halves, in order, with the one prerequisite that quietly breaks the second install if you skip it.
-sidebar:
-  label: Install
-  order: 2
-tableOfContents: false
 ---
 
 import Button from '../../../components/Button.astro';
 import CodeLine from '../../../components/CodeLine.astro';
-import GuidedStep from '../../../components/docs/GuidedStep.astro';
-import MediaSlot from '../../../components/docs/MediaSlot.astro';
+import Actions from '../../../components/journey/Actions.astro';
+import DocFigure from '../../../components/journey/DocFigure.astro';
+import YouSee from '../../../components/journey/YouSee.astro';
 
 export const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
 
@@ -20,97 +17,59 @@ export const COMPANION_COMMAND = 'specify extension add companion --from https:/
 
 export const SOURCE_CLI = 'uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force';
 
-Install SpecKit Companion in four steps: the VS Code extension from the Marketplace, then the Companion Spec Kit extension from the `specify` command. Open a folder as your workspace first. Step 2 needs Spec Kit 0.9.5 or newer.
+SpecKit Companion comes in two halves: the VS Code extension from the Marketplace, and the Companion Spec Kit extension from the `specify` command. Install them in this order, with a folder open as your workspace. The second half needs Spec Kit 0.9.5 or newer.
 
-<GuidedStep n={1} title="Install the VS Code extension">
+## The VS Code extension
 
-This is the half you look at. It works on its own.
+<Actions>
+  <Button href={MARKETPLACE} external size="md" data-analytics="install_click_vscode" data-analytics-placement="install">Get it on the Marketplace</Button>
+  <p>Or from a terminal:</p>
+  <CodeLine command="code --install-extension alfredoperez.speckit-companion" />
+</Actions>
 
-<div slot="action">
-  <Button
-    href={MARKETPLACE}
-    external
-    size="md"
-    data-analytics="install_click_vscode"
-    data-analytics-placement="install"
-  >
-    Get it on the Marketplace
-  </Button>
-  <div class="gstep-fallback">
-    <p>Or from a terminal:</p>
-    <CodeLine command="code --install-extension alfredoperez.speckit-companion" />
-  </div>
-</div>
+This is the half you look at. It works on its own, and it is on Open VSX too.
 
-<div slot="result">
+<YouSee>
 
-A SpecKit icon in the activity bar with two views, **Specs** and **Steering**. Two is correct: Living Specs arrives with the second half. It is on Open VSX too.
+A SpecKit icon in the activity bar with two views, **Specs** and **Steering**. Two is correct. Living Specs arrives with the second half.
 
-</div>
+</YouSee>
 
-<MediaSlot
-  slot="media"
-  feature="specs-sidebar"
-  caption="What the activity bar gives you right after step 1."
-/>
+## A Spec Kit CLI that has extensions
 
-</GuidedStep>
-
-<GuidedStep n={2} title="Get an extension-capable Spec Kit CLI">
-
-The stock PyPI `specify-cli` has no `extension` command, so step 3 would fail. Install the GitHub build instead. This changes your global `uv` tools.
-
-<div slot="action">
+<Actions>
   <CodeLine command={SOURCE_CLI} />
-</div>
+</Actions>
 
-<div slot="result">
+The stock PyPI `specify-cli` has no `extension` command, so the next install would fail. This installs the GitHub build instead. It changes your global `uv` tools.
+
+<YouSee>
 
 `specify extension --help` lists `add` and `list`.
 
-</div>
+</YouSee>
 
-<MediaSlot
-  slot="media"
-  feature="banner-install-vscode"
-  caption="Steps 1 and 2 set up the viewer half. Step 3 adds the run record."
-/>
+## The Companion Spec Kit extension
 
-</GuidedStep>
+<Actions>
+  <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="install" />
+</Actions>
 
-<GuidedStep n={3} title="Add the Companion Spec Kit extension">
+Run it from your project root and copy it whole. The short catalog form does not work. This half writes the run record, a `.spec-context.json` file next to each spec. Without it a spec still renders, but nothing records what the run did.
 
-This half writes the run record, a `.spec-context.json` file next to each spec. Run the command from your project root and copy it whole. The short catalog form does not work.
-
-<div slot="action">
-  <CodeLine
-    command={COMPANION_COMMAND}
-    data-analytics="install_click_speckit_copy"
-    data-analytics-placement="install"
-  />
-</div>
-
-<div slot="result">
+<YouSee>
 
 A one-time **untrusted source** prompt, because the archive comes from a URL and not the catalog. Accept it.
 
-</div>
+</YouSee>
 
-<MediaSlot
-  slot="media"
-  feature="banner-install-engine"
-  caption="Without this step a spec still renders, but nothing records what the run did."
-/>
+## Check that it took
 
-</GuidedStep>
-
-<GuidedStep n={4} title="Check that it took" resultLabel="All three should be true">
-
-<div slot="action">
+<Actions>
   <CodeLine command="specify extension list" />
-</div>
+</Actions>
 
-<div slot="result">
+<YouSee label="All three should be true">
 
 `companion` is in the list.
 
@@ -118,40 +77,30 @@ Your assistant offers `/speckit.companion.*` commands next to the stock `/specki
 
 A **Living Specs** view has joined the sidebar.
 
-</div>
+</YouSee>
 
-<MediaSlot
-  slot="media"
-  feature="live-install-extension-list"
-  caption="The list shows SpecKit Companion enabled, with its commands and hooks."
-/>
-
-<MediaSlot
-  slot="media"
-  feature="living-specs"
-  caption="The Living Specs view is the visible sign the second half is in."
-/>
-
-</GuidedStep>
+<DocFigure src="live-install-extension-list.png" caption="The list shows SpecKit Companion enabled, with its commands and hooks." />
 
 ## Update later
 
-Re-run the step 3 command. The URL always serves the newest build, and `--force` refreshes in place. To silence the install prompts, set `speckit.companion.installPrompt` to `false`.
+Run the Companion Spec Kit extension command again. The URL always serves the newest build, and `--force` refreshes in place. To silence the install prompts, set `speckit.companion.installPrompt` to `false`.
 
 ## If something did not work
 
-**`No such command 'extension'`.** You have the stock PyPI build. Redo step 2, then step 3.
+| What you see | What to do |
+| --- | --- |
+| `No such command 'extension'` | You have the stock PyPI build. Install the GitHub build of the CLI, then add the extension again. |
+| Stuck on an old build | Run `specify extension remove companion`, then add it again. |
+| No `/speckit.companion.*` commands | Run `specify extension list` from the repo root, not your home directory. Then reload the window so your assistant re-reads its commands. |
+| No Living Specs view | The install went somewhere other than this workspace. Run it again from this project's root. |
 
-**Stuck on an old build.** Run `specify extension remove companion`, then add it again.
+## Working outside VS Code
 
-**No `/speckit.companion.*` commands.** Run `specify extension list` from the repo root, not your home directory. Then reload the window so your provider re-reads its commands.
+| Where you work | What to install |
+| --- | --- |
+| GitHub Copilot app | Skip the VS Code extension. Add the Companion Spec Kit extension so the board can run the `/speckit.companion.*` commands, then follow [From the Copilot app](/docs/processes/copilot-app). |
+| Claude Code terminal | Add the mod in [From Claude Code](/docs/processes/claude-code). It keeps the run in view above the prompt. |
 
-**No Living Specs view after step 3.** The install went somewhere other than this workspace.
+## Related
 
-## Next
-
-[Getting started](/docs/start/getting-started) takes one spec from an empty folder to a run record you can read.
-
-Work in the GitHub Copilot app instead of VS Code? You can skip step 1. Do step 3 so the board can run the `/speckit.companion.*` commands, then follow [The Copilot app board](/docs/guides/copilot-app).
-
-Run the commands in the Claude Code terminal? [The Claude Code mod](/docs/guides/claude-code) keeps the run in view above the prompt.
+[Your first spec](/docs/start/your-first-spec) creates a spec and runs its first step.

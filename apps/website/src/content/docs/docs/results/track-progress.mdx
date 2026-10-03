@@ -1,0 +1,75 @@
+---
+title: Track progress
+description: Where a spec's progress shows while it runs, and the three commands that say where it stands, carry it on, and check what really happened.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+Three places tell you where a spec is: the rail, the sidebar and the footer. You don't have to do anything to keep them current. They follow the files the run writes.
+
+| Place | What it shows |
+| --- | --- |
+| The rail | A check when a step's document exists, a spinner and a timer while it runs, and a lock on documents a running step has not reached |
+| The Tasks tab | During implement, a live percentage from the checked boxes in `tasks.md` |
+| The sidebar | For a spec in flight, its last finished task and how long ago, like `T004 · 2h ago` |
+| The footer | The next step by name, with `Next: Plan` above the button. No forward button while a step runs. |
+| A notification | When a step or a phase of tasks completes, with **Open spec**. Turn it off with `speckit.notifications.stepComplete`. |
+
+<DocFigure src="run-in-flight-x16x9.png" caption="A run in the viewer: the rail shows which documents exist and the footer names the next step." />
+
+<DocFigure
+  src="figure-mid-run.png"
+  recapture
+  alt="The viewer while Plan runs: Specification is checked, and the Plan tab shows a spinner and its running time, 1m 18s."
+  caption="While a step runs, its tab spins and keeps time."
+/>
+
+## Three commands for three questions
+
+All three need the [Companion Spec Kit extension](/docs/install) and work with any assistant.
+
+| Question | Command | What it does |
+| --- | --- | --- |
+| Where does this spec stand? | `/speckit.companion.status` | Reports the current step, its status, the decisions recorded so far and the next action. Changes nothing. |
+| I stopped halfway. How do I carry on? | `/speckit.companion.resume` | Finds the next step, carries the recorded decisions into scope and sends that step's command. In implement it continues at the next unchecked task. |
+| Did the run do what it says it did? | `/speckit.companion.doctor` | Recomputes what happened and reports problems. Read-only, and it never stops your work. |
+
+## Resume from the sidebar
+
+Hover a spec that is still in flight and click the play button. That is **Resume**. It shows only when the spec can move forward and the Companion Spec Kit extension is installed. On a spec that is already implemented, completed or archived, resume reports that the run is complete and sends nothing.
+
+<DocFigure src="live-sidebar-hover.png" recapture caption="Hover a spec to get Resume and More Actions." />
+
+## Run the doctor
+
+<Actions>
+  <CodeLine command="/speckit.companion.doctor" prompt={false} />
+</Actions>
+
+| Add | To |
+| --- | --- |
+| Nothing | Check the active spec |
+| `--feature-dir specs/042-export-csv` | Check one spec by name |
+| `--all` | Check every spec |
+| `--json` | Get a machine-readable report |
+| `--chat` | Also read the assistant's session transcript, and explain failed or abandoned work |
+
+It looks for the things a run can get wrong without anyone noticing.
+
+| It finds | For example |
+| --- | --- |
+| Unfinished work | A step that started and never finished, or a task ticked in `tasks.md` with nothing recorded for it |
+| A step doing the next step's work | Plan content in the spec, a task list in the plan, code written before implement |
+| A step that closed having verified nothing | Implement finished but no test or check ever ran |
+| A missing file | A step that closed without the document it promised |
+| Why a spec did not complete | The write was refused, it never arrived, or it landed and the display disagrees |
+
+Every check says whether it ran, was skipped (with the reason) or does not apply, so a check that could not look never reads as clean. The doctor reports and stops. Fixing what it finds is your call.
+
+Every capture call writes one line to `specs/<NNN>/.trace.jsonl`, which is what the doctor reads to explain a failed capture. The file is safe to delete.
+
+## Related
+
+[The Overview](/docs/results/the-overview) shows what a finished run recorded.

@@ -1,10 +1,9 @@
 ---
 title: Supported AI providers
 description: Every provider SpecKit Companion dispatches to, with its steering file, agents, hooks, MCP config path and CLI command.
-sidebar:
-  label: Providers
-  order: 3
 ---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
 
 Pick the AI assistant that runs your spec commands with **Settings > `speckit.aiProvider`** (default `claude`). SpecKit Companion sends commands to the assistant you already use, and this page lists how each one is reached and which files it reads.
 
@@ -49,18 +48,32 @@ The Steering view reads user-level MCP config from your home folder at the same 
 
 IDE Chat sends the prompt to your editor's chat instead of a terminal. The chat has to recognize `/speckit.*`, so run **SpecKit: Initialize Workspace** (`specify init`) first. When the workspace is initialized, the prompt is submitted. When it is not, the prompt is only prefilled, with a warning. Dispatch is one-way: nothing is read back.
 
-![SpecKit Companion dispatching /speckit.plan into GitHub Copilot Chat in VS Code](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/copilot.png)
+<DocFigure
+  src="copilot.png"
+  recapture
+  alt="SpecKit Companion dispatching /speckit.plan into GitHub Copilot Chat in VS Code."
+  caption="A plan command sent into GitHub Copilot Chat."
+/>
 
 ## Claude Code (VS Code)
 
 This opens the Claude Code panel through its URI handler and prefills the command. The panel has no programmatic submit, so press Enter to run it. It shares the `.claude/` setup of the terminal provider. It needs the [Claude Code extension](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code), and suggests terminal `claude` if it is missing.
 
-![SpecKit Companion dispatching /speckit.implement into the Claude Code panel in VS Code](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/claude-vscode.png)
+<DocFigure
+  src="claude-vscode.png"
+  recapture
+  alt="SpecKit Companion dispatching /speckit.implement into the Claude Code panel in VS Code."
+  caption="An implement command prefilled in the Claude Code panel."
+/>
 
 ## GitHub Copilot app
 
-The GitHub Copilot app is not an `aiProvider` value, because it works the other way round. A board opens as a canvas beside the chat there, and its buttons send the same `/speckit.*` commands into that chat. See [The Copilot app board](/docs/guides/copilot-app).
+The GitHub Copilot app is not an `aiProvider` value, because it works the other way round. A board opens as a canvas beside the chat there, and its buttons send the same `/speckit.*` commands into that chat. See [From the Copilot app](/docs/processes/copilot-app).
 
-## Next
+## Claude Code terminal
 
-[Steering](/docs/guides/steering) shows where these files appear in the sidebar.
+Running the commands yourself in the Claude Code terminal needs no setting here. [From Claude Code](/docs/processes/claude-code) adds a mod that keeps the run in view.
+
+## Related
+
+[Steering](/docs/customize/steering) shows where these files appear in the sidebar.

@@ -1,0 +1,124 @@
+---
+title: Living specs
+description: One lasting spec per capability, kept next to the code, updated by the runs that change it.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import WorkflowDiagram from '../../../../components/docs/WorkflowDiagram.astro';
+
+A feature spec describes one change. Once it ships it is a record of something that happened. A year later, current behavior is the sum of thirty specs minus the parts later specs undid.
+
+A **living spec** describes a **capability**, a piece of behavior your code keeps having. You register it once, keep it next to the code, and update it from the runs that change that code. Living specs come with the Companion Spec Kit extension.
+
+<DocFigure src="living-specs-explained-x16x9.png" caption="Specs for a shipped feature go quiet. Capability specs settle next to the source files they describe, each with a coverage count or a drift flag." />
+
+A feature spec is done when the feature ships. A living spec never is. Nothing updates one automatically, and [What stays manual](#what-stays-manual) says who does.
+
+## Turn it on
+
+Living specs stay off until you add `living-specs.yml` at the repo root.
+
+```yaml
+enabled: true
+exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
+capabilities:
+  - name: spec-viewer
+    match: ["src/features/spec-viewer/**"]
+    spec: src/features/spec-viewer/spec-viewer.spec.md
+  - name: workflows
+    match: ["src/features/workflows/**", "speckit-extension/workflows/**"]
+```
+
+| Key | What it does |
+| --- | --- |
+| `enabled` | The opt-in. Without a registry, or with this unset, every living-specs command acts as if the feature were absent. |
+| `exempt` | Globs that never count as drift. Default: `*.config.*`, `*.test.*`, `**/migrations/**`. |
+| `name` | The capability id, and its folder name when the location is derived. |
+| `match` | Globs whose files belong to it, minus the capability's own `exclude` globs. |
+| `spec` | Where the spec lives. Optional. |
+
+An older `livingSpecs:` block in `.specify/companion.yml` is still read. If both exist, `living-specs.yml` wins.
+
+## Where the spec lives
+
+| Layout | How | Where the file goes | Suits |
+| --- | --- | --- | --- |
+| Colocated | Give a `spec:` path | Beside the code, as `<something>.spec.md` | A capability that lives in one folder |
+| Central | Omit `spec:` | `capabilities/<name>/<name>.spec.md` | Code spread across many folders |
+
+You can mix both. The sidebar's Living Specs tree mirrors your choice, and `/speckit.companion.living-move` switches a capability between layouts later.
+
+<DocFigure src="panel-living.png" caption="The two layouts side by side: a spec among the source files it describes, and specs kept together under one capabilities root." />
+
+Each spec has two siblings named from its stem.
+
+| File | Holds | Written by |
+| --- | --- | --- |
+| `<stem>.rules.md` | Conventions as plain bullets for people and assistants. The workflow does not load it. | `living-adopt` only |
+| `<stem>.coverage.md` | Requirements mapped to tests. Feeds the coverage count. | Nothing. You write it. |
+
+A capability without a coverage file shows no number, which is not the same as zero coverage.
+
+- **Most specific wins.** A file matching several capabilities goes to the one with the longest literal path prefix, then by name.
+- **A nested registry is a separate project.** The scan stops at a subfolder with its own `living-specs.yml`.
+- **Orphans.** A spec file no capability claims appears under **Orphans**, hidden when there are none.
+
+## In the sidebar and the viewer
+
+<DocFigure
+  src="living-specs-pair-16x9.png"
+  alt="The Living Specs view with a coverage count or drift flag on each capability, beside the viewer open on one capability's spec."
+  caption="The Living Specs view beside a spec: each capability shows how much of it is covered and whether the code has drifted."
+/>
+
+[The sidebar](/docs/navigate/the-sidebar#living-specs) covers the tree, and [Reading a spec](/docs/results/reading-a-spec#a-living-spec) covers how a living spec looks in the viewer.
+
+## The commands
+
+All seven are `/speckit.companion.living-<verb>`.
+
+| Command | What it does | Kind |
+| --- | --- | --- |
+| `living-adopt` | Drafts a spec for one code area you name, then registers it. Marked as a starting point. | Assistant work |
+| `living-sync` | Rewrites the affected specs from your current changes | Assistant work |
+| `living-drift` | Lists source files changed since each spec was last committed, split into those that went through the workflow and were never folded back, and those the spec never saw. Committed history only. `--working` adds uncommitted edits. | Script |
+| `living-coverage` | Reports what each coverage file says. `--capability <name>` limits it. | Script |
+| `living-show` | Prints a requirement list, one requirement, or the requirements for one file. Read-only. | Script |
+| `living-validate` | Checks spec and delta shape: no scenario, missing WHEN or THEN, duplicate heading, delta pointing nowhere. Read-only. | Script |
+| `living-move` | Moves a capability between layouts and rewrites the registry, after confirming | Script |
+
+Scripts give repeatable answers. Adopt and sync are prompts, so their quality is your assistant's.
+
+## How a run folds back
+
+The band across the top of this diagram is the loop: a run reads the requirements that apply when it starts and writes its changes back when it completes.
+
+<WorkflowDiagram caption="Where living specs meet a run. Specify records the capabilities that apply, plan reuses that list, each implement worker gets the requirements for its own files, and completion folds the changes back." />
+
+A **delta** is a block a run adds to its own feature spec to say what it changed about a capability.
+
+```markdown
+## ADDED Requirements
+<!-- capability: spec-viewer -->
+
+- The viewer re-anchors a stored comment onto the freshly rendered page when its tab reopens.
+```
+
+The other headings are `## MODIFIED Requirements`, `## REMOVED Requirements` and `## RENAMED Requirements`. A block without a capability comment goes to whichever capability the changed files matched.
+
+At mark-complete the assistant writes the blocks and a script folds each into its capability spec. Folding twice changes nothing. Because the blocks live in the feature spec first, they show up in that feature's diff for review.
+
+| Workflow | Deltas |
+| --- | --- |
+| SpecKit Companion | Each capability a run loaded must end with a delta or a recorded skip note. If not, the fold prints a receipt saying the loop did not close. It never blocks the run. |
+| Spec Kit | None. Use `living-sync` afterwards. |
+
+## What stays manual
+
+- A spec stays current only if a delta was written at mark-complete, or someone ran `living-sync`.
+- Drift and coverage never gate anything. They are read-only and always exit zero. Wrap them in CI if you want a gate.
+- A capability with an uncommitted spec, or a CI checkout with too little history, is skipped with the reason named. The all-clear line means every capability was actually examined.
+
+## Where to start
+
+Start with one capability, not a registry. Pick the area you explain most often and run `/speckit.companion.living-adopt` on it. Reading the draft is the fastest way to learn whether your capability boundary matches the code. Every command is in [Commands](/docs/reference/commands#living-specs).

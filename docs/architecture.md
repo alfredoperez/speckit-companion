@@ -135,7 +135,7 @@ User data is stored under the workspace `.claude/` and `specs/` directories, plu
 
 ## Related documents
 
-- the site's [sidebar reference](https://speckit-companion.dev/docs/anatomy/the-sidebar/) and [spec viewer anatomy](https://speckit-companion.dev/docs/anatomy/anatomy-of-the-spec-viewer) — long-form references for the two main surfaces.
+- the site's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) and [spec viewer anatomy](https://speckit-companion.dev/docs/navigate/inside-the-viewer) — long-form references for the two main surfaces.
 - `apps/speckit-extension/docs/node-model.md` — how the spec-kit extension's Companion commands are composed from nodes, the `.specify/companion.yml` hook/recipe model, and the byte-parity assembler.
 - `apps/speckit-extension/docs/living-specs.md` — the living-specs feature both extensions ship: registry, resolver, drift and fold-back.
 - `docs/visual-assets.md` and `docs/media-manifest.md` — how every documentation image, README GIF, web clip and mascot derivative is produced and checked, and the feature asset bundle contract.
