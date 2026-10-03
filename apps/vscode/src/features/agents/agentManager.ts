@@ -8,6 +8,10 @@ import { handleError } from '../../core/errors';
 import { getConfiguredProviderType, getProviderPaths } from '../../ai-providers/aiProvider';
 import { AIProviders } from '../../core/constants';
 
+function readsClaudeAgents(providerType: string): boolean {
+    return providerType === AIProviders.CLAUDE || providerType === AIProviders.CLAUDE_VSCODE;
+}
+
 export interface AgentInfo {
     name: string;
     description: string;
@@ -133,7 +137,7 @@ export class AgentManager {
         const agents: AgentInfo[] = [];
         const providerType = getConfiguredProviderType();
         const { agentsDir, userAgentsDir = agentsDir } = getProviderPaths();
-        const excludeKfc = providerType === AIProviders.CLAUDE;
+        const excludeKfc = readsClaudeAgents(providerType);
 
         if (agentsDir && (type === 'project' || type === 'all') && this.workspaceRoot) {
             const projectAgents = await this.getAgentsFromDirectory(
@@ -152,7 +156,7 @@ export class AgentManager {
             agents.push(...userAgents);
         }
 
-        if ((type === 'plugin' || type === 'all') && providerType === AIProviders.CLAUDE) {
+        if ((type === 'plugin' || type === 'all') && readsClaudeAgents(providerType)) {
             agents.push(...await this.getPluginAgents());
         }
 
@@ -269,7 +273,7 @@ export class AgentManager {
         const { agentsDir, userAgentsDir = agentsDir } = getProviderPaths();
         const basePath = location === 'project'
             ? this.workspaceRoot && agentsDir
-                ? path.join(this.workspaceRoot, providerType === AIProviders.CLAUDE ? '.claude/agents/kfc' : agentsDir)
+                ? path.join(this.workspaceRoot, readsClaudeAgents(providerType) ? '.claude/agents/kfc' : agentsDir)
                 : null
             : userAgentsDir
                 ? path.join(os.homedir(), userAgentsDir)

@@ -71,4 +71,19 @@ describe('AgentManager', () => {
             expect.objectContaining({ name: 'user-omp', type: 'user' }),
         ]);
     });
+
+    it.each(['claude', 'claude-vscode'])('hides the built-in agents folder and lists plugin agents for %s', async (provider) => {
+        mockGetConfiguredProviderType.mockReturnValue(provider as AIProviderType);
+        mockGetProviderPaths.mockReturnValue({ agentsDir: '.claude/agents' } as ProviderPaths);
+        writeAgent(workspaceRoot, '.claude/agents', 'project-claude');
+        writeAgent(workspaceRoot, '.claude/agents/kfc', 'built-in');
+
+        const manager = new AgentManager({ extensionPath: '' } as vscode.ExtensionContext, { appendLine: jest.fn() } as unknown as vscode.OutputChannel);
+        const pluginAgents = jest.spyOn(manager as unknown as { getPluginAgents: () => Promise<unknown[]> }, 'getPluginAgents').mockResolvedValue([]);
+
+        await expect(manager.getAgentList('all')).resolves.toEqual([
+            expect.objectContaining({ name: 'project-claude', type: 'project' }),
+        ]);
+        expect(pluginAgents).toHaveBeenCalled();
+    });
 });
