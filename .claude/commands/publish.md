@@ -12,11 +12,11 @@ description: Publish a new version of the extension
 
 ## Your task
 
-> **Scope: the VS Code extension only.** For the **spec-kit extension** (`apps/speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag (a `v*` tag here would wrongly publish to the Marketplace).
+> **Scope: the VS Code extension only.** For the **spec-kit extension** (`apps/speckit-extension/`) use `/publish-speckit-ext` — it has its own README/CHANGELOG/`extension.yml` version and a `speckit-ext-v*` tag (a `v*` tag here would wrongly publish to the Marketplace). The Claude Code mod and the Copilot canvas ship with `/publish-mod` and `/publish-canvas`; `/publish-all` runs every flow in order.
 
 Help the user publish a new version of the extension by:
 
-0. QA gate. Apply the Release gate in `.claude/commands/release-qa.md` before anything else: a `QA Report*.md` in the vault for the current HEAD with `verdict: ship` and no open FAIL. If it does not pass, stop and tell the user to run `/release-qa`; continue only on their explicit override. Skip it when `/publish-both` already ran it in its preflight.
+0. QA gate. Apply the Release gate in `.claude/commands/release-qa.md` before anything else: a `QA Report*.md` in the vault for the current HEAD with `verdict: ship` and no open FAIL. If it does not pass, stop and tell the user to run `/release-qa`; continue only on their explicit override. Skip it when `/publish-all` already ran it in its preflight.
 1. First check if there are uncommitted changes. If yes, abort with a warning.
 2. Ask the user for the new version number (show current version).
 3. Get the previous version tag and analyze commits since then to generate a changelog.

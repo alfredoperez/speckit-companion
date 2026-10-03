@@ -43,7 +43,7 @@ Behaviour lives in the code and its tests, so a behaviour change updates its tes
 
 ## Per-release checklist (run before tagging a version)
 
-> This checklist is for the **VS Code extension** (`/publish`, `v*` tag), the last step of `/release-loop`. The **spec-kit extension** has its own flow — see `/publish-speckit-ext` and `apps/speckit-extension/docs/publishing.md` (prefixed `speckit-ext-v*` tag, `.zip` archive, catalog issue).
+> This checklist is for the **VS Code extension** (`/publish`, `v*` tag), the last step of `/release-loop`. The **spec-kit extension** has its own flow — see `/publish-speckit-ext` and `apps/speckit-extension/docs/publishing.md` (prefixed `speckit-ext-v*` tag, `.zip` archive, catalog issue). The Claude Code mod and the Copilot canvas have theirs in `/publish-mod` and `/publish-canvas`, and `/publish-all` runs all four.
 
 1. Run `git diff $(git describe --tags --abbrev=0)..HEAD -- README.md` to see what was already updated since the last tag.
 2. Cross-check `CHANGELOG.md` entries since the last release against the map above.

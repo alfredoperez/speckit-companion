@@ -13,7 +13,7 @@ v0.2.0                  ❌  matches v* → would publish the WRONG thing to the
 
 ## Release order: spec-kit first
 
-The VS Code extension bundles a copy of `apps/speckit-extension/extension.yml` and compares it against the version installed in the user's project to say "your spec-kit commands are out of date". So the spec-kit extension is released first and the VS Code extension packaged after, which is the order `/publish-both` runs. Packaged the other way, the `.vsix` expects the previous version and nobody hears about the new one until the next VS Code release. A `.vsix` bundling a manifest *ahead* of what `companion-latest/companion.zip` serves is worse: every user is told they are behind, the update reinstalls the same version, and nothing clears. The extension limits that one to a single wasted click per project, but the release still has to be fixed.
+The VS Code extension bundles a copy of `apps/speckit-extension/extension.yml` and compares it against the version installed in the user's project to say "your spec-kit commands are out of date". So the spec-kit extension is released first and the VS Code extension packaged after, which is the order `/publish-all` runs. Packaged the other way, the `.vsix` expects the previous version and nobody hears about the new one until the next VS Code release. A `.vsix` bundling a manifest *ahead* of what `companion-latest/companion.zip` serves is worse: every user is told they are behind, the update reinstalls the same version, and nothing clears. The extension limits that one to a single wasted click per project, but the release still has to be fixed.
 
 ## Process
 
