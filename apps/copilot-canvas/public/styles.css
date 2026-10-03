@@ -2,12 +2,10 @@
 /* Design tokens come from vendor/viewer.css, the VS Code viewer's own sheet (loaded first).
    Only what the board adds on top lives here. */
 :root {
-    --brand-violet: #a78bfa;
     --review-ink: #c9adf5;
     --focus: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 body.vscode-light {
-    --brand-violet: #7c3aed;
     --review-ink: #5b30b0;
 }
 
@@ -78,8 +76,6 @@ button { font: inherit; color: inherit; }
 .brand-mark { flex: none; }
 .brand { flex: 1; min-width: 0; }
 .brand h1 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.01em; line-height: 1.2; color: var(--text-primary); }
-.mark-pale { fill: var(--text-primary); }
-.mark-violet { fill: var(--brand-violet); }
 .brand-sub { margin: 0; font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
