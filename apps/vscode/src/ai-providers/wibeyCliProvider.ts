@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { AIProviders } from '../core/constants';
+import { getProjectRoot } from '../core/projectRoot';
 import { IAIProvider, AIExecutionResult, toSlashCommand } from './aiProvider';
 import { runInTerminal } from '../core/utils/terminalUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
@@ -93,7 +94,7 @@ export class WibeyCliProvider implements IAIProvider {
         this.outputChannel.appendLine('[WibeyCliProvider] Creating new Wibey terminal');
         const terminal = vscode.window.createTerminal({
             name: WibeyCliProvider.TERMINAL_TITLE,
-            cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+            cwd: getProjectRoot(),
             location: { viewColumn: vscode.ViewColumn.Two },
         });
         return { terminal, isNew: true };

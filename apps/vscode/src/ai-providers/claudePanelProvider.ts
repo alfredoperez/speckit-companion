@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { AIProviders } from '../core/constants';
+import { getProjectRootUri } from '../core/projectRoot';
 import { IAIProvider, AIExecutionResult, toSlashCommand } from './aiProvider';
 import { splitContextPreamble, cleanCommandArg } from './promptBuilder';
 
@@ -53,11 +54,11 @@ export class ClaudePanelProvider implements IAIProvider {
      * no workspace folder (the panel needs one anyway).
      */
     private async writePromptFile(fullPrompt: string): Promise<string | null> {
-        const folder = vscode.workspace.workspaceFolders?.[0];
-        if (!folder) return null;
+        const rootUri = getProjectRootUri();
+        if (!rootUri) return null;
         try {
-            const fileUri = vscode.Uri.joinPath(folder.uri, PROMPT_REL_PATH);
-            const dirUri = vscode.Uri.joinPath(folder.uri, '.claude');
+            const fileUri = vscode.Uri.joinPath(rootUri, PROMPT_REL_PATH);
+            const dirUri = vscode.Uri.joinPath(rootUri, '.claude');
             await vscode.workspace.fs.createDirectory(dirUri);
             await vscode.workspace.fs.writeFile(fileUri, Buffer.from(fullPrompt, 'utf-8'));
             return PROMPT_REL_PATH;

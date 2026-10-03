@@ -3,6 +3,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
 import { AIProviders } from '../core/constants';
+import { getProjectRoot } from '../core/projectRoot';
 import { runInTerminal, executeCommandInHiddenTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { ensureCliInstalled } from '../core/utils/installUtils';
@@ -72,7 +73,7 @@ export class GeminiCliProvider implements IAIProvider {
 
             const terminal = vscode.window.createTerminal({
                 name: title,
-                cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+                cwd: getProjectRoot(),
                 location: {
                     viewColumn: vscode.ViewColumn.Two
                 }
@@ -115,8 +116,7 @@ export class GeminiCliProvider implements IAIProvider {
         this.outputChannel.appendLine(prompt);
         this.outputChannel.appendLine(`========================================`);
 
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        const cwd = workspaceFolder?.uri.fsPath;
+        const cwd = getProjectRoot();
 
         const promptFilePath = await createTempFile(this.context, prompt, 'background-prompt', false);
         const commandLine = `cat "${promptFilePath}" | gemini`;

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { AIProviders } from '../core/constants';
+import { getProjectRoot } from '../core/projectRoot';
 import { runInTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { dispatchSlashCommandViaTempFile, buildPromptDispatchCommand, AIExecutionResult, toSlashCommand } from './aiProvider';
@@ -114,7 +115,7 @@ export class ClaudeCodeProvider extends CliTerminalProvider {
 
             const terminal = vscode.window.createTerminal({
                 name: title,
-                cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+                cwd: getProjectRoot(),
                 location: { viewColumn: vscode.ViewColumn.Two },
             });
             terminal.show();
@@ -164,7 +165,7 @@ export class ClaudeCodeProvider extends CliTerminalProvider {
      * needs to see the Claude CLI's interactive permission prompt.
      */
     static async createPermissionTerminal(): Promise<vscode.Terminal> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const workspaceFolder = getProjectRoot();
         const terminal = vscode.window.createTerminal({
             name: 'Claude Code - Permission Setup',
             cwd: workspaceFolder,

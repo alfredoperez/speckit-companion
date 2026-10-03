@@ -3,6 +3,7 @@ import { runInstallSpecKitExtension, openReadmeFallback, noteUpdateDispatched } 
 import { cachedCompanionGap } from './companionVersionGap';
 import { coerceInstallPromptSurface, reportInstallPromptClicked } from '../core/telemetry';
 import { ConfigKeys } from '../core/constants';
+import { getProjectRoot } from '../core/projectRoot';
 import { CONTEXT_KEYS, setContextKey } from '../core/utils/contextKeys';
 
 /**
@@ -15,7 +16,7 @@ export function registerSpecKitExtensionInstallCommands(
 ): void {
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.companion.installSpecKitExtension', async () => {
-            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const root = getProjectRoot();
             // Noted so that, once the files actually move, a version that did not change can stop the
             // surfaces asking. A dispatch that never lands records nothing.
             if (root) {

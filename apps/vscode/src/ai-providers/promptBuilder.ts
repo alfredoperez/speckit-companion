@@ -10,6 +10,7 @@ import {
     WORKSPACE_WRITER_PATH,
 } from './promptPreamble';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
+import { getProjectRoot } from '../core/projectRoot';
 
 export type { PromptStep } from './promptPreamble';
 
@@ -49,7 +50,7 @@ function companionRecordsSteps(command: string): boolean {
 /** Companion extension present in the current workspace (for the create flow, which has no command verb yet). */
 function companionInstalledHere(): boolean {
     try {
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const root = getProjectRoot();
         return !!root && isCompanionInstalled(root);
     } catch {
         return false;

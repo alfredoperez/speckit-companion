@@ -48,6 +48,7 @@ import {
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
 import { customCommandButtons, optionalCommandButtonsForTab } from "./optionalCommands";
 import { ConfigKeys, SpecStatuses } from "../../core/constants";
+import { getProjectRoot } from "../../core/projectRoot";
 import { coerceLegacyBoolean } from "../../core/settingsMigration";
 import { hasOverview } from "../../core/utils/overviewAvailability";
 import type { CustomCommandConfig } from "../../core/types/config";
@@ -213,9 +214,9 @@ export class SpecViewerProvider {
    * Compute the change root for a spec directory
    */
   private computeChangeRoot(specDirectory: string): string | null {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (!workspaceFolder) return null;
-    return deriveChangeRoot(specDirectory, workspaceFolder.uri.fsPath);
+    const projectRoot = getProjectRoot();
+    if (!projectRoot) return null;
+    return deriveChangeRoot(specDirectory, projectRoot);
   }
 
   /**
@@ -755,7 +756,7 @@ export class SpecViewerProvider {
     const heading = livingSpecHeading(specTierContent);
     const displayName = heading ?? specName;
 
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const workspaceRoot = getProjectRoot();
     const specTierPath = specTier?.filePath ?? doc.filePath;
     const built = workspaceRoot
       ? buildLivingHeaderMeta(workspaceRoot, specTierPath, specTierContent)
@@ -926,7 +927,7 @@ export class SpecViewerProvider {
     specDirectory: string,
     meta: LivingHeaderMeta,
   ): Promise<void> {
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const workspaceRoot = getProjectRoot();
     if (!workspaceRoot) return;
 
     // Only the latest request for a panel may post: an older one finishing last would repaint stale facts.
@@ -1488,7 +1489,7 @@ export class SpecViewerProvider {
         // file, so the table would otherwise present a named test that is not
         // there exactly like one that is.
         {
-          const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          const wsRoot = getProjectRoot();
           if (wsRoot) {
             derivedVs.coverage = markMissingTests(derivedVs.coverage, rel =>
               fs.existsSync(path.isAbsolute(rel) ? rel : path.join(wsRoot, rel))
@@ -1498,7 +1499,7 @@ export class SpecViewerProvider {
         // Living-specs content is filesystem-derived, so it's enriched here at
         // the provider seam rather than inside the pure derivation.
         if (derivedVs.livingSpecs) {
-          const wsRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          const wsRoot = getProjectRoot();
           if (wsRoot) {
             derivedVs.livingSpecs = enrichLivingSpecs(
               derivedVs.livingSpecs,

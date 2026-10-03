@@ -4,6 +4,7 @@ import * as path from 'path';
 import { livingPurposeBody } from './livingDocs';
 import { BaseTreeDataProvider } from '../../core/providers';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
+import { getProjectRoot } from '../../core/projectRoot';
 import {
     readLivingSpecs,
     readCapabilityHealth,
@@ -49,7 +50,7 @@ export class LivingSpecsExplorerProvider extends BaseTreeDataProvider<LivingSpec
     }
 
     private get workspaceRoot(): string | undefined {
-        return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        return getProjectRoot();
     }
 
     private read(): LivingSpecsListing {

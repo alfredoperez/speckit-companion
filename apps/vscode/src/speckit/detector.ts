@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { getProjectRoot, getProjectRootUri, hasSpecKitMarker } from '../core/projectRoot';
 import * as path from 'path';
 import * as fs from 'fs';
 import { exec } from 'child_process';
@@ -81,35 +82,14 @@ export class SpecKitDetector {
      * (looks for .specify/ folder or .github/agents/speckit.*.md files)
      */
     async checkWorkspaceInitialized(): Promise<boolean> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const root = getProjectRoot();
+        if (!root) {
             this._isInitialized = false;
             await setContextKey(CONTEXT_KEYS.detected, false);
             return false;
         }
 
-        // Check for .specify folder (primary indicator)
-        const specifyFolder = path.join(workspaceFolder.uri.fsPath, '.specify');
-        if (fs.existsSync(specifyFolder)) {
-            this._isInitialized = true;
-            this.log('Found .specify folder');
-        } else {
-            // Fallback: Check for SpecKit agent files in .github/agents
-            const specKitAgents = [
-                '.github/agents/speckit.specify.agent.md',
-                '.github/agents/speckit.plan.agent.md'
-            ];
-
-            this._isInitialized = false;
-            for (const agent of specKitAgents) {
-                const agentPath = path.join(workspaceFolder.uri.fsPath, agent);
-                if (fs.existsSync(agentPath)) {
-                    this._isInitialized = true;
-                    this.log(`Found SpecKit agent: ${agent}`);
-                    break;
-                }
-            }
-        }
+        this._isInitialized = hasSpecKitMarker(root);
 
         // Update context for welcome view
         await setContextKey(CONTEXT_KEYS.detected, this._isInitialized);
@@ -122,13 +102,13 @@ export class SpecKitDetector {
      * Check if constitution needs setup (has placeholder tokens)
      */
     async checkConstitutionSetup(): Promise<boolean> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const root = getProjectRoot();
+        if (!root) {
             this._constitutionNeedsSetup = false;
             return false;
         }
 
-        const constitutionPath = path.join(workspaceFolder.uri.fsPath, '.specify/memory/constitution.md');
+        const constitutionPath = path.join(root, '.specify/memory/constitution.md');
 
         if (!fs.existsSync(constitutionPath)) {
             this._constitutionNeedsSetup = false;
@@ -189,14 +169,14 @@ export class SpecKitDetector {
      * Initialize SpecKit in the current workspace
      */
     async initializeWorkspace(): Promise<void> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        const workspaceFolder = getProjectRootUri();
         if (!workspaceFolder) {
             vscode.window.showErrorMessage('No workspace folder open');
             return;
         }
 
         const agentFlag = await this.detectAgentFlag();
-        const terminal = vscode.window.createTerminal({ name: 'Initialize SpecKit', cwd: workspaceFolder.uri });
+        const terminal = vscode.window.createTerminal({ name: 'Initialize SpecKit', cwd: workspaceFolder });
         terminal.show();
         await runInTerminal(terminal, initCommand('specify init .', agentFlag));
 
@@ -249,14 +229,14 @@ export class SpecKitDetector {
      * Upgrade project files to latest SpecKit version
      */
     async upgradeProject(): Promise<void> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        const workspaceFolder = getProjectRootUri();
         if (!workspaceFolder) {
             vscode.window.showErrorMessage('No workspace folder open');
             return;
         }
 
         const agentFlag = await this.detectAgentFlag();
-        const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit Project', cwd: workspaceFolder.uri });
+        const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit Project', cwd: workspaceFolder });
         terminal.show();
         await runInTerminal(terminal, initCommand('specify init --here --force', agentFlag));
 
@@ -274,13 +254,13 @@ export class SpecKitDetector {
      * Upgrade both CLI and project files
      */
     async upgradeAll(): Promise<void> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+        const workspaceFolder = getProjectRootUri();
         if (!workspaceFolder) {
             vscode.window.showErrorMessage('No workspace folder open');
             return;
         }
 
-        const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit (All)', cwd: workspaceFolder.uri });
+        const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit (All)', cwd: workspaceFolder });
         terminal.show();
         await runInTerminal(terminal, 'uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git && ' +
             initCommand('specify init --here --force', '--integration'));

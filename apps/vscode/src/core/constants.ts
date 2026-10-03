@@ -55,6 +55,7 @@ export const ConfigKeys = {
     customCommands: 'speckit.customCommands',
     qwenYoloMode: 'speckit.qwenYoloMode',
     specDirectories: 'speckit.specDirectories',
+    projectFolder: 'speckit.projectFolder',
     customWorkflows: 'speckit.customWorkflows',
     defaultWorkflow: 'speckit.defaultWorkflow',
     installPrompt: 'speckit.companion.installPrompt',

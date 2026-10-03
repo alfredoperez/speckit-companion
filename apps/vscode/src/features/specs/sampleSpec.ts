@@ -7,6 +7,7 @@
 
 import * as vscode from 'vscode';
 import { DefaultPaths } from '../../core/constants';
+import { getProjectRootUri } from '../../core/projectRoot';
 import { reportSampleOpened } from '../../core/telemetry';
 
 /** Directory the sample seeds into, under the workspace's specs/ root. */
@@ -30,15 +31,15 @@ async function directoryExists(uri: vscode.Uri): Promise<boolean> {
  * never touched), then opens it through the viewer's own `speckit.openSpec`.
  */
 export async function openSampleSpec(context: vscode.ExtensionContext): Promise<void> {
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (!workspaceFolder) {
+    const projectRootUri = getProjectRootUri();
+    if (!projectRootUri) {
         void vscode.window.showErrorMessage(
             'No workspace folder open — open a folder first, then choose "Open a live sample" again.'
         );
         return;
     }
 
-    const target = vscode.Uri.joinPath(workspaceFolder.uri, DefaultPaths.specs, SAMPLE_SPEC_DIR_NAME);
+    const target = vscode.Uri.joinPath(projectRootUri,DefaultPaths.specs, SAMPLE_SPEC_DIR_NAME);
     if (!(await directoryExists(target))) {
         const bundled = vscode.Uri.joinPath(context.extensionUri, ...BUNDLED_SAMPLE_PATH);
         await vscode.workspace.fs.copy(bundled, target, { overwrite: false });

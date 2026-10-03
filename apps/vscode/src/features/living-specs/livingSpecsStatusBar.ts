@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { getProjectRoot } from '../../core/projectRoot';
 import { claimsForFile, LIVING_SPECS_REL, type FileClaim } from './livingSpecsModel';
 
 /**
@@ -22,12 +23,15 @@ function claimsForActiveEditor(): { root: string; relPath: string; claims: FileC
     if (!editor || editor.document.uri.scheme !== 'file') {
         return null;
     }
-    const folder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
-    if (!folder) {
+    const root = getProjectRoot();
+    if (!root) {
         return null;
     }
-    const root = folder.uri.fsPath;
-    const relPath = path.relative(root, editor.document.uri.fsPath).replace(/\\/g, '/');
+    const relative = path.relative(root, editor.document.uri.fsPath);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+        return null;
+    }
+    const relPath = relative.replace(/\\/g, '/');
     const claims = claimsForFile(root, relPath);
     return claims.length > 0 ? { root, relPath, claims } : null;
 }

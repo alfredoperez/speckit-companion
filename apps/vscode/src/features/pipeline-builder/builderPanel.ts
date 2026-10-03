@@ -24,6 +24,7 @@ import {
     isGraphError,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
+import { getProjectRoot } from '../../core/projectRoot';
 import { nodeFile, readableNode } from './readableNode';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
@@ -130,7 +131,7 @@ export class PipelineBuilderPanel {
     }
 
     static show(context: vscode.ExtensionContext, outputChannel: vscode.OutputChannel): void {
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const workspaceRoot = getProjectRoot();
         if (!workspaceRoot) {
             void vscode.window.showWarningMessage('Open a workspace folder to see its pipeline.');
             return;

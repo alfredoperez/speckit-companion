@@ -11,6 +11,7 @@ import {
 } from '../workflows';
 import { resolveSpecDirectories, hasDuplicateNames, deriveChangeRoot, type SpecDirectoryInfo } from '../../core/specDirectoryResolver';
 import { SpecStatuses, WorkflowSteps, ConfigKeys } from '../../core/constants';
+import { getProjectRoot } from '../../core/projectRoot';
 import { readSpecContextSyncSafe } from './specContextReader';
 import type { SpecContext } from '../../core/types/specContext';
 import { featureSpecName, isFeatureSpecFile, resolveStepFile } from './featureSpecPath';
@@ -124,13 +125,13 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
      * Get list of specs from configured spec directories
      */
     private async getSpecs(): Promise<SpecInfo[]> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const projectRoot = getProjectRoot();
+        if (!projectRoot) {
             return [];
         }
 
         try {
-            return await resolveSpecDirectories(workspaceFolder.uri.fsPath);
+            return await resolveSpecDirectories(projectRoot);
         } catch {
             this.log('Error resolving spec directories');
             return [];
@@ -163,7 +164,8 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
     }
 
     async getChildren(element?: SpecItem): Promise<SpecItem[]> {
-        if (!vscode.workspace.workspaceFolders) {
+        const basePath = getProjectRoot();
+        if (!basePath) {
             return [];
         }
 
@@ -179,8 +181,6 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             }
 
             const specs = await this.getSpecs();
-            const workspaceFolder = vscode.workspace.workspaceFolders![0];
-            const basePath = workspaceFolder.uri.fsPath;
             const bugs = readBugReports(basePath);
             if (specs.length === 0 && bugs.length === 0) {
                 // No `welcome` prompt is reported here any more: the viewsWelcome
@@ -322,7 +322,6 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             const allSpecs = await this.getSpecs();
             const duplicateNames = hasDuplicateNames(allSpecs);
 
-            const basePath = vscode.workspace.workspaceFolders![0].uri.fsPath;
             return specs.map(spec => {
                 const isActive = this.activeSpecName === spec.name;
                 const specFullPath = path.join(basePath, spec.path);
@@ -521,12 +520,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
      * children of the step — indentation is handled natively by the tree view.
      */
     private getRelatedDocItems(parentElement: SpecItem): SpecItem[] {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder || !parentElement.relatedDocs) {
+        const basePath = getProjectRoot();
+        if (!basePath || !parentElement.relatedDocs) {
             return [];
         }
 
-        const basePath = workspaceFolder.uri.fsPath;
         const specPath = parentElement.specPath || `specs/${parentElement.specName}`;
 
         return parentElement.relatedDocs.map(relativePath => {
@@ -618,12 +616,11 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
      * Get SpecKit documents based on the active workflow's steps, with related docs
      */
     private async getSpecDocuments(specName: string, specPath: string): Promise<SpecItem[]> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const basePath = getProjectRoot();
+        if (!basePath) {
             return [];
         }
 
-        const basePath = workspaceFolder.uri.fsPath;
         const specFullPath = path.join(basePath, specPath);
         const specContext = readSpecContextSyncSafe(specFullPath) ?? undefined;
 
@@ -858,9 +855,9 @@ class SpecItem extends vscode.TreeItem {
             // Store file URI for inline actions (avoid resourceUri to prevent
             // VS Code from dimming git-ignored files in the tree view)
             if (filePath) {
-                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-                if (workspaceFolder) {
-                    this.fileUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, filePath));
+                const projectRoot = getProjectRoot();
+                if (projectRoot) {
+                    this.fileUri = vscode.Uri.file(path.join(projectRoot, filePath));
                 }
             }
         } else if (contextValue === 'spec-related-doc') {
@@ -869,9 +866,9 @@ class SpecItem extends vscode.TreeItem {
             // the label inward so sub-files clearly nest under their parent.
             this.tooltip = filePath ?? label;
             if (filePath) {
-                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-                if (workspaceFolder) {
-                    this.fileUri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, filePath));
+                const projectRoot = getProjectRoot();
+                if (projectRoot) {
+                    this.fileUri = vscode.Uri.file(path.join(projectRoot, filePath));
                 }
             }
         }

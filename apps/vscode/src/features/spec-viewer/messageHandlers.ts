@@ -19,6 +19,7 @@ import {
   FooterActionIds,
   SpecStatuses,
 } from "../../core/constants";
+import { getProjectRoot } from "../../core/projectRoot";
 import type { CustomCommandConfig } from "../../core/types/config";
 import {
   commandMatchesStep,
@@ -141,7 +142,7 @@ const FOOTER_ACTION_HANDLERS: Record<
  */
 /** Workspace-relative spec path for a synthetic tree-command item (falls back to the abs path). */
 function toWorkspaceRelativeSpecPath(specDirectory: string): string {
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const root = getProjectRoot();
   return root ? path.relative(root, specDirectory) : specDirectory;
 }
 
@@ -202,7 +203,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
         : vscode.commands.executeCommand("speckit.livingSpecs.validate"));
     },
     revealGlob: async (msg) => {
-      const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      const root = getProjectRoot();
       if (!root) return;
       // The static prefix of the glob is a real path; the rest is a pattern.
       const prefix = String(msg.glob ?? "").split(/[*?{[]/)[0].replace(/\/+$/, "");
@@ -849,7 +850,7 @@ function livingCapabilitySpecPath(
   specDirectory: string,
   deps: MessageHandlerDependencies,
 ): string | undefined {
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const root = getProjectRoot();
   const anchor = deps.getInstance(specDirectory)?.state.livingSourcePath;
   if (!root || !anchor) return undefined;
   const specTier = livingTierDocuments(anchor).find(d => d.type === "spec");
@@ -862,7 +863,7 @@ function livingCapabilityAreas(
   specDirectory: string,
   deps: MessageHandlerDependencies,
 ): string[] | undefined {
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const root = getProjectRoot();
   const specPath = livingCapabilitySpecPath(specDirectory, deps);
   const cap = root && specPath ? resolveCapabilityBySpecPath(root, specPath) : undefined;
   const areas = cap?.match.map(g => g.split(/[*?[{]/)[0].replace(/\/+$/, "") || ".");
@@ -889,7 +890,7 @@ async function handleOpenLivingSpec(
   deps: MessageHandlerDependencies,
   requirement?: string,
 ): Promise<void> {
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const root = getProjectRoot();
   if (!root) return;
 
   let specPath = suppliedPath;
@@ -939,7 +940,7 @@ async function handleLivingApprove(
   if (!instance?.state.living) return;
   const type = documentType ?? instance.state.currentDocument;
   const doc = instance.state.availableDocuments.find((d) => d.type === type && d.exists);
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const root = getProjectRoot();
   if (!doc || !root) return;
   const rel = path.relative(root, doc.filePath);
   if (!isPathWithinRoot(root, rel) || !LIVING_TIER_FILE.test(path.basename(doc.filePath))) {
@@ -970,7 +971,7 @@ async function handleLivingRemove(
   deps: MessageHandlerDependencies,
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const root = getProjectRoot();
   const specPath = livingCapabilitySpecPath(specDirectory, deps);
   if (!instance?.state.living || !root || !specPath) return;
   const cap = resolveCapabilityBySpecPath(root, specPath);
@@ -1257,7 +1258,7 @@ async function dispatchLivingRefinement(
   const pending = inline.map((c, i) =>
     buildReviewComment(doc, c.lineNum, c.lineContent, sourceLines, c.comment, `living-${i}`),
   );
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const root = getProjectRoot();
   const target = root ? path.relative(root, sourceDoc.filePath).replace(/\\/g, "/") : sourceDoc.filePath;
   deps.outputChannel.appendLine(
     `[SpecViewer] Dispatching ${pending.length} refinement(s) for living ${target} (direct edit)`,

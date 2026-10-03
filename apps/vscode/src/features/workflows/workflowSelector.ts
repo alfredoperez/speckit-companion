@@ -8,6 +8,7 @@
 
 import * as vscode from 'vscode';
 import { WorkflowConfig } from './types';
+import { getProjectRoot } from '../../core/projectRoot';
 import { getWorkflows, getFeatureWorkflow, saveFeatureWorkflow, getWorkflow, resolveEffectiveDefaultWorkflow } from './workflowManager';
 
 /**
@@ -38,7 +39,7 @@ async function resolveDefaultWorkflow(featureDir: string, outputChannel?: vscode
     // an unset default resolves to companion when the companion extension is installed.
     // Resolve the root from the feature's own folder (correct in multi-root workspaces).
     const root = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(featureDir))?.uri.fsPath
-        ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        ?? getProjectRoot();
     const defaultWorkflowName = resolveEffectiveDefaultWorkflow(root);
     const workflows = getWorkflows(outputChannel);
 
