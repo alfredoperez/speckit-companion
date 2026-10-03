@@ -412,8 +412,12 @@ export function preprocessCallouts(markdown: string): string {
     // Process standard callout patterns
     for (const { regex, type, label } of patterns) {
         markdown = markdown.replace(regex, (_, content) => {
-            const trimmedContent = content.trim();
-            return `\n<div class="callout callout-${type}"><span class="callout-icon"></span><div class="callout-content"><strong class="callout-label">${label}:</strong> ${trimmedContent}</div></div>\n`;
+            // Only the callout's own line is parsed: later lines keep their newlines, which the renderer counts as file lines.
+            const [first, ...rest] = content.trim().split('\n');
+            // A trailing HTML comment was already turned into a details block: that one line passes through as before.
+            const head = first.includes('<details class="template-instructions">') ? first : parseInline(first);
+            const body = [head, ...rest].join('\n');
+            return `\n<div class="callout callout-${type}"><span class="callout-icon"></span><div class="callout-content"><strong class="callout-label">${label}:</strong> ${body}</div></div>\n`;
         });
     }
 
@@ -426,7 +430,7 @@ export function preprocessCallouts(markdown: string): string {
                 .map((line: string) => line.replace(/^>\s?/, ''))
                 .join(' ')
                 .trim();
-            return `\n<div class="callout callout-${type}"><span class="callout-icon"></span><div class="callout-content"><strong class="callout-label">${label}:</strong> ${cleanContent}</div></div>\n`;
+            return `\n<div class="callout callout-${type}"><span class="callout-icon"></span><div class="callout-content"><strong class="callout-label">${label}:</strong> ${parseInline(cleanContent)}</div></div>\n`;
         });
     }
 
