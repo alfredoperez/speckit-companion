@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { getAIProvider } from '../../extension';
 import { LivingSpecsExplorerProvider } from './livingSpecsExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
+import { getProjectRoot } from '../../core/projectRoot';
 import { reportLivingSpecDrift, reportLivingSpecSync } from '../../core/telemetry';
 import {
     ResolvedCapability,
@@ -33,7 +34,7 @@ function capabilityName(item?: LivingSpecNode): string {
 }
 
 function workspaceRoot(): string | undefined {
-    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    return getProjectRoot();
 }
 
 function nodeRelPath(item?: LivingSpecNode): string | undefined {

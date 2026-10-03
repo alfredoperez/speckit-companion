@@ -7,6 +7,7 @@ import type { AgentFrontmatter, InstalledPlugin, InstalledPluginsFile } from '..
 import { handleError } from '../../core/errors';
 import { getConfiguredProviderType, getProviderPaths } from '../../ai-providers/aiProvider';
 import { AIProviders } from '../../core/constants';
+import { getProjectRoot } from '../../core/projectRoot';
 
 function readsClaudeAgents(providerType: string): boolean {
     return providerType === AIProviders.CLAUDE || providerType === AIProviders.CLAUDE_VSCODE;
@@ -24,7 +25,9 @@ export interface AgentInfo {
 export class AgentManager {
     private outputChannel: vscode.OutputChannel;
     private extensionPath: string;
-    private workspaceRoot: string | undefined;
+    private get workspaceRoot(): string | undefined {
+        return getProjectRoot();
+    }
     
     private readonly BUILT_IN_AGENTS = [
         'spec-requirements',
@@ -42,7 +45,6 @@ export class AgentManager {
     ) {
         this.outputChannel = outputChannel;
         this.extensionPath = context.extensionPath;
-        this.workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     }
 
     /**

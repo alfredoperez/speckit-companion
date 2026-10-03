@@ -8,6 +8,7 @@ import { Commands, ConfigKeys, SpecStatuses, WorkflowSteps } from '../../core/co
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { buildPrompt } from '../../ai-providers/promptBuilder';
 import { isInsideSpecDirectory, getFileWatcherPatterns } from '../../core/specDirectoryResolver';
+import { getProjectRoot } from '../../core/projectRoot';
 import {
     getOrSelectWorkflow,
     resolveStepCommand,
@@ -38,7 +39,7 @@ import { sendTelemetryEvent, getSpecTelemetryContext, phaseTelemetryId } from '.
 import { getConfiguredProviderType } from '../../ai-providers/aiProvider';
 
 function toWorkspaceRelative(absOrRel: string): string {
-    const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const ws = getProjectRoot();
     if (!ws) return absOrRel;
     const rel = path.relative(ws, absOrRel);
     return rel && !rel.startsWith('..') ? rel : absOrRel;
@@ -47,7 +48,7 @@ function toWorkspaceRelative(absOrRel: string): string {
 function resolveSpecDirArg(target: SpecTreeItem | string | undefined): string | undefined {
     if (!target) return undefined;
     if (typeof target === 'string') return target;
-    const ws = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const ws = getProjectRoot();
     return ws ? path.join(ws, target.specPath || `specs/${target.label}`) : undefined;
 }
 
@@ -192,11 +193,11 @@ export function registerSpecKitCommands(
                 'Cancel'
             );
             if (confirm === 'Delete') {
-                const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-                if (workspaceFolder) {
+                const projectRoot = getProjectRoot();
+                if (projectRoot) {
                     // Use specPath from tree item if available, fall back to specs/<label>
                     const relativePath = (item as SpecTreeItem).specPath || `specs/${item.label}`;
-                    const specPath = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
+                    const specPath = vscode.Uri.file(path.join(projectRoot, relativePath));
                     await vscode.workspace.fs.delete(specPath, { recursive: true });
                     specExplorer.refresh();
                     NotificationUtils.showAutoDismissNotification(`Spec "${item.label}" deleted`);
@@ -209,10 +210,10 @@ export function registerSpecKitCommands(
     // selects the entry in the workspace tree without opening it.
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.specs.revealInExplorer', async (item: SpecTreeItem) => {
-            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-            if (!workspaceFolder) return;
+            const projectRoot = getProjectRoot();
+            if (!projectRoot) return;
             const relativePath = item.filePath || item.specPath || `specs/${item.label}`;
-            const uri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
+            const uri = vscode.Uri.file(path.join(projectRoot, relativePath));
             try {
                 await vscode.workspace.fs.stat(uri);
             } catch {
@@ -232,10 +233,10 @@ export function registerSpecKitCommands(
     // silent no-op `revealFileInOS` produces on some Linux desktops.
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.specs.reveal', async (item: SpecTreeItem) => {
-            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-            if (!workspaceFolder) return;
+            const projectRoot = getProjectRoot();
+            if (!projectRoot) return;
             const relativePath = item.filePath || item.specPath || `specs/${item.label}`;
-            const uri = vscode.Uri.file(path.join(workspaceFolder.uri.fsPath, relativePath));
+            const uri = vscode.Uri.file(path.join(projectRoot, relativePath));
             try {
                 await vscode.workspace.fs.stat(uri);
             } catch {
@@ -257,7 +258,7 @@ export function registerSpecKitCommands(
     // gives on some Linux desktops. (Issue #422)
     const resolveTreeItemUri = (item: any): vscode.Uri | undefined => {
         if (!item) return undefined;
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const root = getProjectRoot();
         if (item.resourceUri instanceof vscode.Uri) return item.resourceUri;
         if (typeof item.resourcePath === 'string' && path.isAbsolute(item.resourcePath)) {
             return vscode.Uri.file(item.resourcePath);
@@ -334,7 +335,7 @@ export function registerSpecKitCommands(
             if (!item) return;
             const relativePath = item.specPath || `specs/${item.label}`;
             // Resume has no stock twin — without the extension, suppress rather than dispatch unresolvably.
-            const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const workspaceRoot = getProjectRoot();
             const resolution = resolveDispatchForRoot('speckit.companion.resume', workspaceRoot);
             if (resolution.fellBack) {
                 outputChannel.appendLine(
@@ -408,12 +409,12 @@ export function registerSpecKitCommands(
         plural: string,
         skipIf?: (status: string | undefined) => boolean
     ): Promise<void> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) return;
+        const projectRoot = getProjectRoot();
+        if (!projectRoot) return;
         const targets = resolveTargets(item, items);
         updateSelectionContextKeys(targets as any);
         if (targets.length === 0) return;
-        const wsPath = workspaceFolder.uri.fsPath;
+        const wsPath = projectRoot;
         const specDirs = targets.map(t => specDirFor(t, wsPath));
         await applyBulkToSpecDirs(specDirs, apply, singular, plural, skipIf);
     }
@@ -444,11 +445,11 @@ export function registerSpecKitCommands(
         plural: string,
         skipIf: (status: string | undefined) => boolean
     ): Promise<void> {
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder || !item) return;
+        const projectRoot = getProjectRoot();
+        if (!projectRoot || !item) return;
         const groupSpecs = (item as { groupSpecs?: SpecInfo[] }).groupSpecs ?? [];
         if (groupSpecs.length === 0) return;
-        const wsPath = workspaceFolder.uri.fsPath;
+        const wsPath = projectRoot;
         const specDirs = groupSpecs.map(s => path.join(wsPath, s.path));
         const eligible = specDirs.filter(d => !skipIf(readSpecContextSyncSafe(d)?.status));
         if (eligible.length === 0) return;
@@ -506,8 +507,8 @@ export function registerSpecKitCommands(
     // Force-override a spec's lifecycle status via the sanctioned forceStatus() writer, authored by:user.
     context.subscriptions.push(
         vscode.commands.registerCommand('speckit.specs.setStatus', async (item: SpecTreeItem) => {
-            const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-            if (!workspaceFolder || !item) return;
+            const projectRoot = getProjectRoot();
+            if (!projectRoot || !item) return;
             const choice = await vscode.window.showQuickPick(FORCE_STATUS_CHOICES, {
                 title: 'Set status',
                 placeHolder: 'Force this spec to a lifecycle status',
@@ -520,7 +521,7 @@ export function registerSpecKitCommands(
                 'Force status'
             );
             if (confirm !== 'Force status') return;
-            const specDir = specDirFor(item, workspaceFolder.uri.fsPath);
+            const specDir = specDirFor(item, projectRoot);
             const ok = await forceStatus(specDir, picked, 'user');
             if (!ok) {
                 vscode.window.showErrorMessage(`Could not set status to ${picked} — see the SpecKit Companion output for details.`);
@@ -898,14 +899,14 @@ async function getActiveSpecDir(): Promise<string | undefined> {
     }
 
     const filePath = activeEditor.document.fileName;
-    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-    if (!workspaceFolder) {
+    const projectRoot = getProjectRoot();
+    if (!projectRoot) {
         return undefined;
     }
 
-    const specRelPath = isInsideSpecDirectory(filePath, workspaceFolder.uri.fsPath);
+    const specRelPath = isInsideSpecDirectory(filePath, projectRoot);
     if (specRelPath) {
-        return path.join(workspaceFolder.uri.fsPath, specRelPath);
+        return path.join(projectRoot, specRelPath);
     }
 
     return undefined;

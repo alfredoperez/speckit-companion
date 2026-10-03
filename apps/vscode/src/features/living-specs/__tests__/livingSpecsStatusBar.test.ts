@@ -93,6 +93,25 @@ describe('living specs status bar', () => {
         expect(register().hidden).toBe(1);
     });
 
+    it('claims nothing for a file outside the project folder', () => {
+        const project = ws({ ...FILES, '.specify/companion.yml': '' });
+        const other = ws({ 'src/alpha/due-date/index.ts': '' });
+        activate(project, 'src/alpha/due-date/index.ts');
+        (vscode.workspace as unknown as { workspaceFolders: unknown }).workspaceFolders = [
+            { uri: { fsPath: other }, name: 'other', index: 0 },
+            { uri: { fsPath: project }, name: 'project', index: 1 },
+        ];
+        expect(register().shown).toBe(1);
+
+        (vscode.window as unknown as { activeTextEditor: unknown }).activeTextEditor = {
+            document: { uri: { scheme: 'file', fsPath: path.join(other, 'src/alpha/due-date/index.ts') } },
+        };
+        expect(__statusBarTest.claimsForActiveEditor()).toBeNull();
+        const item = register();
+        expect(item.hidden).toBe(1);
+        expect(item.shown).toBe(0);
+    });
+
     it('stays hidden when there is no active editor', () => {
         activate(ws(FILES), null);
         expect(register().hidden).toBe(1);

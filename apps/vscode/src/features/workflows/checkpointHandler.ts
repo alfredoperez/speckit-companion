@@ -9,6 +9,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { runInTerminal } from '../../core/utils/terminalUtils';
+import { getProjectRoot } from '../../core/projectRoot';
 import {
     WorkflowConfig,
     CheckpointConfig,
@@ -77,8 +78,8 @@ export async function executeCommit(
 ): Promise<CheckpointResult> {
     try {
         // Get the workspace folder
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const projectRoot = getProjectRoot();
+        if (!projectRoot) {
             return {
                 status: 'skipped',
                 error: 'No workspace folder found',
@@ -96,7 +97,7 @@ export async function executeCommit(
         // Create terminal and execute git commands
         const terminal = vscode.window.createTerminal({
             name: 'SpecKit - Commit',
-            cwd: workspaceFolder.uri.fsPath,
+            cwd: projectRoot,
         });
 
         terminal.show();
@@ -132,8 +133,8 @@ export async function executePR(
 ): Promise<CheckpointResult> {
     try {
         // Get the workspace folder
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-        if (!workspaceFolder) {
+        const projectRoot = getProjectRoot();
+        if (!projectRoot) {
             return {
                 status: 'skipped',
                 error: 'No workspace folder found',
@@ -147,7 +148,7 @@ export async function executePR(
         // Create terminal and execute gh CLI
         const terminal = vscode.window.createTerminal({
             name: 'SpecKit - PR',
-            cwd: workspaceFolder.uri.fsPath,
+            cwd: projectRoot,
         });
 
         terminal.show();

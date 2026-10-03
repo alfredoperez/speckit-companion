@@ -5,10 +5,10 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import * as vscode from 'vscode';
 import { CORE_DOCUMENT_FILES, CoreDocumentType, DocumentType } from './types';
 import type { WorkflowStepConfig } from '../workflows/types';
 import { isInsideSpecDirectory } from '../../core/specDirectoryResolver';
+import { getProjectRoot } from '../../core/projectRoot';
 import { SPEC_CONTEXT_FILENAME } from '../specs/specContextReader';
 import { STOCK_SPEC_FILE, featureSpecPath, isFeatureSpecFile } from '../specs/featureSpecPath';
 
@@ -32,7 +32,7 @@ import { fileNameToDocType, relativePathToDocType } from '../../core/utils/fileN
 /** A markdown file inside a spec folder that the document scanner lists, so the viewer can open it. */
 export function isSpecDocument(
     filePath: string,
-    workspaceRoot: string | undefined = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+    workspaceRoot: string | undefined = getProjectRoot(),
 ): boolean {
     if (!filePath.endsWith('.md') || filePath.endsWith('-extra.md')) {
         return false;

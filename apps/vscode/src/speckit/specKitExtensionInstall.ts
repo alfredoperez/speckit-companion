@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 import { coerceLegacyBoolean } from '../core/settingsMigration';
 import { ConfigKeys } from '../core/constants';
+import { getProjectRoot } from '../core/projectRoot';
 import { cachedCompanionGap, markInstallInFlight, readInstalledCompanionVersion, type CompanionGap } from './companionVersionGap';
 import type { InstallPrompt } from '../protocol/viewer';
 import { runInTerminal } from '../core/utils/terminalUtils';
@@ -117,7 +118,7 @@ export async function dismissInstallPrompt(context: vscode.ExtensionContext, pro
 }
 
 /** The prompt a banner surface renders right now — setting, on-disk versions and dismissal all resolved — or `null` for nothing. */
-export function resolveInstallPrompt(context: vscode.ExtensionContext, workspaceRoot = firstWorkspaceRoot()): InstallPrompt | null {
+export function resolveInstallPrompt(context: vscode.ExtensionContext, workspaceRoot = getProjectRoot()): InstallPrompt | null {
     const gap = workspaceRoot ? cachedCompanionGap(workspaceRoot, context.extensionPath) : { state: 'missing' as const };
     if (updateAlreadyAttempted(context, gap)) {
         return null;
@@ -201,14 +202,9 @@ export async function runInstallSpecKitExtension(workspaceRoot?: string): Promis
     await runInTerminal(terminal, buildInstallCommand({ force: alreadyThere && (await specifySupportsForce()) }));
 }
 
-/** Workspace root of the first open folder, or undefined. */
-function firstWorkspaceRoot(): string | undefined {
-    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-}
-
 /** True when the spec-kit extension is installed in the open project. Convenience over the raw primitive. */
 export function isSpecKitExtensionInstalled(): boolean {
-    const root = firstWorkspaceRoot();
+    const root = getProjectRoot();
     return root ? isCompanionInstalled(root) : false;
 }
 

@@ -14,6 +14,7 @@
 import * as vscode from 'vscode';
 import type { WorkflowConfig, WorkflowStepConfig } from './types';
 import { STEP_NAMES, type StepName } from '../../core/types/specContext';
+import { getProjectRoot } from '../../core/projectRoot';
 import {
     COMPANION_WORKFLOW,
     DEFAULT_WORKFLOW,
@@ -30,7 +31,7 @@ function projectRoot(specDir?: string): string | undefined {
         const owner = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(specDir))?.uri.fsPath;
         if (owner) return owner;
     }
-    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    return getProjectRoot();
 }
 
 /**

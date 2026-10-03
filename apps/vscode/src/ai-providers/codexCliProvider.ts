@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { AIProviders } from '../core/constants';
+import { getProjectRoot } from '../core/projectRoot';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { CliTerminalProvider, DispatchContext, DispatchPlan } from './cliTerminalProvider';
 import { readInitOptions } from './initOptions';
@@ -42,7 +43,7 @@ export class CodexCliProvider extends CliTerminalProvider {
             ? `Run the following SpecKit command: ${ctx.slashCommand}`
             : ctx.prompt;
         const resolution = resolveCodexPrompt(
-            vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+            getProjectRoot(),
             rawPrompt,
             fallback,
         );

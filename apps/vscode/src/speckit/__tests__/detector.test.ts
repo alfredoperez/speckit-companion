@@ -9,10 +9,17 @@ jest.mock('child_process', () => {
     return { exec };
 });
 
-jest.mock('fs', () => ({
-    existsSync: jest.fn().mockReturnValue(false),
-    readFileSync: jest.fn(),
-}));
+jest.mock('fs', () => {
+    const existsSync = jest.fn().mockReturnValue(false);
+    return {
+        existsSync,
+        statSync: jest.fn((target: string) => {
+            if (!existsSync(target)) throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+            return {};
+        }),
+        readFileSync: jest.fn(),
+    };
+});
 
 const mockWindow = vscode.window as jest.Mocked<typeof vscode.window>;
 const mockExecAsync = (require('child_process').exec as any)[promisify.custom] as jest.Mock;
@@ -237,6 +244,23 @@ describe('SpecKitDetector', () => {
             });
         });
 
+        it('starts in the folder that holds the Spec Kit files, not the first one', async () => {
+            (vscode.workspace as any).workspaceFolders = [
+                { uri: { fsPath: '/tmp/source' }, name: 'source' },
+                { uri: { fsPath: '/tmp/kit' }, name: 'kit' },
+            ];
+            const disk = jest.requireMock('fs') as { existsSync: jest.Mock };
+            disk.existsSync.mockImplementation((target: string) => target.startsWith('/tmp/kit'));
+            mockProvider('claude');
+
+            expect(await SpecKitDetector.getInstance().checkWorkspaceInitialized()).toBe(true);
+            await SpecKitDetector.getInstance().upgradeProject();
+
+            const calls = mockWindow.createTerminal.mock.calls as unknown as [{ cwd?: { fsPath: string } }][];
+            expect(calls[calls.length - 1][0].cwd?.fsPath).toBe('/tmp/kit');
+            disk.existsSync.mockReset().mockReturnValue(false);
+        });
+
         it('never pastes the workspace path into the command text', async () => {
             (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/tmp/a"$(touch x)' } }];
             mockProvider('claude');
@@ -246,7 +270,7 @@ describe('SpecKitDetector', () => {
                 expect(lastSentText()).not.toContain('$(touch x)');
                 const calls = mockWindow.createTerminal.mock.calls as unknown as [{ cwd?: unknown }][];
                 const opts = calls[calls.length - 1][0];
-                expect(opts.cwd).toEqual({ fsPath: '/tmp/a"$(touch x)' });
+                expect((opts.cwd as { fsPath: string }).fsPath).toBe('/tmp/a"$(touch x)');
             }
         });
 

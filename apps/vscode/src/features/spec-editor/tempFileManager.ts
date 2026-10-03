@@ -10,6 +10,7 @@ import type {
 } from './types';
 import { SIZE_LIMITS, CLEANUP_THRESHOLDS } from './types';
 import { rewriteImageRefsToStaged } from '../../ai-providers/promptBuilder';
+import { getProjectRootUri } from '../../core/projectRoot';
 
 /**
  * Manages temporary markdown files and images for spec editor submissions.
@@ -204,7 +205,7 @@ export class TempFileManager {
         images: AttachedImage[],
         sourcePaths: Record<string, string>
     ): Promise<Record<string, string>> {
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri;
+        const workspaceRoot = getProjectRootUri();
         if (!workspaceRoot || images.length === 0) {
             return {};
         }

@@ -18,6 +18,7 @@ import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { resolveInstallPrompt, dismissInstallPrompt } from '../../speckit/specKitExtensionInstall';
 import { renderInstallBannerHtml } from './installBanner';
 import { AIProviders, WorkflowSteps, ConfigKeys, COMPANION_WORKFLOW_NAME, SPECKIT_WORKFLOW_NAME } from '../../core/constants';
+import { getProjectRoot } from '../../core/projectRoot';
 import { reportSpecCreated, sendTelemetryEvent, workflowTelemetryId, reportInstallPromptShown, reportInstallPromptClicked } from '../../core/telemetry';
 import * as crypto from 'crypto';
 
@@ -69,7 +70,7 @@ export class SpecEditorProvider {
      * provider-specific command formatting applied on top.
      */
     private buildWorkflowDefinitions(): WorkflowDefinition[] {
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const root = getProjectRoot();
         const choices = buildWorkflowChoices(root, getConfiguredProviderType(), this.outputChannel);
         const workflows: WorkflowDefinition[] = choices.map(choice => ({
             name: choice.name,
@@ -269,7 +270,7 @@ export class SpecEditorProvider {
      */
     private async handleReady(): Promise<void> {
         const workflows = this.buildWorkflowDefinitions();
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const workspaceRoot = getProjectRoot();
         const defaultWorkflow = resolveEffectiveDefaultWorkflow(workspaceRoot);
         this.outputChannel.appendLine(`[SpecEditor] Sending ${workflows.length} workflows to webview (default: ${defaultWorkflow})`);
         this.postMessage({ type: 'init', workflows, defaultWorkflow });
@@ -290,7 +291,7 @@ export class SpecEditorProvider {
         }
 
         // A not-installed Companion pick shows benefits + one-click install before any dispatch (Auto/custom opt out).
-        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        const root = getProjectRoot();
         const companionNeedsInstall =
             workflowName === COMPANION_WORKFLOW_NAME &&
             !auto &&
@@ -383,7 +384,7 @@ export class SpecEditorProvider {
             // command — but guard the missing-extension case: downgrade to stock
             // speckit.specify (and warn) when the spec-kit extension is absent so a
             // Companion pick never dispatches an unresolvable /speckit.companion.*.
-            const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const workspaceRoot = getProjectRoot();
             let command = customCommand ? `/${customCommand}` : workflow.stepSpecify;
             if (auto) {
                 // Auto has no stock twin, so a missing extension suppresses it (command: null) — warn and abort.
