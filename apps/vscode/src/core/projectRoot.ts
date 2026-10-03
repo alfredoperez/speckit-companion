@@ -186,7 +186,7 @@ export function watchProjectRoot(outputChannel: vscode.OutputChannel): vscode.Di
     const subscriptions = [
         vscode.workspace.onDidChangeWorkspaceFolders(recheck),
         vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration(ConfigKeys.projectFolder)) recheck();
+            if (e.affectsConfiguration(ConfigKeys.projectFolder) || e.affectsConfiguration(ConfigKeys.specDirectories)) recheck();
         }),
     ];
     return {
