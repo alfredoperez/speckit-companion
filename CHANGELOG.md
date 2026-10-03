@@ -4,11 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Added
-- **Follow a Spec Kit run from inside Claude Code.** A new Claude Code mod shows the spec you are following above the prompt, such as `Plan done · Tasks 7/12 · Implement running`, and a pane beside the transcript with each step's time, the total active time and the tasks ticking off. `/spec` lists the recent specs and switches which one it follows, and where nothing is drawn, such as `claude -p`, it answers in text. It reads the same run record as the VS Code viewer and the Copilot app board, and never writes. Install it with `claude plugin marketplace add alfredoperez/speckit-companion`, then `claude plugin install speckit-companion@speckit-companion`.
+Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.
+
+### Highlights
+
+#### Follow a Spec Kit run from inside Claude Code
+A new Claude Code mod shows the spec you are following above the prompt, such as `Plan done · Tasks 7/12 · Implement running`, and a pane beside the transcript with each step's time, the total active time and the tasks ticking off. `/spec` lists the recent specs and switches which one it follows, and where nothing is drawn, such as `claude -p`, it answers in text. It reads the same run record as the VS Code viewer and the Copilot app board, and never writes. Install it with `claude plugin marketplace add alfredoperez/speckit-companion`, then `claude plugin install speckit-companion@speckit-companion`.
+<!-- area: assistants; pr: 832 -->
 
 ### Changed
-- **The moss mascot is the new logo.** The SpecKit icon in the activity bar and the logo in the Copilot app board's header are now the small moss character instead of the seedling and the double chevron.
+- **The moss mascot is the new logo.** The SpecKit icon in the activity bar and the logo in the Copilot app board's header are now the small moss character instead of the seedling and the double chevron. ([#831](https://github.com/alfredoperez/speckit-companion/pull/831)) <!-- area: other -->
 
 ### Fixed
 - **The Copilot app board no longer covers itself with the prompt it sent.** Sending a step now shows a short note that fades, with the full prompt behind Show prompt and Copy (it stays up to paste when there is no chat session), and in a workspace without SpecKit Companion the Companion and Auto choices now look disabled. ([#827](https://github.com/alfredoperez/speckit-companion/pull/827)) <!-- area: copilot-app -->

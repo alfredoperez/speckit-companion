@@ -181,16 +181,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         <p class="cl-eyebrow">RELEASE HISTORY</p>
         <h1>Changelog</h1>
         <p class="cl-lede">
-          Two halves that meet in one file. The Spec Kit extension rides your runs and writes
-          <code>.spec-context.json</code>; the VS Code extension reads it and turns it into a
-          workspace. They install independently and they're versioned independently, so each one
-          keeps its own release notes. Both streams are merged below, newest first. Each release
-          leads with what's new, then lists the smaller fixes by area, and every entry links to its
-          pull request.
-        </p>
-        <p class="cl-note">
-          The entries are read from the two <code>CHANGELOG.md</code> files when this page is built,
-          so what's here is what's in the repo.
+          Release notes for the VS Code extension and the Spec Kit extension, newest first.
         </p>
       </header>
 
@@ -562,18 +553,10 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       .cl-lede {
         max-width: 660px;
-        margin: 0 0 16px;
+        margin: 0;
         color: var(--text-body);
         font-size: var(--fs-lead);
         line-height: var(--lh-prose);
-      }
-
-      .cl-note {
-        max-width: 660px;
-        margin: 0;
-        color: var(--text-dim);
-        font-size: var(--fs-ui-sm);
-        line-height: var(--lh-ui);
       }
 
       /* Filters */
