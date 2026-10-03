@@ -141,6 +141,8 @@ Dispatches to Claude Code, GitHub Copilot, Gemini, Codex, and more, in a termina
 
 In the GitHub Copilot app, the [spec board canvas](https://speckit-companion.dev/docs/guides/copilot-app/) shows every spec's pipeline and tasks live next to the chat, and runs the next step from a button.
 
+In the Claude Code terminal, the [SpecKit Companion mod](https://speckit-companion.dev/docs/guides/claude-code/) shows where the run stands above the prompt and in a pane beside the transcript, with `/spec` to switch specs.
+
 ## Docs
 
 - [Getting started](./docs/getting-started.md): platform support, sample specs, and running the extension from source (install story: [speckit-companion.dev/docs/install](https://speckit-companion.dev/docs/install))

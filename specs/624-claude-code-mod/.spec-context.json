@@ -1,0 +1,798 @@
+{
+  "workflow": "companion",
+  "specName": "SpecKit Companion mod for Claude Code",
+  "branch": "feat/820-claude-code-mod",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T12:24:51.642Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:26:16.370Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:26:42.721Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:26:43.062Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-03T12:27:18.025Z"
+    },
+    {
+      "step": "specify",
+      "substep": "handoff",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:27:24.318Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T12:27:36.103Z"
+    },
+    {
+      "step": "plan",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:28:55.172Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:29:50.509Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:30:09.616Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:30:27.189Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:31:55.379Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:31:55.659Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T12:32:08.040Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:32:57.202Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:32:57.360Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-03T12:33:10.622Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:33:46.193Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:34:10.616Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:35:02.752Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:36:36.451Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:37:03.041Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:37:49.122Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:39:00.316Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:39:44.830Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:40:47.772Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:40:54.105Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:42:00.114Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:42:06.712Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:43:07.838Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:43:14.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:43:36.071Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:44:10.348Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:44:48.173Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:45:02.732Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:45:25.370Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:46:08.304Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:51:42.182Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:51:42.214Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:51:42.470Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:54:01.387Z"
+    },
+    {
+      "step": "implement",
+      "substep": "doctor",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T12:54:25.989Z"
+    },
+    {
+      "step": "implement",
+      "substep": "review",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-03T13:12:08.817Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "two review rounds (code-review + codex) applied; 17/17 plugin tests, 76/76 canvas tests, strict validation passes",
+  "coverage": {
+    "FR-001": {
+      "title": "Band above the prompt names the followed spec and its run state",
+      "tasks": [
+        "T007",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/band.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Pane shows title, status, steps, step times, total, and tasks by phase",
+      "tasks": [
+        "T007",
+        "T011",
+        "T012"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/pane.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Times use the shared derivation: own finish, no idle billing, active total",
+      "tasks": [
+        "T003",
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/pane.test.ts::shows each step with its measured time",
+        "apps/copilot-canvas/tests/core.test.mjs::shared rules the Claude Code mod bundles"
+      ]
+    },
+    "FR-004": {
+      "title": "Step states, labels and task counts come from the board rules as one shared module",
+      "tasks": [
+        "T003",
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/core.test.mjs::builds the same row from text that scanSpec builds from disk"
+      ]
+    },
+    "FR-005": {
+      "title": "Band and pane refresh after tool calls and on a short timer",
+      "tasks": [
+        "T008"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/band.test.ts::draws the band from a real run record",
+        "and ticks when a task is checked"
+      ]
+    },
+    "FR-006": {
+      "title": "/spec lists, follows by number/name, or returns to auto",
+      "tasks": [
+        "T013",
+        "T014"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/spec-command.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Hand-picked spec persists per project until /spec auto",
+      "tasks": [
+        "T008",
+        "T013",
+        "T014"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/spec-command.test.ts"
+      ]
+    },
+    "FR-008": {
+      "title": "Text fallback where nothing is drawn",
+      "tasks": [
+        "T015",
+        "T016"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/fallback.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "Mod never submits a prompt or writes spec files",
+      "tasks": [
+        "T008",
+        "T021"
+      ]
+    },
+    "FR-010": {
+      "title": "Plugin at apps/claude-mod, listed in the root marketplace, passes strict validation",
+      "tasks": [
+        "T001",
+        "T002",
+        "T021"
+      ]
+    },
+    "FR-011": {
+      "title": "Plugin tests: band text, /spec switching, fallback, real record",
+      "tasks": [
+        "T009",
+        "T011",
+        "T013",
+        "T015"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/band.test.ts",
+        "apps/claude-mod/tests/pane.test.ts",
+        "apps/claude-mod/tests/spec-command.test.ts",
+        "apps/claude-mod/tests/fallback.test.ts"
+      ]
+    },
+    "FR-012": {
+      "title": "Bundled rules regenerated by a build step and checked in CI",
+      "tasks": [
+        "T005",
+        "T019"
+      ]
+    },
+    "FR-013": {
+      "title": "Site page, changelog, doc map and repo map name the app",
+      "tasks": [
+        "T017",
+        "T018",
+        "T020"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 20,
+    "projectedTasks": 16,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "Running the next step from the mod (users run /speckit.* themselves)",
+    "Anthropic directory submission and the Awesome Copilot listing",
+    "An icon or mascot in the mod UI",
+    "Rendering spec documents in the pane"
+  ],
+  "context": [
+    "area: apps/copilot-canvas (specs-core.mjs, overview.mjs, tasks.mjs, vendor/step-history.mjs), the board rules to share",
+    "area: apps/claude-mod (new plugin)",
+    "constraint: hooks module rules: full $.ns.method calls, string-literal events, ESM, relative imports inside the plugin, no Node APIs",
+    "constraint: read-only: the mod never submits a prompt or writes a run record",
+    "constraint: run-record timing: a step ends at its own finish, idle time unbilled, total is active time",
+    "constraint: no version bumps on a feature branch"
+  ],
+  "intent": "Show the followed spec's run (band above the prompt, pane beside the transcript) in Claude Code, with /spec to switch, read-only",
+  "decisions": [
+    {
+      "decision": "Move the board's pure rules into apps/copilot-canvas/spec-rules.mjs and bundle it into the plugin with esbuild",
+      "why": "A hooks module imports only files inside its plugin and has no Node APIs; one module keeps the board, the viewer and the mod on the same rules",
+      "rejected": "Reimplementing the rules in the mod, which would drift"
+    },
+    {
+      "decision": "Do every file read in register.js through $.fs and pass text to the shared rules",
+      "why": "Static analysis rejects passing $ into imported helpers",
+      "rejected": "An IO helper module taking $"
+    },
+    {
+      "decision": "Refresh the followed spec after each tool call and on a 3 second timer; rescan all folders only at start, on /spec, and after a turn",
+      "why": "Capture writes arrive through the agent's tool calls; a full rescan of hundreds of folders every few seconds is waste",
+      "rejected": "A timer alone (visible lag) or a watcher (no API)"
+    },
+    {
+      "decision": "Fall back to a text reply when $.session.surfaces() has neither terminal nor desktop",
+      "why": "surfaces() is empty under claude -p and the VS Code panel draws no mod UI",
+      "rejected": "Always returning text, which duplicates the pane in the terminal"
+    },
+    {
+      "decision": "Keep the hand-picked spec in $.store under follow:<project root>",
+      "why": "Survives reloads and restarts without sessions in other projects overwriting it",
+      "rejected": "A module variable, lost on every reload"
+    },
+    {
+      "decision": "Generate tests/fixtures/demo-specs.js from specs/_0N_demo-* in the build",
+      "why": "Plugin tests cannot import node:fs, so they need the fixtures as a module; the staleness check keeps it real",
+      "rejected": "Hand-copied fixture strings"
+    },
+    {
+      "decision": "The band counts tasks in place of naming the tasks step as done",
+      "why": "Reproduces the issue's example 'Plan done · Tasks 7/12 · Implement running'",
+      "rejected": "Naming every finished step"
+    },
+    {
+      "decision": "The pane opens by itself at session start where something draws",
+      "why": "Claude Code places an unasked pane only in a terminal 144+ columns wide, which is the beside-the-transcript case; narrower terminals wait for /spec",
+      "rejected": "Opening only on /spec, which hides the pane until asked"
+    },
+    {
+      "decision": "Bare /spec opens the pane on a Specs tab of buttons instead of printing a list where something draws",
+      "why": "Picking from the list is one press; the text list stays for surfaces that draw nothing",
+      "rejected": "Printing the list in the transcript everywhere"
+    },
+    {
+      "decision": "A refresh whose target moved while it read is dropped, keyed on the target id rather than a generation counter",
+      "why": "A generation counter let a timer tick overrule /spec's own refresh, so /spec could answer with the previous spec",
+      "rejected": "Generation counter"
+    },
+    {
+      "decision": "The demo fixtures bundle from the git index",
+      "why": "Clicking through the viewer mutates the working copies, which would rewrite the tracked fixture bundle",
+      "rejected": "Reading the working tree"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: a self-contained plugin under apps/claude-mod that reads with $.fs and derives everything through a bundle of the board's pure rules",
+      "key_finding": "Plugin tests and hooks modules can import only relative files and claude-code, so sharing code means a generated bundle and generated fixtures"
+    },
+    "tasks": {
+      "summary": "21 tasks in 8 phases: setup, foundational rules split and build, four story phases on register.js, docs, polish"
+    },
+    "implement": {
+      "summary": "Claude Code mod at apps/claude-mod: run band, spec pane, /spec with text fallback, built on the board's shared rules bundled from spec-rules.mjs"
+    }
+  },
+  "approach": "Split the Copilot board's reader into pure rules (spec-rules.mjs) and IO, and bundle the rules into a self-contained plugin at apps/claude-mod. The plugin's hooks module reads spec folders through $.fs, derives rows, band line and pane model from the shared rules, refreshes after tool calls and on a timer, and answers /spec with a pane or a text reply.",
+  "currentTask": "T021",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Plugin manifest, hooks.json naming register.js, and a .gitignore for generated types",
+      "files": [
+        "apps/claude-mod/.claude-plugin/plugin.json",
+        "apps/claude-mod/hooks/hooks.json",
+        "apps/claude-mod/.gitignore"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Repo-root marketplace listing the plugin; plugin and marketplace kept out of the vsix",
+      "files": [
+        ".claude-plugin/marketplace.json",
+        ".vscodeignore"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Pure board rules (labels, badges, row, sort, lookup, current task, timing) in spec-rules.mjs",
+      "files": [
+        "apps/copilot-canvas/spec-rules.mjs"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "specs-core keeps IO and re-exports the rules; overview reads phaseTimings; import cycle gone; 71/71 canvas tests pass",
+      "files": [
+        "apps/copilot-canvas/specs-core.mjs",
+        "apps/copilot-canvas/overview.mjs"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Build bundles spec-rules into hooks/vendor/board-rules.mjs and writes demo fixtures; mod:build and test:mod scripts; test:canvas rebuilds the mod bundle",
+      "files": [
+        "apps/claude-mod/build.mjs",
+        "apps/claude-mod/hooks/vendor/board-rules.mjs",
+        "apps/claude-mod/tests/fixtures/demo-specs.js",
+        "package.json"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Direct tests for phaseTimings, timingSummaryText, buildSpecRow parity with scanSpec, sortSpecs, parseSpecContext",
+      "files": [
+        "apps/copilot-canvas/tests/core.test.mjs"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Pure view logic: bandLine, paneModel, listText, followText, defaultFollow",
+      "files": [
+        "apps/claude-mod/hooks/board.js"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Hooks module core: scan through $.fs, follow pinned-or-latest spec, refresh after tool calls, on a 3s timer and after turns; validates strict",
+      "files": [
+        "apps/claude-mod/hooks/register.js"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Band tests: in-flight, next, finished, empty project, real _02 fixture record ticking live",
+      "files": [
+        "apps/claude-mod/tests/band.test.ts",
+        "apps/claude-mod/tests/harness.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Band above the prompt: spec name plus bandLine, keeps later mods' drawing, yields to a survey",
+      "files": [
+        "apps/claude-mod/hooks/register.js"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Pane tests: real _03 record step times and 38m 30s active total on terminal and desktop, tasks by phase, Specs view switching",
+      "files": [
+        "apps/claude-mod/tests/pane.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Pane speckit-companion with Run view (steps, times, total, tasks by phase) and Specs view picker; opens at session start where something draws",
+      "files": [
+        "apps/claude-mod/hooks/register.js"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "/spec tests: number, partial name, auto, no match, deleted pick falls back; pick stored per project",
+      "files": [
+        "apps/claude-mod/tests/spec-command.test.ts",
+        "apps/claude-mod/tests/harness.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "/spec registered immediate with argument hint; follows, auto, no match; opens the pane focused where something draws",
+      "files": [
+        "apps/claude-mod/hooks/register.js"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Fallback tests: list reply with no surfaces, switch confirmation on vscode surface, no-spec answer; pane never opened",
+      "files": [
+        "apps/claude-mod/tests/fallback.test.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Text replies from listText/followText where no terminal or desktop surface; verified with claude -p on the demo fixtures",
+      "files": [
+        "apps/claude-mod/hooks/register.js"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Plugin README: what it shows, install, where it draws, develop, tested on 2.1.287",
+      "files": [
+        "apps/claude-mod/README.md"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Site guide page: what the mod shows, install, where it draws",
+      "files": [
+        "apps/website/src/content/docs/docs/guides/claude-code.mdx"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "CI fails when the mod bundle or generated fixtures are stale",
+      "files": [
+        ".github/workflows/ci.yml"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Changelog Added line, doc-sync row, architecture paragraph, CLAUDE.md repo map, release-qa surface entry, install page link",
+      "files": [
+        "CHANGELOG.md",
+        "docs/doc-sync.md",
+        "docs/architecture.md",
+        "CLAUDE.md",
+        ".claude/skills/release-qa/surface-map.yml",
+        "apps/website/src/content/docs/docs/install.mdx"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Validated: plugin validate --strict (plugin + marketplace), 15/15 plugin tests, 75/75 canvas tests, compile, 3413 jest tests, claude -p /spec on demo copy, /plugin lists 1 mod active in a pty"
+    }
+  },
+  "verified": [
+    {
+      "what": "Claude Code plugin tests (band, pane, /spec, fallback, real fixture records)",
+      "command": "sh /private/tmp/claude-501/-Users-alfredoperez-dev-GitHub-speckit-companion/8803a166-0592-4951-a70c-8ac14c7260c7/scratchpad/cc.sh apps/claude-mod plugin test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.5,
+      "result": " 15 pass ·  0 fail · Ran 15 tests across 4 files. [0.33s]"
+    },
+    {
+      "what": "Strict plugin validation",
+      "command": "sh /private/tmp/claude-501/-Users-alfredoperez-dev-GitHub-speckit-companion/8803a166-0592-4951-a70c-8ac14c7260c7/scratchpad/cc.sh . plugin validate --strict ./apps/claude-mod",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.7,
+      "result": "  ❯ ./register.js hooks: session.start, command.run{command=spec}, tool.call, ui.render{component=AbovePrompt}, ui.render{component=Pane}, turn.complete ·   ❯ ./register.js calls: $.clock.every, $.command.register, $.fs.list (via listDir), $.fs.read (via readText), $.session.cwd, $.session.surfaces (via drawsHere), $.store.delete (via follow), $.store.get, $.store.set (via follow), $.ui.invalidate, $.ui.open, $.ui.resolve · ✔ Validation passed"
+    },
+    {
+      "what": "Canvas suites plus both bundle rebuilds",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 13.0,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 12460.18775"
+    },
+    {
+      "what": "Extension compiles",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.8,
+      "result": "> speckit-companion@0.35.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "Jest suite",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.4,
+      "result": "Snapshots:   0 total · Time:        70.465 s · Ran all test suites."
+    },
+    {
+      "what": "claude -p \"/spec\" with the plugin loaded in a temp copy of specs/_0N_demo-* prints the followed spec, its band line and the four demo specs",
+      "result": "speckit-companion: Following _02_demo-tasked (the latest): Plan done · Tasks 0/4 · Implement next, then the recent list"
+    },
+    {
+      "what": "Interactive session in a pty (CLAUDE* env scrubbed) with --plugin-dir: /plugin shows the mod, and the pane draws beside the transcript",
+      "result": "/plugin read '1 mod active · speckit-companion'; the pane showed Demo — Tasked with Plan 5m, Tasks 5m, Timing coverage: 3 of 4 phases and Phase 1. The band was not seen because a Claude Code survey held the band, which the mod yields to by design."
+    }
+  ],
+  "concerns": [
+    {
+      "note": "simplified: list rows read a spec's spec.md only when the record lacks specName, and tasks.md only without a record, to keep the scan of hundreds of folders cheap; the followed spec reads both. If list rows ever need task counts, read tasks.md for every row.",
+      "step": "implement"
+    },
+    {
+      "note": "claude plugin test needs the Claude Code binary, so CI runs the canvas suites and the bundle staleness check but not the plugin tests; npm run test:mod runs them locally.",
+      "step": "implement"
+    },
+    {
+      "note": "Code review ran inside a subagent run of auto, so the nested /code-review + /codex:review dispatch may degrade to /code-review alone.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: tasks recorded 1 internal boundary where siblings recorded 4, and 1 capture call exited without an outcome (likely a call the subagent's worktree guard refused mid-run). Both self-inflicted by this run; history is append-only, so left as is."
+    },
+    {
+      "note": "Review gap (round 2, codex): two scanAll calls running at once can finish out of order and leave the older row list; scans only start on /spec, after a main turn and when the Specs tab opens, so it is rare, and the next scan corrects it.",
+      "step": "implement"
+    },
+    {
+      "note": "Review gap (round 1, code-review): a spec with no run record sorts by its newest file time, and $.fs.list reports 0 for subfolders where the board stats them, so such specs can sort slightly differently from the Copilot board.",
+      "step": "implement"
+    },
+    {
+      "note": "Claude Code's remote rollout switch for installed mods flipped off once mid-run ('the rollout switch was saved off by an earlier session'); one claude -p run refreshed it and the mod loaded again. Users can hit the same message.",
+      "step": "implement"
+    }
+  ]
+}

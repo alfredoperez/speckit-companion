@@ -4,8 +4,9 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { escapeHtml } from './vendor/viewer-markdown.mjs';
-import { deriveStepHistory, deriveTimingSummary, formatElapsed } from './vendor/step-history.mjs';
-import { PIPELINE_STEPS } from './specs-core.mjs';
+import { formatElapsed, phaseTimings, timingSummaryText } from './spec-rules.mjs';
+
+export { stepTiming } from './spec-rules.mjs';
 
 const CONSTRAINT_PREFIX = 'constraint: ';
 const AREA_PREFIX = 'area: ';
@@ -17,34 +18,16 @@ const text = v => (typeof v === 'string' ? v.trim() : '');
 const list = v => (Array.isArray(v) ? v : []);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
-/** Each step's span and whether it counts as measured, derived exactly as the VS Code viewer derives it. */
-export function stepTiming(ctx) {
-    const history = list(ctx?.history).filter(entry => entry && typeof entry.step === 'string' && typeof entry.at === 'string');
-    return deriveStepHistory(history, ctx?.currentStep, ctx?.status);
-}
-
 function timingSection(ctx) {
-    const timing = stepTiming(ctx);
-    const known = PIPELINE_STEPS.filter(s => timing[s]);
-    const phases = [...known, ...Object.keys(timing).filter(s => !PIPELINE_STEPS.includes(s))];
-    if (!phases.length) return '';
-    const durations = phases.map(p => {
-        const entry = timing[p];
-        return entry.durationTrusted && entry.completedAt && !entry.folded
-            ? Date.parse(entry.completedAt) - Date.parse(entry.startedAt)
-            : null;
-    });
-    const summaryTiming = deriveTimingSummary(timing, PIPELINE_STEPS);
-    const summary = summaryTiming.complete && summaryTiming.elapsedMs !== undefined
-        ? `${formatElapsed(summaryTiming.elapsedMs)} active`
-        : `Timing coverage: ${summaryTiming.measuredPhases} of ${summaryTiming.expectedPhases} phases`;
-    const items = phases.map((p, i) => {
-        const inFlight = timing[p].startedAt && !timing[p].completedAt;
-        return `<div role="listitem" class="dossier-timing__phase${inFlight ? ' is-in-flight' : ''}">`
+    const timings = phaseTimings(ctx);
+    if (!timings.phases.length) return '';
+    const summary = timingSummaryText(timings);
+    const items = timings.phases.map((p, i) => {
+        return `<div role="listitem" class="dossier-timing__phase${p.inFlight ? ' is-in-flight' : ''}">`
             + (i > 0 ? '<span class="dossier-timing__connector" aria-hidden="true"></span>' : '')
             + '<span class="dossier-timing__dot" aria-hidden="true"></span>'
-            + `<span class="dossier-timing__name">${e(cap(p))}</span>`
-            + (durations[i] != null ? `<span class="dossier-timing__duration">${e(formatElapsed(durations[i]))}</span>` : '')
+            + `<span class="dossier-timing__name">${e(cap(p.step))}</span>`
+            + (p.durationMs != null ? `<span class="dossier-timing__duration">${e(formatElapsed(p.durationMs))}</span>` : '')
             + '</div>';
     }).join('');
     return `<section class="dossier-timing" aria-label="Run timing overview"><div class="dossier-timing__head"><span class="dossier-kicker">Run overview</span><strong>${e(summary)}</strong></div><div class="dossier-timing__phases" role="list">${items}</div></section>`;
