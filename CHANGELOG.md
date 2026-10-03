@@ -48,7 +48,7 @@ Clicking a link to another document of the spec opens it and scrolls to the head
 <!-- area: spec-viewer; pr: 796, 802, 800; media: removed-doc -->
 
 ### Added
-- **SpecKit Companion suggests the assistant your project was set up for.** Spec Kit records which assistant a project was set up for in `.specify/integration.json`. When that is not the assistant your AI provider setting names, SpecKit Companion now says so when it starts and offers to switch, or to keep your current one. It never switches on its own, and once you keep your choice it does not ask again for that project. A project set up for an assistant SpecKit Companion has no provider for shows nothing. ([#799](https://github.com/alfredoperez/speckit-companion/pull/799)) <!-- area: assistants -->
+- **SpecKit Companion suggests the assistant your project was set up for.** Spec Kit records which assistant a project was set up for. When that is not the assistant your AI provider setting names, SpecKit Companion now says so when it starts and offers to switch, or to keep your current one. It never switches on its own, and once you keep your choice it does not ask again for that project. A project set up for an assistant SpecKit Companion has no provider for shows nothing. ([#799](https://github.com/alfredoperez/speckit-companion/pull/799)) <!-- area: assistants -->
 
 ### Fixed
 - **Move to phase… works in a narrow Pipeline Builder.** In a side panel the node's panel now scrolls, so the button is always reachable, and its list opens inside the panel on the side with room, showing every phase instead of being cut off at the edge. ([#805](https://github.com/alfredoperez/speckit-companion/pull/805)) <!-- area: pipeline-builder -->
@@ -71,7 +71,7 @@ SpecKit Companion comes to the GitHub Copilot app as a live spec board, and revi
 ### Highlights
 
 #### A spec board for the GitHub Copilot app
-Open the SpecKit Companion canvas beside the chat to see every spec with its pipeline, task progress and the same Overview the VS Code viewer shows, updating live as the agent works. Buttons run the next step, New spec asks for a workflow (Companion, Spec Kit or Auto) the way VS Code does and records the run from its first step, and opening the board tells the agent to wait for your next instruction instead of starting work. It lives in `apps/copilot-canvas` and is copied into `.github/extensions` or `~/.copilot/extensions`; it is not part of the VS Code extension.
+Open the SpecKit Companion canvas beside the chat to see every spec with its pipeline, task progress and the same Overview the VS Code viewer shows, updating live as the agent works. Buttons run the next step, New spec asks for a workflow (Companion, Spec Kit or Auto) the way VS Code does and records the run from its first step, and opening the board tells the agent to wait for your next instruction instead of starting work. It installs separately from the VS Code extension; the [Copilot app guide](https://speckit-companion.dev/docs/guides/copilot-app/) shows how.
 <!-- area: copilot-app; pr: 787; media: copilot-board, copilot-tasks, copilot-new-spec -->
 
 #### Review a living spec in one pass
