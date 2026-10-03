@@ -121,7 +121,7 @@ Sections, in this order:
 - Check: <check id>
 - Severity: blocker | major | minor | cosmetic
 - Repro: 1. <exact click> 2. <exact click> 3. …
-- Expected: <quote the living-spec requirement when there is one>
+- Expected: <quote the site reference or README line when there is one>
 - Actual: …
 - Fix candidate: <one line, the suspected area>
 - Evidence: ![[QA Report <DATE> - <slug>.png]]
@@ -182,7 +182,7 @@ Then: `open_application` Visual Studio Code, click the SpecKit activity-bar icon
 
 ### Navigation matrix
 
-For every row: do the action with clicks only, take a computer-use screenshot, assert the expected state, save a `shot.sh` only when it fails or is docs-worthy. Log each row as PASS/FAIL in `$RESULTS/nav-matrix.md` (`| # | action | expected | actual | shot |`). Expected behaviour comes from `capabilities/spec-viewer/read-a-spec.spec.md` and `move-a-spec-forward.spec.md`; quote the requirement in a FAIL.
+For every row: do the action with clicks only, take a computer-use screenshot, assert the expected state, save a `shot.sh` only when it fails or is docs-worthy. Log each row as PASS/FAIL in `$RESULTS/nav-matrix.md` (`| # | action | expected | actual | shot |`). Expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/anatomy/anatomy-of-the-spec-viewer.mdx`); quote it in a FAIL.
 
 Sidebar entry types (tree: group → spec → document → related doc):
 

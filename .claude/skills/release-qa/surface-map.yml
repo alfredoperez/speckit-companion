@@ -67,7 +67,7 @@ surfaces:
     checks: [jest]
 
   - name: docs only
-    paths: ["docs/**", "*.md", "capabilities/**"]
+    paths: ["docs/**", "*.md"]
     checks: [docs-build]
 
   - name: media

@@ -121,7 +121,7 @@ Open a PR per branch (`/create-pr` conventions). Since there's no issue, **the P
 Merge **one at a time**, only after every CI check on it has finished and passed (`gh pr checks`; a pending check is not a pass). After each merge, the next PR is behind `main` — if GitHub reports a conflict or the branch is stale, rebase it before merging. (This is the tax for parallel branches; it's cheap when the file sets are disjoint, which is why L0 gates on that.)
 
 ### L5. Close out — main loop
-- **One** `install-local`, then `git restore package.json package-lock.json .specify/`. Your living-spec capabilities are safe from this: they live in `living-specs.yml` at the repo root, outside the folder that gets restored.
+- **One** `install-local`, then `git restore package.json package-lock.json .specify/`.
 - **One** learnings distill for the whole batch (same routing rules as the full loop: checklist / `CLAUDE.md` proposal / this file / issue candidate). An empty distill is the norm.
 - **Chat summary**, not an HTML brief: what shipped, anything escalated, and `/release-qa` as the next step.
 
@@ -205,7 +205,7 @@ Mark the ticket task `completed` and loop to the next ticket.
 ```bash
 git checkout main && git fetch origin && git pull --ff-only
 ```
-Run `/install-local`, then `git restore package.json package-lock.json .specify/` to drop the throwaway bump + regenerated registry artifacts. Living-spec capabilities are safe from this: they live in `living-specs.yml` at the repo root. Optionally `code --command workbench.action.reloadWindow`. Record the installed version for the report.
+Run `/install-local`, then `git restore package.json package-lock.json .specify/` to drop the throwaway bump + regenerated registry artifacts. Optionally `code --command workbench.action.reloadWindow`. Record the installed version for the report.
 
 ### Final report
 

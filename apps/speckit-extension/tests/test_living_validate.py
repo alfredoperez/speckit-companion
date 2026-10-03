@@ -15,6 +15,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[3]
 SCRIPTS = REPO / "apps" / "speckit-extension" / "scripts"
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "spec-shape"
+PROJECT = Path(__file__).resolve().parent / "fixtures" / "requirement-slices" / "links"
 
 sys.path.insert(0, str(SCRIPTS))
 _spec = importlib.util.spec_from_file_location(
@@ -96,7 +97,7 @@ class BothSuitesReadEveryFixture(unittest.TestCase):
 
 class TheReportNeverGates(unittest.TestCase):
     def test_a_clean_project_exits_zero(self):
-        self.assertEqual(lv.main(["--root", str(REPO), "--json"]), 0)
+        self.assertEqual(lv.main(["--root", str(PROJECT), "--json"]), 0)
 
     def test_a_project_with_living_specs_off_exits_zero_and_says_so(self):
         import tempfile
@@ -109,26 +110,26 @@ class TheReportNeverGates(unittest.TestCase):
             self.assertEqual(report["findings"], [])
 
     def test_an_unreadable_spec_is_a_skip_not_a_crash(self):
-        report = lv.build_report(str(REPO))
+        report = lv.build_report(str(PROJECT))
         self.assertIn("skipped", report)
         for entry in report["skipped"]:
             self.assertTrue(entry["reason"].strip())
 
     def test_one_capability_checks_only_its_spec(self):
-        report = lv.build_report(str(REPO), "find-a-living-spec")
+        report = lv.build_report(str(PROJECT), "alpha")
         self.assertEqual(report["checked"], 1)
-        self.assertTrue(all(f["path"].endswith("find-a-living-spec.spec.md") for f in report["findings"]))
+        self.assertTrue(all(f["path"] == "capabilities/alpha/spec.md" for f in report["findings"]))
 
     def test_an_unknown_capability_is_a_skip_not_a_clean_report(self):
-        report = lv.build_report(str(REPO), "no-such-capability")
+        report = lv.build_report(str(PROJECT), "no-such-capability")
         self.assertEqual(report["checked"], 0)
         self.assertIn("no capability named no-such-capability", report["skipped"][-1]["reason"])
 
-    def test_this_repository_is_checked_and_exits_zero(self):
-        report = lv.build_report(str(REPO))
+    def test_a_registered_project_is_checked_and_exits_zero(self):
+        report = lv.build_report(str(PROJECT))
         self.assertTrue(report["enabled"])
-        self.assertGreaterEqual(report["checked"], 14)
-        self.assertEqual(lv.main(["--root", str(REPO)]), 0)
+        self.assertEqual(report["checked"], 2)
+        self.assertEqual(lv.main(["--root", str(PROJECT)]), 0)
 
 
 class TheGlobIndexSeesNewFilesToo(unittest.TestCase):
@@ -165,7 +166,7 @@ class NothingCheckedIsNeverReportedAsNothingWrong(unittest.TestCase):
     """A run that could not read the registry is not a run that found nothing."""
 
     def test_running_from_a_subdirectory_says_where_the_registry_is(self):
-        report = lv.build_report(str(REPO / "apps" / "vscode" / "src"))
+        report = lv.build_report(str(PROJECT / "capabilities"))
         self.assertFalse(report["enabled"])
         self.assertTrue(report["skipped"])
         rendered = lv.render_human(report)
@@ -279,7 +280,8 @@ class AnUnreviewedDraftIsNamed(unittest.TestCase):
 
 class FindingsAreOrdered(unittest.TestCase):
     def test_by_path_then_line_then_code(self):
-        report = lv.build_report(str(REPO))
+        report = lv.build_report(str(PROJECT))
+        self.assertTrue(report["findings"])
         keys = [(f["path"], f["line"], f["code"]) for f in report["findings"]]
         self.assertEqual(keys, sorted(keys))
 
