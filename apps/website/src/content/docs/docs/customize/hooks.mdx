@@ -1,0 +1,89 @@
+---
+title: Hooks
+description: Attach your own work before or after a part of a Companion step, from the Pipeline Builder or by hand in companion.yml.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+A hook is your own work that runs before or after a node, a phase or a whole step of the Companion workflow. You attach it without forking the command. A **node** is one section inside a Companion command, and it is what a hook anchors to.
+
+Hooks need the Companion Spec Kit extension and live in `.specify/companion.yml` in your repo.
+
+## The four kinds
+
+| In the Pipeline Builder | In `companion.yml` | What it is |
+| --- | --- | --- |
+| **Skill** | `{ type: skill, ref: <name> }` | Asks the assistant to use a skill you already have. Try this first. |
+| **Instruction** | `{ type: prompt, text: "..." }` | One instruction, kept in the file and dropped in at that point |
+| **Command** | `{ type: command, run: "..." }` | A shell line. Your assistant needs a terminal. |
+| **Node** | `{ type: node, ref: <id> }` | Your own file at `.specify/companion/nodes/<id>.md`, reusable in more than one place |
+
+## Attach one from the Pipeline Builder
+
+Use **Add hook** from a phase's `+` menu, a node's panel, or the dotted slot between nodes. Pick where it runs, then the kind.
+
+<DocFigure
+  src="builder-attach.png"
+  alt="The Add hook form: where it runs, then the kind."
+  caption="Add hook: where it runs, then what kind of work it is."
+/>
+
+Your hooks show under the Companion mascot. Hooks from an installed extension show as `via <extension>`. Nothing takes effect until you **Build**. See [Pipeline Builder](/docs/customize/pipeline-builder#build).
+
+## Move one
+
+| You do | Result |
+| --- | --- |
+| Drop it on the top or bottom half of a node | It runs before or after that node |
+| Drop it on a dotted slot or a block of hooks | It is added last there |
+| Drop it between two hooks | Their order changes |
+| Open the hook and use **Move up** or **Move down** on its **Order** row | The same, from the keyboard |
+
+Hooks at one place run top to bottom. Each move is one change to `companion.yml` and keeps the rest of the file as you wrote it.
+
+<DocFigure src="builder-move-hook.png" caption="A hook being dragged above another, with the drop line showing where it lands." />
+
+A hook moves within its own step. Hooks from an installed extension, and hooks parked while the pipeline runs as it ships, stay where they are, and dragging one says why.
+
+## Write one by hand
+
+The file holds changes only.
+
+```yaml
+commands:
+  implement:
+    hooks:
+      before:
+        handoff:
+          - { type: command, run: "npm test" }
+          - { type: prompt, text: "Confirm the CHANGELOG is updated." }
+      after:
+        implement-exec:
+          - { type: node, ref: review }
+```
+
+`implement` is the step, `before` and `after` are the side, and `handoff` and `implement-exec` are the nodes the hooks anchor to. A phase name works as an anchor too.
+
+Add `background: true` to start a hook without waiting for it. Use it for independent work like tests or notifications, never for anything that writes the run record.
+
+## What actually runs
+
+Nothing executes `companion.yml`. Your assistant reads it at run time, because instructions for doing so are appended to each command. A hook is a strong convention, not an enforced step. If something must never be skipped, put it in CI.
+
+| Situation | What happens |
+| --- | --- |
+| No `companion.yml` | Shipped defaults, no warning |
+| The file cannot be parsed | Shipped defaults and one warning. Nothing partial is applied. |
+| A hook anchored to a missing node | A warning, and that anchor is skipped |
+| A `type: node` hook with a missing file | An error |
+| A hook from an installed extension marked `asks first` | It does not run unless you ask |
+| The run is unattended, under [Auto](/docs/steps/auto) | A hook that would stop and ask a person records the checkpoint and carries on |
+
+## Hooks are not Spec Kit's lifecycle hooks
+
+Spec Kit has its own hooks that fire after each stock command, such as `after_specify`. The Companion Spec Kit extension uses those to write the run record. They are listed in [Commands](/docs/reference/commands#recording-hooks) and you do not edit them.
+
+## Related
+
+- [Pipeline Builder](/docs/customize/pipeline-builder) covers the board the hooks sit on.
+- [Your own workflow](/docs/customize/your-own-workflow) covers the other keys in `companion.yml`.

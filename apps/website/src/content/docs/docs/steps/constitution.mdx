@@ -1,0 +1,48 @@
+---
+title: Constitution
+description: The project's ground rules, written once before the first spec, and where SpecKit Companion asks for them and shows them.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="/speckit.constitution" prompt={false} />
+  <p>Or click <strong>Configure Constitution</strong> in the Specs view, or run <strong>SpecKit: Constitution</strong> from the command palette.</p>
+</Actions>
+
+The constitution holds the rules every spec in this project is held to: how you test, what you keep simple, what you never do. You write it once per project. It is Spec Kit's own step and file, and it lives at `.specify/memory/constitution.md`.
+
+## When you are asked for it
+
+`specify init` creates the file as a template full of placeholders. While the placeholders are still there, SpecKit Companion asks you to fill it in.
+
+| Where | What you see |
+| --- | --- |
+| Specs view | "Configure your project principles to guide AI-assisted development", with **Configure Constitution** and **Create New Spec** |
+| A notification when the project opens | "SpecKit detected! Configure your project principles by running /speckit.constitution", with **Run Setup** and **Dismiss** |
+
+Both send `/speckit.constitution` to your assistant, which asks about your project and writes the file. You can skip it and create a spec first. The prompt stays until the placeholders are gone.
+
+<YouSee>
+
+Once the file has real content, the Specs view drops the prompt and offers **Create New Spec** and **Open a live sample**.
+
+</YouSee>
+
+## Where it shows afterwards
+
+The Steering view lists it as **Constitution** under **SpecKit Project Files**. Click it to open the file.
+
+<DocFigure src="live-steering-view.png" recapture caption="The Steering view, with the Constitution under SpecKit Project Files." />
+
+## What reads it
+
+Your assistant does, when a step runs. The plan step checks its design against the constitution and records the result in `plan.md`. SpecKit Companion itself never reads the file's content when it sends a command. It only checks whether the placeholders are still there.
+
+## Related
+
+- [Steering](/docs/customize/steering) covers the other standing files your assistant reads.
+- [Specify](/docs/steps/specify) is the first step of every spec.

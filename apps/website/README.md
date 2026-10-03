@@ -2,8 +2,6 @@
 
 The marketing site and documentation for SpecKit Companion. It lives in this repo but is not part of either extension: separate `package.json`, separate lockfile, separate build, separate deploy.
 
-Scaffold only right now. The landing page and the two docs pages are placeholders, and they say so on the page. Real content lands in a later ticket, from a claim ledger that cites the source file behind every sentence.
-
 ## Stack
 
 Astro with the Starlight docs integration, static output.
@@ -11,6 +9,31 @@ Astro with the Starlight docs integration, static output.
 - `src/pages/index.astro` is the landing page, a plain Astro route with its own dark styles. It does not use the Starlight layout.
 - `src/content/docs/docs/` holds the Starlight pages, so they serve under `/docs/`. The nesting is what keeps Starlight off the `/` route.
 - `src/content.config.ts` wires the `docs` collection to Starlight's loader and schema.
+
+## Docs
+
+The docs are organized by the spec journey, and each group is a folder under `src/content/docs/docs/`:
+
+| Group | Folder | What its pages are |
+| --- | --- | --- |
+| Start | `index.mdx`, `install.mdx`, `start/` | What it is, the method, getting set up, the first spec |
+| Navigate | `navigate/` | The sidebar and the frame of the viewer |
+| Each step | `steps/` | One page per step: the command, what it writes, what you see |
+| Read the results | `results/` | The document, the Overview, progress, living specs |
+| Other processes | `processes/` | Bugs, assessing an idea, the Copilot app, Claude Code |
+| Customize | `customize/` | Pipeline Builder, hooks, your own workflow, steering |
+| Reference | `reference/` | Commands, configuration, providers, telemetry |
+
+The sidebar in `astro.config.mjs` names every page by slug, in reading order, so a new page is added there as well as saved in its folder. A page that moves gets a line under `redirects` in the same file, pointing at its final address.
+
+Pages are reference, not tutorials: they say what you do and what you see. The building blocks are in `src/components/journey/`.
+
+- `Actions` holds the command or button of a section, above the prose. Commands go in `CodeLine`, which has the copy button.
+- `YouSee` is the short "What you see" note after an action.
+- `DocFigure` puts every screenshot in the same 16:9 light frame. It takes a file name from `docs/screenshots/generated/`, `content/media/web/`, `docs/screenshots/` or `public/canvas/`, and fails the build on a missing file or missing alt text. `recapture` marks a dark capture that is standing in until a light one exists; `grep -rn recapture src/content` lists them.
+- `ShotNeeded` reserves a frame for a screenshot that has not been taken yet.
+
+Choices between options go in a table, not in a paragraph of conditions. Paragraphs are never hard-wrapped.
 
 Dark only. Starlight's `ThemeProvider` and `ThemeSelect` are overridden by `src/components/DarkThemeProvider.astro` and `src/components/NoThemeSelect.astro`, which pin `data-theme="dark"` and remove the theme picker. `src/styles/docs.css` forces `color-scheme: dark` so an OS light preference does not leak through.
 

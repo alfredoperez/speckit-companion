@@ -1,0 +1,42 @@
+---
+title: Converge
+description: Spec Kit's step that checks the code against the spec after implement, and how SpecKit Companion shows it.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="/speckit.converge" prompt={false} />
+  <p>Type it in your assistant after implement. The viewer has no button that starts it.</p>
+</Actions>
+
+Converge is Spec Kit's own command. It checks the code against one feature's spec, plan and task list.
+
+| What it finds | What it does |
+| --- | --- |
+| Something is missing | Appends a Convergence phase of new tasks to `tasks.md` |
+| Nothing is missing | Reports "Converged" |
+
+You run implement and converge again until it converges.
+
+## In the viewer
+
+<YouSee>
+
+While converge runs, the **Tasks** entry in the rail shows it running, with its timer. Afterwards [the Overview](/docs/results/the-overview) lists **Converge** after Implement, with how long it took.
+
+</YouSee>
+
+Recording converge needs the Companion Spec Kit extension, which notes its start and finish.
+
+## What it leaves alone
+
+- **The spec's status.** Converge never changes it. A spec that ran converge still offers **Mark Completed** and **Archive**.
+- **The footer.** There is no button to start converge and none to run it again.
+- **The timing of later passes.** A step keeps one start and one finish, so the first converge pass is the one timed.
+
+## Converge is not a living-spec check
+
+Converge closes the gap between the code and one feature's own documents. Drift and sync, in [Living specs](/docs/results/living-specs), keep the lasting capability specs honest across every feature. A spec that converged can still leave a capability spec out of date.

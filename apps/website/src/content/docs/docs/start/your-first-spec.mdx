@@ -1,9 +1,6 @@
 ---
 title: Your first spec
 description: 'What you do to go from installing SpecKit Companion to a written spec, and what you see along the way: the viewer, review comments, progress, the Overview, and how to move around.'
-sidebar:
-  hidden: true
-  label: Your first spec
 ---
 
 import Button from '../../../../components/Button.astro';
@@ -17,7 +14,7 @@ import YouSee from '../../../../components/journey/YouSee.astro';
 export const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
 export const COMPANION_COMMAND = 'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
 
-This page covers the start of a spec: installing SpecKit Companion, creating a spec, and what the first step, specify, leaves behind. Each section says what you do and what you see. The method itself comes from GitHub Spec Kit, which explains it in [Spec-driven development](https://github.com/github/spec-kit/blob/main/spec-driven.md).
+This page covers the start of a spec: installing SpecKit Companion, creating a spec, and what the first step, specify, leaves behind. Each section says what you do and what you see. [Spec-driven development](/docs/start/spec-driven-development) explains the method behind it.
 
 ## Install both halves
 
@@ -174,7 +171,7 @@ The SpecKit icon opens four views.
 
 <DocFigure src="sidebar-triptych.png" caption="Specs tracks your work, Steering lists the standing files, and Living Specs lists the specs that outlive any one change." />
 
-[The sidebar](/docs/anatomy/the-sidebar) covers every icon, mark and hover action.
+[The sidebar](/docs/navigate/the-sidebar) covers every icon, mark and hover action.
 
 ### Inside the viewer
 
@@ -184,8 +181,8 @@ The SpecKit icon opens four views.
 
 <DocFigure src="workflow-documents-poster.png" caption="The plan, with Research and Data Model under it in the rail and its headings in On this page." />
 
-[Inside the viewer](/docs/anatomy/anatomy-of-the-spec-viewer) covers the header, the footer and every state of the rail.
+[Inside the viewer](/docs/navigate/inside-the-viewer) covers the header, the footer and every state of the rail.
 
 ## What comes next
 
-Your spec has finished its first step. The rest of the loop runs the same way: plan, then tasks, then implement, one step at a time from the viewer footer, or all at once with Auto. After implement you can run Spec Kit's own `/speckit.converge` from your assistant, and repeat implement and converge until the code matches the spec. The viewer shows converge in the rail and on the Overview, but it has no button to start it. Each step has its own page under **Each step**.
+Your spec has finished its first step. The rest of the loop runs the same way: plan, then tasks, then implement, one step at a time from the viewer footer, or all at once with Auto. After implement you can run Spec Kit's own `/speckit.converge` from your assistant, and repeat implement and converge until the code matches the spec. The viewer shows converge in the rail and on the Overview, but it has no button to start it. Each step has its own page under **Each step**, starting with [Specify](/docs/steps/specify).

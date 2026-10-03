@@ -1,60 +1,52 @@
 ---
 title: Introduction
-description: What SpecKit Companion gives you in VS Code, which half does what, and where to start.
-sidebar:
-  label: Introduction
-  order: 1
+description: What SpecKit Companion gives you in VS Code, which half does what, and where each part of these docs picks up.
 ---
 
-import MediaSlot from '../../../components/docs/MediaSlot.astro';
+import DocFigure from '../../../components/journey/DocFigure.astro';
 import WorkflowDiagram from '../../../components/docs/WorkflowDiagram.astro';
 
-SpecKit Companion lets you read, review and track your specs in VS Code. A **spec** is a markdown file that describes what to build before your AI assistant builds it. [Spec Kit](https://github.com/github/spec-kit), the open source tool behind the `specify` command, has your assistant write those files.
+SpecKit Companion lets you read, review and track your specs in VS Code. A **spec** is a markdown file that describes what to build before your AI assistant builds it. [Spec Kit](https://github.com/github/spec-kit), the open source tool behind the `specify` command, has your assistant write those files. [Spec-driven development](/docs/start/spec-driven-development) explains the method.
 
-<MediaSlot
-  feature="readme-hero"
+<DocFigure
+  src="hero.png"
+  alt="The SpecKit sidebar beside the spec viewer, mid-plan: specs grouped as Active and Completed, and one spec open with Specification checked and Plan running."
   caption="The sidebar and the viewer, mid-plan. Both read the folder your assistant already wrote. There is no second copy of the spec."
 />
 
 ## What you get in VS Code
 
-**A spec viewer.** Your `spec.md`, `plan.md` and `tasks.md` open as a page, with a rail down the side for each document.
+| Part | What it does | Read more |
+| --- | --- | --- |
+| Spec viewer | Opens `spec.md`, `plan.md` and `tasks.md` as a page, with a rail for each document | [Inside the viewer](/docs/navigate/inside-the-viewer) |
+| Inline review | Lets you comment on any line and send the comments to your assistant | [Review with comments](/docs/steps/review-with-comments) |
+| Specs sidebar | Lists every spec, grouped by where it stands | [The sidebar](/docs/navigate/the-sidebar) |
+| Steering view | Lists the standing instruction files your assistant already reads | [Steering](/docs/customize/steering) |
 
-<MediaSlot
-  feature="spec-viewer"
-  caption="One spec as a page, with every workflow document one click away."
-/>
+<DocFigure src="spec-viewer-x16x9.png" caption="One spec as a page, with every workflow document one click away." />
 
-**Inline review.** Comment on any line. Comments are saved in the spec's own folder.
-
-<MediaSlot
-  feature="inline-comments"
+<DocFigure
+  src="inline-comments-16x9.png"
+  alt="A spec in the viewer with two review cards pinned under their lines, one pending and one applied, and the comment composer open on line 4."
   caption="A comment sits on the line it is about, and travels with the spec."
 />
 
-**A Specs sidebar.** Every spec, grouped by where it stands.
-
-<MediaSlot
-  feature="specs-sidebar"
-  caption="Active and Completed specs, with the state of each document inside."
-/>
-
-A **Steering** view also lists the standing instruction files your AI provider already reads.
-
 ## What the Companion Spec Kit extension adds
 
-This is a second piece that you install separately with the `specify` command. It records what each step did, how long it took, what it decided and what it checked, in a **run record** next to each spec. The **Overview** in the viewer shows that record.
+This is a second piece that you install separately with the `specify` command. It records what each step did, how long it took, what it decided and what it checked, in a **run record** next to each spec. [The Overview](/docs/results/the-overview) in the viewer shows that record.
 
-<MediaSlot
-  feature="overview"
+<DocFigure
+  src="overview-16x9.png"
+  alt="The Overview of a finished run: intent, run timing, approach and size, a requirement to task to test table, decisions with what each rejected, and the verified checks."
   caption="The Overview reads the run record: intent, timing, decisions, checks and coverage."
 />
 
-It also brings the `/speckit.companion.*` commands, a Resume button, a closing `mark-complete` step and Living Specs. A **living spec** is a spec for behavior that outlives any one change.
+It also brings the `/speckit.companion.*` commands, a Resume button, a closing `mark-complete` step and [Living specs](/docs/results/living-specs). A **living spec** is a spec for behavior that outlives any one change.
 
-<MediaSlot
-  feature="living-specs"
-  caption="Living Specs sit next to the code they describe and flag when the code moves on."
+<DocFigure
+  src="living-specs-pair-16x9.png"
+  alt="The Living Specs view with a coverage count or drift flag on each capability, beside the viewer open on one capability's spec."
+  caption="Living specs sit next to the code they describe and flag when the code moves on."
 />
 
 Either half works alone. With only the VS Code extension you get the viewer, comments and sidebar. A spec made without the second half just has less recorded on it.
@@ -69,6 +61,13 @@ A Companion run turns a feature request into a spec, a plan, a task list and cod
 
 SpecKit Companion hands your assistant the text of a command, then reads whatever lands on disk. It never reads the chat back, and it gets no signal when your assistant finishes.
 
-## Next
+## Where to go
 
-[Install](/docs/install) sets up both halves in four steps.
+| You want to | Go to |
+| --- | --- |
+| Set it up | [Install](/docs/install), then [Your first spec](/docs/start/your-first-spec) |
+| Know what a step does and leaves behind | **Each step**, starting with [Specify](/docs/steps/specify) |
+| Understand what a run recorded | [The Overview](/docs/results/the-overview) and [Track progress](/docs/results/track-progress) |
+| Work outside VS Code | [From the Copilot app](/docs/processes/copilot-app) or [From Claude Code](/docs/processes/claude-code) |
+| Change what a step does | [Pipeline Builder](/docs/customize/pipeline-builder) |
+| Look up a command or a setting | [Commands](/docs/reference/commands) and [Configuration](/docs/reference/configuration) |

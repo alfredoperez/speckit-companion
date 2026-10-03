@@ -1,0 +1,68 @@
+---
+title: Inside the viewer
+description: 'The parts of the spec viewer around the document: the header, the step rail, the outline and the footer, and what each state of them means.'
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+The spec viewer shows your spec markdown as a readable page. The file on disk is unchanged. This page covers the frame around the document. [Reading a spec](/docs/results/reading-a-spec) covers the document itself.
+
+<DocFigure src="spec-viewer-x16x9.png" caption="Header on top, step rail on the left, the document in the middle, the outline on the right." />
+
+| Part | What it holds |
+| --- | --- |
+| Header | The spec's name, a status badge, the branch and the creation date |
+| Run strip | Tasks done, requirements traced, checks, active time and a pull request link |
+| Step rail | One tab for each step that writes a document, with [the Overview](/docs/results/the-overview) at the top |
+| Document | Your markdown, with requirements, scenarios and tasks drawn as rows and chips |
+| On this page | The document's headings. It follows where you are. |
+| Footer | The next step, plus archive, complete, regenerate and refine |
+
+## The step rail
+
+<DocFigure src="panel-step-rail.png" caption="Specification, Plan and Tasks each carry a check. Tasks is the tab being read." />
+
+| A tab looks | Meaning |
+| --- | --- |
+| Check mark | Done. The document exists. |
+| Highlighted | Current. This is the tab you are reading. |
+| Spinner and timer | In flight. The step is running. |
+| Disabled, with a tooltip | Locked. A step ahead is running and this document does not exist yet. |
+| Plain | Not started. |
+
+Clicking a tab only changes what you read. It never moves the run. Supporting documents, such as Checklist, Research and Data Model, sit under the step that wrote them. Steps that only act, such as Implement and Mark Complete, have no tab. Their actions live in the footer.
+
+<DocFigure src="workflow-documents-poster.png" caption="The plan, with Research and Data Model under it in the rail and its headings in On this page." />
+
+## The footer
+
+The main button is the next step, named after it, with a line above reading `Next: Plan`. Press it and the viewer records the current step as done, starts the next one and sends its command to your assistant.
+
+<DocFigure src="live-footer-other-actions.png" recapture caption="The footer on a spec with its tasks written: Next: Implement, with Other actions open on Analyze." />
+
+| Button | What it does | Shows when |
+| --- | --- | --- |
+| The next step, such as **Plan** | Closes the current step and sends the next command | You are reading the current step and nothing is running |
+| **Regenerate** | Runs the current step again | The step has started and the spec is not closed |
+| **Other actions** | Spec Kit's **Clarify**, **Checklist** and **Analyze**, plus your [custom commands](/docs/customize/your-own-workflow#custom-commands) | The spec is open and the menu is not empty |
+| **Refine (N)** | Sends the pending [review comments](/docs/steps/review-with-comments) | N comments are pending on this document |
+| **Mark Completed** | Closes the spec | The work is done and the spec is not closed |
+| **Archive**, **Reactivate** | Shelves a spec, or opens a closed one again | At the end of a run |
+
+No forward button is normal while a step runs, after a run is complete, or when you are reading a tab that is not the current step. While a step runs, the footer reads **Step running, actions unlock when it settles**.
+
+## The header badge
+
+The badge is the spec's status. Two stored values are renamed on screen: `tasking` shows as **Creating Tasks**, and `ready-to-implement` as **Tasks Created**.
+
+## When the document you are reading goes away
+
+If the file on screen is moved or deleted, the viewer switches to a document that still exists and says so above the page. The note stays until you open another document, and clears on its own if the file comes back.
+
+<DocFigure src="viewer-removed-doc.png" caption="plan.md was deleted while it was open, so the viewer fell back to the Specification and named what happened." />
+
+## Good to know
+
+- **Broken run record.** If `.spec-context.json` cannot be parsed, the viewer shows the spec read-only and offers **Reset context**, which backs the file up first.
+- **Offline.** Syntax highlighting and Mermaid load from a CDN, so offline you get plain code and diagram source.
+- **Living specs and bug reports** open in the same viewer with a different frame. See [Reading a spec](/docs/results/reading-a-spec).

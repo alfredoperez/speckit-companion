@@ -1,0 +1,54 @@
+---
+title: Fix a bug
+description: How the reports from Spec Kit's bug extension show up in the sidebar and the viewer.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="specify extension add bug" />
+  <p>This adds Spec Kit's bug extension to the project. The bug flow is its own, and you run its commands in your assistant.</p>
+</Actions>
+
+A bug does not go through specify, plan and tasks. Spec Kit's bug extension assesses it, fixes it and tests the fix, and writes a report for each stage. SpecKit Companion does not run that flow. It shows the reports.
+
+## Where the reports live
+
+Each bug gets a folder under `.specify/bugs/`, with up to three files.
+
+| File | Shown as | Written when |
+| --- | --- | --- |
+| `assessment.md` | Assessment | The bug has been assessed |
+| `fix.md` | Fix | A fix has been made |
+| `test.md` | Test | The fix has been tested |
+
+## In the sidebar
+
+<YouSee>
+
+A **Bugs** group in the Specs view, after Archived. It appears once at least one report exists. Each row is named by the bug's title and reads the reports it has and the latest outcome, like `assess · fix · test · verified`.
+
+</YouSee>
+
+Expand a bug for Assessment, Fix and Test. A report not written yet reads `not created`.
+
+| The outcome on the row comes from | When |
+| --- | --- |
+| The test report's result | A test report exists and states one |
+| The fix report's status | Otherwise, when a fix report states one |
+| The assessment's verdict | Otherwise |
+
+Filter narrows bugs along with specs. Sort leaves bugs in name order.
+
+## In the viewer
+
+Click a bug or one of its reports. The viewer opens with **Assessment**, **Fix** and **Test** on the rail, and a report that does not exist yet greyed out. The header shows the bug's title, and the badge shows the latest outcome, such as **VERIFIED**, or **BUG** when there is none.
+
+The page is for reading. There is no footer, no Overview and no comment button, and the viewer writes nothing to the bug's folder.
+
+## Related
+
+- [The sidebar](/docs/navigate/the-sidebar) covers the rest of the Specs view.
+- [Converge](/docs/steps/converge) is the check for a feature spec, where the bug flow has its test report.

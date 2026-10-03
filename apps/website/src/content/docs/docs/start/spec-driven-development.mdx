@@ -1,0 +1,76 @@
+---
+title: Spec-driven development
+description: The method SpecKit Companion is built around, the steps it runs in, and the two workflows that ship with it.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+Spec-driven development means you write down what you want before any code exists, and you keep that description as the thing the code answers to. The spec comes first and the code follows from it, where most projects do it the other way round and let the documents fall behind.
+
+The method is GitHub Spec Kit's, not ours. Their own explanation is [Specification-Driven Development](https://github.com/github/spec-kit/blob/main/spec-driven.md), and it is worth reading in full. This page is our short version, and how SpecKit Companion fits around it.
+
+## Why write the spec first
+
+An AI assistant can now turn a precise description into working code. That moves the hard part. Typing the code is cheap. Saying exactly what you want, and noticing what you left out, is where the work is.
+
+A spec gives you three things an open-ended chat does not.
+
+- **Something to review before code exists.** A wrong requirement costs one edited line in a spec, and a rewrite once it is code.
+- **A record that outlasts the chat.** The reasons for a decision are in a file in your repo, not in a conversation you closed.
+- **A way to change your mind.** You edit the spec and run the step again, and you don't have to patch around what was already built.
+
+## The steps
+
+Each step is one command your assistant runs, and each leaves a file behind. The next step reads that file.
+
+| Step | Question it answers | What it leaves |
+| --- | --- | --- |
+| [Constitution](/docs/steps/constitution) | How does this project build anything? | `.specify/memory/constitution.md` |
+| [Specify](/docs/steps/specify) | What are we building, and for whom? | `spec.md` |
+| [Plan](/docs/steps/plan) | How will it be built? | `plan.md`, plus research and design notes |
+| [Tasks](/docs/steps/tasks) | In what order, in what pieces? | `tasks.md` |
+| [Implement](/docs/steps/implement) | Does the code exist? | The code, and ticked boxes in `tasks.md` |
+| [Converge](/docs/steps/converge) | Does the code match the spec? | Extra tasks, or a report that it does |
+
+The spec says what and why, and stays away from how. The plan is where technology comes in. Keeping them apart is what lets you change the approach without rewriting the goal.
+
+A spec is allowed to say it does not know. Spec Kit's templates mark an open question in the text and leave it for you to answer, which is better than a guess that reads like a decision.
+
+## Where SpecKit Companion fits
+
+SpecKit Companion does not change the method. Your assistant still runs Spec Kit's commands and writes the same files. Companion shows them: the spec as a page, the steps as a rail, the run as a record you can read afterwards.
+
+<DocFigure src="step-rail-x16x9.png" caption="A spec after specify. The rail lists the steps of the workflow the spec was created with." />
+
+## The two workflows that ship
+
+A **workflow** is the set of steps a spec goes through. You choose it once, when you create the spec. It is recorded on the spec, and the rail, the sidebar and the footer's forward button all read it from there.
+
+| Workflow | Steps | How it ends |
+| --- | --- | --- |
+| Spec Kit | specify, plan, tasks, implement | At Implemented, until you press **Mark Completed** |
+| SpecKit Companion | specify, plan, tasks, implement, mark-complete | Its last step marks the spec complete as part of the run |
+
+Companion's commands also write less. They skip sections a typical change never needs and size the documents to the change. The stock commands stay installed either way, so this is a choice between two command families and not a mode.
+
+<DocFigure src="own-workflow-x16x9.png" caption="The Workflow choice in Create New Spec. It is recorded on the spec when you create it." />
+
+### Which one is pre-selected
+
+| Your setup | Pre-selected in Create New Spec |
+| --- | --- |
+| You set `speckit.defaultWorkflow` yourself | The value you set |
+| Unset, Companion Spec Kit extension installed | SpecKit Companion |
+| Unset, extension not installed | Spec Kit |
+
+The setting decides the pre-selection and nothing else. It does not restrict your choice and does not change existing specs. See [Configuration](/docs/reference/configuration#workflow-choice).
+
+### Without the Companion Spec Kit extension
+
+Companion still appears in the panel, marked **Install to enable**. If you dispatch a Companion step anyway, the four step commands fall back to their stock twins with an install prompt. Commands with no stock twin, such as mark-complete, are not sent.
+
+## Related
+
+- [Your first spec](/docs/start/your-first-spec) runs the first step on a real project.
+- [Run it all with Auto](/docs/steps/auto) runs every step as one command.
+- [Your own workflow](/docs/customize/your-own-workflow) replaces the steps with your own.

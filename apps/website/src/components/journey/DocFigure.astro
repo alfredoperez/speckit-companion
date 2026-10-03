@@ -3,12 +3,12 @@
   One screenshot, framed the same way every time: a 16:9 box on a neutral
   light ground, the image contained inside it, then a caption. Captures come
   in many sizes and two themes; the frame is what makes them read as one set,
-  and it stays light in both site themes so a light capture never sits on a
-  dark ground without an edge.
+  and it is light on the dark site so a light capture always has an edge.
 
-  `src` is a file name under docs/screenshots/generated/ or content/media/web/.
-  Alt text comes from content/media/manifest.json when it describes that file,
-  or from `alt`. A missing file or missing alt fails the build.
+  `src` is a file name under docs/screenshots/generated/, content/media/web/ or
+  docs/screenshots/. Alt text comes from content/media/manifest.json when it
+  describes that file, or from `alt`. A missing file or missing alt fails the
+  build.
 
   `recapture` marks a still that is a dark live capture standing in until a
   light one exists. It changes nothing on screen; it is there to be grepped.
@@ -31,11 +31,17 @@ const stills = {
   ...import.meta.glob<{ default: ImageMetadata }>('../../../../../content/media/web/*.png', {
     eager: true,
   }),
+  ...import.meta.glob<{ default: ImageMetadata }>('../../../../../docs/screenshots/*.png', {
+    eager: true,
+  }),
+  ...import.meta.glob<{ default: ImageMetadata }>('../../../public/canvas/*.png', {
+    eager: true,
+  }),
 };
 
 const match = Object.entries(stills).find(([key]) => key.endsWith(`/${src}`));
 if (!match) {
-  throw new Error(`DocFigure: no still named "${src}" in docs/screenshots/generated/ or content/media/web/.`);
+  throw new Error(`DocFigure: no still named "${src}" in docs/screenshots/generated/, content/media/web/, docs/screenshots/ or public/canvas/.`);
 }
 const image = match[1].default;
 

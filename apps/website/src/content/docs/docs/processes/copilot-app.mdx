@@ -1,0 +1,78 @@
+---
+title: From the Copilot app
+description: A live board of every spec, next to the chat in the GitHub Copilot app, with a button that runs the next SpecKit Companion step.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+If you work in the GitHub Copilot app, SpecKit Companion opens as a canvas beside your chat. It shows every spec in the repo, where each one is in the pipeline, and a button for the next step. You do not need the VS Code extension for it.
+
+<DocFigure
+  src="canvas/board.png"
+  alt="The SpecKit Companion board in the Copilot app: the spec list on the left, and on the right one spec with its pipeline, the next-step button, and the Overview."
+  caption="The board: every spec on the left, and the selected one with its pipeline and Overview on the right."
+/>
+
+## Set it up
+
+Copy the `apps/copilot-canvas` folder from the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project or your user folder.
+
+```bash
+# shared with your team
+cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion
+# every project on your machine
+cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion
+```
+
+Then start a new session in the Copilot app and ask: **Open the SpecKit Companion canvas**. It also appears under **Customize, Canvas**.
+
+| Where you copied it | When it shows up |
+| --- | --- |
+| Your user folder | In every new session |
+| The project | Only once the copy is on your default branch, because the Copilot app runs each session in a fresh worktree cut from that branch |
+
+Use the user folder while you try it out.
+
+## What the board shows
+
+| Part | Detail |
+| --- | --- |
+| The spec list | Status, a four-step bar (specify, plan, tasks, implement) and task progress, most recently active first. Filter by Active, Done or All, or search by name or number. |
+| The Overview | The same record as the VS Code viewer: intent, time per phase, decisions and coverage |
+| The documents | The spec, plan, tasks, research and checklists |
+| The next-step button | Sends the same line the VS Code sidebar does, such as `/speckit.companion.plan specs/042-export-csv`, into the chat |
+| New spec | Companion, Spec Kit or Auto, as in VS Code. Companion and Auto are greyed out, with the reason, in a project without the Companion Spec Kit extension. |
+
+<YouSee>
+
+When the agent writes `plan.md` or ticks a task, the board updates without a refresh.
+
+</YouSee>
+
+<DocFigure
+  src="canvas/tasks.png"
+  alt="A spec mid-implement on the board: Implement is running, three of six tasks are done, and the tasks tab shows each phase with the files the run captured."
+  caption="A spec mid-implement: three of six tasks done, with each phase on the tasks tab."
+/>
+
+<DocFigure
+  src="canvas/new-spec.png"
+  alt="The New spec form on the board with Companion, Spec Kit and Auto to choose from, and a line under it saying what Companion does."
+  caption="New spec, with the same three choices as VS Code."
+/>
+
+## Which commands the buttons send
+
+| The project and the spec | The buttons send |
+| --- | --- |
+| The [Companion Spec Kit extension](/docs/install) is installed | `/speckit.companion.*` |
+| It is not installed | The stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement` |
+| The spec was started with the Spec Kit workflow | The stock commands, even where Companion is installed |
+
+A spec keeps the workflow it was started with, so a run never switches halfway. The board says which commands it is using under the next-step button.
+
+## Good to know
+
+- **The board only reads.** It does not touch `.spec-context.json` or any spec file. The commands it sends do that.
+- **You can ask the agent.** "Which specs are still open?" or "show me the export spec", and the board follows.

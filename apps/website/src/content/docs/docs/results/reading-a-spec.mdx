@@ -1,0 +1,55 @@
+---
+title: Reading a spec
+description: How the viewer draws a spec, a plan and a task list, how links between documents behave, and how a living spec or a bug report reads differently.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+The viewer draws the markdown your assistant wrote so it reads as a document, not a file. Nothing is added to the file. This page covers what the page shows. [Inside the viewer](/docs/navigate/inside-the-viewer) covers the rail, the header and the footer around it.
+
+<DocFigure src="step-rail-x16x9.png" caption="A specification: a user story as a card, and Given, When and Then picked out in each scenario." />
+
+## What the viewer draws
+
+| In the markdown | On the page |
+| --- | --- |
+| A bullet like `- **FR-001** The system must ...` | A labelled requirement row. Any prefix of two to five capital letters and a number works. |
+| Given, When and Then in a scenario | The three words emphasized in place |
+| `## Phase N: Title` in `tasks.md` | A phase header, with MVP and P1 to P5 chips |
+| `[P]` on a task line | The task can run in parallel |
+| `[US2]` on a task line | The user story the task belongs to |
+| `- [ ]` and `- [x]` | A checkbox per task. During implement, the Tasks tab shows a live percentage from them. |
+
+<DocFigure src="panel-step-rail.png" caption="Tasks grouped by phase, each with its checkbox." />
+
+## Stale documents
+
+A document generated before the one above it changed gets a banner with **Regenerate**. Edit the spec after the plan was written and the plan says so.
+
+## Links between documents
+
+| The link points at | Clicking it |
+| --- | --- |
+| Another document of the same spec, such as `tasks.md` from the plan | Opens it in the viewer, at the heading it names |
+| Another spec | Opens that spec in the viewer |
+| A heading only | Jumps within the page |
+| A source file | Opens it in the editor beside the viewer |
+
+## A living spec
+
+A living spec has a flat tab strip where a feature spec has a rail. Its header shows the code it covers and an `N/M covered` count. A drift chip and an **Update** button appear when that code changed after the spec was last committed. Requirements drafted from existing code carry an **adopted** badge and an **Approve** control. [Living specs](/docs/results/living-specs) explains what these files are.
+
+<DocFigure
+  src="living-specs-pair-16x9.png"
+  alt="The Living Specs view with a coverage count or drift flag on each capability, beside the viewer open on one capability's spec."
+  caption="A capability spec in the same viewer: the code it covers where a feature spec shows a branch, and a coverage count where it shows a status."
+/>
+
+## A bug report
+
+Open a bug from the sidebar's **Bugs** group and the viewer shows its reports, with **Assessment**, **Fix** and **Test** on the rail. The page is for reading: there is no footer, Overview or comment button. [Fix a bug](/docs/processes/fix-a-bug) covers it.
+
+## Related
+
+- [The Overview](/docs/results/the-overview) is the first tab in the rail, and the record of what the run did.
+- [Review with comments](/docs/steps/review-with-comments) is how you change what you just read.
