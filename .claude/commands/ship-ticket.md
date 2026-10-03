@@ -57,9 +57,6 @@ Run `/code-review` on the branch diff vs `main` at **high** effort, apply findin
 
 **Two passes is the ceiling.** One review, one re-review, then ship. If the second pass still finds something real, fix it and open a follow-up issue for anything it raises beyond that rather than starting a third. An unbounded loop finds real things and costs more than they are worth: on PR #720 the third pass found a genuine dispatch bug, and the fourth found nothing while the branch sat unmerged. Convergence is a budget, not a proof.
 
-### 1b. Did the branch say what it changed? — main loop
-`python3 apps/speckit-extension/scripts/drift.py --since main --working`. Anything it names is code this branch changed inside a capability, with nothing said about it. Fold it into that spec, or `--accept` the capability when the spec is genuinely still true. Neither is bookkeeping: the first is the loop closing, the second is a review someone actually did.
-
 ### 2. Open the PR — main loop
 Use `/create-pr` conventions (reads `.claude/pr-profile.md`): conventional-commit title `type(scope): summary`, body with `Closes #N`, summary, technical notes, how-to-verify.
 ```bash
@@ -102,7 +99,7 @@ git restore package.json package-lock.json .specify/
 specify extension remove companion                # committed stub means a fresh add reports "already installed"
 specify extension add ./apps/speckit-extension --dev   # re-copies into .specify/extensions/companion/ + re-emits .claude/ command
 specify extension list                            # confirm "companion" at the new state
-git restore .specify/                             # gitignored dev-install copies — never commit these (living-specs.yml is at the repo root, so it is untouched)
+git restore .specify/                             # gitignored dev-install copies — never commit these
 ```
 The `.claude/` command emissions are **committed real files** (not gitignored like `.specify/`), and the merged PR should already carry the updated ones. If the reinstall leaves `.claude/` dirty (`git status`), that means the PR shipped without re-emitting — **surface it, don't silently restore or commit on main**; the emission belongs in the feature PR.
 End with a tight summary: issue shipped, PR link, merged / in-review / blocked, new installed version, **whether the spec-kit extension was reinstalled**, lessons-captured count, and `/release-qa` as the next step for the batch.
