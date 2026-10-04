@@ -4,6 +4,8 @@ import { StepTab } from './StepTab';
 
 declare const vscode: VSCodeApi;
 
+const RAIL_LABELS = { spec: 'Pipeline', bug: 'Reports', idea: 'Stages' } as const;
+
 export function NavigationBar() {
     const ns = navState.value;
     if (!ns) return null;
@@ -142,7 +144,7 @@ export function NavigationBar() {
                 </div>
             )}
             <div class="rail-group">
-                <p class="rail-label">Pipeline</p>
+                <p class="rail-label">{RAIL_LABELS[ns?.report?.kind ?? 'spec']}</p>
                 <div class="step-tabs">
                     {railDocs.map((doc, i) => {
                         const children = childrenFor(doc.type);

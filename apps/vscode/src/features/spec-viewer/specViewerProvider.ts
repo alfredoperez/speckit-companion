@@ -231,7 +231,7 @@ export class SpecViewerProvider {
    */
   public async show(
     filePath: string,
-    opts?: { living?: boolean; requirement?: string; bug?: boolean; report?: ReportSetId },
+    opts?: { living?: boolean; requirement?: string; bug?: boolean; report?: ReportSetId; landing?: boolean },
   ): Promise<void> {
     if (opts?.living) {
       return this.showLiving(filePath, opts.requirement);
@@ -242,7 +242,7 @@ export class SpecViewerProvider {
         ? "ideas"
         : opts?.report ?? (opts?.bug ? "bugs" : undefined);
     if (reportSet) {
-      return this.showReport(filePath, reportSet);
+      return this.showReport(filePath, reportSet, opts?.landing);
     }
     let specDirectory = getSpecDirectoryFromPath(filePath);
     let documentType = getDocumentTypeFromPath(filePath);
@@ -338,11 +338,12 @@ export class SpecViewerProvider {
   }
 
   /** One read-only panel per bug or idea, keyed by its folder, showing the clicked report. */
-  private async showReport(filePath: string, reportSet: ReportSetId): Promise<void> {
+  private async showReport(filePath: string, reportSet: ReportSetId, landing = false): Promise<void> {
     const set = REPORT_SETS[reportSet];
     const directory = reportDirectoryOf(set, filePath) ?? path.dirname(filePath);
     const fileName = path.basename(filePath);
-    const documentType = (set.kinds.find(kind => fileName === `${kind}.md`) ?? set.kinds[0]) as DocumentType;
+    const clicked = set.kinds.find(kind => fileName === `${kind}.md`) ?? set.kinds[0];
+    const documentType = ((landing && readReportPanel(reportSet, directory)?.defaultDocument) || clicked) as DocumentType;
 
     const existing = this.panels.get(directory);
     if (existing?.state.bug) {
@@ -867,11 +868,15 @@ export class SpecViewerProvider {
     const set = REPORT_SETS[reportSet];
     const report = readReportPanel(reportSet, bugDirectory);
     const documents = reportDocuments(set, bugDirectory);
-    const doc = documents.find(d => d.type === documentType) ?? documents[0];
+    const reports = documents.filter(d => d.filePath);
+    const wanted = documents.find(d => d.type === documentType);
+    // The overview has no file, so it can only be shown as a built page.
+    const doc = wanted && (wanted.filePath || report?.page) ? wanted : reports[0];
+    const page = report && doc.type === report.pageDocument ? report.page : undefined;
 
     let content = "";
     let emptyMessage = "This report has not been created yet.";
-    if (doc.exists) {
+    if (doc.exists && doc.filePath) {
       try {
         content = await fs.promises.readFile(doc.filePath, "utf-8");
       } catch (error) {
@@ -932,6 +937,7 @@ export class SpecViewerProvider {
       undefined,     // assistantName
       false,         // hasTerminal
       report?.actions ?? [],
+      report ? { kind: report.kind, page } : { kind: reportSet === "ideas" ? "idea" : "bug" },
     );
 
     this.outputChannel.appendLine(

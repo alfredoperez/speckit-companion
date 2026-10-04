@@ -109,6 +109,126 @@
       "kind": "start",
       "by": "extension",
       "at": "2026-10-04T15:24:48.979Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:26:49.657Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:26:49.763Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:02.577Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:02.665Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:15.801Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:39.399Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:39.481Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:28:04.525Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:42:21.464Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:42:21.583Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:42:44.625Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:43:53.611Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:43:53.719Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:43:53.824Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:43:53.927Z"
     }
   ],
   "unattended": true,
@@ -332,5 +452,128 @@
       "summary": "27 tasks: 1 setup, 14 foundational in three waves plus wiring, 4 per page story, 1 Storybook, 3 polish"
     }
   },
-  "approach": "Pure builders in features/reports turn report text into a BugStory or IdeaDecision. readReportPanel calls them and the model travels as NavState.report. The webview renders it inside #markdown-content with rp- classes from one new partial, and Storybook builds the same pages from fixtures."
+  "approach": "Pure builders in features/reports turn report text into a BugStory or IdeaDecision. readReportPanel calls them and the model travels as NavState.report. The webview renders it inside #markdown-content with rp- classes from one new partial, and Storybook builds the same pages from fixtures.",
+  "currentTask": "T015",
+  "task_summaries": {
+    "T004": {
+      "status": "DONE",
+      "did": "Moved idea stages and verdicts into fs-free ideaValues.ts, added IDEA_RATINGS with a tone lookup, ideaReports re-exports them",
+      "files": [
+        "apps/vscode/src/features/ideas/ideaValues.ts",
+        "apps/vscode/src/features/ideas/ideaReports.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added Prose and Inline markdown fragments with no heading ids or comment controls and escaped viewer code blocks",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/fragments.tsx",
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/fragments.test.tsx"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Moved knownValue and parseReportHeader into fs-free reportValues.ts, re-exported from reportSet.ts",
+      "files": [
+        "apps/vscode/src/features/reports/reportValues.ts",
+        "apps/vscode/src/features/reports/reportSet.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Declared BugStory, IdeaDecision and their parts in types-only reportPageModel.ts and added NavState.report",
+      "files": [
+        "apps/vscode/src/features/reports/reportPageModel.ts",
+        "apps/vscode/src/protocol/viewer.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added the fence-aware report document reader (sections, tables by header, list items, fields, fenced blocks, prose) with tests on the real fixtures",
+      "files": [
+        "apps/vscode/src/features/reports/reportDoc.ts",
+        "apps/vscode/src/features/reports/__tests__/reportDoc.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Moved the four bug value lists into a dependency-free bugValues.ts, added BUG_CHECK_RESULTS, and re-exported them from bugReports.ts",
+      "files": [
+        "apps/vscode/src/features/bugs/bugValues.ts",
+        "apps/vscode/src/features/bugs/bugReports.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Ported the Document look to _report-pages.css with rp- classes on existing tokens, scoped under #markdown-content, with a narrow-viewer container query, and registered it",
+      "files": [
+        "apps/vscode/webview/styles/spec-viewer/_report-pages.css",
+        "apps/vscode/webview/styles/spec-viewer/index.css"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "four report fixture folders: test failed, invalid, go, needs-clarification",
+      "files": [
+        "apps/vscode/tests/fixtures"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "typed stubs for buildBugStory and buildIdeaDecision",
+      "files": [
+        "apps/vscode/src/features/reports/bugStory.ts",
+        "apps/vscode/src/features/reports/ideaDecision.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "stub pages and ReportPage, which picks the page and rebuilds the outline and highlighting after render",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx",
+        "apps/vscode/webview/src/spec-viewer/report-pages/IdeaDecisionPage.tsx",
+        "apps/vscode/webview/src/spec-viewer/report-pages/ReportPage.tsx"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "a bug's document list starts with a file-less Story entry",
+      "files": [
+        "apps/vscode/src/features/reports/reportSet.ts",
+        "apps/vscode/src/features/bugs/bugReports.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "readReportPanel builds the page from the report texts and names the default document",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/reportPanels.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "App renders ReportPage inside #markdown-content when the nav state carries a page",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/App.tsx"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "report rail is labelled for its kind and disables every missing entry",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/StepTab.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "report kind and page ride in the initial nav state; item rows land on the default document",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/html/generator.ts",
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts",
+        "apps/vscode/src/features/processes/processPaneProvider.ts",
+        "apps/vscode/src/features/spec-viewer/specViewerCommands.ts"
+      ]
+    }
+  }
 }

@@ -6,39 +6,39 @@ V = `apps/vscode`. The model shapes are in `data-model.md` and every label, clas
 
 ## Phase 1: Setup
 
-- [ ] **T001** Add four fixture folders shaped like real reports: a bug whose test failed (`assessment.md`, `fix.md`, `test.md` with `Result: failed` and a `fail` check), a bug assessed invalid (`assessment.md` only), a go idea with all five stages and a decision holding a Scorecard and an `If go` handoff, and a needs-clarification idea whose decision holds a Scorecard and an `If needs-clarification` section · V/tests/fixtures/bug-reports/.specify/bugs/{discount-applied-twice,export-drops-header}/, V/tests/fixtures/idea-reports/.specify/assessments/{saved-filters,bulk-archive}/
+- [x] **T001** Add four fixture folders shaped like real reports: a bug whose test failed (`assessment.md`, `fix.md`, `test.md` with `Result: failed` and a `fail` check), a bug assessed invalid (`assessment.md` only), a go idea with all five stages and a decision holding a Scorecard and an `If go` handoff, and a needs-clarification idea whose decision holds a Scorecard and an `If needs-clarification` section · V/tests/fixtures/report-pages/.specify/bugs/{discount-applied-twice,export-drops-header}/, V/tests/fixtures/report-pages/.specify/assessments/{saved-filters,bulk-archive}/ (a root of their own, so the tests that list the existing fixture folders are untouched)
 
 ## Phase 2: Foundational
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T002** [P] Move `knownValue` and `parseReportHeader` into a module with no `fs` import and re-export them from `reportSet.ts` · V/src/features/reports/reportValues.ts, V/src/features/reports/reportSet.ts
-- [ ] **T003** [P] Move the four bug lists into `bugValues.ts` and add `BUG_CHECK_RESULTS`; `bugReports.ts` imports them · V/src/features/bugs/bugValues.ts, V/src/features/bugs/bugReports.ts
-- [ ] **T004** [P] Move the idea verdicts and stages into `ideaValues.ts` and add `IDEA_RATINGS` with a tone each; `ideaReports.ts` imports them · V/src/features/ideas/ideaValues.ts, V/src/features/ideas/ideaReports.ts
-- [ ] **T005** [P] Port the fence-aware document reader (sections by heading prefix, first table by header row, top-level list items, `- **Term**: text` fields, fenced blocks) with its tests · V/src/features/reports/reportDoc.ts, V/src/features/reports/__tests__/reportDoc.test.ts
-- [ ] **T006** [P] Declare `BugStory`, `IdeaDecision` and their parts as in `data-model.md`, and add `NavState.report` · V/src/features/reports/reportPageModel.ts, V/src/protocol/viewer.ts
-- [ ] **T007** [P] Port the Document look as one partial on existing tokens with the `rp-` classes, scoped under `#markdown-content`, with container queries for a narrow window and wrapping for long paths; register it · V/webview/styles/spec-viewer/_report-pages.css, V/webview/styles/spec-viewer/index.css
-- [ ] **T008** [P] Add `Prose` and `Inline`: markdown fragments rendered without heading ids or comment controls, fenced code as the viewer's `pre.code-block` markup with its text escaped · V/webview/src/spec-viewer/report-pages/fragments.tsx, V/webview/src/spec-viewer/report-pages/__tests__/fragments.test.tsx
+- [x] **T002** [P] Move `knownValue` and `parseReportHeader` into a module with no `fs` import and re-export them from `reportSet.ts` · V/src/features/reports/reportValues.ts, V/src/features/reports/reportSet.ts
+- [x] **T003** [P] Move the four bug lists into `bugValues.ts` and add `BUG_CHECK_RESULTS`; `bugReports.ts` imports them · V/src/features/bugs/bugValues.ts, V/src/features/bugs/bugReports.ts
+- [x] **T004** [P] Move the idea verdicts and stages into `ideaValues.ts` and add `IDEA_RATINGS` with a tone each; `ideaReports.ts` imports them · V/src/features/ideas/ideaValues.ts, V/src/features/ideas/ideaReports.ts
+- [x] **T005** [P] Port the fence-aware document reader (sections by heading prefix, first table by header row, top-level list items, `- **Term**: text` fields, fenced blocks) with its tests · V/src/features/reports/reportDoc.ts, V/src/features/reports/__tests__/reportDoc.test.ts
+- [x] **T006** [P] Declare `BugStory`, `IdeaDecision` and their parts as in `data-model.md`, and add `NavState.report` · V/src/features/reports/reportPageModel.ts, V/src/protocol/viewer.ts
+- [x] **T007** [P] Port the Document look as one partial on existing tokens with the `rp-` classes, scoped under `#markdown-content`, with container queries for a narrow window and wrapping for long paths; register it · V/webview/styles/spec-viewer/_report-pages.css, V/webview/styles/spec-viewer/index.css
+- [x] **T008** [P] Add `Prose` and `Inline`: markdown fragments rendered without heading ids or comment controls, fenced code as the viewer's `pre.code-block` markup with its text escaped · V/webview/src/spec-viewer/report-pages/fragments.tsx, V/webview/src/spec-viewer/report-pages/__tests__/fragments.test.tsx
 
 **⟶ Wait for Wave 1 to finish, then:**
 
 **Wave 2 — independent (different files):**
 
-- [ ] **T009** [P] Create `buildBugStory` and `buildIdeaDecision` as typed stubs that return `undefined`, so the wiring compiles before either story is built · V/src/features/reports/bugStory.ts, V/src/features/reports/ideaDecision.ts
-- [ ] **T010** [P] Create `BugStoryPage` and `IdeaDecisionPage` as stubs, and `ReportPage`, which picks one from `navState.report` and calls `applyHighlighting` and `buildToc` after it renders · V/webview/src/spec-viewer/report-pages/BugStoryPage.tsx, IdeaDecisionPage.tsx, ReportPage.tsx
-- [ ] **T011** [P] Give a bug's document list a first `story` entry with no file, always present · V/src/features/reports/reportSet.ts (`reportDocuments`), V/src/features/reports/__tests__/reportSet.test.ts
+- [x] **T009** [P] Create `buildBugStory` and `buildIdeaDecision` as typed stubs that return `undefined`, so the wiring compiles before either story is built · V/src/features/reports/bugStory.ts, V/src/features/reports/ideaDecision.ts
+- [x] **T010** [P] Create `BugStoryPage` and `IdeaDecisionPage` as stubs, and `ReportPage`, which picks one from `navState.report` and calls `applyHighlighting` and `buildToc` after it renders · V/webview/src/spec-viewer/report-pages/BugStoryPage.tsx, IdeaDecisionPage.tsx, ReportPage.tsx
+- [x] **T011** [P] Give a bug's document list a first `story` entry with no file, always present · V/src/features/reports/reportSet.ts (`reportDocuments`), V/src/features/reports/__tests__/reportSet.test.ts
 
 **⟶ Wait for Wave 2 to finish, then:**
 
 **Wave 3 — independent (different files):**
 
-- [ ] **T012** [P] `readReportPanel` reads the report texts, calls the builder for its set with the primary action's label, and returns the page and the default document · V/src/features/spec-viewer/reportPanels.ts
-- [ ] **T013** [P] Render `ReportPage` inside `#markdown-content` when the nav state carries a page, and the markdown otherwise · V/webview/src/spec-viewer/App.tsx
-- [ ] **T014** [P] On a report panel, label the rail for its kind and disable every entry whose document does not exist, the first included · V/webview/src/spec-viewer/components/StepTab.tsx, NavigationBar.tsx, V/webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx
+- [x] **T012** [P] `readReportPanel` reads the report texts, calls the builder for its set with the primary action's label, and returns the page and the default document · V/src/features/spec-viewer/reportPanels.ts
+- [x] **T013** [P] Render `ReportPage` inside `#markdown-content` when the nav state carries a page, and the markdown otherwise · V/webview/src/spec-viewer/App.tsx
+- [x] **T014** [P] On a report panel, label the rail for its kind and disable every entry whose document does not exist, the first included · V/webview/src/spec-viewer/components/StepTab.tsx, NavigationBar.tsx, V/webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx
 
 **⟶ Wait for Wave 3 to finish, then:**
 
-- [ ] **T015** Pass the report kind and page through `generateHtml` into the initial nav state; `showReport` takes a landing flag so an item row opens the default document and a report row opens that report; a `story` request that cannot be built shows the assessment; the pane's item rows pass the flag · V/src/features/spec-viewer/html/generator.ts, V/src/features/spec-viewer/specViewerProvider.ts, V/src/features/processes/processPaneProvider.ts, V/src/features/spec-viewer/specViewerCommands.ts
+- [x] **T015** Pass the report kind and page through `generateHtml` into the initial nav state; `showReport` takes a landing flag so an item row opens the default document and a report row opens that report; a `story` request that cannot be built shows the assessment; the pane's item rows pass the flag · V/src/features/spec-viewer/html/generator.ts, V/src/features/spec-viewer/specViewerProvider.ts, V/src/features/processes/processPaneProvider.ts, V/src/features/spec-viewer/specViewerCommands.ts
 
 ## Phase 3: User Story 1 - A bug reads as one story (P1)
 

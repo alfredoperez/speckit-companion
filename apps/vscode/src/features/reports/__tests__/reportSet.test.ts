@@ -285,6 +285,16 @@ describe('reportDocuments', () => {
         ]);
     });
 
+    it('puts a set\'s overview first, with no file, always present', () => {
+        const docs = reportDocuments({ ...BUGS, overview: { type: 'story', label: 'Story' } }, path.join(FIXTURE_BUGS, 'slug-keeps-spaces'));
+        expect(docs.map(d => [d.type, d.label, d.exists, d.filePath])).toEqual([
+            ['story', 'Story', true, ''],
+            ['assessment', 'Assessment', true, expect.any(String)],
+            ['fix', 'Fix', false, expect.any(String)],
+            ['test', 'Test', false, expect.any(String)],
+        ]);
+    });
+
     it('lists all five idea kinds in the set order', () => {
         const root = tempWorkspace();
         const dir = writeIdea(root, 'offline-mode', { 'research.md': '# Idea Research: Offline mode\n' });

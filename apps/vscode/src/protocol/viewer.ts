@@ -1,4 +1,5 @@
 import type { ReviewCommentDoc } from '../core/types/specContext';
+import type { ReportNav } from '../features/reports/reportPageModel';
 
 /** Which banner a surface shows: the install pitch, or the out-of-date update naming both versions. */
 export type InstallPrompt =
@@ -307,6 +308,8 @@ export interface NavState {
     livingUndo?: LivingUndo | null;
     /** The next steps a bug or idea page offers, computed from its files; report panels only. */
     reportActions?: { id: string; label: string; primary: boolean }[];
+    /** Which report set the panel shows and, on the Story or Decision document, its page model; report panels only. */
+    report?: ReportNav;
     /** Header title came from the document's own H1, so skip slug casing. */
     titleFromHeading?: boolean;
     /** Core documents with existence state */

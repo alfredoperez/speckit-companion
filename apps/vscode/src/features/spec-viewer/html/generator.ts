@@ -58,7 +58,8 @@ export function generateHtml(
     readOnly: boolean = false,
     assistantName?: string,
     hasTerminal: boolean = false,
-    reportActions: NonNullable<NavState['reportActions']> = []
+    reportActions: NonNullable<NavState['reportActions']> = [],
+    report?: NavState['report']
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -129,6 +130,7 @@ export function generateHtml(
         landing,
         removedDocument: removedDocument ?? null,
         ...(reportActions.length > 0 ? { reportActions } : {}),
+        ...(report ? { report } : {}),
     };
 
     return `<!DOCTYPE html>
