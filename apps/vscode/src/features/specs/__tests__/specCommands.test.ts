@@ -1025,3 +1025,27 @@ describe('speckit.taskstoissues command handler', () => {
         expect(setActiveSpec).toHaveBeenCalledWith('041-foo');
     });
 });
+
+describe('speckit.converge command handler', () => {
+    const { getAIProvider } = jest.requireMock('../../../extension');
+    const { startStep } = jest.requireMock('../stepLifecycle');
+
+    beforeEach(() => {
+        (getAIProvider().executeInTerminal as jest.Mock).mockClear();
+        (vscode.workspace as any).workspaceFolders = [{ uri: { fsPath: '/ws' } }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = undefined;
+    });
+
+    it('sends converge for the spec it was invoked on and records no step', async () => {
+        const handler = captureCommandHandlers(createMockContext()).get('speckit.converge')!;
+        await handler({ label: '041-foo', specPath: 'specs/041-foo' });
+        const [prompt, title] = (getAIProvider().executeInTerminal as jest.Mock).mock.calls[0];
+        expect(prompt).toContain('Converge the feature in specs/041-foo.');
+        expect(prompt).toContain('stop and say so');
+        expect(title).toBe('SpecKit - Converge');
+        expect(startStep).not.toHaveBeenCalled();
+    });
+});

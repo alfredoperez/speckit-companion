@@ -219,10 +219,20 @@ export const FOOTER_ACTIONS: FooterAction[] = [
         tooltip: 'Re-run only the current step',
         visibleWhen: (ctx, step, stepHistory) => {
             if (isTerminal(ctx.status)) return false;
-            // The viewer never starts converge, so it never re-runs it either.
+            // Converge has its own button; Regenerate would record a step Companion does not own.
             if (ctx.currentStep === 'converge' || step === 'converge') return false;
             const entry = stepHistory[step];
             return !!entry?.startedAt;
+        },
+    },
+    {
+        id: FooterActionIds.CONVERGE,
+        label: 'Converge',
+        scope: 'spec',
+        tooltip: 'Check the code against this spec and add tasks for anything missing',
+        visibleWhen: (ctx, _step, stepHistory) => {
+            const converge = stepHistory['converge'];
+            return isSpecDone(ctx) && !(converge?.startedAt && !converge.completedAt);
         },
     },
     {

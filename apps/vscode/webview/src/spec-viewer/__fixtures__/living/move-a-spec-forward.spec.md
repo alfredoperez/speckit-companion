@@ -49,7 +49,7 @@ The footer SHALL offer at most one forward button, labelled with the next step's
 ### Regenerate re-runs the step the run is on
 <!-- touches: apps/vscode/src/features/spec-viewer/footerActions.ts, apps/vscode/src/features/spec-viewer/messageHandlers.ts -->
 
-Regenerate SHALL be offered when the step being read has started and the spec is not completed or archived, and never while the run's current step is converge, which the viewer does not start. It SHALL re-run the run's current step, not the tab or sub-document being read, recording a fresh start for that step before sending its command.
+Regenerate SHALL be offered when the step being read has started and the spec is not completed or archived, and never while the run's current step is converge, which has its own button. It SHALL re-run the run's current step, not the tab or sub-document being read, recording a fresh start for that step before sending its command.
 
 #### Scenario: regenerate from a sub-document
 - **WHEN** the person presses Regenerate while reading the data model and the run is on plan
@@ -114,6 +114,18 @@ While a spec's viewer is open, a step that goes from running to complete SHALL r
 #### Scenario: plan completes while the viewer is open
 - **WHEN** the run record gains a completion for plan
 - **THEN** one notification reads "Spec 041 · Plan complete"
+
+### Converge is offered once the build is done, and is only sent
+
+The footer SHALL offer Converge on a spec that is implemented or completed, and the Specs sidebar SHALL offer it on the same rows' menu. It is hidden while a converge pass is running and on an archived spec. Choosing it sends Spec Kit's converge command naming the spec's folder, and Companion records no step start or finish for it.
+
+#### Scenario: a finished build
+- **WHEN** a spec's status is `implemented` or `completed` and no converge pass is running
+- **THEN** the footer offers Converge
+
+#### Scenario: a pass is running
+- **WHEN** a converge start is recorded with no finish
+- **THEN** the footer does not offer Converge
 
 ### A running converge shows in flight on the entry that carries implement's progress
 

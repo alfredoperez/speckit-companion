@@ -134,6 +134,7 @@ const FOOTER_ACTION_HANDLERS: Record<
   [FooterActionIds.REGENERATE]: (dir, deps) => handleRegenerate(dir, deps),
   [FooterActionIds.APPROVE]: (dir, deps) => handleApprove(dir, deps),
   [FooterActionIds.START]: (dir, deps) => handleApprove(dir, deps),
+  [FooterActionIds.CONVERGE]: async (dir) => { await vscode.commands.executeCommand(Commands.converge, dir); },
 };
 
 /**
