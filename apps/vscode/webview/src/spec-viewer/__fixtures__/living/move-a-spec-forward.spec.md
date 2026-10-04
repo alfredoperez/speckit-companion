@@ -117,15 +117,15 @@ While a spec's viewer is open, a step that goes from running to complete SHALL r
 
 ### Converge is offered once the build is done, and is only sent
 
-The footer SHALL offer Converge on a spec that is implemented or completed, and the Specs sidebar SHALL offer it on the same rows' menu. It is hidden while a converge pass is running and on an archived spec. Choosing it sends Spec Kit's converge command naming the spec's folder, and Companion records no step start or finish for it.
+The footer SHALL offer Converge on a spec that is implemented or completed, and the Specs sidebar SHALL offer it on the same rows' menu. It is not offered on an archived spec. Choosing it sends Spec Kit's converge command naming the spec's folder, and Companion records no step start or finish for it.
 
 #### Scenario: a finished build
-- **WHEN** a spec's status is `implemented` or `completed` and no converge pass is running
+- **WHEN** a spec's status is `implemented` or `completed`
 - **THEN** the footer offers Converge
 
-#### Scenario: a pass is running
+#### Scenario: a pass that never finished
 - **WHEN** a converge start is recorded with no finish
-- **THEN** the footer does not offer Converge
+- **THEN** the footer still offers Converge
 
 ### A running converge shows in flight on the entry that carries implement's progress
 

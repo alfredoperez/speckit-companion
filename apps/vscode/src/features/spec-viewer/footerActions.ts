@@ -230,10 +230,7 @@ export const FOOTER_ACTIONS: FooterAction[] = [
         label: 'Converge',
         scope: 'spec',
         tooltip: 'Check the code against this spec and add tasks for anything missing',
-        visibleWhen: (ctx, _step, stepHistory) => {
-            const converge = stepHistory['converge'];
-            return isSpecDone(ctx) && !(converge?.startedAt && !converge.completedAt);
-        },
+        visibleWhen: (ctx) => isSpecDone(ctx),
     },
     {
         id: FooterActionIds.APPROVE,
