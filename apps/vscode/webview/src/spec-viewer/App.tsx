@@ -1,3 +1,4 @@
+import { ReportPage } from './report-pages/ReportPage';
 import { useRef, useEffect, useState } from 'preact/hooks';
 import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
@@ -64,6 +65,9 @@ export function App({ specStatus }: AppProps) {
         document.body.dataset.hasSpecContext = has ? 'true' : 'false';
     }, [ns?.specContextName, ns?.badgeText]);
 
+    const report = ns?.report;
+    const reportPage = report?.page ? { ...report, page: report.page } : null;
+
     return (
         <>
             <PageChrome />
@@ -74,12 +78,18 @@ export function App({ specStatus }: AppProps) {
                     <RemovedDocBanner />
                     <StaleBanner />
                     <main class="content-area" id="content-area">
-                        <div
-                            id="markdown-content"
-                            ref={contentRef}
-                            dangerouslySetInnerHTML={{ __html: html }}
-                            hidden={showOverview || moved}
-                        />
+                        {reportPage ? (
+                            <div id="markdown-content" ref={contentRef} hidden={moved}>
+                                <ReportPage report={reportPage} />
+                            </div>
+                        ) : (
+                            <div
+                                id="markdown-content"
+                                ref={contentRef}
+                                dangerouslySetInnerHTML={{ __html: html }}
+                                hidden={showOverview || moved}
+                            />
+                        )}
                         {moved && (
                             <div class="empty-state">This spec folder was moved or deleted. Open it again from the sidebar.</div>
                         )}

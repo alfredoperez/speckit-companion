@@ -299,3 +299,20 @@ describe('parseInline', () => {
         });
     });
 });
+
+describe('parseInline: a code span inside a link target or image alt', () => {
+    it('leaves the link as text rather than putting the span in the attribute', () => {
+        const html = parseInline('[x](`" style="position:fixed" onmouseover="alert(1)`)');
+        expect(html).not.toContain('<a ');
+        expect(html).not.toMatch(/href="[^"]*"\s+style=/);
+    });
+
+    it('leaves the image as text when its alt holds a code span', () => {
+        const html = parseInline('![`" onerror="x`](a.png)');
+        expect(html).not.toContain('<img');
+    });
+
+    it('still links plain targets', () => {
+        expect(parseInline('[docs](https://example.com)')).toContain('<a href="https://example.com"');
+    });
+});

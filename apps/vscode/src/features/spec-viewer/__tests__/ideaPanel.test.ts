@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { SpecViewerProvider } from '../specViewerProvider';
 import type { SpecDocument } from '../types';
+import type { IdeaDecision } from '../../reports/reportPageModel';
 
 jest.mock('../../../extension', () => ({
     getAIProvider: jest.fn(),
@@ -57,6 +58,9 @@ const SHARED = path.join(IDEAS_ROOT, 'shared-lists');
 const OFFLINE = path.join(IDEAS_ROOT, 'offline-mode');
 const GUEST = path.join(IDEAS_ROOT, 'guest-links');
 const BADGES = path.join(IDEAS_ROOT, 'member-badges');
+const PAGES_ROOT = path.resolve(__dirname, '../../../../tests/fixtures/report-pages/.specify/assessments');
+const FILTERS = path.join(PAGES_ROOT, 'saved-filters');
+const ARCHIVE = path.join(PAGES_ROOT, 'bulk-archive');
 const BUG = path.resolve(__dirname, '../../../../tests/fixtures/bug-reports/.specify/bugs/cart-total-skips-first');
 
 const ARG = {
@@ -72,6 +76,7 @@ const ARG = {
     titleFromHeading: 25,
     readOnly: 30,
     reportActions: 33,
+    report: 34,
 } as const;
 
 function createProvider(): SpecViewerProvider {
@@ -124,6 +129,20 @@ function makeIdea(slug: string, stages: Record<string, string>): string {
 }
 
 const INTAKE = '# Idea Intake: Dark mode\n';
+const RESEARCH = '# Idea Research: Dark mode\n';
+const decisionReport = (verdict: string) =>
+    `# Decision: Dark mode\n\n- **Verdict**: ${verdict}\n\n## Verdict & Rationale\n\n**Decided.** Half the team asked for it. It is a small change.\n`;
+
+function reportNav(): { kind: string; page?: IdeaDecision } {
+    return lastRender()[ARG.report] as { kind: string; page?: IdeaDecision };
+}
+
+async function switchTo(panel: any, documentType: string): Promise<void> {
+    const renders = (generateHtml as jest.Mock).mock.calls.length;
+    await panel.__receive({ type: 'switchDocument', documentType });
+    await until(() => (generateHtml as jest.Mock).mock.calls.length > renders);
+    expect((generateHtml as jest.Mock).mock.calls.length).toBe(renders + 1);
+}
 
 function actions(): unknown {
     return lastRender()[ARG.reportActions];
@@ -141,7 +160,7 @@ describe('Idea report panel', () => {
     let before: Record<string, string>[];
 
     beforeAll(() => {
-        before = [SHARED, OFFLINE, GUEST].map(snapshot);
+        before = [SHARED, OFFLINE, GUEST, FILTERS, ARCHIVE].map(snapshot);
     });
 
     beforeEach(() => {
@@ -168,7 +187,7 @@ describe('Idea report panel', () => {
     });
 
     afterAll(() => {
-        expect([SHARED, OFFLINE, GUEST].map(snapshot)).toEqual(before);
+        expect([SHARED, OFFLINE, GUEST, FILTERS, ARCHIVE].map(snapshot)).toEqual(before);
     });
 
     describe('opening an idea', () => {
@@ -293,6 +312,225 @@ describe('Idea report panel', () => {
 
             expect(panel.title).toBe('Idea: gone (moved)');
             expect(panel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ type: 'specMoved' }));
+        });
+    });
+
+    describe('landing on the decision', () => {
+        it('opens an idea decided go on its decision, with the verdict and the handoff', async () => {
+            await provider.show(path.join(FILTERS, 'intake.md'), { report: 'ideas', landing: true });
+
+            const { kind, page } = reportNav();
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(kind).toBe('idea');
+            expect(page!.verdict).toBe('go');
+            expect(page!.lead).toEqual(expect.any(String));
+            expect(page!.scorecard.length).toBeGreaterThan(0);
+            expect(page!.closing).toEqual(expect.objectContaining({ verdict: 'go' }));
+            expect(lastRender()[ARG.badgeText]).toBe('GO');
+        });
+
+        it('opens an idea that needs clarification on its decision, with what is blocking', async () => {
+            await provider.show(path.join(ARCHIVE, 'intake.md'), { report: 'ideas', landing: true });
+
+            const { page } = reportNav();
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(page!.verdict).toBe('needs-clarification');
+            expect(page!.closing).toEqual(expect.objectContaining({ verdict: 'needs-clarification', revisit: 'research' }));
+            expect((page!.closing as { questions: string[] }).questions).toHaveLength(3);
+        });
+
+        it('opens a killed idea on its decision, with the revisit trigger', async () => {
+            await provider.show(path.join(SHARED, 'intake.md'), { report: 'ideas', landing: true });
+
+            const { page } = reportNav();
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(page!.verdict).toBe('kill');
+            expect(page!.closing).toEqual({ verdict: 'kill', trigger: expect.any(String) });
+        });
+
+        it('reads the verdict of the decision page whatever its letter case', async () => {
+            await provider.show(path.join(GUEST, 'decision.md'), { report: 'ideas', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(reportNav().page!.verdict).toBe('needs-clarification');
+        });
+
+        it('still passes the decision file as the content behind the page', async () => {
+            await provider.show(path.join(FILTERS, 'intake.md'), { report: 'ideas', landing: true });
+
+            expect(lastRender()[2]).toBe(fs.readFileSync(path.join(FILTERS, 'decision.md'), 'utf-8'));
+        });
+
+        it('opens an idea still being assessed on its latest stage, with no page', async () => {
+            await provider.show(path.join(OFFLINE, 'intake.md'), { report: 'ideas', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('research');
+            expect(reportNav().kind).toBe('idea');
+            expect(reportNav().page).toBeUndefined();
+            expect(lastRender()[2]).toBe(fs.readFileSync(path.join(OFFLINE, 'research.md'), 'utf-8'));
+        });
+
+        it('opens the latest stage written even when earlier stages were skipped', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, concept: '# Concept: Dark mode\n' });
+
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('concept');
+            expect(reportNav().page).toBeUndefined();
+        });
+
+        it('shows the raw decision, with no page, for a verdict it does not recognise', async () => {
+            const decision = decisionReport('maybe');
+            const dir = makeIdea('dark-mode', { intake: INTAKE, decision });
+
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(lastRender()[2]).toBe(decision);
+            expect(reportNav().kind).toBe('idea');
+            expect(reportNav().page).toBeUndefined();
+            expect(lastRender()[ARG.badgeText]).toBe('IDEA');
+        });
+
+        it('shows the raw decision, with no page, when the decision has no section the page can use', async () => {
+            const decision = '# Decision: Dark mode\n\n- **Verdict**: go\n';
+            const dir = makeIdea('dark-mode', { intake: INTAKE, decision });
+
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(lastRender()[2]).toBe(decision);
+            expect(reportNav().page).toBeUndefined();
+        });
+
+        it('opens the clicked stage, with no page, when the open is not a landing', async () => {
+            await provider.show(path.join(FILTERS, 'intake.md'), { report: 'ideas' });
+
+            expect(lastRender()[ARG.docType]).toBe('intake');
+            expect(reportNav().kind).toBe('idea');
+            expect(reportNav().page).toBeUndefined();
+        });
+
+        it('shows the decision page when the decision stage itself is clicked', async () => {
+            await provider.show(path.join(FILTERS, 'decision.md'), { report: 'ideas' });
+
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(reportNav().page!.verdict).toBe('go');
+        });
+
+        it('keeps the five stages as the documents, with nothing ahead of Intake', async () => {
+            await provider.show(path.join(FILTERS, 'intake.md'), { report: 'ideas', landing: true });
+
+            expect((lastRender()[ARG.documents] as SpecDocument[]).map(d => d.type)).toEqual([
+                'intake',
+                'research',
+                'problem',
+                'concept',
+                'decision',
+            ]);
+        });
+
+        it('names a bug panel as a bug and an idea panel as an idea', async () => {
+            await provider.show(path.join(BUG, 'assessment.md'), { report: 'bugs' });
+            expect(reportNav().kind).toBe('bug');
+
+            await provider.show(path.join(SHARED, 'intake.md'), { report: 'ideas' });
+            expect(reportNav().kind).toBe('idea');
+        });
+    });
+
+    describe('moving between the decision and the stages', () => {
+        it('shows a stage with no page, then the decision again with its page', async () => {
+            await provider.show(path.join(FILTERS, 'intake.md'), { report: 'ideas', landing: true });
+            const panel = lastPanel();
+
+            await switchTo(panel, 'concept');
+            expect(lastRender()[ARG.docType]).toBe('concept');
+            expect(reportNav().page).toBeUndefined();
+
+            await switchTo(panel, 'decision');
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(reportNav().page!.verdict).toBe('go');
+            expect(droppedMessages()).toHaveLength(0);
+        });
+
+        it('keeps the same button on the decision and on every stage', async () => {
+            await provider.show(path.join(FILTERS, 'intake.md'), { report: 'ideas', landing: true });
+            const panel = lastPanel();
+            expect(actions()).toEqual([{ id: 'idea.createSpec', label: 'Create spec from this idea', primary: true }]);
+            const onDecision = actions();
+
+            for (const stage of ['intake', 'research', 'problem', 'concept', 'decision']) {
+                await panel.__receive({ type: 'stepperClick', phase: stage });
+
+                expect(lastRender()[ARG.docType]).toBe(stage);
+                expect(actions()).toEqual(onDecision);
+            }
+        });
+
+        it('shows a stage that was never written as not created, with no page', async () => {
+            await provider.show(path.join(ARCHIVE, 'intake.md'), { report: 'ideas', landing: true });
+
+            await lastPanel().__receive({ type: 'stepperClick', phase: 'concept' });
+
+            expect(lastRender()[ARG.docType]).toBe('concept');
+            expect(lastRender()[2]).toBe('');
+            expect(reportNav().page).toBeUndefined();
+        });
+    });
+
+    describe('the decision following the files on disk', () => {
+        it('shows the page once the decision on screen is given a verdict it recognises', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, decision: decisionReport('maybe') });
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
+            expect(reportNav().page).toBeUndefined();
+
+            fs.writeFileSync(path.join(dir, 'decision.md'), decisionReport('go'));
+            await provider.refreshIfDisplaying(path.join(dir, 'decision.md'));
+
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(reportNav().page).toEqual(expect.objectContaining({ verdict: 'go', lead: 'Half the team asked for it.' }));
+            expect(actions()).toEqual([{ id: 'idea.createSpec', label: 'Create spec from this idea', primary: true }]);
+        });
+
+        it('changes the verdict on the page when the decision is rewritten', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, decision: decisionReport('go') });
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
+            expect(reportNav().page!.verdict).toBe('go');
+
+            fs.writeFileSync(path.join(dir, 'decision.md'), decisionReport('kill'));
+            await provider.refreshIfDisplaying(path.join(dir, 'decision.md'));
+
+            expect(reportNav().page!.verdict).toBe('kill');
+            expect(lastRender()[ARG.badgeText]).toBe('KILL');
+        });
+
+        it('drops the page when the decision on screen is deleted', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, decision: decisionReport('go') });
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
+
+            fs.rmSync(path.join(dir, 'decision.md'));
+            await provider.refreshIfDisplaying(path.join(dir, 'decision.md'));
+
+            expect(lastRender()[ARG.docType]).toBe('decision');
+            expect(lastRender()[2]).toBe('');
+            expect(reportNav().page).toBeUndefined();
+            expect(existsByType().decision).toBe(false);
+        });
+
+        it('stays on the stage being read when a decision is written, and shows the page once asked', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, research: RESEARCH });
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
+            expect(lastRender()[ARG.docType]).toBe('research');
+
+            fs.writeFileSync(path.join(dir, 'decision.md'), decisionReport('go'));
+            await provider.refreshIfDisplaying(path.join(dir, 'decision.md'));
+            expect(lastRender()[ARG.docType]).toBe('research');
+            expect(reportNav().page).toBeUndefined();
+            expect(existsByType().decision).toBe(true);
+
+            await lastPanel().__receive({ type: 'stepperClick', phase: 'decision' });
+            expect(reportNav().page!.verdict).toBe('go');
         });
     });
 

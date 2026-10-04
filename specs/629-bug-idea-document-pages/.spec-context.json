@@ -1,0 +1,903 @@
+{
+  "workflow": "companion",
+  "specName": "Document pages for bugs and ideas",
+  "branch": "629-bug-idea-document-pages",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T15:14:00.017Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:14:17.189Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:15:33.763Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:15:33.864Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:15:34.178Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-04T15:16:33.544Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T15:16:37.706Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:20:17.417Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:21:22.593Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:23:29.264Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:23:29.625Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T15:24:37.115Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:24:37.247Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:24:37.913Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T15:24:48.979Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:26:49.657Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:26:49.763Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:02.577Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:02.665Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:15.801Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:39.399Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:27:39.481Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:28:04.525Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:42:21.464Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:42:21.583Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:42:44.625Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:43:53.611Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:43:53.719Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:43:53.824Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:43:53.927Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:47:39.214Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:47:39.298Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:47:39.380Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:47:39.472Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:48:44.924Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:48:45.005Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:48:45.085Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:48:45.171Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:51:25.561Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:53:23.354Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:55:15.843Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T16:01:32.092Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T16:01:32.118Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T16:01:48.668Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T16:03:19.711Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "all 27 tasks done, suites pass, branch ready for Storybook review",
+  "coverage": {
+    "FR-001": {
+      "title": "Opening a bug shows a story page that states where the bug stands",
+      "tasks": [
+        "T012",
+        "T015",
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-002": {
+      "title": "The lead sentence is one of six, chosen from the bug state",
+      "tasks": [
+        "T016",
+        "T018"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "One meta line, each fact omitted when unknown",
+      "tasks": [
+        "T016",
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-004": {
+      "title": "Three steps in order, done or next",
+      "tasks": [
+        "T017",
+        "T018",
+        "T019"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx"
+      ]
+    },
+    "FR-005": {
+      "title": "A step with no report says so and names the footer button",
+      "tasks": [
+        "T012",
+        "T017",
+        "T019"
+      ]
+    },
+    "FR-006": {
+      "title": "What changed lists changed files as rows and shows the diff",
+      "tasks": [
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-007": {
+      "title": "Risks and open questions listed at the end, omitted when none",
+      "tasks": [
+        "T016",
+        "T017",
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-008": {
+      "title": "Story, Assessment, Fix and Test tabs; missing disabled; landing rule",
+      "tasks": [
+        "T011",
+        "T014",
+        "T015",
+        "T025"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx"
+      ]
+    },
+    "FR-009": {
+      "title": "A decided idea shows a decision page",
+      "tasks": [
+        "T012",
+        "T022",
+        "T023"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/ideaDecision.test.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/IdeaDecisionPage.test.tsx"
+      ]
+    },
+    "FR-010": {
+      "title": "Scorecard rows with a rating tone that does not rely on colour alone",
+      "tasks": [
+        "T004",
+        "T007",
+        "T021",
+        "T023"
+      ]
+    },
+    "FR-011": {
+      "title": "Five-stage rail; missing stage disabled; latest stage landing",
+      "tasks": [
+        "T014",
+        "T015"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts"
+      ]
+    },
+    "FR-012": {
+      "title": "Shown values come from recognised lists only",
+      "tasks": [
+        "T002",
+        "T003",
+        "T004",
+        "T016",
+        "T020"
+      ]
+    },
+    "FR-013": {
+      "title": "Missing sections omitted; unparseable report falls back to raw",
+      "tasks": [
+        "T009",
+        "T013",
+        "T016",
+        "T020",
+        "T025"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts"
+      ]
+    },
+    "FR-014": {
+      "title": "Footer next-step buttons behave as today",
+      "tasks": [
+        "T012",
+        "T025"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts"
+      ]
+    },
+    "FR-015": {
+      "title": "Pages update when a report file changes",
+      "tasks": [
+        "T012",
+        "T015"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts"
+      ]
+    },
+    "FR-016": {
+      "title": "One reading column, existing tokens, keeps the outline",
+      "tasks": [
+        "T007",
+        "T010",
+        "T013"
+      ]
+    },
+    "FR-017": {
+      "title": "No text repeated in two places",
+      "tasks": [
+        "T017",
+        "T018",
+        "T022"
+      ]
+    },
+    "FR-018": {
+      "title": "One Storybook story per page state",
+      "tasks": [
+        "T001",
+        "T024"
+      ]
+    },
+    "FR-019": {
+      "title": "Docs describe the pages, tabs and rail",
+      "tasks": [
+        "T026"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 26,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "Analysis and Converge report pages and their Reports group",
+    "links between an idea and its spec",
+    "changes to the Bugs and Ideas sidebar panes",
+    "a pull request or merge before the owner reviews in Storybook"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/spec-viewer (reportPanels.ts readReportPanel; specViewerProvider.ts showReport/updateReportContent re-renders full HTML on every tab switch; NavState carries coreDocs, currentDoc, reportActions but no bug/idea data)",
+    "area: apps/vscode/src/features/reports, bugs, ideas (ReportFolder.fields parses only the header bullets; bugState and knownValue allow-lists; body sections are not parsed anywhere)",
+    "area: apps/vscode/webview/src/spec-viewer (App.tsx mounts #markdown-content from markdownHtml; the Overview pane is the precedent for a component page; buildToc fills the outline from h2[id]; ReportFooter posts reportAction)",
+    "area: prototype on design/processes-style (DirectionA.tsx, model.ts, parse.ts ~300 lines, about 195 lines of psa- CSS on existing tokens; readBug ignores test.md; leads, step states and handoff are hard-coded to one state)",
+    "area: fixtures (apps/vscode/tests/fixtures/bug-reports has cart-total-skips-first with three reports and slug-keeps-spaces with one; decision shapes: Scorecard table Criterion|Rating|Justification, Verdict & Rationale, If go / If needs-clarification / Revisit trigger)",
+    "constraint: styles under webview/styles/spec-viewer are bundled into apps/copilot-canvas/vendor/viewer.css, so npm run test:canvas must be re-run",
+    "constraint: escapeHtml is safe for element content only; design tokens rule: body text on --text-body/--text-primary",
+    "constraint: visual work is reviewed in Storybook before any PR"
+  ],
+  "intent": "A bug opens on a story page and a decided idea on a decision page, in the Document look, with raw reports as tabs",
+  "decisions": [
+    {
+      "decision": "Build the page model on the host and ship it in the initial nav state",
+      "why": "A report panel re-renders its whole HTML on every switch and file change, so the model is always current and stories can call the same pure builders",
+      "rejected": "Parsing in the webview, which only receives one document"
+    },
+    {
+      "decision": "Mount the page inside #markdown-content",
+      "why": "The reading column and the outline are keyed to that element",
+      "rejected": "A sibling pane like the Overview, which gets no outline"
+    },
+    {
+      "decision": "Story is a first, file-less document entry on a bug; an idea Decision stage renders the decision page",
+      "why": "The rail and switchDocument already handle document entries and the read-only allow-list permits it",
+      "rejected": "A client-side tab toggle, lost on every reload"
+    },
+    {
+      "decision": "Six bug leads derived from bugState plus the test report",
+      "why": "bugState folds four situations into to-fix and must not change",
+      "rejected": "Extending BugState, which drives pane grouping and footer buttons"
+    },
+    {
+      "decision": "A small fragment renderer instead of renderMarkdown per section",
+      "why": "renderMarkdown adds heading ids and comment controls",
+      "rejected": "The prototype Md helper"
+    },
+    {
+      "decision": "New lists IDEA_RATINGS and BUG_CHECK_RESULTS; allow-lists move to fs-free modules",
+      "why": "Every state-like value must be recognised, and Storybook cannot import fs",
+      "rejected": "The prototype regex tone table"
+    },
+    {
+      "decision": "Once a bug is tested, list only the test report residual risks",
+      "why": "The three reports restate the same risks in different words, which read as repetition",
+      "rejected": "Merging assessment risks, open questions and residual risks"
+    },
+    {
+      "decision": "New fixtures live under tests/fixtures/report-pages",
+      "why": "Existing tests list the bug-reports and idea-reports folders by name",
+      "rejected": "Adding them beside the existing fixtures and rewriting 14 tests"
+    },
+    {
+      "decision": "A panel sent off Story because it could not be built returns to it on the next refresh",
+      "why": "Assess again rewriting the file mid-read knocked the reader onto the raw report for good",
+      "rejected": "Leaving the reader on the fallback"
+    },
+    {
+      "decision": "Pass and fail check results carry a tone",
+      "why": "A failed check read the same as a passed one",
+      "rejected": "Muted text for every result"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Pure parse and model layer on the host, page rendered by Preact inside the content element, Story as a document entry, one new CSS partial",
+      "key_finding": "Report panels reload their whole HTML on every tab switch, so the model must ride in the initial nav state and Story must be a host-side document type"
+    },
+    "tasks": {
+      "summary": "27 tasks: 1 setup, 14 foundational in three waves plus wiring, 4 per page story, 1 Storybook, 3 polish"
+    },
+    "implement": {
+      "summary": "Bug story page and idea decision page in the Document look, nine Storybook states, 4,108 tests passing"
+    }
+  },
+  "approach": "Pure builders in features/reports turn report text into a BugStory or IdeaDecision. readReportPanel calls them and the model travels as NavState.report. The webview renders it inside #markdown-content with rp- classes from one new partial, and Storybook builds the same pages from fixtures.",
+  "currentTask": "T027",
+  "task_summaries": {
+    "T004": {
+      "status": "DONE",
+      "did": "Moved idea stages and verdicts into fs-free ideaValues.ts, added IDEA_RATINGS with a tone lookup, ideaReports re-exports them",
+      "files": [
+        "apps/vscode/src/features/ideas/ideaValues.ts",
+        "apps/vscode/src/features/ideas/ideaReports.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added Prose and Inline markdown fragments with no heading ids or comment controls and escaped viewer code blocks",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/fragments.tsx",
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/fragments.test.tsx"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Moved knownValue and parseReportHeader into fs-free reportValues.ts, re-exported from reportSet.ts",
+      "files": [
+        "apps/vscode/src/features/reports/reportValues.ts",
+        "apps/vscode/src/features/reports/reportSet.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Declared BugStory, IdeaDecision and their parts in types-only reportPageModel.ts and added NavState.report",
+      "files": [
+        "apps/vscode/src/features/reports/reportPageModel.ts",
+        "apps/vscode/src/protocol/viewer.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added the fence-aware report document reader (sections, tables by header, list items, fields, fenced blocks, prose) with tests on the real fixtures",
+      "files": [
+        "apps/vscode/src/features/reports/reportDoc.ts",
+        "apps/vscode/src/features/reports/__tests__/reportDoc.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Moved the four bug value lists into a dependency-free bugValues.ts, added BUG_CHECK_RESULTS, and re-exported them from bugReports.ts",
+      "files": [
+        "apps/vscode/src/features/bugs/bugValues.ts",
+        "apps/vscode/src/features/bugs/bugReports.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Ported the Document look to _report-pages.css with rp- classes on existing tokens, scoped under #markdown-content, with a narrow-viewer container query, and registered it",
+      "files": [
+        "apps/vscode/webview/styles/spec-viewer/_report-pages.css",
+        "apps/vscode/webview/styles/spec-viewer/index.css"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "four report fixture folders: test failed, invalid, go, needs-clarification",
+      "files": [
+        "apps/vscode/tests/fixtures"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "typed stubs for buildBugStory and buildIdeaDecision",
+      "files": [
+        "apps/vscode/src/features/reports/bugStory.ts",
+        "apps/vscode/src/features/reports/ideaDecision.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "stub pages and ReportPage, which picks the page and rebuilds the outline and highlighting after render",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx",
+        "apps/vscode/webview/src/spec-viewer/report-pages/IdeaDecisionPage.tsx",
+        "apps/vscode/webview/src/spec-viewer/report-pages/ReportPage.tsx"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "a bug's document list starts with a file-less Story entry",
+      "files": [
+        "apps/vscode/src/features/reports/reportSet.ts",
+        "apps/vscode/src/features/bugs/bugReports.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "readReportPanel builds the page from the report texts and names the default document",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/reportPanels.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "App renders ReportPage inside #markdown-content when the nav state carries a page",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/App.tsx"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "report rail is labelled for its kind and disables every missing entry",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/StepTab.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/NavigationBar.tsx"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "report kind and page ride in the initial nav state; item rows land on the default document",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/html/generator.ts",
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts",
+        "apps/vscode/src/features/processes/processPaneProvider.ts",
+        "apps/vscode/src/features/spec-viewer/specViewerCommands.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Builder tests for the idea decision: leads, closings, ratings, splitter and undefined cases",
+      "files": [
+        "apps/vscode/src/features/reports/__tests__/ideaDecision.test.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Page tests for the idea decision: lead, rationale, score rows, closing sections, missing parts, no repeated sentence",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/IdeaDecisionPage.test.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "buildIdeaDecision reads verdict, lead and rationale, scorecard and the closing for the verdict",
+      "files": [
+        "apps/vscode/src/features/reports/ideaDecision.ts"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "IdeaDecisionPage lays out the lead, rationale, Scorecard and the closing section",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/IdeaDecisionPage.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Builder tests for every lead, meta dropping, missing sections, merged risks and no-story cases",
+      "files": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Page tests for steps, closed bug, next sentence, risks, heading ids and no repeated sentence",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "buildBugStory derives lead, meta, three steps and risks from the report texts",
+      "files": [
+        "apps/vscode/src/features/reports/bugStory.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "BugStoryPage lays out lead, meta line, step timeline with rows and diffs, then risks",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Documented the bug Story page and the idea Decision page on the site and added the changelog entry",
+      "files": [
+        "apps/website/src/content/docs/docs/processes/fix-a-bug.mdx",
+        "apps/website/src/content/docs/docs/processes/assess-an-idea.mdx",
+        "apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx",
+        "CHANGELOG.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Added nine report-page stories built by the production builders and trimmed the bug report stories to one raw-tab story",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx",
+        "apps/vscode/webview/src/spec-viewer/__stories__/BugReport.stories.tsx"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Updated the host and rail tests for the Story entry, the landing rule, the page in the nav state and the raw fallback; 67 tests added, 5 updated",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugReports.test.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugsPane.test.ts",
+        "apps/vscode/src/features/ideas/__tests__/ideasPane.test.ts",
+        "apps/vscode/src/features/processes/__tests__/processPaneProvider.test.ts",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "canvas bundle rebuilt; compile, both type-checks, unit suite, canvas tests and Storybook build pass",
+      "files": [
+        "apps/copilot-canvas/vendor/viewer.css"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "unit suite",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.6,
+      "result": "\u001b[1mSnapshots:   \u001b[22m0 total · \u001b[1mTime:\u001b[22m        \u001b[1m\u001b[33m70.945 s\u001b[39m\u001b[22m · \u001b[2mRan all test suites\u001b[22m\u001b[2m.\u001b[22m"
+    },
+    {
+      "what": "extension type-check",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.9,
+      "result": "> speckit-companion@0.35.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview type-check",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "no output"
+    },
+    {
+      "what": "canvas tests and bundle",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 13.1,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 12342.108541"
+    },
+    {
+      "what": "All nine page states looked at in Storybook screenshots, light and dark",
+      "result": "lead, timeline, rows, scorecard and closing sections render; no empty heading; outline lists the sections"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Not tried in a running Extension Development Host; verified by unit tests and Storybook only",
+      "step": "implement"
+    },
+    {
+      "note": "The Storybook file mirrors the host set constants and bugState by hand because those modules import fs; it can drift from the host",
+      "step": "implement"
+    },
+    {
+      "note": "Story phases owned four files each, under the five-file bar, and were still sent to workers to keep the main context small; T001 setup was also sent to a worker",
+      "step": "implement"
+    },
+    {
+      "note": "Report parts the Story does not place stay on the raw tabs only: reproduction, suspected code paths, proposed remediation, tests added, deviations, output excerpts, recommendation",
+      "step": "implement"
+    },
+    {
+      "note": "astro check on the website reports 64 type errors in files this change did not touch",
+      "step": "implement"
+    },
+    {
+      "note": "Docs screenshots do not show the new pages yet",
+      "step": "implement"
+    }
+  ]
+}

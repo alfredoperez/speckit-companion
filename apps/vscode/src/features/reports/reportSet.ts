@@ -1,6 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import type { SpecDocument, DocumentType } from '../spec-viewer/types';
+import { parseReportHeader } from './reportValues';
+
+export { knownValue, parseReportHeader } from './reportValues';
 
 export interface ReportSet<K extends string> {
     id: 'bugs' | 'ideas';
@@ -10,6 +13,8 @@ export interface ReportSet<K extends string> {
     titlePrefixes: Record<K, string>;
     panelPrefix: string;
     fallbackBadge: string;
+    /** A first document with no file, shown ahead of the reports. */
+    overview?: { type: string; label: string };
 }
 
 export interface ReportFile<K extends string> {
@@ -43,49 +48,6 @@ function isFileInside(root: string, target: string): boolean {
     } catch {
         return false;
     }
-}
-
-/** The `- **Label**: value` bullets of the block right under the title, keyed by label. */
-/**
- * The known value a report line states, or nothing. These files are written by people and assistants,
- * so a value may be decorated (`Verified ✅`, `verified (3/3 checks)`) or spelled with a space for a hyphen.
- * A value followed by more words, or by another option (`go/no-go`, `verified | partial`), is not a statement.
- */
-export function knownValue<T extends string>(values: readonly T[], raw: string | undefined): T | undefined {
-    if (typeof raw !== 'string') return undefined;
-    const stated = raw.toLowerCase().replace(/^[^a-z0-9]+/, '');
-    return [...values]
-        .sort((a, b) => b.length - a.length)
-        .find(value => {
-            const spelled = value
-                .split(/[\s-]+/)
-                .map(word => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-                .join('[\\s_-]+');
-            return new RegExp(`^${spelled}(?![\\w-])(?!\\s*[a-z0-9|/])`).test(stated);
-        });
-}
-
-export function parseReportHeader(markdown: string): { title?: string; fields: Map<string, string> } {
-    const fields = new Map<string, string>();
-    let title: string | undefined;
-    let inBlock = false;
-    for (const raw of markdown.split(/\r?\n/)) {
-        const line = raw.trim();
-        if (!title && /^#\s+/.test(line)) {
-            title = line.replace(/^#\s+/, '');
-            continue;
-        }
-        const field = /^[-*]\s+\*\*([^*]+)\*\*\s*:\s*(.*)$/.exec(line);
-        if (field) {
-            inBlock = true;
-            const value = field[2].trim();
-            if (value) fields.set(field[1].trim().toLowerCase(), value);
-            continue;
-        }
-        if (line === '' && !inBlock) continue;
-        break;
-    }
-    return { title, fields };
 }
 
 function stripTitlePrefix(heading: string, prefix: string): string | undefined {
@@ -190,7 +152,10 @@ export function reportKindOf<K extends string>(set: ReportSet<K>, filePath: stri
 
 /** The set's reports as viewer documents, in the set's order. */
 export function reportDocuments<K extends string>(set: ReportSet<K>, directory: string): SpecDocument[] {
-    return set.kinds.map(kind => {
+    const overview: SpecDocument[] = set.overview
+        ? [{ type: set.overview.type as DocumentType, label: set.overview.label, fileName: '', filePath: '', exists: true, isCore: true, category: 'core' }]
+        : [];
+    return overview.concat(set.kinds.map(kind => {
         const file = reportFile(set, directory, kind);
         return {
             type: kind as DocumentType,
@@ -201,5 +166,5 @@ export function reportDocuments<K extends string>(set: ReportSet<K>, directory: 
             isCore: true,
             category: 'core',
         };
-    });
+    }));
 }

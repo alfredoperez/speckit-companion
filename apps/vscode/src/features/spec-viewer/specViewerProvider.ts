@@ -231,7 +231,7 @@ export class SpecViewerProvider {
    */
   public async show(
     filePath: string,
-    opts?: { living?: boolean; requirement?: string; bug?: boolean; report?: ReportSetId },
+    opts?: { living?: boolean; requirement?: string; bug?: boolean; report?: ReportSetId; landing?: boolean },
   ): Promise<void> {
     if (opts?.living) {
       return this.showLiving(filePath, opts.requirement);
@@ -242,7 +242,7 @@ export class SpecViewerProvider {
         ? "ideas"
         : opts?.report ?? (opts?.bug ? "bugs" : undefined);
     if (reportSet) {
-      return this.showReport(filePath, reportSet);
+      return this.showReport(filePath, reportSet, opts?.landing);
     }
     let specDirectory = getSpecDirectoryFromPath(filePath);
     let documentType = getDocumentTypeFromPath(filePath);
@@ -338,11 +338,14 @@ export class SpecViewerProvider {
   }
 
   /** One read-only panel per bug or idea, keyed by its folder, showing the clicked report. */
-  private async showReport(filePath: string, reportSet: ReportSetId): Promise<void> {
+  private readonly awaitingOverview = new Set<string>();
+
+  private async showReport(filePath: string, reportSet: ReportSetId, landing = false): Promise<void> {
     const set = REPORT_SETS[reportSet];
     const directory = reportDirectoryOf(set, filePath) ?? path.dirname(filePath);
     const fileName = path.basename(filePath);
-    const documentType = (set.kinds.find(kind => fileName === `${kind}.md`) ?? set.kinds[0]) as DocumentType;
+    const clicked = set.kinds.find(kind => fileName === `${kind}.md`) ?? set.kinds[0];
+    const documentType = ((landing && readReportPanel(reportSet, directory)?.defaultDocument) || clicked) as DocumentType;
 
     const existing = this.panels.get(directory);
     if (existing?.state.bug) {
@@ -398,7 +401,7 @@ export class SpecViewerProvider {
         : [...this.panels].filter(([key, inst]) => inst.state.bug && key.startsWith(filePath + path.sep)).map(([key]) => key);
       for (const key of keys) {
         this.outputChannel.appendLine(`[SpecViewer] Refreshing ${reportSet.panelPrefix.toLowerCase()} report due to file change: ${filePath}`);
-        await this.updateReportContent(key, this.panels.get(key)!.state.currentDocument);
+        await this.updateReportContent(key, (this.awaitingOverview.has(key) && reportSet.overview?.type as DocumentType) || this.panels.get(key)!.state.currentDocument);
       }
       return;
     }
@@ -656,6 +659,7 @@ export class SpecViewerProvider {
         this.stepCompletionNotifier.forget(specDirectory);
         this.settleLivingUndo(specDirectory);
       }
+      this.awaitingOverview.delete(specDirectory);
       // PanelRegistry.delete clears any pending debounceTimer for us.
       this.panels.delete(specDirectory);
     });
@@ -867,11 +871,20 @@ export class SpecViewerProvider {
     const set = REPORT_SETS[reportSet];
     const report = readReportPanel(reportSet, bugDirectory);
     const documents = reportDocuments(set, bugDirectory);
-    const doc = documents.find(d => d.type === documentType) ?? documents[0];
+    // The overview has no file: it exists only when its page could be built.
+    for (const d of documents) if (!d.filePath) d.exists = !!report?.page;
+    const reports = documents.filter(d => d.filePath);
+    const wanted = documents.find(d => d.type === documentType);
+    // The overview has no file, so it can only be shown as a built page.
+    const doc = wanted && (wanted.filePath || report?.page) ? wanted : reports[0];
+    // A reader sent off the overview because it could not be built goes back once it can.
+    if (wanted && doc !== wanted) this.awaitingOverview.add(bugDirectory);
+    else this.awaitingOverview.delete(bugDirectory);
+    const page = report && doc.type === report.pageDocument ? report.page : undefined;
 
     let content = "";
     let emptyMessage = "This report has not been created yet.";
-    if (doc.exists) {
+    if (doc.exists && doc.filePath) {
       try {
         content = await fs.promises.readFile(doc.filePath, "utf-8");
       } catch (error) {
@@ -932,6 +945,7 @@ export class SpecViewerProvider {
       undefined,     // assistantName
       false,         // hasTerminal
       report?.actions ?? [],
+      report ? { kind: report.kind, page } : { kind: reportSet === "ideas" ? "idea" : "bug" },
     );
 
     this.outputChannel.appendLine(

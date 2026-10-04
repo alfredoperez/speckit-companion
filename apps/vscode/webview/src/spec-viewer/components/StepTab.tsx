@@ -1,5 +1,5 @@
 import type { SpecDocument, StalenessMap } from '../types';
-import { viewerState } from '../signals';
+import { navState, viewerState } from '../signals';
 import { CONVERGE_STEP, IMPLEMENT_STEP, isConvergeInFlight, isStepInFlight } from '../stepInFlight';
 import { ElapsedTimer } from './ElapsedTimer';
 
@@ -67,7 +67,8 @@ export function StepTab(props: StepTabProps) {
         && index > runningStepIndex
         && !isViewing
         && !stepDocExists;
-    const isClickable = (exists || index === 0) && !isLocked;
+    // A spec's first step opens before its file exists; a report that was never written has nothing to open.
+    const isClickable = (exists || (index === 0 && !navState.value?.report)) && !isLocked;
     // R003: checkmark only when completed AND the step's document exists.
     const vsCompleted = (vs?.highlights?.includes(stepName) ?? false) && stepDocExists;
     const vsSubstep = vs?.activeSubstep?.step === stepName ? vs.activeSubstep.name : null;

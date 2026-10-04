@@ -346,7 +346,7 @@ async function handleEditDocument(
     (d) => d.type === instance.state.currentDocument,
   );
 
-  if (!currentDoc || !currentDoc.exists) {
+  if (!currentDoc || !currentDoc.exists || !currentDoc.filePath) {
     vscode.window.showWarningMessage("Cannot edit: document not found");
     return;
   }

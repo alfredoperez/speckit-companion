@@ -13,6 +13,17 @@ import {
     reportFile,
 } from '../reports/reportSet';
 
+import {
+    BUG_FIX_STATUSES,
+    BUG_SEVERITIES,
+    BUG_TEST_RESULTS,
+    BUG_VERDICTS,
+    BugFixStatus,
+    BugSeverity,
+    BugTestResult,
+    BugVerdict,
+} from './bugValues';
+
 export { parseReportHeader } from '../reports/reportSet';
 
 export const BUGS_DIR = path.join('.specify', 'bugs');
@@ -29,17 +40,17 @@ export const BUG_SET: ReportSet<BugReportKind> = {
     titlePrefixes: { assessment: 'Bug Assessment:', fix: 'Bug Fix:', test: 'Bug Verification:' },
     panelPrefix: 'Bug',
     fallbackBadge: 'BUG',
+    overview: { type: 'story', label: 'Story' },
 };
 
-export const BUG_VERDICTS = ['valid', 'likely valid, needs reproduction', 'invalid'] as const;
-export const BUG_SEVERITIES = ['critical', 'high', 'medium', 'low'] as const;
-export const BUG_FIX_STATUSES = ['applied', 'partial', 'not-applied'] as const;
-export const BUG_TEST_RESULTS = ['verified', 'partial', 'failed'] as const;
-
-export type BugVerdict = typeof BUG_VERDICTS[number];
-export type BugSeverity = typeof BUG_SEVERITIES[number];
-export type BugFixStatus = typeof BUG_FIX_STATUSES[number];
-export type BugTestResult = typeof BUG_TEST_RESULTS[number];
+export {
+    BUG_VERDICTS,
+    BUG_SEVERITIES,
+    BUG_FIX_STATUSES,
+    BUG_TEST_RESULTS,
+    BUG_CHECK_RESULTS,
+} from './bugValues';
+export type { BugVerdict, BugSeverity, BugFixStatus, BugTestResult, BugCheckResult } from './bugValues';
 
 export type BugState = 'to-fix' | 'to-test' | 'verified' | 'closed';
 

@@ -47,9 +47,22 @@ The groups come from the reports on disk, so a bug handled by typing the command
 
 ## In the viewer
 
-Click a bug or one of its reports. The viewer opens with **Assessment**, **Fix** and **Test** on the rail, and a report that does not exist yet greyed out. The header shows the bug's title, and the badge shows the latest outcome, such as **VERIFIED**, or **BUG** when there is none.
+Click a bug and the viewer opens on **Story**, the whole bug on one page. The header shows the bug's title, and the badge shows the latest outcome, such as **VERIFIED**, or **BUG** when there is none.
 
-The reports are for reading: there is no Overview and no comment button, and the viewer writes nothing to the bug's folder. The footer holds the next step, chosen from where the bug stands.
+The story starts with one sentence saying where the bug stands and one line of facts. Three steps follow down a timeline, **What was wrong**, **What changed** and **How it was verified**, and **Risks and open questions** closes the page. A closed bug shows only the first step.
+
+| The story opens with | When |
+| --- | --- |
+| Assessed, not fixed yet. | The bug has no fix and no test |
+| Fixed, not tested yet. | It has a fix and no test |
+| Fixed and verified. | Its test report says verified |
+| The fix did not hold. | Its test failed or was partial |
+| Tested, result unclear. | It has a test report whose result cannot be read |
+| Closed without a fix. | Its assessment's verdict is invalid |
+
+The reports as written are the tabs beside the story: **Assessment**, **Fix** and **Test**. A report not written yet is disabled. Click a report in the sidebar and the viewer opens on that report. A bug whose assessment cannot be read as a story opens on the assessment itself.
+
+Every tab is for reading: there is no Overview and no comment button, and the viewer writes nothing to the bug's folder. The page updates when a report changes on disk. The footer holds the next step, chosen from where the bug stands.
 
 | The bug is | Main button | Also offered |
 | --- | --- | --- |

@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { ProcessPaneProvider, ProcessRow } from '../../processes/processPaneProvider';
 import { ideasPaneConfig } from '../ideasPane';
 import { IDEA_SET, IdeaReport, readIdeaReport } from '../ideaReports';
 
@@ -96,6 +97,45 @@ describe('Ideas pane', () => {
 
         it('leaves a decided idea with no known verdict untinted', () => {
             expect(tint(ideaWithDecision('# Decision: Made up\n\n- **Verdict**: maybe\n'))).toBeUndefined();
+        });
+    });
+
+    describe('opening an idea', () => {
+        function ideaRow(slug: string): ProcessRow {
+            (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [{ uri: { fsPath: FIXTURE_ROOT }, name: 'ws' }];
+            const rows = new ProcessPaneProvider({} as vscode.ExtensionContext, ideasPaneConfig).getChildren();
+            return rows.flatMap(group => group.children).find(row => row.id === `ideas:${slug}`)!;
+        }
+
+        afterEach(() => {
+            (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = undefined;
+        });
+
+        it('opens an idea row on its landing document', () => {
+            const idea = ideaRow('shared-lists');
+
+            expect(idea.command?.command).toBe('speckit.viewSpecDocument');
+            expect(idea.command?.arguments).toEqual([
+                path.join(FIXTURE_ROOT, '.specify', 'assessments', 'shared-lists', 'intake.md'),
+                { report: 'ideas', landing: true },
+            ]);
+        });
+
+        it('opens a stage row on that stage, not on the landing document', () => {
+            const stages = ideaRow('shared-lists').children;
+
+            expect(stages.map(stage => stage.command?.arguments)).toEqual(
+                ['intake', 'research', 'problem', 'concept', 'decision'].map(stage => [
+                    path.join(FIXTURE_ROOT, '.specify', 'assessments', 'shared-lists', `${stage}.md`),
+                    { report: 'ideas' },
+                ]),
+            );
+        });
+
+        it('gives a stage that was never written nothing to open', () => {
+            const stages = ideaRow('offline-mode').children;
+
+            expect(stages.map(stage => !!stage.command)).toEqual([true, true, false, false, false]);
         });
     });
 

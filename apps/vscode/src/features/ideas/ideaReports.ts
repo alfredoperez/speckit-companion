@@ -8,12 +8,12 @@ import {
     readReportFolders,
     reportDirectoryOf,
 } from '../reports/reportSet';
+import { IDEA_STAGES, IDEA_VERDICTS, IdeaStage, IdeaVerdict } from './ideaValues';
+
+export { IDEA_RATINGS, IDEA_RATING_TONES, IDEA_STAGES, IDEA_VERDICTS } from './ideaValues';
+export type { IdeaRating, IdeaStage, IdeaTone, IdeaVerdict } from './ideaValues';
 
 export const IDEAS_DIR = path.join('.specify', 'assessments');
-
-export type IdeaStage = 'intake' | 'research' | 'problem' | 'concept' | 'decision';
-
-export const IDEA_STAGES: readonly IdeaStage[] = ['intake', 'research', 'problem', 'concept', 'decision'];
 
 export const IDEA_SET: ReportSet<IdeaStage> = {
     id: 'ideas',
@@ -30,10 +30,6 @@ export const IDEA_SET: ReportSet<IdeaStage> = {
     panelPrefix: 'Idea',
     fallbackBadge: 'IDEA',
 };
-
-export const IDEA_VERDICTS = ['go', 'needs-clarification', 'kill'] as const;
-
-export type IdeaVerdict = typeof IDEA_VERDICTS[number];
 
 export type IdeaState = 'assessing' | 'decided';
 

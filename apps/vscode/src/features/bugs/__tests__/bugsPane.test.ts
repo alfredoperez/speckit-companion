@@ -65,14 +65,25 @@ describe('the Bugs pane', () => {
             });
         });
 
-        it('opens a bug from its first report in the read-only viewer', () => {
+        it('opens a bug on its landing document in the read-only viewer', () => {
             const [toFix] = groups(FIXTURE_ROOT);
             const [bug] = toFix.children;
             expect(bug.command?.command).toBe('speckit.viewSpecDocument');
             expect(bug.command?.arguments).toEqual([
                 path.join(FIXTURE_ROOT, '.specify', 'bugs', 'slug-keeps-spaces', 'assessment.md'),
-                { report: 'bugs' },
+                { report: 'bugs', landing: true },
             ]);
+        });
+
+        it('opens a report row on that report, not on the landing document', () => {
+            const [, verified] = groups(FIXTURE_ROOT);
+            const [bug] = verified.children;
+            expect(bug.children.map(report => report.command?.arguments)).toEqual(
+                ['assessment', 'fix', 'test'].map(kind => [
+                    path.join(FIXTURE_ROOT, '.specify', 'bugs', 'cart-total-skips-first', `${kind}.md`),
+                    { report: 'bugs' },
+                ]),
+            );
         });
 
         it('marks every bug with a bug icon', () => {

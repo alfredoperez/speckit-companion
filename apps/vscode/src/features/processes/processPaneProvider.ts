@@ -120,7 +120,7 @@ export class ProcessPaneProvider<K extends string, T extends ProcessItem<K>> ext
         row.description = detail;
         row.tooltip = detail ? `${item.title}\n${detail}` : item.title;
         const first = reports.find(report => report.exists);
-        if (first) row.command = this.open(first, item.title);
+        if (first) row.command = this.open(first, item.title, true);
         return row;
     }
 
@@ -141,11 +141,11 @@ export class ProcessPaneProvider<K extends string, T extends ProcessItem<K>> ext
         return row;
     }
 
-    private open(report: ReportFile<K>, title: string): vscode.Command {
+    private open(report: ReportFile<K>, title: string, landing = false): vscode.Command {
         return {
             command: VIEW_DOCUMENT_COMMAND,
             title: `Open ${title}`,
-            arguments: [report.path, { report: this.config.set.id }],
+            arguments: [report.path, { report: this.config.set.id, ...(landing ? { landing } : {}) }],
         };
     }
 }
