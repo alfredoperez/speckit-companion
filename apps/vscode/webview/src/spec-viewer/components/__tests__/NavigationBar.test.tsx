@@ -315,3 +315,154 @@ describe('NavigationBar — artifacts nested under their step', () => {
         }
     });
 });
+
+describe('NavigationBar — report panel rail', () => {
+    function storyDoc(): SpecDocument {
+        return { type: 'story', label: 'Story', fileName: '', filePath: '', exists: true, isCore: true, category: 'core' };
+    }
+
+    function bugNav(reports: Record<'assessment' | 'fix' | 'test', boolean>, over: Partial<NavState> = {}): NavState {
+        return baseNav({
+            coreDocs: [
+                storyDoc(),
+                doc('assessment', reports.assessment, 'Assessment'),
+                doc('fix', reports.fix, 'Fix'),
+                doc('test', reports.test, 'Test'),
+            ],
+            currentDoc: 'story',
+            workflowPhase: '',
+            report: { kind: 'bug' },
+            ...over,
+        });
+    }
+
+    function ideaNav(written: string[], over: Partial<NavState> = {}): NavState {
+        return baseNav({
+            coreDocs: ['intake', 'research', 'problem', 'concept', 'decision'].map(stage =>
+                doc(stage, written.includes(stage), stage[0].toUpperCase() + stage.slice(1))),
+            currentDoc: written[written.length - 1],
+            workflowPhase: '',
+            report: { kind: 'idea' },
+            ...over,
+        });
+    }
+
+    const railLabels = (c: HTMLElement) => Array.from(c.querySelectorAll('.rail-label')).map(l => l.textContent);
+    const tab = (c: HTMLElement, phase: string) => c.querySelector<HTMLButtonElement>(`[data-phase="${phase}"]`)!;
+
+    it('labels the rail Reports for a bug', () => {
+        const c = renderBar(bugNav({ assessment: true, fix: true, test: true }));
+        try {
+            expect(railLabels(c)).toEqual(['Reports']);
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('labels the rail Stages for an idea', () => {
+        const c = renderBar(ideaNav(['intake', 'research']));
+        try {
+            expect(railLabels(c)).toEqual(['Stages']);
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('still labels the rail Pipeline for a spec', () => {
+        const c = renderBar(baseNav());
+        try {
+            expect(railLabels(c)).toEqual(['Pipeline']);
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('lists Story, then the three reports, for a bug', () => {
+        const c = renderBar(bugNav({ assessment: true, fix: true, test: false }));
+        try {
+            const tabs = Array.from(c.querySelectorAll('.step-tab'));
+            expect(tabs.map(t => [t.getAttribute('data-phase'), t.querySelector('.step-label')!.textContent])).toEqual([
+                ['story', 'Story'],
+                ['assessment', 'Assessment'],
+                ['fix', 'Fix'],
+                ['test', 'Test'],
+            ]);
+            expect(tab(c, 'story').getAttribute('aria-current')).toBe('page');
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('disables every report of a bug that was never written, and opens the ones that were', () => {
+        const c = renderBar(bugNav({ assessment: true, fix: false, test: false }));
+        try {
+            expect(['story', 'assessment', 'fix', 'test'].map(phase => tab(c, phase).disabled)).toEqual([false, false, true, true]);
+            expect(tab(c, 'fix').getAttribute('aria-disabled')).toBe('true');
+
+            tab(c, 'fix').click();
+            expect(postMessage).not.toHaveBeenCalled();
+
+            tab(c, 'assessment').click();
+            expect(postMessage).toHaveBeenLastCalledWith({ type: 'stepperClick', phase: 'assessment' });
+            tab(c, 'story').click();
+            expect(postMessage).toHaveBeenLastCalledWith({ type: 'stepperClick', phase: 'story' });
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('disables a missing first entry on a report panel', () => {
+        const c = renderBar(ideaNav(['research'], { currentDoc: 'research' }));
+        try {
+            const intake = tab(c, 'intake');
+            expect(c.querySelector('.step-tab')).toBe(intake);
+            expect(intake.disabled).toBe(true);
+            expect(intake.getAttribute('aria-disabled')).toBe('true');
+
+            intake.click();
+            expect(postMessage).not.toHaveBeenCalled();
+            expect(tab(c, 'research').disabled).toBe(false);
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('disables a missing first report of a bug whose rail has no Story entry', () => {
+        const c = renderBar(bugNav({ assessment: false, fix: true, test: false }, {
+            coreDocs: [doc('assessment', false, 'Assessment'), doc('fix', true, 'Fix'), doc('test', false, 'Test')],
+            currentDoc: 'fix',
+        }));
+        try {
+            expect(tab(c, 'assessment').disabled).toBe(true);
+            expect(tab(c, 'fix').disabled).toBe(false);
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('disables the stages of an idea that were never written', () => {
+        const c = renderBar(ideaNav(['intake', 'research']));
+        try {
+            expect(['intake', 'research', 'problem', 'concept', 'decision'].map(phase => tab(c, phase).disabled))
+                .toEqual([false, false, true, true, true]);
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('keeps the first entry of a spec clickable before its file exists', () => {
+        const c = renderBar(baseNav({
+            coreDocs: [doc('spec', false, 'Specification'), doc('plan', false, 'Plan'), doc('tasks', false, 'Tasks')],
+        }));
+        try {
+            expect(railLabels(c)).toEqual(['Pipeline']);
+            expect(tab(c, 'spec').disabled).toBe(false);
+            expect(tab(c, 'plan').disabled).toBe(true);
+
+            tab(c, 'spec').click();
+            expect(postMessage).toHaveBeenLastCalledWith({ type: 'stepperClick', phase: 'spec' });
+        } finally {
+            cleanup(c);
+        }
+    });
+});

@@ -100,7 +100,7 @@
 
 #markdown-content .rp-rows > li {
     display: grid;
-    grid-template-columns: minmax(0, 2fr) fit-content(8em) minmax(0, 3fr);
+    grid-template-columns: minmax(0, 2fr) 8em minmax(0, 3fr);
     gap: var(--space-1) var(--space-4);
     align-items: baseline;
     margin: 0;
@@ -116,8 +116,11 @@
     overflow-wrap: anywhere;
 }
 
+#markdown-content .rp-rows > li > :first-child { justify-self: start; }
+
 #markdown-content :where(.rp-rows > li > :first-child) { color: var(--text-primary); }
 #markdown-content :where(.rp-rows > li > :nth-child(2)) { color: var(--text-muted); }
+#markdown-content .rp-rows > li > [class*="rp-tone--"] { font-weight: 600; }
 
 #markdown-content .rp-rows code { white-space: normal; }
 

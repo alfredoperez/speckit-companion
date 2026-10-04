@@ -255,7 +255,7 @@ describe('BugStoryPage', () => {
             const list = heading?.nextElementSibling;
             expect(list?.tagName).toBe('UL');
             expect(list?.className).toBe('');
-            expect(list?.children).toHaveLength(6);
+            expect(list?.children).toHaveLength(3);
             expect(list?.querySelector('code')?.textContent).toBe('price');
         });
 

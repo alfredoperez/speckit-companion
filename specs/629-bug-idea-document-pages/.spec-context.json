@@ -3,7 +3,7 @@
   "specName": "Document pages for bugs and ideas",
   "branch": "629-bug-idea-document-pages",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -293,10 +293,63 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-10-04T15:48:45.171Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:51:25.561Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:53:23.354Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:55:15.843Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T16:01:32.092Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T16:01:32.118Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T16:01:48.668Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T16:03:19.711Z"
     }
   ],
   "unattended": true,
-  "last_action": "living specs evaluated — skipped (not configured)",
+  "last_action": "all 27 tasks done, suites pass, branch ready for Storybook review",
   "coverage": {
     "FR-001": {
       "title": "Opening a bug shows a story page that states where the bug stands",
@@ -312,6 +365,9 @@
       "tasks": [
         "T016",
         "T018"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts"
       ]
     },
     "FR-003": {
@@ -328,6 +384,9 @@
         "T017",
         "T018",
         "T019"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx"
       ]
     },
     "FR-005": {
@@ -361,6 +420,10 @@
         "T014",
         "T015",
         "T025"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx"
       ]
     },
     "FR-009": {
@@ -369,6 +432,10 @@
         "T012",
         "T022",
         "T023"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/ideaDecision.test.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/IdeaDecisionPage.test.tsx"
       ]
     },
     "FR-010": {
@@ -385,6 +452,9 @@
       "tasks": [
         "T014",
         "T015"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts"
       ]
     },
     "FR-012": {
@@ -405,6 +475,9 @@
         "T016",
         "T020",
         "T025"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts"
       ]
     },
     "FR-014": {
@@ -412,6 +485,9 @@
       "tasks": [
         "T012",
         "T025"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts"
       ]
     },
     "FR-015": {
@@ -419,6 +495,9 @@
       "tasks": [
         "T012",
         "T015"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts"
       ]
     },
     "FR-016": {
@@ -505,6 +584,26 @@
       "decision": "New lists IDEA_RATINGS and BUG_CHECK_RESULTS; allow-lists move to fs-free modules",
       "why": "Every state-like value must be recognised, and Storybook cannot import fs",
       "rejected": "The prototype regex tone table"
+    },
+    {
+      "decision": "Once a bug is tested, list only the test report residual risks",
+      "why": "The three reports restate the same risks in different words, which read as repetition",
+      "rejected": "Merging assessment risks, open questions and residual risks"
+    },
+    {
+      "decision": "New fixtures live under tests/fixtures/report-pages",
+      "why": "Existing tests list the bug-reports and idea-reports folders by name",
+      "rejected": "Adding them beside the existing fixtures and rewriting 14 tests"
+    },
+    {
+      "decision": "A panel sent off Story because it could not be built returns to it on the next refresh",
+      "why": "Assess again rewriting the file mid-read knocked the reader onto the raw report for good",
+      "rejected": "Leaving the reader on the fallback"
+    },
+    {
+      "decision": "Pass and fail check results carry a tone",
+      "why": "A failed check read the same as a passed one",
+      "rejected": "Muted text for every result"
     }
   ],
   "step_summaries": {
@@ -514,10 +613,13 @@
     },
     "tasks": {
       "summary": "27 tasks: 1 setup, 14 foundational in three waves plus wiring, 4 per page story, 1 Storybook, 3 polish"
+    },
+    "implement": {
+      "summary": "Bug story page and idea decision page in the Document look, nine Storybook states, 4,108 tests passing"
     }
   },
   "approach": "Pure builders in features/reports turn report text into a BugStory or IdeaDecision. readReportPanel calls them and the model travels as NavState.report. The webview renders it inside #markdown-content with rp- classes from one new partial, and Storybook builds the same pages from fixtures.",
-  "currentTask": "T019",
+  "currentTask": "T027",
   "task_summaries": {
     "T004": {
       "status": "DONE",
@@ -694,6 +796,108 @@
       "files": [
         "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx"
       ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Documented the bug Story page and the idea Decision page on the site and added the changelog entry",
+      "files": [
+        "apps/website/src/content/docs/docs/processes/fix-a-bug.mdx",
+        "apps/website/src/content/docs/docs/processes/assess-an-idea.mdx",
+        "apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx",
+        "CHANGELOG.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Added nine report-page stories built by the production builders and trimmed the bug report stories to one raw-tab story",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx",
+        "apps/vscode/webview/src/spec-viewer/__stories__/BugReport.stories.tsx"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Updated the host and rail tests for the Story entry, the landing rule, the page in the nav state and the raw fallback; 67 tests added, 5 updated",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugReports.test.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugsPane.test.ts",
+        "apps/vscode/src/features/ideas/__tests__/ideasPane.test.ts",
+        "apps/vscode/src/features/processes/__tests__/processPaneProvider.test.ts",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/NavigationBar.test.tsx"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "canvas bundle rebuilt; compile, both type-checks, unit suite, canvas tests and Storybook build pass",
+      "files": [
+        "apps/copilot-canvas/vendor/viewer.css"
+      ]
     }
-  }
+  },
+  "verified": [
+    {
+      "what": "unit suite",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.6,
+      "result": "\u001b[1mSnapshots:   \u001b[22m0 total · \u001b[1mTime:\u001b[22m        \u001b[1m\u001b[33m70.945 s\u001b[39m\u001b[22m · \u001b[2mRan all test suites\u001b[22m\u001b[2m.\u001b[22m"
+    },
+    {
+      "what": "extension type-check",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.9,
+      "result": "> speckit-companion@0.35.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview type-check",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "no output"
+    },
+    {
+      "what": "canvas tests and bundle",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 13.1,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 12342.108541"
+    },
+    {
+      "what": "All nine page states looked at in Storybook screenshots, light and dark",
+      "result": "lead, timeline, rows, scorecard and closing sections render; no empty heading; outline lists the sections"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Not tried in a running Extension Development Host; verified by unit tests and Storybook only",
+      "step": "implement"
+    },
+    {
+      "note": "The Storybook file mirrors the host set constants and bugState by hand because those modules import fs; it can drift from the host",
+      "step": "implement"
+    },
+    {
+      "note": "Story phases owned four files each, under the five-file bar, and were still sent to workers to keep the main context small; T001 setup was also sent to a worker",
+      "step": "implement"
+    },
+    {
+      "note": "Report parts the Story does not place stay on the raw tabs only: reproduction, suspected code paths, proposed remediation, tests added, deviations, output excerpts, recommendation",
+      "step": "implement"
+    },
+    {
+      "note": "astro check on the website reports 64 type errors in files this change did not touch",
+      "step": "implement"
+    },
+    {
+      "note": "Docs screenshots do not show the new pages yet",
+      "step": "implement"
+    }
+  ]
 }

@@ -39,11 +39,13 @@ function FilePath({ path }: { path: string }) {
     return quoted ? <code>{quoted[1]}</code> : <span>{path}</span>;
 }
 
-function Row({ name, path, word, note }: { name?: string; path?: string; word?: string; note?: string }) {
+const CHECK_TONE: Record<string, string | undefined> = { pass: 'rp-tone--favourable', fail: 'rp-tone--unfavourable' };
+
+function Row({ name, path, word, tone, note }: { name?: string; path?: string; word?: string; tone?: string; note?: string }) {
     return (
         <li>
             {path ? <FilePath path={path} /> : <Inline md={name ?? ''} />}
-            {word ? <Inline md={word} /> : note ? <span /> : null}
+            {word ? <span class={tone}><Inline md={word} /></span> : note ? <span /> : null}
             {note ? <Inline md={note} /> : null}
         </li>
     );
@@ -86,7 +88,7 @@ function Step({ step, nextAction }: { step: BugStep; nextAction?: string }) {
             {step.checks?.length ? (
                 <ul class="rp-rows">
                     {step.checks.map((check, index) => (
-                        <Row key={index} name={check.name} word={check.result && CHECK_RESULT[check.result]} note={check.note} />
+                        <Row key={index} name={check.name} word={check.result && CHECK_RESULT[check.result]} tone={check.result && CHECK_TONE[check.result]} note={check.note} />
                     ))}
                 </ul>
             ) : null}

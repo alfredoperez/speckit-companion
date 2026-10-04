@@ -133,12 +133,24 @@ describe('parseReportHeader', () => {
 });
 
 describe('bugReportDocuments', () => {
-    it('returns Assessment, Fix and Test with their existence', () => {
+    it('returns Story, then Assessment, Fix and Test with their existence', () => {
         const docs = bugReportDocuments(path.join(FIXTURE_BUGS, 'slug-keeps-spaces'));
         expect(docs.map(d => [d.type, d.label, d.exists])).toEqual([
+            ['story', 'Story', true],
             ['assessment', 'Assessment', true],
             ['fix', 'Fix', false],
             ['test', 'Test', false],
+        ]);
+    });
+
+    it('gives Story no file, and every report its own', () => {
+        const directory = path.join(FIXTURE_BUGS, 'slug-keeps-spaces');
+        const docs = bugReportDocuments(directory);
+        expect(docs.map(d => d.filePath)).toEqual([
+            '',
+            path.join(directory, 'assessment.md'),
+            path.join(directory, 'fix.md'),
+            path.join(directory, 'test.md'),
         ]);
     });
 });

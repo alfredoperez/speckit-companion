@@ -338,6 +338,8 @@ export class SpecViewerProvider {
   }
 
   /** One read-only panel per bug or idea, keyed by its folder, showing the clicked report. */
+  private readonly awaitingOverview = new Set<string>();
+
   private async showReport(filePath: string, reportSet: ReportSetId, landing = false): Promise<void> {
     const set = REPORT_SETS[reportSet];
     const directory = reportDirectoryOf(set, filePath) ?? path.dirname(filePath);
@@ -399,7 +401,7 @@ export class SpecViewerProvider {
         : [...this.panels].filter(([key, inst]) => inst.state.bug && key.startsWith(filePath + path.sep)).map(([key]) => key);
       for (const key of keys) {
         this.outputChannel.appendLine(`[SpecViewer] Refreshing ${reportSet.panelPrefix.toLowerCase()} report due to file change: ${filePath}`);
-        await this.updateReportContent(key, this.panels.get(key)!.state.currentDocument);
+        await this.updateReportContent(key, this.awaitingOverview.has(key) ? REPORT_SETS[reportSet.id].overview!.type as DocumentType : this.panels.get(key)!.state.currentDocument);
       }
       return;
     }
@@ -872,6 +874,9 @@ export class SpecViewerProvider {
     const wanted = documents.find(d => d.type === documentType);
     // The overview has no file, so it can only be shown as a built page.
     const doc = wanted && (wanted.filePath || report?.page) ? wanted : reports[0];
+    // A reader sent off the overview because it could not be built goes back once it can.
+    if (wanted && doc !== wanted) this.awaitingOverview.add(bugDirectory);
+    else this.awaitingOverview.delete(bugDirectory);
     const page = report && doc.type === report.pageDocument ? report.page : undefined;
 
     let content = "";

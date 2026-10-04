@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { SpecViewerProvider } from '../specViewerProvider';
 import type { SpecDocument } from '../types';
+import type { BugStory } from '../../reports/reportPageModel';
 
 jest.mock('../../../extension', () => ({
     getAIProvider: jest.fn(),
@@ -55,6 +56,9 @@ import { getAIProvider } from '../../../extension';
 const BUGS_ROOT = path.resolve(__dirname, '../../../../tests/fixtures/bug-reports/.specify/bugs');
 const CART = path.join(BUGS_ROOT, 'cart-total-skips-first');
 const SLUG = path.join(BUGS_ROOT, 'slug-keeps-spaces');
+const PAGES_ROOT = path.resolve(__dirname, '../../../../tests/fixtures/report-pages/.specify/bugs');
+const DISCOUNT = path.join(PAGES_ROOT, 'discount-applied-twice');
+const EXPORT = path.join(PAGES_ROOT, 'export-drops-header');
 
 const ARG = {
     documents: 4,
@@ -69,6 +73,7 @@ const ARG = {
     titleFromHeading: 25,
     readOnly: 30,
     reportActions: 33,
+    report: 34,
 } as const;
 
 function createProvider(): SpecViewerProvider {
@@ -121,12 +126,25 @@ function makeBug(slug: string, reports: Record<string, string>): string {
 }
 
 const ASSESSMENT = '# Bug Assessment: Total is wrong\n\n- **Verdict**: valid\n';
+const TOLD_ASSESSMENT = `${ASSESSMENT}\n## Symptom\n\nThe total leaves out the first item.\n`;
+const CLOSED_ASSESSMENT = '# Bug Assessment: Not a bug\n\n- **Verdict**: invalid\n\n## Symptom\n\nThe total is right.\n';
 const fixReport = (status: string) => `# Bug Fix: Total is wrong\n\n- **Status**: ${status}\n`;
 const testReport = (result: string) => `# Bug Verification: Total is wrong\n\n- **Result**: ${result}\n`;
 
 function actionLabels(): Array<[label: string, primary: boolean]> {
     const actions = lastRender()[ARG.reportActions] as Array<{ label: string; primary: boolean }>;
     return actions.map(a => [a.label, a.primary]);
+}
+
+function reportNav(): { kind: string; page?: BugStory } {
+    return lastRender()[ARG.report] as { kind: string; page?: BugStory };
+}
+
+async function switchTo(panel: any, documentType: string): Promise<void> {
+    const renders = (generateHtml as jest.Mock).mock.calls.length;
+    await panel.__receive({ type: 'switchDocument', documentType });
+    await until(() => (generateHtml as jest.Mock).mock.calls.length > renders);
+    expect((generateHtml as jest.Mock).mock.calls.length).toBe(renders + 1);
 }
 
 async function until(condition: () => boolean, timeoutMs = 2000): Promise<void> {
@@ -140,10 +158,12 @@ describe('Bug report panel', () => {
     let provider: SpecViewerProvider;
     let cartBefore: Record<string, string>;
     let slugBefore: Record<string, string>;
+    let pagesBefore: Record<string, string>[];
 
     beforeAll(() => {
         cartBefore = snapshot(CART);
         slugBefore = snapshot(SLUG);
+        pagesBefore = [DISCOUNT, EXPORT].map(snapshot);
     });
 
     beforeEach(() => {
@@ -172,6 +192,7 @@ describe('Bug report panel', () => {
     afterAll(() => {
         expect(snapshot(CART)).toEqual(cartBefore);
         expect(snapshot(SLUG)).toEqual(slugBefore);
+        expect([DISCOUNT, EXPORT].map(snapshot)).toEqual(pagesBefore);
     });
 
     describe('opening a bug', () => {
@@ -182,11 +203,24 @@ describe('Bug report panel', () => {
             expect(lastPanel().title).toBe('Bug: cartTotal skips the first cart item');
         });
 
-        it('renders the three reports read-only, with no run chrome', async () => {
+        it('lists Story ahead of the three reports', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { bug: true });
+
+            const docs = lastRender()[ARG.documents] as SpecDocument[];
+            expect(docs.map(d => [d.type, d.label])).toEqual([
+                ['story', 'Story'],
+                ['assessment', 'Assessment'],
+                ['fix', 'Fix'],
+                ['test', 'Test'],
+            ]);
+            expect(docs[0].filePath).toBe('');
+        });
+
+        it('renders the story and the three reports read-only, with no run chrome', async () => {
             await provider.show(path.join(CART, 'assessment.md'), { bug: true });
 
             const render = lastRender();
-            expect(existsByType()).toEqual({ assessment: true, fix: true, test: true });
+            expect(existsByType()).toEqual({ story: true, assessment: true, fix: true, test: true });
             expect(render[ARG.docType]).toBe('assessment');
             expect(render[ARG.phases]).toEqual([]);
             expect(render[ARG.activityPanelEnabled]).toBe(false);
@@ -201,7 +235,7 @@ describe('Bug report panel', () => {
         it('marks reports that were never written as not created', async () => {
             await provider.show(path.join(SLUG, 'assessment.md'), { bug: true });
 
-            expect(existsByType()).toEqual({ assessment: true, fix: false, test: false });
+            expect(existsByType()).toEqual({ story: true, assessment: true, fix: false, test: false });
             expect(lastRender()[ARG.badgeText]).toBe('VALID');
         });
 
@@ -289,6 +323,300 @@ describe('Bug report panel', () => {
             expect(droppedMessages()).toHaveLength(5);
             expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
             expect(writeSpecContext).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('landing on the story', () => {
+        it('opens a bug with only an assessment on the story, leading with what was assessed', async () => {
+            await provider.show(path.join(SLUG, 'assessment.md'), { report: 'bugs', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().kind).toBe('bug');
+            expect(reportNav().page).toEqual(expect.objectContaining({ lead: 'assessed', nextAction: 'Fix bug' }));
+            expect(reportNav().page!.steps.map(step => [step.id, step.state])).toEqual([
+                ['wrong', 'done'],
+                ['changed', 'next'],
+                ['verified', 'next'],
+            ]);
+        });
+
+        it('leads with a fix waiting for a test when the bug has a fix and no test', async () => {
+            const dir = makeBug('total-wrong', { assessment: TOLD_ASSESSMENT, fix: fixReport('applied') });
+
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page).toEqual(expect.objectContaining({ lead: 'fixed-untested', nextAction: 'Test fix' }));
+        });
+
+        it('leads with verified for a bug whose test verified the fix', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { report: 'bugs', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page!.lead).toBe('verified');
+            expect(reportNav().page!.nextAction).toBeUndefined();
+            expect(reportNav().page!.steps.map(step => step.state)).toEqual(['done', 'done', 'done']);
+        });
+
+        it('leads with a failed test for a bug whose test did not verify the fix', async () => {
+            await provider.show(path.join(DISCOUNT, 'assessment.md'), { report: 'bugs', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page!.lead).toBe('test-failed');
+        });
+
+        it('leads with closed for a bug assessed as not a bug', async () => {
+            await provider.show(path.join(EXPORT, 'assessment.md'), { report: 'bugs', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page!.lead).toBe('closed');
+        });
+
+        it('lands on the story whichever report of the bug the path names', async () => {
+            await provider.show(path.join(CART, 'test.md'), { report: 'bugs', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+        });
+
+        it('keeps the read-only chrome, the badge and the title on the story', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { report: 'bugs', landing: true });
+
+            const render = lastRender();
+            expect(lastPanel().title).toBe('Bug: cartTotal skips the first cart item');
+            expect(render[ARG.badgeText]).toBe('VERIFIED');
+            expect(render[ARG.readOnly]).toBe(true);
+            expect(render[ARG.phases]).toEqual([]);
+            expect(render[2]).toBe('');
+        });
+
+        it('opens the clicked report, with no page, when the open is not a landing', async () => {
+            await provider.show(path.join(CART, 'fix.md'), { report: 'bugs' });
+
+            expect(lastRender()[ARG.docType]).toBe('fix');
+            expect(reportNav().kind).toBe('bug');
+            expect(reportNav().page).toBeUndefined();
+        });
+
+        it('moves an open panel from the story to the clicked report, and back on a landing', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { report: 'bugs', landing: true });
+
+            await provider.show(path.join(CART, 'test.md'), { report: 'bugs' });
+            expect(vscode.window.createWebviewPanel).toHaveBeenCalledTimes(1);
+            expect(lastRender()[ARG.docType]).toBe('test');
+            expect(reportNav().page).toBeUndefined();
+
+            await provider.show(path.join(CART, 'assessment.md'), { report: 'bugs', landing: true });
+            expect(vscode.window.createWebviewPanel).toHaveBeenCalledTimes(1);
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page!.lead).toBe('verified');
+        });
+
+        it('never reads or writes a run record when it lands on the story', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { report: 'bugs', landing: true });
+
+            expect(scanDocuments).not.toHaveBeenCalled();
+            expect(writeSpecContext).not.toHaveBeenCalled();
+            expect(reportSpecOpened).not.toHaveBeenCalled();
+            expect(fs.existsSync(path.join(CART, '.spec-context.json'))).toBe(false);
+        });
+    });
+
+    describe('a bug with no story to tell', () => {
+        it('lands on the assessment when the assessment has no section the story can use', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT });
+
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('assessment');
+            expect(lastRender()[2]).toBe(ASSESSMENT);
+            expect(reportNav().kind).toBe('bug');
+            expect(reportNav().page).toBeUndefined();
+        });
+
+        it('lands on the first report written when the bug has no assessment', async () => {
+            const dir = makeBug('total-wrong', { fix: fixReport('applied') });
+
+            await provider.show(path.join(dir, 'fix.md'), { report: 'bugs', landing: true });
+
+            expect(lastRender()[ARG.docType]).toBe('fix');
+            expect(reportNav().page).toBeUndefined();
+        });
+
+        it('shows the raw assessment when the page asks for the story', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT });
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+
+            await switchTo(lastPanel(), 'story');
+
+            expect(lastRender()[ARG.docType]).toBe('assessment');
+            expect(lastRender()[2]).toBe(ASSESSMENT);
+            expect(reportNav().page).toBeUndefined();
+            expect(droppedMessages()).toHaveLength(0);
+        });
+
+        it('shows the raw assessment when the rail asks for the story', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT, fix: fixReport('applied') });
+            await provider.show(path.join(dir, 'fix.md'), { report: 'bugs' });
+
+            await lastPanel().__receive({ type: 'stepperClick', phase: 'story' });
+
+            expect(lastRender()[ARG.docType]).toBe('assessment');
+            expect(reportNav().page).toBeUndefined();
+        });
+    });
+
+    describe('moving between the story and the reports', () => {
+        it('shows a report with no page, then the story again with its page', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { report: 'bugs', landing: true });
+            const panel = lastPanel();
+
+            await switchTo(panel, 'fix');
+            expect(lastRender()[ARG.docType]).toBe('fix');
+            expect(lastRender()[2]).toBe(fs.readFileSync(path.join(CART, 'fix.md'), 'utf-8'));
+            expect(reportNav().page).toBeUndefined();
+
+            await switchTo(panel, 'story');
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(lastRender()[2]).toBe('');
+            expect(reportNav().page!.lead).toBe('verified');
+            expect(droppedMessages()).toHaveLength(0);
+        });
+
+        it('opens the story from the rail', async () => {
+            await provider.show(path.join(CART, 'fix.md'), { report: 'bugs' });
+
+            await lastPanel().__receive({ type: 'stepperClick', phase: 'story' });
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page!.lead).toBe('verified');
+        });
+
+        const states: Array<[state: string, reports: Record<string, string>, buttons: Array<[string, boolean]>]> = [
+            ['only an assessment', { assessment: TOLD_ASSESSMENT }, [['Fix bug', true]]],
+            ['a fix that was not applied', { assessment: TOLD_ASSESSMENT, fix: fixReport('not-applied') }, [['Fix bug', true]]],
+            ['a fix waiting for a test', { assessment: TOLD_ASSESSMENT, fix: fixReport('applied') }, [['Test fix', true], ['Fix again', false]]],
+            ['a failed test', { assessment: TOLD_ASSESSMENT, fix: fixReport('applied'), test: testReport('failed') }, [['Fix bug', true], ['Test again', false]]],
+            ['a verified fix', { assessment: TOLD_ASSESSMENT, fix: fixReport('applied'), test: testReport('verified') }, [['Test again', false]]],
+            ['a closed assessment', { assessment: CLOSED_ASSESSMENT }, [['Assess again', false]]],
+        ];
+
+        it.each(states)('keeps the same buttons on the story and on every report for a bug with %s', async (_state, reports, buttons) => {
+            const dir = makeBug('total-wrong', reports);
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+            const panel = lastPanel();
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(actionLabels()).toEqual(buttons);
+            const onStory = lastRender()[ARG.reportActions];
+
+            for (const tab of ['assessment', 'fix', 'test', 'story']) {
+                await switchTo(panel, tab);
+
+                expect(lastRender()[ARG.docType]).toBe(tab);
+                expect(lastRender()[ARG.reportActions]).toEqual(onStory);
+            }
+        });
+
+        it('sends the same command from the story as from a report', async () => {
+            await provider.show(path.join(SLUG, 'assessment.md'), { report: 'bugs', landing: true });
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'bug.fix' });
+
+            expect(executeInTerminal).toHaveBeenCalledTimes(1);
+            expect(executeInTerminal).toHaveBeenCalledWith('/speckit-bug-fix slug=slug-keeps-spaces');
+        });
+
+        it('drops writes and run actions sent while the story is shown', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { report: 'bugs', landing: true });
+            const panel = lastPanel();
+            (vscode.commands.executeCommand as jest.Mock).mockClear();
+
+            await panel.__receive({ type: 'toggleCheckbox', lineNum: 3, checked: true });
+            await panel.__receive({ type: 'editLine', lineNum: 3, newText: 'changed' });
+            await panel.__receive({ type: 'approve' });
+
+            expect(droppedMessages()).toHaveLength(3);
+            expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+            expect(writeSpecContext).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('the story following the files on disk', () => {
+        it('leads with the fix once a fix report is added', async () => {
+            const dir = makeBug('total-wrong', { assessment: TOLD_ASSESSMENT });
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+            expect(reportNav().page!.lead).toBe('assessed');
+
+            fs.writeFileSync(path.join(dir, 'fix.md'), fixReport('applied'));
+            await provider.refreshIfDisplaying(path.join(dir, 'fix.md'));
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page).toEqual(expect.objectContaining({ lead: 'fixed-untested', nextAction: 'Test fix' }));
+            expect(existsByType()).toEqual({ story: true, assessment: true, fix: true, test: false });
+        });
+
+        it('leads with verified once a verifying test report is added', async () => {
+            const dir = makeBug('total-wrong', { assessment: TOLD_ASSESSMENT, fix: fixReport('applied') });
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+
+            fs.writeFileSync(path.join(dir, 'test.md'), testReport('verified'));
+            await provider.refreshIfDisplaying(path.join(dir, 'test.md'));
+
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page!.lead).toBe('verified');
+            expect(lastRender()[ARG.badgeText]).toBe('VERIFIED');
+        });
+
+        it('steps the lead back when the test report, then the fix report, is deleted', async () => {
+            const dir = makeBug('total-wrong', { assessment: TOLD_ASSESSMENT, fix: fixReport('applied'), test: testReport('verified') });
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+            expect(reportNav().page!.lead).toBe('verified');
+
+            fs.rmSync(path.join(dir, 'test.md'));
+            await provider.refreshIfDisplaying(path.join(dir, 'test.md'));
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page!.lead).toBe('fixed-untested');
+            expect(actionLabels()).toEqual([['Test fix', true], ['Fix again', false]]);
+
+            fs.rmSync(path.join(dir, 'fix.md'));
+            await provider.refreshIfDisplaying(path.join(dir, 'fix.md'));
+            expect(lastRender()[ARG.docType]).toBe('story');
+            expect(reportNav().page!.lead).toBe('assessed');
+            expect(actionLabels()).toEqual([['Fix bug', true]]);
+        });
+
+        it('follows a report rewritten in place', async () => {
+            const dir = makeBug('total-wrong', { assessment: TOLD_ASSESSMENT, fix: fixReport('applied'), test: testReport('failed') });
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+            expect(reportNav().page!.lead).toBe('test-failed');
+
+            fs.writeFileSync(path.join(dir, 'test.md'), testReport('verified'));
+            await provider.refreshIfDisplaying(path.join(dir, 'test.md'));
+
+            expect(reportNav().page!.lead).toBe('verified');
+        });
+
+        it('falls back to the raw assessment when the story can no longer be built', async () => {
+            const dir = makeBug('total-wrong', { assessment: TOLD_ASSESSMENT, fix: fixReport('applied') });
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+            expect(lastRender()[ARG.docType]).toBe('story');
+
+            fs.writeFileSync(path.join(dir, 'assessment.md'), ASSESSMENT);
+            await provider.refreshIfDisplaying(path.join(dir, 'assessment.md'));
+
+            expect(lastRender()[ARG.docType]).toBe('assessment');
+            expect(lastRender()[2]).toBe(ASSESSMENT);
+            expect(reportNav().page).toBeUndefined();
+        });
+
+        it('says the folder is gone when the bug folder is deleted while the story is shown', async () => {
+            const dir = makeBug('total-wrong', { assessment: TOLD_ASSESSMENT });
+            await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
+            const panel = lastPanel();
+
+            fs.rmSync(dir, { recursive: true, force: true });
+            await provider.refreshIfDisplaying(dir);
+
+            expect(panel.title).toBe('Bug: Total is wrong (moved)');
         });
     });
 

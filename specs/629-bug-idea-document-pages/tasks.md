@@ -86,7 +86,7 @@ Files: V/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx, V/webview/
 
 ### Implementation
 
-- [ ] **T024** [US3] Add nine stories that mount the real `App` with a nav state built by the production builders: bug assessed only, fixed not tested, verified, test failed, closed as invalid; idea assessing, go, needs-clarification, kill. Remove the stories in `BugReport.stories.tsx` that these replace · V/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx, V/webview/src/spec-viewer/__stories__/BugReport.stories.tsx
+- [x] **T024** [US3] Add nine stories that mount the real `App` with a nav state built by the production builders: bug assessed only, fixed not tested, verified, test failed, closed as invalid; idea assessing, go, needs-clarification, kill. Remove the stories in `BugReport.stories.tsx` that these replace · V/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx, V/webview/src/spec-viewer/__stories__/BugReport.stories.tsx
 
 **Checkpoint**: All nine states open in Storybook in light and dark.
 
@@ -94,12 +94,12 @@ Files: V/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx, V/webview/
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T025** [P] Update the host panel tests for the Story entry, the landing rule, the page in the nav state and the fallback to the raw document · V/src/features/spec-viewer/__tests__/bugPanel.test.ts, ideaPanel.test.ts, V/src/features/bugs/__tests__/bugsPane.test.ts, V/src/features/ideas/__tests__/ideasPane.test.ts
-- [ ] **T026** [P] Docs and changelog: the story page, the decision page, the tabs and the rail · apps/website/src/content/docs/docs/processes/fix-a-bug.mdx, assess-an-idea.mdx, navigate/inside-the-viewer.mdx, CHANGELOG.md
+- [x] **T025** [P] Update the host panel tests for the Story entry, the landing rule, the page in the nav state and the fallback to the raw document · V/src/features/spec-viewer/__tests__/bugPanel.test.ts, ideaPanel.test.ts, V/src/features/bugs/__tests__/bugsPane.test.ts, V/src/features/ideas/__tests__/ideasPane.test.ts
+- [x] **T026** [P] Docs and changelog: the story page, the decision page, the tabs and the rail · apps/website/src/content/docs/docs/processes/fix-a-bug.mdx, assess-an-idea.mdx, navigate/inside-the-viewer.mdx, CHANGELOG.md
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T027** Rebuild the Copilot canvas bundle and run every suite: `npm run compile`, `npx tsc -p tsconfig.webview.json --noEmit`, `npm test`, `npm run test:canvas`, `npm run build-storybook` · apps/copilot-canvas/vendor/viewer.css
+- [x] **T027** Rebuild the Copilot canvas bundle and run every suite: `npm run compile`, `npx tsc -p tsconfig.webview.json --noEmit`, `npm test`, `npm run test:canvas`, `npm run build-storybook` · apps/copilot-canvas/vendor/viewer.css
 
 ## Dependencies & Execution Order
 

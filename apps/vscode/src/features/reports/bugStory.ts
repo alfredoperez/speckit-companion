@@ -177,14 +177,15 @@ function build(texts: BugReportTexts, nextAction?: string): BugStory | undefined
     if (verifiedBody) verified.body = verifiedBody;
     if (checks.length) verified.checks = checks;
 
+    // What is left after testing replaces what was feared before it, which the test report restates.
+    const residual = riskItems([[test, 'Residual Risks']]);
     const story: BugStory = {
         lead: leadOf(verdict, fixStatus, testResult, !!fix, !!test),
         meta,
         steps: [wrong, changed, verified],
-        risks: riskItems([
+        risks: residual.length > 0 ? residual : riskItems([
             [assessment, 'Risks & Considerations'],
             [assessment, 'Open Questions'],
-            [test, 'Residual Risks'],
         ]),
     };
     const action = typeof nextAction === 'string' ? nextAction.trim() : '';

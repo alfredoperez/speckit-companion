@@ -205,15 +205,21 @@ describe('buildBugStory', () => {
     });
 
     describe('risks', () => {
-        it('merges assessment risks, open questions and residual risks in that order', () => {
-            const risks = buildBugStory(texts(CART))?.risks ?? [];
-            expect(risks).toHaveLength(6);
+        it('lists the assessment risks then its open questions before the bug is tested', () => {
+            const { test: _test, ...untested } = texts(CART);
+            const risks = buildBugStory(untested)?.risks ?? [];
+            expect(risks).toHaveLength(3);
             expect(risks[0]).toMatch(/^Any downstream code/);
             expect(risks[2]).toBe(
                 'Did wrong totals reach users or orders in production, and does anything need correcting after the fix?'
             );
-            expect(risks[3]).toMatch(/^The production impact is still unknown/);
             expect(risks.join('\n')).not.toContain('NEEDS CLARIFICATION');
+        });
+
+        it('lists only what the test report says is left once the bug is tested', () => {
+            const risks = buildBugStory(texts(CART))?.risks ?? [];
+            expect(risks).toHaveLength(3);
+            expect(risks[0]).toMatch(/^The production impact is still unknown/);
         });
 
         it('leaves fix follow-ups out', () => {

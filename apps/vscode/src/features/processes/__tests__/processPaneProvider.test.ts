@@ -67,11 +67,23 @@ describe('a process pane with items', () => {
         expect(bug.contextValue).toBe('process-item');
     });
 
-    it('opens the first report that exists when the item is clicked', () => {
+    it('opens the item on its landing document when the item is clicked', () => {
         const [bug] = pane().getChildren(groups[0]);
         expect(bug.command?.command).toBe('speckit.viewSpecDocument');
         expect(bug.command?.arguments?.[0]).toMatch(/slug-keeps-spaces\/assessment\.md$/);
-        expect(bug.command?.arguments?.[1]).toEqual({ report: 'bugs' });
+        expect(bug.command?.arguments?.[1]).toEqual({ report: 'bugs', landing: true });
+    });
+
+    it('opens the clicked report, with no landing, when a report row is clicked', () => {
+        const [bug] = pane().getChildren(groups[1]);
+        const reports = pane().getChildren(bug);
+        expect(reports.map(r => r.command?.command)).toEqual(Array(3).fill('speckit.viewSpecDocument'));
+        expect(reports.map(r => r.command?.arguments?.[0])).toEqual([
+            expect.stringMatching(/cart-total-skips-first\/assessment\.md$/),
+            expect.stringMatching(/cart-total-skips-first\/fix\.md$/),
+            expect.stringMatching(/cart-total-skips-first\/test\.md$/),
+        ]);
+        for (const report of reports) expect(report.command?.arguments?.[1]).toEqual({ report: 'bugs' });
     });
 
     it('lists every report under an item, and says which are not written', () => {
