@@ -49,13 +49,13 @@ Files: V/src/features/reports/bugStory.ts, V/webview/src/spec-viewer/report-page
 
 ### Tests
 
-- [ ] **T016** [P] [US1] Builder tests: one case per lead in the contract's table, a fix marked not applied, the meta line dropping unknown and placeholder values and the badge's value, a missing section left out, risks merged from three sections with "None." items dropped, and `undefined` for text with none of the sections · V/src/features/reports/__tests__/bugStory.test.ts
-- [ ] **T017** [P] [US1] Page tests: three steps with the right done and next marks, one step when closed, no Risks heading without risks, the next-step sentence naming the button only when one is given, and no sentence appearing twice · V/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx
+- [x] **T016** [P] [US1] Builder tests: one case per lead in the contract's table, a fix marked not applied, the meta line dropping unknown and placeholder values and the badge's value, a missing section left out, risks merged from three sections with "None." items dropped, and `undefined` for text with none of the sections · V/src/features/reports/__tests__/bugStory.test.ts
+- [x] **T017** [P] [US1] Page tests: three steps with the right done and next marks, one step when closed, no Risks heading without risks, the next-step sentence naming the button only when one is given, and no sentence appearing twice · V/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx
 
 ### Implementation
 
-- [ ] **T018** [US1] Implement `buildBugStory` over `reportDoc`, the bug lists and `bugState` · V/src/features/reports/bugStory.ts
-- [ ] **T019** [US1] Implement `BugStoryPage`: lead, meta line, timeline of steps with changed-file rows, diff blocks and check rows, then Risks and open questions · V/webview/src/spec-viewer/report-pages/BugStoryPage.tsx
+- [x] **T018** [US1] Implement `buildBugStory` over `reportDoc`, the bug lists and `bugState` · V/src/features/reports/bugStory.ts
+- [x] **T019** [US1] Implement `BugStoryPage`: lead, meta line, timeline of steps with changed-file rows, diff blocks and check rows, then Risks and open questions · V/webview/src/spec-viewer/report-pages/BugStoryPage.tsx
 
 **Checkpoint**: A bug's Story tab renders from real report files and its footer buttons are unchanged.
 
@@ -68,13 +68,13 @@ Files: V/src/features/reports/ideaDecision.ts, V/webview/src/spec-viewer/report-
 
 ### Tests
 
-- [ ] **T020** [P] [US2] Builder tests: each verdict's lead and closing section, a rationale that opens with a bold verdict sentence said once, ratings outside the list shown without a rating, a decision with no scorecard, and `undefined` for an unrecognised verdict · V/src/features/reports/__tests__/ideaDecision.test.ts
-- [ ] **T021** [P] [US2] Page tests: lead, rationale, scorecard rows with the rating word and its tone class, each closing section, and nothing rendered for a missing part · V/webview/src/spec-viewer/report-pages/__tests__/IdeaDecisionPage.test.tsx
+- [x] **T020** [P] [US2] Builder tests: each verdict's lead and closing section, a rationale that opens with a bold verdict sentence said once, ratings outside the list shown without a rating, a decision with no scorecard, and `undefined` for an unrecognised verdict · V/src/features/reports/__tests__/ideaDecision.test.ts
+- [x] **T021** [P] [US2] Page tests: lead, rationale, scorecard rows with the rating word and its tone class, each closing section, and nothing rendered for a missing part · V/webview/src/spec-viewer/report-pages/__tests__/IdeaDecisionPage.test.tsx
 
 ### Implementation
 
-- [ ] **T022** [US2] Implement `buildIdeaDecision` over `reportDoc` and the idea lists · V/src/features/reports/ideaDecision.ts
-- [ ] **T023** [US2] Implement `IdeaDecisionPage`: lead, rationale, Scorecard rows, and the closing section for the verdict · V/webview/src/spec-viewer/report-pages/IdeaDecisionPage.tsx
+- [x] **T022** [US2] Implement `buildIdeaDecision` over `reportDoc` and the idea lists · V/src/features/reports/ideaDecision.ts
+- [x] **T023** [US2] Implement `IdeaDecisionPage`: lead, rationale, Scorecard rows, and the closing section for the verdict · V/webview/src/spec-viewer/report-pages/IdeaDecisionPage.tsx
 
 **Checkpoint**: A decided idea opens on its decision page with the five-stage rail.
 

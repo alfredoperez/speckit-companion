@@ -229,6 +229,70 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-10-04T15:43:53.927Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:47:39.214Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:47:39.298Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:47:39.380Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:47:39.472Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:48:44.924Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:48:45.005Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:48:45.085Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:48:45.171Z"
     }
   ],
   "unattended": true,
@@ -453,7 +517,7 @@
     }
   },
   "approach": "Pure builders in features/reports turn report text into a BugStory or IdeaDecision. readReportPanel calls them and the model travels as NavState.report. The webview renders it inside #markdown-content with rp- classes from one new partial, and Storybook builds the same pages from fixtures.",
-  "currentTask": "T015",
+  "currentTask": "T019",
   "task_summaries": {
     "T004": {
       "status": "DONE",
@@ -573,6 +637,62 @@
         "apps/vscode/src/features/spec-viewer/specViewerProvider.ts",
         "apps/vscode/src/features/processes/processPaneProvider.ts",
         "apps/vscode/src/features/spec-viewer/specViewerCommands.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Builder tests for the idea decision: leads, closings, ratings, splitter and undefined cases",
+      "files": [
+        "apps/vscode/src/features/reports/__tests__/ideaDecision.test.ts"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Page tests for the idea decision: lead, rationale, score rows, closing sections, missing parts, no repeated sentence",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/IdeaDecisionPage.test.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "buildIdeaDecision reads verdict, lead and rationale, scorecard and the closing for the verdict",
+      "files": [
+        "apps/vscode/src/features/reports/ideaDecision.ts"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "IdeaDecisionPage lays out the lead, rationale, Scorecard and the closing section",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/IdeaDecisionPage.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Builder tests for every lead, meta dropping, missing sections, merged risks and no-story cases",
+      "files": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Page tests for steps, closed bug, next sentence, risks, heading ids and no repeated sentence",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "buildBugStory derives lead, meta, three steps and risks from the report texts",
+      "files": [
+        "apps/vscode/src/features/reports/bugStory.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "BugStoryPage lays out lead, meta line, step timeline with rows and diffs, then risks",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx"
       ]
     }
   }
