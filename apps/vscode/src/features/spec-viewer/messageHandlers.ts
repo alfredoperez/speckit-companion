@@ -961,7 +961,10 @@ async function handleReportAnswer(
   msg: { question?: unknown; answer?: unknown; document?: unknown },
   deps: MessageHandlerDependencies,
 ): Promise<void> {
-  const drop = (why: string) => deps.outputChannel.appendLine(`[SpecViewer] Report answer dropped: ${why}`);
+  const drop = (why: string) => {
+    deps.outputChannel.appendLine(`[SpecViewer] Report answer dropped: ${why}`);
+    void vscode.window.showWarningMessage(`Your answer was not sent: ${why}.`);
+  };
   const state = deps.getInstance(specDirectory)?.state;
   if (!state?.bug) return drop("not a bug or idea page");
   const setId = state.reportSet ?? "bugs";

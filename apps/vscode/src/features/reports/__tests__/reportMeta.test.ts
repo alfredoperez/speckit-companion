@@ -56,6 +56,16 @@ describe('withHeaderLine', () => {
         expect(out).toContain('from a &lt;b&gt;ticket&lt;/b&gt; &amp; more');
     });
 
+    it('keeps a field that is still an open question, under the line', () => {
+        const out = withHeaderLine('assessment', '# Bug Assessment: x\n\n- **Created**: 2026-10-01\n- **Severity**: [NEEDS CLARIFICATION: how bad?]\n\n## Symptom\n');
+        expect(out).toContain('<p class="rp-meta">Reported Oct 1, 2026</p>');
+        expect(out).toContain('- **Severity**: [NEEDS CLARIFICATION: how bad?]');
+    });
+
+    it('does not read a plain number as a date', () => {
+        expect(reportHeaderFacts('research', '# Idea Research: x\n\n- **Priority**: 3\n- **Stage**: Option 2\n')).toEqual(['Priority: 3', 'Stage: Option 2']);
+    });
+
     it('leaves a report alone when its bullets state nothing it recognises', () => {
         const md = '# Bug Assessment: x\n\n- **Slug**: x\n\n## Symptom\n';
         expect(withHeaderLine('assessment', md)).toBe(md);

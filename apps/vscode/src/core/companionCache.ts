@@ -8,7 +8,14 @@ export const CACHE_ROOT = '.speckit-companion';
 export function ensureCacheFolder(root: string, folder: string): string {
     const cacheRoot = path.join(root, CACHE_ROOT);
     const target = path.join(cacheRoot, folder);
-    fs.mkdirSync(target, { recursive: true });
+    // A cache folder shipped as a link must not carry a write outside the project, so each level is checked before the next is made.
+    const inside = `${fs.realpathSync(root)}${path.sep}`;
+    for (const level of [cacheRoot, target]) {
+        fs.mkdirSync(level, { recursive: true });
+        if (!`${fs.realpathSync(level)}${path.sep}`.startsWith(inside)) {
+            throw new Error(`${path.relative(root, level)} resolves outside the project`);
+        }
+    }
     try {
         fs.writeFileSync(path.join(cacheRoot, '.gitignore'), '*\n', { flag: 'wx' });
     } catch {

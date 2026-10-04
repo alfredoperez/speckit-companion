@@ -2,6 +2,9 @@ import { clarificationsIn } from '../../../../src/features/reports/clarification
 
 const TAG_OR_MARKER = /<pre\b[\s\S]*?<\/pre>|<code\b[^>]*>[^<]*<\/code>|<[^>]+>|\[NEEDS CLARIFICATION:?\s*([^\]]*)\]/gi;
 
+/** A marker that runs across a block boundary is not one question: leaving it as written keeps the markup whole. */
+const BLOCK_TAG = /<\/?(?:p|div|li|ul|ol|h[1-6]|table|tr|td|th|pre|blockquote|button|section)\b/i;
+
 let asked: string[] = [];
 let marked = 0;
 
@@ -9,7 +12,7 @@ let marked = 0;
 export function markClarifications(html: string): string {
     let index = 0;
     const out = html.replace(TAG_OR_MARKER, (match: string, question: string | undefined) => {
-        if (question === undefined || question.trim() === '') return match;
+        if (question === undefined || question.trim() === '' || BLOCK_TAG.test(question)) return match;
         const n = index++;
         return `<span class="rp-question" data-question="${n}"><span class="rp-question__text">${question.trim()}</span> ` +
             `<span class="rp-question__badge">Needs an answer</span> ` +

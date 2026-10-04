@@ -24,14 +24,19 @@ describe('stageReportAnswer', () => {
         expect(fs.existsSync(path.join(root, ...staged.split('/')))).toBe(true);
     });
 
-    it('appends a second answer under the first', () => {
+    it('holds only the answer being sent, so an earlier one is never read again', () => {
         answer('Since when?', 'Since the March release.');
         const staged = answer('Who asked?', 'Support, twice.');
 
-        expect(fs.readFileSync(path.join(root, staged), 'utf8')).toBe(
-            '## Question\nSince when?\n\n## Answer\nSince the March release.\n\n' +
-            '## Question\nWho asked?\n\n## Answer\nSupport, twice.\n\n',
-        );
+        expect(fs.readFileSync(path.join(root, staged), 'utf8')).toBe('## Question\nWho asked?\n\n## Answer\nSupport, twice.\n\n');
+    });
+
+    it('refuses to write through a cache folder that links outside the project', () => {
+        const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'outside-'));
+        fs.symlinkSync(outside, path.join(root, '.speckit-companion'));
+
+        expect(() => answer('Since when?', 'March.')).toThrow(/outside the project/);
+        expect(fs.readdirSync(outside)).toEqual([]);
     });
 
     it('keeps one file per item and document', () => {

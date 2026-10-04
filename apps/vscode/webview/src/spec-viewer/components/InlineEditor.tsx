@@ -70,6 +70,7 @@ export function InlineEditor(props: InlineEditorProps) {
                     ref={textareaRef}
                     class="editor-textarea"
                     placeholder={mode === 'answer' ? 'Your answer…' : 'Add a comment or refinement instruction...'}
+                    maxLength={mode === 'answer' ? 4000 : undefined}
                     value={draft}
                     onInput={(e) => setDraft((e.currentTarget as HTMLTextAreaElement).value)}
                     onKeyDown={handleKeydown}

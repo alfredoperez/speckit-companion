@@ -11,6 +11,8 @@ const FIX_WORDS = { applied: 'fix applied', partial: 'fix partly applied', 'not-
 export function formatReportDate(raw: string | undefined): string | undefined {
     if (!raw) return undefined;
     const value = raw.trim();
+    // `new Date` reads "3" and "Option 2" as dates. A date names its year.
+    if (!/\b\d{4}\b/.test(value)) return undefined;
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return undefined;
     const iso = ISO_DAY.exec(value);
@@ -78,5 +80,7 @@ export function withHeaderLine(kind: string, markdown: string): string {
     while (end < lines.length && HEADER_FIELD.test(lines[end])) end++;
     if (end === start) return markdown;
     const line = `<p class="rp-meta">${facts.map(escapeText).join(' · ')}</p>`;
-    return [...lines.slice(0, title + 1), '', line, ...lines.slice(end)].join('\n');
+    // A field still waiting on an answer stays as written, so its question keeps its place and its button.
+    const open = lines.slice(start, end).filter(field => field.includes(PLACEHOLDER));
+    return [...lines.slice(0, title + 1), '', line, ...(open.length ? ['', ...open] : []), ...lines.slice(end)].join('\n');
 }

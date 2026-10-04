@@ -93,4 +93,9 @@ describe('renderMarkdown on a report', () => {
         expect(writtenQuestion(0)).toBe('Is `qty` ever zero?');
         expect(writtenQuestion(1)).toBe('since when?');
     });
+
+    it('leaves a marker that runs across blocks as written', () => {
+        const html = '<p>Intro [NEEDS CLARIFICATION: first</p><p>second] end</p>';
+        expect(markClarifications(html)).toBe(html);
+    });
 });

@@ -803,12 +803,13 @@ function clarificationsIn(markdown) {
 
 // apps/vscode/webview/src/spec-viewer/markdown/clarifications.ts
 var TAG_OR_MARKER = /<pre\b[\s\S]*?<\/pre>|<code\b[^>]*>[^<]*<\/code>|<[^>]+>|\[NEEDS CLARIFICATION:?\s*([^\]]*)\]/gi;
+var BLOCK_TAG = /<\/?(?:p|div|li|ul|ol|h[1-6]|table|tr|td|th|pre|blockquote|button|section)\b/i;
 var asked = [];
 var marked = 0;
 function markClarifications(html) {
   let index = 0;
   const out = html.replace(TAG_OR_MARKER, (match, question) => {
-    if (question === void 0 || question.trim() === "") return match;
+    if (question === void 0 || question.trim() === "" || BLOCK_TAG.test(question)) return match;
     const n = index++;
     return `<span class="rp-question" data-question="${n}"><span class="rp-question__text">${question.trim()}</span> <span class="rp-question__badge">Needs an answer</span> <button type="button" class="rp-question__answer" data-question="${n}">Answer</button></span>`;
   });

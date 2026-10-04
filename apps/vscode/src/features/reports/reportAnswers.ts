@@ -12,10 +12,10 @@ export interface ReportAnswer {
     answer: string;
 }
 
-/** Append one answered question to the item's staged answers file. Returns its workspace-relative path. */
+/** Write one answered question to the item's staged answer file, replacing the last one sent. Returns its workspace-relative path. */
 export function stageReportAnswer(root: string, { kind, slug, document, question, answer }: ReportAnswer): string {
     const fileName = `${kind}-${slug}-${document}.md`;
     const folder = ensureCacheFolder(root, ANSWERS_FOLDER);
-    fs.appendFileSync(path.join(folder, fileName), `## Question\n${question}\n\n## Answer\n${answer}\n\n`, 'utf8');
+    fs.writeFileSync(path.join(folder, fileName), `## Question\n${question}\n\n## Answer\n${answer}\n\n`, 'utf8');
     return `${CACHE_ROOT}/${ANSWERS_FOLDER}/${fileName}`;
 }
