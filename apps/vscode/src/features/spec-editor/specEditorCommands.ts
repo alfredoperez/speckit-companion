@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { SpecEditorProvider } from './specEditorProvider';
 import { TempFileManager } from './tempFileManager';
 import { SpecDraftManager } from './specDraftManager';
+import { SIZE_LIMITS } from './types';
 
 /**
  * Register spec editor commands and initialize managers
@@ -24,16 +25,17 @@ export function registerSpecEditorCommands(
 
     // Register open spec editor command
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.openSpecEditor', () => {
-            provider.show();
+        vscode.commands.registerCommand('speckit.openSpecEditor', (description?: unknown) => {
+            const prefill = typeof description === 'string' && description.trim()
+                ? description.slice(0, SIZE_LIMITS.DRAFT_CONTENT_CHARS)
+                : undefined;
+            return provider.show(prefill);
         })
     );
 
     // Open Create Spec where the Auto button builds the whole spec hands-off.
     context.subscriptions.push(
-        vscode.commands.registerCommand('speckit.companion.auto.run', () => {
-            provider.show();
-        })
+        vscode.commands.registerCommand('speckit.companion.auto.run', () => provider.show())
     );
 
     // Cleanup orphaned files on activation

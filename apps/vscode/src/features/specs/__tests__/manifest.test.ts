@@ -72,13 +72,25 @@ describe('sidebar contributions', () => {
         });
 
         it.each([
-            ['speckit.bugs.refresh', 'speckit.views.bugs'],
-            ['speckit.ideas.refresh', 'speckit.views.ideas'],
-        ])('%s is the one title action of %s', (command, view) => {
-            expect(viewTitle.filter(e => e.when.includes(`view == ${view}`))).toEqual([
-                { command, when: `view == ${view}`, group: 'navigation@1' },
+            ['speckit.views.bugs', 'speckit.bugs.refresh', 'speckit.bugs.create'],
+            ['speckit.views.ideas', 'speckit.ideas.refresh', 'speckit.ideas.create'],
+        ])('%s has Refresh then New as its title actions', (view, refresh, create) => {
+            const actions = viewTitle
+                .filter(e => e.when.includes(`view == ${view}`))
+                .sort((x, y) => x.group.localeCompare(y.group));
+            expect(actions).toEqual([
+                { command: refresh, when: `view == ${view}`, group: 'navigation@1' },
+                { command: create, when: `view == ${view}`, group: 'navigation@2' },
             ]);
-            expect(commands.find(c => c.command === command)!.icon).toBe('$(refresh)');
+            expect(commands.find(c => c.command === refresh)!.icon).toBe('$(refresh)');
+            expect(commands.find(c => c.command === create)!.icon).toBe('$(plus)');
+        });
+
+        it.each([
+            ['speckit.bugs.create', 'New Bug'],
+            ['speckit.ideas.create', 'New Idea'],
+        ])('%s is titled "%s"', (id, title) => {
+            expect(commandTitle(id)).toBe(title);
         });
 
         it('keeps the process install command out of the command palette, where it has no row to act on', () => {

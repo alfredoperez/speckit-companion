@@ -47,6 +47,8 @@ import { IDEA_SET } from './features/ideas/ideaReports';
 import { ideasPaneConfig } from './features/ideas/ideasPane';
 import { ProcessPaneProvider } from './features/processes/processPaneProvider';
 import { registerProcessCommands } from './features/processes/processCommands';
+import { ProcessCreateProvider } from './features/process-create/processCreateProvider';
+import { registerProcessCreateCommands } from './features/process-create/processCreateCommands';
 import { ReportSet, reportDirectoryOf } from './features/reports/reportSet';
 import { PROCESS_EXTENSION_IDS } from './speckit/processExtensions';
 
@@ -254,6 +256,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, filterState, sortState);
     registerLivingSpecsCommands(context, livingSpecsExplorer, outputChannel);
     registerProcessCommands(context, { bugs: bugsPane, ideas: ideasPane });
+    registerProcessCreateCommands(context, new ProcessCreateProvider(context));
     registerLivingSpecsStatusBar(context);
     registerUtilityCommands(context, updateChecker, outputChannel);
 

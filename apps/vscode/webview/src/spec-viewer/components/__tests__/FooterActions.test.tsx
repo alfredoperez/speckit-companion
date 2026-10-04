@@ -360,3 +360,108 @@ describe('FooterActions — living Approve all and Undo', () => {
         }
     });
 });
+
+describe('FooterActions — bug and idea report pages', () => {
+    const host = globalThis as unknown as { vscode: { postMessage: (m: unknown) => void } };
+    const original = host.vscode.postMessage;
+    const report = (reportActions: { id: string; label: string; primary: boolean }[]) =>
+        ({ enhancementButtons: [], reportActions }) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    afterEach(() => {
+        host.vscode.postMessage = original;
+        navState.value = null;
+        viewerState.value = null;
+    });
+
+    it('puts the secondary button first and the main button last, and names the next step', () => {
+        navState.value = report([
+            { id: 'bug.test', label: 'Test fix', primary: true },
+            { id: 'bug.fix', label: 'Fix again', primary: false },
+        ]);
+
+        const container = renderInto();
+        try {
+            expect(labels(container)).toEqual(['Fix again', 'Test fix']);
+            expect(Array.from(container.querySelectorAll('button')).map((b) => b.className)).toEqual(['secondary', 'primary']);
+            expect(container.querySelector('.footer-context')?.textContent).toBe('Next: Test fix');
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('shows no next step line when the page offers only a secondary action', () => {
+        navState.value = report([{ id: 'bug.test', label: 'Test again', primary: false }]);
+
+        const container = renderInto();
+        try {
+            expect(labels(container)).toEqual(['Test again']);
+            expect(container.querySelector('.footer-context')).toBeNull();
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('posts only the id of the button clicked', () => {
+        const posted: unknown[] = [];
+        host.vscode.postMessage = (m) => posted.push(m);
+        navState.value = report([{ id: 'bug.fix', label: 'Fix bug', primary: true }]);
+
+        const container = renderInto();
+        try {
+            container.querySelector('button')!.click();
+            expect(posted).toEqual([{ type: 'reportAction', id: 'bug.fix' }]);
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('renders a label as text, never as markup', () => {
+        navState.value = report([{ id: 'bug.fix', label: '<img src=x>', primary: true }]);
+
+        const container = renderInto();
+        try {
+            expect(container.querySelector('img')).toBeNull();
+            expect(labels(container)).toEqual(['<img src=x>']);
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('renders no footer for an empty list', () => {
+        navState.value = report([]);
+
+        const container = renderInto();
+        try {
+            expect(container.querySelector('footer')).toBeNull();
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('leaves a living spec with its own footer', () => {
+        navState.value = {
+            ...report([{ id: 'bug.fix', label: 'Fix bug', primary: true }]),
+            livingMode: true,
+            livingMeta: { capabilityName: 'auth', specPath: 'specs/auth/spec.md', location: 'centralized', match: [], drifted: false },
+        };
+
+        const container = renderInto();
+        try {
+            expect(labels(container)).toEqual(['Adopt an area', 'Validate']);
+        } finally {
+            cleanup(container);
+        }
+    });
+
+    it('leaves a spec with its own footer when it carries no report actions', () => {
+        viewerState.value = vs({ footer: [{ id: 'approve', label: 'Plan', scope: 'step', tooltip: 'continue' }] });
+        navState.value = { enhancementButtons: [] } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+        const container = renderInto();
+        try {
+            expect(labels(container)).toEqual(['Plan']);
+        } finally {
+            cleanup(container);
+        }
+    });
+});

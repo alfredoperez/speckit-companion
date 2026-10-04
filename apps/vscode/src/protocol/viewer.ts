@@ -305,6 +305,8 @@ export interface NavState {
     livingOverview?: LivingOverview | null;
     /** The pending Undo for the last Approve all or Remove, present only while it is offered. */
     livingUndo?: LivingUndo | null;
+    /** The next steps a bug or idea page offers, computed from its files; report panels only. */
+    reportActions?: { id: string; label: string; primary: boolean }[];
     /** Header title came from the document's own H1, so skip slug casing. */
     titleFromHeading?: boolean;
     /** Core documents with existence state */
@@ -584,6 +586,11 @@ export type ViewerToExtensionMessage =
           type: 'approveSpec';
           /** Which tier to approve; the one on screen when absent. */
           documentType?: DocumentType;
+      }
+    // A bug or idea page's footer button: the id only, the extension re-reads the item
+    | {
+          type: 'reportAction';
+          id: string;
       }
     // File reference click
     | {

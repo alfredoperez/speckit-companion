@@ -500,6 +500,63 @@ describe('messageHandlers - showTerminal', () => {
     });
 });
 
+describe('messageHandlers - read-only bug and idea pages', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    const reportDeps = () =>
+        createMockDeps({
+            getInstance: jest.fn().mockReturnValue({ state: { specDirectory: SPEC_DIR, bug: true, reportSet: 'bugs' } }),
+        });
+
+    it.each([
+        [{ type: 'footerAction', id: 'archive' }],
+        [{ type: 'clarify', command: 'speckit.clarify' }],
+        [{ type: 'approve' }],
+        [{ type: 'regenerate' }],
+        [{ type: 'livingUpdate' }],
+        [{ type: 'livingAdopt' }],
+        [{ type: 'resumeRun' }],
+        [{ type: 'setStatus' }],
+        [{ type: 'installSpecKitExtension' }],
+        [{ type: 'toggleCheckbox', lineNum: 1, checked: true }],
+        [{ type: 'removeLine', lineNum: 1 }],
+        [{ type: 'runDocRefinement', doc: 'spec', comments: [] }],
+    ])('drops %j without sending or running anything', async (message) => {
+        const deps = reportDeps();
+
+        await createMessageHandlers(SPEC_DIR, deps)(message as any);
+
+        expect(deps.executeInTerminal).not.toHaveBeenCalled();
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+        expect(deps.outputChannel.appendLine).toHaveBeenCalledWith(
+            `[SpecViewer] Report is read-only: ${message.type} dropped`,
+        );
+    });
+
+    it('lets a report action through the read-only gate, then drops it when the folder has no reports', async () => {
+        const deps = reportDeps();
+
+        await createMessageHandlers(SPEC_DIR, deps)({ type: 'reportAction', id: 'bug.fix' });
+
+        expect(deps.executeInTerminal).not.toHaveBeenCalled();
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+        expect(deps.outputChannel.appendLine).toHaveBeenCalledWith(
+            '[SpecViewer] Report action dropped: the item has no reports on disk',
+        );
+    });
+
+    it('drops a report action sent from a page that is not a bug or an idea', async () => {
+        const deps = createMockDeps();
+
+        await createMessageHandlers(SPEC_DIR, deps)({ type: 'reportAction', id: 'bug.fix' });
+
+        expect(deps.executeInTerminal).not.toHaveBeenCalled();
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+    });
+});
+
 describe('messageHandlers - stepperClick', () => {
     beforeEach(() => {
         jest.clearAllMocks();

@@ -292,6 +292,19 @@ function restoreDraft(): void {
     }
 }
 
+function applyPrefill(content: string, replace = false): void {
+    const { textarea } = getElements();
+    if (textarea.value === content) return;
+    if (!replace && textarea.value.trim()) {
+        vscode.postMessage({ type: 'confirmPrefill' });
+        return;
+    }
+    textarea.value = content;
+    updateCharCount();
+    updateSubmitState();
+    saveDraft();
+}
+
 function cancelWithConfirm(): void {
     const { textarea } = getElements();
     const hasContent = textarea.value.trim().length > 0;
@@ -623,6 +636,13 @@ function handleMessage(event: MessageEvent): void {
     switch (message.type) {
         case 'init':
             initWorkflows(message.workflows, message.defaultWorkflow);
+            if (message.prefill) {
+                applyPrefill(message.prefill);
+            }
+            break;
+
+        case 'prefill':
+            applyPrefill(message.content, message.replace);
             break;
 
         case 'imageSaved':

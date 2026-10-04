@@ -62,6 +62,8 @@ import {
 import type { CoreDocumentType } from "./types";
 import { isFeatureSpecFile } from "../specs/featureSpecPath";
 import { isSpecDocument } from "./utils";
+import { readReportPanel } from "./reportPanels";
+import { commandForAction, repeatsFromFolder } from "../processes/processActions";
 import type { ReviewComment, ReviewCommentDoc } from "../../core/types/specContext";
 import {
   DocumentType,
@@ -226,6 +228,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     removeRequirement: (msg, dir, deps) => handleLivingRemove(dir, msg.heading, deps),
     approveSpec: (msg, dir, deps) => handleLivingApprove(dir, msg.documentType, undefined, deps),
     undoLivingAction: (msg, dir, deps) => handleLivingUndo(dir, msg.token, deps),
+    reportAction: (msg, dir, deps) => handleReportAction(dir, msg.id, deps),
     openFile: (msg, dir, deps) => handleOpenFile(dir, msg.filename, deps),
     openLivingSpec: (msg, _dir, deps) =>
       handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps, msg.requirement),
@@ -255,7 +258,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
   };
 }
 
-/** The only messages a read-only bug or idea panel may act on; every write and dispatch is dropped. */
+/** The only messages a read-only bug or idea panel may act on. Every write is dropped, and the one dispatch allowed is `reportAction`, which re-checks its id against the item's files. */
 const BUG_PANEL_MESSAGES: ReadonlySet<ViewerToExtensionMessage["type"]> = new Set<ViewerToExtensionMessage["type"]>([
   "ready",
   "switchDocument",
@@ -264,6 +267,7 @@ const BUG_PANEL_MESSAGES: ReadonlySet<ViewerToExtensionMessage["type"]> = new Se
   "openFile",
   "editSource",
   "webviewError",
+  "reportAction",
 ]);
 
 /**
@@ -877,6 +881,67 @@ async function handleLivingUpdate(
   const capabilitySpecPath = livingCapabilitySpecPath(specDirectory, deps);
   if (!capabilitySpecPath) return;
   await vscode.commands.executeCommand("speckit.livingSpecs.update", { capabilitySpecPath });
+}
+
+/** A folder name that is safe to place in a prompt as it stands. */
+const PROMPT_SAFE_SLUG = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+function firstRationaleParagraph(decisionPath: string | undefined): string {
+  if (!decisionPath) return "";
+  let lines: string[];
+  try {
+    lines = fs.readFileSync(decisionPath, "utf-8").split(/\r?\n/);
+  } catch {
+    return "";
+  }
+  const heading = lines.findIndex(line => /^##\s+Verdict & Rationale\s*$/.test(line));
+  if (heading === -1) return "";
+  const rest = lines.slice(heading + 1);
+  const start = rest.findIndex(line => line.trim() !== "");
+  if (start === -1 || rest[start].startsWith("#")) return "";
+  const end = rest.findIndex((line, i) => i > start && (line.trim() === "" || line.startsWith("#")));
+  return rest.slice(start, end === -1 ? undefined : end).join(" ").trim();
+}
+
+/** A bug or idea page's footer button. The id is checked against what the item's files offer right now. */
+async function handleReportAction(
+  specDirectory: string,
+  id: unknown,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const drop = (why: string) => deps.outputChannel.appendLine(`[SpecViewer] Report action dropped: ${why}`);
+  const state = deps.getInstance(specDirectory)?.state;
+  if (!state?.bug) return drop("not a bug or idea page");
+  const item = readReportPanel(state.reportSet ?? "bugs", state.specDirectory);
+  if (!item) return drop("the item has no reports on disk");
+  const action = typeof id === "string" ? item.actions.find(a => a.id === id) : undefined;
+  if (!action) {
+    drop("the item does not offer that action in its current state");
+    await deps.updateContent(specDirectory, state.currentDocument);
+    return;
+  }
+
+  if (action.id === "idea.createSpec") {
+    const description = [item.title, firstRationaleParagraph(item.decisionPath), `Assessment: ${item.folder}`]
+      .filter(part => part !== "")
+      .join("\n\n");
+    await vscode.commands.executeCommand("speckit.openSpecEditor", description);
+    return;
+  }
+
+  const command = commandForAction(action.id);
+  if (!command) return drop("no command is mapped to that action");
+  if (!PROMPT_SAFE_SLUG.test(item.slug)) {
+    drop("the folder name cannot be sent as a slug");
+    vscode.window.showWarningMessage(
+      `The folder "${item.slug}" has characters in its name that Companion will not send to a terminal. Rename it using only letters, digits and dashes.`,
+    );
+    return;
+  }
+  const step = `/${formatCommandForProvider(command)} slug=${item.slug}`;
+  await deps.executeInTerminal(
+    repeatsFromFolder(action.id) ? `${step} Start again from the existing reports in ${item.folder}.` : step,
+  );
 }
 
 /**
