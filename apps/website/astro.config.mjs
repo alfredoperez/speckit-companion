@@ -14,6 +14,13 @@ import { mkdir, writeFile } from 'node:fs/promises';
 // the two Pipeline Builder pages (anatomy and guide) are one page now.
 // customize         custom commands stayed with Your own workflow; hooks got
 //                   their own page, which that one links to first.
+//
+// The sidebar was then regrouped by where you work, and the Other processes
+// folder went away.
+//
+// fix-a-bug, assess-an-idea   moved in with the IDE pages.
+// copilot-app, claude-code    each split into three pages; the old address
+//                             lands on Install, the first of them.
 const MOVED = {
   '/docs/start/getting-started': '/docs/start/your-first-spec',
   '/docs/anatomy/the-sidebar': '/docs/navigate/the-sidebar',
@@ -27,12 +34,16 @@ const MOVED = {
   '/docs/guides/steering': '/docs/customize/steering',
   '/docs/guides/review-and-refine': '/docs/steps/review-with-comments',
   '/docs/guides/check-a-run': '/docs/results/track-progress',
-  '/docs/guides/copilot-app': '/docs/processes/copilot-app',
-  '/docs/guides/claude-code': '/docs/processes/claude-code',
+  '/docs/guides/copilot-app': '/docs/copilot-app/install',
+  '/docs/guides/claude-code': '/docs/claude-code/install',
   '/docs/guides/living-specs': '/docs/results/living-specs',
   '/docs/discussions/living-specs': '/docs/results/living-specs',
   '/docs/guides/pick-a-pipeline': '/docs/start/spec-driven-development',
   '/docs/discussions/pick-a-pipeline': '/docs/start/spec-driven-development',
+  '/docs/processes/fix-a-bug': '/docs/ide/fix-a-bug',
+  '/docs/processes/assess-an-idea': '/docs/ide/assess-an-idea',
+  '/docs/processes/copilot-app': '/docs/copilot-app/install',
+  '/docs/processes/claude-code': '/docs/claude-code/install',
 };
 
 // The adapter turns each redirect into a Vercel route that matches the path
@@ -124,11 +135,15 @@ export default defineConfig({
           href: 'https://github.com/alfredoperez/speckit-companion',
         },
       ],
-      // Seven groups, in the order of the spec journey: get set up, find your
-      // way around, run each step, read what a run left, the other ways in,
-      // make it yours, then the dictionaries. Every entry is named here by
-      // slug, because the order is the reading order and the footer's previous
-      // and next buttons walk it. A new page is added to its group below.
+      // Six groups, by where you work: get set up, the VS Code extension, the
+      // Copilot app, Claude Code, make it yours, then the dictionaries. Every
+      // entry is named here by slug, because the order is the reading order
+      // and the footer's previous and next buttons walk it. A new page is
+      // added to its group below.
+      //
+      // A group is not a folder. The IDE group gathers pages from start/,
+      // navigate/, steps/, results/ and ide/, which kept their addresses when
+      // the sidebar was regrouped.
       //
       // Introduction and Install are /docs/ and /docs/install: the first is the
       // section root, and the second is linked from two published READMEs.
@@ -137,47 +152,60 @@ export default defineConfig({
           label: 'Start',
           items: [
             { label: 'Introduction', slug: 'docs' },
-            { label: 'Spec-driven development', slug: 'docs/start/spec-driven-development' },
+            { label: 'What is spec-driven development?', slug: 'docs/start/spec-driven-development' },
             { label: 'Install', slug: 'docs/install' },
-            { label: 'Your first spec', slug: 'docs/start/your-first-spec' },
           ],
         },
         {
-          label: 'Navigate',
+          label: 'In your IDE',
           items: [
+            { label: 'Choose an AI provider', slug: 'docs/ide/choose-a-provider' },
+            { label: 'Your first spec', slug: 'docs/start/your-first-spec' },
             { label: 'The sidebar', slug: 'docs/navigate/the-sidebar' },
             { label: 'Inside the viewer', slug: 'docs/navigate/inside-the-viewer' },
+            {
+              label: 'Each step',
+              collapsed: true,
+              items: [
+                { label: 'Constitution', slug: 'docs/steps/constitution' },
+                { label: 'Specify', slug: 'docs/steps/specify' },
+                { label: 'Plan', slug: 'docs/steps/plan' },
+                { label: 'Tasks', slug: 'docs/steps/tasks' },
+                { label: 'Implement', slug: 'docs/steps/implement' },
+                { label: 'Converge', slug: 'docs/steps/converge' },
+                { label: 'Review with comments', slug: 'docs/steps/review-with-comments' },
+                { label: 'Run it all with Auto', slug: 'docs/steps/auto' },
+              ],
+            },
+            {
+              label: 'Read the results',
+              collapsed: true,
+              items: [
+                { label: 'Reading a spec', slug: 'docs/results/reading-a-spec' },
+                { label: 'The Overview', slug: 'docs/results/the-overview' },
+                { label: 'Track progress', slug: 'docs/results/track-progress' },
+                { label: 'Living specs', slug: 'docs/results/living-specs' },
+              ],
+            },
+            { label: 'Fix a bug', slug: 'docs/ide/fix-a-bug', badge: { text: 'New', variant: 'tip' } },
+            { label: 'Assess an idea', slug: 'docs/ide/assess-an-idea', badge: { text: 'New', variant: 'tip' } },
           ],
         },
         {
-          label: 'Each step',
+          label: 'In the Copilot app',
           items: [
-            { label: 'Constitution', slug: 'docs/steps/constitution' },
-            { label: 'Specify', slug: 'docs/steps/specify' },
-            { label: 'Plan', slug: 'docs/steps/plan' },
-            { label: 'Tasks', slug: 'docs/steps/tasks' },
-            { label: 'Implement', slug: 'docs/steps/implement' },
-            { label: 'Converge', slug: 'docs/steps/converge' },
-            { label: 'Review with comments', slug: 'docs/steps/review-with-comments' },
-            { label: 'Run it all with Auto', slug: 'docs/steps/auto' },
+            { label: 'Install', slug: 'docs/copilot-app/install' },
+            { label: 'Navigate the board', slug: 'docs/copilot-app/navigate-the-board' },
+            { label: 'Run the steps', slug: 'docs/copilot-app/run-the-steps' },
           ],
         },
         {
-          label: 'Read the results',
+          label: 'In Claude Code',
+          badge: { text: 'New', variant: 'tip' },
           items: [
-            { label: 'Reading a spec', slug: 'docs/results/reading-a-spec' },
-            { label: 'The Overview', slug: 'docs/results/the-overview' },
-            { label: 'Track progress', slug: 'docs/results/track-progress' },
-            { label: 'Living specs', slug: 'docs/results/living-specs' },
-          ],
-        },
-        {
-          label: 'Other processes',
-          items: [
-            { label: 'Fix a bug', slug: 'docs/processes/fix-a-bug' },
-            { label: 'Assess an idea', slug: 'docs/processes/assess-an-idea' },
-            { label: 'From the Copilot app', slug: 'docs/processes/copilot-app' },
-            { label: 'From Claude Code', slug: 'docs/processes/claude-code' },
+            { label: 'Install', slug: 'docs/claude-code/install' },
+            { label: 'What it shows', slug: 'docs/claude-code/what-it-shows' },
+            { label: 'Switch specs with /spec', slug: 'docs/claude-code/switch-specs' },
           ],
         },
         {

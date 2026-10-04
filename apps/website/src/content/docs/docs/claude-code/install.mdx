@@ -1,0 +1,29 @@
+---
+title: Install the Claude Code mod
+description: Add the SpecKit Companion mod to Claude Code with two commands, and check that it is active.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<Actions>
+  <CodeLine command="claude plugin marketplace add alfredoperez/speckit-companion" />
+  <CodeLine command="claude plugin install speckit-companion@speckit-companion" />
+  <p>You need Claude Code 2.1.287 or later. Check with <code>claude --version</code>.</p>
+</Actions>
+
+If you run the Spec Kit commands in the Claude Code terminal, the SpecKit Companion mod keeps the run in view while you work. It reads the same run record as the VS Code viewer and the [Copilot app board](/docs/copilot-app/navigate-the-board), so the three always agree on steps, times and task counts.
+
+In a session that is already open, run `/reload-plugins` after installing.
+
+<YouSee>
+
+Run `/plugin`. The line under the tabs lists `speckit-companion` among the active mods.
+
+</YouSee>
+
+## Related
+
+- [What it shows](/docs/claude-code/what-it-shows) covers the band, the pane and where each one appears.
+- [Switch specs with /spec](/docs/claude-code/switch-specs) changes the spec the mod follows.

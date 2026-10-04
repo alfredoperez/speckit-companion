@@ -1,6 +1,6 @@
 ---
-title: Spec-driven development
-description: The method SpecKit Companion is built around, the steps it runs in, and the two workflows that ship with it.
+title: What is spec-driven development?
+description: The method SpecKit Companion is built around, the terms and steps it uses, the two workflows that ship with it, and the two other processes for bugs and ideas.
 ---
 
 import DocFigure from '../../../../components/journey/DocFigure.astro';
@@ -8,6 +8,10 @@ import DocFigure from '../../../../components/journey/DocFigure.astro';
 Spec-driven development means you write down what you want before any code exists, and you keep that description as the thing the code answers to. The spec comes first and the code follows from it, where most projects do it the other way round and let the documents fall behind.
 
 The method is GitHub Spec Kit's, not ours. Their own explanation is [Specification-Driven Development](https://github.com/github/spec-kit/blob/main/spec-driven.md), and it is worth reading in full. This page is our short version, and how SpecKit Companion fits around it.
+
+## Spec Kit's own document
+
+GitHub Spec Kit explains the method in one long document, [Specification-Driven Development](https://github.com/github/spec-kit/blob/main/spec-driven.md). It covers why the spec becomes the source of truth, how the commands turn a description into a plan and tasks, and the principles a constitution holds. Read it when you want the reasoning behind a step. The pages here stay with what you do and what you see.
 
 ## Why write the spec first
 
@@ -35,6 +39,24 @@ Each step is one command your assistant runs, and each leaves a file behind. The
 The spec says what and why, and stays away from how. The plan is where technology comes in. Keeping them apart is what lets you change the approach without rewriting the goal.
 
 A spec is allowed to say it does not know. Spec Kit's templates mark an open question in the text and leave it for you to answer, which is better than a guess that reads like a decision.
+
+## The terms you will meet
+
+Each of these is a Spec Kit command, and most are also the name of what the command writes.
+
+| Term | What it means |
+| --- | --- |
+| Constitution | The project's ground rules, written once and checked against by every spec after it |
+| Specify | Writes the spec: what you are building and why, with no technology in it |
+| Clarify | Asks you about the parts of the spec that are still open, and writes your answers into it |
+| Plan | Decides how the spec gets built: the approach, the structure and the technical choices |
+| Checklist | Writes a list of checks for the quality of the requirements themselves, before any code |
+| Tasks | Breaks the plan into small ordered pieces of work |
+| Analyze | Reads the spec, the plan and the tasks together and reports where they disagree. It changes nothing. |
+| Implement | Works through the tasks and writes the code, ticking each task as it goes |
+| Converge | Compares the finished code with the spec and adds tasks for whatever is missing |
+
+Clarify, checklist and analyze are optional. The viewer offers them under **Other actions**, and [Commands](/docs/reference/commands) lists every command.
 
 ## Where SpecKit Companion fits
 
@@ -68,6 +90,14 @@ The setting decides the pre-selection and nothing else. It does not restrict you
 ### Without the Companion Spec Kit extension
 
 Companion still appears in the panel, marked **Install to enable**. If you dispatch a Companion step anyway, the four step commands fall back to their stock twins with an install prompt. Commands with no stock twin, such as mark-complete, are not sent.
+
+## Fixing a bug
+
+A bug does not go through specify, plan and tasks. Spec Kit's bug extension has three commands of its own: assess the report, apply the fix, and test it again. Each one leaves a report, and SpecKit Companion lists the bugs in the sidebar and shows each one as a story. See [Fix a bug](/docs/ide/fix-a-bug).
+
+## Assessing an idea
+
+Assessment comes before a spec. It asks whether an idea is worth building, takes it through five stages, and ends in a verdict: go, needs-clarification or kill. A go can become a spec with one button. See [Assess an idea](/docs/ide/assess-an-idea).
 
 ## Related
 
