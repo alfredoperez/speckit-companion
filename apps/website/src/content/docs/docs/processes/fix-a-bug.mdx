@@ -49,7 +49,20 @@ The groups come from the reports on disk, so a bug handled by typing the command
 
 Click a bug or one of its reports. The viewer opens with **Assessment**, **Fix** and **Test** on the rail, and a report that does not exist yet greyed out. The header shows the bug's title, and the badge shows the latest outcome, such as **VERIFIED**, or **BUG** when there is none.
 
-The page is for reading. There is no footer, no Overview and no comment button, so nothing here runs the next command, and the viewer writes nothing to the bug's folder.
+The reports are for reading: there is no Overview and no comment button, and the viewer writes nothing to the bug's folder. The footer holds the next step, chosen from where the bug stands.
+
+| The bug is | Main button | Also offered |
+| --- | --- | --- |
+| Waiting for a fix | **Fix bug** | **Test again**, when a test already failed |
+| Waiting for a test | **Test fix** | **Fix again** |
+| Verified | | **Test again** |
+| Closed | | **Assess again** |
+
+A button sends that step's command, with the bug's name, to your assistant. When the report it writes appears, the buttons move on by themselves.
+
+## Start a bug from Companion
+
+Choose **+** on the Bugs pane. **New Bug** asks for the symptom, an optional link or pasted error, and a name for the bug's folder, which is suggested from the symptom and can be edited. **Assess bug** sends `/speckit.bug.assess` to your assistant; Fix and Test come after, from the bug's own page. A name that is already taken cannot be sent.
 
 ## Related
 

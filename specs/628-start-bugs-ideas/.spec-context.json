@@ -1,0 +1,658 @@
+{
+  "workflow": "companion",
+  "specName": "Start and continue a bug or an idea from Companion",
+  "branch": "628-start-bugs-ideas",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T01:19:04.540Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:19:04.722Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:19:05.108Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-04T01:19:05.454Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T01:19:05.624Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:22:36.839Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:22:36.931Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:22:37.021Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:24:08.172Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:24:08.473Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T01:24:08.536Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:24:08.643Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:24:09.061Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:24:09.167Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T01:24:09.232Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:25:04.367Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:25:04.458Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:25:25.159Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:27:15.407Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:28:21.043Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:31:02.224Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:31:02.300Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:31:02.375Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:31:02.451Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:31:31.761Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:31:31.825Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:31:31.889Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:31:31.957Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:39:10.091Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:39:10.111Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:39:10.198Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:39:10.683Z"
+    },
+    {
+      "step": "implement",
+      "substep": "complete",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T01:39:45.065Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "A + action on each pane opens its create screen",
+      "tasks": [
+        "T003",
+        "T005",
+        "T007"
+      ],
+      "tests": [
+        "manifest.test.ts",
+        "processCreateCommands.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "New Bug collects symptom, optional link or error, slug, and sends bug assess",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "processCreateProvider.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "New Idea collects idea, optional audience, slug, and sends assess intake",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "processCreateProvider.test.ts"
+      ]
+    },
+    "FR-004": {
+      "title": "Slug is derived, normalised, non-empty and unique",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "processCreate.test.ts",
+        "gate.test.ts",
+        "processCreateProvider.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "Nothing is sent with an empty required field; typed text survives a failed dispatch",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "gate.test.ts",
+        "processCreateProvider.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "The + action offers the extension install when it is missing",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "processCreateCommands.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Bug page footer buttons follow the bug state",
+      "tasks": [
+        "T002",
+        "T008",
+        "T010",
+        "T011"
+      ],
+      "tests": [
+        "processActions.test.ts",
+        "bugPanel.test.ts",
+        "FooterActions.test.tsx"
+      ]
+    },
+    "FR-008": {
+      "title": "Idea page buttons follow the stage and verdict",
+      "tasks": [
+        "T002",
+        "T008",
+        "T010"
+      ],
+      "tests": [
+        "processActions.test.ts",
+        "ideaPanel.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "Create spec from this idea opens Create Spec prefilled",
+      "tasks": [
+        "T010",
+        "T012"
+      ],
+      "tests": [
+        "ideaPanel.test.ts",
+        "specEditorProvider.prefill.test.ts"
+      ]
+    },
+    "FR-010": {
+      "title": "Buttons follow the files without reopening the page",
+      "tasks": [
+        "T008",
+        "T010"
+      ],
+      "tests": [
+        "bugPanel.test.ts"
+      ]
+    },
+    "FR-011": {
+      "title": "Pages stay read-only apart from the buttons",
+      "tasks": [
+        "T008",
+        "T010"
+      ],
+      "tests": [
+        "bugPanel.test.ts",
+        "ideaPanel.test.ts",
+        "messageHandlers.test.ts"
+      ]
+    },
+    "FR-012": {
+      "title": "Typed text reaches the assistant as prompt text only",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "processCreateProvider.test.ts"
+      ]
+    },
+    "FR-013": {
+      "title": "Docs describe starting and continuing bugs and ideas",
+      "tasks": [
+        "T013"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 20,
+    "projectedTasks": 20,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "No new look for the bug or idea pages",
+    "No per-bug assistant choice",
+    "No recorded link between an idea and its spec",
+    "No run record for bugs or ideas"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/spec-editor and apps/vscode/webview/src/spec-editor (the Create Spec screen and its submit path)",
+    "area: apps/vscode/src/features/spec-viewer and apps/vscode/webview/src/spec-viewer (the read-only report panel footer and its message allow-list)",
+    "area: apps/vscode/src/features/bugs, ideas, processes and package.json (pane title actions, commands)",
+    "constraint: a natural-language prompt dispatches through executeInTerminal, never executeSlashCommand",
+    "constraint: never interpolate user data into an HTML attribute or a shell command",
+    "constraint: a read-only panel message allow-list gates what a report panel may send",
+    "constraint: row and button values come from allow-listed state, never raw file text"
+  ],
+  "intent": "Start a bug or an idea from its pane and move it through its steps with footer buttons",
+  "decisions": [
+    {
+      "decision": "A second small webview for New Bug and New Idea",
+      "why": "Create Spec wires image, workflow and paste handlers unconditionally and holds one panel",
+      "rejected": "A mode on the Create Spec panel"
+    },
+    {
+      "decision": "Typed text goes into a file; the prompt holds the command, the slug and the file path",
+      "why": "cmd.exe places the prompt on the command line, so typed text there would reach a shell",
+      "rejected": "Sending the text as prompt text"
+    },
+    {
+      "decision": "Footer buttons are computed from the files and a click sends only an id",
+      "why": "A read-only panel must not be able to send a command or a slug",
+      "rejected": "Reusing enhancement buttons, which carry a command"
+    },
+    {
+      "decision": "Create Spec accepts an optional description",
+      "why": "A go idea becomes a spec only when the developer sends it",
+      "rejected": "Creating the spec directly from the idea"
+    },
+    {
+      "decision": "A report folder whose name is not plain letters, digits, dots, underscores or dashes is not dispatched",
+      "why": "The folder name goes into the prompt, and a hand-made name with spaces or shell characters must not",
+      "rejected": "Quoting the name"
+    },
+    {
+      "decision": "The create screen has its own classes in the Create Spec stylesheet",
+      "why": "Inline styles were a stopgap from a worker that could not edit the shared stylesheet",
+      "rejected": "Keeping inline styles"
+    },
+    {
+      "decision": "A prefill sent to a hidden Create Spec panel waits for its reload",
+      "why": "A hidden panel has no live webview to receive a message",
+      "rejected": "Posting to it anyway"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "A create screen, state-derived footer buttons on report panels, and a Create Spec prefill",
+      "key_finding": "Report panels have no footer at all today, and the read-only allow-list is what keeps them from dispatching"
+    },
+    "tasks": {
+      "summary": "14 tasks: Foundational (3), US1 (4), US2 (4), US3 (1), Polish (2)"
+    },
+    "implement": {
+      "summary": "New Bug and New Idea screens, state-derived footer buttons on report pages, and a Create Spec prefill"
+    }
+  },
+  "approach": "A small create webview writes the typed text to a file and sends the assess command with a cleaned slug. Report panels get a footer whose buttons the extension derives from the files; a click sends an id that is re-checked against the item before the matching command is dispatched. Create Spec gains an optional prefill for a go idea.",
+  "currentTask": "T014",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Create-screen protocol with slugFromText and normaliseSlug; tests for unsafe and long input",
+      "files": [
+        "apps/vscode/src/protocol/processCreate.ts",
+        "apps/vscode/src/protocol/__tests__/processCreate.test.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Button rules for bugs and ideas and the action-to-command map, tested against every row of the table",
+      "files": [
+        "apps/vscode/src/features/processes/processActions.ts",
+        "apps/vscode/src/features/processes/__tests__/processActions.test.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "speckit.bugs.create and speckit.ideas.create: ids, manifest commands and a + title action on each pane",
+      "files": [
+        "apps/vscode/src/core/constants.ts",
+        "package.json",
+        "apps/vscode/src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Documented New Bug, New Idea and the page buttons in the bug and idea pages, the sidebar reference, README and changelog",
+      "files": [
+        "apps/website/src/content/docs/docs/navigate/the-sidebar.mdx",
+        "apps/website/src/content/docs/docs/processes/fix-a-bug.mdx",
+        "apps/website/src/content/docs/docs/processes/assess-an-idea.mdx",
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Create Spec opens with a description: command and show take an optional string, init carries it, an open panel receives it, typed text is replaced only after a modal confirm",
+      "files": [
+        "apps/vscode/src/protocol/spec-editor.ts",
+        "apps/vscode/src/features/spec-editor/specEditorProvider.ts",
+        "apps/vscode/src/features/spec-editor/specEditorCommands.ts",
+        "apps/vscode/src/features/spec-editor/__tests__/specEditorProvider.prefill.test.ts",
+        "apps/vscode/webview/src/spec-editor/index.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Tests for report panel actions per state, reportAction dispatch, forged ids and the read-only gate",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/bugPanel.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Tests for the report footer: button order, posted id, empty list, living and spec footers unaffected",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/FooterActions.test.tsx"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Report panels send their actions on first paint and reportAction re-reads the item, checks the id and dispatches",
+      "files": [
+        "apps/vscode/src/protocol/viewer.ts",
+        "apps/vscode/src/features/spec-viewer/html/generator.ts",
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts",
+        "apps/vscode/src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Report footer with secondary then main button and a Next line, plus four stories",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/footer/ReportFooter.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/FooterActions.tsx",
+        "apps/vscode/webview/src/spec-viewer/__stories__/BugReport.stories.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Tests for the create provider (file written, prompt holds only command, slug and path, refusals, failure keeps the screen open) and the two create commands (install offer when the extension is missing)",
+      "files": [
+        "apps/vscode/src/features/process-create/__tests__/processCreateProvider.test.ts",
+        "apps/vscode/src/features/process-create/__tests__/processCreateCommands.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Built the create provider for both kinds and the New Bug / New Idea commands with the missing-extension check",
+      "files": [
+        "apps/vscode/src/features/process-create/processCreateProvider.ts",
+        "apps/vscode/src/features/process-create/processCreateCommands.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Built the create screen webview, its send gate, a story mock for both kinds and the process-create bundle entry",
+      "files": [
+        "apps/vscode/webview/src/process-create/index.ts",
+        "apps/vscode/webview/src/process-create/gate.ts",
+        "apps/vscode/webview/src/process-create/__tests__/gate.test.ts",
+        "apps/vscode/webview/src/process-create/ProcessCreateMock.tsx",
+        "apps/vscode/webview/src/process-create/__stories__/ProcessCreate.stories.tsx",
+        "webpack.config.js"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Registered the create commands at activation",
+      "files": [
+        "apps/vscode/src/extension.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "compile, webview type-check, 3854 jest tests, canvas tests, site build and vsce package all pass; the package carries the new bundle",
+      "files": [
+        "package.json"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "> speckit-companion@0.35.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview type-check",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "no output"
+    },
+    {
+      "what": "unit and integration tests",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.8,
+      "result": "\u001b[1mSnapshots:   \u001b[22m0 total · \u001b[1mTime:\u001b[22m        71.236 s, estimated 72 s · \u001b[2mRan all test suites\u001b[22m\u001b[2m.\u001b[22m"
+    },
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 12.8,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 12086.685667"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Not exercised in a running Extension Development Host; the create screen, the footer buttons and the prefill are covered by unit tests and Storybook captures",
+      "step": "implement"
+    },
+    {
+      "note": "The files holding typed bug and idea text under the extension storage are never cleaned up",
+      "step": "implement"
+    },
+    {
+      "note": "A prefill sent to a visible Create Spec panel that has not finished loading is dropped",
+      "step": "implement"
+    },
+    {
+      "note": "Cancel on the create screen closes without a discard prompt",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: eight task finishes were folded in two bursts, so their durations are not trustworthy"
+    }
+  ],
+  "last_action": "all 14 tasks done, full suite passes"
+}

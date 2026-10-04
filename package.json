@@ -570,6 +570,18 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "speckit.bugs.create",
+        "title": "New Bug",
+        "category": "SpecKit",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "speckit.ideas.create",
+        "title": "New Idea",
+        "category": "SpecKit",
+        "icon": "$(plus)"
+      },
+      {
         "command": "speckit.ideas.refresh",
         "title": "Refresh Ideas",
         "category": "SpecKit",
@@ -686,6 +698,16 @@
           "command": "speckit.bugs.refresh",
           "when": "view == speckit.views.bugs",
           "group": "navigation@1"
+        },
+        {
+          "command": "speckit.bugs.create",
+          "when": "view == speckit.views.bugs",
+          "group": "navigation@2"
+        },
+        {
+          "command": "speckit.ideas.create",
+          "when": "view == speckit.views.ideas",
+          "group": "navigation@2"
         },
         {
           "command": "speckit.ideas.refresh",

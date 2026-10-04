@@ -55,6 +55,7 @@ export type SpecEditorToExtensionMessage =
     | { type: 'removeImage'; imageId: string }
     | { type: 'ready' }
     | { type: 'cancel' }
+    | { type: 'confirmPrefill' }
     | { type: 'installSpecKitExtension'; prompt?: InstallPrompt }
     | { type: 'openReadme' }
     | { type: 'dismissInstallBanner'; prompt: InstallPrompt };
@@ -64,7 +65,8 @@ export type SpecEditorToExtensionMessage =
 // ============================================
 
 export type ExtensionToSpecEditorMessage =
-    | { type: 'init'; workflows: WorkflowDefinition[]; defaultWorkflow?: string }
+    | { type: 'init'; workflows: WorkflowDefinition[]; defaultWorkflow?: string; prefill?: string }
+    | { type: 'prefill'; content: string; replace?: boolean }
     | { type: 'imageSaved'; imageId: string; thumbnailUri: string; originalName: string }
     | { type: 'imageRemoved'; imageId: string }
     | { type: 'previewContent'; markdown: string }

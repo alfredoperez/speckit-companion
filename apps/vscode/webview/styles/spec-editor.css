@@ -642,3 +642,83 @@
         align-items: stretch;
     }
 }
+
+/* ============================================
+   New Bug / New Idea screen
+   ============================================ */
+
+/* An empty alert slot would still take a gap of its own. */
+.process-alert:empty {
+    display: none;
+}
+
+.process-field {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    min-width: 0;
+}
+
+.process-input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    padding: 6px 12px;
+    border: 1px solid var(--vscode-input-border, var(--border));
+    border-radius: var(--radius-sm);
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    font-family: var(--font-family);
+    font-size: max(15px, var(--font-size));
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+
+.process-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+    border-color: var(--accent);
+}
+
+.process-input::placeholder {
+    color: var(--vscode-input-placeholderForeground, var(--text-muted));
+    opacity: 1;
+}
+
+.spec-editor-textarea.process-textarea--short {
+    flex: none;
+    min-height: 88px;
+}
+
+.process-slug-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.process-slug-prefix {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.process-field-message {
+    margin: 6px 0 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: var(--error);
+}
+
+.process-note {
+    margin: 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: var(--text-body);
+}
+
+.process-note + .process-note {
+    margin-top: 4px;
+}

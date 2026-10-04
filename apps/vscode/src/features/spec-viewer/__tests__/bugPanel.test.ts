@@ -50,6 +50,7 @@ import { scanDocuments } from '../documentScanner';
 import { generateHtml } from '../html';
 import { writeSpecContext, updateSpecContext } from '../../specs/specContextWriter';
 import { reportSpecOpened } from '../../../core/telemetry';
+import { getAIProvider } from '../../../extension';
 
 const BUGS_ROOT = path.resolve(__dirname, '../../../../tests/fixtures/bug-reports/.specify/bugs');
 const CART = path.join(BUGS_ROOT, 'cart-total-skips-first');
@@ -67,6 +68,7 @@ const ARG = {
     livingMode: 23,
     titleFromHeading: 25,
     readOnly: 30,
+    reportActions: 33,
 } as const;
 
 function createProvider(): SpecViewerProvider {
@@ -106,6 +108,27 @@ function snapshot(dir: string): Record<string, string> {
     return Object.fromEntries(fs.readdirSync(dir).map(name => [name, fs.readFileSync(path.join(dir, name), 'utf-8')]));
 }
 
+const executeInTerminal = jest.fn().mockResolvedValue(undefined);
+const tempRoots: string[] = [];
+
+function makeBug(slug: string, reports: Record<string, string>): string {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bug-actions-'));
+    tempRoots.push(root);
+    const dir = path.join(root, '.specify', 'bugs', slug);
+    fs.mkdirSync(dir, { recursive: true });
+    for (const [kind, text] of Object.entries(reports)) fs.writeFileSync(path.join(dir, `${kind}.md`), text);
+    return dir;
+}
+
+const ASSESSMENT = '# Bug Assessment: Total is wrong\n\n- **Verdict**: valid\n';
+const fixReport = (status: string) => `# Bug Fix: Total is wrong\n\n- **Status**: ${status}\n`;
+const testReport = (result: string) => `# Bug Verification: Total is wrong\n\n- **Result**: ${result}\n`;
+
+function actionLabels(): Array<[label: string, primary: boolean]> {
+    const actions = lastRender()[ARG.reportActions] as Array<{ label: string; primary: boolean }>;
+    return actions.map(a => [a.label, a.primary]);
+}
+
 async function until(condition: () => boolean, timeoutMs = 2000): Promise<void> {
     const deadline = Date.now() + timeoutMs;
     while (!condition() && Date.now() < deadline) {
@@ -134,10 +157,12 @@ describe('Bug report panel', () => {
         (vscode.window.createWebviewPanel as jest.Mock).mockImplementation(
             (vscode as any).createMockWebviewPanel,
         );
+        (getAIProvider as jest.Mock).mockReturnValue({ executeInTerminal });
         provider = createProvider();
     });
 
     afterEach(() => {
+        for (const root of tempRoots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
         for (const result of (vscode.window.createWebviewPanel as jest.Mock).mock.results) {
             result.value.__fireDispose();
         }
@@ -264,6 +289,170 @@ describe('Bug report panel', () => {
             expect(droppedMessages()).toHaveLength(5);
             expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
             expect(writeSpecContext).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('the next steps a bug offers', () => {
+        it('offers Fix bug for a bug with only an assessment', async () => {
+            await provider.show(path.join(SLUG, 'assessment.md'), { bug: true });
+
+            expect(lastRender()[ARG.reportActions]).toEqual([{ id: 'bug.fix', label: 'Fix bug', primary: true }]);
+        });
+
+        it('offers Fix bug when the fix was not applied', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT, fix: fixReport('not-applied') });
+
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+
+            expect(actionLabels()).toEqual([['Fix bug', true]]);
+        });
+
+        it('offers Fix bug and Test again when the last test did not verify the fix', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT, fix: fixReport('applied'), test: testReport('failed') });
+
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+
+            expect(actionLabels()).toEqual([['Fix bug', true], ['Test again', false]]);
+        });
+
+        it('offers Test fix and Fix again for a bug waiting for a test', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT, fix: fixReport('applied') });
+
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+
+            expect(actionLabels()).toEqual([['Test fix', true], ['Fix again', false]]);
+        });
+
+        it('offers only Test again for a verified bug', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { bug: true });
+
+            expect(lastRender()[ARG.reportActions]).toEqual([{ id: 'bug.test', label: 'Test again', primary: false }]);
+        });
+
+        it('offers only Assess again for a closed bug', async () => {
+            const dir = makeBug('not-a-bug', { assessment: '# Bug Assessment: Not a bug\n\n- **Verdict**: invalid\n' });
+
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+
+            expect(actionLabels()).toEqual([['Assess again', false]]);
+        });
+
+        it('changes the buttons when a fix report is added and the page refreshes', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT });
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+            expect(actionLabels()).toEqual([['Fix bug', true]]);
+
+            fs.writeFileSync(path.join(dir, 'fix.md'), fixReport('applied'));
+            await provider.refreshIfDisplaying(path.join(dir, 'fix.md'));
+
+            expect(actionLabels()).toEqual([['Test fix', true], ['Fix again', false]]);
+        });
+    });
+
+    describe('choosing a next step', () => {
+        it('sends the fix command with the folder name as the slug', async () => {
+            await provider.show(path.join(SLUG, 'assessment.md'), { bug: true });
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'bug.fix' });
+
+            expect(executeInTerminal).toHaveBeenCalledTimes(1);
+            expect(executeInTerminal).toHaveBeenCalledWith('/speckit-bug-fix slug=slug-keeps-spaces');
+        });
+
+        it('takes the slug from the folder, not from the report text', async () => {
+            const dir = makeBug('folder-name', { assessment: '# Bug Assessment: Total is wrong\n\n- **Slug**: other-name\n- **Verdict**: valid\n' });
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'bug.fix' });
+
+            expect(executeInTerminal).toHaveBeenCalledWith('/speckit-bug-fix slug=folder-name');
+        });
+
+        it('points Assess again at the reports already in the folder', async () => {
+            const dir = makeBug('not-a-bug', { assessment: '# Bug Assessment: Not a bug\n\n- **Verdict**: invalid\n' });
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'bug.assess' });
+
+            expect(executeInTerminal).toHaveBeenCalledWith(
+                '/speckit-bug-assess slug=not-a-bug Start again from the existing reports in .specify/bugs/not-a-bug/.',
+            );
+        });
+
+        it('follows the files: a step the page did not offer at open is sent once its report exists', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT });
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+            const panel = lastPanel();
+
+            await panel.__receive({ type: 'reportAction', id: 'bug.test' });
+            expect(executeInTerminal).not.toHaveBeenCalled();
+
+            fs.writeFileSync(path.join(dir, 'fix.md'), fixReport('applied'));
+            await panel.__receive({ type: 'reportAction', id: 'bug.test' });
+
+            expect(executeInTerminal).toHaveBeenCalledWith('/speckit-bug-test slug=total-wrong');
+        });
+
+        it('sends nothing for a step the bug does not offer in its state', async () => {
+            await provider.show(path.join(SLUG, 'assessment.md'), { bug: true });
+            const panel = lastPanel();
+            (vscode.commands.executeCommand as jest.Mock).mockClear();
+
+            await panel.__receive({ type: 'reportAction', id: 'bug.test' });
+            await panel.__receive({ type: 'reportAction', id: 'idea.createSpec' });
+
+            expect(executeInTerminal).not.toHaveBeenCalled();
+            expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+        });
+
+        it('catches the buttons up when a step the bug no longer offers is chosen', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT });
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+            expect(actionLabels()).toEqual([['Fix bug', true]]);
+
+            fs.writeFileSync(path.join(dir, 'fix.md'), fixReport('applied'));
+            fs.writeFileSync(path.join(dir, 'test.md'), testReport('verified'));
+            await lastPanel().__receive({ type: 'reportAction', id: 'bug.fix' });
+
+            expect(executeInTerminal).not.toHaveBeenCalled();
+            expect(actionLabels()).toEqual([['Test again', false]]);
+        });
+
+        it('sends nothing for an id that is not an action', async () => {
+            await provider.show(path.join(SLUG, 'assessment.md'), { bug: true });
+            const panel = lastPanel();
+            (vscode.commands.executeCommand as jest.Mock).mockClear();
+
+            await panel.__receive({ type: 'reportAction', id: 'constructor' });
+            await panel.__receive({ type: 'reportAction', id: '__proto__' });
+            await panel.__receive({ type: 'reportAction', id: 42 });
+            await panel.__receive({ type: 'reportAction', id: ['bug.fix'] });
+            await panel.__receive({ type: 'reportAction' });
+
+            expect(executeInTerminal).not.toHaveBeenCalled();
+            expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+        });
+
+        it('sends nothing when the folder name is not safe to send as a slug', async () => {
+            const dir = makeBug('bad name; rm', { assessment: ASSESSMENT });
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'bug.fix' });
+
+            expect(executeInTerminal).not.toHaveBeenCalled();
+            expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+                'The folder "bad name; rm" has characters in its name that Companion will not send to a terminal. Rename it using only letters, digits and dashes.',
+            );
+        });
+
+        it('sends nothing once the reports are gone', async () => {
+            const dir = makeBug('total-wrong', { assessment: ASSESSMENT });
+            await provider.show(path.join(dir, 'assessment.md'), { bug: true });
+
+            fs.rmSync(path.join(dir, 'assessment.md'));
+            await lastPanel().__receive({ type: 'reportAction', id: 'bug.fix' });
+
+            expect(executeInTerminal).not.toHaveBeenCalled();
         });
     });
 

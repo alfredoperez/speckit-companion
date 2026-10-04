@@ -2,6 +2,7 @@ import { navState, viewerState } from '../signals';
 import { inFlightStepFor, isStepInFlight } from '../stepInFlight';
 import { CatalogFooter } from './footer/CatalogFooter';
 import { LivingFooter } from './footer/LivingFooter';
+import { ReportFooter } from './footer/ReportFooter';
 
 export interface FooterActionsProps {
     initialSpecStatus: string;
@@ -21,6 +22,7 @@ export function FooterActions(_props: FooterActionsProps) {
     // A living spec has no lifecycle state to derive a catalogue from; its bar
     // is the two drift actions.
     if (ns?.livingMode) return <LivingFooter />;
+    if (ns?.reportActions?.length) return <ReportFooter />;
     if (!vs) return null;
 
     const status = vs.status;

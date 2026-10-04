@@ -57,7 +57,8 @@ export function generateHtml(
     removedDocument?: string | null,
     readOnly: boolean = false,
     assistantName?: string,
-    hasTerminal: boolean = false
+    hasTerminal: boolean = false,
+    reportActions: NonNullable<NavState['reportActions']> = []
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -127,6 +128,7 @@ export function generateHtml(
         // request has to ride in here, not only on the later navigation update.
         landing,
         removedDocument: removedDocument ?? null,
+        ...(reportActions.length > 0 ? { reportActions } : {}),
     };
 
     return `<!DOCTYPE html>

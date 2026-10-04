@@ -89,6 +89,14 @@ const specEditorConfig = {
 };
 
 /**@type {import('webpack').Configuration}*/
+const processCreateConfig = {
+  ...specEditorConfig,
+  entry: './apps/vscode/webview/src/process-create/index.ts',
+  output: { ...specEditorConfig.output, filename: 'process-create.js' },
+  plugins: []
+};
+
+/**@type {import('webpack').Configuration}*/
 const specViewerConfig = {
   target: 'web', // Webview runs in browser context
   mode: 'none',
@@ -176,4 +184,4 @@ const pipelineBuilderConfig = {
   ]
 };
 
-module.exports = [extensionConfig, specEditorConfig, specViewerConfig, pipelineBuilderConfig];
+module.exports = [extensionConfig, specEditorConfig, processCreateConfig, specViewerConfig, pipelineBuilderConfig];

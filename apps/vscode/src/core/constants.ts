@@ -44,6 +44,8 @@ export const Commands = {
         review: 'speckit.feedback.review',
     },
     bugsRefresh: 'speckit.bugs.refresh',
+    bugsCreate: 'speckit.bugs.create',
+    ideasCreate: 'speckit.ideas.create',
     ideasRefresh: 'speckit.ideas.refresh',
     processesInstallExtension: 'speckit.processes.installExtension',
 } as const;

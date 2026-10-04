@@ -69,9 +69,10 @@ import { resolveInstallPrompt, type InstallPrompt } from "../../speckit/specKitE
 import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
 import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests } from "./stateDerivation";
 import { enrichLivingSpecs } from "../living-specs/livingSpecsContent";
-import { BUG_SET, bugDirectoryOf, readBugReport } from "../bugs/bugReports";
-import { IDEA_SET, ideaDirectoryOf, readIdeaReport } from "../ideas/ideaReports";
+import { bugDirectoryOf } from "../bugs/bugReports";
+import { ideaDirectoryOf } from "../ideas/ideaReports";
 import { isReportPath, reportDirectoryOf, reportDocuments, type ReportSet } from "../reports/reportSet";
+import { REPORT_SETS, readReportPanel, type ReportSetId } from "./reportPanels";
 import { featureSpecPath } from "../specs/featureSpecPath";
 import { noteSpecDispatch, resolveSpecAssistant } from "../specs/specAssistant";
 import { getSpecTerminal } from "../specs/specTerminals";
@@ -88,32 +89,8 @@ import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/ty
 /** How long Approve all and Remove stay undoable. */
 const LIVING_UNDO_MS = 5000;
 
-type ReportSetId = ReportSet<string>["id"];
-
-interface ReportPanel {
-  set: ReportSet<string>;
-  read(directory: string): { title: string; badge?: string } | undefined;
-}
-
-const REPORT_PANELS: Record<ReportSetId, ReportPanel> = {
-  bugs: {
-    set: BUG_SET,
-    read: directory => {
-      const bug = readBugReport(directory);
-      return bug && { title: bug.title, badge: bug.outcome };
-    },
-  },
-  ideas: {
-    set: IDEA_SET,
-    read: directory => {
-      const idea = readIdeaReport(directory);
-      return idea && { title: idea.title, badge: idea.verdict };
-    },
-  },
-};
-
 function reportSetOfPath(filePath: string): ReportSet<string> | undefined {
-  return Object.values(REPORT_PANELS).map(panel => panel.set).find(set => isReportPath(set, filePath));
+  return Object.values(REPORT_SETS).find(set => isReportPath(set, filePath));
 }
 
 // Re-export utility functions for external use
@@ -362,7 +339,7 @@ export class SpecViewerProvider {
 
   /** One read-only panel per bug or idea, keyed by its folder, showing the clicked report. */
   private async showReport(filePath: string, reportSet: ReportSetId): Promise<void> {
-    const { set } = REPORT_PANELS[reportSet];
+    const set = REPORT_SETS[reportSet];
     const directory = reportDirectoryOf(set, filePath) ?? path.dirname(filePath);
     const fileName = path.basename(filePath);
     const documentType = (set.kinds.find(kind => fileName === `${kind}.md`) ?? set.kinds[0]) as DocumentType;
@@ -594,7 +571,7 @@ export class SpecViewerProvider {
     const instance = this.panels.get(specDirectory);
     if (!instance) return;
     this.outputChannel.appendLine(`[SpecViewer] Spec folder gone: ${specDirectory}`);
-    const kind = instance.state.living ? "Living Spec" : instance.state.bug ? REPORT_PANELS[instance.state.reportSet ?? "bugs"].set.panelPrefix : "Spec";
+    const kind = instance.state.living ? "Living Spec" : instance.state.bug ? REPORT_SETS[instance.state.reportSet ?? "bugs"].panelPrefix : "Spec";
     instance.panel.title = `${kind}: ${instance.state.specName} (moved)`;
     this.postMessage(specDirectory, { type: "specMoved", specDirectory });
   }
@@ -631,7 +608,7 @@ export class SpecViewerProvider {
 
     const panel = vscode.window.createWebviewPanel(
       "speckit.specViewer",
-      `${report ? REPORT_PANELS[report].set.panelPrefix : "Spec"}: ${specName}`,
+      `${report ? REPORT_SETS[report].panelPrefix : "Spec"}: ${specName}`,
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -886,8 +863,9 @@ export class SpecViewerProvider {
       return;
     }
 
-    const { set, read } = REPORT_PANELS[instance.state.reportSet ?? "bugs"];
-    const report = read(bugDirectory);
+    const reportSet = instance.state.reportSet ?? "bugs";
+    const set = REPORT_SETS[reportSet];
+    const report = readReportPanel(reportSet, bugDirectory);
     const documents = reportDocuments(set, bugDirectory);
     const doc = documents.find(d => d.type === documentType) ?? documents[0];
 
@@ -951,6 +929,9 @@ export class SpecViewerProvider {
       null,          // livingUndo
       undefined,     // removedDocument
       true,          // readOnly
+      undefined,     // assistantName
+      false,         // hasTerminal
+      report?.actions ?? [],
     );
 
     this.outputChannel.appendLine(

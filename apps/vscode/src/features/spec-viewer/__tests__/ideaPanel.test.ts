@@ -50,11 +50,13 @@ import { scanDocuments } from '../documentScanner';
 import { generateHtml } from '../html';
 import { writeSpecContext, updateSpecContext } from '../../specs/specContextWriter';
 import { reportSpecOpened } from '../../../core/telemetry';
+import { getAIProvider } from '../../../extension';
 
 const IDEAS_ROOT = path.resolve(__dirname, '../../../../tests/fixtures/idea-reports/.specify/assessments');
 const SHARED = path.join(IDEAS_ROOT, 'shared-lists');
 const OFFLINE = path.join(IDEAS_ROOT, 'offline-mode');
 const GUEST = path.join(IDEAS_ROOT, 'guest-links');
+const BADGES = path.join(IDEAS_ROOT, 'member-badges');
 const BUG = path.resolve(__dirname, '../../../../tests/fixtures/bug-reports/.specify/bugs/cart-total-skips-first');
 
 const ARG = {
@@ -69,6 +71,7 @@ const ARG = {
     livingMode: 23,
     titleFromHeading: 25,
     readOnly: 30,
+    reportActions: 33,
 } as const;
 
 function createProvider(): SpecViewerProvider {
@@ -108,6 +111,24 @@ function snapshot(dir: string): Record<string, string> {
     return Object.fromEntries(fs.readdirSync(dir).map(name => [name, fs.readFileSync(path.join(dir, name), 'utf-8')]));
 }
 
+const executeInTerminal = jest.fn().mockResolvedValue(undefined);
+const tempRoots: string[] = [];
+
+function makeIdea(slug: string, stages: Record<string, string>): string {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'idea-actions-'));
+    tempRoots.push(root);
+    const dir = path.join(root, '.specify', 'assessments', slug);
+    fs.mkdirSync(dir, { recursive: true });
+    for (const [stage, text] of Object.entries(stages)) fs.writeFileSync(path.join(dir, `${stage}.md`), text);
+    return dir;
+}
+
+const INTAKE = '# Idea Intake: Dark mode\n';
+
+function actions(): unknown {
+    return lastRender()[ARG.reportActions];
+}
+
 async function until(condition: () => boolean, timeoutMs = 2000): Promise<void> {
     const deadline = Date.now() + timeoutMs;
     while (!condition() && Date.now() < deadline) {
@@ -134,10 +155,12 @@ describe('Idea report panel', () => {
         (vscode.window.createWebviewPanel as jest.Mock).mockImplementation(
             (vscode as any).createMockWebviewPanel,
         );
+        (getAIProvider as jest.Mock).mockReturnValue({ executeInTerminal });
         provider = createProvider();
     });
 
     afterEach(() => {
+        for (const root of tempRoots.splice(0)) fs.rmSync(root, { recursive: true, force: true });
         for (const result of (vscode.window.createWebviewPanel as jest.Mock).mock.results) {
             result.value.__fireDispose();
         }
@@ -270,6 +293,138 @@ describe('Idea report panel', () => {
 
             expect(panel.title).toBe('Idea: gone (moved)');
             expect(panel.webview.postMessage).toHaveBeenCalledWith(expect.objectContaining({ type: 'specMoved' }));
+        });
+    });
+
+    describe('the next step an idea offers', () => {
+        it('offers Research for an idea at intake', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE });
+
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas' });
+
+            expect(actions()).toEqual([{ id: 'idea.research', label: 'Research', primary: true }]);
+        });
+
+        it('offers Define the problem for an idea at research', async () => {
+            await provider.show(path.join(OFFLINE, 'intake.md'), { report: 'ideas' });
+
+            expect(actions()).toEqual([{ id: 'idea.define', label: 'Define the problem', primary: true }]);
+        });
+
+        it('offers Shape a concept for an idea at problem', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, problem: '# Problem Definition: Dark mode\n' });
+
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas' });
+
+            expect(actions()).toEqual([{ id: 'idea.shape', label: 'Shape a concept', primary: true }]);
+        });
+
+        it('offers Decide for an idea at concept', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, concept: '# Concept: Dark mode\n' });
+
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas' });
+
+            expect(actions()).toEqual([{ id: 'idea.decide', label: 'Decide', primary: true }]);
+        });
+
+        it('offers Create spec for an idea decided go', async () => {
+            await provider.show(path.join(BADGES, 'decision.md'), { report: 'ideas' });
+
+            expect(actions()).toEqual([{ id: 'idea.createSpec', label: 'Create spec from this idea', primary: true }]);
+        });
+
+        it('offers Continue assessment for an idea that needs clarification', async () => {
+            await provider.show(path.join(GUEST, 'decision.md'), { report: 'ideas' });
+
+            expect(actions()).toEqual([{ id: 'idea.research', label: 'Continue assessment', primary: true }]);
+        });
+
+        it('offers only Reopen from intake for a killed idea', async () => {
+            await provider.show(path.join(SHARED, 'decision.md'), { report: 'ideas' });
+
+            expect(actions()).toEqual([{ id: 'idea.intake', label: 'Reopen from intake', primary: false }]);
+        });
+
+        it('offers Decide for a decision with no known verdict', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, decision: '# Decision: Dark mode\n\n- **Verdict**: maybe\n' });
+
+            await provider.show(path.join(dir, 'decision.md'), { report: 'ideas' });
+
+            expect(actions()).toEqual([{ id: 'idea.decide', label: 'Decide', primary: true }]);
+        });
+
+        it('changes the button when the next stage is written and the page refreshes', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE });
+            await provider.show(path.join(dir, 'intake.md'), { report: 'ideas' });
+
+            fs.writeFileSync(path.join(dir, 'research.md'), '# Idea Research: Dark mode\n');
+            await provider.refreshIfDisplaying(path.join(dir, 'research.md'));
+
+            expect(actions()).toEqual([{ id: 'idea.define', label: 'Define the problem', primary: true }]);
+        });
+    });
+
+    describe('choosing a next step', () => {
+        it('sends the next stage command with the folder name as the slug', async () => {
+            await provider.show(path.join(OFFLINE, 'intake.md'), { report: 'ideas' });
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'idea.define' });
+
+            expect(executeInTerminal).toHaveBeenCalledTimes(1);
+            expect(executeInTerminal).toHaveBeenCalledWith('/speckit-assess-define slug=offline-mode');
+        });
+
+        it('points Reopen from intake at the reports already in the folder', async () => {
+            await provider.show(path.join(SHARED, 'decision.md'), { report: 'ideas' });
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'idea.intake' });
+
+            expect(executeInTerminal).toHaveBeenCalledWith(
+                '/speckit-assess-intake slug=shared-lists Start again from the existing reports in .specify/assessments/shared-lists/.',
+            );
+        });
+
+        it('opens Create Spec for a go idea, filled with its title, rationale and folder, and sends nothing', async () => {
+            await provider.show(path.join(BADGES, 'decision.md'), { report: 'ideas' });
+            (vscode.commands.executeCommand as jest.Mock).mockClear();
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'idea.createSpec' });
+
+            expect(vscode.commands.executeCommand).toHaveBeenCalledTimes(1);
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'speckit.openSpecEditor',
+                'Member status badges\n\n' +
+                    '**Go.** Three requesters, a small change, and no constitution conflict.\n\n' +
+                    'Assessment: .specify/assessments/member-badges/',
+            );
+            expect(executeInTerminal).not.toHaveBeenCalled();
+        });
+
+        it('fills Create Spec with the title and folder when the decision has no rationale section', async () => {
+            const dir = makeIdea('dark-mode', { intake: INTAKE, decision: '# Decision: Dark mode\n\n- **Verdict**: go\n' });
+            await provider.show(path.join(dir, 'decision.md'), { report: 'ideas' });
+            (vscode.commands.executeCommand as jest.Mock).mockClear();
+
+            await lastPanel().__receive({ type: 'reportAction', id: 'idea.createSpec' });
+
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+                'speckit.openSpecEditor',
+                'Dark mode\n\nAssessment: .specify/assessments/dark-mode/',
+            );
+        });
+
+        it('does not open Create Spec for an idea that is not decided go', async () => {
+            await provider.show(path.join(SHARED, 'decision.md'), { report: 'ideas' });
+            const panel = lastPanel();
+            (vscode.commands.executeCommand as jest.Mock).mockClear();
+
+            await panel.__receive({ type: 'reportAction', id: 'idea.createSpec' });
+            await panel.__receive({ type: 'reportAction', id: 'idea.decide' });
+            await panel.__receive({ type: 'reportAction', id: 'constructor' });
+            await panel.__receive({ type: 'reportAction', id: 7 });
+
+            expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+            expect(executeInTerminal).not.toHaveBeenCalled();
         });
     });
 

@@ -1,8 +1,9 @@
 /**
  * A bug report open in the viewer: the real App, fed the report text one real
  * run of Spec Kit's bug commands wrote. No run record, so `viewerState` is null
- * and there is no Overview, footer or run strip; the page is read-only, so no
- * line or comment affordance appears. The rail switches between the reports
+ * and there is no Overview or run strip; the page is read-only, so no line or
+ * comment affordance appears. The footer holds only the next steps the
+ * extension computed from the reports. The rail switches between the reports
  * the way the extension answers `stepperClick` / `switchDocument`.
  */
 
@@ -15,17 +16,23 @@ import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
 import { mockDoc, mockNavState } from '../components/__stories__/mockData';
 import type { DocSet } from './viewerHarness';
+import type { NavState } from '../types';
 
 import cartAssessment from '../../../../tests/fixtures/bug-reports/.specify/bugs/cart-total-skips-first/assessment.md?raw';
 import cartFix from '../../../../tests/fixtures/bug-reports/.specify/bugs/cart-total-skips-first/fix.md?raw';
 import cartTest from '../../../../tests/fixtures/bug-reports/.specify/bugs/cart-total-skips-first/test.md?raw';
 import slugAssessment from '../../../../tests/fixtures/bug-reports/.specify/bugs/slug-keeps-spaces/assessment.md?raw';
+import badgesIntake from '../../../../tests/fixtures/idea-reports/.specify/assessments/member-badges/intake.md?raw';
+import badgesDecision from '../../../../tests/fixtures/idea-reports/.specify/assessments/member-badges/decision.md?raw';
 
 interface BugFixture {
     slug: string;
     title: string;
     badge: string;
     docs: DocSet;
+    actions?: NonNullable<NavState['reportActions']>;
+    reports?: Array<[type: string, label: string]>;
+    folder?: string;
 }
 
 const cartTotalSkipsFirst: BugFixture = {
@@ -54,8 +61,52 @@ const REPORTS: Array<[type: string, label: string]> = [
     ['test', 'Test'],
 ];
 
+const IDEA_STAGES: Array<[type: string, label: string]> = [
+    ['intake', 'Intake'],
+    ['research', 'Research'],
+    ['problem', 'Problem'],
+    ['concept', 'Concept'],
+    ['decision', 'Decision'],
+];
+
+const waitingForFix: BugFixture = {
+    ...slugKeepsSpaces,
+    actions: [{ id: 'bug.fix', label: 'Fix bug', primary: true }],
+};
+
+const waitingForTest: BugFixture = {
+    ...cartTotalSkipsFirst,
+    badge: 'APPLIED',
+    docs: { assessment: cartTotalSkipsFirst.docs.assessment, fix: cartTotalSkipsFirst.docs.fix },
+    actions: [
+        { id: 'bug.test', label: 'Test fix', primary: true },
+        { id: 'bug.fix', label: 'Fix again', primary: false },
+    ],
+};
+
+const verified: BugFixture = {
+    ...cartTotalSkipsFirst,
+    actions: [{ id: 'bug.test', label: 'Test again', primary: false }],
+};
+
+const ideaDecidedGo: BugFixture = {
+    slug: 'member-badges',
+    title: 'Member status badges',
+    badge: 'GO',
+    docs: {
+        intake: { md: badgesIntake, label: 'Intake' },
+        decision: { md: badgesDecision, label: 'Decision' },
+    },
+    actions: [{ id: 'idea.createSpec', label: 'Create spec from this idea', primary: true }],
+    reports: IDEA_STAGES,
+    folder: 'assessments',
+};
+
 function BugViewer({ bug }: { bug: BugFixture }) {
-    const [doc, setDoc] = useState('assessment');
+    const reports = bug.reports ?? REPORTS;
+    const folder = bug.folder ?? 'bugs';
+    const first = reports.find(([type]) => bug.docs[type])?.[0] ?? reports[0][0];
+    const [doc, setDoc] = useState(first);
 
     useEffect(() => {
         document.body.dataset.readOnly = 'true';
@@ -81,7 +132,7 @@ function BugViewer({ bug }: { bug: BugFixture }) {
         };
     }, [bug]);
 
-    const active = bug.docs[doc] ?? bug.docs.assessment;
+    const active = bug.docs[doc] ?? bug.docs[first];
     const md = active.md;
 
     viewerMode.value = 'document';
@@ -92,9 +143,9 @@ function BugViewer({ bug }: { bug: BugFixture }) {
     setCurrentTask(null);
     setTaskSummaries(null);
     navState.value = mockNavState({
-        coreDocs: REPORTS.map(([type, label]) => ({
+        coreDocs: reports.map(([type, label]) => ({
             ...mockDoc(type, !!bug.docs[type], label),
-            filePath: `/workspace/.specify/bugs/${bug.slug}/${type}.md`,
+            filePath: `/workspace/.specify/${folder}/${bug.slug}/${type}.md`,
         })),
         relatedDocs: [],
         currentDoc: doc,
@@ -110,10 +161,11 @@ function BugViewer({ bug }: { bug: BugFixture }) {
         specContextName: bug.title,
         titleFromHeading: true,
         branch: null,
-        filePath: `/workspace/.specify/bugs/${bug.slug}/${doc}.md`,
+        filePath: `/workspace/.specify/${folder}/${bug.slug}/${doc}.md`,
         docTypeLabel: active.label,
         activityPanelEnabled: false,
         landing: 'document',
+        reportActions: bug.actions,
     });
     markdownHtml.value = renderMarkdown(md);
 
@@ -167,4 +219,24 @@ export const AllReports: Story = {
 export const AssessmentOnly: Story = {
     name: 'Assessment only',
     render: () => <BugViewer bug={slugKeepsSpaces} />,
+};
+
+export const WaitingForFix: Story = {
+    name: 'Waiting for a fix',
+    render: () => <BugViewer bug={waitingForFix} />,
+};
+
+export const WaitingForTest: Story = {
+    name: 'Waiting for a test',
+    render: () => <BugViewer bug={waitingForTest} />,
+};
+
+export const Verified: Story = {
+    name: 'Verified',
+    render: () => <BugViewer bug={verified} />,
+};
+
+export const IdeaDecidedGo: Story = {
+    name: 'Idea decided go',
+    render: () => <BugViewer bug={ideaDecidedGo} />,
 };

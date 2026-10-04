@@ -56,6 +56,8 @@ export class SpecEditorProvider {
     private sessionId: string | undefined;
     private attachedImages: Map<string, AttachedImage> = new Map();
     private workflows: Map<string, WorkflowDefinition> = new Map();
+    private initPrefill: string | undefined;
+    private offeredPrefill: string | undefined;
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -165,12 +167,24 @@ export class SpecEditorProvider {
     /**
      * Show the spec editor webview
      */
-    public async show(): Promise<void> {
+    public async show(prefill?: string): Promise<void> {
+        if (prefill) {
+            this.offeredPrefill = prefill;
+        }
+
         // If panel exists, just reveal it
         if (this.panel) {
+            // A hidden panel has no live webview: it reloads on reveal and asks for init again.
+            if (prefill && this.panel.visible) {
+                this.postMessage({ type: 'prefill', content: prefill });
+            } else if (prefill) {
+                this.initPrefill = prefill;
+            }
             this.panel.reveal();
             return;
         }
+
+        this.initPrefill = prefill;
 
         // Create new session
         this.sessionId = generateSessionId();
@@ -208,6 +222,8 @@ export class SpecEditorProvider {
             this.outputChannel.appendLine(`[SpecEditor] Panel disposed for session: ${this.sessionId}`);
             this.panel = undefined;
             this.sessionId = undefined;
+            this.initPrefill = undefined;
+            this.offeredPrefill = undefined;
         });
     }
 
@@ -250,6 +266,10 @@ export class SpecEditorProvider {
                 this.handleCancel();
                 break;
 
+            case 'confirmPrefill':
+                await this.handleConfirmPrefill();
+                break;
+
             case 'installSpecKitExtension':
                 reportInstallPromptClicked(message.prompt?.kind === 'update' ? 'createSpecUpdate' : 'createSpec');
                 void vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
@@ -273,7 +293,24 @@ export class SpecEditorProvider {
         const workspaceRoot = getProjectRoot();
         const defaultWorkflow = resolveEffectiveDefaultWorkflow(workspaceRoot);
         this.outputChannel.appendLine(`[SpecEditor] Sending ${workflows.length} workflows to webview (default: ${defaultWorkflow})`);
-        this.postMessage({ type: 'init', workflows, defaultWorkflow });
+        const prefill = this.initPrefill;
+        this.initPrefill = undefined;
+        this.postMessage({ type: 'init', workflows, defaultWorkflow, ...(prefill ? { prefill } : {}) });
+    }
+
+    private async handleConfirmPrefill(): Promise<void> {
+        const content = this.offeredPrefill;
+        if (!content) {
+            return;
+        }
+        const choice = await vscode.window.showWarningMessage(
+            'Replace the description you have typed with the idea?',
+            { modal: true },
+            'Replace'
+        );
+        if (choice === 'Replace') {
+            this.postMessage({ type: 'prefill', content, replace: true });
+        }
     }
 
     /**
