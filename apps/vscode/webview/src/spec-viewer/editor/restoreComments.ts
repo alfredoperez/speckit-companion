@@ -7,8 +7,9 @@
  *   1. the stored line, when its content still matches the stored block;
  *   2. else any line whose content equals the stored block's first line
  *      (handles line-number drift);
- *   3. else the first line under the stored nearest-heading;
- *   4. else the stored line element if it still exists.
+ *   3. else the joined paragraph whose source lines hold the stored line;
+ *   4. else the first line under the stored nearest-heading;
+ *   5. else the stored line element if it still exists.
  * A comment that matches nothing inline stays available in the Activity list.
  */
 
@@ -31,6 +32,7 @@ function toRenderedLines(els: HTMLElement[]): RenderedLine[] {
     return els.map((el, index) => ({
         index,
         line: Number(el.getAttribute('data-line')),
+        endLine: el.hasAttribute('data-line-end') ? Number(el.getAttribute('data-line-end')) : undefined,
         content: contentText(el),
     }));
 }

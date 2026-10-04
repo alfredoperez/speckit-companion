@@ -45,7 +45,11 @@ export function CommentsCard({ state }: CommentsCardProps) {
     const jump = (c: ReviewComment) => {
         vscode.postMessage({ type: 'switchDocument', documentType: c.doc });
         // Best-effort scroll when the target line is already in the DOM (same doc).
-        const el = document.querySelector(`.line[data-line="${c.anchor.line}"]`);
+        const line = c.anchor.line;
+        const el = document.querySelector(`.line[data-line="${line}"]`)
+            ?? Array.from(document.querySelectorAll('.line[data-line-end]')).find(
+                e => Number(e.getAttribute('data-line')) <= line && line <= Number(e.getAttribute('data-line-end')),
+            );
         el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     };
     const runDoc = (doc: DocumentType) => {

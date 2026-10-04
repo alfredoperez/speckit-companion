@@ -17,7 +17,14 @@ import type { ReviewComment } from '../types';
 export interface RenderedLine {
     index: number;
     line: number;
+    /** Last source line of a paragraph joined from several; absent on a one-line element. */
+    endLine?: number;
     content: string;
+}
+
+/** Source text as it reads once rendered: emphasis and code marks gone, a link reduced to its label. */
+function plainText(source: string): string {
+    return source.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '').trim();
 }
 
 export function firstNonEmptyLine(block: string): string {
@@ -28,7 +35,8 @@ export function firstNonEmptyLine(block: string): string {
  * Returns the rendered line to anchor a restored comment to, or null when
  * nothing matches (the comment stays Activity-only). Precedence: stored line
  * with matching content → any line matching the stored block's first line →
- * first line under the stored heading → stored line if it still exists.
+ * the joined paragraph holding the stored line → first line under the stored
+ * heading → stored line if it still exists.
  */
 export function resolveAnchorLine(c: ReviewComment, lines: RenderedLine[]): RenderedLine | null {
     const firstLine = firstNonEmptyLine(c.anchor.blockText);
@@ -43,12 +51,16 @@ export function resolveAnchorLine(c: ReviewComment, lines: RenderedLine[]): Rend
         if (byText) return byText;
     }
 
-    // 3. first line under the stored nearest-heading.
+    // 3. the joined paragraph that now holds the stored line.
+    const joined = lines.find(l => l.endLine !== undefined && l.line <= c.anchor.line && c.anchor.line <= l.endLine);
+    if (joined && (!firstLine || joined.content.includes(plainText(firstLine)))) return joined;
+
+    // 4. first line under the stored nearest-heading.
     if (c.anchor.heading) {
         const headingIdx = lines.findIndex(l => l.content === c.anchor.heading);
         if (headingIdx >= 0) return lines[headingIdx + 1] ?? lines[headingIdx];
     }
 
-    // 4. fall back to the stored line if it still exists at all.
+    // 5. fall back to the stored line if it still exists at all.
     return exact ?? null;
 }
