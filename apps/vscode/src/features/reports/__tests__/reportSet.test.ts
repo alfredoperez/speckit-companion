@@ -317,6 +317,7 @@ describe('reading a known value from a report line', () => {
         ['verified', 'verified'],
         ['Verified ✅ (3/3 checks)', 'verified'],
         ['`verified`', 'verified'],
+        ['✅ Verified', 'verified'],
         ['**verified**.', 'verified'],
         ['failed, symptom still reproduces', 'failed'],
     ])('reads %p as %s', (stated, value) => {
@@ -332,6 +333,7 @@ describe('reading a known value from a report line', () => {
         'verified | partial | failed',
         '[verified / partial / failed]',
         'verified-pending',
+        'verified partially',
         'not verified',
         'partial pass, then verified',
         'failed to run',

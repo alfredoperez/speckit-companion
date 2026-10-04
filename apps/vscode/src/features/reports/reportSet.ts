@@ -53,7 +53,7 @@ function isFileInside(root: string, target: string): boolean {
  */
 export function knownValue<T extends string>(values: readonly T[], raw: string | undefined): T | undefined {
     if (typeof raw !== 'string') return undefined;
-    const stated = raw.toLowerCase().replace(/^[\s`*_"']+/, '');
+    const stated = raw.toLowerCase().replace(/^[^a-z0-9]+/, '');
     return [...values]
         .sort((a, b) => b.length - a.length)
         .find(value => {

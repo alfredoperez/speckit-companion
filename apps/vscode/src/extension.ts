@@ -465,6 +465,13 @@ export async function activate(context: vscode.ExtensionContext) {
             watchReports(BUG_SET, bugsPane);
             watchReports(IDEA_SET, ideasPane);
 
+            // Initialising or removing Spec Kit mid-session shows or hides the views gated on the detected key.
+            const markerWatcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '.specify'));
+            const redetect = trailing(() => void specKitDetector.detect(), 300);
+            markerWatcher.onDidCreate(redetect.call);
+            markerWatcher.onDidDelete(redetect.call);
+            wiring.push(markerWatcher, redetect);
+
             // An install row clears once its extension's folder appears.
             const processExtensionsWatcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(root, `.specify/extensions/{${PROCESS_EXTENSION_IDS.flatMap(id => [id, `${id}/**`]).join(',')}}`)
