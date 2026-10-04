@@ -31,6 +31,7 @@ function toRenderedLines(els: HTMLElement[]): RenderedLine[] {
     return els.map((el, index) => ({
         index,
         line: Number(el.getAttribute('data-line')),
+        endLine: el.hasAttribute('data-line-end') ? Number(el.getAttribute('data-line-end')) : undefined,
         content: contentText(el),
     }));
 }

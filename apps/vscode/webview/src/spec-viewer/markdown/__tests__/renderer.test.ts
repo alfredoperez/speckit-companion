@@ -247,3 +247,31 @@ describe('a callout line', () => {
         expect(html).toMatch(/data-line="7"[^>]*>(?:(?!data-line="8").)*T002/s);
     });
 });
+
+describe('renderMarkdown: a hard-wrapped paragraph', () => {
+    it('joins consecutive source lines into one paragraph with one comment button', () => {
+        const html = renderMarkdown('# T\n\nThe first half of a sentence\nand the second half,\nwrapped twice.\n\nNext paragraph.');
+        expect(html).toContain('<p>The first half of a sentence and the second half, wrapped twice.</p>');
+        expect(html).toMatch(/class="line" data-line="3" data-line-end="5"/);
+        expect(html).not.toContain('data-line="4"');
+        expect(html).toMatch(/class="line" data-line="7">/);
+    });
+
+    it('keeps bold-led field lines as their own lines', () => {
+        const html = renderMarkdown('**Created**: today\n**Status**: Draft');
+        expect(html).toContain('data-line="1"');
+        expect(html).toContain('data-line="2"');
+    });
+
+    it('keeps a deliberate line break', () => {
+        const html = renderMarkdown('first line  \nsecond line');
+        expect(html).toMatch(/<p>first line\s*<\/p>/);
+        expect(html).toContain('data-line="2"');
+    });
+
+    it('does not join across a list or a blank line', () => {
+        const html = renderMarkdown('intro\n\n- item\nafter the list');
+        expect(html).toContain('<p>intro</p>');
+        expect(html).toContain('<p>after the list</p>');
+    });
+});

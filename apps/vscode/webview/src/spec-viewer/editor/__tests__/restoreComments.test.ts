@@ -72,4 +72,22 @@ describe('resolveAnchorLine', () => {
         const resolved = resolveAnchorLine(c, dup);
         expect(resolved?.index).toBe(1);
     });
+
+    it('anchors a comment saved on a later line of a wrapped paragraph to the joined paragraph', () => {
+        const joined: RenderedLine[] = [
+            { index: 0, line: 3, content: 'Requirements' },
+            { index: 1, line: 5, endLine: 7, content: 'first half and the target line of it' },
+            { index: 2, line: 9, content: 'another line' },
+        ];
+        const c = comment({ anchor: { heading: 'Requirements', blockText: 'the target line', line: 6 } });
+        expect(resolveAnchorLine(c, joined)?.index).toBe(1);
+    });
+
+    it('anchors a comment made on a joined paragraph, whose stored text is its first source line', () => {
+        const joined: RenderedLine[] = [
+            { index: 0, line: 3, content: 'Requirements' },
+            { index: 1, line: 5, endLine: 6, content: 'the target line and its second half' },
+        ];
+        expect(resolveAnchorLine(comment(), joined)?.index).toBe(1);
+    });
 });

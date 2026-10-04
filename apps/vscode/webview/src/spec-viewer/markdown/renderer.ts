@@ -139,8 +139,14 @@ function highlightTree(text: string): string {
 // Comment icon SVG for line action buttons
 const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
 
-function wrapWithLineActions(content: string, lineNum: number): string {
-    return `<div class="line" data-line="${lineNum}">
+/** A bold-led line is a field or a label of its own; a trailing double space or backslash is a deliberate break. */
+function continuesParagraph(previous: string, next: string): boolean {
+    return !/( {2}|\\)$/.test(previous) && !/^\s*(\*\*|__|<|\|)/.test(next);
+}
+
+function wrapWithLineActions(content: string, lineNum: number, lastLineNum: number = lineNum): string {
+    const span = lastLineNum > lineNum ? ` data-line-end="${lastLineNum}"` : '';
+    return `<div class="line" data-line="${lineNum}"${span}>
         <button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">
             ${COMMENT_ICON_SVG}
         </button>
@@ -283,6 +289,8 @@ export function renderMarkdown(markdown: string): string {
         blockquoteLines = [];
         blockquoteStartLine = 0;
     };
+
+    let paragraph: { lines: string[]; firstLine: number; lastLine: number; htmlStart: number; htmlEnd: number } | null = null;
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -580,8 +588,17 @@ export function renderMarkdown(markdown: string): string {
             continue;
         }
 
-        // Paragraph - wrap with line actions for hover editing
-        html += wrapWithLineActions(`<p>${parseInline(line)}</p>`, sourceLineNum);
+        // Paragraph. A source line directly under another paragraph line is the same paragraph, hard-wrapped.
+        if (paragraph && paragraph.htmlEnd === html.length && paragraph.lastLine === sourceLineNum - 1 &&
+            continuesParagraph(paragraph.lines[paragraph.lines.length - 1], line)) {
+            html = html.slice(0, paragraph.htmlStart);
+            paragraph.lines.push(line.trimStart());
+        } else {
+            paragraph = { lines: [line], firstLine: sourceLineNum, lastLine: sourceLineNum, htmlStart: html.length, htmlEnd: 0 };
+        }
+        paragraph.lastLine = sourceLineNum;
+        html += wrapWithLineActions(`<p>${parseInline(paragraph.lines.join(' '))}</p>`, paragraph.firstLine, paragraph.lastLine);
+        paragraph.htmlEnd = html.length;
     }
 
     // Close any open elements
