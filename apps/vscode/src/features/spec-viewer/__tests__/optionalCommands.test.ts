@@ -18,10 +18,12 @@ describe('optionalCommands - optionalCommandButtonsForTab', () => {
         expect(buttons[0]).toMatchObject({ label: 'Checklist', command: 'speckit.checklist' });
     });
 
-    it('returns the Analyze button on the tasks tab', () => {
+    it('returns Analyze then Create GitHub issues on the tasks tab', () => {
         const buttons = optionalCommandButtonsForTab('tasks', new Set());
-        expect(buttons).toHaveLength(1);
+        expect(buttons.map(b => b.label)).toEqual(['Analyze', 'Create GitHub issues']);
         expect(buttons[0]).toMatchObject({ label: 'Analyze', command: 'speckit.analyze' });
+        expect(buttons[1]).toMatchObject({ command: 'speckit.taskstoissues' });
+        expect(buttons[1].tooltip).toMatch(/GitHub remote/);
     });
 
     it('returns no buttons on an unrelated tab', () => {

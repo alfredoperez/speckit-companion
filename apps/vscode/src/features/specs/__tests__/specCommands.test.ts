@@ -972,3 +972,56 @@ describe('speckit.specs.showTerminal command handler', () => {
         expect(() => handlerFor()('/ws/specs/001-a')).not.toThrow();
     });
 });
+
+describe('the prompt for a Spec Kit command outside the pipeline', () => {
+    const { optionalCommandLine } = jest.requireActual('../specCommands') as typeof import('../specCommands');
+
+    beforeEach(() => {
+        (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [{ uri: { fsPath: '/ws' }, name: 'ws' }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = undefined;
+    });
+
+    it('passes the spec folder to clarify, analyze and checklist as before', () => {
+        expect(optionalCommandLine('analyze', 'speckit-analyze', '/ws/specs/041-foo')).toBe('/speckit-analyze /ws/specs/041-foo');
+    });
+
+    it('names the tasks file for issue creation and asks for a stop on a mismatch', () => {
+        const line = optionalCommandLine('taskstoissues', 'speckit-taskstoissues', '/ws/specs/041-foo');
+        expect(line.startsWith('/speckit-taskstoissues Create the issues from specs/041-foo/tasks.md.')).toBe(true);
+        expect(line).toContain('stop and say so instead of creating issues');
+    });
+});
+
+describe('speckit.taskstoissues command handler', () => {
+    const handlerFor = () => captureCommandHandlers(createMockContext()).get('speckit.taskstoissues')!;
+    const { getAIProvider } = jest.requireMock('../../../extension');
+
+    beforeEach(() => {
+        (getAIProvider().executeInTerminal as jest.Mock).mockClear();
+        (vscode.window.showWarningMessage as jest.Mock).mockReset();
+    });
+
+    it('sends nothing when the confirmation is dismissed', async () => {
+        (vscode.window.showWarningMessage as jest.Mock).mockResolvedValue(undefined);
+        await handlerFor()('/ws/specs/041-foo');
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+            expect.stringContaining('041-foo'),
+            expect.objectContaining({ modal: true }),
+            'Create Issues'
+        );
+        expect(getAIProvider().executeInTerminal).not.toHaveBeenCalled();
+        expect((lastMockExplorer as any).setActiveSpec).toBeUndefined();
+    });
+
+    it('goes on to the dispatch once the developer confirms', async () => {
+        (vscode.window.showWarningMessage as jest.Mock).mockResolvedValue('Create Issues');
+        const handler = handlerFor();
+        const setActiveSpec = jest.fn();
+        (lastMockExplorer as any).setActiveSpec = setActiveSpec;
+        await Promise.resolve(handler('/ws/specs/041-foo')).catch(() => undefined);
+        expect(setActiveSpec).toHaveBeenCalledWith('041-foo');
+    });
+});

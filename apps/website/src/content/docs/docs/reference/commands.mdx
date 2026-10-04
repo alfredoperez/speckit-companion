@@ -24,7 +24,7 @@ Each workflow has its own family. Both stay installed, and a spec uses the one i
 
 Where a step has two commands, the first belongs to the Spec Kit workflow and the second to SpecKit Companion.
 
-Spec Kit also has `/speckit.clarify`, `/speckit.checklist` and `/speckit.analyze`. The viewer offers them under **Other actions**.
+Spec Kit also has `/speckit.clarify`, `/speckit.checklist`, `/speckit.analyze` and `/speckit.taskstoissues`. The viewer offers them under **Other actions**.
 
 ## Run state
 
@@ -75,6 +75,7 @@ All of these are under the **SpecKit** category.
 | **Run Spec Hands-Off (Auto)** | Starts a spec with [Auto](/docs/steps/auto) |
 | **Specify**, **Plan**, **Tasks**, **Implement** | Send that step's command to your assistant |
 | **Clarify**, **Checklist**, **Analyze** | Send Spec Kit's refinement commands |
+| **Create GitHub Issues from Tasks** | Sends Spec Kit's `/speckit.taskstoissues`, which turns the task list into GitHub issues, after you confirm |
 | **Constitution** | Sends `/speckit.constitution` |
 | **Run Custom Command** | Lists your [custom commands](/docs/customize/your-own-workflow#custom-commands) |
 | **Initialize SpecKit** | Runs `specify init` in the workspace |

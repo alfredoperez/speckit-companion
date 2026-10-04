@@ -213,6 +213,12 @@
         "icon": "$(tasklist)"
       },
       {
+        "command": "speckit.taskstoissues",
+        "title": "Create GitHub Issues from Tasks",
+        "category": "SpecKit",
+        "icon": "$(github)"
+      },
+      {
         "command": "speckit.customCommand",
         "title": "Run Custom Command",
         "category": "SpecKit",
@@ -975,6 +981,9 @@
         },
         {
           "command": "speckit.checklist"
+        },
+        {
+          "command": "speckit.taskstoissues"
         },
         {
           "command": "speckit.constitution",

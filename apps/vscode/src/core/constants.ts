@@ -10,6 +10,7 @@ export const Commands = {
     clarify: 'speckit.clarify',
     analyze: 'speckit.analyze',
     checklist: 'speckit.checklist',
+    tasksToIssues: 'speckit.taskstoissues',
     customCommand: 'speckit.customCommand',
     constitution: 'speckit.constitution',
     refresh: 'speckit.refresh',
