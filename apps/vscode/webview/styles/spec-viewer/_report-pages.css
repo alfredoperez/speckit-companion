@@ -119,7 +119,7 @@
 #markdown-content .rp-rows > li > :first-child { justify-self: start; }
 
 #markdown-content :where(.rp-rows > li > :first-child) { color: var(--text-primary); }
-#markdown-content :where(.rp-rows > li > :nth-child(2)) { color: var(--text-muted); }
+#markdown-content :where(.rp-rows > li > :nth-child(2)) { color: var(--text-body); }
 #markdown-content .rp-rows > li > [class*="rp-tone--"] { font-weight: 600; }
 
 #markdown-content .rp-rows code { white-space: normal; }

@@ -220,3 +220,16 @@ describe('reportDoc', () => {
         });
     });
 });
+
+describe('given a heading padded with thousands of spaces', () => {
+    it('reads it in linear time', () => {
+        const started = Date.now();
+        const doc = parseReportDoc(`## Symptom${' '.repeat(20000)}x ##\n\nbody\n`);
+        expect(Date.now() - started).toBeLessThan(500);
+        expect(doc.sections[0].heading.startsWith('Symptom')).toBe(true);
+    });
+
+    it('drops closing hashes', () => {
+        expect(parseReportDoc('## Symptom ##\n').sections[0].heading).toBe('Symptom');
+    });
+});

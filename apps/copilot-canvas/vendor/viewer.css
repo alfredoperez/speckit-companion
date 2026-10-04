@@ -5253,7 +5253,7 @@ body[data-spec-status=tasks-done] #regenerate {
   color: var(--text-primary);
 }
 #markdown-content :where(.rp-rows > li > :nth-child(2)) {
-  color: var(--text-muted);
+  color: var(--text-body);
 }
 #markdown-content .rp-rows > li > [class*=rp-tone--] {
   font-weight: 600;

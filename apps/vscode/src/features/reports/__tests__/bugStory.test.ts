@@ -46,7 +46,7 @@ describe('buildBugStory', () => {
             const unclear = cart.test.replace('**Result**: verified', '**Result**: verified | partial | failed');
             const story = buildBugStory({ ...cart, test: unclear });
             expect(story?.lead).toBe('test-unclear');
-            expect(story?.steps[2].state).toBe('done');
+            expect(story?.steps[2].state).toBe('next');
         });
 
         it('is assessed when only the assessment exists', () => {
@@ -164,7 +164,7 @@ describe('buildBugStory', () => {
 
         it('reads the summary and the checks for how it was verified', () => {
             const verified = buildBugStory(texts(DISCOUNT))?.steps[2];
-            expect(verified?.state).toBe('done');
+            expect(verified?.state).toBe('next');
             expect(verified?.when).toBe('Oct 2, 2026');
             expect(verified?.body).toMatch(/^The reported percent-code case is fixed/);
             expect(verified?.checks?.map(check => [check.name, check.result])).toEqual([
@@ -202,6 +202,11 @@ describe('buildBugStory', () => {
             const assessment = read(SLUG, 'assessment.md').replace(/## Symptom[\s\S]*?(?=## Reproduction)/, '');
             expect(buildBugStory({ assessment })?.steps[0].body).toMatch(/^`replace` receives a string literal/);
         });
+    });
+
+    it('marks How it was verified done only when the test verified the fix', () => {
+        expect(buildBugStory(texts(CART))?.steps[2].state).toBe('done');
+        expect(buildBugStory(texts(DISCOUNT))?.steps[2].state).toBe('next');
     });
 
     describe('risks', () => {

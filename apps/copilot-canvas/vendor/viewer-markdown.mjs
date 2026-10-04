@@ -44,6 +44,7 @@ function escapeHtml(text) {
 function escapeHtmlInScenario(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+var inAttribute = (value) => value.includes("\0CODE");
 function parseInline(text) {
   if (!text) return "";
   const codeSpans = [];
@@ -61,7 +62,7 @@ function parseInline(text) {
       codeSpans.push(`<code>${code}</code>`);
     }
     return `\0CODE${codeSpans.length - 1}\0`;
-  }).replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/___(.+?)___/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>").replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, target) => `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, "&quot;")}">`).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text2, target) => `<a href="${safeUrl(target)}" target="_blank">${text2}</a>`).replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
+  }).replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/___(.+?)___/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>").replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => inAttribute(alt) || inAttribute(target) ? match : `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, "&quot;")}">`).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text2, target) => inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text2}</a>`).replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
   result = result.replace(/<strong>Given<\/strong>/g, '<span class="scenario-keyword scenario-given">Given</span>').replace(/<strong>When<\/strong>/g, '<span class="scenario-keyword scenario-when">When</span>').replace(/<strong>Then<\/strong>/g, '<span class="scenario-keyword scenario-then">Then</span>');
   return result;
 }

@@ -8,7 +8,7 @@ type Block =
 const FENCE = /^\s*(`{3,}|~{3,})\s*([^\s`]*)/;
 const BULLET = /^\s*[-*]\s+(.*)$/;
 const NUMBERED = /^\s*\d+[.)]\s+(.*)$/;
-const HEADING = /^\s*#{1,6}\s+(.*?)\s*#*\s*$/;
+const HEADING = /^\s*#{1,6}\s+(\S.*)$/;
 const QUOTE = /^\s*>\s?(.*)$/;
 
 function toBlocks(md: string): Block[] {
@@ -40,7 +40,7 @@ function toBlocks(md: string): Block[] {
 
         const heading = line.match(HEADING);
         if (heading) {
-            blocks.push({ kind: 'paragraph', text: heading[1], strong: true });
+            blocks.push({ kind: 'paragraph', text: heading[1].trimEnd().replace(/#+$/, '').trimEnd(), strong: true });
             open = undefined;
             continue;
         }

@@ -30,9 +30,13 @@ export const REPORT_SETS: Record<ReportSetId, ReportSet<string>> = { bugs: BUG_S
 
 const folderOf = (setDir: string, slug: string): string => [...setDir.split(path.sep), slug, ''].join('/');
 
+/** A report larger than this is still shown as written; it is just not read into a page. */
+const MAX_PAGE_SOURCE_BYTES = 512 * 1024;
+
 function textOf(report: ReportFile<string>): string | undefined {
     if (!report.exists) return undefined;
     try {
+        if (fs.statSync(report.path).size > MAX_PAGE_SOURCE_BYTES) return undefined;
         return fs.readFileSync(report.path, 'utf-8');
     } catch {
         return undefined;

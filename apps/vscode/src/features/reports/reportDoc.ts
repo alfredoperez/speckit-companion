@@ -28,7 +28,12 @@ interface Line {
 }
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})\s*([^\s`]*)/;
-const HEADING = /^(#{1,6})\s+(.*?)\s*#*\s*$/;
+const HEADING = /^(#{1,6})\s+(\S.*)$/;
+
+/** A heading's text without its closing hashes. Done in code: one pattern with adjacent optional runs backtracks cubically. */
+function headingText(raw: string): string {
+    return raw.trimEnd().replace(/#+$/, '').trimEnd();
+}
 const TABLE_DIVIDER = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
 const LIST_ITEM = /^(?:[-*+]|\d+[.)])\s+(.*)$/;
 const FIELD = /^\*\*([^*]+?)\*\*\s*:?\s*([\s\S]*)$/;
@@ -101,7 +106,7 @@ export function parseReportDoc(source: string): ReportDoc {
         const heading = line.kind === 'text' ? HEADING.exec(line.text) : null;
         if (heading && heading[1].length === 2) {
             close();
-            sections.push({ heading: heading[2], body: '' });
+            sections.push({ heading: headingText(heading[2]), body: '' });
             body = [];
         } else if (body) {
             body.push(line.text);

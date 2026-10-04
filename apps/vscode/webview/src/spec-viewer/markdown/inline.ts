@@ -51,6 +51,9 @@ export function escapeHtmlInScenario(text: string): string {
 /**
  * Parse inline markdown elements
  */
+/** A code span is restored after links are built, so one inside a target or alt text would land unescaped in the attribute. */
+const inAttribute = (value: string): boolean => value.includes('\x00CODE');
+
 export function parseInline(text: string): string {
     if (!text) return '';
 
@@ -94,11 +97,13 @@ export function parseInline(text: string): string {
         // Strikethrough
         .replace(/~~(.+?)~~/g, '<del>$1</del>')
         // Images
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, target) =>
-            `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, '&quot;')}">`)
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) =>
+            inAttribute(alt) || inAttribute(target)
+                ? match
+                : `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, '&quot;')}">`)
         // Links
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, target) =>
-            `<a href="${safeUrl(target)}" target="_blank">${text}</a>`)
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, target) =>
+            inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text}</a>`)
         // Restore inline code spans
         .replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
 

@@ -153,7 +153,7 @@ function build(texts: BugReportTexts, nextAction?: string): BugStory | undefined
 
     const wrong: BugStep = { id: 'wrong', state: 'done', body: wrongBody };
     const changed: BugStep = { id: 'changed', state: fix && fixStatus !== 'not-applied' ? 'done' : 'next' };
-    const verified: BugStep = { id: 'verified', state: test ? 'done' : 'next' };
+    const verified: BugStep = { id: 'verified', state: testResult === 'verified' ? 'done' : 'next' };
 
     const whens: [BugStep, string | undefined][] = [
         [wrong, assessment.fields.get('created')],
