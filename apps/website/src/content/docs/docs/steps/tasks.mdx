@@ -41,6 +41,8 @@ The Companion workflow groups each phase into waves separated by those join line
 
 **Analyze**, under **Other actions** in the footer, is Spec Kit's command that cross-checks the spec, the plan and the tasks for consistency.
 
+**Create GitHub issues**, in the same menu, sends Spec Kit's `/speckit.taskstoissues`: one GitHub issue per task. It needs a GitHub remote and the GitHub MCP server in your assistant, and it creates real issues, so run it when the task list is settled. Spec Kit works on the feature of your current branch; Companion names this spec's tasks file in the request and asks the assistant to stop if the two differ.
+
 <DocFigure src="live-footer-other-actions.png" recapture caption="The footer on the Tasks tab: Next: Implement, with Other actions open on Analyze." />
 
 ## Related

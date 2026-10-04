@@ -92,6 +92,7 @@ describe('shouldRecordStepStart', () => {
         const userSteps = [{ name: 'discuss', command: 'gsd.discuss' }];
         expect(shouldRecordStepStart(userSteps, 'discuss')).toBe(false);
         expect(shouldRecordStepStart(companion, 'nowhere')).toBe(false);
+        expect(shouldRecordStepStart(companion, 'taskstoissues')).toBe(false);
         expect(shouldRecordStepStart(companion, undefined)).toBe(false);
     });
 

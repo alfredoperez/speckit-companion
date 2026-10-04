@@ -45,6 +45,16 @@ function toWorkspaceRelative(absOrRel: string): string {
     return rel && !rel.startsWith('..') ? rel : absOrRel;
 }
 
+/**
+ * The prompt for a non-workflow Spec Kit command. Creating issues cannot be undone and Spec Kit picks its
+ * feature from the branch, not from an argument, so that one names its tasks file and asks for a stop on a mismatch.
+ */
+export function optionalCommandLine(name: string, formattedCommand: string, targetDir: string): string {
+    if (name !== 'taskstoissues') return `/${formattedCommand} ${targetDir}`;
+    const tasksFile = `${toWorkspaceRelative(targetDir).split(path.sep).join('/')}/tasks.md`;
+    return `/${formattedCommand} Create the issues from ${tasksFile}. If that is not the tasks file of the feature you resolve for this run, stop and say so instead of creating issues.`;
+}
+
 function resolveSpecDirArg(target: SpecTreeItem | string | undefined): string | undefined {
     if (!target) return undefined;
     if (typeof target === 'string') return target;
@@ -627,6 +637,7 @@ function registerPhaseCommands(
         { name: 'clarify', title: 'Clarify', isWorkflowStep: false },
         { name: 'analyze', title: 'Analyze', isWorkflowStep: false },
         { name: 'checklist', title: 'Checklist', isWorkflowStep: false },
+        { name: 'taskstoissues', title: 'Create GitHub Issues', isWorkflowStep: false },
     ];
 
     for (const cmd of phaseCommands) {
@@ -658,7 +669,7 @@ function registerPhaseCommands(
 
                 // Non-workflow steps use default command
                 const formattedCmd = formatCommandForProvider(`speckit.${cmd.name}`);
-                let prompt = `/${formattedCmd} ${targetDir}`;
+                let prompt = optionalCommandLine(cmd.name, formattedCmd, targetDir);
                 if (refinementContext) {
                     prompt += refinementContext;
                 }

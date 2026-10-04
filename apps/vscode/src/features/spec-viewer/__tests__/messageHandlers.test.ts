@@ -447,6 +447,16 @@ describe('messageHandlers - clarify (built-in optional commands)', () => {
         expect(deps.executeInTerminal).not.toHaveBeenCalled();
     });
 
+    it('sends Create GitHub issues through its registered command, like the other optional commands', async () => {
+        const deps = createMockDeps();
+        const handler = createMessageHandlers(SPEC_DIR, deps);
+
+        await handler({ type: 'clarify', command: 'speckit.taskstoissues' } as any);
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.taskstoissues', SPEC_DIR);
+        expect(deps.executeInTerminal).not.toHaveBeenCalled();
+    });
+
     it('lets a user customCommand with the same id win over the built-in', async () => {
         const config = vscode.workspace.getConfiguration();
         (config.get as jest.Mock).mockImplementation((key: string, defaultValue?: any) => {

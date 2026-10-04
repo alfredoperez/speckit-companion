@@ -1,7 +1,7 @@
 /**
  * Built-in optional SpecKit commands surfaced as step-scoped buttons in the
  * spec viewer. These reuse the already-registered VS Code commands
- * (`speckit.clarify` / `speckit.checklist` / `speckit.analyze`) so dispatch,
+ * (`speckit.clarify`, `speckit.checklist`, `speckit.analyze`, `speckit.taskstoissues`) so dispatch,
  * provider formatting, and step tracking stay identical to invoking them from
  * the Command Palette.
  */
@@ -23,7 +23,7 @@ interface OptionalCommand {
 }
 
 /**
- * The three optional SpecKit refinement commands, each scoped to the tab where
+ * The optional SpecKit commands, each scoped to the tab where
  * it is most useful in the spec lifecycle.
  */
 export const OPTIONAL_SPECKIT_COMMANDS: readonly OptionalCommand[] = [
@@ -44,6 +44,12 @@ export const OPTIONAL_SPECKIT_COMMANDS: readonly OptionalCommand[] = [
         label: 'Analyze',
         tab: CORE_DOCUMENTS.TASKS,
         tooltip: 'Cross-check spec, plan, and tasks for consistency',
+    },
+    {
+        command: Commands.tasksToIssues,
+        label: 'Create GitHub issues',
+        tab: CORE_DOCUMENTS.TASKS,
+        tooltip: 'Turn this spec\'s task list into GitHub issues. Needs a GitHub remote and the GitHub MCP server, and creates real issues.',
     },
 ];
 

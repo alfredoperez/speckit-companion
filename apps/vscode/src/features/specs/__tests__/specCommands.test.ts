@@ -972,3 +972,25 @@ describe('speckit.specs.showTerminal command handler', () => {
         expect(() => handlerFor()('/ws/specs/001-a')).not.toThrow();
     });
 });
+
+describe('the prompt for a Spec Kit command outside the pipeline', () => {
+    const { optionalCommandLine } = jest.requireActual('../specCommands') as typeof import('../specCommands');
+
+    beforeEach(() => {
+        (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = [{ uri: { fsPath: '/ws' }, name: 'ws' }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = undefined;
+    });
+
+    it('passes the spec folder to clarify, analyze and checklist as before', () => {
+        expect(optionalCommandLine('analyze', 'speckit-analyze', '/ws/specs/041-foo')).toBe('/speckit-analyze /ws/specs/041-foo');
+    });
+
+    it('names the tasks file for issue creation and asks for a stop on a mismatch', () => {
+        const line = optionalCommandLine('taskstoissues', 'speckit-taskstoissues', '/ws/specs/041-foo');
+        expect(line.startsWith('/speckit-taskstoissues Create the issues from specs/041-foo/tasks.md.')).toBe(true);
+        expect(line).toContain('stop and say so instead of creating issues');
+    });
+});
