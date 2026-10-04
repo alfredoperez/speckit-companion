@@ -1,0 +1,692 @@
+/* Process styling directions. Loaded by the Process styling stories only. */
+
+/* ── Story frame ───────────────────────────────────────────────────────── */
+
+.ps-stage {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    box-sizing: border-box;
+    height: 100vh;
+    padding: 16px;
+}
+
+.ps-stage__caption {
+    max-width: 110ch;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+.ps-stage__caption strong {
+    color: var(--text-body);
+    font-weight: 600;
+}
+
+/* `contain` makes this box the containing block for the viewer's fixed footer. */
+.ps-stage__body {
+    flex: 1;
+    min-height: 0;
+    contain: layout;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.ps-stage__body .viewer-container { height: 100%; }
+.ps-stage__body .actions { max-width: calc(100% - 40px); }
+
+.ps-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: 16px;
+}
+
+.ps-stack .ps-stage {
+    height: 960px;
+    padding: 0;
+}
+
+/* ── Shared by all three ───────────────────────────────────────────────── */
+
+.ps-dir .spec-header-branch { max-width: none; }
+
+.ps-dir .content-area > #markdown-content.ps-wide {
+    grid-column: 1 / -1;
+    width: 100%;
+}
+
+.ps-tone--success { color: var(--success); }
+.ps-tone--warning { color: var(--warning); }
+.ps-tone--error { color: var(--error); }
+.ps-tone--info { color: var(--info); }
+.ps-tone--neutral { color: var(--text-body); }
+
+#markdown-content .ps-label {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+/* ══ A · Document ══════════════════════════════════════════════════════════
+   The page is a document: the reading column, the outline, the viewer's own
+   headings. Facts are a line of metadata, steps are a line down the margin. */
+
+#markdown-content .psa-lead {
+    margin: 0 0 var(--space-3);
+    color: var(--text-body);
+    font-size: 19px;
+    font-weight: 500;
+    line-height: 1.45;
+    text-wrap: pretty;
+}
+
+#markdown-content .psa-lead strong {
+    color: var(--text-primary);
+    font-weight: 650;
+}
+
+#markdown-content .psa-meta {
+    margin: 0 0 var(--space-6);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+#markdown-content .psa-meta--under { margin: -8px 0 var(--space-3); }
+
+#markdown-content .psa-aside {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+.ps-dir--a #markdown-content .ps-md > p { margin: 0 0 var(--space-3); }
+.ps-dir--a #markdown-content .ps-md > :last-child { margin-bottom: 0; }
+.ps-dir--a #markdown-content .ps-md + .ps-md { margin-top: var(--space-3); }
+.ps-dir--a #markdown-content .ps-md + .psa-aside { margin-top: var(--space-2); }
+
+#markdown-content .psa-line {
+    margin: 0;
+    padding: 0 0 0 30px;
+    list-style: none;
+}
+
+#markdown-content .psa-step {
+    position: relative;
+    margin: 0;
+    padding-bottom: 36px;
+}
+
+#markdown-content .psa-step:last-child { padding-bottom: 0; }
+
+#markdown-content .psa-step::before {
+    content: '';
+    position: absolute;
+    top: 22px;
+    bottom: -2px;
+    left: -25px;
+    width: 1px;
+    background: var(--border);
+}
+
+#markdown-content .psa-step:last-child::before { display: none; }
+
+#markdown-content .psa-step__mark {
+    position: absolute;
+    top: 5px;
+    left: -30px;
+    box-sizing: border-box;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--success);
+}
+
+#markdown-content .psa-step--next .psa-step__mark {
+    border: 1.5px solid var(--text-muted);
+    background: var(--bg-primary);
+}
+
+#markdown-content .psa-step__when {
+    margin: 0 0 2px;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 20px;
+}
+
+#markdown-content .psa-step h2 { margin: 0 0 var(--space-3); }
+
+#markdown-content .psa-step > p { margin: 0; }
+
+#markdown-content .psa-rows {
+    margin: var(--space-4) 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+}
+
+#markdown-content .psa-rows li {
+    display: grid;
+    grid-template-columns: 148px minmax(0, 1fr) auto;
+    gap: var(--space-4);
+    align-items: baseline;
+    margin: 0;
+    padding: 9px 0;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+#markdown-content .psa-rows__note {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+#markdown-content .psa-findings {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+}
+
+#markdown-content .psa-finding {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    margin: 0;
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--border);
+}
+
+#markdown-content .psa-finding p { margin: 0 0 var(--space-2); }
+#markdown-content .psa-finding .psa-aside { margin: 0; }
+
+#markdown-content .psa-finding__id {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 25.6px;
+    color: var(--text-muted);
+}
+
+#markdown-content .psa-finding--warning .psa-finding__id { color: var(--warning); }
+#markdown-content .psa-finding--error .psa-finding__id { color: var(--error); }
+
+#markdown-content .psa-finding__fix { color: var(--text-primary); }
+
+#markdown-content .psa-defs {
+    margin: 0;
+    border-bottom: 1px solid var(--border);
+}
+
+#markdown-content .psa-defs > div {
+    display: grid;
+    grid-template-columns: 148px minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: 11px 0;
+    border-top: 1px solid var(--border);
+}
+
+#markdown-content .psa-defs dt {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 25.6px;
+}
+
+#markdown-content .psa-defs dd { margin: 0; }
+#markdown-content .psa-defs dd ul { margin: var(--space-1) 0 0; padding-left: 20px; }
+
+#markdown-content .psa-score {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+}
+
+#markdown-content .psa-score li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-4);
+    margin: 0;
+    padding: 11px 0;
+    border-top: 1px solid var(--border);
+}
+
+#markdown-content .psa-score__name {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+#markdown-content .psa-score__rating {
+    font-size: var(--text-sm);
+    font-weight: 600;
+}
+
+#markdown-content .psa-score__why { grid-column: 1 / -1; }
+
+/* ══ B · Record ════════════════════════════════════════════════════════════
+   Dense and IDE-native: property rows, tables, hairlines. The only colour on
+   the page is a state. */
+
+.ps-dir--b .content-area > #markdown-content.ps-wide {
+    max-width: 1060px;
+    font-size: 13px;
+    line-height: 1.5;
+    letter-spacing: 0;
+}
+
+#markdown-content .psb-status {
+    max-width: 96ch;
+    margin: 0 0 var(--space-4);
+    color: var(--text-body);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+#markdown-content .psb-status strong {
+    color: var(--text-primary);
+    font-weight: 650;
+}
+
+#markdown-content .psb-props {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: var(--space-6);
+    margin: 0;
+    border-top: 1px solid var(--border);
+}
+
+#markdown-content .psb-props > div {
+    display: grid;
+    grid-template-columns: 84px minmax(0, 1fr);
+    align-items: start;
+    padding: 6px 0;
+    line-height: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+#markdown-content .psb-props dt {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+#markdown-content .psb-props dd {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+#markdown-content .psb-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 18px;
+    white-space: nowrap;
+}
+
+#markdown-content .psb-state .codicon { font-size: 14px; }
+#markdown-content .psb-state.ps-tone--neutral .codicon { color: var(--text-muted); }
+
+#markdown-content .psb-block { margin-top: 30px; }
+
+#markdown-content .psb-block__head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-hover);
+}
+
+#markdown-content .psb-block__head h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: 0;
+    line-height: 1.5;
+}
+
+#markdown-content .psb-block__head span {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+#markdown-content .psb-table {
+    width: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    border-collapse: collapse;
+    background: none;
+    font-size: 13px;
+}
+
+#markdown-content .psb-table th {
+    padding: 6px 16px 6px 0;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    background: none;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: none;
+}
+
+#markdown-content .psb-table td {
+    padding: 7px 16px 7px 0;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    background: none;
+    color: var(--text-body);
+    line-height: 1.5;
+    vertical-align: top;
+}
+
+#markdown-content .psb-table :is(th, td):last-child { padding-right: 0; }
+#markdown-content .psb-table tr:hover td { background: none; }
+
+#markdown-content .psb-table .psb-strong {
+    color: var(--text-primary);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+#markdown-content .psb-table .psb-mono {
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+#markdown-content .psb-table .psb-group th {
+    padding: 14px 0 6px;
+    border-bottom: 1px solid var(--border);
+}
+
+#markdown-content .psb-group__n {
+    margin-left: var(--space-2);
+    color: var(--text-muted);
+}
+
+#markdown-content .psb-table--findings th:nth-child(1) { width: 40px; }
+#markdown-content .psb-table--findings th:nth-child(3) { width: 132px; }
+#markdown-content .psb-table--findings th:nth-child(4) { width: 196px; }
+#markdown-content .psb-table--open td:first-child { width: 92px; }
+
+#markdown-content .psb-fix {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 3px;
+    color: var(--text-primary);
+}
+
+#markdown-content .psb-fix .codicon {
+    position: relative;
+    top: 2px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+#markdown-content .psb-rows { margin: 0; }
+
+#markdown-content .psb-rows > div {
+    display: grid;
+    grid-template-columns: 148px minmax(0, 1fr);
+    column-gap: var(--space-4);
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+#markdown-content .psb-rows dt { color: var(--text-muted); font-size: 12px; line-height: 19.5px; }
+#markdown-content .psb-rows dd { margin: 0; max-width: 100ch; }
+#markdown-content .psb-rows :is(p, li) { margin: 0; line-height: 1.5; }
+#markdown-content .psb-rows ul { margin: 2px 0 0; padding-left: 18px; }
+
+#markdown-content .psb-code pre { margin: var(--space-3) 0 0; }
+
+@container viewer (max-width: 900px) {
+    #markdown-content .psb-props { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ══ C · Editorial ═════════════════════════════════════════════════════════
+   The state is the headline. Labels sit in the margin, sections part by space,
+   and the one accent points at the next step. */
+
+.ps-dir--c .content-area > #markdown-content.ps-wide {
+    max-width: 880px;
+    padding-top: var(--space-5);
+}
+
+#markdown-content .psc-opening { margin-bottom: 72px; }
+
+#markdown-content .psc-headline {
+    margin: 0 0 var(--space-4);
+    color: var(--text-primary);
+    font-size: clamp(34px, 4.4cqi, 46px);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.04;
+    text-wrap: balance;
+    word-spacing: 0.1em;
+}
+
+#markdown-content .psc-lead {
+    max-width: 32em;
+    margin: 0 0 var(--space-5);
+    color: var(--text-body);
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, ui-serif, serif;
+    font-size: 23px;
+    letter-spacing: 0;
+    line-height: 1.38;
+    text-wrap: pretty;
+}
+
+#markdown-content .psc-lead code { font-size: 0.78em; }
+
+#markdown-content .psc-byline {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+#markdown-content .psc-track {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    list-style: none;
+}
+
+#markdown-content .psc-track li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+#markdown-content .psc-track li span {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+#markdown-content .psc-track li::before {
+    content: '';
+    box-sizing: border-box;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--success);
+}
+
+#markdown-content .psc-track li.is-next::before {
+    border: 2px solid var(--accent);
+    background: transparent;
+}
+
+#markdown-content .psc-track li:not(:last-child)::after {
+    content: '';
+    width: 32px;
+    height: 1px;
+    margin: 0 var(--space-3) 0 var(--space-1);
+    background: var(--border-hover);
+}
+
+#markdown-content .psc-part {
+    display: grid;
+    grid-template-columns: 172px minmax(0, 1fr);
+    column-gap: 44px;
+    margin-top: 60px;
+}
+
+#markdown-content .psc-part__label h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 650;
+    letter-spacing: 0;
+    line-height: 27px;
+}
+
+#markdown-content .psc-part__label p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+#markdown-content .psc-part__body p { margin: 0 0 var(--space-3); }
+#markdown-content .psc-part__body > :last-child,
+#markdown-content .psc-part__body .ps-md > :last-child,
+#markdown-content .psc-part__body .psc-first > :last-child { margin-bottom: 0; }
+#markdown-content .psc-part__body > * + * { margin-top: var(--space-3); }
+
+#markdown-content .psc-first,
+#markdown-content .psc-first p {
+    color: var(--text-primary);
+    font-size: 18px;
+    line-height: 1.5;
+    text-wrap: pretty;
+}
+
+#markdown-content .psc-fine {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+#markdown-content .psc-next .psc-part__label h2::before {
+    content: '';
+    display: inline-block;
+    box-sizing: border-box;
+    width: 9px;
+    height: 9px;
+    margin-right: var(--space-2);
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+}
+
+#markdown-content .psc-files,
+#markdown-content .psc-plain,
+#markdown-content .psc-findings,
+#markdown-content .psc-score {
+    padding: 0;
+    list-style: none;
+}
+
+#markdown-content .psc-files li {
+    display: grid;
+    grid-template-columns: 156px minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: baseline;
+    margin: 0 0 6px;
+    font-size: 15px;
+}
+
+#markdown-content .psc-plain li { margin: 0 0 var(--space-3); }
+#markdown-content .psc-plain li:last-child { margin-bottom: 0; }
+
+#markdown-content .psc-findings { margin: 0; }
+#markdown-content .psc-findings li { margin: 0 0 34px; }
+#markdown-content .psc-findings li:last-child { margin-bottom: 0; }
+
+#markdown-content .psc-finding__tag {
+    margin: 0 0 4px;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    line-height: 27px;
+}
+
+#markdown-content .psc-finding__tag span {
+    margin-right: 6px;
+    font-family: var(--font-mono);
+    font-weight: 650;
+}
+
+#markdown-content .psc-findings--warning .psc-finding__tag span { color: var(--warning); }
+#markdown-content .psc-findings--error .psc-finding__tag span { color: var(--error); }
+
+#markdown-content .psc-finding__what { margin: 0 0 var(--space-2); }
+
+#markdown-content .psc-finding__fix {
+    margin: 0 0 6px;
+    color: var(--text-primary);
+}
+
+#markdown-content .psc-findings .psc-fine { margin: 0; }
+
+#markdown-content .psc-score { margin: 0; }
+
+#markdown-content .psc-score li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-4);
+    margin: 0 0 22px;
+}
+
+#markdown-content .psc-score li:last-child { margin-bottom: 0; }
+
+#markdown-content .psc-score__name {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+#markdown-content .psc-score__rating {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 25.6px;
+}
+
+#markdown-content .psc-score__why { grid-column: 1 / -1; }
+
+#markdown-content .psc-handoff { margin: 0; }
+#markdown-content .psc-handoff > div + div { margin-top: 18px; }
+
+#markdown-content .psc-handoff dt {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+#markdown-content .psc-handoff dd { margin: 0; }
+
+@container viewer (max-width: 760px) {
+    #markdown-content .psc-part {
+        grid-template-columns: minmax(0, 1fr);
+        row-gap: var(--space-2);
+        margin-top: var(--space-8);
+    }
+}
