@@ -54,7 +54,7 @@ function buildProject() {
     const user = join(root, 'user');
     mkdirSync(join(user, 'User'), { recursive: true });
     writeFileSync(join(user, 'User', 'settings.json'), JSON.stringify({
-        'workbench.colorTheme': THEME === 'dark' ? 'Default Dark Modern' : 'Default Light Modern',
+        'workbench.colorTheme': THEME === 'dark' ? 'Default Dark Modern' : 'Quiet Light',
         'workbench.startupEditor': 'none',
         'workbench.secondarySideBar.defaultVisibility': 'hidden',
         'chat.commandCenter.enabled': false,
