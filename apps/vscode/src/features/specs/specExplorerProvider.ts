@@ -27,7 +27,6 @@ import { resolveSpecDisplayName } from '../../core/utils/specDisplayName';
 import { CONTEXT_KEYS, setContextKey } from '../../core/utils/contextKeys';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { reportInstallPromptShown } from '../../core/telemetry';
-import { BUG_REPORT_KINDS, bugReportSummary, readBugReports, type BugReport } from '../bugs/bugReports';
 
 export interface SpecInfo {
     name: string;
@@ -181,8 +180,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             }
 
             const specs = await this.getSpecs();
-            const bugs = readBugReports(basePath);
-            if (specs.length === 0 && bugs.length === 0) {
+            if (specs.length === 0) {
                 // No `welcome` prompt is reported here any more: the viewsWelcome
                 // install block this counted was removed, so reporting it would
                 // record a prompt shown on every empty-Specs refresh that nothing
@@ -220,21 +218,18 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             let filteredActive = activeSpecs;
             let filteredCompleted = completedSpecs;
             let filteredArchived = archivedSpecs;
-            let filteredBugs = bugs;
             if (query.length > 0) {
                 const matches = (spec: SpecInfo) =>
                     fuzzyMatch(query, spec.name, specNameByPath.get(spec.path));
                 filteredActive = activeSpecs.filter(matches);
                 filteredCompleted = completedSpecs.filter(matches);
                 filteredArchived = archivedSpecs.filter(matches);
-                filteredBugs = bugs.filter(bug => fuzzyMatch(query, bug.slug, bug.title));
             }
 
             const noFilterMatch = query.length > 0
                 && filteredActive.length === 0
                 && filteredCompleted.length === 0
-                && filteredArchived.length === 0
-                && filteredBugs.length === 0;
+                && filteredArchived.length === 0;
             void setContextKey(CONTEXT_KEYS.specsNoFilterMatch, noFilterMatch);
 
             // Dispatch on the active sort mode. Default ('number') preserves
@@ -297,25 +292,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 items.push(archivedGroup);
             }
 
-            if (filteredBugs.length > 0) {
-                const bugGroup = new SpecItem(
-                    `Bugs (${filteredBugs.length})`,
-                    vscode.TreeItemCollapsibleState.Collapsed,
-                    'bug-group',
-                    this.context
-                );
-                bugGroup.id = 'bug-group';
-                bugGroup.iconPath = new vscode.ThemeIcon('bug');
-                bugGroup.tooltip = "Bug reports from Spec Kit's bug commands";
-                bugGroup.groupBugs = filteredBugs;
-                items.push(bugGroup);
-            }
-
             return items;
-        } else if (element.contextValue === 'bug-group') {
-            return (element.groupBugs ?? []).map(bug => this.buildBugItem(bug));
-        } else if (element.contextValue === 'bug-report' && element.bugReport) {
-            return this.buildBugReportRows(element.bugReport);
         } else if (isSpecGroupItem(element.contextValue)) {
             // Show specs within a group
             const specs = element.groupSpecs || [];
@@ -372,63 +349,6 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
         }
 
         return [];
-    }
-
-    private buildBugItem(bug: BugReport): SpecItem {
-        const firstReport = bug.reports[bug.stages[0]];
-        const item = new SpecItem(
-            bug.title,
-            vscode.TreeItemCollapsibleState.Collapsed,
-            'bug-report',
-            this.context,
-            undefined,
-            undefined,
-            {
-                command: 'speckit.viewSpecDocument',
-                title: `Open ${bug.title}`,
-                arguments: [firstReport.path, { bug: true }],
-            }
-        );
-        item.id = `bug:${bug.slug}`;
-        item.bugReport = bug;
-        item.iconPath = new vscode.ThemeIcon('bug');
-        item.description = bugReportSummary(bug);
-        const reports = bug.stages.map(kind => bug.reports[kind].label).join(', ');
-        item.tooltip = [
-            bug.title,
-            `Reports: ${reports}`,
-            bug.verdict ? `Verdict: ${bug.verdict}${bug.severity ? ` (${bug.severity})` : ''}` : undefined,
-            bug.fixStatus ? `Fix: ${bug.fixStatus}` : undefined,
-            bug.testResult ? `Test: ${bug.testResult}` : undefined,
-        ].filter(Boolean).join('\n');
-        return item;
-    }
-
-    private buildBugReportRows(bug: BugReport): SpecItem[] {
-        return BUG_REPORT_KINDS.map(kind => {
-            const report = bug.reports[kind];
-            const item = new SpecItem(
-                report.label,
-                vscode.TreeItemCollapsibleState.None,
-                report.exists ? 'bug-report-doc' : 'bug-report-doc-missing',
-                this.context,
-                undefined,
-                undefined,
-                report.exists
-                    ? { command: 'speckit.viewSpecDocument', title: `Open ${report.label}`, arguments: [report.path, { bug: true }] }
-                    : undefined
-            );
-            item.id = `bug:${bug.slug}:${kind}`;
-            if (report.exists) {
-                item.iconPath = new vscode.ThemeIcon('markdown');
-                item.tooltip = report.path;
-                item.fileUri = vscode.Uri.file(report.path);
-            } else {
-                item.description = 'not created';
-                item.tooltip = `${report.label} — not created`;
-            }
-            return item;
-        });
     }
 
     /**
@@ -736,8 +656,6 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
 class SpecItem extends vscode.TreeItem {
     public fileUri?: vscode.Uri;
     public groupSpecs?: SpecInfo[];
-    public groupBugs?: BugReport[];
-    public bugReport?: BugReport;
 
     constructor(
         public readonly label: string,

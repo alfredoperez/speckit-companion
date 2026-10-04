@@ -38,10 +38,12 @@ const SPEC_TERMINAL_WHEN = 'viewItem =~ /^spec-(active|tasks-done|implemented|co
 
 describe('sidebar contributions', () => {
     describe('view names', () => {
-        it('titles the four views for what they hold', () => {
+        it('titles the six views for what they hold', () => {
             const byId = Object.fromEntries(views.map(v => [v.id, v.name]));
             expect(byId).toEqual({
                 'speckit.views.explorer': 'Specs',
+                'speckit.views.bugs': 'Bugs',
+                'speckit.views.ideas': 'Ideas',
                 'speckit.views.livingSpecs': 'Living Specs',
                 'speckit.views.steering': 'Steering',
                 'speckit.views.settings': 'Settings & Feedback',
@@ -54,6 +56,35 @@ describe('sidebar contributions', () => {
             // Gating the view on the companion extension meant a user without it
             // saw the section vanish rather than learn how to get it.
             expect(living.when).not.toContain('speckit.companion.installed');
+        });
+
+        it('places Bugs and Ideas between Specs and Living Specs, shown in a Spec Kit project', () => {
+            const living = views.find(v => v.id === 'speckit.views.livingSpecs')!;
+            expect(views.map(v => v.id).slice(0, 4)).toEqual([
+                'speckit.views.explorer',
+                'speckit.views.bugs',
+                'speckit.views.ideas',
+                'speckit.views.livingSpecs',
+            ]);
+            for (const id of ['speckit.views.bugs', 'speckit.views.ideas']) {
+                expect(views.find(v => v.id === id)!.when).toBe(`${living.when} && speckit.detected`);
+            }
+        });
+
+        it.each([
+            ['speckit.bugs.refresh', 'speckit.views.bugs'],
+            ['speckit.ideas.refresh', 'speckit.views.ideas'],
+        ])('%s is the one title action of %s', (command, view) => {
+            expect(viewTitle.filter(e => e.when.includes(`view == ${view}`))).toEqual([
+                { command, when: `view == ${view}`, group: 'navigation@1' },
+            ]);
+            expect(commands.find(c => c.command === command)!.icon).toBe('$(refresh)');
+        });
+
+        it('keeps the process install command out of the command palette, where it has no row to act on', () => {
+            expect(commandTitle('speckit.processes.installExtension')).toBe('Install Spec Kit Process Extension');
+            expect(commandPalette.some(
+                e => e.command === 'speckit.processes.installExtension' && e.when === 'false')).toBe(true);
         });
 
         it('walks the three living-specs first-run states, each to its one next action', () => {
@@ -98,6 +129,8 @@ describe('sidebar contributions', () => {
             ['speckit.livingSpecs.sync', 'Sync living specs from my changes'],
             ['speckit.livingSpecs.refresh', 'Refresh Living Specs'],
             ['speckit.livingSpecs.open', 'Open Living Spec'],
+            ['speckit.bugs.refresh', 'Refresh Bugs'],
+            ['speckit.ideas.refresh', 'Refresh Ideas'],
             ['speckit.companion.installSpecKitExtension', 'Install Companion Extension'],
         ])('%s is titled "%s"', (id, title) => {
             expect(commandTitle(id)).toBe(title);

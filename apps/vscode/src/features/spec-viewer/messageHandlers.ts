@@ -255,7 +255,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
   };
 }
 
-/** The only messages a read-only bug panel may act on; every write and dispatch is dropped. */
+/** The only messages a read-only bug or idea panel may act on; every write and dispatch is dropped. */
 const BUG_PANEL_MESSAGES: ReadonlySet<ViewerToExtensionMessage["type"]> = new Set<ViewerToExtensionMessage["type"]>([
   "ready",
   "switchDocument",
@@ -292,7 +292,7 @@ export function createMessageHandlers(
     deps.outputChannel.appendLine(`[SpecViewer] Received message: ${message.type}`);
     const readOnly = deps.readOnly || deps.getInstance(specDirectory)?.state.bug;
     if (readOnly && !BUG_PANEL_MESSAGES.has(message.type)) {
-      deps.outputChannel.appendLine(`[SpecViewer] Bug report is read-only: ${message.type} dropped`);
+      deps.outputChannel.appendLine(`[SpecViewer] Report is read-only: ${message.type} dropped`);
       return;
     }
     await dispatch(message, specDirectory, deps);

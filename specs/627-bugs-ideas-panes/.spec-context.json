@@ -1,0 +1,705 @@
+{
+  "workflow": "companion",
+  "specName": "Bugs and Ideas panes",
+  "branch": "627-bugs-ideas-panes",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T00:24:57.483Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:24:57.715Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:26:25.549Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-04T00:26:25.961Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T00:26:26.189Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:30:09.663Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:30:09.770Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:30:09.870Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:31:58.265Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:31:58.569Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T00:31:58.635Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:31:58.751Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:31:59.168Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:31:59.277Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T00:31:59.346Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:33:32.004Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:33:55.787Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:34:14.208Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:34:36.815Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:35:58.764Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:36:49.025Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:38:16.442Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:38:34.780Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:40:22.185Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:40:22.259Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:40:22.329Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:40:22.397Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:40:32.933Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:41:04.502Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:41:04.573Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:41:04.647Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:41:04.723Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:43:09.596Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:45:04.934Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:45:04.955Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:45:05.046Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:45:05.500Z"
+    },
+    {
+      "step": "implement",
+      "substep": "complete",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T00:45:33.038Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Bugs and Ideas panes after Specs, shown when a workspace is open",
+      "tasks": [
+        "T003",
+        "T004",
+        "T017"
+      ],
+      "tests": [
+        "manifest.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Bugs grouped To fix, To test, Verified, Closed from the report files",
+      "tasks": [
+        "T005",
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "bugReports.test.ts",
+        "bugsPane.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Bug row shows title, severity and outcome and expands to its reports",
+      "tasks": [
+        "T007",
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "bugsPane.test.ts",
+        "processPaneProvider.test.ts"
+      ]
+    },
+    "FR-004": {
+      "title": "Specs pane no longer lists bugs; filter and sort are specs only",
+      "tasks": [
+        "T010"
+      ],
+      "tests": [
+        "specExplorerProvider.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "Ideas grouped Assessing and Decided with stage or verdict",
+      "tasks": [
+        "T006",
+        "T012",
+        "T014"
+      ],
+      "tests": [
+        "ideaReports.test.ts",
+        "ideasPane.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "Idea row expands to five stage documents that open read-only",
+      "tasks": [
+        "T001",
+        "T007",
+        "T013",
+        "T015"
+      ],
+      "tests": [
+        "ideaPanel.test.ts",
+        "processPaneProvider.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Row values come from fixed lists; unknown values show nothing",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "bugReports.test.ts",
+        "ideaReports.test.ts"
+      ]
+    },
+    "FR-008": {
+      "title": "Install row when the extension is missing and there are no items",
+      "tasks": [
+        "T002",
+        "T007",
+        "T016"
+      ],
+      "tests": [
+        "processPaneProvider.test.ts",
+        "processExtensions.test.ts",
+        "processCommands.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "Empty state names the command that starts an item",
+      "tasks": [
+        "T007",
+        "T009",
+        "T014"
+      ],
+      "tests": [
+        "bugsPane.test.ts",
+        "ideasPane.test.ts"
+      ]
+    },
+    "FR-010": {
+      "title": "Panes update on file and project folder changes",
+      "tasks": [
+        "T017"
+      ]
+    },
+    "FR-011": {
+      "title": "Each pane has a Refresh action",
+      "tasks": [
+        "T004",
+        "T016"
+      ],
+      "tests": [
+        "processCommands.test.ts",
+        "manifest.test.ts"
+      ]
+    },
+    "FR-012": {
+      "title": "Docs describe the panes, groups and install rows",
+      "tasks": [
+        "T018"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 18,
+    "projectedTasks": 18,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "No New bug or New idea action yet",
+    "No Fix, Test or Continue buttons yet",
+    "No new look for the bug, idea or report pages",
+    "No relationship notes between ideas, specs and bugs"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/bugs and the bug rows in apps/vscode/src/features/specs/specExplorerProvider.ts",
+    "area: apps/vscode/src/features/spec-viewer (the read-only bug panel path) and apps/vscode/src/features/fileWatchers.ts plus extension.ts wiring",
+    "area: package.json views and menus, and the docs and release-qa surface map",
+    "constraint: enum by type is not enum by data, so row values go through an allow-list",
+    "constraint: a probe must distinguish no from could-not-tell",
+    "constraint: every root comes from getProjectRoot",
+    "constraint: a new surface gets a path glob in .claude/skills/release-qa/surface-map.yml"
+  ],
+  "intent": "Give bugs and ideas their own sidebar panes, with install rows when their Spec Kit extension is missing",
+  "decisions": [
+    {
+      "decision": "One ReportSet reader shared by bugs and ideas",
+      "why": "bugReports.ts is already that shape with the constants inlined",
+      "rejected": "A copied reader for ideas"
+    },
+    {
+      "decision": "One ProcessPaneProvider class configured twice",
+      "why": "The two panes differ only in data",
+      "rejected": "Two tree providers"
+    },
+    {
+      "decision": "Install and empty states are single tree rows",
+      "why": "The decision was a row in the pane, and welcome content cannot coexist with rows",
+      "rejected": "viewsWelcome with context keys"
+    },
+    {
+      "decision": "Row values are matched against Spec Kit command vocabulary",
+      "why": "The files are written by people and assistants, and the reader passes raw text today",
+      "rejected": "Showing raw text"
+    },
+    {
+      "decision": "The viewer bug path becomes a report path keyed by set",
+      "why": "Everything a bug panel switches off should be off for an idea",
+      "rejected": "A second read-only mode for ideas"
+    },
+    {
+      "decision": "The two panes start expanded",
+      "why": "A bug has to be on screen without a click, which was the reason for choosing panes",
+      "rejected": "Starting collapsed like Living Specs"
+    },
+    {
+      "decision": "The viewer keeps state.bug as the read-only flag and adds reportSet",
+      "why": "Many checks gate on it, and a rename would touch all of them",
+      "rejected": "Renaming the flag"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "A shared report-set reader, one configurable pane provider, a generalised read-only viewer path, and bugs out of the Specs tree",
+      "key_finding": "A bug report kind is named assessment and the ideas directory is named assessments, so path helpers must key on the directory"
+    },
+    "tasks": {
+      "summary": "19 tasks: Foundational (7), US1 (4), US2 (4), US3 (2), Polish (2)"
+    },
+    "implement": {
+      "summary": "Bugs and Ideas panes on a shared report reader, with ideas opening read-only in the viewer"
+    }
+  },
+  "approach": "A generic report-set reader serves bugs and ideas. One tree provider configured twice draws the panes, with a single install or empty row when there is nothing to list. Ideas open through the viewer read-only report path, generalised from bug to report set, and bugs leave the Specs tree.",
+  "currentTask": "T019",
+  "task_summaries": {
+    "T003": {
+      "status": "DONE",
+      "did": "Added Views.bugs, Views.ideas and three command IDs (bugsRefresh, ideasRefresh, processesInstallExtension) to constants.ts",
+      "files": [
+        "apps/vscode/src/core/constants.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Added the process extension helpers: an id allow-list, a present/absent/unknown folder probe, and a visible-terminal install for bug and assess",
+      "files": [
+        "apps/vscode/src/speckit/processExtensions.ts",
+        "apps/vscode/src/speckit/__tests__/processExtensions.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Contributed the Bugs and Ideas views, their refresh commands and title actions, and the palette-hidden process install command",
+      "files": [
+        "package.json",
+        "apps/vscode/src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "Added the report-set reader: descriptor, folder readers, directory-keyed path helpers and documents list, with tests",
+      "files": [
+        "apps/vscode/src/features/reports/reportSet.ts",
+        "apps/vscode/src/features/reports/__tests__/reportSet.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Bug reader rebuilt on the report set with known-value fields and a state; 17 new state and allow-list tests",
+      "files": [
+        "apps/vscode/src/features/bugs/bugReports.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugReports.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Idea reader on the report set with an allow-listed verdict and state, four fixture ideas, 13 tests",
+      "files": [
+        "apps/vscode/src/features/ideas/ideaReports.ts",
+        "apps/vscode/src/features/ideas/__tests__/ideaReports.test.ts",
+        "apps/vscode/tests/fixtures/idea-reports"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "One configurable pane provider: groups, item rows, report rows, an install or empty row; 10 tests",
+      "files": [
+        "apps/vscode/src/features/processes/processPaneProvider.ts",
+        "apps/vscode/src/features/processes/__tests__/processPaneProvider.test.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Two refresh commands and an allow-listed install command, with tests",
+      "files": [
+        "apps/vscode/src/features/processes/processCommands.ts",
+        "apps/vscode/src/features/processes/__tests__/processCommands.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Bugs pane tests: each state in its group, row text per outcome, unknown values dropped, install and empty labels",
+      "files": [
+        "apps/vscode/src/features/bugs/__tests__/bugsPane.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Bugs pane config: To fix, To test, Verified, Closed groups, severity and outcome text, tinted bug icon, install and empty labels",
+      "files": [
+        "apps/vscode/src/features/bugs/bugsPane.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Removed the Bugs group, rows, filter and empty checks from the Specs tree; deleted its bug tests, added a no-bug-rows test",
+      "files": [
+        "apps/vscode/src/features/specs/specExplorerProvider.ts",
+        "apps/vscode/src/features/specs/__tests__/specExplorerBugs.test.ts",
+        "apps/vscode/src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Sidebar bug story shows a Bugs pane after Specs, grouped To fix and Verified",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/__stories__/SidebarCapture.stories.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Sidebar, fix-a-bug and assess-an-idea pages, README, changelog and the release-qa map describe the two panes",
+      "files": [
+        "apps/website/src/content/docs/docs/navigate/the-sidebar.mdx",
+        "apps/website/src/content/docs/docs/processes/fix-a-bug.mdx",
+        "apps/website/src/content/docs/docs/processes/assess-an-idea.mdx",
+        "README.md",
+        "CHANGELOG.md",
+        ".claude/skills/release-qa/surface-map.yml",
+        ".claude/skills/release-qa/SKILL.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Ideas pane config: Assessing and Decided groups, stage or verdict text, tinted lightbulb, install and empty labels",
+      "files": [
+        "apps/vscode/src/features/ideas/ideasPane.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Ideas pane tests: grouping, row text per case, unrecognised verdict shows nothing, icon tints, labels",
+      "files": [
+        "apps/vscode/src/features/ideas/__tests__/ideasPane.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Viewer report path keyed by set: panel state names the set; title prefix, badge, default kind, documents and path checks come from it; open option accepts report",
+      "files": [
+        "apps/vscode/src/protocol/viewer.ts",
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts",
+        "apps/vscode/src/features/spec-viewer/specViewerCommands.ts",
+        "apps/vscode/src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Idea panel tests: read-only panel titled for the idea, five documents, verdict or IDEA badge, panel reuse, separate bug and idea panels, fixture unchanged; bug panel tests green untouched",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Both panes registered; one watcher helper per report set refreshes its pane and open report panels; extension folders watched; panes refresh on a project change",
+      "files": [
+        "apps/vscode/src/extension.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "compile, webview type-check, 3671 jest tests, canvas tests, site build and vsce package all pass",
+      "files": [
+        "package.json"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "> speckit-companion@0.35.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "webview type-check",
+      "command": "npx tsc -p tsconfig.webview.json --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.3,
+      "result": "no output"
+    },
+    {
+      "what": "unit and integration tests",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.8,
+      "result": "\u001b[1mSnapshots:   \u001b[22m0 total · \u001b[1mTime:\u001b[22m        71.244 s, estimated 72 s · \u001b[2mRan all test suites\u001b[22m\u001b[2m.\u001b[22m"
+    },
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 12.9,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 12213.09325"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Not exercised in a running Extension Development Host; pane rendering, the install row and the watchers are covered by unit tests only",
+      "step": "implement"
+    },
+    {
+      "note": "No visibility setting for the two panes; a developer hides one from the view menu",
+      "step": "implement"
+    },
+    {
+      "note": "The docs screenshots that show the sidebar do not include the new panes yet",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: eight task finishes were folded in two bursts, so their durations are not trustworthy"
+    }
+  ],
+  "last_action": "all 19 tasks done, full suite passes"
+}

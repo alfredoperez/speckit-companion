@@ -30,19 +30,20 @@ Each bug gets its own folder, `.specify/bugs/<slug>/`, holding those three files
 
 <YouSee>
 
-A **Bugs** group in the Specs view, after Archived. It appears once at least one report exists. Each row is named by the bug's title and reads the reports it has and the latest outcome, like `assess · fix · test · verified`.
+A **Bugs** pane under Specs. It groups bugs as To fix, To test, Verified and Closed, and each row is named by the bug's title with its severity and latest outcome beside it, like `high · fix applied`.
 
 </YouSee>
 
 Expand a bug for Assessment, Fix and Test. A report not written yet reads `not created`.
 
-| The outcome on the row comes from | When |
+| A bug is under | When |
 | --- | --- |
-| The test report's result | The test report states one |
-| The fix report's status | Otherwise, when the fix report states one |
-| The assessment's verdict | Otherwise |
+| To fix | It has no fix yet, its fix was not applied, or its test failed or was partial |
+| To test | It has a fix and no test |
+| Verified | Its test report says verified |
+| Closed | Its assessment's verdict is invalid |
 
-Filter narrows bugs along with specs. Sort leaves bugs in name order.
+The groups come from the reports on disk, so a bug handled by typing the commands yourself shows up the same. Before the bug extension is installed the pane holds one row that installs it.
 
 ## In the viewer
 

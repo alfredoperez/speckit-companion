@@ -43,6 +43,9 @@ export const Commands = {
         featureRequest: 'speckit.feedback.featureRequest',
         review: 'speckit.feedback.review',
     },
+    bugsRefresh: 'speckit.bugs.refresh',
+    ideasRefresh: 'speckit.ideas.refresh',
+    processesInstallExtension: 'speckit.processes.installExtension',
 } as const;
 
 /**
@@ -199,6 +202,8 @@ export const Views = {
     livingSpecs: 'speckit.views.livingSpecs',
     steering: 'speckit.views.steering',
     settings: 'speckit.views.settings',
+    bugs: 'speckit.views.bugs',
+    ideas: 'speckit.views.ideas',
 } as const;
 
 /**
