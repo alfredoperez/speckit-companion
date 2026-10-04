@@ -1,0 +1,336 @@
+{
+  "workflow": "companion",
+  "specName": "Document pages for bugs and ideas",
+  "branch": "629-bug-idea-document-pages",
+  "currentStep": "implement",
+  "status": "implementing",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T15:14:00.017Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:14:17.189Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:15:33.763Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:15:33.864Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:15:34.178Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-04T15:16:33.544Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T15:16:37.706Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:20:17.417Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:21:22.593Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:23:29.264Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:23:29.625Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T15:24:37.115Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:24:37.247Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-04T15:24:37.913Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-04T15:24:48.979Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "Opening a bug shows a story page that states where the bug stands",
+      "tasks": [
+        "T012",
+        "T015",
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-002": {
+      "title": "The lead sentence is one of six, chosen from the bug state",
+      "tasks": [
+        "T016",
+        "T018"
+      ]
+    },
+    "FR-003": {
+      "title": "One meta line, each fact omitted when unknown",
+      "tasks": [
+        "T016",
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-004": {
+      "title": "Three steps in order, done or next",
+      "tasks": [
+        "T017",
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-005": {
+      "title": "A step with no report says so and names the footer button",
+      "tasks": [
+        "T012",
+        "T017",
+        "T019"
+      ]
+    },
+    "FR-006": {
+      "title": "What changed lists changed files as rows and shows the diff",
+      "tasks": [
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-007": {
+      "title": "Risks and open questions listed at the end, omitted when none",
+      "tasks": [
+        "T016",
+        "T017",
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-008": {
+      "title": "Story, Assessment, Fix and Test tabs; missing disabled; landing rule",
+      "tasks": [
+        "T011",
+        "T014",
+        "T015",
+        "T025"
+      ]
+    },
+    "FR-009": {
+      "title": "A decided idea shows a decision page",
+      "tasks": [
+        "T012",
+        "T022",
+        "T023"
+      ]
+    },
+    "FR-010": {
+      "title": "Scorecard rows with a rating tone that does not rely on colour alone",
+      "tasks": [
+        "T004",
+        "T007",
+        "T021",
+        "T023"
+      ]
+    },
+    "FR-011": {
+      "title": "Five-stage rail; missing stage disabled; latest stage landing",
+      "tasks": [
+        "T014",
+        "T015"
+      ]
+    },
+    "FR-012": {
+      "title": "Shown values come from recognised lists only",
+      "tasks": [
+        "T002",
+        "T003",
+        "T004",
+        "T016",
+        "T020"
+      ]
+    },
+    "FR-013": {
+      "title": "Missing sections omitted; unparseable report falls back to raw",
+      "tasks": [
+        "T009",
+        "T013",
+        "T016",
+        "T020",
+        "T025"
+      ]
+    },
+    "FR-014": {
+      "title": "Footer next-step buttons behave as today",
+      "tasks": [
+        "T012",
+        "T025"
+      ]
+    },
+    "FR-015": {
+      "title": "Pages update when a report file changes",
+      "tasks": [
+        "T012",
+        "T015"
+      ]
+    },
+    "FR-016": {
+      "title": "One reading column, existing tokens, keeps the outline",
+      "tasks": [
+        "T007",
+        "T010",
+        "T013"
+      ]
+    },
+    "FR-017": {
+      "title": "No text repeated in two places",
+      "tasks": [
+        "T017",
+        "T018",
+        "T022"
+      ]
+    },
+    "FR-018": {
+      "title": "One Storybook story per page state",
+      "tasks": [
+        "T001",
+        "T024"
+      ]
+    },
+    "FR-019": {
+      "title": "Docs describe the pages, tabs and rail",
+      "tasks": [
+        "T026"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 26,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "Analysis and Converge report pages and their Reports group",
+    "links between an idea and its spec",
+    "changes to the Bugs and Ideas sidebar panes",
+    "a pull request or merge before the owner reviews in Storybook"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/spec-viewer (reportPanels.ts readReportPanel; specViewerProvider.ts showReport/updateReportContent re-renders full HTML on every tab switch; NavState carries coreDocs, currentDoc, reportActions but no bug/idea data)",
+    "area: apps/vscode/src/features/reports, bugs, ideas (ReportFolder.fields parses only the header bullets; bugState and knownValue allow-lists; body sections are not parsed anywhere)",
+    "area: apps/vscode/webview/src/spec-viewer (App.tsx mounts #markdown-content from markdownHtml; the Overview pane is the precedent for a component page; buildToc fills the outline from h2[id]; ReportFooter posts reportAction)",
+    "area: prototype on design/processes-style (DirectionA.tsx, model.ts, parse.ts ~300 lines, about 195 lines of psa- CSS on existing tokens; readBug ignores test.md; leads, step states and handoff are hard-coded to one state)",
+    "area: fixtures (apps/vscode/tests/fixtures/bug-reports has cart-total-skips-first with three reports and slug-keeps-spaces with one; decision shapes: Scorecard table Criterion|Rating|Justification, Verdict & Rationale, If go / If needs-clarification / Revisit trigger)",
+    "constraint: styles under webview/styles/spec-viewer are bundled into apps/copilot-canvas/vendor/viewer.css, so npm run test:canvas must be re-run",
+    "constraint: escapeHtml is safe for element content only; design tokens rule: body text on --text-body/--text-primary",
+    "constraint: visual work is reviewed in Storybook before any PR"
+  ],
+  "intent": "A bug opens on a story page and a decided idea on a decision page, in the Document look, with raw reports as tabs",
+  "decisions": [
+    {
+      "decision": "Build the page model on the host and ship it in the initial nav state",
+      "why": "A report panel re-renders its whole HTML on every switch and file change, so the model is always current and stories can call the same pure builders",
+      "rejected": "Parsing in the webview, which only receives one document"
+    },
+    {
+      "decision": "Mount the page inside #markdown-content",
+      "why": "The reading column and the outline are keyed to that element",
+      "rejected": "A sibling pane like the Overview, which gets no outline"
+    },
+    {
+      "decision": "Story is a first, file-less document entry on a bug; an idea Decision stage renders the decision page",
+      "why": "The rail and switchDocument already handle document entries and the read-only allow-list permits it",
+      "rejected": "A client-side tab toggle, lost on every reload"
+    },
+    {
+      "decision": "Six bug leads derived from bugState plus the test report",
+      "why": "bugState folds four situations into to-fix and must not change",
+      "rejected": "Extending BugState, which drives pane grouping and footer buttons"
+    },
+    {
+      "decision": "A small fragment renderer instead of renderMarkdown per section",
+      "why": "renderMarkdown adds heading ids and comment controls",
+      "rejected": "The prototype Md helper"
+    },
+    {
+      "decision": "New lists IDEA_RATINGS and BUG_CHECK_RESULTS; allow-lists move to fs-free modules",
+      "why": "Every state-like value must be recognised, and Storybook cannot import fs",
+      "rejected": "The prototype regex tone table"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Pure parse and model layer on the host, page rendered by Preact inside the content element, Story as a document entry, one new CSS partial",
+      "key_finding": "Report panels reload their whole HTML on every tab switch, so the model must ride in the initial nav state and Story must be a host-side document type"
+    },
+    "tasks": {
+      "summary": "27 tasks: 1 setup, 14 foundational in three waves plus wiring, 4 per page story, 1 Storybook, 3 polish"
+    }
+  },
+  "approach": "Pure builders in features/reports turn report text into a BugStory or IdeaDecision. readReportPanel calls them and the model travels as NavState.report. The webview renders it inside #markdown-content with rp- classes from one new partial, and Storybook builds the same pages from fixtures."
+}
