@@ -44,7 +44,11 @@ export function project(on: any, files: Record<string, string>, options: Options
     store.delete(e.key)
     return { value: undefined }
   })
-  on('command.register', () => ({ value: undefined }))
+  const commands: { name: string; description: string }[] = []
+  on('command.register', ($: any, e: any) => {
+    commands.push({ name: e.name, description: e.description })
+    return { value: undefined }
+  })
   on('session.surfaces', () => ({ value: options.surfaces ?? ['terminal'] }))
   const opened: string[] = []
   on('ui.open', ($: any, e: any) => {
@@ -56,7 +60,7 @@ export function project(on: any, files: Record<string, string>, options: Options
   on('tool.call', () => ({ result: 'ok' }))
   on('turn.complete', () => ({ text: '' }))
   on('ui.render', () => ({ type: 'Text', props: {}, children: ['drawn by Claude Code'] }))
-  return { store, opened, clock: mock.clock(on) }
+  return { store, opened, commands, clock: mock.clock(on) }
 }
 
 export async function startSession($: any) {

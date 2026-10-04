@@ -2,6 +2,7 @@
 
 import {
   DEFAULT_SPEC_DIRS,
+  PIPELINE_STEPS,
   buildSpecRow,
   findSpec,
   isSpecFolder,
@@ -10,15 +11,20 @@ import {
   pickFeatureSpecName,
   sortSpecs,
 } from './vendor/board-rules.mjs'
-import { bandLine, defaultFollow, followText, listText, paneModel } from './board.js'
+import { bandParts, defaultFollow, documentChunks, followText, listText, overviewModel, paneModel, taskSummaryLines } from './board.js'
 
 const REFRESH_MS = 3000
 const PANE = 'speckit-companion'
 const TITLE = 'SpecKit Companion'
 const PICKER_SIZE = 15
 const SCAN_BATCH = 32
+const COMMAND = 'spec-tracker'
+const ALIAS = 'spec'
 const GLYPH = { completed: '✓', 'in-progress': '●', 'not-started': '○' }
-const STEP_STYLE = { completed: { color: 'green' }, 'in-progress': { color: 'yellow' }, 'not-started': { dimColor: true } }
+// 'warning' is the one theme key the mods types name for text; done and failed use the terminal's own green and red.
+const RUNNING = { color: 'warning' }
+const FAILED = { color: 'red' }
+const STEP_STYLE = { completed: { color: 'green' }, 'in-progress': RUNNING, 'not-started': { dimColor: true } }
 
 let view = 'run'
 let root = null
@@ -27,6 +33,9 @@ let pinned = null
 let followed = null
 let signature = ''
 let timer = null
+// The step whose document is open, and the step the Run view puts the focus on.
+let doc = null
+let focusStep = null
 
 const at = (...parts) => [root, ...parts].join('/')
 const followKey = () => 'follow:' + root
@@ -117,6 +126,7 @@ async function refreshFollowed($) {
   }
   // The target moved while this read was in flight, so the call that moved it draws instead.
   if (id !== target()) return false
+  if (doc && doc.spec !== id) doc = null
   const sig = next ? [JSON.stringify(next.row), next.ctxText, next.tasksText].join('\u0000') : ''
   followed = next
   if (sig === signature) return false
@@ -124,11 +134,30 @@ async function refreshFollowed($) {
   return true
 }
 
+/** Re-read the open document, so it grows as the agent writes it; true when its text changed. */
+async function refreshDocument($) {
+  const open = doc
+  if (!open) return false
+  const text = await readText($, at(open.path))
+  if (doc !== open || text === open.text) return false
+  doc = { ...open, text }
+  return true
+}
+
+async function openDocument($, step, path) {
+  const spec = followed?.row.id
+  const text = await readText($, at(path))
+  focusStep = step
+  doc = { spec, step, path, text }
+  $.ui.invalidate('ui.render')
+}
+
 async function tick($) {
   try {
     // A spec created after the session started is in no row yet, so a new or removed folder means looking again.
     if ((await listSpecIds($)).join('\n') !== knownFolders) await scanAll($)
-    if (await refreshFollowed($)) $.ui.invalidate('ui.render')
+    const changed = await refreshFollowed($)
+    if ((await refreshDocument($)) || changed) $.ui.invalidate('ui.render')
   } catch {
     // A failed read leaves the last drawing up; the next tick tries again.
   }
@@ -157,14 +186,31 @@ async function start($, cwd) {
   await refreshFollowed($)
   timer?.cancel()
   timer = $.clock.every(REFRESH_MS, () => tick($))
-  await $.command.register({
-    name: 'spec',
-    description: 'Show the specs and pick the one the SpecKit Companion pane follows',
-    argumentHint: '[number | name | auto]',
-    immediate: true,
-  })
+  const commands = [
+    [COMMAND, 'Show the specs and pick the one the SpecKit Companion pane follows'],
+    [ALIAS, 'Same as /' + COMMAND],
+  ]
+  for (const [name, description] of commands) {
+    try {
+      await $.command.register({ name, description, argumentHint: '[number | name | auto]', immediate: true })
+    } catch {
+      // A name another command already holds is skipped, and the other name still works.
+    }
+  }
   // Opened unasked, Claude Code places the pane only beside the transcript of a wide terminal.
   if (followed && (await drawsHere($))) await $.ui.open({ id: PANE, title: TITLE })
+}
+
+/** The band's facts after the spec name: dim, with the running step in the warning colour. */
+function bandTexts(Text, parts) {
+  const quiet = parts.filter(p => !p.running).map(p => p.text)
+  const live = parts.find(p => p.running)
+  // The running step is always the last fact, so the quiet ones lead up to it.
+  const lead = [''].concat(quiet, live ? [''] : []).join(' · ')
+  return [
+    ...(lead ? [Text({ dimColor: true, wrap: 'truncate-end', children: [lead] })] : []),
+    ...(live ? [Text({ ...RUNNING, wrap: 'truncate-end', children: [live.text] })] : []),
+  ]
 }
 
 let starting = null
@@ -178,33 +224,38 @@ function ensureStarted($) {
   return starting
 }
 
+/** /spec-tracker and its alias /spec: follow a spec, then open the pane or answer in text. */
+async function runCommand($, e) {
+  await ensureStarted($)
+  const query = e.args.trim()
+  await scanAll($)
+  if (!rows.length) return { text: 'No specs found' }
+  if (query === 'auto') {
+    await follow($, null)
+  } else if (query) {
+    const hit = findSpec(rows, query)
+    if (!hit) return { text: `No spec matches "${query}"` }
+    await follow($, hit.id)
+  } else {
+    await refreshFollowed($)
+  }
+  if (!followed) return { text: 'No specs found' }
+  if (!(await drawsHere($))) return { text: query ? followText(followed, activePin()) : listText(followed, rows, activePin()) }
+  view = query ? 'run' : 'specs'
+  doc = null
+  await $.ui.open({ id: PANE, title: TITLE, focus: true })
+  $.ui.invalidate('ui.render')
+  return {}
+}
+
 export function register(on) {
   on('session.start', async ($, e, next) => {
     await start($, e.cwd)
     return next(e)
   })
 
-  on('command.run', { command: 'spec' }, async ($, e) => {
-    await ensureStarted($)
-    const query = e.args.trim()
-    await scanAll($)
-    if (!rows.length) return { text: 'No specs found' }
-    if (query === 'auto') {
-      await follow($, null)
-    } else if (query) {
-      const hit = findSpec(rows, query)
-      if (!hit) return { text: `No spec matches "${query}"` }
-      await follow($, hit.id)
-    } else {
-      await refreshFollowed($)
-    }
-    if (!followed) return { text: 'No specs found' }
-    if (!(await drawsHere($))) return { text: query ? followText(followed, activePin()) : listText(followed, rows, activePin()) }
-    view = query ? 'run' : 'specs'
-    await $.ui.open({ id: PANE, title: TITLE, focus: true })
-    $.ui.invalidate('ui.render')
-    return {}
-  })
+  on('command.run', { command: COMMAND }, runCommand)
+  on('command.run', { command: ALIAS }, runCommand)
 
   // Capture writes arrive through the agent's tool calls, so look again once each one finishes.
   on('tool.call', async ($, e, next) => {
@@ -223,7 +274,7 @@ export function register(on) {
       flexDirection: 'row',
       children: [
         Text({ bold: true, wrap: 'truncate-end', children: [followed.row.name] }),
-        Text({ dimColor: true, wrap: 'truncate-end', children: [' · ' + bandLine(followed.row, followed.ctx)] }),
+        ...bandTexts(Text, bandParts(followed.row, followed.ctx)),
       ],
     })
     const theirs = await next(e)
@@ -232,7 +283,7 @@ export function register(on) {
 
   on('ui.render', { component: 'Pane' }, async ($, e, next) => {
     if (e.requestId !== PANE) return next(e)
-    const { Box, Text, Button } = $.ui.resolve(e)
+    const { Box, Text, Button, Markdown } = $.ui.resolve(e)
     const tab = (name, label, hotkey) =>
       Button({
         key: 'tab-' + name,
@@ -242,11 +293,18 @@ export function register(on) {
         dimColor: view !== name,
         onPress: async () => {
           view = name
+          doc = null
           if (name === 'specs') await scanAll($)
           $.ui.invalidate('ui.render')
         },
       })
     const line = (text, style = {}) => Text({ wrap: 'truncate-end', ...style, children: [text] })
+    const para = (text, style = {}) => Text({ wrap: 'wrap', ...style, children: [text] })
+    const gap = () => line(' ')
+    const section = title => [gap(), line(title, { bold: true })]
+    const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText) : null
+    const header = [Box({ flexDirection: 'row', columnGap: 3, children: [tab('run', 'Run', '1'), tab('overview', 'Overview', '2'), tab('specs', 'Specs', '3')] })]
+    if (m) header.push(line(m.title, { bold: true }), line(m.name + ' · ' + m.statusLabel, { dimColor: true }))
     const body = []
 
     if (view === 'specs') {
@@ -278,39 +336,104 @@ export function register(on) {
       })
     } else if (!followed) {
       body.push(line('No specs found in this project yet. Run /speckit-specify or /speckit-companion-specify to start one.'))
+    } else if (view === 'overview') {
+      const o = overviewModel(followed.row, followed.ctx)
+      if (!o) {
+        body.push(para('The run record is missing. The Companion Spec Kit extension writes it.', { dimColor: true }))
+      } else if (o.empty) {
+        body.push(para('The run record has no overview details yet.', { dimColor: true }))
+      } else {
+        const item = text => para('- ' + text)
+        if (o.intent) body.push(line('Intent', { bold: true }), para(o.intent))
+        if (o.approach) body.push(...(body.length ? section('Approach') : [line('Approach', { bold: true })]), para(o.approach))
+        if (o.facts) body.push(...(body.length ? [gap()] : []), line(o.facts, { dimColor: true }))
+        if (o.expectations.length) body.push(...section('Expectations'), line('Out of scope', { dimColor: true }), ...o.expectations.map(item))
+        if (o.decisions.length) {
+          body.push(...section('Decisions'))
+          for (const d of o.decisions) body.push(item(d.decision), ...(d.why ? [para('  ' + d.why, { dimColor: true })] : []))
+        }
+        if (o.verified.length) {
+          body.push(...section('Verified'))
+          for (const v of o.verified) {
+            body.push(
+              Box({
+                flexDirection: 'row',
+                columnGap: 1,
+                children: [para('- ' + v.what), ...(v.failed ? [Text({ ...FAILED, bold: true, children: [v.mark] })] : [])],
+              }),
+              ...(v.result ? [para('  ' + v.result, { dimColor: true })] : []),
+            )
+          }
+        }
+        if (o.concerns.length) body.push(...section('Concerns'), ...o.concerns.map(item))
+        if (o.requirements) body.push(gap(), line(o.requirements))
+      }
+    } else if (doc) {
+      body.push(line(doc.path, { bold: true }))
+      body.push(
+        Button({
+          key: 'doc-back',
+          label: 'Back',
+          hotkey: 'b',
+          plain: true,
+          autoFocus: true,
+          onPress: () => {
+            doc = null
+            $.ui.invalidate('ui.render')
+          },
+        }),
+        gap(),
+      )
+      const did = doc.step === 'implement' ? taskSummaryLines(followed.ctx) : []
+      if (did.length) {
+        body.push(line('What each finished task did', { bold: true }), ...did.map(t => para(t.id + ' ' + t.did)), gap())
+      }
+      if (doc.text == null) {
+        body.push(line('not written yet', { dimColor: true }))
+      } else {
+        const { chunks, note } = documentChunks(doc.text)
+        if (!chunks.length) body.push(line('This file is empty.', { dimColor: true }))
+        chunks.forEach((text, i) => body.push(Markdown({ key: 'doc-' + i, text })))
+        if (note) body.push(gap(), line(note, { dimColor: true }))
+      }
     } else {
-      const m = paneModel(followed.row, followed.ctx, followed.tasksText)
-      body.push(line(m.title, { bold: true }), line(m.name + ' · ' + m.statusLabel, { dimColor: true }), line(' '))
       for (const s of m.steps) {
-        const note = s.time ?? (s.state === 'in-progress' ? 'running' : null)
+        const pressable = Boolean(s.document)
+        const notes = []
+        if (s.time) notes.push(Text({ dimColor: true, children: [s.time] }))
+        else if (s.state === 'in-progress') notes.push(Text({ ...RUNNING, children: ['running'] }))
+        else if (s.folded) notes.push(Text({ dimColor: true, children: ['with Specify'] }))
+        if (PIPELINE_STEPS.includes(s.step) && !pressable) notes.push(Text({ dimColor: true, children: ['not written yet'] }))
+        const name = pressable
+          ? Button({
+              key: 'step-' + s.step,
+              label: s.label,
+              plain: true,
+              ...(focusStep === s.step ? { autoFocus: true } : {}),
+              onPress: () => openDocument($, s.step, s.document),
+            })
+          : Text({ children: [s.label] })
         body.push(
           Box({
-            key: 'step-' + s.step,
+            key: 'row-' + s.step,
             flexDirection: 'row',
             columnGap: 1,
-            children: [
-              Text({ ...STEP_STYLE[s.state], children: [GLYPH[s.state]] }),
-              Text({ children: [s.label.padEnd(10)] }),
-              ...(note ? [Text({ dimColor: true, children: [note] })] : []),
-            ],
+            children: [Text({ ...STEP_STYLE[s.state], children: [GLYPH[s.state]] }), Box({ width: 10, children: [name] }), ...notes],
           }),
         )
       }
       if (m.total) body.push(line(m.total, { dimColor: true }))
       for (const phase of m.phases) {
-        body.push(line(' '), line(phase.name + '  ' + phase.checked + '/' + phase.total, { bold: true }))
+        body.push(gap(), line(phase.name + '  ' + phase.checked + '/' + phase.total, { bold: true }))
         for (const t of phase.tasks) {
           const mark = t.checked ? '✓' : t.current ? '▸' : '○'
-          const style = t.checked ? { dimColor: true } : t.current ? { color: 'yellow' } : {}
+          const style = t.checked ? { dimColor: true } : t.current ? RUNNING : {}
           body.push(line(mark + ' ' + t.id + ' ' + t.text, style))
         }
       }
     }
 
-    return Box({
-      flexDirection: 'column',
-      children: [Box({ flexDirection: 'row', columnGap: 3, children: [tab('run', 'Run', '1'), tab('specs', 'Specs', '2')] }), line(' '), ...body],
-    })
+    return Box({ flexDirection: 'column', children: [Box({ key: 'header', flexDirection: 'column', children: header }), gap(), ...body] })
   })
 
   // A new run may have started a new spec; follow it unless the user picked one.

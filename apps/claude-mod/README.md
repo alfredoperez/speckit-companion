@@ -7,10 +7,19 @@ Tested on Claude Code 2.1.287, the first version with mods on by default. The mo
 ## What it shows
 
 - **A band above the prompt** with the followed spec and where its run stands, such as `042-export-csv · Plan done · Tasks 7/12 · Implement running`. A finished spec reads `Completed · Tasks 12/12 · 38m active`.
-- **A pane beside the transcript** with the spec's title and status, the four steps (specify, plan, tasks, implement) with the time each one took, the total active time, and the task list by phase with the task in flight marked. A step shows a time only when the record measured it from its own start to its own finish, and the waits between steps count toward nothing.
-- **`/spec`** to choose the spec the band and pane follow. Bare `/spec` opens the pane on its Specs tab, a list of the most recent specs. `/spec 42` or `/spec export-csv` follows that spec, and `/spec auto` goes back to following the most recently active one. Your pick is remembered for the project.
+- **A pane beside the transcript** with three tabs. Press `1`, `2` or `3` to switch, and the spec's title and status stay at the top of each.
+  - **Run** has the four steps (specify, plan, tasks, implement) with the time each one took, the total active time, and the task list by phase with the task in flight marked. A step shows a time only when the record measured it from its own start to its own finish, and the waits between steps count toward nothing. When a small change is specified, planned and tasked in one pass, Plan and Tasks read `with Specify`, because their time is inside that step.
+  - **Overview** has what the run record says about the change: the intent, the approach, the size and workflow, what is out of scope, the decisions with the reason for each, what was verified and how each check came out, the open concerns, and how many requirements are covered by tests. A part the record does not have is left out. A check that failed says `failed` in red.
+  - **Specs** lists the most recent specs so you can pick the one to follow.
+- **`/spec-tracker`** to choose the spec the band and pane follow. Bare `/spec-tracker` opens the pane on its Specs tab. `/spec-tracker 42` or `/spec-tracker export-csv` follows that spec, and `/spec-tracker auto` goes back to following the most recently active one. Your pick is remembered for the project. `/spec` is a shorter name for the same command.
 
-Both update while the agent works: after each tool call, and every few seconds for changes made outside the session.
+Everything updates while the agent works: after each tool call, and every few seconds for changes made outside the session.
+
+The colours follow your terminal: a finished step is green, the running step and the word `running` use the theme's warning colour, a failed check is red, and secondary facts are dim.
+
+### Open a step's document
+
+On the Run tab each step is a control. Move to it with Tab or the arrow keys and press Enter to read that step's file inside the pane, rendered as markdown: Specify opens the spec, Plan opens `plan.md`, and Tasks and Implement open `tasks.md`. When the record has a summary of what each finished task did, Implement lists those first. The first line names the file, and `b` goes back to the step you came from. The document refreshes as the agent writes it. A step whose file does not exist yet says `not written yet` and cannot be opened, and a very long file shows its first 60,000 characters with a line saying how much was left out.
 
 The mod only reads. It never writes a spec file or the run record, and never sends a prompt: you run the `/speckit-*` commands yourself.
 
@@ -23,11 +32,11 @@ claude plugin install speckit-companion@speckit-companion
 
 Run `/reload-plugins` in a session that is already open. To check it loaded, run `/plugin`: the line under the tabs names `speckit-companion` among the active mods.
 
-The pane sits beside the transcript in a terminal at least 144 columns wide, and opens there by itself. In a narrower terminal it waits until you run `/spec`, then sits above the prompt.
+The pane sits beside the transcript in a terminal at least 144 columns wide, and opens there by itself. In a narrower terminal it waits until you run `/spec-tracker`, then sits above the prompt.
 
 ## Where it draws
 
-The Claude Code terminal and the Code tab of the Claude Desktop app draw the band and the pane. The VS Code extension's chat panel and `claude -p` draw nothing, so there `/spec` answers with text: the followed spec, its band line, and the recent specs.
+The Claude Code terminal and the Code tab of the Claude Desktop app draw the band and the pane. The VS Code extension's chat panel and `claude -p` draw nothing, so there `/spec-tracker` answers with text: the followed spec, its band line, and the recent specs.
 
 The spec folders are read from `specs/` and `.specify/specs/`, or from `speckit.specDirectories` in `.vscode/settings.json` when you set it.
 
@@ -42,8 +51,8 @@ claude --plugin-dir ./apps/claude-mod      # load this checkout for one session,
 
 | File | Job |
 |---|---|
-| `hooks/register.js` | The hooks module: every call to Claude Code, the file reads, the band, the pane and `/spec`. |
-| `hooks/board.js` | What the band, pane and text replies say, worked out from the rows. No IO. |
+| `hooks/register.js` | The hooks module: every call to Claude Code, the file reads, the band, the pane and `/spec-tracker`. |
+| `hooks/board.js` | What the band, the pane's three tabs, a step's document and the text replies say, worked out from the rows. No IO. |
 | `hooks/vendor/board-rules.mjs` | Generated by `build.mjs` from `apps/copilot-canvas/spec-rules.mjs`, the board's own rules for statuses, steps, tasks and timing. Never edit by hand. |
 | `tests/` | `claude plugin test` suites. `fixtures/demo-specs.js` is generated from the repo's `specs/_0N_demo-*` fixtures, because a plugin test cannot read files. |
 
