@@ -4,6 +4,9 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 
 ## [Unreleased]
 
+### Fixed
+- **The mod starts in a session that was already open.** Installing the mod and running `/reload-plugins` loaded it without starting it, so there was no band, no pane and no `/spec` until Claude Code was restarted. It now starts on its own the first time it is needed.
+
 ## [0.1.0]
 
 First version. Tested on Claude Code 2.1.287.

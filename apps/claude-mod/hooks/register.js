@@ -138,27 +138,43 @@ async function drawsHere($) {
   return surfaces.includes('terminal') || surfaces.includes('desktop')
 }
 
+async function start($, cwd) {
+  root = cwd ?? (await $.session.cwd())
+  const saved = await $.store.get(followKey())
+  pinned = typeof saved === 'string' ? saved : null
+  await scanAll($)
+  await refreshFollowed($)
+  timer?.cancel()
+  timer = $.clock.every(REFRESH_MS, () => tick($))
+  await $.command.register({
+    name: 'spec',
+    description: 'Show the specs and pick the one the SpecKit Companion pane follows',
+    argumentHint: '[number | name | auto]',
+    immediate: true,
+  })
+  // Opened unasked, Claude Code places the pane only beside the transcript of a wide terminal.
+  if (followed && (await drawsHere($))) await $.ui.open({ id: PANE, title: TITLE })
+}
+
+let starting = null
+
+/** A mod loaded by /reload-plugins never sees session.start, so the first hook that runs starts it. */
+function ensureStarted($) {
+  if (root) return undefined
+  starting ??= start($).catch(() => undefined).finally(() => {
+    starting = null
+  })
+  return starting
+}
+
 export function register(on) {
   on('session.start', async ($, e, next) => {
-    root = e.cwd ?? (await $.session.cwd())
-    const saved = await $.store.get(followKey())
-    pinned = typeof saved === 'string' ? saved : null
-    await scanAll($)
-    await refreshFollowed($)
-    timer?.cancel()
-    timer = $.clock.every(REFRESH_MS, () => tick($))
-    await $.command.register({
-      name: 'spec',
-      description: 'Show the specs and pick the one the SpecKit Companion pane follows',
-      argumentHint: '[number | name | auto]',
-      immediate: true,
-    })
-    // Opened unasked, Claude Code places the pane only beside the transcript of a wide terminal.
-    if (followed && (await drawsHere($))) await $.ui.open({ id: PANE, title: TITLE })
+    await start($, e.cwd)
     return next(e)
   })
 
   on('command.run', { command: 'spec' }, async ($, e) => {
+    await ensureStarted($)
     const query = e.args.trim()
     await scanAll($)
     if (!rows.length) return { text: 'No specs found' }
@@ -182,11 +198,13 @@ export function register(on) {
   // Capture writes arrive through the agent's tool calls, so look again once each one finishes.
   on('tool.call', async ($, e, next) => {
     const result = await next(e)
+    await ensureStarted($)
     if (root) await tick($)
     return result
   })
 
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    await ensureStarted($)
     if (!followed || e.props.hasSurvey) return next(e)
     const { Box, Text } = $.ui.resolve(e)
     const mine = Box({
