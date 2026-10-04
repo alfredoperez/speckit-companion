@@ -165,6 +165,14 @@ Two steps show a product screenshot, copied from `docs/screenshots/generated/` b
 
 The Teamboard fixture prose (`apps/vscode/webview/src/spec-viewer/__fixtures__/teamboard/`) appears verbatim in public images and videos. Keep it legible and deliberately dull; it must never be anyone's real spec. Preserve its engineered properties: FR-004 stays vacuous by design (it is the clarify-demo plant). No em dashes in fixture text or any on-screen copy. The product name in on-image copy is "Spec Kit Companion", two words.
 
+## The real-window check
+
+`npm run check:desktop` builds the extension, opens a real VS Code window on a throwaway project, clicks through the sidebar panes, the bug and idea pages, New Bug, Create GitHub issues, Converge and a wrapped paragraph, and saves one screenshot per step under `.desktop-check/` (gitignored). It reads the terminal too, so a step can assert which command a button sent. The project's assistant is a stand-in script, so nothing real runs.
+
+Use it for two things: to verify a change in a real window before asking anyone to look, and as the source of screenshots of the extension for the docs, the changelog and review notes. Those are taken in the **Quiet Light** theme, the script's default; pass `--theme dark` for Dark Modern. `--extension <checkout>` points it at another checkout, `--out <dir>` moves the screenshots, and `--only <step,step>` runs a subset. Add a step for every new surface: a step is a name, one sentence saying what it proves, and a function that drives the window and throws when the claim does not hold.
+
+It needs VS Code installed (`VSCODE_BIN` overrides the path) and opens a visible window while it runs.
+
 ## Manual assets — the README screenshots
 
 The five README screenshots (`hero.jpg`, `viewer.png`, `comments.png`, `create-spec.png`, `activity.png`) are captured by hand, not by a script, so the set needs a standing recipe to stay uniform: same theme, same zoom, same widths, cropped tight, no decoration.

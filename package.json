@@ -1611,6 +1611,7 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "media:all": "node tooling/scripts/capture-docs-images.mjs && node tooling/scripts/capture-docs-images.mjs --clips && node tooling/scripts/render-web-clips.mjs && node tooling/scripts/build-stills.mjs && node tooling/scripts/build-clip-gifs.mjs && node apps/website/scripts/sync-media.mjs && node tooling/scripts/clip-storyboard.mjs --check && node tooling/scripts/check-media-manifest.mjs",
+    "check:desktop": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs",
     "clips:capture": "node tooling/scripts/capture-docs-images.mjs",
     "clips:new": "node tooling/scripts/new-clip.mjs",
     "clips:stills": "node tooling/scripts/build-stills.mjs",
