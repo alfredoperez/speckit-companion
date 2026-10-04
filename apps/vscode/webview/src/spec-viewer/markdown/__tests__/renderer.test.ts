@@ -269,9 +269,17 @@ describe('renderMarkdown: a hard-wrapped paragraph', () => {
         expect(html).toContain('data-line="2"');
     });
 
-    it('does not join across a list or a blank line', () => {
-        const html = renderMarkdown('intro\n\n- item\nafter the list');
-        expect(html).toContain('<p>intro</p>');
-        expect(html).toContain('<p>after the list</p>');
+    it.each([
+        ['a trailing backslash', 'first line\\\nsecond line'],
+        ['a label line', 'Branch: main\nCreated: today'],
+        ['a scenario step', 'Given a user\nWhen they click'],
+        ['an image line', 'intro text\n![a](a.png)'],
+        ['a table row', 'intro text\n| a | b |'],
+    ])('does not join across %s', (_name, source) => {
+        expect(renderMarkdown(source)).not.toContain('data-line-end');
+    });
+
+    it('joins a continuation that only mentions a colon mid-line', () => {
+        expect(renderMarkdown('The first half\nof a sentence: with a colon.')).toContain('data-line-end="2"');
     });
 });

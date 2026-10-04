@@ -76,10 +76,10 @@ describe('resolveAnchorLine', () => {
     it('anchors a comment saved on a later line of a wrapped paragraph to the joined paragraph', () => {
         const joined: RenderedLine[] = [
             { index: 0, line: 3, content: 'Requirements' },
-            { index: 1, line: 5, endLine: 7, content: 'first half and the target line of it' },
+            { index: 1, line: 5, endLine: 7, content: 'Use the cache flag and the rest of it' },
             { index: 2, line: 9, content: 'another line' },
         ];
-        const c = comment({ anchor: { heading: 'Requirements', blockText: 'the target line', line: 6 } });
+        const c = comment({ anchor: { heading: 'Requirements', blockText: 'Use the `cache` flag\nand the rest\nof it', line: 6 } });
         expect(resolveAnchorLine(c, joined)?.index).toBe(1);
     });
 

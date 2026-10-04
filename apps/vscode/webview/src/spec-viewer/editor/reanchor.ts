@@ -22,6 +22,11 @@ export interface RenderedLine {
     content: string;
 }
 
+/** Source text as it reads once rendered: emphasis and code marks gone, a link reduced to its label. */
+function plainText(source: string): string {
+    return source.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/[`*_]/g, '').trim();
+}
+
 export function firstNonEmptyLine(block: string): string {
     return (block.split('\n').find(l => l.trim()) || '').trim();
 }
@@ -48,7 +53,7 @@ export function resolveAnchorLine(c: ReviewComment, lines: RenderedLine[]): Rend
 
     // 3. the joined paragraph that now holds the stored line.
     const joined = lines.find(l => l.endLine !== undefined && l.line <= c.anchor.line && c.anchor.line <= l.endLine);
-    if (joined && (!firstLine || joined.content.includes(firstLine))) return joined;
+    if (joined && (!firstLine || joined.content.includes(plainText(firstLine)))) return joined;
 
     // 4. first line under the stored nearest-heading.
     if (c.anchor.heading) {
