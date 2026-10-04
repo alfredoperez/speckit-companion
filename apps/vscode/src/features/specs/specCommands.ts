@@ -651,6 +651,16 @@ function registerPhaseCommands(
                     return;
                 }
 
+                if (cmd.name === 'taskstoissues') {
+                    const create = 'Create Issues';
+                    const choice = await vscode.window.showWarningMessage(
+                        `Create a GitHub issue for every task in ${path.basename(targetDir)}?`,
+                        { modal: true, detail: 'Issues are created in this repository\'s GitHub remote and cannot be undone from here.' },
+                        create
+                    );
+                    if (choice !== create) return;
+                }
+
                 // Mark this spec as active (spinning indicator)
                 const specName = path.basename(targetDir);
                 specExplorer.setActiveSpec(specName);

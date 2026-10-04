@@ -624,7 +624,7 @@ async function handleClarify(
     }
   }
 
-  // Source 2: built-in optional SpecKit commands (clarify/checklist/analyze).
+  // Source 2: built-in optional SpecKit commands (OPTIONAL_SPECKIT_COMMANDS).
   // Dispatch through the registered VS Code command so provider formatting
   // and step tracking match invoking it from the Command Palette.
   if (buttonCommand && isOptionalCommand(buttonCommand)) {

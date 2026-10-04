@@ -75,11 +75,15 @@ Mark Completed and Archive SHALL appear only once the spec is implemented or com
 ### Spec Kit's optional commands and the user's custom commands sit on the tab they belong to
 <!-- touches: apps/vscode/src/features/spec-viewer/optionalCommands.ts, apps/vscode/src/features/spec-viewer/customCommands.ts, apps/vscode/webview/src/spec-viewer/components/footer/CatalogFooter.tsx -->
 
-The footer's Other actions menu SHALL offer Clarify on the Spec tab, Checklist on the Plan tab, and Analyze and Create GitHub issues on the Tasks tab with no configuration, plus every `speckit.customCommands` entry written in object form whose step matches the tab being read or, for a step with no document, the run's current step. A custom command with the same command as a built-in one replaces it. The menu is hidden when it would be empty and once the spec is implemented, completed or archived. Choosing an entry sends that command, with the spec's path, to the configured AI provider.
+The footer's Other actions menu SHALL offer Clarify on the Spec tab, Checklist on the Plan tab, and Analyze and Create GitHub issues on the Tasks tab with no configuration, plus every `speckit.customCommands` entry written in object form whose step matches the tab being read or, for a step with no document, the run's current step. A custom command with the same command as a built-in one replaces it. The menu is hidden when it would be empty and once the spec is implemented, completed or archived. Choosing an entry sends that command, with the spec's path, to the configured AI provider. Create GitHub issues asks for confirmation first, because the issues it creates cannot be undone from Companion.
 
 #### Scenario: the plan tab
 - **WHEN** an active spec's Plan tab is open and no custom commands are configured
 - **THEN** Other actions lists Checklist only
+
+#### Scenario: the tasks tab
+- **WHEN** an active spec's Tasks tab is open and the developer chooses Create GitHub issues
+- **THEN** Companion asks for confirmation, and sends the command only after the developer confirms
 
 #### Scenario: a spec at its closure gate
 - **WHEN** the footer offers Mark Completed
