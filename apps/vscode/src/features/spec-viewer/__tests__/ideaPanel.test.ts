@@ -1,3 +1,4 @@
+import { withHeaderLine } from '../../reports/reportMeta';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -358,7 +359,7 @@ describe('Idea report panel', () => {
         it('still passes the decision file as the content behind the page', async () => {
             await provider.show(path.join(FILTERS, 'intake.md'), { report: 'ideas', landing: true });
 
-            expect(lastRender()[2]).toBe(fs.readFileSync(path.join(FILTERS, 'decision.md'), 'utf-8'));
+            expect(lastRender()[2]).toBe(withHeaderLine('decision', fs.readFileSync(path.join(FILTERS, 'decision.md'), 'utf-8')));
         });
 
         it('opens an idea still being assessed on its latest stage, with no page', async () => {
@@ -367,7 +368,7 @@ describe('Idea report panel', () => {
             expect(lastRender()[ARG.docType]).toBe('research');
             expect(reportNav().kind).toBe('idea');
             expect(reportNav().page).toBeUndefined();
-            expect(lastRender()[2]).toBe(fs.readFileSync(path.join(OFFLINE, 'research.md'), 'utf-8'));
+            expect(lastRender()[2]).toBe(withHeaderLine('research', fs.readFileSync(path.join(OFFLINE, 'research.md'), 'utf-8')));
         });
 
         it('opens the latest stage written even when earlier stages were skipped', async () => {
@@ -386,7 +387,7 @@ describe('Idea report panel', () => {
             await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
 
             expect(lastRender()[ARG.docType]).toBe('decision');
-            expect(lastRender()[2]).toBe(decision);
+            expect(lastRender()[2]).toBe(withHeaderLine('decision', decision));
             expect(reportNav().kind).toBe('idea');
             expect(reportNav().page).toBeUndefined();
             expect(lastRender()[ARG.badgeText]).toBe('IDEA');
@@ -399,7 +400,7 @@ describe('Idea report panel', () => {
             await provider.show(path.join(dir, 'intake.md'), { report: 'ideas', landing: true });
 
             expect(lastRender()[ARG.docType]).toBe('decision');
-            expect(lastRender()[2]).toBe(decision);
+            expect(lastRender()[2]).toBe(withHeaderLine('decision', decision));
             expect(reportNav().page).toBeUndefined();
         });
 

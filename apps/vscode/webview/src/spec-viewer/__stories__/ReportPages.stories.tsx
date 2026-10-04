@@ -10,7 +10,8 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { useEffect, useState } from 'preact/hooks';
 import { App } from '../App';
 import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from '../signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from '../markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setTaskSummaries } from '../markdown';
+import { setupAnswerActions } from '../editor/answerEditor';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
 import { mockNavState } from '../components/__stories__/mockData';
@@ -205,8 +206,10 @@ export function ReportViewer({ fixture, initialDocument }: { fixture: ReportFixt
 
     useEffect(() => {
         document.body.dataset.readOnly = 'true';
+        setupAnswerActions();
         return () => {
             delete document.body.dataset.readOnly;
+            setReportMode(false);
             viewerMode.value = null;
         };
     }, []);
@@ -232,6 +235,7 @@ export function ReportViewer({ fixture, initialDocument }: { fixture: ReportFixt
     viewerState.value = null;
     historyEntries.value = [];
     setLivingMode(false);
+    setReportMode(true);
     setHasSpecContext(true);
     setCurrentTask(null);
     setTaskSummaries(null);
@@ -346,6 +350,11 @@ export const BugFixedNotTested: Story = {
 export const BugVerified: Story = {
     name: 'Bug verified',
     render: () => <ReportViewer fixture={cartTotalSkipsFirst} />,
+};
+
+export const RawAssessmentWithOpenQuestions: Story = {
+    name: 'Raw assessment with open questions',
+    render: () => <ReportViewer fixture={cartTotalSkipsFirst} initialDocument="assessment" />,
 };
 
 export const BugTestFailed: Story = {

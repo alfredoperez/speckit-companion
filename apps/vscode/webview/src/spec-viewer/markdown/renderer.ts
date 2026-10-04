@@ -27,6 +27,7 @@ import {
     preprocessLivingRequirements,
     preprocessLivingUncovered
 } from './livingComponents';
+import { markClarifications, rememberClarifications } from './clarifications';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -38,6 +39,8 @@ let hasSpecContext = false;
 // before render; when false, none of the living preprocessors run and the
 // document takes the feature-spec path unchanged.
 let livingMode = false;
+
+let reportMode = false;
 
 // A line is trusted living-component HTML only if it *starts* with one of the
 // tag shapes the living preprocessors emit — never merely contains the class
@@ -78,6 +81,11 @@ export function setHasSpecContext(value: boolean): void {
  */
 export function setLivingMode(value: boolean): void {
     livingMode = value;
+}
+
+/** Set whether the document is a bug or idea report, whose open questions get an Answer button. */
+export function setReportMode(on: boolean): void {
+    reportMode = on;
 }
 
 export function slugify(text: string): string {
@@ -227,6 +235,7 @@ export function renderMarkdown(markdown: string): string {
     // '\r' on every line, failing every heading/list/rule match and rendering
     // the whole document as raw paragraphs. See issue #158.
     markdown = markdown.replace(/\r\n?/g, '\n');
+    const source = markdown;
 
     // Strip spec-kit's leading YAML frontmatter so it doesn't leak as an <hr> +
     // paragraph. Runs after newline normalization so it only deals with '\n'.
@@ -565,6 +574,7 @@ export function renderMarkdown(markdown: string): string {
         // Match any line containing our custom class patterns or HTML structure elements
         if (LIVING_HTML_LINE.test(line) ||
             line.includes('<div class="callout') ||
+            line.includes('<p class="rp-meta') ||
             line.includes('<div class="ck-group') ||
             line.includes('<div class="tech-grid') ||
             line.includes('<div class="decision-card') ||
@@ -618,6 +628,11 @@ export function renderMarkdown(markdown: string): string {
 
     // Post-process: group task sub-items into .task-details containers
     html = groupTaskDetails(html);
+
+    if (reportMode) {
+        rememberClarifications(source);
+        html = markClarifications(html);
+    }
 
     return html;
 }

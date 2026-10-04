@@ -1,4 +1,4 @@
-import { bugActions, commandForAction, ideaActions, repeatsFromFolder, ReportActionId } from '../processActions';
+import { bugActions, commandForAction, commandForDocument, ideaActions, repeatsFromFolder, ReportActionId } from '../processActions';
 
 const labels = (actions: { label: string; primary: boolean }[]) =>
     actions.map(action => `${action.primary ? 'main' : 'secondary'}: ${action.label}`);
@@ -71,5 +71,29 @@ describe('the command an action sends', () => {
         expect(repeatsFromFolder('bug.assess')).toBe(true);
         expect(repeatsFromFolder('idea.intake')).toBe(true);
         expect(repeatsFromFolder('bug.fix')).toBe(false);
+    });
+});
+
+describe('the command that wrote a report', () => {
+    it.each([
+        ['bug', 'assessment', 'speckit.bug.assess'],
+        ['bug', 'fix', 'speckit.bug.fix'],
+        ['bug', 'test', 'speckit.bug.test'],
+        ['idea', 'intake', 'speckit.assess.intake'],
+        ['idea', 'research', 'speckit.assess.research'],
+        ['idea', 'problem', 'speckit.assess.define'],
+        ['idea', 'concept', 'speckit.assess.shape'],
+        ['idea', 'decision', 'speckit.assess.decide'],
+    ] as const)('for a %s %s is %s', (kind, document, command) => {
+        expect(commandForDocument(kind, document)).toBe(command);
+    });
+
+    it.each([
+        ['bug', 'story'],
+        ['bug', 'intake'],
+        ['idea', 'assessment'],
+        ['idea', 'constructor'],
+    ] as const)('is none for a %s %s', (kind, document) => {
+        expect(commandForDocument(kind, document)).toBeUndefined();
     });
 });

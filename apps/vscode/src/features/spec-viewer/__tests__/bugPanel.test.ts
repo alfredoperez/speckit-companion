@@ -1,3 +1,4 @@
+import { withHeaderLine } from '../../reports/reportMeta';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -232,6 +233,13 @@ describe('Bug report panel', () => {
             expect(render[ARG.contextSpecName]).toBe('cartTotal skips the first cart item');
         });
 
+        it('shows a report tab with its header bullets as one line of facts', async () => {
+            await provider.show(path.join(CART, 'assessment.md'), { bug: true });
+            const content = String(lastRender()[2]);
+            expect(content).toContain('<p class="rp-meta">Reported Oct 1, 2026 from pasted text · valid · high severity</p>');
+            expect(content).not.toContain('**Slug**');
+        });
+
         it('marks reports that were never written as not created', async () => {
             await provider.show(path.join(SLUG, 'assessment.md'), { bug: true });
 
@@ -428,7 +436,7 @@ describe('Bug report panel', () => {
             await provider.show(path.join(dir, 'assessment.md'), { report: 'bugs', landing: true });
 
             expect(lastRender()[ARG.docType]).toBe('assessment');
-            expect(lastRender()[2]).toBe(ASSESSMENT);
+            expect(lastRender()[2]).toBe(withHeaderLine('assessment', ASSESSMENT));
             expect(reportNav().kind).toBe('bug');
             expect(reportNav().page).toBeUndefined();
         });
@@ -449,7 +457,7 @@ describe('Bug report panel', () => {
             await switchTo(lastPanel(), 'story');
 
             expect(lastRender()[ARG.docType]).toBe('assessment');
-            expect(lastRender()[2]).toBe(ASSESSMENT);
+            expect(lastRender()[2]).toBe(withHeaderLine('assessment', ASSESSMENT));
             expect(reportNav().page).toBeUndefined();
             expect(droppedMessages()).toHaveLength(0);
         });
@@ -472,7 +480,7 @@ describe('Bug report panel', () => {
 
             await switchTo(panel, 'fix');
             expect(lastRender()[ARG.docType]).toBe('fix');
-            expect(lastRender()[2]).toBe(fs.readFileSync(path.join(CART, 'fix.md'), 'utf-8'));
+            expect(lastRender()[2]).toBe(withHeaderLine('fix', fs.readFileSync(path.join(CART, 'fix.md'), 'utf-8')));
             expect(reportNav().page).toBeUndefined();
 
             await switchTo(panel, 'story');
@@ -604,7 +612,7 @@ describe('Bug report panel', () => {
             await provider.refreshIfDisplaying(path.join(dir, 'assessment.md'));
 
             expect(lastRender()[ARG.docType]).toBe('assessment');
-            expect(lastRender()[2]).toBe(ASSESSMENT);
+            expect(lastRender()[2]).toBe(withHeaderLine('assessment', ASSESSMENT));
             expect(reportNav().page).toBeUndefined();
         });
 

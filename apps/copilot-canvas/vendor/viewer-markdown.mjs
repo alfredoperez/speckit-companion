@@ -775,10 +775,58 @@ function preprocessLivingUncovered(markdown) {
   });
 }
 
+// apps/vscode/src/features/reports/clarifications.ts
+var FENCE = /^\s*(```|~~~)/;
+var MARKER_OR_CODE = /`[^`\n]*`|\[NEEDS CLARIFICATION:?\s*([^\]]*)\]/gi;
+function clarificationsIn(markdown) {
+  let fence;
+  const prose = [];
+  for (const line of markdown.split(/\r?\n/)) {
+    const marker = FENCE.exec(line)?.[1];
+    if (fence) {
+      if (marker === fence) fence = void 0;
+      continue;
+    }
+    if (marker) {
+      fence = marker;
+      continue;
+    }
+    prose.push(line);
+  }
+  const questions = [];
+  for (const match of prose.join("\n").matchAll(MARKER_OR_CODE)) {
+    const question = match[1]?.replace(/\s+/g, " ").trim();
+    if (question) questions.push(question);
+  }
+  return questions;
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/clarifications.ts
+var TAG_OR_MARKER = /<pre\b[\s\S]*?<\/pre>|<code\b[^>]*>[^<]*<\/code>|<[^>]+>|\[NEEDS CLARIFICATION:?\s*([^\]]*)\]/gi;
+var asked = [];
+var marked = 0;
+function markClarifications(html) {
+  let index = 0;
+  const out = html.replace(TAG_OR_MARKER, (match, question) => {
+    if (question === void 0 || question.trim() === "") return match;
+    const n = index++;
+    return `<span class="rp-question" data-question="${n}"><span class="rp-question__text">${question.trim()}</span> <span class="rp-question__badge">Needs an answer</span> <button type="button" class="rp-question__answer" data-question="${n}">Answer</button></span>`;
+  });
+  marked = index;
+  return out;
+}
+function rememberClarifications(markdown) {
+  asked = clarificationsIn(markdown);
+}
+function writtenQuestion(index) {
+  return asked.length === marked ? asked[index] : void 0;
+}
+
 // apps/vscode/webview/src/spec-viewer/markdown/renderer.ts
 var currentTaskId = null;
 var hasSpecContext = false;
 var livingMode = false;
+var reportMode = false;
 var LIVING_HTML_LINE = /^\s*<(?:div|span|ol|ul|li|p) class="living-/;
 var TOUCHES_MARKER_LINE = /^\s*<!--\s*(?:touches|adopted|reviewed|aligns|capability):\s*.+?\s*-->\s*$/i;
 var taskSummaries = {};
@@ -793,6 +841,9 @@ function setHasSpecContext(value) {
 }
 function setLivingMode(value) {
   livingMode = value;
+}
+function setReportMode(on) {
+  reportMode = on;
 }
 function slugify(text) {
   return text.toLowerCase().replace(/<[^>]+>/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-");
@@ -875,6 +926,7 @@ function renderTable(rows) {
 }
 function renderMarkdown(markdown) {
   markdown = markdown.replace(/\r\n?/g, "\n");
+  const source = markdown;
   markdown = stripFrontmatter(markdown);
   markdown = stripTaskFormatLegend(markdown);
   markdown = preprocessHtmlComments(markdown);
@@ -1129,7 +1181,7 @@ function renderMarkdown(markdown) {
       html += wrapComponentLine(line, sourceLineNum) + "\n";
       continue;
     }
-    if (LIVING_HTML_LINE.test(line) || line.includes('<div class="callout') || line.includes('<div class="ck-group') || line.includes('<div class="tech-grid') || line.includes('<div class="decision-card') || line.includes('<div class="decision-field') || line.includes('<div class="spec-meta') || line.includes('<div class="spec-input') || line.includes('<p class="scenario-label') || line.includes('<table class="scenario-table') || line.includes("<details") || line.includes("<summary") || line.includes("</details>") || line.includes("</summary>") || line.includes('<span class="meta-') || line.includes('<span class="story-') || line.includes('<span class="priority-') || line.includes('<span class="scenario-') || line.includes("</div>") || line.includes("</span>") || line.includes("</p>") || line.includes("</table>")) {
+    if (LIVING_HTML_LINE.test(line) || line.includes('<div class="callout') || line.includes('<p class="rp-meta') || line.includes('<div class="ck-group') || line.includes('<div class="tech-grid') || line.includes('<div class="decision-card') || line.includes('<div class="decision-field') || line.includes('<div class="spec-meta') || line.includes('<div class="spec-input') || line.includes('<p class="scenario-label') || line.includes('<table class="scenario-table') || line.includes("<details") || line.includes("<summary") || line.includes("</details>") || line.includes("</summary>") || line.includes('<span class="meta-') || line.includes('<span class="story-') || line.includes('<span class="priority-') || line.includes('<span class="scenario-') || line.includes("</div>") || line.includes("</span>") || line.includes("</p>") || line.includes("</table>")) {
       html += line + "\n";
       continue;
     }
@@ -1157,6 +1209,10 @@ function renderMarkdown(markdown) {
 `;
   }
   html = groupTaskDetails(html);
+  if (reportMode) {
+    rememberClarifications(source);
+    html = markClarifications(html);
+  }
   return html;
 }
 function groupTaskDetails(html) {
@@ -1199,6 +1255,7 @@ function groupTaskItemDetails(content) {
 export {
   escapeHtml,
   escapeHtmlInScenario,
+  markClarifications,
   parseAcceptanceScenarios,
   parseInline,
   preprocessCallouts,
@@ -1223,7 +1280,9 @@ export {
   setLivingDrifted,
   setLivingMode,
   setLivingNew,
+  setReportMode,
   setTaskSummaries,
   slugify,
-  stripLivingDraftBanner
+  stripLivingDraftBanner,
+  writtenQuestion
 };

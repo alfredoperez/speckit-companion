@@ -284,6 +284,9 @@ body {
     justify-content: center;
     column-gap: clamp(20px, 3vw, 56px);
     align-items: start;
+    /* Rows take their content's height. Stretching them split the spare height of
+       a short document between the outline and the text, leaving a blank band. */
+    align-content: start;
 }
 
 .content-area > #markdown-content { grid-column: 1; }

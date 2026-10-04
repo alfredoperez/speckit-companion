@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'preact/hooks';
 import type { LineType } from '../types';
 import { getContextActions } from '../editor/lineActions';
 
-export type EditorMode = 'line' | 'row';
+export type EditorMode = 'line' | 'row' | 'answer';
 
 export interface InlineEditorProps {
     mode: EditorMode;
@@ -50,7 +50,9 @@ export function InlineEditor(props: InlineEditorProps) {
     const card = (
         <div class="inline-editor">
             <div class="editor-header">
-                {mode === 'row' ? (
+                {mode === 'answer' ? (
+                    <span class="editor-header-target">Your answer</span>
+                ) : mode === 'row' ? (
                     scenarioContent && (
                         <>
                             <span class="editor-context-label">Scenario {lineNum}:</span>
@@ -67,7 +69,7 @@ export function InlineEditor(props: InlineEditorProps) {
                 <textarea
                     ref={textareaRef}
                     class="editor-textarea"
-                    placeholder="Add a comment or refinement instruction..."
+                    placeholder={mode === 'answer' ? 'Your answer…' : 'Add a comment or refinement instruction...'}
                     value={draft}
                     onInput={(e) => setDraft((e.currentTarget as HTMLTextAreaElement).value)}
                     onKeyDown={handleKeydown}

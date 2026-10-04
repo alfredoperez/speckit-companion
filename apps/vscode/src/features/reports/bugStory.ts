@@ -1,3 +1,4 @@
+import { formatReportDate } from './reportMeta';
 import {
     BUG_CHECK_RESULTS,
     BUG_FIX_STATUSES,
@@ -23,25 +24,12 @@ interface Report {
     doc: ReportDoc;
 }
 
-const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})(?![\d])/;
 const PLACEHOLDER = '[NEEDS CLARIFICATION';
 const CLARIFICATION = /^\[NEEDS CLARIFICATION:?\s*([\s\S]*?)\]\s*$/i;
 const NOTHING = /^[*_\s]*(?:none|n\/a)(?![\w-])(?!\s+of\b)/i;
 
 function read(text: string | undefined): Report | undefined {
     return typeof text === 'string' ? { fields: parseReportHeader(text).fields, doc: parseReportDoc(text) } : undefined;
-}
-
-function formatDate(raw: string | undefined): string | undefined {
-    if (!raw) return undefined;
-    const value = raw.trim();
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return undefined;
-    const iso = ISO_DAY.exec(value);
-    const noon = iso
-        ? Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]), 12)
-        : Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 12);
-    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(noon);
 }
 
 function prose(report: Report | undefined, heading: string): string | undefined {
@@ -143,7 +131,7 @@ function build(texts: BugReportTexts, nextAction?: string): BugStory | undefined
     const testResult = knownValue(BUG_TEST_RESULTS, test?.fields.get('result'));
 
     const meta: BugMeta = {};
-    const reported = formatDate(assessment.fields.get('created'));
+    const reported = formatReportDate(assessment.fields.get('created'));
     const source = text(assessment.fields.get('source'));
     if (reported) meta.reported = reported;
     if (source && !source.includes(PLACEHOLDER)) meta.source = source;
@@ -161,7 +149,7 @@ function build(texts: BugReportTexts, nextAction?: string): BugStory | undefined
         [verified, test?.fields.get('tested')],
     ];
     for (const [step, raw] of whens) {
-        const when = formatDate(raw);
+        const when = formatReportDate(raw);
         if (when) step.when = when;
     }
 

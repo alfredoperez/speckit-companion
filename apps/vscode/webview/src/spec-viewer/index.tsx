@@ -6,9 +6,10 @@
 import { render } from 'preact';
 import type { VSCodeApi, NavState } from './types';
 import { navState, markdownHtml } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode } from './markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupLineActions } from './editor';
+import { setupAnswerActions } from './editor/answerEditor';
 import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupOpenLivingRequirement, setupRemoveRequirement, setupRevealGlob } from './actions';
 import { applyPendingFragment, setupDocumentLinkClickHandler } from './documentLinks';
 import { createMessageRouter } from './messageHandlers';
@@ -102,6 +103,7 @@ function init(): void {
         // Set renderer flags before the first updateContent below, or a living
         // spec's first paint renders in feature-spec mode until a later message.
         setLivingMode(!!initialNav.livingMode);
+        setReportMode(!!initialNav.report);
         setHasSpecContext(!!(initialNav.specContextName || initialNav.badgeText));
         if (initialNav.currentTask !== undefined) {
             setCurrentTask(initialNav.currentTask);
@@ -116,6 +118,7 @@ function init(): void {
     }
 
     setupLineActions();
+    setupAnswerActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
     setupDocumentLinkClickHandler();

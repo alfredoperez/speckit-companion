@@ -595,6 +595,13 @@ export type ViewerToExtensionMessage =
           type: 'reportAction';
           id: string;
       }
+    // An answer to one open question on a bug or idea report; the extension checks the question against the file
+    | {
+          type: 'reportAnswer';
+          question: string;
+          answer: string;
+          document: string;
+      }
     // File reference click
     | {
           type: 'openFile';

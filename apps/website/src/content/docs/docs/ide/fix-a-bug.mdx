@@ -64,6 +64,8 @@ The reports as written are the tabs beside the story: **Assessment**, **Fix** an
 
 Every tab is for reading: there is no Overview and no comment button, and the viewer writes nothing to the bug's folder. The page updates when a report changes on disk. The footer holds the next step, chosen from where the bug stands.
 
+An open question in a report shows **Needs an answer** and an **Answer** button on the Assessment, Fix and Test tabs. Click **Answer**, type your reply and send it. Your answer is saved in the project's `.speckit-companion/` folder, which git ignores, and the command that wrote that report is sent to your assistant with it, so the report is rewritten with the question settled.
+
 | The bug is | Main button | Also offered |
 | --- | --- | --- |
 | Waiting for a fix | **Fix bug** | **Test again**, when a test already failed |
