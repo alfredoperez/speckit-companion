@@ -73,8 +73,10 @@ async function readSpec($, id, full) {
   return { row, ctx, tasksText, ctxText }
 }
 
-/** Every spec folder under the spec directories, most recently active first. */
-async function scanAll($) {
+let knownFolders = ''
+
+/** The spec folders that exist right now. Cheap: it lists the spec directories and reads no spec. */
+async function listSpecIds($) {
   const settings = await readText($, at('.vscode', 'settings.json'))
   const dirs = (settings != null && parseSpecDirsSetting(settings)) || DEFAULT_SPEC_DIRS
   const ids = []
@@ -84,6 +86,13 @@ async function scanAll($) {
       if (entry.kind === 'dir' && !entry.name.startsWith('.')) ids.push(dir.replace(/\/+$/, '') + '/' + entry.name)
     }
   }
+  return ids
+}
+
+/** Every spec folder under the spec directories, most recently active first. */
+async function scanAll($) {
+  const ids = await listSpecIds($)
+  knownFolders = ids.join('\n')
   const read = []
   for (let i = 0; i < ids.length; i += SCAN_BATCH) {
     read.push(...(await Promise.all(ids.slice(i, i + SCAN_BATCH).map(id => readSpec($, id, false)))))
@@ -117,6 +126,8 @@ async function refreshFollowed($) {
 
 async function tick($) {
   try {
+    // A spec created after the session started is in no row yet, so a new or removed folder means looking again.
+    if ((await listSpecIds($)).join('\n') !== knownFolders) await scanAll($)
     if (await refreshFollowed($)) $.ui.invalidate('ui.render')
   } catch {
     // A failed read leaves the last drawing up; the next tick tries again.
