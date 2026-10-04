@@ -116,3 +116,6 @@ assets/mascot/explore/
 
 .claude/skills/release-qa/.bin/
 .claude/skills/release-qa/canvas-harness/node_modules/
+
+# Screenshots from `npm run check:desktop`
+.desktop-check/
