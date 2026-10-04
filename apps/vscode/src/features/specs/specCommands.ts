@@ -45,6 +45,11 @@ function toWorkspaceRelative(absOrRel: string): string {
     return rel && !rel.startsWith('..') ? rel : absOrRel;
 }
 
+export function convergeCommandLine(formattedCommand: string, targetDir: string): string {
+    const specDir = toWorkspaceRelative(targetDir).split(path.sep).join('/');
+    return `/${formattedCommand} Converge the feature in ${specDir}. If that is not the feature you resolve for this run, stop and say so instead of changing its tasks.`;
+}
+
 /**
  * The prompt for a non-workflow Spec Kit command. Creating issues cannot be undone and Spec Kit picks its
  * feature from the branch, not from an argument, so that one names its tasks file and asks for a stop on a mismatch.
@@ -703,6 +708,24 @@ function registerPhaseCommands(
             })
         );
     }
+
+    // Converge is sent and never recorded here: Spec Kit's own hooks time it.
+    context.subscriptions.push(
+        vscode.commands.registerCommand(Commands.converge, async (target?: SpecTreeItem | string) => {
+            const targetDir = resolveSpecDirArg(target) || await getActiveSpecDir();
+            if (!targetDir) {
+                vscode.window.showErrorMessage('No spec directory found. Create a spec first.');
+                return;
+            }
+            outputChannel.appendLine(`[SpecKit] Converge command triggered for: ${targetDir}`);
+            const assistant = getConfiguredProviderType();
+            const terminal = await getAIProvider().executeInTerminal(
+                convergeCommandLine(formatCommandForProvider('speckit.converge'), targetDir),
+                'SpecKit - Converge'
+            );
+            noteSpecDispatch(targetDir, terminal, assistant);
+        })
+    );
 
     // Constitution command (no spec directory required)
     context.subscriptions.push(

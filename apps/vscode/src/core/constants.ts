@@ -11,6 +11,7 @@ export const Commands = {
     analyze: 'speckit.analyze',
     checklist: 'speckit.checklist',
     tasksToIssues: 'speckit.taskstoissues',
+    converge: 'speckit.converge',
     customCommand: 'speckit.customCommand',
     constitution: 'speckit.constitution',
     refresh: 'speckit.refresh',
@@ -320,6 +321,7 @@ export const FooterActionIds = {
     START: 'start',
     REGENERATE: 'regenerate',
     APPROVE: 'approve',
+    CONVERGE: 'converge',
 } as const;
 
 /**

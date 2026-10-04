@@ -219,6 +219,12 @@
         "icon": "$(github)"
       },
       {
+        "command": "speckit.converge",
+        "title": "Converge",
+        "category": "SpecKit",
+        "icon": "$(check-all)"
+      },
+      {
         "command": "speckit.customCommand",
         "title": "Run Custom Command",
         "category": "SpecKit",
@@ -768,6 +774,11 @@
           "group": "2_lifecycle@3"
         },
         {
+          "command": "speckit.converge",
+          "when": "view == speckit.views.explorer && viewItem =~ /^spec-(implemented|completed)(\\+terminal)?$/",
+          "group": "2_lifecycle@4"
+        },
+        {
           "command": "speckit.specs.copyName",
           "when": "view == speckit.views.explorer && viewItem =~ /^spec-(active|tasks-done|implemented|completed|archived)(\\+terminal)?$/",
           "group": "3_copy@1"
@@ -924,6 +935,11 @@
           "group": "2_lifecycle@3"
         },
         {
+          "command": "speckit.converge",
+          "when": "viewItem =~ /^spec-(implemented|completed)(\\+terminal)?$/",
+          "group": "2_lifecycle@4"
+        },
+        {
           "command": "speckit.specs.copyName",
           "group": "3_copy@1"
         },
@@ -984,6 +1000,9 @@
         },
         {
           "command": "speckit.taskstoissues"
+        },
+        {
+          "command": "speckit.converge"
         },
         {
           "command": "speckit.constitution",

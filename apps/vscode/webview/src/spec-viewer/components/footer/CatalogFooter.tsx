@@ -59,7 +59,7 @@ export function CatalogFooter({ vs, isActive, stepInFlight = false, enhancementB
     const [menuOpen, setMenuOpen] = useState(false);
 
     const visible = vs.footer;
-    const LEFT_IDS = new Set(['regenerate']);
+    const LEFT_IDS = new Set(['regenerate', 'converge']);
     const RIGHT_IDS = new Set(['refine', 'approve', 'reactivate', 'archive', 'complete', 'start']);
     // While the current step is in flight, drop the forward-motion buttons
     // (Approve / next-step `start`) — the step hasn't settled. Closure/refine

@@ -198,6 +198,20 @@ describe('a spec on converge keeps the implement footer', () => {
         expect(ids).not.toContain('regenerate');
     });
 
+    it('offers Converge once the build is done, and again after a pass finishes', () => {
+        expect(footerIds(onConverge('implemented', true))).toContain('converge');
+        expect(footerIds(onConverge('completed', true))).toContain('converge');
+    });
+
+    it('keeps Converge after a pass that never finished, so it can be run again', () => {
+        expect(footerIds(onConverge('implemented', false))).toContain('converge');
+    });
+
+    it('hides Converge before the build is done and once archived', () => {
+        expect(footerIds(onConverge('implementing', true))).not.toContain('converge');
+        expect(footerIds(onConverge('archived', true))).not.toContain('converge');
+    });
+
     it('offers no Approve while converge runs at implementing', () => {
         const ids = footerIds(onConverge('implementing', false));
         expect(ids).not.toContain('approve');

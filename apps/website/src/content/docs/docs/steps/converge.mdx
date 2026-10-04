@@ -21,6 +21,12 @@ Converge is Spec Kit's own command. It checks the code against one feature's spe
 
 You run implement and converge again until it converges.
 
+## Start it from Companion
+
+Once a spec's build is done, the viewer footer has a **Converge** button, and the spec's row menu in the sidebar has **Converge** too. Either one sends the command to your assistant, naming the spec's folder. Spec Kit works on the feature of your current branch, so the request asks the assistant to stop if that is a different one.
+
+If converge adds tasks to a completed spec, **Reactivate** it before you run implement again.
+
 ## In the viewer
 
 <YouSee>
@@ -34,7 +40,7 @@ Recording converge needs the Companion Spec Kit extension, which notes its start
 ## What it leaves alone
 
 - **The spec's status.** Converge never changes it. A spec that ran converge still offers **Mark Completed** and **Archive**.
-- **The footer.** There is no button to start converge and none to run it again.
+- **Its own records.** The **Converge** button only sends the command. Spec Kit's hooks note the start and finish, so Companion never times the wait.
 - **The timing of later passes.** A step keeps one start and one finish, so the first converge pass is the one timed.
 
 ## Converge is not a living-spec check
