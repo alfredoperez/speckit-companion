@@ -252,6 +252,10 @@ Open the AI provider picker and assert it lists the configured providers. Dispat
 
 Open the pipeline builder. Assert the phase menu opens, Add step adds a step that shows in the canvas, and the builder holds at a narrow width (split the editor as in Narrow panel). `shot.sh` it as `builder-<state>`.
 
+### Bugs and Ideas panes
+
+In a workspace with reports under `.specify/bugs/` and `.specify/assessments/`: assert the Bugs pane shows its groups with a count and the Ideas pane shows Assessing and Decided; expand one item and open a report, which must be read-only (no footer step buttons). In a workspace with neither Spec Kit extension and no reports: assert each pane holds one install row. `shot.sh` it as `panes-<state>`.
+
 ## Recipe: Clean profile and workspace variants
 
 ### First open

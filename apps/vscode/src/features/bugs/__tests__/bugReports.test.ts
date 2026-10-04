@@ -4,8 +4,8 @@ import * as path from 'path';
 import {
     bugDirectoryOf,
     bugReportDocuments,
-    bugReportSummary,
     parseReportHeader,
+    readBugReport,
     readBugReports,
 } from '../bugReports';
 
@@ -48,7 +48,6 @@ describe('readBugReports', () => {
             expect(cart.fixStatus).toBe('applied');
             expect(cart.testResult).toBe('verified');
             expect(cart.outcome).toBe('verified');
-            expect(bugReportSummary(cart)).toBe('assess · fix · test · verified');
         });
 
         it('falls back to the assessment verdict when only an assessment exists', () => {
@@ -58,7 +57,6 @@ describe('readBugReports', () => {
             expect(slug.reports.fix.exists).toBe(false);
             expect(slug.reports.test.exists).toBe(false);
             expect(slug.outcome).toBe('valid');
-            expect(bugReportSummary(slug)).toBe('assess · valid');
         });
     });
 
@@ -92,7 +90,6 @@ describe('readBugReports', () => {
             expect(bug.title).toBe('odd-report');
             expect(bug.verdict).toBeUndefined();
             expect(bug.outcome).toBeUndefined();
-            expect(bugReportSummary(bug)).toBe('assess');
         });
     });
 
@@ -155,4 +152,62 @@ describe('bugDirectoryOf', () => {
     it('returns undefined for a spec document', () => {
         expect(bugDirectoryOf('/repo/specs/001-x/spec.md')).toBeUndefined();
     });
+});
+
+describe('where a bug stands', () => {
+    const tmpRoots: string[] = [];
+
+    function bugWith(files: Record<string, string>): string {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bug-state-'));
+        tmpRoots.push(root);
+        const dir = path.join(root, '.specify', 'bugs', 'sample');
+        fs.mkdirSync(dir, { recursive: true });
+        for (const [name, header] of Object.entries(files)) {
+            fs.writeFileSync(path.join(dir, name), `# Bug: sample\n\n${header}\n`);
+        }
+        return dir;
+    }
+
+    afterAll(() => tmpRoots.forEach(root => fs.rmSync(root, { recursive: true, force: true })));
+
+    it.each([
+        ['an assessment alone is waiting for a fix', { 'assessment.md': '- **Verdict**: valid' }, 'to-fix'],
+        ['an unverified report still needs a fix', { 'assessment.md': '- **Verdict**: likely valid, needs reproduction' }, 'to-fix'],
+        ['an invalid report is closed', { 'assessment.md': '- **Verdict**: invalid' }, 'closed'],
+        ['an invalid report stays closed even with a fix', { 'assessment.md': '- **Verdict**: invalid', 'fix.md': '- **Status**: applied' }, 'closed'],
+        ['an applied fix is waiting for a test', { 'assessment.md': '- **Verdict**: valid', 'fix.md': '- **Status**: applied' }, 'to-test'],
+        ['a partial fix is waiting for a test', { 'assessment.md': '- **Verdict**: valid', 'fix.md': '- **Status**: partial' }, 'to-test'],
+        ['a fix that was not applied goes back to fixing', { 'assessment.md': '- **Verdict**: valid', 'fix.md': '- **Status**: not-applied' }, 'to-fix'],
+        ['a verified test is done', { 'assessment.md': '- **Verdict**: valid', 'fix.md': '- **Status**: applied', 'test.md': '- **Result**: verified' }, 'verified'],
+        ['a failed test goes back to fixing', { 'assessment.md': '- **Verdict**: valid', 'fix.md': '- **Status**: applied', 'test.md': '- **Result**: failed' }, 'to-fix'],
+        ['a partial test goes back to fixing', { 'assessment.md': '- **Verdict**: valid', 'fix.md': '- **Status**: applied', 'test.md': '- **Result**: partial' }, 'to-fix'],
+        ['a decorated verified result still counts', { 'assessment.md': '- **Verdict**: valid', 'fix.md': '- **Status**: applied', 'test.md': '- **Result**: Verified ✅ (3/3 checks)' }, 'verified'],
+        ['a fix written as "not applied" goes back to fixing', { 'assessment.md': '- **Verdict**: valid', 'fix.md': '- **Status**: not applied' }, 'to-fix'],
+        ['an invalid report written with its reason is closed', { 'assessment.md': '- **Verdict**: invalid, expected behaviour' }, 'closed'],
+        ['a test with no known result goes back to fixing', { 'assessment.md': '- **Verdict**: valid', 'test.md': '- **Result**: looks fine to me' }, 'to-fix'],
+    ])('%s', (_name, files, state) => {
+        expect(readBugReport(bugWith(files))?.state).toBe(state);
+    });
+
+    it('reads known values whatever their case', () => {
+        const bug = readBugReport(bugWith({ 'assessment.md': '- **Verdict**: Valid\n- **Severity**: HIGH' }));
+        expect(bug?.verdict).toBe('valid');
+        expect(bug?.severity).toBe('high');
+    });
+
+    it.each(['constructor', '<img src=x onerror=alert(1)>', 'sev-0', '__proto__'])(
+        'drops the unrecognised value %p instead of showing it',
+        value => {
+            const bug = readBugReport(bugWith({
+                'assessment.md': `- **Verdict**: ${value}\n- **Severity**: ${value}`,
+                'fix.md': `- **Status**: ${value}`,
+                'test.md': `- **Result**: ${value}`,
+            }));
+            expect(bug?.verdict).toBeUndefined();
+            expect(bug?.severity).toBeUndefined();
+            expect(bug?.fixStatus).toBeUndefined();
+            expect(bug?.testResult).toBeUndefined();
+            expect(bug?.outcome).toBeUndefined();
+        },
+    );
 });

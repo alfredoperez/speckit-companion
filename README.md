@@ -79,7 +79,7 @@ Feature specs describe one change and then go quiet. **Living specs** are durabl
 ### Also in the box
 
 - **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
-- **Bug reports from Spec Kit's bug flow.** With the `bug` extension installed, each bug's assessment, fix and test reports show up in a Bugs group in the sidebar, with the latest outcome, and open read-only in the viewer. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
+- **Bugs and ideas beside your specs.** Spec Kit's bug flow and idea assessment each get a pane in the sidebar: bugs grouped by To fix, To test, Verified and Closed, ideas by Assessing and Decided with the verdict. Every report opens read-only in the viewer, and a pane offers to install its Spec Kit extension when it is missing. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
 - **Know which assistant has which spec.** A spec you run from Companion shows the assistant's name on its sidebar row and in the viewer header, and Show Terminal brings its terminal to the front while that terminal is open. It cannot jump to a chat panel or tell you an assistant is waiting for an answer. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
 - **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer)
 

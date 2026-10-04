@@ -69,7 +69,9 @@ import { resolveInstallPrompt, type InstallPrompt } from "../../speckit/specKitE
 import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
 import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests } from "./stateDerivation";
 import { enrichLivingSpecs } from "../living-specs/livingSpecsContent";
-import { bugDirectoryOf, bugReportDocuments, bugReportKindOf, isBugsPath, readBugReport } from "../bugs/bugReports";
+import { BUG_SET, bugDirectoryOf, readBugReport } from "../bugs/bugReports";
+import { IDEA_SET, ideaDirectoryOf, readIdeaReport } from "../ideas/ideaReports";
+import { isReportPath, reportDirectoryOf, reportDocuments, type ReportSet } from "../reports/reportSet";
 import { featureSpecPath } from "../specs/featureSpecPath";
 import { noteSpecDispatch, resolveSpecAssistant } from "../specs/specAssistant";
 import { getSpecTerminal } from "../specs/specTerminals";
@@ -85,6 +87,34 @@ import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/ty
 
 /** How long Approve all and Remove stay undoable. */
 const LIVING_UNDO_MS = 5000;
+
+type ReportSetId = ReportSet<string>["id"];
+
+interface ReportPanel {
+  set: ReportSet<string>;
+  read(directory: string): { title: string; badge?: string } | undefined;
+}
+
+const REPORT_PANELS: Record<ReportSetId, ReportPanel> = {
+  bugs: {
+    set: BUG_SET,
+    read: directory => {
+      const bug = readBugReport(directory);
+      return bug && { title: bug.title, badge: bug.outcome };
+    },
+  },
+  ideas: {
+    set: IDEA_SET,
+    read: directory => {
+      const idea = readIdeaReport(directory);
+      return idea && { title: idea.title, badge: idea.verdict };
+    },
+  },
+};
+
+function reportSetOfPath(filePath: string): ReportSet<string> | undefined {
+  return Object.values(REPORT_PANELS).map(panel => panel.set).find(set => isReportPath(set, filePath));
+}
 
 // Re-export utility functions for external use
 export {
@@ -224,13 +254,18 @@ export class SpecViewerProvider {
    */
   public async show(
     filePath: string,
-    opts?: { living?: boolean; requirement?: string; bug?: boolean },
+    opts?: { living?: boolean; requirement?: string; bug?: boolean; report?: ReportSetId },
   ): Promise<void> {
     if (opts?.living) {
       return this.showLiving(filePath, opts.requirement);
     }
-    if (opts?.bug || bugDirectoryOf(filePath)) {
-      return this.showBug(filePath);
+    const reportSet = bugDirectoryOf(filePath)
+      ? "bugs"
+      : ideaDirectoryOf(filePath)
+        ? "ideas"
+        : opts?.report ?? (opts?.bug ? "bugs" : undefined);
+    if (reportSet) {
+      return this.showReport(filePath, reportSet);
     }
     let specDirectory = getSpecDirectoryFromPath(filePath);
     let documentType = getDocumentTypeFromPath(filePath);
@@ -325,19 +360,21 @@ export class SpecViewerProvider {
     this.revealRequirement(specDirectory, requirement);
   }
 
-  /** One read-only panel per bug, keyed by its folder, showing the clicked report. */
-  private async showBug(filePath: string): Promise<void> {
-    const bugDirectory = bugDirectoryOf(filePath) ?? path.dirname(filePath);
-    const documentType: DocumentType = bugReportKindOf(filePath) ?? "assessment";
+  /** One read-only panel per bug or idea, keyed by its folder, showing the clicked report. */
+  private async showReport(filePath: string, reportSet: ReportSetId): Promise<void> {
+    const { set } = REPORT_PANELS[reportSet];
+    const directory = reportDirectoryOf(set, filePath) ?? path.dirname(filePath);
+    const fileName = path.basename(filePath);
+    const documentType = (set.kinds.find(kind => fileName === `${kind}.md`) ?? set.kinds[0]) as DocumentType;
 
-    const existing = this.panels.get(bugDirectory);
+    const existing = this.panels.get(directory);
     if (existing?.state.bug) {
       existing.state.landing = "document";
-      await this.updateBugContent(bugDirectory, documentType);
+      await this.updateReportContent(directory, documentType);
       existing.panel.reveal(vscode.ViewColumn.One);
       return;
     }
-    await this.createPanel(bugDirectory, documentType, undefined, "document", { bug: true });
+    await this.createPanel(directory, documentType, undefined, "document", { report: reportSet });
   }
 
   /**
@@ -375,15 +412,16 @@ export class SpecViewerProvider {
    * Refresh content if currently displaying the specified file
    */
   public async refreshIfDisplaying(filePath: string): Promise<void> {
-    if (isBugsPath(filePath)) {
-      const bugKey = [bugDirectoryOf(filePath), path.dirname(filePath), filePath]
+    const reportSet = reportSetOfPath(filePath);
+    if (reportSet) {
+      const reportKey = [reportDirectoryOf(reportSet, filePath), path.dirname(filePath), filePath]
         .find(key => key && this.panels.get(key)?.state.bug);
-      const keys = bugKey
-        ? [bugKey]
+      const keys = reportKey
+        ? [reportKey]
         : [...this.panels].filter(([key, inst]) => inst.state.bug && key.startsWith(filePath + path.sep)).map(([key]) => key);
       for (const key of keys) {
-        this.outputChannel.appendLine(`[SpecViewer] Refreshing bug report due to file change: ${filePath}`);
-        await this.updateBugContent(key, this.panels.get(key)!.state.currentDocument);
+        this.outputChannel.appendLine(`[SpecViewer] Refreshing ${reportSet.panelPrefix.toLowerCase()} report due to file change: ${filePath}`);
+        await this.updateReportContent(key, this.panels.get(key)!.state.currentDocument);
       }
       return;
     }
@@ -487,7 +525,7 @@ export class SpecViewerProvider {
    * Handle file deletion
    */
   public handleFileDeleted(filePath: string): void {
-    if (isBugsPath(filePath)) {
+    if (reportSetOfPath(filePath)) {
       void this.refreshIfDisplaying(filePath);
       return;
     }
@@ -556,7 +594,7 @@ export class SpecViewerProvider {
     const instance = this.panels.get(specDirectory);
     if (!instance) return;
     this.outputChannel.appendLine(`[SpecViewer] Spec folder gone: ${specDirectory}`);
-    const kind = instance.state.living ? "Living Spec" : instance.state.bug ? "Bug" : "Spec";
+    const kind = instance.state.living ? "Living Spec" : instance.state.bug ? REPORT_PANELS[instance.state.reportSet ?? "bugs"].set.panelPrefix : "Spec";
     instance.panel.title = `${kind}: ${instance.state.specName} (moved)`;
     this.postMessage(specDirectory, { type: "specMoved", specDirectory });
   }
@@ -583,16 +621,17 @@ export class SpecViewerProvider {
     documentType: DocumentType | undefined,
     living?: { living: true; sourcePath: string },
     landing?: 'overview' | 'document',
-    mode?: { bug?: boolean },
+    mode?: { report?: ReportSetId },
   ): Promise<void> {
-    const bug = !!mode?.bug;
+    const report = mode?.report;
+    const bug = !!report;
     const specName = living
       ? livingCapabilityName(living.sourcePath)
       : path.basename(specDirectory);
 
     const panel = vscode.window.createWebviewPanel(
       "speckit.specViewer",
-      `${bug ? "Bug" : "Spec"}: ${specName}`,
+      `${report ? REPORT_PANELS[report].set.panelPrefix : "Spec"}: ${specName}`,
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -610,7 +649,7 @@ export class SpecViewerProvider {
       specDirectory,
       living: !!living,
       livingSourcePath: living?.sourcePath,
-      ...(bug ? { bug: true } : {}),
+      ...(report ? { bug: true, reportSet: report } : {}),
       currentDocument: documentType ?? CORE_DOCUMENTS.SPEC,
       landing,
       availableDocuments: [],
@@ -835,8 +874,8 @@ export class SpecViewerProvider {
     }
   }
 
-  /** Render one bug report read-only: the three reports as the rail, no run record or run machinery. */
-  private async updateBugContent(
+  /** Render one bug or idea report read-only: its reports as the rail, no run record or run machinery. */
+  private async updateReportContent(
     bugDirectory: string,
     documentType: DocumentType,
   ): Promise<void> {
@@ -847,8 +886,9 @@ export class SpecViewerProvider {
       return;
     }
 
-    const bug = readBugReport(bugDirectory);
-    const documents = bugReportDocuments(bugDirectory);
+    const { set, read } = REPORT_PANELS[instance.state.reportSet ?? "bugs"];
+    const report = read(bugDirectory);
+    const documents = reportDocuments(set, bugDirectory);
     const doc = documents.find(d => d.type === documentType) ?? documents[0];
 
     let content = "";
@@ -863,8 +903,8 @@ export class SpecViewerProvider {
     // The panel may have closed, or been replaced, while the report was read.
     if (this.panels.get(bugDirectory) !== instance) return;
 
-    const title = bug?.title ?? path.basename(bugDirectory);
-    const badgeText = bug?.outcome?.toUpperCase() ?? "BUG";
+    const title = report?.title ?? path.basename(bugDirectory);
+    const badgeText = report?.badge?.toUpperCase() ?? set.fallbackBadge;
 
     instance.state = {
       ...instance.state,
@@ -877,7 +917,7 @@ export class SpecViewerProvider {
       taskCompletionPercent: 0,
     };
     instance.firstOpenComplete = true;
-    instance.panel.title = `Bug: ${title}`;
+    instance.panel.title = `${set.panelPrefix}: ${title}`;
 
     instance.panel.webview.html = generateHtml(
       instance.panel.webview,
@@ -914,7 +954,7 @@ export class SpecViewerProvider {
     );
 
     this.outputChannel.appendLine(
-      `[SpecViewer] Updated bug report: ${path.basename(bugDirectory)}/${doc.type}`,
+      `[SpecViewer] Updated ${set.panelPrefix.toLowerCase()} report: ${path.basename(bugDirectory)}/${doc.type}`,
     );
   }
 
@@ -973,7 +1013,7 @@ export class SpecViewerProvider {
       );
     }
     if (instance.state.bug) {
-      return this.updateBugContent(specDirectory, documentType ?? instance.state.currentDocument);
+      return this.updateReportContent(specDirectory, documentType ?? instance.state.currentDocument);
     }
     if (this.specDirectoryGone(instance)) {
       this.markSpecMoved(specDirectory);
@@ -1269,7 +1309,7 @@ export class SpecViewerProvider {
       return this.updateLivingContent(specDirectory, documentType);
     }
     if (instance.state.bug) {
-      return this.updateBugContent(specDirectory, documentType);
+      return this.updateReportContent(specDirectory, documentType);
     }
     if (this.specDirectoryGone(instance)) {
       this.markSpecMoved(specDirectory);

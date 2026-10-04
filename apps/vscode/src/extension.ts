@@ -41,7 +41,14 @@ import { getConfiguredProviderType } from './ai-providers/aiProvider';
 import { suggestIntegrationProvider } from './speckit/integrationProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
 import { registerSpecShapeDiagnostics } from './features/specs/specShapeDiagnostics';
-import { bugDirectoryOf } from './features/bugs/bugReports';
+import { BUG_SET } from './features/bugs/bugReports';
+import { bugsPaneConfig } from './features/bugs/bugsPane';
+import { IDEA_SET } from './features/ideas/ideaReports';
+import { ideasPaneConfig } from './features/ideas/ideasPane';
+import { ProcessPaneProvider } from './features/processes/processPaneProvider';
+import { registerProcessCommands } from './features/processes/processCommands';
+import { ReportSet, reportDirectoryOf } from './features/reports/reportSet';
+import { PROCESS_EXTENSION_IDS } from './speckit/processExtensions';
 
 let aiProvider: IAIProvider;
 let extensionContext: vscode.ExtensionContext;
@@ -200,6 +207,8 @@ export async function activate(context: vscode.ExtensionContext) {
     specExplorer = new SpecExplorerProvider(context, outputChannel, filterState, sortState);
     const steeringExplorer = new SteeringExplorerProvider(context);
     const livingSpecsExplorer = new LivingSpecsExplorerProvider(context, outputChannel);
+    const bugsPane = new ProcessPaneProvider(context, bugsPaneConfig, outputChannel);
+    const ideasPane = new ProcessPaneProvider(context, ideasPaneConfig, outputChannel);
 
     // Restore filter/sort from workspace state and sync the matching context
     // keys so title-bar menu visibility matches reality on activation.
@@ -222,6 +231,8 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
         specsTreeView,
+        vscode.window.registerTreeDataProvider(Views.bugs, bugsPane),
+        vscode.window.registerTreeDataProvider(Views.ideas, ideasPane),
         vscode.window.registerTreeDataProvider(Views.livingSpecs, livingSpecsExplorer),
         vscode.window.registerTreeDataProvider(Views.steering, steeringExplorer)
     );
@@ -242,6 +253,7 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
     registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, filterState, sortState);
     registerLivingSpecsCommands(context, livingSpecsExplorer, outputChannel);
+    registerProcessCommands(context, { bugs: bugsPane, ideas: ideasPane });
     registerLivingSpecsStatusBar(context);
     registerUtilityCommands(context, updateChecker, outputChannel);
 
@@ -423,31 +435,47 @@ export async function activate(context: vscode.ExtensionContext) {
             livingSpecsWatcher.onDidCreate(refreshOpenLiving);
             wiring.push(livingSpecsWatcher, refreshLivingSpecs);
 
-            // Bug reports sit outside the spec directories the tree and viewer watchers cover.
-            const bugsWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(root, '.specify/bugs/**')
-            );
-            const refreshBugs = trailing(() => specExplorer.refresh(), 150);
-            const changedBugs = new Set<string>();
-            const refreshOpenBugs = trailing(() => {
-                changedBugs.forEach(bug => void specViewer.refreshIfDisplaying(bug));
-                changedBugs.clear();
-            }, 300);
-            const onBugChange = (uri: vscode.Uri) => {
-                refreshBugs.call();
-                // A report, a bug folder, or the bugs folder itself; stray files like .DS_Store redraw nothing.
-                const name = path.basename(uri.fsPath);
-                const isFolderEvent = name === 'bugs' || name === '.specify' || path.basename(path.dirname(uri.fsPath)) === 'bugs';
-                const changed = bugDirectoryOf(uri.fsPath) ?? (isFolderEvent ? uri.fsPath : undefined);
-                if (changed) {
-                    changedBugs.add(changed);
-                    refreshOpenBugs.call();
-                }
+            // Bug and idea reports sit outside the spec directories the tree and viewer watchers cover.
+            const watchReports = (set: ReportSet<string>, pane: { refresh(): void }): void => {
+                const folder = set.dir.split(path.sep).join('/');
+                const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, `{${folder},${folder}/**}`));
+                const refreshPane = trailing(() => pane.refresh(), 150);
+                const changed = new Set<string>();
+                const refreshOpen = trailing(() => {
+                    changed.forEach(item => void specViewer.refreshIfDisplaying(item));
+                    changed.clear();
+                }, 300);
+                const setFolder = path.basename(set.dir);
+                const onChange = (uri: vscode.Uri) => {
+                    refreshPane.call();
+                    // A report, an item folder, or the set folder itself; stray files like .DS_Store redraw nothing.
+                    const name = path.basename(uri.fsPath);
+                    const isFolderEvent = name === setFolder || name === '.specify' || path.basename(path.dirname(uri.fsPath)) === setFolder;
+                    const item = reportDirectoryOf(set, uri.fsPath) ?? (isFolderEvent ? uri.fsPath : undefined);
+                    if (item) {
+                        changed.add(item);
+                        refreshOpen.call();
+                    }
+                };
+                watcher.onDidCreate(onChange);
+                watcher.onDidChange(onChange);
+                watcher.onDidDelete(onChange);
+                wiring.push(watcher, refreshPane, refreshOpen);
             };
-            bugsWatcher.onDidCreate(onBugChange);
-            bugsWatcher.onDidChange(onBugChange);
-            bugsWatcher.onDidDelete(onBugChange);
-            wiring.push(bugsWatcher, refreshBugs, refreshOpenBugs);
+            watchReports(BUG_SET, bugsPane);
+            watchReports(IDEA_SET, ideasPane);
+
+            // An install row clears once its extension's folder appears.
+            const processExtensionsWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, `.specify/extensions/{${PROCESS_EXTENSION_IDS.flatMap(id => [id, `${id}/**`]).join(',')}}`)
+            );
+            const refreshPanes = trailing(() => {
+                bugsPane.refresh();
+                ideasPane.refresh();
+            }, 300);
+            processExtensionsWatcher.onDidCreate(refreshPanes.call);
+            processExtensionsWatcher.onDidDelete(refreshPanes.call);
+            wiring.push(processExtensionsWatcher, refreshPanes);
         };
         wireCompanionSurfaces();
         context.subscriptions.push(
@@ -458,6 +486,8 @@ export async function activate(context: vscode.ExtensionContext) {
                 specExplorer.refresh();
                 steeringExplorer.refresh();
                 livingSpecsExplorer.refresh();
+                bugsPane.refresh();
+                ideasPane.refresh();
                 void specViewer.refreshOpenPanels();
                 void specKitDetector.detect();
             }),

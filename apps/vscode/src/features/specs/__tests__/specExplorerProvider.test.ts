@@ -161,6 +161,23 @@ describe('SpecExplorerProvider', () => {
             expect(children).toEqual([]);
         });
 
+        it('lists no bug rows when the project has bug reports and no specs', async () => {
+            const realFs = jest.requireActual<typeof fs>('fs');
+            const fixtureRoot = path.resolve(__dirname, '../../../../tests/fixtures/bug-reports');
+            for (const name of ['existsSync', 'statSync', 'readdirSync', 'readFileSync', 'realpathSync'] as const) {
+                (mockFs[name] as jest.Mock).mockImplementation(realFs[name] as (...args: unknown[]) => unknown);
+            }
+            (vscode.workspace as any).workspaceFolders = [
+                { uri: vscode.Uri.file(fixtureRoot), name: 'workspace', index: 0 },
+            ];
+            (resolveSpecDirectories as jest.Mock).mockResolvedValue([]);
+
+            expect(realFs.existsSync(path.join(fixtureRoot, '.specify', 'bugs'))).toBe(true);
+            expect(await provider.getChildren()).toEqual([]);
+
+            (mockFs.realpathSync as unknown as jest.Mock).mockReset();
+        });
+
         it('should group specs with no context file under Active by default', async () => {
             (resolveSpecDirectories as jest.Mock).mockResolvedValue([
                 { name: 'feature-a', path: 'specs/feature-a' },

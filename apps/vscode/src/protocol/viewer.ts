@@ -164,6 +164,9 @@ export interface SpecViewerState {
     /** Bug-report mode: a `.specify/bugs/<slug>/` folder shown read-only, with no run record. */
     bug?: boolean;
 
+    /** Which report set a read-only panel shows; bugs when a read-only panel names none. */
+    reportSet?: 'bugs' | 'ideas';
+
     /** Absolute path to the spec directory */
     specDirectory: string;
 

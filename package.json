@@ -65,6 +65,16 @@
           "name": "Specs"
         },
         {
+          "id": "speckit.views.bugs",
+          "name": "Bugs",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && speckit.detected"
+        },
+        {
+          "id": "speckit.views.ideas",
+          "name": "Ideas",
+          "when": "!(workbenchState == empty || workspaceFolderCount == 0) && speckit.detected"
+        },
+        {
           "id": "speckit.views.livingSpecs",
           "name": "Living Specs",
           "visibility": "collapsed",
@@ -554,6 +564,23 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "speckit.bugs.refresh",
+        "title": "Refresh Bugs",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.ideas.refresh",
+        "title": "Refresh Ideas",
+        "category": "SpecKit",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "speckit.processes.installExtension",
+        "title": "Install Spec Kit Process Extension",
+        "category": "SpecKit"
+      },
+      {
         "command": "speckit.livingSpecs.update",
         "title": "Update to Match Code",
         "category": "SpecKit",
@@ -654,6 +681,16 @@
           "command": "speckit.steering.create",
           "when": "view == speckit.views.steering",
           "group": "navigation@2"
+        },
+        {
+          "command": "speckit.bugs.refresh",
+          "when": "view == speckit.views.bugs",
+          "group": "navigation@1"
+        },
+        {
+          "command": "speckit.ideas.refresh",
+          "when": "view == speckit.views.ideas",
+          "group": "navigation@1"
         },
         {
           "command": "speckit.livingSpecs.refresh",
@@ -990,6 +1027,10 @@
         },
         {
           "command": "speckit.companion.installNudge",
+          "when": "false"
+        },
+        {
+          "command": "speckit.processes.installExtension",
           "when": "false"
         }
       ]

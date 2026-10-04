@@ -31,6 +31,7 @@ checks:
   canvas-new-spec: { kind: desktop, recipe: "Copilot canvas pass › Full run", what: "New spec once per workflow (stock Spec Kit and Companion); the chat receives the matching command each time" }
   site-pages: { kind: desktop, recipe: "Website pages", what: "serve with `npm run preview` in apps/website and look at each changed page in a browser" }
   builder: { kind: desktop, recipe: "VS Code pass › Pipeline builder", what: "phase menu opens, Add step adds a step, the builder holds at a narrow width" }
+  process-panes: { kind: desktop, recipe: "VS Code pass › Bugs and Ideas panes", what: "the Bugs and Ideas panes list their groups, a report opens read-only, and a pane with no extension shows its install row" }
 
 # Runs on every release whatever the diff says.
 baseline: [vscode-run, terminal-run, first-open, stock-workspace, multi-root, themes]
@@ -67,6 +68,15 @@ surfaces:
       - "apps/vscode/webview/src/pipeline-builder/**"
       - "apps/vscode/webview/styles/pipeline-builder.css"
     checks: [builder]
+
+  - name: bugs and ideas panes
+    paths:
+      - "apps/vscode/src/features/bugs/**"
+      - "apps/vscode/src/features/ideas/**"
+      - "apps/vscode/src/features/processes/**"
+      - "apps/vscode/src/features/reports/**"
+      - "apps/vscode/src/speckit/processExtensions.ts"
+    checks: [jest, process-panes]
 
   - name: extension host
     paths: ["apps/vscode/src/**", "package.json"]
