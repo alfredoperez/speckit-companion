@@ -1,0 +1,31 @@
+---
+title: Install the board in the Copilot app
+description: Copy the SpecKit Companion canvas into your project or your user folder, then open it beside the chat in the GitHub Copilot app.
+---
+
+If you work in the GitHub Copilot app, SpecKit Companion opens as a canvas beside your chat. It shows every spec in the repo, where each one is in the pipeline, and a button for the next step. You do not need the VS Code extension for it.
+
+## Set it up
+
+Copy the `apps/copilot-canvas` folder from the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project or your user folder.
+
+```bash
+# shared with your team
+cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion
+# every project on your machine
+cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion
+```
+
+Then start a new session in the Copilot app and ask: **Open the SpecKit Companion canvas**. It also appears under **Customize, Canvas**.
+
+| Where you copied it | When it shows up |
+| --- | --- |
+| Your user folder | In every new session |
+| The project | Only once the copy is on your default branch, because the Copilot app runs each session in a fresh worktree cut from that branch |
+
+Use the user folder while you try it out.
+
+## Related
+
+- [Navigate the board](/docs/copilot-app/navigate-the-board) covers what each part of the board shows.
+- [Run the steps](/docs/copilot-app/run-the-steps) covers which commands the buttons send.

@@ -140,9 +140,9 @@ Install **SpecKit Companion** from the VS Code Marketplace, then add the [compan
 
 Dispatches to Claude Code, Oh My Pi, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](https://speckit-companion.dev/docs/reference/providers).
 
-In the GitHub Copilot app, the [spec board canvas](https://speckit-companion.dev/docs/processes/copilot-app/) shows every spec's pipeline and tasks live next to the chat, and runs the next step from a button.
+In the GitHub Copilot app, the [spec board canvas](https://speckit-companion.dev/docs/copilot-app/install/) shows every spec's pipeline and tasks live next to the chat, and runs the next step from a button.
 
-In the Claude Code terminal, the [SpecKit Companion mod](https://speckit-companion.dev/docs/processes/claude-code/) shows where the run stands above the prompt and in a pane beside the transcript, with `/spec` to switch specs.
+In the Claude Code terminal, the [SpecKit Companion mod](https://speckit-companion.dev/docs/claude-code/install/) shows where the run stands above the prompt and in a pane beside the transcript, with `/spec` to switch specs.
 
 ## Docs
 

@@ -1,0 +1,26 @@
+---
+title: Run the steps from the board
+description: Which commands the board's buttons send into the GitHub Copilot app chat, and what the board does and does not do by itself.
+---
+
+Each button on the board sends one command into the chat, and your agent runs the step from there.
+
+## Which commands the buttons send
+
+| The project and the spec | The buttons send |
+| --- | --- |
+| The [Companion Spec Kit extension](/docs/install) is installed | `/speckit.companion.*` |
+| It is not installed | The stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement` |
+| The spec was started with the Spec Kit workflow | The stock commands, even where Companion is installed |
+
+A spec keeps the workflow it was started with, so a run never switches halfway. The board says which commands it is using under the next-step button.
+
+## Good to know
+
+- **The board only reads.** It does not touch `.spec-context.json` or any spec file. The commands it sends do that.
+- **You can ask the agent.** "Which specs are still open?" or "show me the export spec", and the board follows.
+
+## Related
+
+- [Navigate the board](/docs/copilot-app/navigate-the-board) covers what each part of the board shows.
+- [Spec-driven development](/docs/start/spec-driven-development) explains the two workflows a spec can be started with.

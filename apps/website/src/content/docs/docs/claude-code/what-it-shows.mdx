@@ -1,27 +1,9 @@
 ---
-title: From Claude Code
-description: A Claude Code mod that shows where your Spec Kit run stands, above the prompt and in a pane beside the transcript, with /spec to switch specs.
+title: What the mod shows
+description: The band above the prompt and the pane beside the transcript that the SpecKit Companion mod adds to Claude Code, and where each one appears.
 ---
 
-import CodeLine from '../../../../components/CodeLine.astro';
-import Actions from '../../../../components/journey/Actions.astro';
-import YouSee from '../../../../components/journey/YouSee.astro';
-
-<Actions>
-  <CodeLine command="claude plugin marketplace add alfredoperez/speckit-companion" />
-  <CodeLine command="claude plugin install speckit-companion@speckit-companion" />
-  <p>You need Claude Code 2.1.287 or later. Check with <code>claude --version</code>.</p>
-</Actions>
-
-If you run the Spec Kit commands in the Claude Code terminal, the SpecKit Companion mod keeps the run in view while you work. It reads the same run record as the VS Code viewer and the [Copilot app board](/docs/processes/copilot-app), so the three always agree on steps, times and task counts.
-
-In a session that is already open, run `/reload-plugins` after installing.
-
-<YouSee>
-
-Run `/plugin`. The line under the tabs lists `speckit-companion` among the active mods.
-
-</YouSee>
+The mod adds two things to Claude Code, a band and a pane, and both follow one spec at a time.
 
 ## What you get
 
@@ -31,14 +13,6 @@ Run `/plugin`. The line under the tabs lists `speckit-companion` among the activ
 | A pane beside the transcript | The four steps with the time each one took, the total active time, and the task list by phase with the task in flight marked. Tasks tick off as the agent finishes them. |
 
 Step times follow the same rules as the viewer. A step ends at its own finish, the waits between steps count toward nothing, and the total is the time the steps were actually running.
-
-## Switch specs with /spec
-
-| You type | It does |
-| --- | --- |
-| `/spec` | Lists the most recent specs to pick from |
-| `/spec 42` or `/spec export-csv` | Follows that spec |
-| `/spec auto` | Goes back to following the latest one |
 
 ## Where it shows
 
@@ -54,3 +28,8 @@ In VS Code itself, the SpecKit Companion extension already shows all of this.
 ## Good to know
 
 The mod only reads. It never writes a spec file or sends a prompt, so you still run `/speckit-companion-plan`, `/speckit-implement` and the rest yourself.
+
+## Related
+
+- [Install](/docs/claude-code/install) adds the mod to Claude Code.
+- [Switch specs with /spec](/docs/claude-code/switch-specs) changes the spec the band and the pane follow.

@@ -12,17 +12,18 @@ Astro with the Starlight docs integration, static output.
 
 ## Docs
 
-The docs are organized by the spec journey, and each group is a folder under `src/content/docs/docs/`:
+The docs sidebar is organized by where you work. A group is a list in the sidebar, not a folder: the IDE group gathers pages from five folders, which kept their addresses when the sidebar was regrouped.
 
-| Group | Folder | What its pages are |
+| Group | Folder under `src/content/docs/docs/` | What its pages are |
 | --- | --- | --- |
-| Start | `index.mdx`, `install.mdx`, `start/` | What it is, the method, getting set up, the first spec |
-| Navigate | `navigate/` | The sidebar and the frame of the viewer |
-| Each step | `steps/` | One page per step: the command, what it writes, what you see |
-| Read the results | `results/` | The document, the Overview, progress, living specs |
-| Other processes | `processes/` | Bugs, assessing an idea, the Copilot app, Claude Code |
+| Start | `index.mdx`, `start/spec-driven-development.mdx`, `install.mdx` | What it is, the method with its glossary and the two other processes, getting set up |
+| In your IDE | `ide/`, `start/your-first-spec.mdx`, `navigate/`, `steps/`, `results/` | Choosing a provider, the first spec, the sidebar and the viewer, then two collapsed sub-groups (Each step, Read the results), then fixing a bug and assessing an idea |
+| In the Copilot app | `copilot-app/` | Install, Navigate the board, Run the steps |
+| In Claude Code | `claude-code/` | Install, What it shows, Switch specs with /spec |
 | Customize | `customize/` | Pipeline Builder, hooks, your own workflow, steering |
 | Reference | `reference/` | Commands, configuration, providers, telemetry |
+
+The regroup retired the `processes/` folder. Fix a bug and Assess an idea moved to `ide/`, the Copilot app page and the Claude Code page each split into three, and Choose an AI provider is new. The four old `/docs/processes/` addresses redirect, and the two split pages land on their Install page.
 
 The sidebar in `astro.config.mjs` names every page by slug, in reading order, so a new page is added there as well as saved in its folder. A page that moves gets a line under `redirects` in the same file, pointing at its final address.
 
