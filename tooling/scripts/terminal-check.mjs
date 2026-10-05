@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Drives a real Claude Code session in tmux with the SpecKit Companion mod and a throwaway Spec Kit project, and saves the screen as text and as a picture per step.
-// usage: node tooling/scripts/terminal-check.mjs [--mode replay|run] [--recipe claude-mod-stock|claude-mod] [--look plain|site] [--out <dir>] [--only <step,step>] [--keep]
+// usage: node tooling/scripts/terminal-check.mjs [--mode replay|run] [--recipe claude-mod-stock|claude-mod] [--look plain|site] [--out <dir>] [--only <step,step>] [--keep] [--grids]
 import { execFile, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { LOOKS, gridHtml, gridText, parseAnsi } from './lib/terminal/ansi.mjs';
+import { LOOKS, gridHtml, gridJson, gridText, parseAnsi } from './lib/terminal/ansi.mjs';
 import { bandRow, dialog, focusedControl, isWorking, paneHasKeyboard, paneRows, paneText, promptBox } from './lib/terminal/screen.mjs';
 import { outsideEnv, sleep, startSession } from './lib/terminal/tmux.mjs';
 
@@ -24,6 +24,8 @@ const RECIPE = arg('recipe', 'claude-mod-stock');
 const OUT = resolve(arg('out', join(REPO, '.terminal-check', `${RECIPE}-${MODE}`)));
 const ONLY = arg('only', '').split(',').filter(Boolean);
 const KEEP = process.argv.includes('--keep');
+// Also saves each step's screen as <name>.grid.json, the cell grid the video terminal player draws from.
+const GRIDS = process.argv.includes('--grids');
 // How the pictures are drawn; what a step reads off the screen is the same in every look.
 const LOOK = arg('look', 'plain');
 const WINDOW_TITLE = 'claude — speckit-tracker';
@@ -131,6 +133,7 @@ async function shot(name) {
     const grid = parseAnsi(await session.capture());
     writeFileSync(join(OUT, `${name}.txt`), gridText(grid) + '\n');
     const pane = paneRows(grid);
+    if (GRIDS) writeFileSync(join(OUT, `${name}.grid.json`), JSON.stringify(gridJson(grid, { look: LOOK, cols: COLS, pane: pane && { col: pane.col, top: pane.top, bottom: pane.bottom } })));
     const file = await render(gridHtml(grid, { to: COLS, look: LOOK, title: WINDOW_TITLE, pane }), join(OUT, `${name}.png`));
     const band = bandRow(grid, specNames);
     const crop = { look: LOOK, frame: 'card' };

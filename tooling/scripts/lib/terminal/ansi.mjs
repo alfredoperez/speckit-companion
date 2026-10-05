@@ -182,6 +182,34 @@ function cellCss(cell, look, under) {
     return rules.join(';');
 }
 
+/**
+ * The grid as plain data for a player to draw: one array of cells per row, each cell [character, column, width, style index],
+ * with the colours already resolved in a look. `pane` ({ col, top, bottom }) marks the cells that sit on the pane's card.
+ */
+export function gridJson(grid, { look: name = 'site', pane = null, cols = null } = {}) {
+    const look = LOOKS[name] ?? LOOKS.plain;
+    const styles = [];
+    const index = new Map();
+    const styleOf = (cell, under) => {
+        const key = cellCss(cell, look, under);
+        if (!index.has(key)) index.set(key, styles.push(key) - 1);
+        return index.get(key);
+    };
+    const rows = grid.map((cells, row) => {
+        const under = col => (look.card && pane && row >= pane.top && row < pane.bottom && col > pane.col ? look.card : look.background);
+        const out = cells.filter(cell => cell.ch !== ' ' || cell.bg || cell.inverse || cell.underline).map(cell => [cell.ch, cell.col, cell.w, styleOf(cell, under(cell.col))]);
+        const end = cells.length ? cells.at(-1).col + cells.at(-1).w : 0;
+        const tail = cells.tail && cells.tail.bg ? styleOf({ ...cells.tail, col: end }, under(end)) : -1;
+        return tail >= 0 ? { cells: out, tail: [end, tail] } : { cells: out };
+    });
+    const hexOf = rgb => css(rgb);
+    return {
+        look: name, cols: cols ?? Math.max(1, ...grid.map(cells => (cells.length ? cells.at(-1).col + cells.at(-1).w : 0))), rows: grid.length, size: look.size, rowHeight: look.row,
+        colours: Object.fromEntries(Object.entries(look).filter(([, v]) => Array.isArray(v)).map(([k, v]) => [k, hexOf(v)])),
+        pane, styles, grid: rows,
+    };
+}
+
 // Rules are painted, not typed: a font's box-drawing glyphs leave gaps between rows.
 const RULES = { '│': 'v', '─': 'h', '╌': 'd' };
 

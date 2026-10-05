@@ -1,0 +1,11 @@
+{
+  "name": "trial-claude-code-run",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node ../../../../tooling/video/terminal-player/build.mjs .",
+    "dev": "npx --yes hyperframes@0.8.12 preview",
+    "check": "npx --yes hyperframes@0.8.12 check",
+    "render": "npx --yes hyperframes@0.8.12 render"
+  }
+}

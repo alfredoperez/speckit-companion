@@ -1,0 +1,6 @@
+# Trial clips: sources are tracked, anything a tool writes is not.
+node_modules/
+**/snapshots/
+**/renders/
+**/.hyperframes/
+**/.cache/

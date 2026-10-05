@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Follow a Spec Kit run inside Claude Code</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link rel="stylesheet" href="assets/terminal/player.css" />
+    <style>
+      @font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-style:normal; font-display:block; }
+      @font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-Regular.ttf") format("truetype"); font-weight:400; font-style:normal; font-display:block; }
+      @font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-Bold.ttf") format("truetype"); font-weight:700; font-style:normal; font-display:block; }
+
+      * { margin:0; padding:0; box-sizing:border-box; }
+      /* The site's own tokens (apps/website/src/styles/tokens.css), by role. */
+      :root {
+        --ground:#0a0913; --panel:#0d0b1a; --card:#15122a; --border:#2a2545; --rule:#1d1930;
+        --text:#edeaf6; --body:#b6b0d2; --muted:#9d97bd; --accent:#a78bfa; --accent-solid:#8b5cf6; --green:#7cc98a;
+        --sans:"Figtree", sans-serif; --mono:"JetBrains Mono", monospace;
+      }
+      html, body { width:1920px; height:1080px; overflow:hidden; background:var(--ground); }
+      #root { position:relative; width:100%; height:100%; overflow:hidden; background:var(--ground); font-family:var(--sans); color:var(--text); }
+      .clip { position:absolute; inset:0; }
+      #glow { position:absolute; inset:0; background:radial-gradient(900px 700px at 78% 40%, rgb(139 92 246 / 0.16), transparent 70%), radial-gradient(600px 500px at 8% 92%, rgb(124 201 138 / 0.07), transparent 70%); }
+
+      /* ---- the rail: the one point, the four steps, the caption ---- */
+      #rail { position:absolute; left:56px; top:0; width:420px; height:1080px; display:flex; flex-direction:column; padding:64px 0 60px; }
+      .eyebrow { font:700 17px/1.3 var(--sans); letter-spacing:0.2em; text-transform:uppercase; color:var(--accent); }
+      h1 { margin-top:18px; font:700 58px/1.06 var(--sans); letter-spacing:-0.03em; color:var(--text); }
+      #steps { margin-top:48px; display:flex; flex-direction:column; gap:14px; list-style:none; }
+      #steps li { position:relative; display:flex; align-items:center; gap:16px; height:66px; padding:0 18px; border:1px solid var(--rule); border-radius:14px; background:rgb(13 11 26 / 0.7); }
+      #steps .ring { position:absolute; inset:-1px; border:2px solid var(--accent); border-radius:14px; background:rgb(167 139 250 / 0.08); opacity:0; }
+      #steps .dot { position:relative; width:28px; height:28px; flex:none; }
+      #steps .dot i { position:absolute; inset:0; border-radius:50%; }
+      #steps .dot .off { border:2px solid #3a3357; }
+      #steps .dot .run { border:2px solid var(--accent); background:rgb(167 139 250 / 0.25); opacity:0; }
+      #steps .dot .ok { background:var(--green); opacity:0; display:grid; place-items:center; font:800 18px/1 var(--sans); font-style:normal; color:#0a0913; }
+      #steps .name { position:relative; font:700 25px/1 var(--sans); width:128px; flex:none; }
+      #steps .cmd { position:relative; font:400 17.5px/1 var(--mono); color:var(--muted); }
+      #caps { position:relative; margin-top:auto; height:150px; }
+      .cap { position:absolute; left:0; bottom:0; width:420px; font:500 29px/1.3 var(--sans); color:var(--body); opacity:0; }
+      .cap b { color:var(--text); font-weight:700; }
+
+      /* ---- the stage: the terminal under one camera ---- */
+      #stage { position:absolute; left:500px; top:0; width:1420px; height:1080px; overflow:hidden; -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 70px); mask-image:linear-gradient(90deg, transparent 0, #000 70px); }
+      #cam { position:absolute; left:0; top:0; transform-origin:0 0; }
+
+      /* ---- the end card ---- */
+      #end { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; background:var(--ground); opacity:0; }
+      #end .halo { position:absolute; inset:0; background:radial-gradient(1000px 620px at 50% 46%, rgb(139 92 246 / 0.2), transparent 70%); }
+      #end img { position:relative; width:210px; height:210px; object-fit:contain; }
+      #end h2 { position:relative; font:700 76px/1.05 var(--sans); letter-spacing:-0.03em; }
+      #end .eyebrow { position:relative; font-size:20px; }
+      #pill { position:relative; display:flex; align-items:center; gap:18px; width:1560px; height:92px; padding:0 34px; margin-top:14px; background:var(--card); border:1px solid rgb(167 139 250 / 0.45); border-radius:18px; box-shadow:0 24px 60px rgb(0 0 0 / 0.5); font:400 28px/1 var(--mono); white-space:pre; }
+      #pill .sig { color:var(--accent); font-weight:700; }
+      #pill .caret { display:inline-block; width:15px; height:34px; background:var(--text); margin-left:2px; }
+      #then { position:relative; font:400 24px/1 var(--mono); color:var(--muted); opacity:0; }
+      #then b { color:var(--body); font-weight:400; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="23.8" data-fps="30" data-width="1920" data-height="1080">
+
+      <div id="demo" class="clip" data-start="0" data-duration="20.9" data-track-index="0">
+        <div id="glow"></div>
+        <aside id="rail">
+          <p class="eyebrow">Claude Code · SpecKit Companion</p>
+          <h1>Follow a Spec Kit run inside Claude Code</h1>
+          <ol id="steps">
+            <li id="st-specify"><div class="ring"></div><div class="dot"><i class="off"></i><i class="run"></i><i class="ok">✓</i></div><span class="name">Specify</span><span class="cmd">/speckit-specify</span></li>
+            <li id="st-plan"><div class="ring"></div><div class="dot"><i class="off"></i><i class="run"></i><i class="ok">✓</i></div><span class="name">Plan</span><span class="cmd">/speckit-plan</span></li>
+            <li id="st-tasks"><div class="ring"></div><div class="dot"><i class="off"></i><i class="run"></i><i class="ok">✓</i></div><span class="name">Tasks</span><span class="cmd">/speckit-tasks</span></li>
+            <li id="st-implement"><div class="ring"></div><div class="dot"><i class="off"></i><i class="run"></i><i class="ok">✓</i></div><span class="name">Implement</span><span class="cmd">/speckit-implement</span></li>
+          </ol>
+          <div id="caps">
+            <p class="cap" id="cap0">Type the command <b>you already use.</b></p>
+            <p class="cap" id="cap1">A band and a pane appear. <b>Each step ticks green.</b></p>
+            <p class="cap" id="cap2">Open a step to <b>read its document.</b> Press <b>o</b> for your editor.</p>
+            <p class="cap" id="cap3">The task bar <b>fills as tasks are ticked.</b></p>
+          </div>
+        </aside>
+        <div id="stage"><div id="cam" data-layout-allow-overflow><div id="term"></div></div></div>
+      </div>
+
+      <div id="endcard" class="clip" data-start="20.5" data-duration="3.3" data-track-index="1">
+        <div id="end">
+          <div class="halo"></div>
+          <img src="assets/mascot-celebrating.png" alt="" />
+          <p class="eyebrow">SpecKit Companion for Claude Code</p>
+          <h2>Follow your next run</h2>
+          <div id="pill"><span class="sig">$</span><span id="cmd"></span><span class="caret" id="caret"></span></div>
+          <p id="then">then <b>claude plugin install speckit-companion@speckit-companion</b></p>
+        </div>
+      </div>
+    </div>
+
+    <script src="assets/terminal/player.js"></script>
+    <script src="assets/terminal/data.js"></script>
+    <script>
+      var END_AT = 20.5;                       // where the end card starts; matches #endcard data-start
+      var INSTALL = "claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json";
+      var STAGE_W = 1420, STAGE_H = 1080;
+      var MOVE = 0.65, MOVE_EASE = "power3.inOut";
+
+      Promise.all([document.fonts.load('400 18px "JetBrains Mono"'), document.fonts.load('700 18px "JetBrains Mono"'), document.fonts.load('700 58px "Figtree"')]).then(function () {
+        var player = TerminalPlayer.create(document.getElementById("term"), { script: window.TERMINAL.script, frames: window.TERMINAL.frames, fontSize: 18, rowHeight: 25 });
+        var m = player.marks;
+        var size = player.size();
+        var tl = gsap.timeline({ paused: true });
+
+        /* the terminal is a function of time: one linear tween drives it */
+        var clock = { t: 0 };
+        tl.to(clock, { t: player.duration, duration: player.duration, ease: "none", onUpdate: function () { player.seek(clock.t); } }, 0);
+
+        /* ---- camera: three framings, all computed from where the player says things are ---- */
+        var pane = player.rect("pane", "tasked");
+        var full = { scale: 1, x: STAGE_W - size.w - 24, y: (STAGE_H - size.h) / 2 };
+        var typing = { scale: 1.34, x: 76, y: STAGE_H - 26 - size.h * 1.34 };
+        var reading = { scale: 1.34, x: STAGE_W - 40 - (pane.x + pane.w) * 1.34, y: STAGE_H / 2 - (pane.y + pane.h / 2) * 1.34 };
+        gsap.set("#cam", typing);
+        tl.to("#cam", Object.assign({ duration: MOVE, ease: MOVE_EASE }, full), m.specify.end - 0.15);
+        tl.to("#cam", Object.assign({ duration: MOVE, ease: MOVE_EASE }, reading), m.focus.start - 0.45);
+        tl.to("#cam", Object.assign({ duration: MOVE, ease: MOVE_EASE }, full), m.back.start);
+        tl.to("#cam", Object.assign({ duration: MOVE, ease: MOVE_EASE }, reading), m.implementing.start);
+        tl.to("#cam", Object.assign({ duration: MOVE, ease: MOVE_EASE }, full), m.done.end + 0.1);
+
+        /* ---- rail: each step lights while its command runs, then ticks green ---- */
+        [["specify", m.specify.start, m.specified.start], ["plan", m.plan.start, m.planned.start], ["tasks", m.tasks.start, m.tasked.start], ["implement", m.implement.start, m.done.start]].forEach(function (row) {
+          var li = "#st-" + row[0];
+          tl.to(li + " .ring", { opacity: 1, duration: 0.18, ease: "power2.out" }, row[1]);
+          tl.to(li + " .run", { opacity: 1, duration: 0.18 }, row[1]);
+          tl.to(li + " .cmd", { color: "#edeaf6", duration: 0.18 }, row[1]);
+          tl.to(li + " .ring", { opacity: 0, duration: 0.3 }, row[2]);
+          tl.to(li + " .cmd", { color: "#9d97bd", duration: 0.3 }, row[2]);
+          tl.fromTo(li + " .ok", { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.32, ease: "back.out(2.4)" }, row[2]);
+        });
+
+        /* ---- captions: one at a time ---- */
+        var caps = [[0, m["pane-opens"].start], [m["pane-opens"].start, m.focus.start - 0.45], [m.focus.start - 0.45, m.implement.start], [m.implement.start, END_AT + 0.4]];
+        gsap.set("#cap0", { opacity: 1 });
+        caps.forEach(function (span, i) {
+          if (i) tl.fromTo("#cap" + i, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, span[0] + 0.12);
+          if (i < caps.length - 1) tl.to("#cap" + i, { opacity: 0, duration: 0.14, ease: "power1.in" }, span[1]);
+        });
+
+        /* ---- end card: the install command types itself ---- */
+        tl.to("#end", { opacity: 1, duration: 0.3, ease: "power2.out" }, END_AT);
+        tl.fromTo("#end img", { y: 30, scale: 0.8 }, { y: 0, scale: 1, duration: 0.5, ease: "back.out(1.8)" }, END_AT + 0.05);
+        tl.fromTo("#end h2", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, END_AT + 0.12);
+        tl.fromTo("#pill", { opacity: 0, scaleX: 0.6 }, { opacity: 1, scaleX: 1, duration: 0.42, ease: "power3.out" }, END_AT + 0.25);
+        var typed = { n: 0 }, cmd = document.getElementById("cmd");
+        tl.to(typed, { n: INSTALL.length, duration: 1.25, ease: "none", onUpdate: function () { cmd.textContent = INSTALL.slice(0, Math.round(typed.n)); } }, END_AT + 0.6);
+        tl.to("#then", { opacity: 1, duration: 0.3 }, END_AT + 2.05);
+        tl.to("#caret", { opacity: 0, duration: 0.01, repeat: 2, repeatDelay: 0.26, yoyo: true }, END_AT + 2.1);
+
+        window.__timelines = window.__timelines || {};
+        window.__timelines["main"] = tl;
+        if (window.__hfForceTimelineRebind) window.__hfForceTimelineRebind();
+        window.__terminal = { duration: player.duration, marks: m };
+      });
+    </script>
+  </body>
+</html>

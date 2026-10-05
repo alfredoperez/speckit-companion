@@ -1,0 +1,47 @@
+{
+  "captures": "video-clear-completed",
+  "start": "idle",
+  "transcript": { "top": 5 },
+  "beats": [
+    { "at": 0.45, "do": "type", "id": "specify", "text": "/speckit-specify Let me clear all completed todos with one button", "cps": 42 },
+    { "do": "submit" },
+    { "gap": 0.2, "do": "frame", "id": "pane-opens", "to": "specifying", "dur": 0.55 },
+    { "do": "spinner", "text": "Specifying", "for": 0.75, "clock": [3, 118] },
+    { "do": "frame", "id": "specified", "to": "specified", "dur": 0.3 },
+    { "do": "print", "lines": ["Wrote specs/001-clear-completed/spec.md"] },
+
+    { "gap": 0.3, "do": "type", "id": "plan", "text": "/speckit-plan", "cps": 30 },
+    { "do": "submit" },
+    { "gap": 0.15, "do": "frame", "to": "planning", "dur": 0.25 },
+    { "do": "spinner", "text": "Planning", "for": 0.6, "clock": [2, 176] },
+    { "do": "frame", "id": "planned", "to": "planned", "dur": 0.3 },
+    { "do": "print", "lines": ["Wrote specs/001-clear-completed/plan.md"] },
+
+    { "gap": 0.3, "do": "type", "id": "tasks", "text": "/speckit-tasks", "cps": 30 },
+    { "do": "submit" },
+    { "gap": 0.15, "do": "frame", "to": "tasking", "dur": 0.25 },
+    { "do": "spinner", "text": "Writing tasks", "for": 0.55, "clock": [2, 61] },
+    { "do": "frame", "id": "tasked", "to": "tasked", "dur": 0.5 },
+    { "do": "print", "lines": ["Wrote specs/001-clear-completed/tasks.md"] },
+
+    { "gap": 0.5, "do": "frame", "id": "focus", "to": "focus-plan", "how": "cut" },
+    { "gap": 0.35, "do": "key", "id": "read", "key": "↵", "label": "Read the plan", "for": 0.9, "wait": false },
+    { "gap": 0.3, "do": "frame", "to": "open-plan", "dur": 0.4 },
+    { "do": "hold", "for": 1.3 },
+    { "do": "key", "id": "editor", "key": "o", "label": "Open it in your editor", "for": 1.2 },
+    { "do": "frame", "id": "back", "to": "tasked", "dur": 0.3 },
+
+    { "gap": 0.3, "do": "type", "id": "implement", "text": "/speckit-implement", "cps": 30 },
+    { "do": "submit" },
+    { "gap": 0.15, "do": "frame", "id": "implementing", "to": "implementing", "dur": 0.25 },
+    { "do": "spinner", "text": "Implementing", "for": 3.8, "clock": [2, 470], "wait": false },
+    { "gap": 0.6, "do": "frame", "id": "tick-1", "to": "tick-1", "dur": 0.2 },
+    { "gap": 0.5, "do": "frame", "to": "tick-2", "dur": 0.2 },
+    { "gap": 0.5, "do": "frame", "to": "tick-3", "dur": 0.2 },
+    { "gap": 0.5, "do": "frame", "to": "tick-4", "dur": 0.2 },
+    { "gap": 0.5, "do": "frame", "to": "tick-5", "dur": 0.2 },
+    { "gap": 0.45, "do": "frame", "id": "done", "to": "done", "dur": 0.3 },
+    { "do": "print", "lines": ["5 of 5 tasks done"] },
+    { "do": "hold", "id": "rest", "for": 0.7 }
+  ]
+}
