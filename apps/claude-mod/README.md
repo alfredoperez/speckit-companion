@@ -21,6 +21,18 @@ The colours follow your terminal: a finished step is green, the running step and
 
 On the Run tab each step is a control. Move to it with Tab or the arrow keys and press Enter to read that step's file inside the pane, rendered as markdown: Specify opens the spec, Plan opens `plan.md`, and Tasks and Implement open `tasks.md`. When the record has a summary of what each finished task did, Implement lists those first. The first line names the file, and `b` goes back to the step you came from. The document refreshes as the agent writes it. A step whose file does not exist yet says `not written yet` and cannot be opened, and a very long file shows its first 60,000 characters with a line saying how much was left out.
 
+### Without a run record
+
+A stock Spec Kit project has no `.spec-context.json`, because the Companion Spec Kit extension is what writes it. The pane then works from the files in the spec folder alone:
+
+- **A timeline from the files.** Each step says when its document was last written, such as `✓ Plan  written 7:18 PM · 4m after the spec`, and a file from another day carries its date. Implement reads `3 of 10 tasks · last change 2m ago` while tasks are being ticked. A line under the steps says these are file times, not measured ones, and a step the record did measure never shows a file time.
+- **What is happening now.** The line under the title reads `Writing the plan`, `Implementing: T004 next` or `Waiting: tasks next`, from which files exist and how lately each changed. The band reads the same way: `001-clear-completed · Plan written 4m ago · Tasks next`.
+- **Documents.** One line per file in the spec folder with what it holds: the spec's stories, requirements, success criteria and open questions, the files the plan names, the tasks by phase and how many can run in parallel, the decisions in the research, and how much of each checklist is checked. Press a line to read that file, including the ones in `checklists/` and `contracts/`. A count the file does not give is left out.
+- **An Overview from the spec.** The feature's description, its user stories with their priority, the open questions, the first five requirements, the success criteria and the plan's summary.
+- **The next command.** The last line of the Run tab names it, such as `Next: /speckit-tasks`, or the `/speckit-companion-*` command with the spec folder when the project has the Companion skills.
+
+A run that has a record shows the Documents block and the next command too, and its Overview adds the user stories and open questions from the spec.
+
 The mod only reads. It never writes a spec file or the run record, and never sends a prompt: you run the `/speckit-*` commands yourself.
 
 ## Install

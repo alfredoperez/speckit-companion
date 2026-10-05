@@ -72,7 +72,9 @@ test('draws the band from a real run record, and ticks when a task is checked', 
 
 test('redraws right after a tool call, and when a spec without a record gains a plan', async ($, on) => {
   const files: Record<string, string> = { 'specs/042-export-csv/spec.md': '# Feature Specification: Export CSV\n' }
-  project(on, files)
+  const mtimes: Record<string, number> = { 'specs/042-export-csv/spec.md': 1000 }
+  const { clock } = project(on, files, { mtimes })
+  await clock.set(4 * 60000 + 1000)
   await startSession($)
   const band = async (text: string) => {
     const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
@@ -80,10 +82,11 @@ test('redraws right after a tool call, and when a spec without a record gains a 
     await ui.unmount()
     return found
   }
-  expect(await band(' · Specify done · Plan next')).toBeDefined()
+  expect(await band(' · Specify written 4m ago · Plan next')).toBeDefined()
   files['specs/042-export-csv/plan.md'] = '# Plan\n'
+  mtimes['specs/042-export-csv/plan.md'] = 4 * 60000
   await $.tool.call({ tool: 'Write', file_path: 'specs/042-export-csv/plan.md', content: '# Plan\n' })
-  expect(await band(' · Plan done · Tasks next')).toBeDefined()
+  expect(await band(' · Plan written just now · Tasks next')).toBeDefined()
 })
 
 test('draws nothing of its own in a project with no specs', async ($, on) => {

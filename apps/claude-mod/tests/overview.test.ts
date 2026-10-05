@@ -81,13 +81,13 @@ test('cuts one long item at 400 characters and keeps every item of a long list',
   expect(model.concerns[1]).toBe('Concern 1 xxxxx')
 })
 
-test('says the run record is missing when a spec has none', async ($, on) => {
-  project(on, { 'specs/042-export-csv/spec.md': '# Feature Specification: Export CSV\n' })
+test('a spec with no record gets an Overview from its files, and the model of the record stays empty', async ($, on) => {
+  project(on, { 'specs/042-export-csv/spec.md': '# Feature Specification: Export CSV\n\n**Input**: User description: "Export any list as CSV"\n' })
   await startSession($)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   await ui.press({ key: 'tab-overview' })
-  const missing = await ui.find({ type: 'Text', text: 'The run record is missing. The Companion Spec Kit extension writes it.' })
-  expect(missing.props.dimColor).toBe(true)
+  expect(await ui.find({ type: 'Text', text: 'Export any list as CSV' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: /The run record is missing/ })).toBeUndefined()
   expect(await ui.find({ type: 'Text', text: 'Intent' })).toBeUndefined()
   expect(overviewModel(buildSpecRow({ id: 'specs/x', ctx: null, specText: null, files: {}, tasksText: null, updatedAt: null }), null)).toBe(null)
 })

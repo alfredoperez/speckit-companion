@@ -11,7 +11,20 @@ import {
   pickFeatureSpecName,
   sortSpecs,
 } from './vendor/board-rules.mjs'
-import { bandParts, defaultFollow, documentChunks, followText, listText, overviewModel, paneModel, taskSummaryLines } from './board.js'
+import {
+  FROM_FILES_NOTE,
+  bandParts,
+  defaultFollow,
+  documentChunks,
+  documentFacts,
+  documentKind,
+  fileOverview,
+  followText,
+  listText,
+  overviewModel,
+  paneModel,
+  taskSummaryLines,
+} from './board.js'
 
 const REFRESH_MS = 3000
 const PANE = 'speckit-companion'
@@ -20,11 +33,18 @@ const PICKER_SIZE = 15
 const SCAN_BATCH = 32
 const COMMAND = 'speckit-tracker'
 const ALIAS = 'spec'
+const MAX_DOCS = 40
+const MAX_SUBDIRS = 8
+const MAX_PARSED_BYTES = 1 << 20
+// The documents whose text is read; every other markdown file is listed by name only.
+const PARSED = ['spec', 'plan', 'tasks', 'research', 'data-model', 'checklist']
+const COMPANION_SKILL = ['.claude', 'skills', 'speckit-companion-plan']
 const GLYPH = { completed: '✓', 'in-progress': '●', 'not-started': '○' }
 // 'warning' is the one theme key the mods types name for text; done and failed use the terminal's own green and red.
 const RUNNING = { color: 'warning' }
 const FAILED = { color: 'red' }
 const STEP_STYLE = { completed: { color: 'green' }, 'in-progress': RUNNING, 'not-started': { dimColor: true } }
+const TONE = { plain: {}, dim: { dimColor: true }, running: RUNNING }
 
 let view = 'run'
 let root = null
@@ -33,9 +53,12 @@ let pinned = null
 let followed = null
 let signature = ''
 let timer = null
-// The step whose document is open, and the step the Run view puts the focus on.
+// The document that is open, and the control the Run view puts the focus on.
 let doc = null
-let focusStep = null
+let focusKey = null
+let companionSkills = false
+// Each followed file's text and facts, kept until its time or size changes.
+const parsed = new Map()
 
 const at = (...parts) => [root, ...parts].join('/')
 const followKey = () => 'follow:' + root
@@ -56,7 +79,40 @@ async function listDir($, path) {
   }
 }
 
-/** One folder's row; `full` also reads the spec and task files the list view can do without. */
+/** One document's text and facts, read again only when the file's time or size changed. */
+async function readDocument($, path, entry, kind) {
+  const stamp = entry.mtimeMs > 0 ? entry.mtimeMs + ':' + entry.size : null
+  const hit = parsed.get(path)
+  if (stamp && hit?.stamp === stamp) return hit
+  const small = kind === 'spec' || kind === 'tasks' || !(entry.size > MAX_PARSED_BYTES)
+  const text = small ? await readText($, path) : null
+  const next = { stamp, text: kind === 'spec' || kind === 'tasks' ? text : null, facts: documentFacts(kind, text) }
+  parsed.set(path, next)
+  return next
+}
+
+/** The followed folder's markdown files, one level of subfolders deep, with when each was written and what it says. */
+async function readFolder($, id, entries, specFile) {
+  const found = entries.filter(f => f.kind === 'file' && f.name.endsWith('.md')).map(f => ({ rel: f.name, entry: f }))
+  let contracts = null
+  for (const dir of entries.filter(f => f.kind === 'dir' && !f.name.startsWith('.')).slice(0, MAX_SUBDIRS)) {
+    const inside = ((await listDir($, at(id, dir.name))) ?? []).filter(f => f.kind === 'file')
+    if (dir.name === 'contracts') contracts = inside.length
+    for (const f of inside) if (f.name.endsWith('.md')) found.push({ rel: dir.name + '/' + f.name, entry: f })
+  }
+  const texts = {}
+  const files = await Promise.all(
+    found.slice(0, MAX_DOCS).map(async ({ rel, entry }) => {
+      const kind = documentKind(rel, specFile)
+      const read = PARSED.includes(kind) ? await readDocument($, at(id, rel), entry, kind) : null
+      if (read?.text != null) texts[kind] = read.text
+      return { rel, kind, mtimeMs: entry.mtimeMs > 0 ? entry.mtimeMs : null, facts: read?.facts ?? null }
+    }),
+  )
+  return { folder: { files, contracts }, texts }
+}
+
+/** One folder's row; `full` also reads the folder's documents, which the list view can do without. */
 async function readSpec($, id, full) {
   const entries = await listDir($, at(id))
   if (!entries) return null
@@ -67,9 +123,10 @@ async function readSpec($, id, full) {
   const specFile = pickFeatureSpecName(id.split('/').pop(), names)
   const hasSpec = names.includes(specFile)
   const hasTasks = names.includes('tasks.md')
-  // simplified: a list row reads the spec file only for a title the record lacks, and tasks only without a record; the followed spec reads both.
-  const specText = hasSpec && (full || !ctx?.specName) ? await readText($, at(id, specFile)) : null
-  const tasksText = hasTasks && (full || !ctx) ? await readText($, at(id, 'tasks.md')) : null
+  const read = full ? await readFolder($, id, entries, specFile) : null
+  // A list row reads the spec file only for a title the record lacks, and tasks only without a record; the followed spec reads both.
+  const specText = read ? (read.texts.spec ?? null) : hasSpec && !ctx?.specName ? await readText($, at(id, specFile)) : null
+  const tasksText = read ? (read.texts.tasks ?? null) : hasTasks && !ctx ? await readText($, at(id, 'tasks.md')) : null
   const newest = Math.max(0, ...entries.map(f => f.mtimeMs || 0))
   const row = buildSpecRow({
     id,
@@ -79,7 +136,7 @@ async function readSpec($, id, full) {
     tasksText,
     updatedAt: newest ? new Date(newest).toISOString() : null,
   })
-  return { row, ctx, tasksText, ctxText }
+  return { row, ctx, tasksText, ctxText, folder: read?.folder ?? null }
 }
 
 let knownFolders = ''
@@ -102,6 +159,7 @@ async function listSpecIds($) {
 async function scanAll($) {
   const ids = await listSpecIds($)
   knownFolders = ids.join('\n')
+  companionSkills = Boolean(await listDir($, at(...COMPANION_SKILL)))
   const read = []
   for (let i = 0; i < ids.length; i += SCAN_BATCH) {
     read.push(...(await Promise.all(ids.slice(i, i + SCAN_BATCH).map(id => readSpec($, id, false)))))
@@ -116,6 +174,7 @@ const activePin = () => (pinned && rows.some(r => r.id === pinned) ? pinned : nu
 const target = () => activePin() ?? defaultFollow(rows)?.id ?? null
 
 async function refreshFollowed($) {
+  const now = await $.clock.now()
   let id = target()
   let next = id ? await readSpec($, id, true) : null
   if (id && !next) {
@@ -127,7 +186,10 @@ async function refreshFollowed($) {
   // The target moved while this read was in flight, so the call that moved it draws instead.
   if (id !== target()) return false
   if (doc && doc.spec !== id) doc = null
-  const sig = next ? [JSON.stringify(next.row), next.ctxText, next.tasksText].join('\u0000') : ''
+  for (const path of parsed.keys()) if (!id || !path.startsWith(at(id) + '/')) parsed.delete(path)
+  // The texts that count minutes are part of what is shown, so a minute passing redraws too.
+  const live = next ? [bandParts(next.row, next.ctx, next.folder, now), paneModel(next.row, next.ctx, next.tasksText, { folder: next.folder, now, companionSkills })] : null
+  const sig = next ? [JSON.stringify(next.row), next.ctxText, next.tasksText, JSON.stringify(next.folder), JSON.stringify(live)].join('\u0000') : ''
   followed = next
   if (sig === signature) return false
   signature = sig
@@ -144,10 +206,10 @@ async function refreshDocument($) {
   return true
 }
 
-async function openDocument($, step, path) {
+async function openDocument($, key, step, path) {
   const spec = followed?.row.id
   const text = await readText($, at(path))
-  focusStep = step
+  focusKey = key
   doc = { spec, step, path, text }
   $.ui.invalidate('ui.render')
 }
@@ -203,13 +265,15 @@ async function start($, cwd) {
 
 /** The band's facts after the spec name: dim, with the running step in the warning colour. */
 function bandTexts(Text, parts) {
-  const quiet = parts.filter(p => !p.running).map(p => p.text)
-  const live = parts.find(p => p.running)
-  // The running step is always the last fact, so the quiet ones lead up to it.
-  const lead = [''].concat(quiet, live ? [''] : []).join(' · ')
+  const at = parts.findIndex(p => p.running)
+  const live = parts[at]
+  const texts = some => some.map(p => p.text)
+  const lead = [''].concat(texts(live ? parts.slice(0, at) : parts), live ? [''] : []).join(' · ')
+  const trail = live ? [''].concat(texts(parts.slice(at + 1))).join(' · ') : ''
   return [
     ...(lead ? [Text({ dimColor: true, wrap: 'truncate-end', children: [lead] })] : []),
     ...(live ? [Text({ ...RUNNING, wrap: 'truncate-end', children: [live.text] })] : []),
+    ...(trail ? [Text({ dimColor: true, wrap: 'truncate-end', children: [trail] })] : []),
   ]
 }
 
@@ -240,7 +304,10 @@ async function runCommand($, e) {
     await refreshFollowed($)
   }
   if (!followed) return { text: 'No specs found' }
-  if (!(await drawsHere($))) return { text: query ? followText(followed, activePin()) : listText(followed, rows, activePin()) }
+  if (!(await drawsHere($))) {
+    const now = await $.clock.now()
+    return { text: query ? followText(followed, activePin(), now) : listText(followed, rows, activePin(), now) }
+  }
   view = query ? 'run' : 'specs'
   doc = null
   await $.ui.open({ id: PANE, title: TITLE, focus: true })
@@ -274,7 +341,7 @@ export function register(on) {
       flexDirection: 'row',
       children: [
         Text({ bold: true, wrap: 'truncate-end', children: [followed.row.name] }),
-        ...bandTexts(Text, bandParts(followed.row, followed.ctx)),
+        ...bandTexts(Text, bandParts(followed.row, followed.ctx, followed.folder, await $.clock.now())),
       ],
     })
     const theirs = await next(e)
@@ -302,9 +369,11 @@ export function register(on) {
     const para = (text, style = {}) => Text({ wrap: 'wrap', ...style, children: [text] })
     const gap = () => line(' ')
     const section = title => [gap(), line(title, { bold: true })]
-    const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText) : null
+    const now = await $.clock.now()
+    const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText, { folder: followed.folder, now, companionSkills }) : null
     const header = [Box({ flexDirection: 'row', columnGap: 3, children: [tab('run', 'Run', '1'), tab('overview', 'Overview', '2'), tab('specs', 'Specs', '3')] })]
-    if (m) header.push(line(m.title, { bold: true }), line(m.name + ' · ' + m.statusLabel, { dimColor: true }))
+    if (m) header.push(line(m.title, { bold: true }), line(m.recorded ? m.name + ' · ' + m.statusLabel : m.name, { dimColor: true }))
+    if (m?.activity) header.push(line(m.activity.text, m.activity.live ? RUNNING : { dimColor: true }))
     const body = []
 
     if (view === 'specs') {
@@ -338,15 +407,32 @@ export function register(on) {
       body.push(line('No specs found in this project yet. Run /speckit-specify or /speckit-companion-specify to start one.'))
     } else if (view === 'overview') {
       const o = overviewModel(followed.row, followed.ctx)
+      const f = fileOverview(followed.folder)
+      const item = text => para('- ' + text)
+      const titled = title => (body.length ? section(title) : [line(title, { bold: true })])
+      const stories = () => {
+        if (f.stories.length) body.push(...titled('User stories'), ...f.stories.map(s => item(s.priority ? s.title + ' · ' + s.priority : s.title)))
+        if (f.questions.length) body.push(...titled('Open questions'), ...f.questions.map(q => para('- ' + q, RUNNING)))
+      }
       if (!o) {
-        body.push(para('The run record is missing. The Companion Spec Kit extension writes it.', { dimColor: true }))
+        if (f.description) body.push(para(f.description))
+        stories()
+        if (f.requirements) {
+          body.push(...titled(f.requirements.title), ...f.requirements.first.map(item))
+          if (f.requirements.more) body.push(line(f.requirements.more + ' more in the spec', { dimColor: true }))
+        }
+        if (f.success.length) body.push(...titled('Success criteria'), ...f.success.map(item))
+        if (f.summary) body.push(...titled('Plan summary'), para(f.summary))
+        if (f.empty) body.push(para('The spec files have nothing to summarise yet.', { dimColor: true }))
+        body.push(gap(), para(FROM_FILES_NOTE, { dimColor: true }))
       } else if (o.empty) {
         body.push(para('The run record has no overview details yet.', { dimColor: true }))
+        stories()
       } else {
-        const item = text => para('- ' + text)
         if (o.intent) body.push(line('Intent', { bold: true }), para(o.intent))
-        if (o.approach) body.push(...(body.length ? section('Approach') : [line('Approach', { bold: true })]), para(o.approach))
+        if (o.approach) body.push(...titled('Approach'), para(o.approach))
         if (o.facts) body.push(...(body.length ? [gap()] : []), line(o.facts, { dimColor: true }))
+        stories()
         if (o.expectations.length) body.push(...section('Expectations'), line('Out of scope', { dimColor: true }), ...o.expectations.map(item))
         if (o.decisions.length) {
           body.push(...section('Decisions'))
@@ -397,21 +483,19 @@ export function register(on) {
         if (note) body.push(gap(), line(note, { dimColor: true }))
       }
     } else {
+      const focus = key => (focusKey === key ? { autoFocus: true } : {})
       for (const s of m.steps) {
         const pressable = Boolean(s.document)
         const notes = []
         if (s.time) notes.push(Text({ dimColor: true, children: [s.time] }))
+        else if (s.notes.length) notes.push(...s.notes.map(n => Text({ ...TONE[n.tone], wrap: 'truncate-end', children: [n.text] })))
         else if (s.state === 'in-progress') notes.push(Text({ ...RUNNING, children: ['running'] }))
         else if (s.folded) notes.push(Text({ dimColor: true, children: ['with Specify'] }))
-        if (PIPELINE_STEPS.includes(s.step) && !pressable) notes.push(Text({ dimColor: true, children: ['not written yet'] }))
+        // Without a record Implement has no file of its own to wait for, so it says nothing until tasks are ticked.
+        const awaited = PIPELINE_STEPS.includes(s.step) && !pressable && (m.recorded || s.step !== 'implement')
+        if (awaited) notes.push(Text({ dimColor: true, children: ['not written yet'] }))
         const name = pressable
-          ? Button({
-              key: 'step-' + s.step,
-              label: s.label,
-              plain: true,
-              ...(focusStep === s.step ? { autoFocus: true } : {}),
-              onPress: () => openDocument($, s.step, s.document),
-            })
+          ? Button({ key: 'step-' + s.step, label: s.label, plain: true, ...focus('step-' + s.step), onPress: () => openDocument($, 'step-' + s.step, s.step, s.document) })
           : Text({ children: [s.label] })
         body.push(
           Box({
@@ -423,6 +507,18 @@ export function register(on) {
         )
       }
       if (m.total) body.push(line(m.total, { dimColor: true }))
+      if (m.footnote) body.push(para(m.footnote, { dimColor: true }))
+      if (m.documents.length) body.push(...section('Documents'))
+      for (const d of m.documents) {
+        const name = d.path
+          ? Button({ key: d.key, label: d.label, plain: true, ...focus(d.key), onPress: () => openDocument($, d.key, null, d.path) })
+          : Text({ children: [d.label] })
+        body.push(
+          Box({ key: 'row-' + d.key, flexDirection: 'row', columnGap: 2, children: [name, ...(d.note ? [Text({ dimColor: true, wrap: 'truncate-end', children: [d.note] })] : [])] }),
+        )
+        // A line of its own, so a narrow pane cannot cut the one fact that needs an answer.
+        if (d.warn) body.push(line('  ' + d.warn, RUNNING))
+      }
       for (const phase of m.phases) {
         body.push(gap(), line(phase.name + '  ' + phase.checked + '/' + phase.total, { bold: true }))
         for (const t of phase.tasks) {
@@ -431,9 +527,10 @@ export function register(on) {
           body.push(line(mark + ' ' + t.id + ' ' + t.text, style))
         }
       }
+      if (m.next) body.push(gap(), para(m.next, { dimColor: true }))
     }
 
-    return Box({ flexDirection: 'column', children: [Box({ key: 'header', flexDirection: 'column', children: header }), gap(), ...body] })
+    return Box({ key: 'pane', flexDirection: 'column', children: [Box({ key: 'header', flexDirection: 'column', children: header }), gap(), ...body] })
   })
 
   // A new run may have started a new spec; follow it unless the user picked one.
