@@ -69,9 +69,17 @@ A doc under `docs/` stays under 3,000 words. That's where the repo's healthy doc
 
 ## Changelog voice
 
-Changelog entries are **release notes for users**, not commit messages. Lead with the observable change — what a user can now do, or what stopped going wrong. Keep the things users actually touch: setting keys (`speckit.defaultWorkflow`), command names (`/speckit.companion.resume`), config files they edit, and the install commands they run. **Drop internal file and symbol names** — `promptBuilder.ts`, `sync_tasks()`, `write-context.py --task …`, on-disk field names like `history[]`/`transitions[]`. Those belong in the commit message or PR description. The test: would the entry make sense to someone who has never opened `apps/vscode/src/`? If it only lands for someone who has, it's too deep — move the mechanism out and keep the effect. Applies to both changelogs (root and `apps/speckit-extension/`).
+An entry is a headline for someone skimming, not the story of the change. The detail lives in the docs page and the PR. The same voice holds in all three changelogs (root, `apps/speckit-extension/`, `apps/claude-mod/`).
 
-Both files stay readable on GitHub and the Marketplace, and the site's changelog page is built from the same text. A release has this shape:
+- **A bullet** is a bold title of at most 8 words, then ONE sentence of at most 22 words. Nothing else.
+- **A highlight** is a `####` title, at most two sentences of that length, and its pictures.
+- **Start with what you do or see**, second person, present tense. Light and a little playful is welcome; never a pun that hides the fact.
+- **At most one `==highlighted phrase==` per entry**, in the body: the two to four words a skimmer must not miss. The site draws it as a marker stroke.
+- **Keep what you type or press** in code or bold: setting keys, command names, button names. No file or symbol names, no "now", no "previously", no history of the bug.
+
+Before: "**A paragraph wrapped across several lines reads as one paragraph.** A spec file that breaks a paragraph over several source lines used to show every line as its own paragraph, each with its own comment button, so sentences broke in the middle. The viewer now joins them…" After: "**Wrapped paragraphs stay whole.** A paragraph split across lines in the file is ==one paragraph, one comment button==."
+
+`/changelog-entry` writes an entry in this voice, and `npm test -- docs-consistency` holds every entry under `## [Unreleased]` to it; released versions are never checked. A release has this shape:
 
 ```markdown
 ## [0.35.0] - 2026-10-03
@@ -81,14 +89,14 @@ One plain sentence that says what the release is about.
 ### Highlights
 
 #### Drag a hook to move it
-Two or three sentences in the voice above: what you can do now, and what stops going wrong.
+Grab a hook in the Pipeline Builder and ==drop it where it runs==. The file keeps every other line as you wrote it.
 <!-- area: pipeline-builder; pr: 818; media: move-hook -->
 
 ### Fixed
-- **Move to phase… works in a narrow Pipeline Builder.** One or two sentences on what changed. ([#805](https://github.com/alfredoperez/speckit-companion/pull/805)) <!-- area: pipeline-builder -->
+- **Move to phase… works in a narrow builder.** The menu opens ==inside the window== however narrow the Pipeline Builder gets. ([#805](https://github.com/alfredoperez/speckit-companion/pull/805)) <!-- area: pipeline-builder -->
 ```
 
-- **Highlights are the big features**, each its own `####` block, and each gets a section on the site with its screenshots (per-release checklist step 8). The comment is for the site only: `area`, one or more `pr` numbers, and the `media` ids. A feature that is not worth a picture and a paragraph is not a highlight.
-- **Everything else is one bullet** under Added, Fixed, Changed or Security: a bold lead sentence that stands alone (the site shows only that line, with the rest behind More), then the full PR link, then `<!-- area: … -->`. Never a section of its own.
-- **Every entry links its PR**, highlight or bullet. When a fix spans PRs, list each.
+- **Highlights are the big features**, each its own `####` block, and each gets a section on the site with its screenshots (per-release checklist step 8). The comment is for the site only: `area`, one or more `pr` numbers, and the `media` ids. A feature that is not worth a picture is not a highlight.
+- **Everything else is one bullet** under Added, Fixed, Changed or Security: the bold title, the sentence, the full PR link, then `<!-- area: … -->`. Never a section of its own.
+- **Every entry links its PR**, highlight or bullet. When a fix spans PRs, list each. The Claude Code mod's changelog is the exception: it writes neither PR links nor area tags, and the site does not show it, so leave `==` out there.
 - **Areas**: `spec-viewer`, `overview`, `sidebar`, `create-spec`, `pipeline-builder`, `pipeline` (the Companion pipeline's commands), `copilot-app`, `living-specs`, `run-record`, `assistants` (assistants and terminals), `install` (install and updates), `docs`. The list lives in `apps/website/src/components/changelog/changelogAreas.ts`; an entry without a tag is filed by a keyword map there, and the site build names it so it can be tagged.
