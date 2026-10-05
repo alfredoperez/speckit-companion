@@ -12,8 +12,8 @@
  * `.specify/extensions/companion/CHANGELOG.md` is generated and gitignored. It is
  * never read here.
  *
- * A release leads with its `### Highlights`, one section per `####` block with
- * its screenshots, then lists its small entries grouped by area, one line each.
+ * A release is laid out by topic. A topic opens on its screenshots, then names
+ * its highlights in one sentence each, then lists its small entries one line each.
  * Screenshots come from content/media/changelog.json; see releaseMedia.ts.
  *
  * Unreleased blocks are kept, not dropped, and rendered in their own block above
@@ -35,12 +35,12 @@ import LogoMark from '../components/LogoMark.astro';
 import SiteIcons from '../components/SiteIcons.astro';
 import ogCard from '../../../../docs/screenshots/generated/og-card.png';
 import ReleaseCard from '../components/changelog/ReleaseCard.astro';
-import type { RenderedEntry, RenderedGroup } from '../components/changelog/ReleaseCard.astro';
+import type { RenderedTopic } from '../components/changelog/ReleaseCard.astro';
 import { mergeReleases, parseChangelog, unreleasedOf } from '../components/changelog/parseChangelog';
 import type { Release } from '../components/changelog/parseChangelog';
 import { mediaKey, resolveMedia } from '../components/changelog/releaseMedia';
 import { leadFor } from '../components/changelog/releaseLead';
-import { AREAS, areaLabel, areaRank } from '../components/changelog/changelogAreas';
+import { areaLabel, areaRank } from '../components/changelog/changelogAreas';
 
 const vscodeStream = parseChangelog(vscodeChangelog, 'vscode', 'VS Code extension');
 const speckitStream = parseChangelog(speckitChangelog, 'speckit', 'Spec Kit extension');
@@ -81,22 +81,53 @@ const latestIds = new Set(
   ['vscode', 'speckit'].map((product) => released.find((r) => r.product === product)?.id)
 );
 
-const renderRelease = async (release: Release, openAlso: boolean) => {
+// A highlight leads with one sentence; the rest waits behind "More".
+const splitLead = (markdown: string): [string, string] => {
+  const text = markdown.trim();
+  const paragraphEnd = text.search(/\n\s*\n/);
+  const paragraph = paragraphEnd === -1 ? text : text.slice(0, paragraphEnd);
+  const sentence = paragraph.match(/^[\s\S]*?[.!?](?=\s|$)/);
+  const first = sentence ? sentence[0] : paragraph;
+  return [first.replace(/\s+/g, ' '), text.slice(first.length).trim()];
+};
+
+const renderRelease = async (release: Release, open: boolean) => {
   const shots = media.get(mediaKey(release.product, release.version));
-  const byArea = new Map<string, RenderedEntry[]>();
+  const topics = new Map<string, RenderedTopic>();
+  const topicFor = (area: string) => {
+    let topic = topics.get(area);
+    if (!topic) {
+      topic = { area, label: areaLabel(area), shots: [], highlights: [], entries: [] };
+      topics.set(area, topic);
+    }
+    return topic;
+  };
+
+  for (const highlight of release.highlights) {
+    const topic = topicFor(highlight.area);
+    const [first, rest] = splitLead(highlight.markdown);
+    topic.shots.push(...highlight.media.map((id) => shots!.get(id)!));
+    topic.highlights.push({
+      id: highlight.id,
+      title: highlight.title,
+      leadHtml: await renderInline(first),
+      restHtml: await renderBlock(rest),
+      prs: highlight.prs,
+    });
+  }
   for (const entry of release.entries) {
-    const list = byArea.get(entry.area) ?? [];
-    list.push({
+    topicFor(entry.area).entries.push({
       type: entry.type,
       leadHtml: await renderInline(entry.lead),
       restHtml: await renderBlock(entry.rest),
       prs: entry.prs,
     });
-    byArea.set(entry.area, list);
   }
-  const groups: RenderedGroup[] = [...byArea.entries()]
-    .sort(([a], [b]) => areaRank(a) - areaRank(b))
-    .map(([area, entries]) => ({ area, label: areaLabel(area), entries }));
+
+  // Topics with pictures lead, then the product's usual area order.
+  const ordered = [...topics.values()].sort(
+    (x, y) => Number(y.shots.length > 0) - Number(x.shots.length > 0) || areaRank(x.area) - areaRank(y.area)
+  );
 
   return {
     id: release.id,
@@ -107,33 +138,14 @@ const renderRelease = async (release: Release, openAlso: boolean) => {
     unreleased: release.unreleased,
     latest: latestIds.has(release.id),
     lead: leadFor(release),
-    highlights: await Promise.all(
-      release.highlights.map(async (highlight) => ({
-        id: highlight.id,
-        title: highlight.title,
-        html: await renderBlock(highlight.markdown),
-        area: highlight.area,
-        areaLabel: areaLabel(highlight.area),
-        prs: highlight.prs,
-        shots: highlight.media.map((id) => shots!.get(id)!),
-      }))
-    ),
-    groups,
-    entryCount: release.entries.length,
-    openAlso,
+    topics: ordered,
+    changeCount: release.highlights.length + release.entries.length,
+    open,
   };
 };
 
 const renderedUnreleased = await Promise.all(unreleased.map((release) => renderRelease(release, true)));
-const renderedReleased = await Promise.all(released.map((release, index) => renderRelease(release, index < 4 || release.entries.length <= 3)));
-
-const areaCounts = new Map<string, number>();
-for (const release of everyRelease) {
-  for (const item of [...release.highlights, ...release.entries]) {
-    areaCounts.set(item.area, (areaCounts.get(item.area) ?? 0) + 1);
-  }
-}
-const areaChips = AREAS.filter((area) => areaCounts.has(area.id));
+const renderedReleased = await Promise.all(released.map((release, index) => renderRelease(release, index < 4)));
 
 const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.src;
 ---
@@ -198,13 +210,6 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           </button>
         </div>
 
-        <div class="cl-areas" role="group" aria-label="Filter changes by area">
-          <button type="button" class="cl-area is-active" data-area="all" aria-pressed="true">All areas</button>
-          {areaChips.map((area) => (
-            <button type="button" class="cl-area" data-area={area.id} aria-pressed="false">{area.label}</button>
-          ))}
-        </div>
-        <p class="cl-empty" hidden>Nothing in this area for the product you picked.</p>
       </div>
 
       {renderedUnreleased.length > 0 && (
@@ -252,7 +257,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           if (!location.hash) return;
           var target = document.querySelector(location.hash.replace(/[^#\w.-]/g, ''));
           if (!target) return;
-          var box = target.closest('details') || target.querySelector('details.cl-also');
+          var box = target.closest('details.cl-body') || target.querySelector('details.cl-body');
           if (box) box.open = true;
           target.scrollIntoView();
         }
@@ -260,75 +265,26 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         openHash();
       })();
 
-      // Product and area filters. Both apply together; the area is kept in ?area= so a filtered view can be shared.
+      // Product filter.
       (function () {
-        var body = document.body;
-        var state = { product: 'all', area: 'all' };
-        var productButtons = Array.prototype.slice.call(document.querySelectorAll('.cl-pill'));
-        var areaButtons = Array.prototype.slice.call(document.querySelectorAll('.cl-area'));
-        var empty = document.querySelector('.cl-empty');
-        var each = function (root, selector, fn) {
-          Array.prototype.forEach.call(root.querySelectorAll(selector), fn);
-        };
-
-        function press(buttons, attr, value) {
-          buttons.forEach(function (button) {
-            var active = button.getAttribute(attr) === value;
-            button.classList.toggle('is-active', active);
-            button.setAttribute('aria-pressed', active ? 'true' : 'false');
-          });
-        }
-
-        function apply() {
-          body.setAttribute('data-filter', state.product);
-          var anyArea = state.area === 'all';
-          var shown = 0;
-          each(document, '.cl-release', function (card) {
-            var productOk = state.product === 'all' || card.getAttribute('data-product') === state.product;
-            each(card, '[data-area]', function (item) {
-              item.hidden = !anyArea && item.getAttribute('data-area') !== state.area;
+        var buttons = Array.prototype.slice.call(document.querySelectorAll('.cl-pill'));
+        buttons.forEach(function (button) {
+          button.addEventListener('click', function () {
+            var product = button.getAttribute('data-filter');
+            document.body.setAttribute('data-filter', product);
+            buttons.forEach(function (other) {
+              var active = other === button;
+              other.classList.toggle('is-active', active);
+              other.setAttribute('aria-pressed', active ? 'true' : 'false');
             });
-            var also = card.querySelector('.cl-also');
-            var alsoHas = also && also.querySelector('.cl-entry:not([hidden])');
-            if (also) {
-              also.hidden = !alsoHas;
-              if (!anyArea && alsoHas) also.open = true;
-            }
-            var has = anyArea || card.querySelector('.cl-hl:not([hidden])') || alsoHas;
-            card.hidden = !productOk || !has;
-            if (!card.hidden) shown += 1;
-          });
-          each(document, '[data-group]', function (group) {
-            group.hidden = group.querySelectorAll('.cl-release:not([hidden])').length === 0;
-          });
-          if (empty) empty.hidden = shown > 0;
-          press(productButtons, 'data-filter', state.product);
-          press(areaButtons, 'data-area', state.area);
-        }
-
-        productButtons.forEach(function (button) {
-          button.addEventListener('click', function () {
-            state.product = button.getAttribute('data-filter');
-            apply();
+            Array.prototype.forEach.call(document.querySelectorAll('.cl-release'), function (card) {
+              card.hidden = product !== 'all' && card.getAttribute('data-product') !== product;
+            });
+            Array.prototype.forEach.call(document.querySelectorAll('[data-group]'), function (group) {
+              group.hidden = group.querySelectorAll('.cl-release:not([hidden])').length === 0;
+            });
           });
         });
-
-        areaButtons.forEach(function (button) {
-          button.addEventListener('click', function () {
-            state.area = button.getAttribute('data-area');
-            var url = new URL(location.href);
-            if (state.area === 'all') url.searchParams.delete('area');
-            else url.searchParams.set('area', state.area);
-            history.replaceState(null, '', url);
-            apply();
-          });
-        });
-
-        var initial = new URLSearchParams(location.search).get('area');
-        if (initial && document.querySelector('.cl-area[data-area="' + initial.replace(/[^\w-]/g, '') + '"]')) {
-          state.area = initial;
-          apply();
-        }
       })();
 
       // Carousels: scroll-snap does the moving; buttons, dots and arrow keys drive it. No autoplay.
@@ -601,43 +557,6 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         font-weight: var(--fw-bold);
       }
 
-      .cl-areas {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .cl-area {
-        padding: 5px 12px;
-        background: none;
-        border: 1px solid var(--border-panel);
-        border-radius: var(--radius-pill);
-        color: var(--text-body);
-        font-family: var(--font-sans);
-        font-size: var(--fs-ui-sm);
-        font-weight: var(--fw-medium);
-        cursor: pointer;
-      }
-
-      .cl-area:hover {
-        border-color: var(--border-strong);
-        color: var(--text-primary);
-      }
-
-      .cl-area.is-active {
-        background: rgba(139, 92, 246, 0.16);
-        border-color: var(--accent-solid);
-        color: var(--text-primary);
-      }
-
-      .cl-empty {
-        margin: 8px 0 0;
-        color: var(--text-body);
-        font-size: var(--fs-ui);
-      }
-
-      /* Groups */
-      .cl-unreleased,
       .cl-released {
         padding: 56px 48px;
         border-top: 1px solid var(--rule);
@@ -764,45 +683,38 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         line-height: var(--lh-prose);
       }
 
-      /* Highlight */
-      .cl-hl {
-        margin-top: 28px;
-        padding-top: 28px;
+      /* Topic: pictures first, then one line per change */
+      .cl-topic {
+        margin-top: 26px;
+        padding-top: 22px;
         border-top: 1px solid var(--rule);
-        scroll-margin-top: 16px;
       }
 
-      .cl-hl-head {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: baseline;
-        gap: 8px 12px;
-        margin-bottom: 10px;
+      .cl-topic:first-of-type {
+        margin-top: 8px;
+        padding-top: 0;
+        border-top: 0;
       }
 
-      .cl-hl-title {
-        margin: 0;
+      .cl-topic-title {
+        margin: 0 0 4px;
         font-size: var(--fs-h3);
         font-weight: var(--fw-bold);
         line-height: 1.3;
         letter-spacing: -0.01em;
       }
 
-      .cl-area-chip {
-        padding: 2px 10px;
-        border: 1px solid var(--border-accent);
-        border-radius: var(--radius-pill);
-        color: var(--accent);
-        font-family: var(--font-mono);
-        font-size: var(--fs-mono);
-        white-space: nowrap;
+      .cl-topic .cl-shot,
+      .cl-topic .cl-carousel {
+        margin-bottom: 14px;
       }
 
-      .cl-hl-body {
-        max-width: 720px;
-        color: var(--text-body);
-        font-size: var(--fs-body);
-        line-height: var(--lh-prose);
+      .cl-entry--highlight {
+        scroll-margin-top: 16px;
+      }
+
+      .cl-tag--new {
+        color: var(--accent);
       }
 
       .cl-hl-prs {
@@ -973,7 +885,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       }
 
       /* Also in this release */
-      .cl-also {
+      .cl-body {
         margin-top: 28px;
         border-top: 1px solid var(--rule);
       }
