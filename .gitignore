@@ -119,3 +119,4 @@ assets/mascot/explore/
 
 # Screenshots from `npm run check:desktop`
 .desktop-check/
+.terminal-check/
