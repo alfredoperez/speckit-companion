@@ -31,12 +31,13 @@ SKILL=$REPO/.claude/skills/release-qa
 VAULT=$HOME/dev/GitHub/obsidian-vault
 DATE=$(date +%Y-%m-%d)
 RUN=$(date +%Y-%m-%d-%H%M)
-SANDBOX=$HOME/dev/projects/companion-sandboxes/e2e-$RUN
+. "$REPO/.claude/sandboxes-env.sh"     # SANDBOXES_REPO, SANDBOXES_DIR, EVIDENCE_DIR
+SANDBOX=$SANDBOXES_DIR/e2e-$RUN
 STOCK=$SANDBOX-stock
-RESULTS=$HOME/dev/projects/companion-sandboxes/e2e-results/$DATE
+RESULTS=$EVIDENCE_DIR/$DATE-release-qa
 ```
 
-Re-declare them in every Bash call; shell state does not persist. `$RESULTS` is per day: a second run the same day reuses it and its numbered shots.
+Re-declare them in every Bash call; shell state does not persist. `$RESULTS` is per day: a second run the same day reuses it and its numbered shots. `sandboxes-env.sh` finds the sibling `speckit-sandboxes` checkout, whose recipes build every sandbox this skill uses: sandboxes land under its sandbox root (`$SANDBOXES_DIR`) and results under its `evidence/` folder. `qa-stage.sh` names its own folders from the run name: `$SANDBOXES_DIR/qa-<name>`, `qa-<name>-stock` and `$EVIDENCE_DIR/<date>-qa-<name>/`.
 
 ## Step 0. Scope the run from the release
 
@@ -73,7 +74,7 @@ Claude Code, on the Mac:
 2. **Canvas checks headlessly** through the Copilot SDK harness on a copy of the sandbox (three bare opens, New spec per workflow, per-spec commands). The harness has one model, not the Copilot app's own, so the real-app check stays a separate row.
    Run `canvas-harness/canvas-checks.sh <copy> <results>` on a fresh copy of the sandbox (the agent writes specs there; it refuses a non-git or dirty folder). It installs its own deps on first run, gives each session about five minutes (a stall is BLOCKED, never retried), and prints one PASS/FAIL line per check.
    It writes `<results>/canvas-checks.json` (`checks[]` with `id`, `result`, `evidence`, plus `model`) and every sent message and reply under `<results>/canvas-transcripts/`.
-3. **`qa-stage.sh <run-name>`**. It builds the sandbox and fixtures, answers Claude Code's folder-trust prompt once for the sandbox and the stock workspace, creates the timed-run spec headlessly (so nothing needs typing), installs this build into the user's normal VS Code, opens the three QA windows in the Default profile, starts `record-windows.sh`, and writes `desktop-handoff.md` from the template. It prints `READY` only when every gate passed, or `NOT READY` and the gate that failed. Never hand anything to Claude Desktop before `READY`.
+3. **`qa-stage.sh <run-name>`**. It builds the sandbox and fixtures from the `vscode-qa` recipe and the stock workspace from `vscode-qa-stock`, answers Claude Code's folder-trust prompt once for the sandbox and the stock workspace, creates the timed-run spec headlessly (so nothing needs typing), installs this build into the user's normal VS Code, opens the three QA windows in the Default profile, starts `record-windows.sh`, and writes `desktop-handoff.md` from the template. It prints `READY` only when every gate passed, or `NOT READY` and the gate that failed. Never hand anything to Claude Desktop before `READY`.
 
 Then the user pastes the handoff path into Claude Desktop, which clicks through the checks and replies with one line per step. Claude Code turns the reply into the report, runs `timing.py report` and `check_capture.py` on the timed spec (`TIMED` in `stage.env`), stops the recorder (`touch shots/STOP`), and picks screenshots from `shots/`.
 
@@ -143,7 +144,7 @@ Run each and stop with a one-line reason on the first failure. The two Copilot i
 - [ ] `code --version` works
 - [ ] `test -f ~/.copilot/extensions/speckit-companion/extension.mjs` (canvas loader, it imports `$REPO/apps/copilot-canvas/extension.mjs`)
 - [ ] `gh api /copilot_internal/user --jq '[.copilot_plan, .chat_enabled, .copilot_app_enabled]'` shows chat enabled; a lapsed plan answers every canvas run with a 403, so stop here and say so
-- [ ] `ls ~/dev/GitHub/speckit-bench/examples/todo-claude/src` (the app fixture)
+- [ ] `ls "$SANDBOXES_REPO/seeds/todo/src"` (the app fixture) and `"$SANDBOXES_REPO/new-sandbox.sh" --list` names `vscode-qa` and `vscode-qa-stock`
 - [ ] `request_access` for **Visual Studio Code** and **GitHub Copilot**; confirm the returned tiers match the table above
 - [ ] `$SKILL/shot.sh /tmp/e2e-probe x probe` writes a non-empty PNG (needs Screen Recording for Claude; Accessibility makes it crop to the front window)
 - [ ] `git -C $REPO status --porcelain` is empty, so the sha under test means something
@@ -159,9 +160,9 @@ cp -R "$SANDBOX" "$SANDBOX-terminal"
 
 The copy is the terminal run's own sandbox, taken before any run touches `specs/`.
 
-`setup-sandbox.sh` copies the `todo-claude` app from speckit-bench, runs `specify init` with the Claude integration plus Copilot, installs this checkout's spec-kit extension (`specify extension add $REPO/apps/speckit-extension --dev`) once per agent, Claude first and Copilot last (Copilot stays the default), seeds navigation fixtures (`specs/_00…_03` copied from the repo, plus `_04_demo-related-docs` with research, data model and a checklist, and `_05_demo-archived`), runs `npm install`, and **commits everything on `main`**. The commit matters: the Copilot app runs each session in a worktree cut from the default branch, so anything uncommitted is invisible to the canvas.
+`setup-sandbox.sh` is a thin wrapper over the `vscode-qa` recipe in speckit-sandboxes (`recipes/vscode-qa/setup.sh`), run against this checkout. The recipe copies the `todo` seed app, runs `specify init` with the Claude integration plus Copilot, installs this checkout's spec-kit extension (`specify extension add $REPO/apps/speckit-extension --dev`) once per agent, Claude first and Copilot last (Copilot stays the default), seeds navigation fixtures (`specs/_00…_03` copied from the repo, plus `_04_demo-related-docs` with research, data model and a checklist, `_05_demo-archived`, `_06_empty-record` and `_07_links-demo`), runs `npm install`, and **commits everything on `main`**. The commit matters: the Copilot app runs each session in a worktree cut from the default branch, so anything uncommitted is invisible to the canvas.
 
-A `--dev` install writes each agent's Companion skills as symlinks into `.specify/extensions/companion/.specify-dev/`, and installing for the other agent repoints or wipes them. A symlink that dangles in the Copilot worktree means the agent never gets `/speckit.companion.*`: it falls back to reading `.claude/skills/...`, writes no `.spec-context.json`, and may implement the feature during specify. So the script turns each agent's skills into real files before installing for the next agent, then `verify-companion-skills.sh` fails the setup (exit 1, path printed) unless every `.github/skills/speckit-companion-*/SKILL.md` and `.claude/skills/speckit-companion-*/SKILL.md` resolves with `test -e`. Run it by hand on any sandbox to check it.
+A `--dev` install writes each agent's Companion skills as symlinks into `.specify/extensions/companion/.specify-dev/`, and installing for the other agent repoints or wipes them. A symlink that dangles in the Copilot worktree means the agent never gets `/speckit.companion.*`: it falls back to reading `.claude/skills/...`, writes no `.spec-context.json`, and may implement the feature during specify. So the recipe turns each agent's skills into real files before installing for the next agent, then `verify-companion-skills.sh` fails the setup (exit 1, path printed) unless every `.github/skills/speckit-companion-*/SKILL.md` and `.claude/skills/speckit-companion-*/SKILL.md` resolves with `test -e`. Run it by hand on any sandbox to check it.
 
 Opening the sandbox in VS Code runs the extension's preset reconciler, which calls the `specify` CLI and rewrites the committed `.claude/skills/speckit-*` files (`source: preset:companion-standard`) and creates `.specify/presets/`. That is specified behaviour, but it dirties the tree: commit or restore it before the canvas pass.
 
@@ -176,7 +177,7 @@ Any `[setup] Missing …` line is a finding before you start; fix or record it.
 "$SKILL/launch-vscode.sh" "$SANDBOX" "$RESULTS" dev      # or: Extension Development Host, what docs screenshots use
 ```
 
-It runs an isolated instance (`--user-data-dir`/`--extensions-dir` under `~/dev/projects/companion-sandboxes/.e2e-vscode`), so the user's own VS Code settings and extensions are never touched. Settings it writes: `speckit.aiProvider: claude`, `speckit.permissionMode: auto-approve`, `speckit.defaultWorkflow: companion`, telemetry off, workspace trust off, zoom 1, minimap and breadcrumbs off, Dark Modern.
+It runs an isolated instance (`--user-data-dir`/`--extensions-dir` under `$SANDBOXES_DIR/.e2e-vscode`), so the user's own VS Code settings and extensions are never touched. Settings it writes: `speckit.aiProvider: claude`, `speckit.permissionMode: auto-approve`, `speckit.defaultWorkflow: companion`, telemetry off, workspace trust off, zoom 1, minimap and breadcrumbs off, Dark Modern.
 
 Then: `open_application` Visual Studio Code, click the SpecKit activity-bar icon, screenshot, `shot.sh "$RESULTS" vscode sidebar-initial dark`.
 
@@ -263,7 +264,7 @@ In a workspace with reports under `.specify/bugs/` and `.specify/assessments/`: 
 The packaged `.vsix` in a fresh profile with workspace trust on:
 
 ```bash
-E2E_VSCODE_STATE=$HOME/dev/projects/companion-sandboxes/.e2e-vscode-fresh E2E_TRUST=1 "$SKILL/launch-vscode.sh" "$SANDBOX" "$RESULTS"
+E2E_VSCODE_STATE=$SANDBOXES_DIR/.e2e-vscode-fresh E2E_TRUST=1 "$SKILL/launch-vscode.sh" "$SANDBOX" "$RESULTS"
 ```
 
 Delete that state folder first so the profile is really clean. Assert Restricted Mode opens with no error popup and no empty view, and that the extension says what is limited, if anything is. Click **Trust**, then assert the sidebar fills and a spec opens. `shot.sh` both states. Quit the window afterwards: later checks use the default profile.
@@ -273,7 +274,7 @@ Delete that state folder first so the profile is really clean. Assert Restricted
 A workspace with spec-kit and no Companion:
 
 ```bash
-mkdir -p "$STOCK" && cd "$STOCK" && git init -q -b main && specify init --here --force --non-interactive --integration claude >/dev/null && git add -A && git commit -qm "stock workspace"
+"$SANDBOXES_REPO/new-sandbox.sh" vscode-qa-stock "e2e-$RUN-stock"     # lands at $STOCK
 "$SKILL/launch-vscode.sh" "$STOCK" "$RESULTS"
 ```
 
@@ -315,7 +316,7 @@ Open the canvas three times without editing anything: start a new session each t
 On the first open, screenshot (`shot.sh "$RESULTS" canvas board-initial dark`) and assert the board (log in `$RESULTS/canvas-checks.md`):
 
 - [ ] Header reads SpecKit Companion and there is **no** "Stock Spec Kit commands: SpecKit Companion is not installed" hint (Companion commands detected)
-- [ ] All six fixtures listed with the right status; Active/Done/All filters and search by number (`04`) work
+- [ ] All eight fixtures (`_00` to `_07`) listed with the right status; Active/Done/All filters and search by number (`04`) work
 - [ ] Click `_04`: rail, next-step button, document tabs (spec, plan, tasks with per-phase progress, research, data model, checklists) and the Activity tab render
 - [ ] Click `_00` then `_02` quickly: detail shows `_02`, no content from `_00`
 

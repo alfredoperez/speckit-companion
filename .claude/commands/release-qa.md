@@ -16,7 +16,7 @@ Load the `release-qa` skill and follow it in order: Step 0 scope, Step 1 automat
 - empty: the full run, baseline included.
 - `recheck`: after fixes. Repeats the automated gates and only the checks that ended FAIL or BLOCKED in the latest report, and writes a new report against the new HEAD.
 
-The result is one note, `Projects/speckit companion/QA Report <YYYY-MM-DD>.md` in the vault. Raw evidence stays in `~/dev/projects/companion-sandboxes/e2e-results/<date>/`.
+The result is one note, `Projects/speckit companion/QA Report <YYYY-MM-DD>.md` in the vault. Raw evidence stays in the sibling `speckit-sandboxes` checkout, under `$EVIDENCE_DIR/<date>-release-qa/` (and `$EVIDENCE_DIR/<date>-qa-<name>/` for what `qa-stage.sh` stages); `. .claude/sandboxes-env.sh` sets `$EVIDENCE_DIR`.
 
 ## Release gate
 

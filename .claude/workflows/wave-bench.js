@@ -1,7 +1,7 @@
 export const meta = {
   name: 'wave-bench',
   description: 'Bench one pipeline wave on the two Companion cells: drive, measure, judge, record',
-  whenToUse: 'After the cells are baked and prepped for a wave. args: { wave, size, letters, sweep }',
+  whenToUse: 'After the cells are baked and prepped for a wave. args: { wave, size, letters, sweep, benchDir, cellsDir }',
   phases: [
     { title: 'Build', detail: 'One driver per cell, told a letter and nothing else' },
     { title: 'Measure', detail: 'Tokens from the transcripts, then capture with nothing else running' },
@@ -10,14 +10,17 @@ export const meta = {
   ],
 }
 
-const { wave, size = 'hard', letters, sweep } = args
-if (!wave || !letters?.length || !sweep) throw new Error('args: { wave, size, letters, sweep }')
+// No env or disk access in a workflow script: /bench-wave passes benchDir ("$SANDBOXES_REPO"/bench) and cellsDir (BENCH_CELLS_DIR), and every path derives from them.
+const { wave, size = 'hard', letters, sweep, benchDir, cellsDir } = args
+if (!wave || !letters?.length || !sweep) throw new Error('args: { wave, size, letters, sweep, benchDir, cellsDir }')
+const isAbs = (p) => typeof p === 'string' && p.startsWith('/')
+if (!isAbs(benchDir) || !isAbs(cellsDir)) throw new Error('args.benchDir and args.cellsDir must be absolute paths (see /bench-wave, Paths)')
 
-const BENCH = '~/dev/GitHub/speckit-bench'
-const CELLS_DIR = '~/dev/projects'
+const BENCH = benchDir.replace(/\/+$/, '')
+const CELLS_DIR = cellsDir.replace(/\/+$/, '')
 const cellOf = (l) => `conduit-${size}-${l}`
 const dirOf = (l) => `${CELLS_DIR}/${cellOf(l)}`
-const marker = (l) => `process.env.HOME+'/dev/GitHub/speckit-bench/runs-meta/${cellOf(l)}.json'`
+const marker = (l) => `'${BENCH}/runs-meta/${cellOf(l)}.json'`
 
 const DRIVE_SCHEMA = {
   type: 'object',

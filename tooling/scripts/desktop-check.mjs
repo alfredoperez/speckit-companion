@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Drives a real VS Code window with this extension and a throwaway project, and saves a screenshot per step.
-// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>]
+// Drives a real VS Code window with this extension and a throwaway project (or an existing one, --sandbox), and saves a screenshot per step.
+// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>]
 import { createRequire } from 'node:module';
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,10 +16,15 @@ const EXTENSION = resolve(arg('extension', join(HERE, '..', '..')));
 const OUT = resolve(arg('out', join(EXTENSION, '.desktop-check')));
 const THEME = arg('theme', 'light');
 const ONLY = arg('only', '').split(',').filter(Boolean);
+const SANDBOX = arg('sandbox') ? resolve(arg('sandbox')) : undefined;
 const CODE = process.env.VSCODE_BIN ?? '/Applications/Visual Studio Code.app/Contents/MacOS/Code';
 
 if (!existsSync(join(EXTENSION, 'dist', 'extension.js'))) {
     console.error(`No build in ${EXTENSION}/dist. Run "npm run compile && npm run compile-web" there first.`);
+    process.exit(2);
+}
+if (SANDBOX && !existsSync(join(SANDBOX, 'specs')) && !existsSync(join(SANDBOX, '.specify'))) {
+    console.error(`${SANDBOX} has no specs/ or .specify/ folder, so it is not a Spec Kit project.`);
     process.exit(2);
 }
 if (!existsSync(CODE)) {
@@ -32,16 +37,18 @@ const { _electron } = require('playwright-core');
 
 function buildProject() {
     const root = mkdtempSync(join(tmpdir(), 'speckit-desktop-'));
-    const project = join(root, 'project');
-    const fixtures = join(EXTENSION, 'apps', 'vscode', 'tests', 'fixtures');
-    mkdirSync(join(project, '.specify'), { recursive: true });
-    for (const set of ['bug-reports', 'report-pages', 'idea-reports']) {
-        const from = join(fixtures, set, '.specify');
-        if (existsSync(from)) cpSync(from, join(project, '.specify'), { recursive: true });
-    }
-    for (const extension of ['bug', 'assess']) mkdirSync(join(project, '.specify', 'extensions', extension), { recursive: true });
-    for (const spec of ['_00_demo-specified', '_02_demo-tasked', '627-bugs-ideas-panes']) {
-        cpSync(join(EXTENSION, 'specs', spec), join(project, 'specs', spec), { recursive: true });
+    const project = SANDBOX ?? join(root, 'project');
+    if (!SANDBOX) {
+        const fixtures = join(EXTENSION, 'apps', 'vscode', 'tests', 'fixtures');
+        mkdirSync(join(project, '.specify'), { recursive: true });
+        for (const set of ['bug-reports', 'report-pages', 'idea-reports']) {
+            const from = join(fixtures, set, '.specify');
+            if (existsSync(from)) cpSync(from, join(project, '.specify'), { recursive: true });
+        }
+        for (const extension of ['bug', 'assess']) mkdirSync(join(project, '.specify', 'extensions', extension), { recursive: true });
+        for (const spec of ['_00_demo-specified', '_02_demo-tasked', '627-bugs-ideas-panes']) {
+            cpSync(join(EXTENSION, 'specs', spec), join(project, 'specs', spec), { recursive: true });
+        }
     }
     // Whatever a step sends goes to this stand-in, so nothing real runs and the terminal shows what was sent.
     const bin = join(root, 'bin');
@@ -77,7 +84,7 @@ function buildProject() {
         'speckit.views.steering.visible': false,
         'speckit.views.settings.visible': false,
     }, null, 2));
-    return { root, project, user };
+    return { root, project, user, bin };
 }
 
 const results = [];
@@ -134,8 +141,14 @@ async function terminalText(pattern) {
     throw new Error(`the terminal never showed ${pattern}`);
 }
 
-async function step(name, what, run) {
+/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. */
+async function step(name, what, run, { needs } = {}) {
     if (ONLY.length && !ONLY.includes(name)) return;
+    if (SANDBOX && needs === 'fixtures') {
+        results.push({ name, what, ok: true, skipped: true, note: 'skipped: needs the built-in project' });
+        console.log(`skip ${name}: ${what} (skipped: needs the built-in project)`);
+        return;
+    }
     const result = { name, what, ok: false };
     try {
         result.note = (await run()) ?? '';
@@ -157,7 +170,7 @@ async function expectText(locator, pattern) {
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
-const { root, project, user } = buildProject();
+const { root, project, user, bin } = buildProject();
 const app = await _electron.launch({
     executablePath: CODE,
     args: [
@@ -171,6 +184,8 @@ const app = await _electron.launch({
         '--disable-updates',
         '--window-size=1680,1050',
     ],
+    // In a sandbox, keep `specify` off the extension's PATH so opening the folder cannot reinstall presets into it.
+    ...(SANDBOX ? { env: { ...process.env, PATH: `${bin}:/usr/bin:/bin:/usr/sbin:/sbin` } } : {}),
     timeout: 60000,
 });
 
@@ -185,36 +200,36 @@ try {
         await row('Ideas', 'Saved filters');
         const groups = await pane('Bugs').locator('.monaco-list-row').allInnerTexts();
         return groups.filter(text => /\(\d+\)/.test(text)).map(text => text.trim().split('\n')[0]).join(', ');
-    });
+    }, { needs: 'fixtures' });
 
     await step('bug-story', 'A bug opens on its Story page', async () => {
         await (await row('Bugs', 'cartTotal skips the first cart item')).click();
         return expectText(webview().locator('.rp-lead'), /Fixed and verified\./);
-    });
+    }, { needs: 'fixtures' });
 
     await step('bug-report-tab', 'The Assessment tab shows the raw report', async () => {
         await webview().locator('.step-tab', { hasText: 'Assessment' }).click();
         await webview().locator('.rp-lead').waitFor({ state: 'detached', timeout: 15000 });
         return expectText(webview().locator('#markdown-content h2').first(), /Report|Symptom/);
-    });
+    }, { needs: 'fixtures' });
 
     await step('bug-test-failed', 'A bug whose test failed says the fix did not hold', async () => {
         await clear();
         await (await row('Bugs', 'promo code discount')).click();
         return expectText(webview().locator('.rp-lead'), /The fix did not hold\./);
-    });
+    }, { needs: 'fixtures' });
 
     await step('bug-next-step', 'Fix bug sends its command to the assistant', async () => {
         await webview().locator('footer.actions button', { hasText: /^Fix bug$/ }).click();
         return terminalText(/\[sent to assistant\].*speckit[-.]bug[-.]fix/);
-    });
+    }, { needs: 'fixtures' });
 
     await step('idea-decision', 'A decided idea opens on its decision page', async () => {
         await clear();
         await (await row('Ideas', 'Saved filters')).click();
         await expectText(webview().locator('.rp-lead'), /^Go\./);
         return `${await webview().locator('.rp-score > li').count()} scorecard rows`;
-    });
+    }, { needs: 'fixtures' });
 
     await step('idea-assessing', 'An idea still being assessed opens on its latest stage', async () => {
         await clear();
@@ -222,7 +237,7 @@ try {
         await webview().locator('.step-tab.current, .step-tab[aria-current]').first().waitFor({ timeout: 15000 });
         if (await webview().locator('.rp-lead').count()) throw new Error('a decision page showed for an undecided idea');
         return (await webview().locator('.step-tab[disabled]').count()) + ' stages disabled';
-    });
+    }, { needs: 'fixtures' });
 
     await step('new-bug', 'New Bug opens the create screen', async () => {
         await clear();
@@ -230,7 +245,7 @@ try {
         await pane('Bugs').locator('.pane-header a.action-label[aria-label^="New Bug"]').click();
         await webview().locator('textarea').first().waitFor({ timeout: 15000 });
         await webview().locator('textarea').first().fill('The export button does nothing on Safari.');
-    });
+    }, { needs: 'fixtures' });
 
     await step('tasks-other-actions', 'Other actions on the Tasks tab offers Create GitHub issues', async () => {
         await clear();
@@ -238,30 +253,30 @@ try {
         await webview().locator('.step-tab', { hasText: 'Tasks' }).click();
         await webview().locator('footer.actions button', { hasText: 'Other actions' }).click();
         return expectText(webview().locator('.action-menu'), /Create GitHub issues/);
-    });
+    }, { needs: 'fixtures' });
 
     await step('create-issues-confirm', 'Create GitHub issues asks before it sends', async () => {
         await webview().locator('.action-menu button', { hasText: 'Create GitHub issues' }).click();
         const text = await expectText(page.locator('.monaco-dialog-box'), /Create a GitHub issue for every task/);
         return text.split('\n')[0];
-    });
+    }, { needs: 'fixtures' });
 
     await step('create-issues-cancel', 'Cancel sends nothing', async () => {
         await page.locator('.monaco-dialog-box .monaco-button', { hasText: 'Cancel' }).click();
         await page.locator('.monaco-dialog-box').waitFor({ state: 'detached', timeout: 5000 });
-    });
+    }, { needs: 'fixtures' });
 
     await step('converge-button', 'A finished spec offers Converge in the footer', async () => {
         await clear();
         await (await row('Specs', 'Completed')).click();
         await (await row('Specs', 'Bugs And Ideas Panes')).click();
         return expectText(webview().locator('footer.actions button', { hasText: /^Converge$/ }), /Converge/);
-    });
+    }, { needs: 'fixtures' });
 
     await step('converge-sends', 'Converge sends the command and names the spec', async () => {
         await webview().locator('footer.actions button', { hasText: /^Converge$/ }).click();
         return terminalText(/\[sent to assistant\].*converge/i);
-    });
+    }, { needs: 'fixtures' });
 
     await step('joined-paragraph', 'A wrapped paragraph is one paragraph with one comment button', async () => {
         await clear();
@@ -270,7 +285,7 @@ try {
         const joined = webview().locator('.line[data-line-end]');
         await joined.first().waitFor({ timeout: 15000 });
         return `${await joined.count()} joined paragraph(s)`;
-    });
+    }, { needs: 'fixtures' });
 
     await step('tasks-no-blank-band', 'A short document starts right under the outline', async () => {
         await clear();
@@ -283,7 +298,7 @@ try {
         });
         if (gap > 170) throw new Error(`the first phase starts ${gap}px down the page`);
         return `${gap}px from the top of the page`;
-    });
+    }, { needs: 'fixtures' });
 
     await step('report-header-line', 'A report tab opens with one line of facts, not a bullet list', async () => {
         await clear();
@@ -294,7 +309,7 @@ try {
         const body = await webview().locator('#markdown-content').innerText();
         if (/Slug\s*:/.test(body)) throw new Error('the slug bullet is still shown');
         return line;
-    });
+    }, { needs: 'fixtures' });
 
     await step('answer-open-question', 'An open question has an Answer button', async () => {
         const question = webview().locator('.rp-question').first();
@@ -302,13 +317,56 @@ try {
         await expectText(question.locator('.rp-question__badge'), /Needs an answer/);
         await question.locator('.rp-question__answer').click();
         await webview().locator('textarea').first().fill('No. The wrong totals never reached an order: checkout recomputes them on the server.');
-    });
+    }, { needs: 'fixtures' });
 
     await step('answer-sends', 'Send answer hands the answer to the assistant with the assess command', async () => {
         await webview().locator('button', { hasText: 'Send answer' }).click();
         await expectText(webview().locator('.rp-question__sent'), /Sent to your assistant/);
         return terminalText(/\[sent to assistant\].*speckit[-.]bug[-.]assess slug=cart-total-skips-first/);
+    }, { needs: 'fixtures' });
+
+    await step('specs-pane', 'The sidebar shows the Specs pane', async () => {
+        await clear();
+        await pane('Specs').waitFor({ timeout: 15000 });
+        await pane('Specs').locator('.monaco-list-row').first().waitFor({ timeout: 15000 });
+        return `${await pane('Specs').locator('.monaco-list-row').count()} row(s)`;
     });
+
+    let tabs = [];
+    await step('first-spec', 'The first spec opens in the viewer', async () => {
+        const specs = pane('Specs').locator('.monaco-list-row[aria-level="2"]');
+        if (!(await specs.count())) {
+            await pane('Specs').locator('.monaco-list-row[aria-level="1"][aria-expanded="false"]').first().click();
+        }
+        await specs.first().waitFor({ timeout: 15000 });
+        const name = (await specs.first().locator('.label-name').first().innerText()).trim();
+        await specs.first().click();
+        await webview().locator('.step-tab').first().waitFor({ timeout: 15000 });
+        tabs = await webview().locator('.step-tab:not([disabled]) .step-label').allInnerTexts();
+        return `${name}: ${tabs.join(', ')}`;
+    });
+
+    let lastText = '';
+    for (const tab of tabs) {
+        const slug = tab.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        await step(`doc-${slug}`, `The ${tab.trim()} tab renders without an error`, async () => {
+            await webview().locator('.step-tab', { has: webview().locator(`.step-label:text-is("${tab.trim()}")`) }).first().click();
+            const area = webview().locator('#content-area');
+            await webview().locator('.step-tab[aria-current="page"]', { hasText: tab.trim() }).waitFor({ timeout: 15000 });
+            // The tab turns current before its document arrives, so wait for the page to stop showing the last one.
+            let text = '';
+            for (let tries = 0; tries < 30; tries++) {
+                text = (await area.locator('#markdown-content').innerText()).trim();
+                if (text && (text !== lastText || tries >= 10)) break;
+                await page.waitForTimeout(500);
+            }
+            lastText = text;
+            const broken = area.locator('.empty-state:visible, .activity-error:visible');
+            if (await broken.count()) throw new Error(`the page says "${(await broken.first().innerText()).trim().slice(0, 80)}"`);
+            if (!text) throw new Error('the page is blank');
+            return `${text.length} characters`;
+        });
+    }
 } finally {
     writeFileSync(join(OUT, `results.${THEME}.json`), JSON.stringify(results, null, 2));
     await app.close().catch(() => undefined);
@@ -316,5 +374,7 @@ try {
 }
 
 const failed = results.filter(result => !result.ok);
-console.log(`\n${results.length - failed.length} of ${results.length} steps passed. Screenshots: ${OUT}`);
+const skipped = results.filter(result => result.skipped);
+const ran = results.length - skipped.length;
+console.log(`\n${ran - failed.length} of ${ran} steps passed${skipped.length ? `, ${skipped.length} skipped` : ''}. Screenshots: ${OUT}`);
 process.exit(failed.length ? 1 : 0);
