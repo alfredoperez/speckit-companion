@@ -9,7 +9,7 @@ Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.
 ### Highlights
 
 #### Follow a Spec Kit run from inside Claude Code
-A new Claude Code mod pins your spec ==above the prompt== and ticks off steps and tasks in a side pane. Switch specs with `/spec`, and install it with `claude plugin marketplace add alfredoperez/speckit-companion`, then `claude plugin install speckit-companion@speckit-companion`.
+A new Claude Code mod pins your spec ==above the prompt== and ticks off steps and tasks in a side pane. Switch specs with `/speckit-tracker`, and install it with `claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json`, then `claude plugin install speckit-companion@speckit-companion`.
 <!-- area: assistants; pr: 832 -->
 
 #### A bug reads as a story, and a decided idea as a decision
