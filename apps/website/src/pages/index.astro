@@ -230,6 +230,47 @@ const rows = [
   },
 ];
 
+/*
+  Bugs and ideas are Spec Kit's own extensions, not Companion commands. The copy
+  says who runs what: your assistant runs the commands, Companion shows the
+  reports and sends the next command when you press its button.
+*/
+const processes = [
+  {
+    id: 'spec',
+    eyebrow: 'A FEATURE',
+    title: 'A spec, from idea to merged code',
+    steps: ['specify', 'plan', 'tasks', 'implement'],
+    body: 'The pipeline you already know, with the run written down as it happens and one page to read when it is done.',
+    link: { label: 'your first spec', href: '/docs/start/your-first-spec/' },
+    image: overview.panel,
+    alt: overview.panelAlt,
+    window: 'Spec · Overview',
+  },
+  {
+    id: 'bug',
+    eyebrow: 'A BUG',
+    title: 'A bug, told as one story',
+    steps: ['assess', 'fix', 'test'],
+    body: 'Spec Kit’s bug extension writes three reports. Companion joins them into one page: what was wrong, what changed, how it was verified. A button sends the next command to your assistant.',
+    link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
+    image: '/landing/bug-story.png',
+    alt: 'A bug page in VS Code: the lead reads Fixed and verified, then What was wrong with the root cause.',
+    window: 'Bug · Story',
+  },
+  {
+    id: 'idea',
+    eyebrow: 'AN IDEA',
+    title: 'An idea, judged before it is built',
+    steps: ['intake', 'research', 'problem', 'concept', 'decision'],
+    body: 'Spec Kit’s assess extension takes an idea through five stages to go, needs clarification or kill. Companion opens a decided idea on its verdict and scorecard, and a go becomes a spec in one press.',
+    link: { label: 'assess an idea', href: '/docs/ide/assess-an-idea/' },
+    image: '/landing/idea-decision.png',
+    alt: 'An idea page in VS Code: the verdict Go with its reason, then a scorecard.',
+    window: 'Idea · Decision',
+  },
+];
+
 const cards = [
   {
     eyebrow: 'OVERVIEW',
@@ -273,12 +314,39 @@ const cards = [
     link: { label: 'set up the board', href: '/docs/copilot-app/install/' },
     wide: true,
   },
+  {
+    eyebrow: 'CLAUDE CODE',
+    title: 'A tracker inside Claude Code',
+    body: 'Work in the terminal? A mod adds one line above the prompt naming the spec and its next step, and a pane with the steps, the tasks and each step’s document. It reads the spec files, so it follows a stock Spec Kit run too.',
+    link: { label: 'install the mod', href: '/docs/claude-code/install/' },
+    image: '/landing/claude-mod.png',
+    alt: 'The SpecKit Companion pane in Claude Code: four steps with times, the documents and the task list.',
+    wide: true,
+  },
+  {
+    eyebrow: 'CONVERGE',
+    title: 'Check the code against the spec',
+    body: 'On a finished spec, Converge sends Spec Kit’s converge command for that spec, so what was built is compared with what was asked.',
+    link: { label: 'converge', href: '/docs/steps/converge/' },
+  },
+  {
+    eyebrow: 'GITHUB ISSUES',
+    title: 'Tasks to issues',
+    body: 'From the Tasks tab, Create GitHub issues sends Spec Kit’s command that turns the task list into issues. It asks before it sends.',
+    link: { label: 'the tasks step', href: '/docs/steps/tasks/' },
+  },
+  {
+    eyebrow: 'OPEN QUESTIONS',
+    title: 'Answer where you read',
+    body: 'A report marks what it still needs to know. Answer on the page and the answer goes to your assistant with the command that rewrites the report.',
+    link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
+  },
 ];
 
 // One leaf per section below the hero, in document order. The script measures
 // where each section boundary falls and places its leaf on the stem; a leaf
 // with no section to mark stays hidden.
-const stemLeaves = ['quick start', 'demo', 'features', 'box', 'claim', 'install'];
+const stemLeaves = ['quick start', 'demo', 'processes', 'features', 'box', 'claim', 'install'];
 
 // Entrances stagger at 60ms. The delay is data, not a magic number in the CSS.
 const REVEAL_STAGGER = 60;
@@ -672,6 +740,49 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     </div>
   </section>
 
+  <!-- THREE PROCESSES -->
+  <section class="section section--processes" id="processes">
+    <div class="inner stack-20">
+      <p class="eyebrow">NOT ONLY SPECS</p>
+      <h2 class="processes-heading">Three kinds of work, one place to read them</h2>
+      <p class="processes-lead">
+        A feature, a bug and an idea each have their own steps in Spec Kit. Companion lists all
+        three in the sidebar and opens each on a page written for it.
+      </p>
+
+      <div class="processes">
+        {
+          processes.map((process, index) => (
+            <article
+              class="process"
+              data-reveal
+              style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
+            >
+              <p class="card-eyebrow">{process.eyebrow}</p>
+              <h3 class="process-title">{process.title}</h3>
+              <ol class="process-steps" aria-label={`Steps: ${process.steps.join(', ')}`}>
+                {process.steps.map((step) => <li>{step}</li>)}
+              </ol>
+              <p class="card-body">{process.body}</p>
+              <a class="card-link" href={process.link.href}>
+                {process.link.label} →
+              </a>
+              <div class="window process-window">
+                <div class="window-bar">
+                  <span class="dot" aria-hidden="true" />
+                  <span class="dot" aria-hidden="true" />
+                  <span class="dot" aria-hidden="true" />
+                  <span class="window-label">{process.window}</span>
+                </div>
+                <img src={process.image} alt={process.alt} loading="lazy" decoding="async" />
+              </div>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
   <!-- ACCORDION FEATURE SECTION -->
   <section class="section section--accordion">
     <div class="spores" aria-hidden="true">
@@ -765,7 +876,7 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
         {
           cards.map((card, index) => (
             <article
-              class:list={['card', { 'card--wide': card.wide }]}
+              class:list={['card', { 'card--wide': card.wide, 'card--shot': card.image }]}
               data-reveal
               style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
             >
@@ -776,6 +887,9 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
                 <a class="card-link" href={card.link.href}>
                   {card.link.label} →
                 </a>
+              )}
+              {card.image && (
+                <img class="card-shot" src={card.image} alt={card.alt} loading="lazy" decoding="async" />
               )}
             </article>
           ))
@@ -1676,6 +1790,127 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
   .card-link:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  .card-shot {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: var(--space-8);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+  }
+
+  /* ------------------------------------------------------------- processes */
+
+  .section--processes .inner {
+    padding-top: 72px;
+    padding-bottom: 72px;
+  }
+
+  .processes-heading {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-h2);
+    line-height: 1.15;
+  }
+
+  .processes-lead {
+    max-width: var(--measure-lead);
+    margin: 0;
+    color: var(--text-body);
+    font-size: var(--fs-lead);
+    line-height: var(--lh-ui);
+  }
+
+  .processes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-14);
+    margin-top: var(--space-8);
+  }
+
+  .process {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    column-gap: var(--space-22);
+    row-gap: var(--space-8);
+    align-items: start;
+    padding: var(--space-22);
+    background: var(--panel);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+  }
+
+  .process > :not(.process-window) {
+    grid-column: 1;
+  }
+
+  .process-title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-bold);
+  }
+
+  .process-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4) 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+
+  .process-steps li + li::before {
+    content: '→';
+    margin: 0 6px;
+    color: var(--accent);
+  }
+
+  .process-window {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    box-shadow: none;
+  }
+
+  .process-window img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .card--shot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    column-gap: var(--space-22);
+    align-items: start;
+  }
+
+  .card--shot > :not(.card-shot) {
+    grid-column: 1;
+  }
+
+  .card--shot .card-shot {
+    grid-column: 2;
+    grid-row: 1 / span 5;
+    margin-top: 0;
+  }
+
+  @media (max-width: 980px) {
+    .process,
+    .card--shot {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card--shot .card-shot {
+      margin-top: var(--space-8);
+    }
   }
 
   /* ------------------------------------------------------------ claim band */
