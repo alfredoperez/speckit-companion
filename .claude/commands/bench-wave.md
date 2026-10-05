@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git -C:*), Bash(npm run compile:*), Bash(python3 apps/speckit-extension/scripts/*), Bash(python3 -m pytest:*), Bash(npx jest:*), Bash(node ../speckit-bench/*), Workflow, Read, Edit
+allowed-tools: Bash(. .claude/sandboxes-env.sh:*), Bash(git -C:*), Bash(npm run compile:*), Bash(python3 apps/speckit-extension/scripts/*), Bash(python3 -m pytest:*), Bash(npx jest:*), Bash(node "$SANDBOXES_REPO"/bench/*), Workflow, Read, Edit
 description: Bench one pipeline-diet wave on the two Companion cells and record the row
 ---
 
@@ -8,6 +8,16 @@ description: Bench one pipeline-diet wave on the two Companion cells and record 
 Bench one wave of the pipeline diet, start to finish, and record it. `$ARGUMENTS` is the wave letter (`B`), optionally followed by the branch; the branch defaults to `pipeline-diet/wave-<letter lowercase>`. The plan and the results table live in the vault at `Projects/speckit companion/plans/pipeline-speed/Pipeline Speed Execution.md`.
 
 One bench at a time. Nothing else heavy runs on this machine until the row is recorded.
+
+### Paths
+
+Shell state does not persist between Bash calls, so start each one with this line:
+
+```bash
+. .claude/sandboxes-env.sh && eval "$(node "$SANDBOXES_REPO"/bench/paths.mjs --sh)"
+```
+
+It sets `$SANDBOXES_REPO` (the sibling `speckit-sandboxes` checkout, whose `bench/` folder is the harness) and `$BENCH_CELLS_DIR` (where the cells are baked). When you hand a path to an agent, expand it first: an agent gets the absolute path, never the variable.
 
 ### 1. The wave has to reach the cell
 
@@ -36,9 +46,9 @@ A red gate means the wave is not ready to bench. Say which one and stop.
 ### 3. Bake and prep
 
 ```bash
-node ../speckit-bench/sync-templates.mjs --sizes hard --speckit keep --ext code --sweep "wave <letter>"
-node ../speckit-bench/run-all.mjs prep --sizes hard --modes companion,companion-living
-node ../speckit-bench/run-all.mjs --dry-run
+node "$SANDBOXES_REPO"/bench/sync-templates.mjs --sizes hard --speckit keep --ext code --sweep "wave <letter>"
+node "$SANDBOXES_REPO"/bench/run-all.mjs prep --sizes hard --modes companion,companion-living
+node "$SANDBOXES_REPO"/bench/run-all.mjs --dry-run
 ```
 
 The bake prints `speckitExtBuild` as `code@<sha>`; it must be the wave's commit. The dry run prints which letter is which arm: take the two letters that are not stock. Never pass the mapping itself anywhere.
@@ -47,10 +57,10 @@ The bake prints `speckitExtBuild` as `code@<sha>`; it must be the wave's commit.
 
 ```
 Workflow name: wave-bench
-args: { "wave": "<letter>", "size": "hard", "letters": ["<l1>", "<l2>"], "sweep": "wave <letter>" }
+args: { "wave": "<letter>", "size": "hard", "letters": ["<l1>", "<l2>"], "sweep": "wave <letter>", "benchDir": "<expanded $SANDBOXES_REPO/bench>", "cellsDir": "<expanded $BENCH_CELLS_DIR>" }
 ```
 
-It drives both cells, records tokens, captures alone, judges, folds the rubric, compares, and commits the round in `speckit-bench`. Expect about 40 minutes. The result carries the two rows, the `calls` and `context` compare tables, the drivers' notes on what did not work as written, and the commit.
+`benchDir` and `cellsDir` are the absolute paths the Paths line gives (`echo "$SANDBOXES_REPO/bench" "$BENCH_CELLS_DIR"`): a workflow script cannot read the environment, so it is handed both. It drives both cells, records tokens, captures alone, judges, folds the rubric, compares, and commits the round in `speckit-sandboxes`. Expect about 40 minutes. The result carries the two rows, the `calls` and `context` compare tables, the drivers' notes on what did not work as written, and the commit.
 
 ### 5. Record
 

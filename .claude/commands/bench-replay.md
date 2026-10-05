@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(../speckit-bench/replay.sh:*), Bash(../speckit-bench/stage-from-capture.sh:*), Bash(node ../speckit-bench/grade-one.mjs:*), Bash(node ../speckit-bench/regressions/read-case.mjs:*), Bash(node ../speckit-bench/sync-templates.mjs:*), Bash(node -e:*), Bash(git -C:*), Bash(ls:*), Bash(cat:*), Bash(python3:*), AskUserQuestion
+allowed-tools: Bash(. .claude/sandboxes-env.sh:*), Bash("$SANDBOXES_REPO"/bench/replay.sh:*), Bash("$SANDBOXES_REPO"/bench/stage-from-capture.sh:*), Bash(node "$SANDBOXES_REPO"/bench/grade-one.mjs:*), Bash(node "$SANDBOXES_REPO"/bench/regressions/read-case.mjs:*), Bash(node "$SANDBOXES_REPO"/bench/sync-templates.mjs:*), Bash(node -e:*), Bash(git -C:*), Bash(ls:*), Bash(cat:*), Bash(python3:*), AskUserQuestion
 description: Change one thing and replay one pipeline step from a staged cell, then grade it
 ---
 
@@ -7,7 +7,17 @@ description: Change one thing and replay one pipeline step from a staged cell, t
 
 Answer a single-step question without running a round. The user names a change ("fan-out off", "the new check node", "gentle-ai's classifier") and which step it affects; you replay that step from a staged state, as many ways as the question needs, and grade each. Everything else is held byte-identical, so a difference in the result is the change and nothing else.
 
-This is for "does X help", never for "is the pipeline good today". A round answers the second. A replay costs about $8 and ten minutes; a round costs about $35 and forty. The harness `README.md` under **Stages** is the reference; this command is the procedure.
+This is for "does X help", never for "is the pipeline good today". A round answers the second. A replay costs about $8 and ten minutes; a round costs about $35 and forty. The harness `README.md` (`bench/README.md` in `speckit-sandboxes`) under **Stages** is the reference; this command is the procedure.
+
+### Paths
+
+Shell state does not persist between Bash calls, so start each one with this line:
+
+```bash
+. .claude/sandboxes-env.sh && eval "$(node "$SANDBOXES_REPO"/bench/paths.mjs --sh)"
+```
+
+It sets `$SANDBOXES_REPO` (the sibling `speckit-sandboxes` checkout, whose `bench/` folder is the harness) and `$BENCH_CELLS_DIR` (where the cells are baked). When you hand a path to an agent, expand it first: an agent gets the absolute path, never the variable.
 
 ### 1. Name the question and the variants
 
@@ -24,15 +34,15 @@ Two variants is the normal shape. Three or more only when the question genuinely
 Pick the arm the question is about. Cells are blind on disk; identify one by what is installed rather than by letter:
 
 ```bash
-for d in ~/dev/projects/conduit-*/; do n=$(basename $d); c=$([ -d "$d/.specify/extensions/companion" ] && echo companion || echo stock); l=$([ -f "$d/living-specs.yml" ] && echo "+living" || echo ""); echo "$n $c$l"; done
+for d in "$BENCH_CELLS_DIR"/conduit-*/; do n=$(basename "$d"); c=$([ -d "$d/.specify/extensions/companion" ] && echo companion || echo stock); l=$([ -f "$d/living-specs.yml" ] && echo "+living" || echo ""); echo "$n $c$l"; done
 ```
 
 A variant that changes the product needs the pinned build to carry it: `~/dev/GitHub/speckit-companion.worktrees/bench-main` is what a cell installs from. If the change is on `main` and not in the worktree, fast-forward it, then refresh the cell in place rather than re-baking:
 
 ```bash
 git -C ~/dev/GitHub/speckit-companion.worktrees/bench-main merge --ff-only main
-node -e "import('$HOME/dev/GitHub/speckit-bench/sync-templates.mjs').then(m=>m.installCompanion('$HOME/dev/projects/<cell>','companion','code'))"
-node -e "import('$HOME/dev/GitHub/speckit-bench/lib.mjs').then(m=>m.gitCommitCellBaseline('$HOME/dev/projects/<cell>'))"
+node -e "import('$SANDBOXES_REPO/bench/sync-templates.mjs').then(m=>m.installCompanion('$BENCH_CELLS_DIR/<cell>','companion','code'))"
+node -e "import('$SANDBOXES_REPO/bench/lib.mjs').then(m=>m.gitCommitCellBaseline('$BENCH_CELLS_DIR/<cell>'))"
 ```
 
 The second line re-tags the baseline so the stage you build next starts from the new build. Skip both if the variant is only a prompt passed to `replay.sh`.
@@ -42,13 +52,13 @@ The second line re-tags the baseline so the stage you build next starts from the
 Check for one first:
 
 ```bash
-git -C ~/dev/projects/<cell> tag | grep ^stage/
+git -C "$BENCH_CELLS_DIR"/<cell> tag | grep ^stage/
 ```
 
 If the stage you need is missing, rebuild it from a captured run. Every round since the clean sweep leaves stages behind, and every captured run under `runs/conduit/<runId>/` can become one:
 
 ```bash
-../speckit-bench/stage-from-capture.sh <runId> <cell> <stage>
+"$SANDBOXES_REPO"/bench/stage-from-capture.sh <runId> <cell> <stage>
 ```
 
 It winds the record back — unticks the task boxes, resets the status, trims the history — because a capture is of a finished run and a replayed step would otherwise read it as work already done. Confirm the output says `source changes: 0`.
@@ -58,13 +68,13 @@ It winds the record back — unticks the task boxes, resets the status, trims th
 One call per variant. A variant that is only an instruction goes as the fifth argument; a variant that is a product change was installed in step 2:
 
 ```bash
-../speckit-bench/replay.sh <cell> <stage> <step> asis
-../speckit-bench/replay.sh <cell> <stage> <step> <label> "<extra instruction>"
+"$SANDBOXES_REPO"/bench/replay.sh <cell> <stage> <step> asis
+"$SANDBOXES_REPO"/bench/replay.sh <cell> <stage> <step> <label> "<extra instruction>"
 ```
 
 Run them one after another, never at once: the machine and the workers are what is being measured. Each replay prints its time, tokens, workers and cost, then the exam score, then any regression case the cell still trips. The result stays on branch `replay-<label>` in the cell for diffing.
 
-**A replay that finishes in under two minutes with zero workers did not run.** Read `runs-meta/replay-<cell>-<stage>-<step>-<label>.json` before believing a low score. Twice today a harness bug read as a catastrophic result.
+**A replay that finishes in under two minutes with zero workers did not run.** Read `$SANDBOXES_REPO/bench/runs-meta/replay-<cell>-<stage>-<step>-<label>.json` before believing a low score. Twice today a harness bug read as a catastrophic result.
 
 ### 5. Report
 

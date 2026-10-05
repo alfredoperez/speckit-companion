@@ -1,11 +1,15 @@
 ---
-allowed-tools: Bash(node ../speckit-bench/sync-templates.mjs:*), Bash(node ../speckit-bench/run-all.mjs:*), Bash(specify:*), Bash(uv tool:*), Bash(npm run compile:*)
+allowed-tools: Bash(. .claude/sandboxes-env.sh:*), Bash(node "$SANDBOXES_REPO"/bench/sync-templates.mjs:*), Bash(node "$SANDBOXES_REPO"/bench/run-all.mjs:*), Bash(specify:*), Bash(uv tool:*), Bash(npm run compile:*)
 description: Install the latest spec-kit + Companion extension and bake the bench cells
 ---
 
 ## Your task
 
-Bake the bench cells so a round measures **current** tooling. The harness lives in the sibling [`speckit-bench`](https://github.com/alfredoperez/speckit-bench) repo; the app it measures lives in [`conduit`](https://github.com/alfredoperez/conduit). Nothing it writes lands in this repo.
+Bake the bench cells so a round measures **current** tooling. The harness lives in the `bench/` folder of the sibling [`speckit-sandboxes`](https://github.com/alfredoperez/speckit-sandboxes) repo; the app it measures lives in [`conduit`](https://github.com/alfredoperez/conduit). Nothing it writes lands in this repo.
+
+### Paths
+
+Shell state does not persist between Bash calls, so start each one with `. .claude/sandboxes-env.sh`. It sets `$SANDBOXES_REPO`, the sibling `speckit-sandboxes` checkout, whose `bench/` folder is the harness.
 
 ### 1. Compile the extension first
 
@@ -18,7 +22,7 @@ npm run compile
 ### 2. Bake
 
 ```bash
-node ../speckit-bench/sync-templates.mjs --sizes easy,medium,hard,oversized
+node "$SANDBOXES_REPO"/bench/sync-templates.mjs --sizes easy,medium,hard,oversized
 ```
 
 Defaults are `--speckit latest --ext latest`, which is what a measured round wants:
@@ -32,4 +36,4 @@ If the app clone is missing, the script prints the one-time clone command. Run i
 
 ### 3. Report
 
-Print the three versions the bake recorded and confirm the cell count. Say which arm each letter carries only if the user asks — the letters are opaque on purpose, and `node ../speckit-bench/run-all.mjs --dry-run` prints the table when it is wanted.
+Print the three versions the bake recorded and confirm the cell count. Say which arm each letter carries only if the user asks — the letters are opaque on purpose, and `node "$SANDBOXES_REPO"/bench/run-all.mjs --dry-run` prints the table when it is wanted.

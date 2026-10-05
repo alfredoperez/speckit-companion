@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(node ../speckit-bench/run-all.mjs:*), Bash(node ../speckit-bench/sync-templates.mjs:*), Bash(date:*), Bash(git -C:*), Agent, Workflow, AskUserQuestion
+allowed-tools: Bash(. .claude/sandboxes-env.sh:*), Bash(node "$SANDBOXES_REPO"/bench/run-all.mjs:*), Bash(node "$SANDBOXES_REPO"/bench/sync-templates.mjs:*), Bash(date:*), Bash(git -C:*), Agent, Workflow, AskUserQuestion
 description: Agent-driven bench round for one size — drive the three cells, judge, capture
 ---
 
@@ -11,19 +11,29 @@ Size from `$ARGUMENTS` (`easy`/`medium`/`hard`/`oversized`).
 
 > Faithful dispatch: a driver mimics the GUI, it does not follow raw command bodies.
 >
-> **Never `/speckit-companion-auto`.** It is a different product path — it decides its own shape and folds on its own judgement — and a round driven by it is measuring auto, not the pipeline a GUI user drives. A round that used it also loaded no living specs at all in one measured cell, while the per-step run of the same feature in the same cell loaded three and caught a planted contradiction. The full driver contract is `../speckit-bench/DRIVER.md`. The bench is a trustworthy **relative** comparator with capture overhead isolated; it does not reproduce a human's absolute wall clock.
+> **Never `/speckit-companion-auto`.** It is a different product path — it decides its own shape and folds on its own judgement — and a round driven by it is measuring auto, not the pipeline a GUI user drives. A round that used it also loaded no living specs at all in one measured cell, while the per-step run of the same feature in the same cell loaded three and caught a planted contradiction. The full driver contract is `$SANDBOXES_REPO/bench/DRIVER.md`. The bench is a trustworthy **relative** comparator with capture overhead isolated; it does not reproduce a human's absolute wall clock.
+
+### Paths
+
+Shell state does not persist between Bash calls, so start each one with this line:
+
+```bash
+. .claude/sandboxes-env.sh && eval "$(node "$SANDBOXES_REPO"/bench/paths.mjs --sh)"
+```
+
+It sets `$SANDBOXES_REPO` (the sibling `speckit-sandboxes` checkout, whose `bench/` folder is the harness) and `$BENCH_CELLS_DIR` (where the cells are baked). When you hand a path to an agent, expand it first: an agent gets the absolute path, never the variable.
 
 ### 1. Check the cells
 
-`node ../speckit-bench/run-all.mjs --dry-run` — if any cell is missing, run `/bench-sync`. Note the three versions it prints; they belong in the final report.
+`node "$SANDBOXES_REPO"/bench/run-all.mjs --dry-run` — if any cell is missing, run `/bench-sync`. Note the three versions it prints; they belong in the final report.
 
 ### 2. Prep
 
-`node ../speckit-bench/run-all.mjs prep --sizes <size>` — resets the cells and writes their run markers into the harness.
+`node "$SANDBOXES_REPO"/bench/run-all.mjs prep --sizes <size>` — resets the cells and writes their run markers into the harness.
 
 ### 3. Drive the three cells (Workflow, parallel)
 
-One driver per cell (`parallel` of 3). Each works only in `~/dev/projects/conduit-<size>-<letter>`, stamps `startedAt`/`finishedAt` into `../speckit-bench/runs-meta/conduit-<size>-<letter>.json` (via `date -u`), and runs **specify → plan → tasks → implement** the GUI-faithful way (see `../speckit-bench/driver.mjs`):
+One driver per cell (`parallel` of 3). Each works only in `$BENCH_CELLS_DIR/conduit-<size>-<letter>`, stamps `startedAt`/`finishedAt` into `$SANDBOXES_REPO/bench/runs-meta/conduit-<size>-<letter>.json` (via `date -u`), and runs **specify → plan → tasks → implement** the GUI-faithful way (see `$SANDBOXES_REPO/bench/driver.mjs`):
 
 - For EACH step, prepend the **same** GUI preamble every arm gets — `buildStepPreamble(step, specDir)` from `driver.mjs`, which imports the real renderer from `dist/ai-providers/promptPreamble.js` so it cannot drift — then dispatch the step's command.
   - **stock arm** → stock `/speckit.*` command bodies. No capture script; stock is blind by design.
@@ -31,7 +41,7 @@ One driver per cell (`parallel` of 3). Each works only in `~/dev/projects/condui
 - After dispatching a step, **wait for it to settle** — `waitForSettle(cellDir, step)` polls `.spec-context.json` until the step's completed status **or any later one** appears. It returns `folded: true` when the status overshot, which happens for two shipped reasons: the fast path folds specify/plan/tasks onto `ready-to-implement`, and mark-complete takes implement to `completed`. **A folded step is already done — never re-dispatch it, and never steer the size verdict to make steps settle one at a time.** Right-sizing is the feature under measurement; a driver that disables it produces numbers that look valid and are not.
 - Do not time the capture calls. The harness counts them from `.trace.jsonl` and the timing itself is under the noise floor.
 
-The feature prompt is `../speckit-bench/prompts/conduit/<size>.md`, the text between the `---` rules.
+The feature prompt is `$SANDBOXES_REPO/bench/prompts/conduit/<size>.md`, the text between the `---` rules.
 
 **A driver may run the app's own build and test suite, and should.** That is what a person does, and forbidding it measured something nobody does: on the first Conduit round one arm wrote twelve tests and eleven failed on a single convention slip it had no way to see, because it was not allowed to run them. The acceptance oracle is injected only at grading time and removed afterwards, so a run cannot reach it from inside the cell — there is nothing to protect by keeping the suite closed.
 
@@ -43,7 +53,7 @@ The one hard rule for a driver is **no git commands**. Branching and committing 
 
 Spawn a rubric judge per cell and one cross-solution comparative reviewer (steps 3 and 4 of `/bench-capture`), then:
 
-`node ../speckit-bench/run-all.mjs capture --sizes <size>`
+`node "$SANDBOXES_REPO"/bench/run-all.mjs capture --sizes <size>`
 
 ### 5. Report
 

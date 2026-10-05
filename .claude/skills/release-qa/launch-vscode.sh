@@ -2,12 +2,16 @@
 # Open the sandbox in an isolated VS Code instance (own user-data and extensions dirs) with SpecKit Companion from this checkout.
 # Usage: launch-vscode.sh <sandbox-dir> <results-dir> [vsix|dev]
 #   vsix (default) packages the checkout into <results-dir> and installs it; dev runs it as an Extension Development Host.
-# Env: E2E_VSCODE_STATE=<dir> uses a fresh profile; E2E_TRUST=1 leaves workspace trust on (Restricted Mode first-open); E2E_EXTRA_FOLDER=<dir> opens it beside the sandbox as a multi-root window.
+# Env: E2E_VSCODE_STATE=<dir> uses a fresh profile (default: .e2e-vscode under the sandbox root); E2E_TRUST=1 leaves workspace trust on (Restricted Mode first-open); E2E_EXTRA_FOLDER=<dir> opens it beside the sandbox as a multi-root window.
 # Theme switch while running: launch-vscode.sh theme light|dark
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/../../.." && pwd)"
-STATE="${E2E_VSCODE_STATE:-$HOME/dev/projects/companion-sandboxes/.e2e-vscode}"
+STATE="${E2E_VSCODE_STATE:-}"
+if [ -z "$STATE" ]; then
+  . "$REPO/.claude/sandboxes-env.sh"
+  STATE="$SANDBOXES_DIR/.e2e-vscode"
+fi
 SETTINGS="$STATE/data/User/settings.json"
 
 if [ "${1:-}" = "theme" ]; then

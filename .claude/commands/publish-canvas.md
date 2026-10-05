@@ -23,10 +23,11 @@ Release the **GitHub Copilot app canvas** (`apps/copilot-canvas/`). It reaches u
 1. **Preflight.** The working tree is clean and the branch is `main`, or abort.
 2. **Version.** Ask for the new version, showing the current one; a first release, with no tag yet, may keep it. Skip the question when `/publish-all` passed one in. Their site lists the `version` in `plugin.json`, so an update with the old number looks like no update.
 3. **Bump and build.** Set `version` in `apps/copilot-canvas/plugin.json` and `apps/copilot-canvas/package.json`, run `npm run test:canvas` (it rebuilds `vendor/` first), and commit `apps/copilot-canvas/` locally as `chore(canvas): release v<X.Y.Z>`. Do not push yet.
-4. **Get a fresh upstream checkout.** Always branch from their `main`: a branch cut from `staged` carries generated plugin files and gets rejected.
+4. **Get a fresh upstream checkout.** Always branch from their `main`: a branch cut from `staged` carries generated plugin files and gets rejected. The checkout is a clone under the sandbox root (`$SANDBOXES_DIR/awesome-copilot`), made the first time this step runs and reused after.
    ```bash
-   AC=~/dev/projects/awesome-copilot
-   [ -d "$AC/.git" ] || git clone https://github.com/github/awesome-copilot "$AC"
+   . .claude/sandboxes-env.sh
+   AC="$SANDBOXES_DIR/awesome-copilot"
+   [ -d "$AC/.git" ] || { mkdir -p "$SANDBOXES_DIR" && git clone https://github.com/github/awesome-copilot "$AC"; }
    git -C "$AC" fetch origin main
    git -C "$AC" checkout -B speckit-companion-canvas origin/main
    ```
@@ -46,6 +47,7 @@ Release the **GitHub Copilot app canvas** (`apps/copilot-canvas/`). It reaches u
        "$SRC/README.md" > "$PLG/README.md"
    cp "$PLG/README.md" "$EXT/README.md"
    ```
+   `AC` is not a fresh variable in a later Bash call: set it again with the first two lines of step 4.
    The `sed` turns the README's two relative links into absolute ones, since neither target exists in their repo. Never add a `canvas.json`.
 6. **Validate with their validator, then regenerate their README**:
    ```bash
