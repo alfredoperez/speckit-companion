@@ -2,42 +2,42 @@ import { expect, test } from 'claude-code/testing'
 import { DEMO_SPECS } from './fixtures/demo-specs.js'
 import { BAND, PANE, ROOT, project, startSession } from './harness.ts'
 
-test('registers /spec-tracker and keeps /spec as an alias of it', async ($, on) => {
+test('registers /speckit-tracker and keeps /spec as an alias of it', async ($, on) => {
   const { commands } = project(on, { ...DEMO_SPECS })
   await startSession($)
-  expect(commands.map(c => c.name)).toEqual(['spec-tracker', 'spec'])
-  expect(commands[1].description).toBe('Same as /spec-tracker')
+  expect(commands.map(c => c.name)).toEqual(['speckit-tracker', 'spec'])
+  expect(commands[1].description).toBe('Same as /speckit-tracker')
 })
 
-test('/spec-tracker <number> follows a spec and /spec-tracker auto lets it go, as /spec does', async ($, on) => {
+test('/speckit-tracker <number> follows a spec and /speckit-tracker auto lets it go, as /spec does', async ($, on) => {
   const files = { ...DEMO_SPECS, 'specs/042-export-csv/spec.md': '# Feature Specification: Export CSV\n' }
   const { store, opened } = project(on, files)
   await startSession($)
-  expect(await $.command.run({ command: 'spec-tracker', args: '42' })).toEqual({})
+  expect(await $.command.run({ command: 'speckit-tracker', args: '42' })).toEqual({})
   expect(store.get('follow:' + ROOT)).toBe('specs/042-export-csv')
   expect(opened).toContain('speckit-companion')
-  await $.command.run({ command: 'spec-tracker', args: 'auto' })
+  await $.command.run({ command: 'speckit-tracker', args: 'auto' })
   expect(store.has('follow:' + ROOT)).toBe(false)
   await $.command.run({ command: 'spec', args: 'export-csv' })
   expect(store.get('follow:' + ROOT)).toBe('specs/042-export-csv')
 })
 
-test('bare /spec-tracker opens the pane on its Specs tab', async ($, on) => {
+test('bare /speckit-tracker opens the pane on its Specs tab', async ($, on) => {
   project(on, { ...DEMO_SPECS })
   await startSession($)
-  await $.command.run({ command: 'spec-tracker', args: '' })
+  await $.command.run({ command: 'speckit-tracker', args: '' })
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   expect(await ui.find({ key: 'follow-auto' })).toBeDefined()
 })
 
-test('where nothing draws, /spec-tracker answers in text and names itself', async ($, on) => {
+test('where nothing draws, /speckit-tracker answers in text and names itself', async ($, on) => {
   const { opened } = project(on, { ...DEMO_SPECS }, { surfaces: [] })
   await startSession($)
-  const bare = await $.command.run({ command: 'spec-tracker', args: '' })
+  const bare = await $.command.run({ command: 'speckit-tracker', args: '' })
   expect(bare.text).toContain('Following _02_demo-tasked (picked automatically): Plan done · Tasks 0/4 · Implement next')
-  expect(bare.text).toContain('Run /spec-tracker <number or name> to follow one, or /spec-tracker auto to follow the latest.')
+  expect(bare.text).toContain('Run /speckit-tracker <number or name> to follow one, or /speckit-tracker auto to follow the latest.')
   expect((await $.command.run({ command: 'spec', args: '' })).text).toBe(bare.text)
-  expect((await $.command.run({ command: 'spec-tracker', args: 'planned' })).text).toBe('Following _01_demo-planned\nPlan done · Tasks next')
+  expect((await $.command.run({ command: 'speckit-tracker', args: 'planned' })).text).toBe('Following _01_demo-planned\nPlan done · Tasks next')
   expect(opened).toEqual([])
 })
 

@@ -16,7 +16,7 @@ test('where nothing draws, bare /spec answers with the followed spec and the rec
       '  _01_demo-planned · Planned',
       '  _00_demo-specified · Specified',
       '',
-      'Run /spec-tracker <number or name> to follow one, or /spec-tracker auto to follow the latest.',
+      'Run /speckit-tracker <number or name> to follow one, or /speckit-tracker auto to follow the latest.',
     ].join('\n'),
   )
   expect(opened).toEqual([])

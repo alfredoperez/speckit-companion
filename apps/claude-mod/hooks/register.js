@@ -18,7 +18,7 @@ const PANE = 'speckit-companion'
 const TITLE = 'SpecKit Companion'
 const PICKER_SIZE = 15
 const SCAN_BATCH = 32
-const COMMAND = 'spec-tracker'
+const COMMAND = 'speckit-tracker'
 const ALIAS = 'spec'
 const GLYPH = { completed: '✓', 'in-progress': '●', 'not-started': '○' }
 // 'warning' is the one theme key the mods types name for text; done and failed use the terminal's own green and red.
@@ -224,7 +224,7 @@ function ensureStarted($) {
   return starting
 }
 
-/** /spec-tracker and its alias /spec: follow a spec, then open the pane or answer in text. */
+/** /speckit-tracker and its alias /spec: follow a spec, then open the pane or answer in text. */
 async function runCommand($, e) {
   await ensureStarted($)
   const query = e.args.trim()

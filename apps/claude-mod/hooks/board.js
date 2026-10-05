@@ -6,7 +6,7 @@ const SEP = ' · '
 // Optional Spec Kit phases, in the order they run around the pipeline; other history steps are not phases.
 const STEP_ORDER = ['specify', 'clarify', 'plan', 'tasks', 'analyze', 'implement', 'converge']
 const RECENT = 10
-const COMMAND = 'spec-tracker'
+const COMMAND = 'speckit-tracker'
 const ITEM_MAX = 400
 const CHUNK_MAX = 10000
 const DOC_MAX = 60000
@@ -102,7 +102,7 @@ export function paneModel(row, ctx, tasksText) {
   }
 }
 
-/** The text reply for bare `/spec-tracker` where nothing draws. */
+/** The text reply for bare `/speckit-tracker` where nothing draws. */
 export function listText(followed, rows, pinned) {
   if (!rows.length) return 'No specs found'
   const lines = []
@@ -115,7 +115,7 @@ export function listText(followed, rows, pinned) {
   return lines.join('\n')
 }
 
-/** The text reply after `/spec-tracker <query>` or `/spec-tracker auto` where nothing draws. */
+/** The text reply after `/speckit-tracker <query>` or `/speckit-tracker auto` where nothing draws. */
 export function followText(followed, pinned) {
   const lead = pinned ? `Following ${followed.row.name}` : `Following automatically: ${followed.row.name}`
   return `${lead}\n${bandLine(followed.row, followed.ctx)}`
