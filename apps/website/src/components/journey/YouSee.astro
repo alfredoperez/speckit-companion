@@ -16,11 +16,10 @@ const { label = 'What you see' } = Astro.props;
   .you-see {
     max-width: var(--measure-prose);
     margin-block: 1rem;
-    padding: 0.65rem 0.9rem;
+    padding: var(--space-12) var(--space-16);
     background: var(--panel);
     border: 1px solid var(--border-card);
-    border-left: 2px solid var(--accent);
-    border-radius: 0 var(--radius-button-sm) var(--radius-button-sm) 0;
+    border-radius: var(--radius-sm);
   }
 
   .you-see .you-see__label {
@@ -43,6 +42,10 @@ const { label = 'What you see' } = Astro.props;
 
   .you-see .you-see__text :global(p + p) {
     margin-top: 0.4rem;
+  }
+
+  .you-see .you-see__text :global(code) {
+    font-size: var(--fs-ui-sm);
   }
 
   .you-see .you-see__text :global(strong) {

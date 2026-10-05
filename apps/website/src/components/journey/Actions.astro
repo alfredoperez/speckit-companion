@@ -9,7 +9,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.6rem;
+    gap: var(--space-10);
     max-width: 100%;
     min-width: 0;
     margin-block: 1rem;
@@ -28,10 +28,7 @@
   }
 
   .doc-actions :global(p code) {
-    padding: 0.1em 0.36em;
     font-size: var(--fs-ui-sm);
-    border: 1px solid var(--rule);
-    border-radius: 4px;
   }
 
   .doc-actions :global(a:not(.btn)) {

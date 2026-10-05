@@ -1,7 +1,12 @@
 ---
 /*
-  The mono command row. A button means click, a chip means copy, and the shape
-  says which without a label.
+  The mono command row: one surface, a dim prompt glyph, the command, and a copy
+  button at the right edge. A button means click, this row means copy, and the
+  shape says which without a label.
+
+  A shell command leads with `$`. A slash command already starts with its own
+  glyph, so with `prompt={false}` the leading `/` is the dim one. The copied
+  text is always the whole command, read from the row, never from the spans.
 
   The text tint #cfc9e8 is a single-use value in the token sheet, so it stays a
   literal here rather than becoming a token.
@@ -10,6 +15,9 @@
   caller wants to describe here is the copy itself, and the analytics listener
   walks up from the click target, so an attribute on the wrapper would also fire
   when someone just clicks the command text.
+
+  The click is handled from the document, once. The docs swap pages in place, so
+  a listener bound to the rows of the first page would miss every row after it.
 */
 interface Props {
   command: string;
@@ -21,20 +29,25 @@ interface Props {
 
 const { command, prompt = true, label, class: className, ...rest } = Astro.props;
 const copyLabel = label ?? `Copy: ${command}`;
+const slash = !prompt && command.startsWith('/');
+const glyph = prompt ? '$' : slash ? '/' : undefined;
+const text = slash ? command.slice(1) : command;
 ---
 
-<div class:list={['code-line', className]} data-code-line>
+<div class:list={['code-line', className, slash && 'code-line--slash']} data-code-line data-command={command}>
   <code>
-    {prompt && <span class="prompt" aria-hidden="true">$</span>}
-    <span class="text" data-code-text>{command}</span>
+    {glyph && <span class="prompt" aria-hidden={prompt ? 'true' : undefined}>{glyph}</span>}
+    <span class="text">{text}</span>
   </code>
 
+  <span class="copied" aria-hidden="true">Copied</span>
+
   <button type="button" class="copy" data-copy-button aria-label={copyLabel} {...rest}>
-    <svg class="icon icon--copy" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg class="icon icon--copy" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <rect x="5.5" y="5.5" width="8" height="8" rx="1.75" />
       <path d="M10.5 3.25A1.75 1.75 0 0 0 8.75 1.5h-5A2.25 2.25 0 0 0 1.5 3.75v5c0 .97.78 1.75 1.75 1.75" />
     </svg>
-    <svg class="icon icon--done" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <svg class="icon icon--done" width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <path d="M3 8.4 6.3 11.7 13 5" />
     </svg>
   </button>
@@ -44,29 +57,56 @@ const copyLabel = label ?? `Copy: ${command}`;
 
 <style>
   .code-line {
+    --code-line-surface: var(--panel);
+    position: relative;
     display: inline-flex;
     align-items: center;
-    gap: var(--space-12);
+    gap: var(--space-8);
     max-width: 100%;
-    padding: 12px 16px;
-    background: var(--ground);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius-button-sm);
+    min-height: 44px;
+    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-16);
+    background: var(--code-line-surface);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+    transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
-  code {
+  .code-line:hover,
+  .code-line:focus-within {
+    border-color: var(--border-panel);
+  }
+
+  /* Qualified so the row owns its text wherever it is placed: a docs page gives
+     every inline code a fill and a chip shape, and this is not a chip. */
+  .code-line code {
     display: flex;
+    flex: 1 1 auto;
     align-items: center;
-    gap: var(--space-8);
+    gap: var(--space-10);
     min-width: 0;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
     font-family: var(--font-mono);
-    font-size: var(--fs-mono);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
     color: #cfc9e8;
   }
 
+  .code-line--slash code {
+    gap: 0;
+  }
+
   .prompt {
-    color: var(--text-dim);
     flex: none;
+    color: var(--text-dim);
+    user-select: none;
+  }
+
+  .code-line--slash .prompt {
+    user-select: auto;
   }
 
   .text {
@@ -84,22 +124,27 @@ const copyLabel = label ?? `Copy: ${command}`;
     align-items: center;
     justify-content: center;
     flex: none;
+    width: 34px;
+    height: 34px;
     padding: 0;
     background: none;
     border: 0;
+    border-radius: var(--radius-button-sm);
     cursor: pointer;
-    color: var(--text-dim);
-    transition: color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    color: var(--text-muted);
+    transition:
+      color 160ms cubic-bezier(0.23, 1, 0.32, 1),
+      background-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .copy:hover {
-    color: var(--accent);
+    color: var(--text-primary);
+    background: var(--accent-solid-a25);
   }
 
   .copy:focus-visible {
     outline: 2px solid var(--accent);
-    outline-offset: 3px;
-    border-radius: 3px;
+    outline-offset: 1px;
   }
 
   .icon {
@@ -111,7 +156,32 @@ const copyLabel = label ?? `Copy: ${command}`;
 
   .icon--done {
     display: none;
-    stroke: var(--green);
+  }
+
+  /* The word sits over the tail of the command, on the row's own surface, so
+     the row keeps its width while it confirms. */
+  .copied {
+    position: absolute;
+    inset-block: 1px;
+    inset-inline-end: 42px;
+    display: none;
+    align-items: center;
+    padding-inline: var(--space-26) var(--space-6);
+    background: linear-gradient(to right, transparent, var(--code-line-surface) var(--space-20));
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+    color: var(--green);
+    pointer-events: none;
+  }
+
+  .code-line[data-copied] .copied {
+    display: flex;
+  }
+
+  .code-line[data-copied] .copy,
+  .code-line[data-copied] .copy:hover {
+    color: var(--green);
+    background: none;
   }
 
   .code-line[data-copied] .icon--copy {
@@ -130,32 +200,51 @@ const copyLabel = label ?? `Copy: ${command}`;
     clip-path: inset(50%);
     white-space: nowrap;
   }
+
+  @media (max-width: 40rem) {
+    .code-line {
+      display: flex;
+      align-self: stretch;
+      width: 100%;
+    }
+  }
 </style>
 
 <script>
-  document.querySelectorAll('[data-code-line]').forEach((row) => {
-    const button = row.querySelector('[data-copy-button]');
-    const text = row.querySelector('[data-code-text]');
-    const status = row.querySelector('[data-copy-status]');
-    if (!button || !text) return;
+  declare global {
+    interface Window {
+      __codeLineCopy?: boolean;
+    }
+  }
 
-    let timer;
+  const timers = new WeakMap<Element, ReturnType<typeof setTimeout>>();
 
-    button.addEventListener('click', async () => {
-      const value = text.textContent ?? '';
+  if (!window.__codeLineCopy) {
+    window.__codeLineCopy = true;
+
+    document.addEventListener('click', async (event) => {
+      const button = event.target instanceof Element ? event.target.closest('[data-copy-button]') : null;
+      const row = button?.closest('[data-code-line]');
+      if (!row) return;
+
+      const status = row.querySelector('[data-copy-status]');
       try {
-        await navigator.clipboard.writeText(value);
+        await navigator.clipboard.writeText(row.getAttribute('data-command') ?? '');
       } catch {
         if (status) status.textContent = 'Copy failed. Select the command and copy it by hand.';
         return;
       }
+
       row.setAttribute('data-copied', '');
       if (status) status.textContent = 'Copied';
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        row.removeAttribute('data-copied');
-        if (status) status.textContent = '';
-      }, 1600);
+      clearTimeout(timers.get(row));
+      timers.set(
+        row,
+        setTimeout(() => {
+          row.removeAttribute('data-copied');
+          if (status) status.textContent = '';
+        }, 1600),
+      );
     });
-  });
+  }
 </script>
