@@ -1,5 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { CANVAS_DESCRIPTION, OPEN_NOTE, SYSTEM_RULE } from '../prompts.mjs';
 
 // extension.mjs joins a Copilot session on import, so it is loaded once against the stub SDK (tests/sdk-stub) and we read what it registered.
@@ -45,13 +48,27 @@ describe('what the extension tells the agent about opening the board', () => {
     });
 });
 
-describe('how the board learns that a chat turn ended', () => {
-    it('settles every open board when the session goes idle', async () => {
+describe('how the board learns that a chat turn started and ended', () => {
+    it('shows a sent step as running through an idle that is not its own, and stops when its own turn ends', async () => {
         const [canvas] = (await loadExtension()).canvases;
-        assert.equal(typeof globalThis.__copilotHandlers['session.idle'], 'function');
-        await canvas.open({ instanceId: 'test-idle', input: null, session: { workingDirectory: process.cwd() } });
+        const root = mkdtempSync(join(tmpdir(), 'canvas-ext-'));
+        mkdirSync(join(root, 'specs/001-x'), { recursive: true });
+        writeFileSync(join(root, 'specs/001-x/spec.md'), '# X\n');
+        const fire = (type, data) => globalThis.__copilotHandlers[type]({ type, data });
+        const ctx = { instanceId: 'test-idle', session: { workingDirectory: root } };
+        const action = name => canvas.actions.find(a => a.name === name).handler;
+        const plan = async () => (await action('list_specs')({ ...ctx, input: {} })).specs[0].steps.plan;
+        await canvas.open({ ...ctx, input: null });
         try {
-            assert.doesNotThrow(() => globalThis.__copilotHandlers['session.idle']());
+            fire('user.message', { content: 'something the user typed earlier' });
+            const { prompt } = await action('run_step')({ ...ctx, input: { spec: '001-x', command: 'plan' } });
+            assert.equal(await plan(), 'in-progress');
+            fire('session.idle', {});
+            assert.equal(await plan(), 'in-progress', 'the earlier turn ending settles nothing');
+            fire('user.message', { content: prompt });
+            writeFileSync(join(root, 'specs/001-x/plan.md'), '# Plan\n\nStore the flag.\n');
+            fire('session.idle', {});
+            assert.equal(await plan(), 'completed', 'its own turn ending does, and the written plan.md reads as done');
         } finally {
             await canvas.onClose({ instanceId: 'test-idle' });
         }

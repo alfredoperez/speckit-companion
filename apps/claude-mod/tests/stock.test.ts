@@ -489,9 +489,9 @@ test('a file is read again only when its time or size changed', async ($, on) =>
   const { clock, reads } = await open($, on, files, mtimes)
   const count = (name: string) => reads.filter(r => r === path(name)).length
   const counted = ['spec.md', 'plan.md', 'tasks.md', 'research.md', 'data-model.md', 'checklists/requirements.md']
-  // Starting up reads the spec and the tasks once more, for the list of specs.
+  // The list of specs and the followed spec share one read of each file.
   const before = counted.map(count)
-  expect(before).toEqual([2, 1, 2, 1, 1, 1])
+  expect(before).toEqual([1, 1, 1, 1, 1, 1])
   // A file with nothing to count is never read to draw the Run view.
   expect(count('quickstart.md') + count('contracts/ui-contract.md')).toBe(0)
   await clock.advance(9000)
@@ -499,7 +499,7 @@ test('a file is read again only when its time or size changed', async ($, on) =>
   files[path('tasks.md')] = tasks(4)
   mtimes[path('tasks.md')] = NOW + 9000
   await clock.advance(3000)
-  expect(counted.map(count)).toEqual([2, 1, 3, 1, 1, 1])
+  expect(counted.map(count)).toEqual([1, 1, 2, 1, 1, 1])
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   expect(said(await ui.find({ key: 'row-implement' }))).toBe('● Implement  4 of 10 tasks · last change just now')
 })
@@ -509,4 +509,42 @@ test('where nothing draws, the text answer for a stock project reads like the ba
   await made.clock.set(NOW)
   await startSession($)
   expect((await $.command.run({ command: 'spec', args: '1' })).text).toBe('Following 001-clear-completed\nPlan written 12m ago · Tasks next')
+})
+
+test('a document that only exists is not a finished step: an empty plan, the copied template, a tasks file with no task', async ($, on) => {
+  const template = '# Implementation Plan: [FEATURE]\n\n## Summary\n'
+  const files: Record<string, string> = { [path('spec.md')]: SPEC, [path('plan.md')]: '', '.specify/templates/plan-template.md': template }
+  const { clock } = await open($, on, files, { [path('spec.md')]: today(19, 14), [path('plan.md')]: today(19, 18) })
+  const band = () => bandText($)
+  expect(await band()).toContain('Plan next')
+  files[path('plan.md')] = template
+  await clock.advance(3000)
+  expect(await band()).toContain('Plan next')
+  files[path('plan.md')] = PLAN
+  files[path('tasks.md')] = '# Tasks: Clear Completed Todos\n\nNothing yet.\n'
+  await clock.advance(3000)
+  expect(await band()).toContain('Tasks next')
+})
+
+test('reads a record the way the board does in a project with no Companion recorder, in the list and for the followed spec alike', async ($, on) => {
+  const START = { step: 'specify', substep: null, kind: 'start', by: 'extension', at: new Date(today(19, 10)).toISOString() }
+  const record = (status: string, currentStep: string) => JSON.stringify({ workflow: 'speckit', specName: 'Clear Completed Todos', currentStep, status, history: [START] })
+  const files: Record<string, string> = { ...WAITING_FOR_TASKS, [path('.spec-context.json')]: record('specifying', 'specify') }
+  const { clock } = await open($, on, files, WAITING_TIMES)
+  const band = () => bandText($)
+  // The record stopped at specifying, and nothing here can advance it: the written spec and plan say where the run is.
+  expect(await band()).toContain('Plan done')
+  expect(await band()).toContain('Tasks next')
+  // A step the record left open, with nothing on disk against it, is still open.
+  files[path('.spec-context.json')] = record('implementing', 'implement')
+  files[path('tasks.md')] = tasks(0)
+  await clock.advance(3000)
+  expect(await band()).toContain('Implement running')
+  // With Companion's recorder in the project the record leads again.
+  files['.specify/extensions/companion/scripts/write-context.py'] = '# writer'
+  files[path('.spec-context.json')] = record('specifying', 'specify')
+  delete files[path('tasks.md')]
+  files['specs/002-new/spec.md'] = '# New\n'
+  await clock.advance(3000)
+  expect(await band()).toContain('Specify running')
 })

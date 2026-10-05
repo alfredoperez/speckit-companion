@@ -1,11 +1,12 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { request } from 'node:http';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, rmSync, existsSync, chmodSync, utimesSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createSpecServer } from '../server.mjs';
+import { recordLockPath, recordStep } from '../run-record.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 
@@ -333,20 +334,35 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
     };
     const SPEC = 'specs/001-todo-stars';
 
-    async function open({ record = STALE, files = ['spec.md', 'plan.md'], quietMs } = {}) {
+    const IMPLEMENTED = {
+        ...SPECIFIED,
+        currentStep: 'implement',
+        status: 'implemented',
+        history: [...SPECIFIED.history, ...['plan', 'tasks', 'implement'].flatMap((step, i) => ['start', 'complete'].map((kind, j) => ({ step, substep: null, kind, by: 'extension', at: `2026-10-05T15:0${i}:${j}0.000Z` })))],
+    };
+
+    async function open({ record = STALE, files = ['spec.md', 'plan.md'], quietMs, ceilingMs } = {}) {
         const root = mkdtempSync(join(tmpdir(), 'canvas-stock-run-'));
         for (const step of ['specify', 'plan', 'tasks', 'implement']) {
             mkdirSync(join(root, '.github/skills', `speckit-${step}`), { recursive: true });
             writeFileSync(join(root, '.github/skills', `speckit-${step}`, 'SKILL.md'), `# ${step}\n`);
         }
         mkdirSync(join(root, SPEC), { recursive: true });
-        for (const file of files) writeFileSync(join(root, SPEC, file), `# ${file}\n`);
+        for (const file of files) writeFileSync(join(root, SPEC, file), file === 'tasks.md' ? '- [x] T001 One\n' : `# ${file}\n`);
         if (record) writeFileSync(join(root, SPEC, '.spec-context.json'), JSON.stringify(record));
         const sent = [];
-        const board = await createSpecServer({ root, checkoutWriter: null, quietMs, send: async (prompt) => { sent.push(prompt); return true; } });
+        const clock = { ms: Date.now() + 1000 };
+        const board = await createSpecServer({ root, checkoutWriter: null, quietMs, ceilingMs, now: () => clock.ms, send: async (prompt) => { sent.push(prompt); return true; } });
         const row = () => board.snapshot.specs.find(s => s.id === SPEC);
         const context = () => JSON.parse(readFileSync(join(root, SPEC, '.spec-context.json'), 'utf8'));
-        return { root, board, sent, row, context };
+        // A document written after the send: its time is set, so the test never depends on the file system's clock.
+        const write = (name, text, dir = SPEC) => {
+            clock.ms += 1000;
+            writeFileSync(join(root, dir, name), text);
+            utimesSync(join(root, dir, name), new Date(clock.ms), new Date(clock.ms));
+        };
+        const pass = (ms) => { clock.ms += ms; board.rescan(); };
+        return { root, board, sent, row, context, clock, write, pass };
     }
 
     it('reads a record stuck on specifying as planned when spec.md and plan.md are on disk', async () => {
@@ -391,14 +407,14 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
     });
 
     it('shows a step it sent as running, then records it once the turn settles with the document on disk', async () => {
-        const { root, board, row, context } = await open({ record: SPECIFIED });
+        const { board, row, context, write } = await open({ record: SPECIFIED });
         try {
             assert.equal(row().statusLabel, 'Planned', 'plan.md is there though the record never heard of a plan');
             await board.run(SPEC, 'tasks');
             assert.equal(row().steps.tasks, 'in-progress');
             assert.equal(row().statusLabel, 'Tasking');
             assert.equal(board.detail(SPEC).spec.steps.tasks, 'in-progress');
-            writeFileSync(join(root, SPEC, 'tasks.md'), '- [ ] T001 One\n');
+            write('tasks.md', '- [ ] T001 One\n');
             board.rescan();
             assert.equal(row().steps.tasks, 'in-progress', 'still running until the turn ends');
             board.settle(new Date(Date.now() + 90000));
@@ -430,17 +446,131 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
         }
     });
 
-    it('stops waiting for the turn once the step\'s document has sat unchanged, without recording a time', async () => {
-        const { root, board, row, context } = await open({ quietMs: 40 });
+    it('as a last resort stops waiting once the written document has sat unchanged, on a host that never says a turn started', async () => {
+        const { board, row, context, write, pass } = await open({ quietMs: 120000 });
         try {
             await board.run(SPEC, 'tasks');
-            writeFileSync(join(root, SPEC, 'tasks.md'), '- [ ] T001 One\n');
-            board.rescan();
-            assert.equal(row().steps.tasks, 'in-progress');
-            await new Promise(r => setTimeout(r, 80));
-            board.rescan();
+            write('tasks.md', '- [ ] T001 One\n');
+            pass(119000);
+            assert.equal(row().steps.tasks, 'in-progress', 'not quiet for long enough yet');
+            pass(2000);
+            assert.equal(row().steps.tasks, 'completed', 'the files say so');
+            assert.deepEqual(context(), STALE, 'and no time is recorded for a turn nobody saw end');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('never ends a run on quiet while the session is working, and records it when the turn really ends', async () => {
+        const { board, sent, row, context, write, pass } = await open({ record: SPECIFIED, quietMs: 120000 });
+        try {
+            await board.run(SPEC, 'tasks');
+            board.began(sent.at(-1));
+            write('tasks.md', '- [ ] T001 One\n');
+            pass(10 * 60000);
+            assert.equal(row().steps.tasks, 'in-progress', 'ten quiet minutes into a turn that is still running');
+            board.settle();
             assert.equal(row().steps.tasks, 'completed');
-            assert.deepEqual(context(), STALE);
+            assert.deepEqual(context().history.slice(-2).map(e => [e.step, e.kind]), [['tasks', 'start'], ['tasks', 'complete']]);
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('stops showing a run whose document never appears once the ceiling passes, and stops waking up for it', async () => {
+        const { board, sent, row, context, pass } = await open({ record: SPECIFIED, ceilingMs: 2 * 60 * 60000 });
+        try {
+            await board.run(SPEC, 'tasks');
+            board.began(sent.at(-1));
+            pass(119 * 60000);
+            assert.equal(row().steps.tasks, 'in-progress');
+            pass(2 * 60000);
+            assert.equal(row().steps.tasks, 'not-started');
+            board.settle();
+            assert.deepEqual(context(), SPECIFIED);
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('does not settle a step on the idle of a turn that was already running when the step was sent', async () => {
+        const { board, sent, row, context, write } = await open({ record: SPECIFIED });
+        try {
+            board.began('an earlier message that is still being worked on');
+            await board.run(SPEC, 'tasks');
+            board.settle();
+            assert.equal(row().steps.tasks, 'in-progress', 'that idle belongs to the earlier turn');
+            assert.deepEqual(context(), SPECIFIED);
+            board.began(sent.at(-1));
+            write('tasks.md', '- [ ] T001 One\n');
+            board.settle();
+            assert.equal(row().steps.tasks, 'completed');
+            assert.equal(context().status, 'ready-to-implement');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('does not take a document that was already there at the send as proof the step ran', async () => {
+        const { board, row, context, write } = await open({ record: SPECIFIED });
+        try {
+            await board.run(SPEC, 'plan');
+            board.settle();
+            assert.deepEqual(context(), SPECIFIED, 'plan.md was not touched, so nothing is recorded');
+            assert.equal(row().statusLabel, 'Planned');
+            await board.run(SPEC, 'plan');
+            write('plan.md', '# plan.md\n\nRewritten.\n');
+            board.settle();
+            assert.equal(context().status, 'planned', 'a plan.md modified since the send is');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('never moves a record backwards: re-running Plan on an implemented spec writes nothing', async () => {
+        const { board, context, write } = await open({ record: IMPLEMENTED, files: ['spec.md', 'plan.md', 'tasks.md'] });
+        try {
+            await board.run(SPEC, 'plan');
+            write('plan.md', '# plan.md\n\nRewritten.\n');
+            board.settle();
+            assert.deepEqual(context(), IMPLEMENTED);
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('does not record a step whose document is empty or still the copied template', async () => {
+        const { root, board, row, context, write } = await open({ record: SPECIFIED, files: ['spec.md'] });
+        try {
+            const template = '# Implementation Plan: [FEATURE]\n\n## Summary\n';
+            mkdirSync(join(root, '.specify/templates'), { recursive: true });
+            writeFileSync(join(root, '.specify/templates/plan-template.md'), template);
+            await board.run(SPEC, 'plan');
+            write('plan.md', template);
+            board.rescan();
+            board.settle();
+            assert.equal(row().steps.plan, 'not-started');
+            assert.equal(row().statusLabel, 'Specified');
+            assert.deepEqual(context(), SPECIFIED);
+            await board.run(SPEC, 'tasks');
+            write('tasks.md', '');
+            board.settle();
+            assert.equal(row().steps.tasks, 'not-started');
+            assert.deepEqual(context(), SPECIFIED);
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('checks who owns the record again when the turn ends: Companion installed mid-turn means the board writes nothing', async () => {
+        const { root, board, context, write } = await open({ record: SPECIFIED });
+        try {
+            await board.run(SPEC, 'tasks');
+            write('tasks.md', '- [ ] T001 One\n');
+            mkdirSync(join(root, '.specify/extensions/companion/scripts'), { recursive: true });
+            writeFileSync(join(root, '.specify/extensions/companion/scripts/write-context.py'), '');
+            board.settle();
+            assert.deepEqual(context(), SPECIFIED);
         } finally {
             await board.close();
         }
@@ -482,10 +612,10 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
     });
 
     it('leaves a record that stopped mid-step alone, so that step is not handed a time nobody measured', async () => {
-        const { root, board, row, context } = await open();
+        const { board, row, context, write } = await open();
         try {
             await board.run(SPEC, 'tasks');
-            writeFileSync(join(root, SPEC, 'tasks.md'), '- [ ] T001 One\n');
+            write('tasks.md', '- [ ] T001 One\n');
             board.settle(new Date(Date.now() + 90000));
             assert.equal(row().statusLabel, 'Ready to Implement');
             assert.deepEqual(context(), STALE);
@@ -499,10 +629,10 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
     });
 
     it('says on the Overview what a board-kept time measures', async () => {
-        const { root, board } = await open({ record: SPECIFIED });
+        const { board, write } = await open({ record: SPECIFIED });
         try {
             await board.run(SPEC, 'tasks');
-            writeFileSync(join(root, SPEC, 'tasks.md'), '- [ ] T001 One\n');
+            write('tasks.md', '- [ ] T001 One\n');
             board.settle(new Date(Date.now() + 90000));
             const detail = JSON.parse((await call(board, `/api/spec?id=${SPEC}`, { headers: { 'x-speckit-token': board.token } })).body);
             assert.match(detail.overviewHtml, /Timed by the board: from the moment it sent a step to the end of that chat turn\. A step run any other way has no time\./);
@@ -535,5 +665,79 @@ describe('a project where the agent keeps the record', () => {
         } finally {
             await board.close();
         }
+    });
+});
+
+describe('the board\'s own record writer', () => {
+    const START = '2026-10-05T15:00:00.000Z';
+    const END = '2026-10-05T15:02:00.000Z';
+    const SPECIFIED = { workflow: 'speckit', specName: 'X', currentStep: 'specify', status: 'specified', history: [] };
+
+    function project(record) {
+        const root = mkdtempSync(join(tmpdir(), 'canvas-record-'));
+        mkdirSync(join(root, 'specs/001-x'), { recursive: true });
+        const file = join(root, 'specs/001-x/.spec-context.json');
+        if (record !== undefined) writeFileSync(file, typeof record === 'string' ? record : JSON.stringify(record));
+        return { root, file, spec: { id: 'specs/001-x', title: 'X' }, read: () => JSON.parse(readFileSync(file, 'utf8')) };
+    }
+
+    it('creates the record only when the file is missing, and appends to one it can read', () => {
+        const fresh = project();
+        assert.equal(recordStep(fresh.root, fresh.spec, 'specify', START, END), true);
+        assert.equal(fresh.read().status, 'specified');
+        const { root, spec, read } = project(SPECIFIED);
+        assert.equal(recordStep(root, spec, 'plan', START, END), true);
+        assert.deepEqual([read().status, read().currentStep, read().history.length], ['planned', 'plan', 2]);
+    });
+
+    it('writes nothing over a record it could not read', { skip: process.getuid?.() === 0 }, () => {
+        const { root, file, spec } = project({ ...SPECIFIED, status: 'implemented', currentStep: 'implement' });
+        const before = readFileSync(file, 'utf8');
+        chmodSync(file, 0o000);
+        try {
+            assert.equal(recordStep(root, spec, 'plan', START, END), false);
+        } finally {
+            chmodSync(file, 0o644);
+        }
+        assert.equal(readFileSync(file, 'utf8'), before);
+        const broken = project('{ not json');
+        assert.equal(recordStep(broken.root, broken.spec, 'plan', START, END), false);
+        assert.equal(readFileSync(broken.file, 'utf8'), '{ not json');
+    });
+
+    it('never lowers the status or the current step', () => {
+        for (const [status, currentStep, step] of [['implemented', 'implement', 'plan'], ['planned', 'plan', 'plan'], ['ready-to-implement', 'tasks', 'specify'], ['specified', 'tasks', 'plan'], ['some-custom-status', 'plan', 'tasks']]) {
+            const record = { ...SPECIFIED, status, currentStep };
+            const { root, spec, read } = project(record);
+            assert.equal(recordStep(root, spec, step, START, END), false, `${status} then ${step}`);
+            assert.deepEqual(read(), record);
+        }
+    });
+
+    it('takes the lock the other writers take, and stands back while a live writer holds it', () => {
+        const { root, file, spec, read } = project(SPECIFIED);
+        const lock = recordLockPath(file);
+        assert.match(lock, /speckit-companion-locks\/[0-9a-f]{32}\.lock$/);
+        mkdirSync(join(lock, '..'), { recursive: true });
+        writeFileSync(lock, `${process.pid}:some-other-scope:abc`);
+        try {
+            assert.equal(recordStep(root, spec, 'plan', START, END), false);
+            assert.deepEqual(read(), SPECIFIED);
+        } finally {
+            rmSync(lock, { force: true });
+        }
+        assert.equal(recordStep(root, spec, 'plan', START, END), true);
+        assert.ok(!existsSync(lock), 'and releases it');
+    });
+
+    it('reclaims a lock nobody has touched for half a minute', () => {
+        const { root, file, spec, read } = project(SPECIFIED);
+        const lock = recordLockPath(file);
+        mkdirSync(join(lock, '..'), { recursive: true });
+        writeFileSync(lock, '1:some-other-scope:abc');
+        utimesSync(lock, new Date(Date.now() - 60000), new Date(Date.now() - 60000));
+        assert.equal(recordStep(root, spec, 'plan', START, END), true);
+        assert.equal(read().status, 'planned');
+        assert.ok(!existsSync(lock));
     });
 });

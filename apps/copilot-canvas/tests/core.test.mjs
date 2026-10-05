@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
-import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
-import { buildSpecRow, parseSpecContext, phaseTimings, sortSpecs, statusFromSteps, timingSummaryText } from '../spec-rules.mjs';
+import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, readTemplates, recordLive, scanSpec, specStatusLabel } from '../specs-core.mjs';
+import { buildSpecRow, isWritten, parseSpecContext, phaseTimings, recordLiveIn, sortSpecs, statusFromSteps, timingSummaryText } from '../spec-rules.mjs';
 import { INSTALL_COMMAND, OPEN_NOTE, PROMPTS_DIR, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandPattern, commandSetFor, detectCommandSet, instructionsSentence, nextSpecNumber, openStatus, resolveCommand, resolveSpecify, runInstructionsDoc, specifyChoices, specifyInstructionsName, stepInstructionsName, writeRunInstructions, writerPath } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
@@ -350,49 +350,132 @@ describe('a stock run in a project with no context writer', () => {
     });
 });
 
-describe('a run record that is behind the files', () => {
+describe('a run record checked against the files', () => {
     const START = { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-10-05T14:54:53.999Z' };
     const stale = { workflow: 'speckit', specName: 'Todo Stars', currentStep: 'specify', status: 'specifying', history: [START] };
-    const row = (ctx, files, options = {}) => buildSpecRow({ id: 'specs/001-todo-stars', ctx, specText: '# Spec', files: { spec: null, plan: null, tasks: null, ...files }, tasksText: options.tasksText ?? null, recordLive: options.recordLive });
+    const specified = { ...stale, status: 'specified', history: [START, { ...START, kind: 'complete', at: '2026-10-05T14:56:35.000Z' }] };
+    const row = (ctx, files, options = {}) => buildSpecRow({ id: 'specs/001-todo-stars', ctx, specText: '# Spec', files: { spec: null, plan: null, tasks: null, ...files }, written: options.written, tasksText: options.tasksText ?? null, recordLive: options.recordLive });
+    const stock = (ctx, files, options = {}) => row(ctx, files, { ...options, recordLive: false });
 
-    it('reads Specify and Plan as done when the record stopped at specifying and both documents exist', () => {
-        const got = row(stale, { spec: 'spec.md', plan: 'plan.md' });
+    it('reads Specify and Plan as done in a stock project when the record stopped at specifying and both documents are written', () => {
+        const got = stock(stale, { spec: 'spec.md', plan: 'plan.md' });
         assert.deepEqual(got.steps, { specify: 'completed', plan: 'completed', tasks: 'not-started', implement: 'not-started' });
         assert.equal(got.status, 'planned');
         assert.equal(got.statusLabel, 'Planned');
     });
 
-    it('reads implement progress off the ticked tasks', () => {
-        const got = row(stale, { spec: 'spec.md', plan: 'plan.md', tasks: 'tasks.md' }, { tasksText: '- [x] T001 one\n- [ ] T002 two\n' });
+    it('reads implement progress off the ticked tasks in a stock project', () => {
+        const got = stock(stale, { spec: 'spec.md', plan: 'plan.md', tasks: 'tasks.md' }, { tasksText: '- [x] T001 one\n- [ ] T002 two\n' });
         assert.equal(got.steps.tasks, 'completed');
         assert.equal(got.steps.implement, 'in-progress');
         assert.equal(got.status, 'implementing');
     });
 
-    it('keeps a step running while its own document exists and something can still advance the record', () => {
-        const got = row(stale, { spec: 'spec.md' });
-        assert.equal(got.steps.specify, 'in-progress');
+    it('keeps a step a stock record left open while the files have nothing to say against it', () => {
+        const planning = stock({ ...stale, currentStep: 'plan', status: 'planning' }, { spec: 'spec.md' });
+        assert.equal(planning.steps.plan, 'in-progress');
+        assert.equal(planning.status, 'planning');
+        const implementing = stock({ ...stale, currentStep: 'implement', status: 'implementing' }, { spec: 'spec.md', plan: 'plan.md', tasks: 'tasks.md' }, { tasksText: '- [ ] T001 one\n- [ ] T002 two\n' });
+        assert.equal(implementing.steps.implement, 'in-progress');
+        assert.equal(implementing.status, 'implementing');
+    });
+
+    it('does not count a document that exists but is not written', () => {
+        const got = stock(stale, { spec: 'spec.md', plan: 'plan.md', tasks: 'tasks.md' }, { written: { spec: true, plan: false, tasks: false } });
+        assert.deepEqual(got.steps, { specify: 'completed', plan: 'not-started', tasks: 'not-started', implement: 'not-started' });
+        assert.deepEqual(got.files, { spec: 'spec.md', plan: 'plan.md', tasks: 'tasks.md' }, 'the files are still listed');
+        assert.equal(stock(null, { spec: 'spec.md', plan: 'plan.md' }, { written: { spec: true, plan: false, tasks: false } }).steps.plan, 'not-started');
+    });
+
+    it('lets a Companion record lead while a step is open: plan.md mid-specify finishes nothing', () => {
+        const got = row(stale, { spec: 'spec.md', plan: 'plan.md' });
+        assert.deepEqual(got.steps, { specify: 'in-progress', plan: 'not-started', tasks: 'not-started', implement: 'not-started' });
         assert.equal(got.status, 'specifying');
     });
 
-    it('reads that step as done from its document where nothing can advance the record', () => {
-        const got = row(stale, { spec: 'spec.md' }, { recordLive: false });
-        assert.equal(got.steps.specify, 'completed');
-        assert.equal(got.status, 'specified');
-        assert.equal(row({ ...stale, currentStep: 'plan', status: 'planning' }, { spec: 'spec.md' }, { recordLive: false }).steps.plan, 'not-started');
+    it('fills in a step a Companion record has no entry for, when no step is open', () => {
+        const got = row(specified, { spec: 'spec.md', plan: 'plan.md' });
+        assert.equal(got.steps.plan, 'completed');
+        assert.equal(got.status, 'planned');
+        const started = { ...specified, history: [...specified.history, { ...START, step: 'plan', at: '2026-10-05T14:57:00.000Z' }] };
+        assert.equal(row(started, { spec: 'spec.md', plan: 'plan.md' }).steps.plan, 'not-started', 'a step with an entry is the record\'s to tell');
+        assert.equal(row(specified, { spec: 'spec.md', plan: 'plan.md', tasks: 'tasks.md' }, { tasksText: '- [x] T001 one\n- [ ] T002 two\n' }).steps.implement, 'not-started', 'ticks never start implement there');
     });
 
     it('never takes back what the record finished, and leaves a closed spec closed', () => {
         const done = { ...stale, currentStep: 'implement', status: 'implemented' };
-        assert.equal(row(done, { spec: 'spec.md' }, { recordLive: false }).status, 'implemented');
+        assert.equal(stock(done, { spec: 'spec.md' }).status, 'implemented');
         const closed = { ...stale, currentStep: 'specify', status: 'completed' };
-        assert.equal(row(closed, { spec: 'spec.md', plan: 'plan.md' }, { recordLive: false }).status, 'completed');
+        assert.equal(stock(closed, { spec: 'spec.md', plan: 'plan.md' }).status, 'completed');
     });
 
     it('names the status a set of badges amounts to', () => {
         assert.equal(statusFromSteps({ specify: 'completed', plan: 'in-progress' }), 'planning');
         assert.equal(statusFromSteps({ specify: 'completed', plan: 'completed', tasks: 'completed' }), 'ready-to-implement');
         assert.equal(statusFromSteps({}), 'draft');
+    });
+});
+
+describe('telling a written document from one that only exists', () => {
+    const TEMPLATE = '# Implementation Plan: My Product Plan\n\n## Summary\n\nFill this in.\n';
+
+    it('does not count an empty file, or one that is only whitespace', () => {
+        for (const kind of ['spec', 'plan', 'tasks']) {
+            assert.equal(isWritten(kind, ''), false);
+            assert.equal(isWritten(kind, ' \n\n'), false);
+            assert.equal(isWritten(kind, null), false);
+        }
+    });
+
+    it('does not count the template the Spec Kit script copied in, however the whitespace differs', () => {
+        assert.equal(isWritten('plan', TEMPLATE, TEMPLATE), false);
+        assert.equal(isWritten('plan', TEMPLATE.replace(/\n/g, '\r\n') + '\n', TEMPLATE), false);
+        assert.equal(isWritten('plan', TEMPLATE.replace('Fill this in.', 'Store a starred flag on each todo.'), TEMPLATE), true);
+    });
+
+    it('knows the stock templates by their placeholder title when the project keeps no template', () => {
+        assert.equal(isWritten('plan', '# Implementation Plan: [FEATURE]\n\n**Branch**: `[###-feature-name]`\n'), false);
+        assert.equal(isWritten('spec', '# Feature Specification: [FEATURE NAME]\n\nbody\n'), false);
+        assert.equal(isWritten('spec', '# Feature Specification: Todo Stars\n\nbody\n'), true);
+    });
+
+    it('wants at least one task in tasks.md', () => {
+        assert.equal(isWritten('tasks', '# Tasks: Todo Stars\n\nNothing yet.\n'), false);
+        assert.equal(isWritten('tasks', '# Tasks: Todo Stars\n\n- [ ] T001 Add the star\n'), true);
+    });
+
+    it('reads the real stock templates in this repository as not written', () => {
+        const templates = readTemplates(REPO);
+        for (const kind of ['spec', 'plan', 'tasks']) {
+            assert.ok(templates[kind], `${kind} template found`);
+            assert.equal(isWritten(kind, templates[kind]), false, `${kind} by its placeholder title`);
+            assert.equal(isWritten(kind, templates[kind], templates[kind]), false);
+        }
+    });
+
+    it('scans a stock spec folder whose plan.md is still the copied template as planned-not-yet', () => {
+        const root = workspace({ companion: false });
+        mkdirSync(join(root, '.specify/templates'), { recursive: true });
+        writeFileSync(join(root, '.specify/templates/plan-template.md'), TEMPLATE);
+        mkdirSync(join(root, 'specs/001-x'));
+        writeFileSync(join(root, 'specs/001-x/spec.md'), '# Feature Specification: X\n\nA real spec.\n');
+        writeFileSync(join(root, 'specs/001-x/plan.md'), TEMPLATE);
+        writeFileSync(join(root, 'specs/001-x/tasks.md'), '');
+        const before = scanSpec(root, 'specs/001-x');
+        assert.deepEqual(before.steps, { specify: 'completed', plan: 'not-started', tasks: 'not-started', implement: 'not-started' });
+        assert.deepEqual(before.written, { spec: true, plan: false, tasks: false });
+        writeFileSync(join(root, 'specs/001-x/plan.md'), '# Implementation Plan: X\n\nStore the flag.\n');
+        assert.equal(scanSpec(root, 'specs/001-x').steps.plan, 'completed');
+    });
+
+    it('asks one question of a project to know whether its record can still advance', () => {
+        const asked = [];
+        assert.equal(recordLiveIn((path) => { asked.push(path); return true; }), true);
+        assert.deepEqual(asked, ['.specify/extensions/companion/scripts/write-context.py']);
+        assert.equal(recordLive(workspace({ companion: false })), false);
+        const withWriter = workspace({ companion: true });
+        writeFileSync(join(withWriter, '.specify/extensions/companion/scripts/write-context.py'), '');
+        assert.equal(recordLive(withWriter), true);
     });
 });
 

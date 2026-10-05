@@ -43,9 +43,11 @@ After a send, a note at the bottom of the board shows the message that was sent,
 
 While the agent works on a step the board sent, that step shows as **Running**. It stays that way until the chat turn ends.
 
-In a stock project the board reads each step from the files: a spec file means Specify is done, `plan.md` means Plan is done, `tasks.md` means Tasks is done, and ticked tasks show how far Implement is. The next step's button is there as soon as the previous step's document is. The board reads the files the same way when a run record has fallen behind them.
+In a stock project the board reads each step from the files: a written spec file means Specify is done, a written `plan.md` means Plan is done, a written `tasks.md` means Tasks is done, and ticked tasks show how far Implement is. An empty file, or the template Spec Kit copies in when a step starts, does not count. The next step's button is there as soon as the previous step's document is written. The board reads the files the same way when a run record has fallen behind them.
 
-For a step you send from the board in a stock project, the board notes when it sent the step and when that chat turn ended with the step's document written. The Overview shows a time for those steps only, and says so. A step you type into the chat yourself has no time.
+Where Companion is installed its run record leads, so a step that is still running is never shown as done because a file appeared early.
+
+For a step you send from the board in a stock project, the board notes when it sent the step and when that chat turn ended, if the step's document was written during it. The Overview shows a time for those steps only, and says so. A step you type into the chat yourself has no time, and neither does a second run of a step the spec is already past.
 
 ## When Companion is not installed
 

@@ -205,10 +205,19 @@ async function askInstall(button) {
     }
 }
 
-/** One quiet line, shown only where SpecKit Companion is not installed, that opens to the install command. Null once dismissed. */
-function installHint() {
+const hintNodes = {};
+
+/** The install line for one place on the page, the same node for as long as it says the same thing, so a redraw keeps a "Copied" in it. */
+function installHint(place) {
     const command = state.snapshot?.specify?.installCommand;
     if (!command || state.install.dismissed) return null;
+    const key = `${command}\n${state.install.open}`;
+    if (hintNodes[place]?.key !== key) hintNodes[place] = { key, node: buildInstallHint(command) };
+    return hintNodes[place].node;
+}
+
+/** One quiet line, shown only where SpecKit Companion is not installed, that opens to the install command. */
+function buildInstallHint(command) {
     const { open } = state.install;
     return el('div', { class: 'install-hint' },
         el('p', { class: 'install-hint__line' },
@@ -370,7 +379,7 @@ function renderNext(spec) {
         .filter(([command]) => command !== next.command && !(command === 'resume' && spec.done))
         .map(([command, label, title]) => el('button', { class: 'btn btn-chip', type: 'button', title, onclick: (e) => run(command, e.currentTarget) }, label));
     const pattern = state.detail?.commandHint ?? (commandSet === 'companion' ? '/speckit.companion.<step>' : '/speckit.<step>');
-    const hint = installHint();
+    const hint = installHint('card');
     const stockNote = commandSet === 'companion' || hint
         ? null
         : state.snapshot.commandSet === 'companion' ? ' This spec uses the Spec Kit workflow, so it runs the standard commands.' : ' Stock Spec Kit commands: SpecKit Companion is not installed in this workspace.';
@@ -492,6 +501,10 @@ async function loadDetail() {
     try {
         const detail = await api(`/api/spec?id=${encodeURIComponent(state.selected)}`);
         if (request !== state.detailRequest) return;
+        // The same detail again, as after a file event that changed nothing shown: keep the nodes that are there.
+        const key = JSON.stringify(detail);
+        if (state.detail && key === state.detailKey) return;
+        state.detailKey = key;
         state.detail = detail;
     } catch {
         if (request !== state.detailRequest) return;
@@ -541,7 +554,7 @@ function renderSpecifyChoices() {
             renderSpecifyChoices();
         },
     }, choice.label)));
-    const hint = installHint();
+    const hint = installHint('form');
     const blocked = specify.choices.find(c => !c.available);
     els.newSpecHint.textContent = blocked && !hint ? blocked.reason : WORKFLOW_NOTES[state.workflow];
     els.newSpecInstall.replaceChildren(...(hint ? [hint] : []));
@@ -549,7 +562,11 @@ function renderSpecifyChoices() {
 }
 
 function applySnapshot(snapshot) {
+    const key = JSON.stringify({ ...snapshot, generatedAt: null });
+    const same = key === state.snapshotKey;
+    state.snapshotKey = key;
     state.snapshot = snapshot;
+    if (same) return loadDetail();
     renderSpecifyChoices();
     if (state.selected && !snapshot.specs.some(s => s.id === state.selected)) state.selected = null;
     if (!state.selected && window.matchMedia('(min-width: 761px)').matches) {

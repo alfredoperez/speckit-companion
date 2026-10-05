@@ -4,13 +4,13 @@
 import { createServer } from 'node:http';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { watch } from 'node:fs';
+import { statSync, watch } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildSnapshot, findSpec, readSpecDetail, resolveSpecDirs } from './specs-core.mjs';
-import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, hasWorkspaceWriter, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
+import { buildSnapshot, findSpec, readSpecDetail, recordLive, resolveSpecDirs } from './specs-core.mjs';
+import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
 import { recordStep } from './run-record.mjs';
-import { withRunningStep } from './spec-rules.mjs';
+import { stepEvidence, withRunningStep } from './spec-rules.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -23,6 +23,7 @@ const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-sr
 const BODY_LIMIT = 16 * 1024;
 const DEBOUNCE_MS = 200;
 const QUIET_MS = 120000;
+const CEILING_MS = 2 * 60 * 60 * 1000;
 
 function sendJson(res, status, data) {
     res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -51,10 +52,9 @@ function tokenMatches(given, expected) {
 /**
  * Start the board server for a workspace.
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
- * `checkoutWriter` is the context writer outside the workspace that run instructions may name; null says there is none.
- * `quietMs` is how long a sent step's folder must sit unchanged before the board stops waiting for `settle()`.
+ * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
-export async function createSpecServer({ root, specDirs, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS }) {
+export async function createSpecServer({ root, specDirs, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
     const state = {
         root,
         specDirs: specDirs ?? resolveSpecDirs(root),
@@ -67,7 +67,9 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         timer: null,
         runs: new Map(),
         pendingSpecify: null,
-        quietTimer: null,
+        runTimer: null,
+        busy: false,
+        sawTurnStart: false,
         host: null,
         origin: null,
     };
@@ -97,29 +99,45 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         return { ...state.snapshot, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
     }
 
-    /**
-     * Drop the runs that are over without a settle: the spec is gone, a live record closed the step after it was sent, or the
-     * step's document has sat unchanged for `quietMs`. A new folder that appears after New spec was sent is that run's spec.
-     */
+    /** The step's document as it is on disk right now, so a later look can tell whether the run touched it. */
+    function fingerprint(spec, step) {
+        const file = step === 'specify' ? spec.files.spec : step === 'plan' ? 'plan.md' : 'tasks.md';
+        const stat = file ? statSync(join(state.root, spec.id, file), { throwIfNoEntry: false }) : null;
+        return stat ? `${stat.mtimeMs}:${stat.size}` : null;
+    }
+
+    /** A run did its step when the step's document is written and is not the file that was there at the send. */
+    const didStep = (run, spec) => stepEvidence(spec, run.step) && fingerprint(spec, run.step) !== run.before;
+
+    /** Stop following runs that ended with no word from the session; a new folder after New spec was sent is that run's spec. */
     function reviewRuns() {
         const { specs } = state.snapshot;
         const pending = state.pendingSpecify;
         const created = pending && specs.find(spec => !pending.known.has(spec.id));
         if (created) {
-            state.runs.set(created.id, { step: 'specify', startedAt: pending.startedAt, owned: pending.owned });
+            state.runs.set(created.id, { step: 'specify', prompt: pending.prompt, startedAt: pending.startedAt, started: pending.started, before: null, owned: pending.owned });
+            state.pendingSpecify = null;
+        } else if (pending && now() - Date.parse(pending.startedAt) >= ceilingMs) {
             state.pendingSpecify = null;
         }
-        const live = hasWorkspaceWriter(state.root);
+        const live = recordLive(state.root);
+        let wake = Infinity;
         for (const [id, run] of state.runs) {
             const spec = specs.find(s => s.id === id);
-            const written = spec?.steps[run.step] === 'completed';
             const sentAt = Date.parse(run.startedAt);
-            const recorded = written && live && Date.parse(spec.lastActivity ?? '') > sentAt;
-            const quiet = written && Date.now() - Math.max(sentAt, Date.parse(spec.updatedAt ?? '') || 0) >= quietMs;
-            if (!spec || recorded || quiet) state.runs.delete(id);
+            const idleFor = now() - Math.max(sentAt, Date.parse(spec?.updatedAt ?? '') || 0);
+            // Companion's recorder closed the step after the send: the record leads there.
+            const recorded = spec && live && spec.steps[run.step] === 'completed' && Date.parse(spec.lastActivity ?? '') > sentAt;
+            // Last resort, for a host that never says a turn started: the document is written and nothing has moved since.
+            const quiet = spec && !run.started && !state.busy && didStep(run, spec) && idleFor >= quietMs;
+            if (!spec || recorded || quiet || idleFor >= ceilingMs) {
+                state.runs.delete(id);
+                continue;
+            }
+            wake = Math.min(wake, ceilingMs - idleFor, !run.started && !state.busy && didStep(run, spec) ? quietMs - idleFor : Infinity);
         }
-        clearTimeout(state.quietTimer);
-        if (state.runs.size && !state.closed) state.quietTimer = setTimeout(scheduleRescan, Math.max(1000, quietMs / 4)).unref();
+        clearTimeout(state.runTimer);
+        if (Number.isFinite(wake) && !state.closed) state.runTimer = setTimeout(scheduleRescan, Math.max(50, wake)).unref();
     }
 
     function rescan() {
@@ -129,25 +147,35 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         return state.snapshot;
     }
 
-    /**
-     * The chat turn ended, so nothing the board sent is running any more. Where no context writer exists the board keeps the
-     * record itself: a step whose document is there gets its start (the send) and its finish (now), both seen here.
-     */
-    function settle(now = new Date()) {
-        if (!state.runs.size && !state.pendingSpecify) return;
+    /** The session took a message into a turn: a run whose prompt it carries has started, and only a started run settles. */
+    function began(content) {
+        state.busy = true;
+        state.sawTurnStart = true;
+        const carries = prompt => typeof content === 'string' && content.includes(prompt.split('\n')[0]);
+        for (const run of state.runs.values()) if (carries(run.prompt)) run.started = true;
+        if (state.pendingSpecify && carries(state.pendingSpecify.prompt)) state.pendingSpecify.started = true;
+    }
+
+    /** The chat turn ended: started runs stop running, and one that did its step in a project with no context writer is recorded. */
+    function settle(at = new Date(now())) {
+        state.busy = false;
+        // A host that never reports a turn starting gives no way to pair, so there every run settles.
+        const over = run => run.started || !state.sawTurnStart;
+        if (![...state.runs.values(), state.pendingSpecify].some(run => run && over(run))) return;
         state.snapshot = buildSnapshot(state.root, state.specDirs);
         reviewRuns();
         for (const [id, run] of state.runs) {
+            if (!over(run)) continue;
+            state.runs.delete(id);
             const spec = state.snapshot.specs.find(s => s.id === id);
-            if (!run.owned || spec?.steps[run.step] !== 'completed') continue;
+            if (!run.owned || writer() || !spec || !didStep(run, spec)) continue;
             try {
-                recordStep(state.root, spec, run.step, run.startedAt, now.toISOString());
+                recordStep(state.root, spec, run.step, run.startedAt, at.toISOString());
             } catch (error) {
                 log(`[speckit-canvas] run record not written: ${error.message}`);
             }
         }
-        state.runs.clear();
-        state.pendingSpecify = null;
+        if (state.pendingSpecify && over(state.pendingSpecify)) state.pendingSpecify = null;
         rescan();
     }
 
@@ -247,12 +275,13 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         const set = commandSetFor(state.root, spec.workflow);
         const spelling = availableCommands(set).includes(command) ? resolveCommand(state.root, command, set) : null;
         const line = buildPrompt(command, spec.id, set, spelling);
-        const startedAt = new Date();
+        const startedAt = new Date(now());
         const preamble = buildStepPreamble(command, spec.id, state.root, set, startedAt, writer());
         const file = preamble ? writeRunInstructions(state.root, stepInstructionsName(command, spec.id), runInstructionsDoc(line.split('\n')[0], preamble)) : null;
+        const before = STEP_COMMANDS.includes(command) ? fingerprint(spec, command) : null;
         const result = await deliver(spec.id, command, buildPrompt(command, spec.id, set, spelling, file), file);
         if (result.sent && STEP_COMMANDS.includes(command)) {
-            state.runs.set(spec.id, { step: command, startedAt: startedAt.toISOString(), owned: !writer() });
+            state.runs.set(spec.id, { step: command, prompt: result.prompt, startedAt: startedAt.toISOString(), started: false, before, owned: !writer() });
             rescan();
         }
         return result;
@@ -261,14 +290,14 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     async function specify(description, workflow) {
         let built;
         try {
-            built = buildSpecifyPrompt({ description, workflow: workflow ?? specifyChoices(state.root).default, root: state.root, specDirs: state.specDirs, writer: writer() });
+            built = buildSpecifyPrompt({ description, workflow: workflow ?? specifyChoices(state.root).default, root: state.root, specDirs: state.specDirs, writer: writer(), now: new Date(now()) });
         } catch (error) {
             throw Object.assign(error, { status: 400 });
         }
         const file = built.instructionsDoc ? writeRunInstructions(state.root, built.instructionsName, built.instructionsDoc) : null;
         const result = await deliver(null, 'specify', built.prompt, file);
         if (result.sent) {
-            state.pendingSpecify = { startedAt: built.startedAt, known: new Set(state.snapshot.specs.map(s => s.id)), owned: built.workflow === 'speckit' && !writer() };
+            state.pendingSpecify = { prompt: result.prompt, startedAt: built.startedAt, started: false, known: new Set(state.snapshot.specs.map(s => s.id)), owned: built.workflow === 'speckit' && !writer() };
         }
         return { ...result, workflow: built.workflow, command: built.command };
     }
@@ -366,6 +395,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         run,
         specify,
         settle,
+        began,
         detail: (query) => {
             const detail = readSpecDetail(state.root, requireSpec(query).id, { html: false });
             return { ...detail, spec: present(detail.spec) };
@@ -373,7 +403,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         async close() {
             state.closed = true;
             clearTimeout(state.timer);
-            clearTimeout(state.quietTimer);
+            clearTimeout(state.runTimer);
             for (const watcher of state.watchers) watcher.close();
             for (const client of state.clients) client.end();
             server.closeAllConnections();

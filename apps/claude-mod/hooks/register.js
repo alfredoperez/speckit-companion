@@ -6,9 +6,11 @@ import {
   buildSpecRow,
   findSpec,
   isSpecFolder,
+  isWritten,
   parseSpecContext,
   parseSpecDirsSetting,
   pickFeatureSpecName,
+  recordLiveIn,
   sortSpecs,
 } from './vendor/board-rules.mjs'
 import {
@@ -80,6 +82,10 @@ let focusKey = null
 // The step or document the focus was last on, which `o` opens from the Run tab.
 let ringKey = null
 let companionSkills = false
+// Whether Companion's recorder owns this project's run records, and the templates Spec Kit copies into a new spec folder.
+let recordLive = false
+let templates = {}
+const STEP_DOCS = ['spec', 'plan', 'tasks']
 // When the last turn of the main loop ended; a file written before then is not being written any more.
 let settledAt = null
 // The pane is offered once; after that it is the user's to close and to open.
@@ -113,7 +119,9 @@ async function readDocument($, path, entry, kind) {
   if (stamp && hit?.stamp === stamp) return hit
   const small = kind === 'spec' || kind === 'tasks' || !(entry.size > MAX_PARSED_BYTES)
   const text = small ? await readText($, path) : null
-  const next = { stamp, text: kind === 'spec' || kind === 'tasks' ? text : null, facts: documentFacts(kind, text) }
+  // A file too large to read is taken as written.
+  const written = STEP_DOCS.includes(kind) ? (small ? isWritten(kind, text, templates[kind]) : true) : null
+  const next = { stamp, text: kind === 'spec' || kind === 'tasks' ? text : null, facts: documentFacts(kind, text), written }
   parsed.set(path, next)
   return next
 }
@@ -128,15 +136,17 @@ async function readFolder($, id, entries, specFile) {
     for (const f of inside) if (f.name.endsWith('.md')) found.push({ rel: dir.name + '/' + f.name, entry: f })
   }
   const texts = {}
+  const written = { spec: false, plan: false, tasks: false }
   const files = await Promise.all(
     found.slice(0, MAX_DOCS).map(async ({ rel, entry }) => {
       const kind = documentKind(rel, specFile)
       const read = PARSED.includes(kind) ? await readDocument($, at(id, rel), entry, kind) : null
       if (read?.text != null) texts[kind] = read.text
+      if (read && !rel.includes('/') && kind in written) written[kind] = Boolean(read.written)
       return { rel, kind, mtimeMs: entry.mtimeMs > 0 ? entry.mtimeMs : null, facts: read?.facts ?? null }
     }),
   )
-  return { folder: { files, contracts }, texts }
+  return { folder: { files, contracts }, texts, written }
 }
 
 /** One folder's row; `full` also reads the folder's documents, which the list view can do without. */
@@ -151,16 +161,25 @@ async function readSpec($, id, full) {
   const hasSpec = names.includes(specFile)
   const hasTasks = names.includes('tasks.md')
   const read = full ? await readFolder($, id, entries, specFile) : null
-  // A list row reads the spec file only for a title the record lacks, and tasks only without a record; the followed spec reads both.
-  const specText = read ? (read.texts.spec ?? null) : hasSpec && !ctx?.specName ? await readText($, at(id, specFile)) : null
-  const tasksText = read ? (read.texts.tasks ?? null) : hasTasks && !ctx ? await readText($, at(id, 'tasks.md')) : null
+  // A list row of a closed spec reads only the title its record lacks; every other row reads what the followed spec reads, so the two agree.
+  const closed = ctx?.status === 'completed' || ctx?.status === 'archived'
+  const doc = async (name, kind) => {
+    const entry = entries.find(f => f.kind === 'file' && f.name === name)
+    return entry ? readDocument($, at(id, name), entry, kind) : null
+  }
+  const light = read ? null : { spec: !closed || !ctx?.specName ? await doc(specFile, 'spec') : null, plan: closed ? null : await doc('plan.md', 'plan'), tasks: closed ? null : await doc('tasks.md', 'tasks') }
+  const specText = (read ? read.texts.spec : light.spec?.text) ?? null
+  const tasksText = (read ? read.texts.tasks : light.tasks?.text) ?? null
+  const written = read ? read.written : closed ? null : { spec: Boolean(light.spec?.written), plan: Boolean(light.plan?.written), tasks: Boolean(light.tasks?.written) }
   const newest = Math.max(0, ...entries.map(f => f.mtimeMs || 0))
   const row = buildSpecRow({
     id,
     ctx,
     specText,
     files: { spec: hasSpec ? specFile : null, plan: names.includes('plan.md') ? 'plan.md' : null, tasks: hasTasks ? 'tasks.md' : null },
+    written,
     tasksText,
+    recordLive,
     updatedAt: newest ? new Date(newest).toISOString() : null,
   })
   return { row, ctx, tasksText, ctxText, folder: read?.folder ?? null }
@@ -187,6 +206,9 @@ async function scanAll($) {
   const ids = await listSpecIds($)
   knownFolders = ids.join('\n')
   companionSkills = Boolean(await listDir($, at(...COMPANION_SKILL)))
+  recordLive = Boolean(await recordLiveIn(async path => (await readText($, at(path))) != null))
+  templates = {}
+  for (const kind of STEP_DOCS) templates[kind] = await readText($, at('.specify', 'templates', kind + '-template.md'))
   const read = []
   for (let i = 0; i < ids.length; i += SCAN_BATCH) {
     read.push(...(await Promise.all(ids.slice(i, i + SCAN_BATCH).map(id => readSpec($, id, false)))))

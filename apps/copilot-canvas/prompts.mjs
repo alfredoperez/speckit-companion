@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_SPEC_DIRS } from './spec-rules.mjs';
+import { CONTEXT_WRITER, DEFAULT_SPEC_DIRS } from './spec-rules.mjs';
 import { isKnownStep, renderPreamble, renderSpecifyCreationLifecyclePreamble } from './vendor/preamble.mjs';
 
 export const STEP_COMMANDS = ['plan', 'tasks', 'implement'];
@@ -23,21 +23,13 @@ export function commandSetFor(root, workflow) {
     return workflow === 'speckit' ? 'speckit' : detectCommandSet(root);
 }
 
-const WORKSPACE_WRITER = '.specify/extensions/companion/scripts/write-context.py';
+const WORKSPACE_WRITER = CONTEXT_WRITER;
 const CHECKOUT_WRITER = fileURLToPath(new URL('../speckit-extension/scripts/write-context.py', import.meta.url));
 
-/**
- * The context writer a run's instructions may tell the agent to call: the workspace's copy, else this checkout's when the board runs
- * from the repository. Null when neither file exists, and then the instructions never mention one.
- */
+/** The context writer run instructions may name: the workspace's copy, else this checkout's; null when neither exists. */
 export function writerPath(root, checkout = CHECKOUT_WRITER) {
     if (existsSync(join(root, WORKSPACE_WRITER))) return WORKSPACE_WRITER;
     return checkout && existsSync(checkout) ? checkout : null;
-}
-
-/** Whether anything in the workspace can advance a run record. Without it the files are the only news about a run. */
-export function hasWorkspaceWriter(root) {
-    return existsSync(join(root, WORKSPACE_WRITER));
 }
 
 /** The model reads only title, status and url from a canvas's `open` result, so the instruction to stop rides in `status`. */
@@ -61,11 +53,7 @@ export function availableCommands(commandSet) {
 const dottedName = (command, commandSet) => (commandSet === 'companion' ? `speckit.companion.${command}` : `speckit.${command}`);
 const SKILL_DIRS = ['.github/skills', '.agents/skills', '.claude/skills'];
 
-/**
- * How this project spells a command and where its body lives. A skill folder registers the dashed name (`/speckit-plan`), a prompt or
- * agent file the dotted one (`/speckit.plan`). `registered` is false when neither exists: the dotted name is then a guess, and
- * `instructions` is the command's body for an agent that has no such slash command, or null.
- */
+/** How this project spells a command: dashed for a skill folder, dotted for a prompt or agent file, and a dotted guess (`registered` false) with the command's body when neither exists. */
 export function resolveCommand(root, command, commandSet = 'companion') {
     const dotted = dottedName(command, commandSet);
     const dashed = dotted.replace(/\./g, '-');
@@ -135,11 +123,7 @@ export function writeRunInstructions(root, name, content) {
     return `${PROMPTS_DIR}/${safeName(name)}`;
 }
 
-/**
- * The chat message a run button sends: the command line in the spelling `spelling` (from `resolveCommand`) says the project registers,
- * a pointer to the command's body only when the project registers neither spelling, and one sentence naming the file that holds the
- * step preamble when there is one.
- */
+/** The chat message a run button sends: the command as `spelling` has it, its body's path only when unregistered, and the instruction file's sentence when there is one. */
 export function buildPrompt(command, specId, commandSet = 'companion', spelling = null, instructionsFile = null) {
     if (!availableCommands(commandSet).includes(command)) {
         throw new Error(`Unknown command for the ${commandSet} command set: ${command}`);
@@ -150,10 +134,7 @@ export function buildPrompt(command, specId, commandSet = 'companion', spelling 
     return instructionsFile ? `${text}\n\n${instructionsSentence(instructionsFile)}` : text;
 }
 
-/**
- * The step preamble for a run button (plan, tasks, implement). Null for commands VS Code sends none for, and for a stock run in a
- * project with no context writer: its lifecycle rules all end in that script, so without it the agent gets no lifecycle rules.
- */
+/** The step preamble for a run button, or null: for commands VS Code sends none for, and for a stock run with no context writer to call. */
 export function buildStepPreamble(command, specId, root, commandSet, now = new Date(), writer = writerPath(root)) {
     if (!STEP_COMMANDS.includes(command) || !isKnownStep(command)) return null;
     const companion = commandSet === 'companion';
@@ -229,8 +210,7 @@ export function numberingRule(root, specDirs = DEFAULT_SPEC_DIRS) {
 /**
  * A new spec starts from a description, not a folder: specify mints the folder itself. The message is the command line with the
  * description, the folder number, and one sentence naming the file that will hold the lifecycle preamble that seeds `.spec-context.json`.
- * The caller writes `preamble` to `instructionsName` (`writeRunInstructions`) before it sends `prompt`. A stock run in a project with
- * no context writer gets no preamble and no file: nothing tells the agent to seed a record it could never advance.
+ * The caller writes `preamble` to `instructionsName` (`writeRunInstructions`) before it sends `prompt`; a stock run with no context writer gets neither.
  */
 export function buildSpecifyPrompt({ description, workflow, root, specDirs = DEFAULT_SPEC_DIRS, now = new Date(), writer = writerPath(root) }) {
     const text = String(description ?? '').replace(/\r\n?/g, '\n').trim();

@@ -13,6 +13,9 @@ const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const TEAMBOARD = join(REPO, 'apps/vscode/webview/src/spec-viewer/__fixtures__/teamboard/041-profile-photo-upload');
 const SHOTS = process.env.CANVAS_SHOTS ? resolve(process.env.CANVAS_SHOTS) : null;
 
+// File events for fixtures written just before a server started land late and trigger one more scan; let that pass first.
+const fileEventsToLand = () => new Promise(r => setTimeout(r, 450));
+
 async function launch() {
     let chromium;
     try {
@@ -221,6 +224,7 @@ describe('board page', { concurrency: false }, async () => {
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
         const stockSent = [];
         const stock = await createSpecServer({ root: stockRoot, send: async (prompt) => { stockSent.push(prompt); return true; } });
+        await fileEventsToLand();
         const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark', permissions: ['clipboard-read', 'clipboard-write'] });
         const stockPage = await context.newPage();
         const line = 'SpecKit Companion is not installed in this project, so the standard Spec Kit commands run.';
@@ -268,6 +272,43 @@ describe('board page', { concurrency: false }, async () => {
             await stockPage.reload();
             await stockPage.waitForSelector('.next');
             assert.equal(await stockPage.locator('.install-hint').count(), 0, 'and it stays dismissed for the session');
+        } finally {
+            await context.close();
+            await stock.close();
+        }
+    });
+
+    it('keeps the nodes it has through a rescan that changed nothing, and a "Copied" through one that did', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-redraw-'));
+        mkdirSync(join(stockRoot, 'specs/001-starred-todos'), { recursive: true });
+        writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
+        const stock = await createSpecServer({ root: stockRoot, send: async () => true });
+        const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark', permissions: ['clipboard-read', 'clipboard-write'] });
+        const stockPage = await context.newPage();
+        try {
+            await stockPage.goto(stock.url);
+            await stockPage.waitForSelector('.next .install-hint');
+            await stockPage.locator('.next .install-hint .btn-link').click();
+            await stockPage.locator('.next .install-hint__how button:has-text("Copy")').click();
+            await stockPage.locator('.next .install-hint__how button:has-text("Copied")').waitFor();
+            await stockPage.evaluate(() => { window.kept = { rail: document.querySelector('.rail'), card: document.querySelector('.spec-card') }; });
+            const scans = () => stockPage.evaluate(() => window.scans ?? 0);
+            await stockPage.evaluate(() => { new EventSource(`/api/events${location.search}`).addEventListener('snapshot', () => { window.scans = (window.scans ?? 0) + 1; }); });
+            await stockPage.waitForFunction(() => window.scans === 1);
+
+            stock.rescan();
+            await stockPage.waitForFunction(() => window.scans === 2);
+            await stockPage.waitForTimeout(150);
+            assert.deepEqual(await stockPage.evaluate(() => [document.querySelector('.rail') === window.kept.rail, document.querySelector('.spec-card') === window.kept.card]), [true, true], 'nothing was rebuilt');
+            assert.equal(await stockPage.locator('.next .install-hint__how button:has-text("Copied")').count(), 1);
+
+            writeFileSync(join(stockRoot, 'specs/001-starred-todos/plan.md'), '# Plan\n\nStore the flag.\n');
+            stock.rescan();
+            await stockPage.waitForSelector('.next-title:has-text("Next: Tasks")');
+            assert.equal(await stockPage.evaluate(() => document.querySelector('.rail') === window.kept.rail), false, 'a real change redraws');
+            assert.equal(await stockPage.locator('.next .install-hint__how button:has-text("Copied")').count(), 1, 'and the install line keeps its state');
+            assert.equal(await scans() >= 3, true);
         } finally {
             await context.close();
             await stock.close();

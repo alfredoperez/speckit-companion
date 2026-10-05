@@ -46,7 +46,7 @@ A spec whose build is done has a ==**Converge** button== in the viewer footer an
 - **The moss mascot is the new logo.** The ==small moss character== replaces the seedling in the activity bar and the double chevron on the Copilot app board. ([#831](https://github.com/alfredoperez/speckit-companion/pull/831)) <!-- area: other -->
 
 ### Fixed
-- **The Copilot board follows a stock run.** Each step reads as done ==from the files on disk==, so the next step unlocks without Companion installed. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
+- **The Copilot board follows a stock run.** Each step reads as done ==once its document is written==, so the next step unlocks without Companion installed. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
 - **Stock runs get no Companion-only instructions.** The board sends ==the command alone== where Companion's script is missing, so nothing tells the agent to hold a document back. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
 - **The board sends the command your project registers.** A project whose commands are skills gets `/speckit-plan`, and the card and **Show prompt** show ==that spelling==. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
 - **A sent step shows as running.** It stays ==Running== until the chat turn ends, and a stock run's Overview times only the steps the board watched. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->

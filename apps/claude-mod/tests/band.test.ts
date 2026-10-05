@@ -25,10 +25,12 @@ test('names the next step when nothing is running', async () => {
   expect(bandLine(row(ctx, null, null), ctx)).toBe('Specify done · Plan next')
 })
 
-test('follows the files when a document exists that the record never heard of', async () => {
-  const ctx = { status: 'specifying', currentStep: 'specify', history: [entry('specify', 'start', 0)] }
-  expect(bandLine(row(ctx, null, null), ctx)).toBe('Specify running')
-  expect(bandLine(row(ctx, null), ctx)).toBe('Plan done · Tasks next')
+test('lets a Companion record lead while a step is open, and fills in only a step it has no entry for', async () => {
+  const open = { status: 'specifying', currentStep: 'specify', history: [entry('specify', 'start', 0)] }
+  expect(bandLine(row(open, null, null), open)).toBe('Specify running')
+  expect(bandLine(row(open, null), open)).toBe('Specify running')
+  const closed = { status: 'specified', currentStep: 'specify', history: [entry('specify', 'start', 0), entry('specify', 'complete', 4)] }
+  expect(bandLine(row(closed, null), closed)).toBe('Plan done · Tasks next')
 })
 
 test('gives a finished spec its status, task count and active time', async () => {
