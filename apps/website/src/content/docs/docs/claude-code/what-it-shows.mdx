@@ -3,6 +3,8 @@ title: What the mod shows
 description: The band above the prompt and the pane beside the transcript that the SpecKit Companion mod adds to Claude Code, and where each one appears.
 ---
 
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
 The mod adds two things to Claude Code, a band and a pane, and both follow one spec at a time.
 
 ## What you get
@@ -11,6 +13,18 @@ The mod adds two things to Claude Code, a band and a pane, and both follow one s
 | --- | --- |
 | A band above the prompt | The spec you are following and where its run stands, such as `042-export-csv · Plan done · Tasks 7/12 · Implement running` |
 | A pane beside the transcript | The four steps with the time each one took, the total active time, and the task list by phase with the task in flight marked. Tasks tick off as the agent finishes them. |
+
+<DocFigure
+  src="live-claude-mod-band.png"
+  alt="The band, one line above the Claude Code prompt: _02_demo-tasked, Plan done, Tasks 0/4, Implement next."
+  caption="The band: the spec you are following and where its run stands, on one line above the prompt."
+/>
+
+<DocFigure
+  src="live-claude-mod-run.png"
+  alt="The pane on its Run tab for Demo, Tasked. Specify, Plan and Tasks are ticked with 5m beside each and Plan is highlighted, Implement is open, the documents are listed, and Phase 1 shows 1/4 with task T001 ticked."
+  caption="The pane's Run tab: each step with its time, the documents, and the tasks by phase."
+/>
 
 Step times follow the same rules as the viewer. A step ends at its own finish, the waits between steps count toward nothing, and the total is the time the steps were actually running.
 
@@ -33,11 +47,23 @@ The mod only reads. It never writes a spec file or sends a prompt, so you still 
 
 In the pane's **Run** view each step is something you can move to and press. Pressing one opens its document inside the pane: the spec for Specify, the plan for Plan, the task list for Tasks and Implement. Press `b` to go back. A step whose document is not written yet says so and cannot be opened.
 
+<DocFigure
+  src="live-claude-mod-document.png"
+  alt="The pane showing specs/_02_demo-tasked/plan.md after Plan was pressed, with b: Back above the plan's title, its Approach and its list of files."
+  caption="Plan pressed: the plan opens inside the pane, and b goes back."
+/>
+
 A small change that Specify plans and tasks in one pass shows **with Specify** beside Plan and Tasks where a time would be.
 
 ## The Overview tab
 
 The pane has three tabs, switched with `1`, `2` and `3`: **Run**, **Overview** and **Specs**. Overview shows what the run recorded about itself: the intent, the approach, what was left out of scope, the decisions and why, what was verified, any concerns, and how many requirements have tests. Each part shows only when the run recorded it.
+
+<DocFigure
+  src="live-claude-mod-overview.png"
+  alt="The pane on its Overview tab for the completed spec _03_demo-living, showing the Intent the run recorded and the line Workflow: speckit-companion."
+  caption="The Overview tab of a run that recorded only its intent."
+/>
 
 ## Related
 

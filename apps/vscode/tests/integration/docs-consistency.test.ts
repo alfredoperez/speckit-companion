@@ -15,6 +15,7 @@
 import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { markHighlights } from '../../../website/src/components/changelog/parseChangelog';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const read = (rel: string) => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
@@ -288,6 +289,129 @@ describe('docs consistency', () => {
         return fs.existsSync(file) && 'telemetryInstanceId' in JSON.parse(fs.readFileSync(file, 'utf8'));
       });
       expect(carrying).toEqual([]);
+    });
+  });
+
+  describe('changelog voice', () => {
+    // docs/doc-sync.md "Changelog voice", enforced on the Unreleased block only:
+    // a released version is history and is never checked. A file is held to the
+    // PR links and area tags it already writes; the Claude Code mod's has neither.
+    const CHANGELOGS = [
+      { file: 'CHANGELOG.md', links: true, areas: true },
+      { file: 'apps/speckit-extension/CHANGELOG.md', links: true, areas: true },
+      { file: 'apps/claude-mod/CHANGELOG.md', links: false, areas: false },
+    ];
+    const TITLE_WORDS = 8;
+    const SENTENCE_WORDS = 22;
+
+    const COMMENT = /<!--[\s\S]*?-->/g;
+    const PR_LINKS = /\(\[#\d+\]\([^)\s]+\)(?:,\s*\[#\d+\]\([^)\s]+\))*\)/g;
+
+    // A code span counts as one word, and a stop inside it ends no sentence.
+    const plain = (markdown: string) =>
+      markdown
+        .replace(COMMENT, ' ')
+        .replace(PR_LINKS, ' ')
+        .replace(/`[^`]*`/g, 'code')
+        .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+        .replace(/==|\*\*|\*/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    const words = (text: string) => text.split(' ').filter(word => /[A-Za-z0-9]/.test(word)).length;
+    const sentences = (text: string) => text.split(/(?<=[.!?]["')]?)\s+/).filter(Boolean);
+    const marks = (markdown: string) => (markdown.replace(/`[^`]*`/g, '').match(/==/g) ?? []).length;
+
+    function voiceProblems(source: string, { links, areas }: { links: boolean; areas: boolean }): string[] {
+      const start = source.search(/^## \[Unreleased\]/m);
+      if (start === -1) return [];
+      const after = source.slice(start + 3);
+      const end = after.search(/^## /m);
+      const lines = (end === -1 ? after : after.slice(0, end)).split('\n').slice(1);
+
+      const problems: string[] = [];
+      const check = (kind: 'bullet' | 'highlight', title: string, raw: string) => {
+        const say = (rule: string) => problems.push(`"${title}": ${rule}`);
+        const body = sentences(plain(raw));
+        if (kind === 'bullet') {
+          if (words(plain(title)) > TITLE_WORDS) say(`title is over ${TITLE_WORDS} words`);
+          if (body.length !== 1) say(`body is ${body.length} sentences, a bullet gets exactly one`);
+          if (links && !/\[#\d+\]\([^)\s]+\)/.test(raw)) say('no PR link');
+        } else {
+          if (body.length < 1 || body.length > 2) say(`body is ${body.length} sentences, a highlight gets one or two`);
+          if (links && !/<!--[^>]*\bpr:\s*\d/.test(raw)) say('no pr: in its comment');
+        }
+        if (body.some(sentence => words(sentence) > SENTENCE_WORDS)) say(`a sentence is over ${SENTENCE_WORDS} words`);
+        if (marks(raw) > 2 || marks(raw) % 2 === 1 || marks(title) > 0) say('more than one ==highlight==, or one in the title');
+        if (areas && !/<!--[^>]*\barea:\s*[\w-]+/.test(raw)) say('no area tag');
+        if (/\b(now|previously)\b/i.test(plain(`${title} ${raw}`))) say('says "now" or "previously"');
+      };
+
+      let section = '';
+      let open: { kind: 'bullet' | 'highlight'; title: string; raw: string[] } | null = null;
+      const close = () => {
+        if (open) check(open.kind, open.title, open.raw.join('\n'));
+        open = null;
+      };
+      for (const line of lines) {
+        const heading = line.match(/^(#{3,4})\s+(.+?)\s*$/);
+        if (heading) {
+          close();
+          if (heading[1] === '###') section = heading[2];
+          else open = { kind: 'highlight', title: heading[2], raw: [] };
+        } else if (/^- /.test(line)) {
+          close();
+          const bold = line.match(/^- \*\*(.+?)\*\*(.*)$/);
+          if (!bold) problems.push(`"${line.slice(2, 50)}": a bullet starts with a bold title`);
+          else open = { kind: 'bullet', title: bold[1], raw: [bold[2]] };
+        } else if (open && (open.kind === 'bullet' || /highlights/i.test(section))) {
+          open.raw.push(line);
+        }
+      }
+      close();
+      return problems;
+    }
+
+    it.each(CHANGELOGS)('$file → every Unreleased entry is in the voice', ({ file, links, areas }) => {
+      expect(voiceProblems(read(file), { links, areas })).toEqual([]);
+    });
+
+    it('names the entry and the rule it breaks, and leaves released versions alone', () => {
+      const long = 'It wraps the text and it keeps going with far more words than any skimmer wants to read in a single changelog bullet today.';
+      const sample = [
+        '## [Unreleased]',
+        '### Highlights',
+        '#### Three sentences',
+        'One. Two. Three.',
+        '<!-- area: docs; pr: 1 -->',
+        '### Fixed',
+        '- **Fine entry.** A menu keeps ==its text== inside. ([#1](https://x/pull/1)) <!-- area: docs -->',
+        '- **Two sentences.** One here. Two here. ([#1](https://x/pull/1)) <!-- area: docs -->',
+        `- **Long sentence.** ${long} ([#1](https://x/pull/1)) <!-- area: docs -->`,
+        '- **This title has rather more than eight words in.** Short. ([#1](https://x/pull/1)) <!-- area: docs -->',
+        '- **Two marks.** A ==first== and a ==second== phrase. ([#1](https://x/pull/1)) <!-- area: docs -->',
+        '- **Untagged.** It now works.',
+        '## [1.0.0] - 2026-01-01',
+        '- **A released entry is never checked.** One. Two. Three.',
+      ].join('\n');
+      expect(voiceProblems(sample, { links: true, areas: true })).toEqual([
+        '"Three sentences": body is 3 sentences, a highlight gets one or two',
+        '"Two sentences.": body is 2 sentences, a bullet gets exactly one',
+        '"Long sentence.": a sentence is over 22 words',
+        '"This title has rather more than eight words in.": title is over 8 words',
+        '"Two marks.": more than one ==highlight==, or one in the title',
+        '"Untagged.": no PR link',
+        '"Untagged.": no area tag',
+        '"Untagged.": says "now" or "previously"',
+      ]);
+      expect(voiceProblems(sample, { links: false, areas: false })).not.toContain('"Untagged.": no PR link');
+    });
+
+    it('the site draws ==a phrase== as a marker stroke, outside code and URLs only', () => {
+      expect(markHighlights('<strong>Go.</strong> It is ==one <strong>big</strong> paragraph== here.')).toBe(
+        '<strong>Go.</strong> It is <mark class="cl-hi">one <strong>big</strong> paragraph</mark> here.',
+      );
+      const untouched = '<a href="https://x/?a==b">link</a> <code>a == b == c</code> and a lone == sign';
+      expect(markHighlights(untouched)).toBe(untouched);
     });
   });
 

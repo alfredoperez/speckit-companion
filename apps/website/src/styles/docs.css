@@ -484,3 +484,21 @@ starlight-toc a[aria-current='true'] {
   border-inline-start-color: var(--accent);
   font-weight: var(--fw-semibold);
 }
+
+/* Previous / Next: a quiet row, not two billboards. */
+.pagination-links > a {
+  padding: var(--space-10) var(--space-16);
+  border-color: var(--border-card);
+  box-shadow: none;
+  font-size: var(--fs-ui-sm);
+}
+
+.pagination-links .link-title {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  line-height: 1.35;
+}
+
+.pagination-links > a svg {
+  font-size: var(--fs-body);
+}

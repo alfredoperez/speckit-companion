@@ -57,6 +57,8 @@ export interface Entry {
   lead: string;
   /** Whatever the entry says after its lead, or an empty string. */
   rest: string;
+  /** True when the lead is the entry's own bold title rather than its first sentence. */
+  titled: boolean;
   area: string;
   areaGuessed: boolean;
   prs: PrLink[];
@@ -278,7 +280,7 @@ function firstSentenceEnd(paragraph: string, from = 0): number {
   return -1;
 }
 
-function splitLead(text: string): { lead: string; rest: string } {
+function splitLead(text: string): { lead: string; rest: string; titled: boolean } {
   const blankAt = text.search(/\n\s*\n/);
   const first = (blankAt === -1 ? text : text.slice(0, blankAt)).replace(/\s*\n\s*/g, ' ');
   const after = blankAt === -1 ? '' : text.slice(blankAt).trim();
@@ -286,11 +288,11 @@ function splitLead(text: string): { lead: string; rest: string } {
 
   const bold = first.match(/^\*\*(.+?)\*\*/);
   if (bold && /[.!?:]$/.test(bold[1].trim())) {
-    return { lead: bold[1].trim().replace(/:$/, '.'), rest: join(first.slice(bold[0].length)) };
+    return { lead: bold[1].trim().replace(/:$/, '.'), rest: join(first.slice(bold[0].length)), titled: true };
   }
   const end = firstSentenceEnd(first, bold ? bold[0].length : 0);
-  if (end === -1) return { lead: first.trim(), rest: after };
-  return { lead: first.slice(0, end).trim(), rest: join(first.slice(end)) };
+  if (end === -1) return { lead: first.trim(), rest: after, titled: false };
+  return { lead: first.slice(0, end).trim(), rest: join(first.slice(end)), titled: false };
 }
 
 function toEntry(block: string, type: string, release: Release): Entry {
@@ -298,12 +300,44 @@ function toEntry(block: string, type: string, release: Release): Entry {
   const tagged = text.match(AREA_COMMENT);
   text = text.replace(AREA_COMMENT, '').trim();
   const taken = takePrLinks(text);
-  const { lead, rest } = splitLead(taken.text);
+  const { lead, rest, titled } = splitLead(taken.text);
   const area = tagged ? tagged[1] : areaFromKeywords(lead, rest);
   if (tagged && !isArea(area)) {
     throw new Error(`${where(release)}: unknown area "${area}" on "${lead}". Known areas: ${AREAS.map((a) => a.id).join(', ')}.`);
   }
-  return { type, lead, rest, area, areaGuessed: !tagged, prs: taken.prs };
+  return { type, lead, rest, titled, area, areaGuessed: !tagged, prs: taken.prs };
+}
+
+/** A body short enough to sit on the entry's line instead of behind More. */
+export function isBrief(markdown: string, maxWords = 32): boolean {
+  const text = markdown.trim();
+  return text !== '' && !text.includes('\n') && text.split(/\s+/).length <= maxWords;
+}
+
+/**
+ * Turns `==phrase==` in rendered HTML into a marker stroke. Only text outside
+ * code is read, so a `==` in a code span, a code block or a link's URL stays as written.
+ */
+export function markHighlights(html: string): string {
+  const parts = html.split(/(<[^>]+>)/);
+  const hits: Array<[number, number]> = [];
+  let code = 0;
+  parts.forEach((part, index) => {
+    if (part.startsWith('<')) {
+      if (/^<(code|pre)[\s>]/i.test(part)) code += 1;
+      else if (/^<\/(code|pre)>/i.test(part)) code = Math.max(0, code - 1);
+      return;
+    }
+    if (code > 0) return;
+    for (const match of part.matchAll(/==/g)) hits.push([index, match.index]);
+  });
+  if (hits.length % 2 === 1) hits.pop();
+  for (let i = hits.length - 1; i >= 0; i -= 1) {
+    const [index, at] = hits[i];
+    const tag = i % 2 === 0 ? '<mark class="cl-hi">' : '</mark>';
+    parts[index] = `${parts[index].slice(0, at)}${tag}${parts[index].slice(at + 2)}`;
+  }
+  return parts.join('');
 }
 
 function parseFields(comment: string): Record<string, string> {

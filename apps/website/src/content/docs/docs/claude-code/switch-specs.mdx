@@ -3,6 +3,8 @@ title: Switch specs with /speckit-tracker
 description: The /speckit-tracker command of the SpecKit Companion mod picks which spec the band and the pane follow in Claude Code.
 ---
 
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
 The mod follows the latest spec until you tell it otherwise, and `/speckit-tracker` is how you tell it.
 
 ## What you can type
@@ -12,6 +14,12 @@ The mod follows the latest spec until you tell it otherwise, and `/speckit-track
 | `/speckit-tracker` | Lists the most recent specs to pick from |
 | `/speckit-tracker 42` or `/speckit-tracker export-csv` | Follows that spec |
 | `/speckit-tracker auto` | Goes back to following the latest one |
+
+<DocFigure
+  src="live-claude-mod-specs.png"
+  alt="The pane on its Specs tab after /speckit-tracker. Under Pick the spec this pane and the band follow are three rows: Follow the latest (now), _03_demo-living Completed, and _02_demo-tasked Ready to Implement."
+  caption="/speckit-tracker opens the pane on Specs, with the recent specs to pick from."
+/>
 
 `/spec` still works as a shorter name for the same command.
 

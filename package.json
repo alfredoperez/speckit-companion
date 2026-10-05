@@ -1614,6 +1614,7 @@
     "check:desktop": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs",
     "check:terminal": "node tooling/scripts/terminal-check.mjs",
     "shots": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --shots .shots",
+    "shots:board": "npm run canvas:build && node tooling/scripts/board-shots.mjs",
     "shots:place": "node tooling/scripts/place-shots.mjs",
     "clips:capture": "node tooling/scripts/capture-docs-images.mjs",
     "clips:new": "node tooling/scripts/new-clip.mjs",

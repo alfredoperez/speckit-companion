@@ -5,6 +5,7 @@ description: Add the SpecKit Companion mod to Claude Code with two commands, and
 
 import CodeLine from '../../../../components/CodeLine.astro';
 import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
 
 <Actions>
@@ -14,6 +15,12 @@ import YouSee from '../../../../components/journey/YouSee.astro';
 </Actions>
 
 If you run the Spec Kit commands in the Claude Code terminal, the SpecKit Companion mod keeps the run in view while you work. It reads the same run record as the VS Code viewer and the [Copilot app board](/docs/copilot-app/navigate-the-board), so the three always agree on steps, times and task counts.
+
+<DocFigure
+  src="live-claude-mod-pane-running.png"
+  alt="The mod's pane in Claude Code during an implement run of 001-clear-completed-todos. Specify, Plan and Tasks are ticked, Implement shows 7 of 8 tasks with the last change just now, and the spec's documents are listed under it."
+  caption="The pane during a real run: the four steps, how far Implement has got, and the spec's documents."
+/>
 
 In a session that is already open, run `/reload-plugins` after installing.
 

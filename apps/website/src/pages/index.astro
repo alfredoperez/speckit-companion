@@ -81,7 +81,7 @@ const makeItYours = media('make-it-yours');
 // later rather than stopping at the comment.
 const review = media('review');
 
-// The Living Specs tab and the accordion figure both play the drawn explainer
+// The Living Specs tab plays the drawn explainer
 // rather than a screenshot tour. A tour can only show the tree; the argument is
 // what the tree replaces, and that needs a diagram.
 const livingExplained = media('living-specs-explained');
@@ -166,6 +166,7 @@ const tabs = [
     heading: 'You stop reading four markdown files',
     body: 'A finished run becomes one page: what it was for, how it was approached, where in the codebase it landed, and what it decided against — with a coverage table that puts untraced requirements first.',
     clip: overview,
+    link: { label: 'read the Overview guide', href: '/docs/results/the-overview/' },
   },
   {
     id: 'customize',
@@ -174,6 +175,7 @@ const tabs = [
     heading: 'The workflow is yours, not the tool’s',
     body: 'Define your own phases, commands and output files in settings, and attach a shell command, an inline instruction, or a node file of your own before or after any named step. Those attachments are instructions your assistant reads at run time.',
     clip: makeItYours,
+    link: { label: 'compare the two workflows', href: '/docs/start/spec-driven-development/#the-two-workflows-that-ship' },
   },
   {
     id: 'living',
@@ -182,6 +184,7 @@ const tabs = [
     heading: 'The learning outlives the ticket',
     body: 'Spec Kit leaves each spec in a folder that goes quiet when the feature ships. Turn living specs on and every capability keeps one durable spec instead — at the root, or next to the code it describes.',
     clip: livingExplained,
+    link: { label: 'living specs', href: '/docs/results/living-specs/' },
   },
   {
     id: 'review',
@@ -190,43 +193,35 @@ const tabs = [
     heading: 'Say it in the margin, not in the chat box',
     body: 'Comment on a line the way you’d review a pull request. Notes persist the moment you add them, and Refine sends the pending ones to your agent as an in-place edit request.',
     clip: review,
-  },
-];
-
-/*
-  Living specs leads, because it is the row nothing else in this category has.
-  Order is the literal array order: it is consumed twice, once for the toggles
-  and once for the stacked stills, so moving an entry moves both.
-*/
-const rows = [
-  {
-    id: 'living',
-    title: 'Specs that outlive the ticket',
-    body: 'Spec Kit writes the spec, ships the feature, and leaves the folder behind. What you learned about how that capability works goes quiet with it. Turn living specs on and each capability keeps one durable spec instead — at capabilities/<name>/spec.md, or next to the code with a path you choose. Drift lists the source files that changed since a capability’s spec was last committed. Drift and coverage are read-only reports that always exit zero, so neither can block a build.',
-    link: { label: 'living specs', href: '/docs/results/living-specs/' },
-    still: livingExplained,
-    open: true,
-  },
-  {
-    id: 'read',
-    title: 'Runs you can read',
-    body: 'A finished run becomes a page. It leads with the intent, the approach and the area worked in, fences the constraints against the declared non-goals, and lists each decision with what it rejected. The coverage table traces every requirement to the tasks that delivered it and the tests that exercise it, and untraced requirements sort to the top.',
-    link: { label: 'read the Overview guide', href: '/docs/results/the-overview/' },
-    still: overview,
-  },
-  {
-    id: 'bend',
-    title: 'A pipeline you can bend',
-    body: 'Two workflows ship in the box: stock SpecKit, and SpecKit Companion with a fifth step that marks the spec complete. Define your own phases, commands and output files in settings and Create Spec offers them. A companion.yml attaches a shell command, an inline instruction, or a node file of your own before or after any named node. Those attachments are instructions your assistant reads at run time, not an engine that executes them.',
-    link: { label: 'compare the two workflows', href: '/docs/start/spec-driven-development/#the-two-workflows-that-ship' },
-    still: makeItYours,
-  },
-  {
-    id: 'review',
-    title: 'Reviews with a reply button',
-    body: 'Comment on a line of a spec, the way you’d review a pull request. Your notes persist the moment you add them, and Refine sends the pending ones to your agent, so you’re not copy-pasting into a chat box. The sidebar keeps every spec and its status one click away.',
     link: { label: 'explore the review flow', href: '/docs/steps/review-with-comments/' },
-    still: review,
+  },
+  // Bugs and ideas are Spec Kit's own extensions. Your assistant runs the
+  // commands; Companion shows the reports and sends the next command.
+  {
+    id: 'bugs',
+    label: 'Bugs',
+    window: 'Bug · the story of one fix',
+    heading: 'A bug reads as one story',
+    steps: ['assess', 'fix', 'test'],
+    body: 'Spec Kit’s bug extension writes three reports. Companion joins them into one page: what was wrong, what changed, how it was verified. A button sends the next command to your assistant.',
+    still: {
+      src: '/landing/bug-story.png',
+      alt: 'A bug page in VS Code: the lead reads Fixed and verified, then What was wrong with the root cause.',
+    },
+    link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
+  },
+  {
+    id: 'ideas',
+    label: 'Ideas',
+    window: 'Idea · the decision',
+    heading: 'An idea is judged before it is built',
+    steps: ['intake', 'research', 'problem', 'concept', 'decision'],
+    body: 'Spec Kit’s assess extension takes an idea through five stages to go, needs clarification or kill. Companion opens a decided idea on its verdict and scorecard, and a go becomes a spec in one press.',
+    still: {
+      src: '/landing/idea-decision.png',
+      alt: 'An idea page in VS Code: the verdict Go with its reason, then a scorecard.',
+    },
+    link: { label: 'assess an idea', href: '/docs/ide/assess-an-idea/' },
   },
 ];
 
@@ -273,12 +268,39 @@ const cards = [
     link: { label: 'set up the board', href: '/docs/copilot-app/install/' },
     wide: true,
   },
+  {
+    eyebrow: 'CLAUDE CODE',
+    title: 'A tracker inside Claude Code',
+    body: 'Work in the terminal? A mod adds one line above the prompt naming the spec and its next step, and a pane with the steps, the tasks and each step’s document. It reads the spec files, so it follows a stock Spec Kit run too.',
+    link: { label: 'install the mod', href: '/docs/claude-code/install/' },
+    image: '/landing/claude-mod.png',
+    alt: 'The SpecKit Companion pane in Claude Code: four steps with times, the documents and the task list.',
+    wide: true,
+  },
+  {
+    eyebrow: 'CONVERGE',
+    title: 'Check the code against the spec',
+    body: 'On a finished spec, Converge sends Spec Kit’s converge command for that spec, so what was built is compared with what was asked.',
+    link: { label: 'converge', href: '/docs/steps/converge/' },
+  },
+  {
+    eyebrow: 'GITHUB ISSUES',
+    title: 'Tasks to issues',
+    body: 'From the Tasks tab, Create GitHub issues sends Spec Kit’s command that turns the task list into issues. It asks before it sends.',
+    link: { label: 'the tasks step', href: '/docs/steps/tasks/' },
+  },
+  {
+    eyebrow: 'OPEN QUESTIONS',
+    title: 'Answer where you read',
+    body: 'A report marks what it still needs to know. Answer on the page and the answer goes to your assistant with the command that rewrites the report.',
+    link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
+  },
 ];
 
 // One leaf per section below the hero, in document order. The script measures
 // where each section boundary falls and places its leaf on the stem; a leaf
 // with no section to mark stays hidden.
-const stemLeaves = ['quick start', 'demo', 'features', 'box', 'claim', 'install'];
+const stemLeaves = ['quick start', 'demo', 'box', 'claim', 'install'];
 
 // Entrances stagger at 60ms. The delay is data, not a magic number in the CSS.
 const REVEAL_STAGGER = 60;
@@ -305,7 +327,7 @@ type Spore = {
   tone?: 'green';
 };
 
-const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
+const spores: Record<'hero' | 'cards', Spore[]> = {
   // The hero's field is the densest of the three and it is not spread evenly:
   // most of it gathers in the upper middle, around and above the mascot, and
   // thins out towards the edges and the floor. That is what makes it read as a
@@ -328,12 +350,6 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     { x: 90, y: 36, size: 3, dx: -14, dy: -28, dur: 14300, delay: -4100, bright: 0.65 },
     { x: 71, y: 79, size: 4, dx: -21, dy: -50, dur: 24100, delay: -18300, bright: 0.8, tone: 'green' },
     { x: 29, y: 84, size: 5, dx: 16, dy: -60, dur: 27700, delay: -11300, bright: 0.75 },
-  ],
-  accordion: [
-    { x: 6, y: 78, size: 4, dx: 14, dy: -44, dur: 27100, delay: -3700 },
-    { x: 44, y: 92, size: 3, dx: -18, dy: -36, dur: 13900, delay: -16300, tone: 'green' },
-    { x: 88, y: 62, size: 4, dx: -20, dy: -52, dur: 25300, delay: -7100 },
-    { x: 71, y: 18, size: 3, dx: 12, dy: -26, dur: 18700, delay: -12900 },
   ],
   cards: [
     { x: 14, y: 86, size: 4, dx: 20, dy: -50, dur: 22300, delay: -1900, tone: 'green' },
@@ -576,6 +592,28 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
   <!-- DEMO -->
   <section class="section section--demo">
     <div class="inner demo-stack" data-tabs>
+      <div class="pills" role="tablist" aria-label="Product demos">
+        {
+          tabs.map((tab, index) => (
+            <button
+              type="button"
+              class="pill"
+              role="tab"
+              data-tab={tab.id}
+              data-window={tab.window}
+              aria-controls={`panel-${tab.id}`}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? 0 : -1}
+              data-analytics="demo_tab_click"
+              data-analytics-tab={tab.id}
+              data-analytics-tab={tab.id}
+            >
+              {tab.label}
+            </button>
+          ))
+        }
+      </div>
+
       {/* The point arrives before the clip does. All four sit in one grid cell
           so the frame below never jumps when the copy swaps. */}
       <div class="demo-say">
@@ -588,7 +626,15 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
               aria-hidden={index === 0 ? 'false' : 'true'}
             >
               <h2>{tab.heading}</h2>
+              {tab.steps && (
+                <ol class="say-steps" aria-label={`Steps: ${tab.steps.join(', ')}`}>
+                  {tab.steps.map((step) => <li>{step}</li>)}
+                </ol>
+              )}
               <p>{tab.body}</p>
+              <a class="say-link" href={tab.link.href} tabindex={index === 0 ? 0 : -1}>
+                {tab.link.label} →
+              </a>
             </div>
           ))
         }
@@ -625,122 +671,38 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
                     aria-label={tab.label}
                     aria-hidden={index === 0 ? 'false' : 'true'}
                   >
-                    <video
-                      muted
-                      loop
-                      playsinline
-                      preload="none"
-                      poster={tab.clip.poster}
-                      aria-label={tab.clip.alt}
-                    >
-                      {tab.clip.webm && <source src={tab.clip.webm} type="video/webm" />}
-                      {tab.clip.mp4 && <source src={tab.clip.mp4} type="video/mp4" />}
-                    </video>
+                    {tab.clip ? (
+                      <>
+                        <img
+                          class="stage-still"
+                          src={tab.clip.panel}
+                          alt={tab.clip.panelAlt}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <video muted loop playsinline preload="none" aria-label={tab.clip.alt}>
+                          {tab.clip.webm && <source src={tab.clip.webm} type="video/webm" />}
+                          {tab.clip.mp4 && <source src={tab.clip.mp4} type="video/mp4" />}
+                        </video>
+                        <button type="button" class="stage-play" data-play data-analytics="demo_play_click" data-analytics-tab={tab.id}>
+                          <span aria-hidden="true">▶</span> Play the clip
+                        </button>
+                      </>
+                    ) : (
+                      <img src={tab.still.src} alt={tab.still.alt} loading="lazy" decoding="async" />
+                    )}
                   </div>
                 ))
               }
             </div>
           </div>
 
-          <div class="pills" role="tablist" aria-label="Product demos">
-            {
-              tabs.map((tab, index) => (
-                <button
-                  type="button"
-                  class="pill"
-                  role="tab"
-                  data-tab={tab.id}
-                  data-window={tab.window}
-                  aria-controls={`panel-${tab.id}`}
-                  aria-selected={index === 0 ? 'true' : 'false'}
-                  tabindex={index === 0 ? 0 : -1}
-                  data-analytics="demo_tab_click"
-                  data-analytics-tab={tab.id}
-                  data-analytics-tab={tab.id}
-                >
-                  {tab.label}
-                </button>
-              ))
-            }
-          </div>
         </div>
       </div>
 
       <p class="demo-caption">
-        Four tabs, four clips. Each one is recorded from the extension, not a mockup.
+        Every picture is the extension itself. The first four have a short clip behind Play.
       </p>
-    </div>
-  </section>
-
-  <!-- ACCORDION FEATURE SECTION -->
-  <section class="section section--accordion">
-    <div class="spores" aria-hidden="true">
-      {
-        spores.accordion.map((spore) => (
-          <span
-            class="spore"
-            data-tone={spore.tone}
-            style={`--sx:${spore.x}%;--sy:${spore.y}%;--ss:${spore.size}px;--sdx:${spore.dx}px;--sdy:${spore.dy}px;--sdur:${spore.dur}ms;--sdelay:${spore.delay}ms`}
-          />
-        ))
-      }
-    </div>
-
-    <div class="inner split">
-      <div class="accordion" data-accordion>
-        {
-          rows.map((row, index) => (
-            <div
-              class="acc-row"
-              data-acc-row={row.id}
-              data-open={row.open ? '' : undefined}
-              data-reveal
-              style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
-            >
-              <h2 class="acc-heading">
-                <button
-                  type="button"
-                  class="acc-toggle"
-                  data-acc-toggle={row.id}
-                  aria-expanded={row.open ? 'true' : 'false'}
-                  aria-controls={`acc-body-${row.id}`}
-                >
-                  <span class="acc-title">{row.title}</span>
-                  <span class="acc-plus" aria-hidden="true">
-                    +
-                  </span>
-                </button>
-              </h2>
-
-              <div class="acc-body" id={`acc-body-${row.id}`}>
-                <div class="acc-body-inner">
-                  <p>{row.body}</p>
-                  <a class="acc-link" href={row.link.href}>
-                    {row.link.label} →
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))
-        }
-      </div>
-
-      <!-- flex: 1.15 is one layout ratio in one section, so it stays literal. -->
-      <div class="acc-figure" data-reveal>
-        {
-          rows.map((row) => (
-            <img
-              class="acc-still"
-              data-acc-still={row.id}
-              data-active={row.open ? '' : undefined}
-              src={row.still.panel}
-              alt={row.still.panelAlt}
-              loading="lazy"
-              decoding="async"
-            />
-          ))
-        }
-      </div>
     </div>
   </section>
 
@@ -765,7 +727,7 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
         {
           cards.map((card, index) => (
             <article
-              class:list={['card', { 'card--wide': card.wide }]}
+              class:list={['card', { 'card--wide': card.wide, 'card--shot': card.image }]}
               data-reveal
               style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
             >
@@ -776,6 +738,9 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
                 <a class="card-link" href={card.link.href}>
                   {card.link.label} →
                 </a>
+              )}
+              {card.image && (
+                <img class="card-shot" src={card.image} alt={card.alt} loading="lazy" decoding="async" />
               )}
             </article>
           ))
@@ -829,6 +794,13 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
 
 <style>
   /* ------------------------------------------------------------ scaffolding */
+
+  /* The lightwells spill past a narrow viewport on purpose; clip keeps that
+     spill from becoming a sideways scroll and leaves the vertical spill alone. */
+  .hero,
+  .section--demo {
+    overflow-x: clip;
+  }
 
   .inner {
     max-width: var(--page-width);
@@ -1368,11 +1340,89 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     pointer-events: auto;
   }
 
-  .stage-layer video {
+  .stage-layer video,
+  .stage-layer img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top left;
+  }
+
+  .stage-layer video {
+    position: absolute;
+    inset: 0;
+    display: none;
+    cursor: pointer;
+  }
+
+  .stage-layer[data-playing] video {
+    display: block;
+  }
+
+  .stage-layer[data-playing] .stage-play {
+    display: none;
+  }
+
+  .stage-play {
+    position: absolute;
+    right: var(--space-16);
+    bottom: var(--space-16);
+    padding: var(--space-9) var(--space-16);
+    background: var(--accent-solid);
+    border: 0;
+    border-radius: var(--radius-pill);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-bold);
+    cursor: pointer;
+    box-shadow: var(--shadow-lift);
+  }
+
+  .stage-play:hover {
+    filter: brightness(1.1);
+  }
+
+  .stage-play:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
+
+  .say-steps {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: var(--space-10) 0 var(--space-10);
+    padding: 0;
+    list-style: none;
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+
+  .say-steps li + li::before {
+    content: '→';
+    margin: 0 6px;
+    color: var(--accent);
+  }
+
+  .say-link {
+    display: inline-block;
+    margin-top: var(--space-8);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    text-decoration: none;
+  }
+
+  .say-link:hover {
+    color: var(--accent-hover);
+  }
+
+  .say-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .pills {
@@ -1464,149 +1514,6 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     text-align: center;
   }
 
-  /* ------------------------------------------------------------- accordion */
-
-  .section--accordion .inner {
-    max-width: 1220px;
-    padding-top: 80px;
-    padding-bottom: 80px;
-  }
-
-  .split {
-    display: flex;
-    align-items: center;
-    gap: 56px;
-  }
-
-  .accordion {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .acc-row {
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .acc-heading {
-    margin: 0;
-    font-size: inherit;
-    font-weight: inherit;
-  }
-
-  .acc-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-16);
-    width: 100%;
-    padding: var(--space-18) 0;
-    background: none;
-    border: 0;
-    color: inherit;
-    font-family: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .acc-toggle:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .acc-title {
-    color: var(--text-muted);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-semibold);
-    transition:
-      color 160ms cubic-bezier(0.23, 1, 0.32, 1),
-      font-size 160ms cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .acc-toggle:hover .acc-title {
-    color: var(--text-primary);
-  }
-
-  .acc-plus {
-    flex: none;
-    color: var(--accent);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-regular);
-    line-height: 1;
-  }
-
-  .acc-row[data-open] .acc-title {
-    color: var(--text-primary);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-black);
-  }
-
-  .acc-row[data-open] .acc-plus {
-    display: none;
-  }
-
-  .acc-body {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 220ms cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .acc-row[data-open] .acc-body {
-    grid-template-rows: 1fr;
-  }
-
-  .acc-body-inner {
-    overflow: hidden;
-  }
-
-  .acc-body-inner p {
-    margin: 0;
-    color: var(--text-body);
-    font-size: var(--fs-ui);
-    line-height: var(--lh-prose);
-  }
-
-  .acc-link {
-    display: inline-block;
-    margin-top: var(--space-10);
-    padding-bottom: var(--space-22);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: var(--fs-ui-sm);
-    text-decoration: none;
-  }
-
-  .acc-link:hover {
-    color: var(--accent-hover);
-  }
-
-  .acc-figure {
-    position: relative;
-    flex: 1.45;
-    aspect-ratio: 1836 / 1164;
-    overflow: hidden;
-    background: var(--panel);
-    border: 1px solid var(--border-panel);
-    border-radius: var(--radius-md);
-    box-shadow: var(--glow-card);
-  }
-
-  .acc-still {
-    position: absolute;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .acc-still[data-active] {
-    opacity: 1;
-  }
-
   /* ----------------------------------------------------------------- cards */
 
   .section--cards .inner {
@@ -1676,6 +1583,43 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
   .card-link:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  .card-shot {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: var(--space-8);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-sm);
+  }
+
+  .card--shot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+    column-gap: var(--space-22);
+    align-items: start;
+  }
+
+  .card--shot > :not(.card-shot) {
+    grid-column: 1;
+  }
+
+  .card--shot .card-shot {
+    grid-column: 2;
+    grid-row: 1 / span 5;
+    margin-top: 0;
+  }
+
+  @media (max-width: 980px) {
+    .card--shot {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card--shot .card-shot {
+      margin-top: var(--space-8);
+    }
   }
 
   /* ------------------------------------------------------------ claim band */
@@ -2427,35 +2371,14 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     const label = root.querySelector('[data-window-label]');
     if (!tabs.length) return;
 
-    // A clip is only worth playing once the viewer can see the whole frame.
-    // Until then the poster stands in, so the opening hold every composition
-    // now carries is actually the first thing anyone sees. `armed` flips once
-    // and stays flipped: after the first arrival, a tab click plays at once.
-    let armed = false;
     let current = tabs[0].dataset.tab;
 
-    const activeVideo = () => {
-      const panel = panels.find((p) => p.dataset.panel === current);
-      return panel ? panel.querySelector('video') : null;
-    };
-
-    // Always from frame one. Resuming mid-tour is the same bug as starting
-    // before arrival: the viewer sees a highlight with no idea what preceded it.
     // preload="none" means the element may never have fetched anything, and
     // raising preload alone does not start one: it needs an explicit load().
     const warmOne = (video) => {
       if (!video) return;
       if (video.preload !== 'auto') video.preload = 'auto';
       if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) video.load();
-    };
-
-    const start = (video) => {
-      if (!video || reduced.matches) return;
-      warmOne(video);
-      try {
-        video.currentTime = 0;
-      } catch {}
-      video.play().catch(() => {});
     };
 
     const select = (id) => {
@@ -2472,6 +2395,8 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
         const on = say.dataset.say === id;
         say.toggleAttribute('data-active', on);
         say.setAttribute('aria-hidden', on ? 'false' : 'true');
+        const link = say.querySelector('a');
+        if (link) link.tabIndex = on ? 0 : -1;
       });
 
       panels.forEach((panel) => {
@@ -2479,13 +2404,30 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
         panel.toggleAttribute('data-active', on);
         panel.setAttribute('aria-hidden', on ? 'false' : 'true');
 
+        // Every tab opens on its still. A clip plays only when asked.
+        panel.removeAttribute('data-playing');
         const video = panel.querySelector('video');
-        if (!video) return;
-        // Reduced motion never plays. The poster is the whole experience.
-        if (on && armed) start(video);
-        else video.pause();
+        if (video) video.pause();
       });
     };
+
+    panels.forEach((panel) => {
+      const play = panel.querySelector('[data-play]');
+      const video = panel.querySelector('video');
+      if (!play || !video) return;
+      play.addEventListener('click', () => {
+        panel.setAttribute('data-playing', '');
+        warmOne(video);
+        try {
+          video.currentTime = 0;
+        } catch {}
+        video.play().catch(() => {});
+      });
+      video.addEventListener('click', () => {
+        video.pause();
+        panel.removeAttribute('data-playing');
+      });
+    });
 
     tabs.forEach((tab, index) => {
       tab.addEventListener('click', () => select(tab.dataset.tab));
@@ -2500,81 +2442,6 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     });
 
     select(tabs[0].dataset.tab);
-
-    // data-tabs and data-demo-frame sit on the same element, so the frame is
-    // the root; the query is only here if they ever come apart.
-    const frame = root.matches('[data-demo-frame]')
-      ? root
-      : root.querySelector('[data-demo-frame]') || root;
-
-    // preload="none" keeps the clips off the critical path, but it also means
-    // nothing is buffered when the frame arrives and the opening hold would
-    // stall exactly where it needs to be still. Fetch on approach instead.
-    if ('IntersectionObserver' in window && !reduced.matches) {
-      const warm = new IntersectionObserver(
-        (entries) => {
-          if (!entries.some((e) => e.isIntersecting)) return;
-          warm.disconnect();
-          // Only the clip that is about to play. The other three stay unfetched
-          // until someone actually picks their tab, which is the whole point of
-          // preload="none".
-          warmOne(activeVideo());
-        },
-        { rootMargin: '600px 0px' }
-      );
-      warm.observe(frame);
-
-      // Fully in view, not merely intersecting. A frame taller than the
-      // viewport can never reach ratio 0.9, so covering most of the screen
-      // counts too.
-      const seen = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            const whole = entry.intersectionRatio >= 0.9;
-            const fills = entry.intersectionRect.height >= window.innerHeight * 0.85;
-            const video = activeVideo();
-            if (entry.isIntersecting && (whole || fills)) {
-              armed = true;
-              // Paused means either never started or scrolled away from. Both
-              // want the same thing: run it again from the opening hold.
-              if (video && video.paused) start(video);
-            } else if (!entry.isIntersecting && video) {
-              video.pause();
-            }
-          }
-        },
-        { threshold: [0, 0.5, 0.9, 1] }
-      );
-      seen.observe(frame);
-    } else {
-      armed = true;
-      start(activeVideo());
-    }
-  });
-
-  // --- accordion -----------------------------------------------------------
-  document.querySelectorAll('[data-accordion]').forEach((root) => {
-    const section = root.closest('section');
-    const rows = Array.from(root.querySelectorAll('[data-acc-row]'));
-    const stills = section ? Array.from(section.querySelectorAll('[data-acc-still]')) : [];
-
-    const open = (id) => {
-      rows.forEach((row) => {
-        const on = row.dataset.accRow === id;
-        row.toggleAttribute('data-open', on);
-        const toggle = row.querySelector('[data-acc-toggle]');
-        if (toggle) toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
-      });
-      stills.forEach((still) => {
-        still.toggleAttribute('data-active', still.dataset.accStill === id);
-      });
-    };
-
-    rows.forEach((row) => {
-      const toggle = row.querySelector('[data-acc-toggle]');
-      if (!toggle) return;
-      toggle.addEventListener('click', () => open(row.dataset.accRow));
-    });
   });
 
   // --- motion --------------------------------------------------------------
