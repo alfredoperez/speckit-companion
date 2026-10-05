@@ -127,24 +127,25 @@ const bandText = async ($: any) => {
   return text
 }
 
-const HEAD = ['Run   Overview   Specs', 'Clear Completed Todos', '001-clear-completed']
+const HEAD = ['▸Run   Overview   Specs', 'Clear Completed Todos', '001-clear-completed']
 const SPEC_LINE = ['spec  3 stories (2 P1, 1 P2) · 9 requirements · 4 success criteria', '  2 open questions']
 
 test('a spec alone says when it was written, what comes next, and that nothing was recorded', async ($, on) => {
   await open($, on, { [path('spec.md')]: SPEC }, { [path('spec.md')]: today(19, 26) })
-  expect(await bandText($)).toBe('001-clear-completed · Specify written 4m ago · Plan next')
+  expect(await bandText($)).toBe('○ 001-clear-completed · Specify written 4m ago · Plan next')
   expect(await paneText($)).toBe(
     [
       ...HEAD,
       'Waiting: plan next',
       ' ',
+      'STEPS',
       '✓ Specify    written 7:26 PM',
       '○ Plan       not written yet',
       '○ Tasks      not written yet',
       '○ Implement ',
       NO_RECORD_NOTE,
       ' ',
-      'Documents',
+      'DOCUMENTS',
       ...SPEC_LINE,
       ' ',
       'Next: /speckit-plan',
@@ -154,20 +155,21 @@ test('a spec alone says when it was written, what comes next, and that nothing w
 
 test('a spec and a plan show the gap between them, and the pane waits for tasks', async ($, on) => {
   await open($, on, WAITING_FOR_TASKS, WAITING_TIMES)
-  expect(await bandText($)).toBe('001-clear-completed · Plan written 12m ago · Tasks next')
+  expect(await bandText($)).toBe('○ 001-clear-completed · Plan written 12m ago · Tasks next')
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   expect(toText(await ui.find({ key: 'pane' }))).toBe(
     [
       ...HEAD,
       'Waiting: tasks next',
       ' ',
+      'STEPS',
       '✓ Specify    written 7:14 PM',
       '✓ Plan       written 7:18 PM · 4m after the spec',
       '○ Tasks      not written yet',
       '○ Implement ',
       NO_RECORD_NOTE,
       ' ',
-      'Documents',
+      'DOCUMENTS',
       ...SPEC_LINE,
       'plan  4 files named',
       'checklist: requirements  2 of 3 checked',
@@ -185,19 +187,20 @@ test('a spec and a plan show the gap between them, and the pane waits for tasks'
 
 test('mid-implement the pane counts the ticked tasks and names the one that is next', async ($, on) => {
   await open($, on, MID_IMPLEMENT, IMPLEMENT_TIMES)
-  expect(await bandText($)).toBe('001-clear-completed · Implement 3/10 · last change 2m ago')
+  expect(await bandText($)).toBe('● 001-clear-completed ██░░░░░░ · Implement 3/10 · last change 2m ago')
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'pane' })).split('\n').slice(0, 21)).toEqual([
+  expect(toText(await ui.find({ key: 'pane' })).split('\n').slice(0, 22)).toEqual([
     ...HEAD,
     'Implementing: T004 next · Add the clear button to index.html',
     ' ',
+    'STEPS',
     '✓ Specify    written 7:14 PM',
     '✓ Plan       written 7:18 PM · 4m after the spec',
     '✓ Tasks      written 7:28 PM',
     '● Implement  3 of 10 tasks · last change 2m ago',
     NO_RECORD_NOTE,
     ' ',
-    'Documents',
+    'DOCUMENTS',
     ...SPEC_LINE,
     'plan  4 files named',
     'tasks  10 tasks in 5 phases · 4 can run in parallel',
@@ -222,7 +225,7 @@ test('the minutes move on by themselves, and ticked tasks left alone stop readin
   expect(toText(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 2m ago')
   await clock.advance(60000)
   expect(toText(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 3m ago')
-  expect(await bandText($)).toBe('001-clear-completed · Implement 3/10 · last change 3m ago')
+  expect(await bandText($)).toBe('● 001-clear-completed ██░░░░░░ · Implement 3/10 · last change 3m ago')
   await clock.advance(8 * 60000)
   expect(toText(await ui.find({ key: 'row-implement' }))).toBe('○ Implement  3 of 10 tasks · last change 11m ago')
   expect((await ui.find({ type: 'Text', text: '3 of 10 tasks' })).props.dimColor).toBe(true)
@@ -231,7 +234,7 @@ test('the minutes move on by themselves, and ticked tasks left alone stop readin
 
 test('a finished stock run ticks Implement and names no next step', async ($, on) => {
   await open($, on, { ...MID_IMPLEMENT, [path('tasks.md')]: tasks(10) }, IMPLEMENT_TIMES)
-  expect(await bandText($)).toBe('001-clear-completed · Done · Tasks 10/10')
+  expect(await bandText($)).toBe('● 001-clear-completed ████████ · Done · Tasks 10/10')
   const text = await paneText($)
   expect(text).toContain('All 10 tasks ticked')
   expect(text).toContain('✓ Implement  10 of 10 tasks')
@@ -295,7 +298,7 @@ test('a count the file does not give is left out, never shown as zero', async ($
   }
   await open($, on, files, {})
   const lines = (await paneText($)).split('\n')
-  const block = lines.slice(lines.indexOf('Documents') + 1, lines.indexOf(' ', lines.indexOf('Documents')))
+  const block = lines.slice(lines.indexOf('DOCUMENTS') + 1, lines.indexOf(' ', lines.indexOf('DOCUMENTS')))
   expect(block).toEqual([
     'spec  2 stories',
     'plan  One module and its tests, wired into the toolbar that every…',
@@ -329,16 +332,16 @@ test('the Overview of a stock project comes from its spec and plan', async ($, o
     ' ',
     'Let me clear all completed todos with one button',
     ' ',
-    'User stories',
+    'USER STORIES',
     '- Clear all completed todos at once · P1',
     '- Cleared todos stay gone · P1',
     '- The button hides when it has nothing to do · P2',
     ' ',
-    'Open questions',
+    'OPEN QUESTIONS',
     '- Should clearing ask for confirmation?',
     '- Is there an undo, and for how long?',
     ' ',
-    'Requirements · 9',
+    'REQUIREMENTS · 9',
     '- FR-001 The app MUST provide one control that removes all completed todos.',
     '- FR-002 Activating the control MUST remove every todo marked as done.',
     '- FR-003 The remaining todos MUST keep their order.',
@@ -346,20 +349,20 @@ test('the Overview of a stock project comes from its spec and plan', async ($, o
     '- FR-005 The removal MUST persist.',
     '4 more in the spec',
     ' ',
-    'Success criteria',
+    'SUCCESS CRITERIA',
     '- SC-001 A user can remove all completed todos with 1 action.',
     '- SC-002 100% of active todos remain.',
     '- SC-003 The list reflects the clear in under 1 second.',
     '- SC-004 Cleared todos stay gone after reopening.',
     ' ',
-    'Plan summary',
+    'PLAN SUMMARY',
     'Add one "Clear completed" button that removes every todo marked as done and saves the result.',
     ' ',
     FROM_FILES_NOTE,
   ])
   expect((await ui.find({ type: 'Text', text: '- Is there an undo, and for how long?' })).props.color).toBe('warning')
   expect((await ui.find({ type: 'Text', text: FROM_FILES_NOTE })).props.dimColor).toBe(true)
-  expect((await ui.find({ type: 'Text', text: 'User stories' })).props.bold).toBe(true)
+  expect((await ui.find({ type: 'Text', text: 'USER STORIES' })).props.bold).toBe(true)
   expect(await ui.find({ type: 'Text', text: /run record/ })).toBeUndefined()
 })
 
@@ -369,7 +372,7 @@ test('an Overview with nothing to draw from says so, and a part the files lack i
   await ui.press({ key: 'tab-overview' })
   expect(await ui.find({ type: 'Text', text: 'The spec files have nothing to summarise yet.' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: FROM_FILES_NOTE })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /^(User stories|Open questions|Requirements|Success criteria|Plan summary)/ })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: /^(User stories|Open questions|Requirements|Success criteria|Plan summary)/i })).toBeUndefined()
   expect(fileOverview(null)).toMatchObject({ empty: true, stories: [], requirements: null })
 })
 
@@ -387,11 +390,11 @@ test('a recorded run keeps its measured times, and gains the stories and questio
   expect(run).toContain(SPEC_LINE[0])
   await ui.press({ key: 'tab-overview' })
   const overview = toText(await ui.find({ key: 'pane' }))
-  expect(overview).toContain('Intent')
-  expect(overview).toContain('User stories\n- Clear all completed todos at once · P1')
-  expect(overview).toContain('Open questions\n- Should clearing ask for confirmation?')
+  expect(overview).toContain('INTENT')
+  expect(overview).toContain('USER STORIES\n- Clear all completed todos at once · P1')
+  expect(overview).toContain('OPEN QUESTIONS\n- Should clearing ask for confirmation?')
   expect(overview).not.toContain(FROM_FILES_NOTE)
-  expect(overview).not.toContain('Success criteria')
+  expect(overview).not.toContain('SUCCESS CRITERIA')
 })
 
 test('a recorded step nobody measured takes its file time, and a measured one never does', async () => {

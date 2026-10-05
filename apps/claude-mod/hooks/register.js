@@ -23,6 +23,7 @@ import {
   listText,
   overviewModel,
   paneModel,
+  progressBar,
   taskSummaryLines,
 } from './board.js'
 
@@ -40,10 +41,26 @@ const MAX_PARSED_BYTES = 1 << 20
 const PARSED = ['spec', 'plan', 'tasks', 'research', 'data-model', 'checklist']
 const COMPANION_SKILL = ['.claude', 'skills', 'speckit-companion-plan']
 const GLYPH = { completed: '✓', 'in-progress': '●', 'not-started': '○' }
-// 'warning' is the one theme key the mods types name for text; done and failed use the terminal's own green and red.
-const RUNNING = { color: 'warning' }
-const FAILED = { color: 'red' }
-const STEP_STYLE = { completed: { color: 'green' }, 'in-progress': RUNNING, 'not-started': { dimColor: true } }
+// Every colour is a theme key, so the pane follows the user's theme: one per state, one per section heading.
+const C = { accent: 'warning', done: 'success', failed: 'error', title: 'claude', steps: 'suggestion', documents: 'autoAccept', tasks: 'planMode', chip: 'subtle' }
+const HEADING = {
+  intent: C.steps,
+  approach: C.title,
+  'user stories': C.documents,
+  'open questions': C.accent,
+  expectations: C.tasks,
+  decisions: C.documents,
+  verified: C.done,
+  concerns: C.accent,
+  'success criteria': C.done,
+  'plan summary': C.title,
+}
+const RUNNING = { color: C.accent }
+const FAILED = { color: C.failed }
+const STEP_STYLE = { completed: { color: C.done }, 'in-progress': RUNNING, 'not-started': { dimColor: true } }
+const BAND_BAR = 8
+const BAND_BAR_MIN_COLUMNS = 80
+const ROW_WIDTH = 34
 const TONE = { plain: {}, dim: { dimColor: true }, running: RUNNING }
 
 let view = 'run'
@@ -282,18 +299,35 @@ async function start($, cwd) {
   await offerPane($)
 }
 
-/** The band's facts after the spec name: dim, with the running step in the warning colour. */
+/** A task bar: the filled part in the running colour, or the done colour once every task is ticked. */
+function barText(Text, bar) {
+  return Text({
+    children: [
+      ...(bar.filled ? [Text({ color: bar.done ? C.done : C.accent, children: [bar.filled] })] : []),
+      ...(bar.empty ? [Text({ dimColor: true, children: [bar.empty] })] : []),
+    ],
+  })
+}
+
+/** The band's facts after the spec name: dim, with the running step bold and the next step in the accent colour. */
 function bandTexts(Text, parts) {
-  const at = parts.findIndex(p => p.running)
+  const at = parts.findIndex(p => p.running || p.next)
   const live = parts[at]
   const texts = some => some.map(p => p.text)
   const lead = [''].concat(texts(live ? parts.slice(0, at) : parts), live ? [''] : []).join(' · ')
   const trail = live ? [''].concat(texts(parts.slice(at + 1))).join(' · ') : ''
   return [
     ...(lead ? [Text({ dimColor: true, wrap: 'truncate-end', children: [lead] })] : []),
-    ...(live ? [Text({ ...RUNNING, wrap: 'truncate-end', children: [live.text] })] : []),
+    ...(live ? [Text({ ...RUNNING, bold: live.running, wrap: 'truncate-end', children: [live.text] })] : []),
     ...(trail ? [Text({ dimColor: true, wrap: 'truncate-end', children: [trail] })] : []),
   ]
+}
+
+/** The band's leading dot: done, running, or waiting for its next step. */
+function bandDot(Text, row, parts) {
+  if (row.done || row.steps.implement === 'completed') return Text({ color: C.done, children: ['● '] })
+  if (parts.some(p => p.running)) return Text({ ...RUNNING, children: ['● '] })
+  return Text({ dimColor: true, children: ['○ '] })
 }
 
 let starting = null
@@ -356,12 +390,17 @@ export function register(on) {
     await ensureStarted($)
     if (!followed || e.props.hasSurvey) return next(e)
     const { Box, Text } = $.ui.resolve(e)
+    const parts = bandParts(followed.row, followed.ctx, followed.folder, await $.clock.now())
+    const count = followed.row.tasks
+    const bar = e.props.bodyColumns >= BAND_BAR_MIN_COLUMNS ? progressBar(count?.checked ?? 0, count?.total ?? 0, BAND_BAR) : null
     const mine = Box({
       key: 'speckit-band',
       flexDirection: 'row',
       children: [
+        bandDot(Text, followed.row, parts),
         Text({ bold: true, wrap: 'truncate-end', children: [followed.row.name] }),
-        ...bandTexts(Text, bandParts(followed.row, followed.ctx, followed.folder, await $.clock.now())),
+        ...(bar ? [Text({ children: [' '] }), barText(Text, bar)] : []),
+        ...bandTexts(Text, parts),
       ],
     })
     const theirs = await next(e)
@@ -371,28 +410,40 @@ export function register(on) {
   on('ui.render', { component: 'Pane' }, async ($, e, next) => {
     if (e.requestId !== PANE) return next(e)
     const { Box, Text, Button, Markdown } = $.ui.resolve(e)
+    // A Button takes no colour, so the tab in view is marked by the Text beside it.
     const tab = (name, label, hotkey) =>
-      Button({
-        key: 'tab-' + name,
-        label,
-        hotkey,
-        plain: true,
-        dimColor: view !== name,
-        onPress: async () => {
-          view = name
-          doc = null
-          if (name === 'specs') await scanAll($)
-          $.ui.invalidate('ui.render')
-        },
+      Box({
+        flexDirection: 'row',
+        children: [
+          Text({ ...RUNNING, bold: true, children: [view === name ? '▸' : ' '] }),
+          Button({
+            key: 'tab-' + name,
+            label,
+            hotkey,
+            plain: true,
+            dimColor: view !== name,
+            onPress: async () => {
+              view = name
+              doc = null
+              if (name === 'specs') await scanAll($)
+              $.ui.invalidate('ui.render')
+            },
+          }),
+        ],
       })
     const line = (text, style = {}) => Text({ wrap: 'truncate-end', ...style, children: [text] })
     const para = (text, style = {}) => Text({ wrap: 'wrap', ...style, children: [text] })
     const gap = () => line(' ')
-    const section = title => [gap(), line(title, { bold: true })]
+    const heading = (title, color) => line(title.toUpperCase(), { bold: true, color: color ?? HEADING[title.toLowerCase()] ?? C.tasks })
+    const section = (title, color) => [gap(), heading(title, color)]
+    // A background, not reverse video: the terminal draws the focused control in reverse.
+    const chip = (key, label) =>
+      Box({ flexDirection: 'row', columnGap: 1, children: [Text({ backgroundColor: C.chip, bold: true, children: [' ' + key + ' '] }), Text({ dimColor: true, children: [label] })] })
+    const width = Math.max(12, Math.min(e.props.bodyColumns ?? ROW_WIDTH, ROW_WIDTH))
     const now = await $.clock.now()
     const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText, { folder: followed.folder, now, companionSkills }) : null
-    const header = [Box({ flexDirection: 'row', columnGap: 3, children: [tab('run', 'Run', '1'), tab('overview', 'Overview', '2'), tab('specs', 'Specs', '3')] })]
-    if (m) header.push(line(m.title, { bold: true }), line(m.recorded ? m.name + ' · ' + m.statusLabel : m.name, { dimColor: true }))
+    const header = [Box({ flexDirection: 'row', columnGap: 2, children: [tab('run', 'Run', '1'), tab('overview', 'Overview', '2'), tab('specs', 'Specs', '3')] })]
+    if (m) header.push(line(m.title, { bold: true, color: C.title }), line(m.recorded ? m.name + ' · ' + m.statusLabel : m.name, { dimColor: true }))
     if (m?.activity) header.push(line(m.activity.text, m.activity.live ? RUNNING : { dimColor: true }))
     const body = []
 
@@ -429,7 +480,7 @@ export function register(on) {
       const o = overviewModel(followed.row, followed.ctx)
       const f = fileOverview(followed.folder)
       const item = text => para('- ' + text)
-      const titled = title => (body.length ? section(title) : [line(title, { bold: true })])
+      const titled = title => (body.length ? section(title) : [heading(title)])
       const stories = () => {
         if (f.stories.length) body.push(...titled('User stories'), ...f.stories.map(s => item(s.priority ? s.title + ' · ' + s.priority : s.title)))
         if (f.questions.length) body.push(...titled('Open questions'), ...f.questions.map(q => para('- ' + q, RUNNING)))
@@ -449,7 +500,7 @@ export function register(on) {
         body.push(para('The run record has no overview details yet.', { dimColor: true }))
         stories()
       } else {
-        if (o.intent) body.push(line('Intent', { bold: true }), para(o.intent))
+        if (o.intent) body.push(heading('Intent'), para(o.intent))
         if (o.approach) body.push(...titled('Approach'), para(o.approach))
         if (o.facts) body.push(...(body.length ? [gap()] : []), line(o.facts, { dimColor: true }))
         stories()
@@ -475,7 +526,7 @@ export function register(on) {
         if (o.requirements) body.push(gap(), line(o.requirements))
       }
     } else if (doc) {
-      body.push(line(doc.path, { bold: true }))
+      body.push(line(doc.path, { bold: true, color: C.documents }))
       body.push(
         Button({
           key: 'doc-back',
@@ -493,7 +544,7 @@ export function register(on) {
       )
       const did = doc.step === 'implement' ? taskSummaryLines(followed.ctx) : []
       if (did.length) {
-        body.push(line('What each finished task did', { bold: true }), ...did.map(t => para(t.id + ' ' + t.did)), gap())
+        body.push(line('What each finished task did', { bold: true, color: C.tasks }), ...did.map(t => para(t.id + ' ' + t.did)), gap())
       }
       if (doc.text == null) {
         body.push(line('not written yet', { dimColor: true }))
@@ -505,10 +556,11 @@ export function register(on) {
       }
     } else {
       const focus = key => (focusKey === key ? { autoFocus: true } : {})
+      body.push(heading('Steps', C.steps))
       for (const s of m.steps) {
         const pressable = Boolean(s.document)
         const notes = []
-        if (s.time) notes.push(Text({ dimColor: true, children: [s.time] }))
+        if (s.time) notes.push(Box({ flexGrow: 1 }), Box({ flexShrink: 0, children: [Text({ dimColor: true, children: [s.time] })] }))
         else if (s.notes.length) notes.push(...s.notes.map(n => Text({ ...TONE[n.tone], wrap: 'truncate-end', children: [n.text] })))
         else if (s.state === 'in-progress') notes.push(Text({ ...RUNNING, children: ['running'] }))
         else if (s.folded) notes.push(Text({ dimColor: true, children: ['with Specify'] }))
@@ -523,13 +575,14 @@ export function register(on) {
             key: 'row-' + s.step,
             flexDirection: 'row',
             columnGap: 1,
+            ...(s.time ? { width } : {}),
             children: [Text({ ...STEP_STYLE[s.state], children: [GLYPH[s.state]] }), Box({ width: 10, children: [name] }), ...notes],
           }),
         )
       }
       if (m.total) body.push(line(m.total, { dimColor: true }))
       if (m.footnote) body.push(para(m.footnote, { dimColor: true }))
-      if (m.documents.length) body.push(...section('Documents'))
+      if (m.documents.length) body.push(...section('Documents', C.documents))
       for (const d of m.documents) {
         const name = d.path
           ? Button({ key: d.key, label: d.label, plain: true, ...focus(d.key), onPress: () => openDocument($, d.key, null, d.path) })
@@ -540,18 +593,54 @@ export function register(on) {
         // A line of its own, so a narrow pane cannot cut the one fact that needs an answer.
         if (d.warn) body.push(line('  ' + d.warn, RUNNING))
       }
-      for (const phase of m.phases) {
-        body.push(gap(), line(phase.name + '  ' + phase.checked + '/' + phase.total, { bold: true }))
-        for (const t of phase.tasks) {
-          const mark = t.checked ? '✓' : t.current ? '▸' : '○'
-          const style = t.checked ? { dimColor: true } : t.current ? RUNNING : {}
-          body.push(line(mark + ' ' + t.id + ' ' + t.text, style))
-        }
+      const bar = progressBar(m.tasks.checked, m.tasks.total, width - (m.tasks.checked + '/' + m.tasks.total).length - 1)
+      if (bar) {
+        body.push(
+          ...section('Tasks', C.tasks),
+          Box({
+            key: 'task-bar',
+            flexDirection: 'row',
+            columnGap: 1,
+            width,
+            children: [barText(Text, bar), Text({ ...(bar.done ? { color: C.done } : { dimColor: true }), children: [m.tasks.checked + '/' + m.tasks.total] })],
+          }),
+        )
       }
+      // Tasks under no phase heading are counted by the bar alone.
+      const named = m.phases.length > 1 || m.phases[0]?.name !== 'Tasks'
+      m.phases.forEach((phase, i) => {
+        if (named) {
+          body.push(
+            ...(i ? [gap()] : []),
+            Box({
+              key: 'phase-' + i,
+              flexDirection: 'row',
+              columnGap: 2,
+              children: [
+                Box({ flexShrink: 1, children: [line(phase.name, { bold: true })] }),
+                Box({ flexShrink: 0, children: [Text({ ...(phase.checked === phase.total ? { color: C.done } : { dimColor: true }), children: [phase.checked + '/' + phase.total] })] }),
+              ],
+            }),
+          )
+        }
+        for (const t of phase.tasks) {
+          const mark = t.checked ? Text({ color: C.done, children: ['✓'] }) : t.current ? Text({ ...RUNNING, bold: true, children: ['▸'] }) : Text({ dimColor: true, children: ['○'] })
+          const style = t.checked ? { dimColor: true } : t.current ? RUNNING : {}
+          body.push(Box({ flexDirection: 'row', columnGap: 1, children: [mark, Box({ flexShrink: 1, children: [line(t.id + ' ' + t.text, style)] })] }))
+        }
+      })
       if (m.next) body.push(gap(), para(m.next, { dimColor: true }))
     }
 
-    return Box({ key: 'pane', flexDirection: 'column', children: [Box({ key: 'header', flexDirection: 'column', children: header }), gap(), ...body] })
+    const hints = [chip('1', 'Run'), chip('2', 'Overview'), chip('3', 'Specs'), ...(doc && view === 'run' ? [chip('b', 'Back')] : []), chip('Esc', 'Prompt')]
+    return Box({
+      flexDirection: 'column',
+      children: [
+        Box({ key: 'pane', flexDirection: 'column', children: [Box({ key: 'header', flexDirection: 'column', children: header }), gap(), ...body] }),
+        gap(),
+        Box({ key: 'hints', flexDirection: 'row', flexWrap: 'wrap', columnGap: 2, children: hints }),
+      ],
+    })
   })
 
   // A new run may have started a new spec; follow it unless the user picked one.

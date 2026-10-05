@@ -41,6 +41,7 @@ export function bandParts(row, ctx, folder, now) {
     if (fromFiles) return fromFiles
   }
   const live = step => (step ? { text: `${cap(step)} running`, running: true } : null)
+  const upNext = step => (step ? { text: `${cap(step)} next`, running: false, next: true } : null)
   const count = fact(counted ? `Tasks ${tasks.checked}/${tasks.total}` : null)
   if (row.done || steps.implement === 'completed') {
     const timings = ctx ? phaseTimings(ctx) : null
@@ -53,7 +54,7 @@ export function bandParts(row, ctx, folder, now) {
   const done = PIPELINE_STEPS.filter(s => steps[s] === 'completed' && !(s === 'tasks' && counted)).pop()
   const running = PIPELINE_STEPS.find(s => steps[s] === 'in-progress')
   const next = running ? null : PIPELINE_STEPS.find(s => steps[s] === 'not-started')
-  return [fact(done ? `${cap(done)} done` : null), count, live(running), fact(next ? `${cap(next)} next` : null)].filter(Boolean)
+  return [fact(done ? `${cap(done)} done` : null), count, live(running), upNext(next)].filter(Boolean)
 }
 
 /** The band of a run with no record: the last document written and how long ago, or the task count while tasks are ticked. */
@@ -70,8 +71,17 @@ function fileBandParts(row, folder, now) {
   const next = PIPELINE_STEPS.find(s => row.steps[s] !== 'completed')
   return [
     { text: `${STEP_OF_DOC[last]} written ${ago(now - written(last))}`, running: false },
-    ...(next ? [{ text: `${cap(next)} next`, running: false }] : []),
+    ...(next ? [{ text: `${cap(next)} next`, running: false, next: true }] : []),
   ]
+}
+
+/** A bar of `width` cells for real task counts: full only when every task is ticked, never empty once one is. Null with no tasks. */
+export function progressBar(checked, total, width) {
+  if (!(total > 0) || !(width >= 1)) return null
+  const done = checked >= total
+  const share = Math.floor((Math.max(0, checked) / total) * width)
+  const cells = done ? width : Math.min(width - 1, checked > 0 ? Math.max(1, share) : 0)
+  return { filled: '█'.repeat(cells), empty: '░'.repeat(width - cells), done }
 }
 
 /** "Plan done · Tasks 7/12 · Implement running" for a spec, or null with no spec. */
@@ -195,6 +205,7 @@ export function paneModel(row, ctx, tasksText, { folder = null, now = null, comp
     steps,
     total: timings.phases.length ? summary : null,
     phases,
+    tasks: { checked: phases.reduce((sum, p) => sum + p.checked, 0), total: phases.reduce((sum, p) => sum + p.total, 0) },
     recorded,
     footnote: fromFiles && steps.some(st => st.notes.length) ? NO_RECORD_NOTE : null,
     activity: recorded ? null : activityLine(row, folder, now),

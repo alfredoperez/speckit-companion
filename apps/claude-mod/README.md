@@ -15,7 +15,7 @@ Tested on Claude Code 2.1.287, the first version with mods on by default. The mo
 
 Everything updates while the agent works: after each tool call, and every few seconds for changes made outside the session.
 
-The colours follow your terminal: a finished step is green, the running step and the word `running` use the theme's warning colour, a failed check is red, and secondary facts are dim.
+The colours come from your Claude Code theme: a finished step is green, the running step, the next step in the band and the tab in view use the warning colour, a failed check is red, and times and secondary facts are dim. Each section heading is in capitals with a colour of its own, a bar of block characters shows the ticked tasks out of the total (green once all are ticked), and the foot of the pane lists the keys: `1` Run, `2` Overview, `3` Specs, `b` Back, `Esc` Prompt.
 
 ### Open a step's document
 

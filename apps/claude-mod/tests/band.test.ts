@@ -1,8 +1,8 @@
 import { expect, test } from 'claude-code/testing'
-import { bandLine } from '../hooks/board.js'
+import { bandLine, progressBar } from '../hooks/board.js'
 import { buildSpecRow } from '../hooks/vendor/board-rules.mjs'
 import { DEMO_SPECS } from './fixtures/demo-specs.js'
-import { BAND, ROOT, project, startSession } from './harness.ts'
+import { BAND, ROOT, project, startSession, toText } from './harness.ts'
 
 const at = (minutes: number) => new Date(Date.UTC(2026, 0, 1, 10, minutes)).toISOString()
 const entry = (step: string, kind: string, minutes: number) => ({ step, kind, by: 'extension', at: at(minutes) })
@@ -61,13 +61,15 @@ test('draws the band from a real run record, and ticks when a task is checked', 
   await startSession($)
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect(await ui.find({ type: 'Text', text: '_02_demo-tasked' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: ' · Plan done · Tasks 0/4 · Implement next' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: ' · Plan done · Tasks 0/4 · ' })).toBeDefined()
+  expect((await ui.find({ type: 'Text', text: 'Implement next' })).props.color).toBe('warning')
   await ui.unmount()
 
   files['specs/_02_demo-tasked/tasks.md'] = files['specs/_02_demo-tasked/tasks.md'].replace('- [ ] **T001**', '- [x] **T001**')
   await clock.advance(3000)
   const again = await $.ui.mount({ ...BAND, surface: 'terminal' })
-  expect(await again.find({ type: 'Text', text: ' · Plan done · Tasks 1/4 · Implement next' })).toBeDefined()
+  expect(await again.find({ type: 'Text', text: ' · Plan done · Tasks 1/4 · ' })).toBeDefined()
+  expect(await again.find({ type: 'Text', text: '██' })).toBeDefined()
 })
 
 test('redraws right after a tool call, and when a spec without a record gains a plan', async ($, on) => {
@@ -76,17 +78,17 @@ test('redraws right after a tool call, and when a spec without a record gains a 
   const { clock } = project(on, files, { mtimes })
   await clock.set(4 * 60000 + 1000)
   await startSession($)
-  const band = async (text: string) => {
+  const band = async (_?: string) => {
     const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
-    const found = await ui.find({ type: 'Text', text })
+    const found = toText(await ui.find({ key: 'speckit-band' }))
     await ui.unmount()
     return found
   }
-  expect(await band(' · Specify written 4m ago · Plan next')).toBeDefined()
+  expect(await band()).toBe('○ 042-export-csv · Specify written 4m ago · Plan next')
   files['specs/042-export-csv/plan.md'] = '# Plan\n'
   mtimes['specs/042-export-csv/plan.md'] = 4 * 60000
   await $.tool.call({ tool: 'Write', file_path: 'specs/042-export-csv/plan.md', content: '# Plan\n' })
-  expect(await band(' · Plan written just now · Tasks next')).toBeDefined()
+  expect(await band()).toBe('○ 042-export-csv · Plan written just now · Tasks next')
 })
 
 test('draws nothing of its own in a project with no specs', async ($, on) => {
@@ -95,4 +97,14 @@ test('draws nothing of its own in a project with no specs', async ($, on) => {
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   expect(await ui.find({ type: 'Text', text: 'drawn by Claude Code' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: /Tasks|done|next/ })).toBeUndefined()
+})
+
+test('the task bar is drawn from real counts: empty at none, full only when every task is ticked', async () => {
+  expect(progressBar(0, 8, 8)).toEqual({ filled: '', empty: '░░░░░░░░', done: false })
+  expect(progressBar(1, 100, 8)).toEqual({ filled: '█', empty: '░░░░░░░', done: false })
+  expect(progressBar(7, 8, 8)).toEqual({ filled: '███████', empty: '░', done: false })
+  expect(progressBar(99, 100, 8).filled.length).toBe(7)
+  expect(progressBar(8, 8, 8)).toEqual({ filled: '████████', empty: '', done: true })
+  expect(progressBar(0, 0, 8)).toBe(null)
+  expect(progressBar(1, 2, 0)).toBe(null)
 })

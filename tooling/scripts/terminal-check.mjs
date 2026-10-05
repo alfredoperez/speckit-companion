@@ -183,6 +183,8 @@ async function waitFor(what, test, timeout = 15000) {
     throw new Error(`${what}. The band read "${bandRow(grid, specNames)?.text ?? ''}" and the pane read "${pane}"`);
 }
 
+// The tab in view carries a ▸ marker, and section headings are drawn in capitals.
+const TABS = /1: Run\s+▸?2: Overview\s+▸?3: Specs/;
 const pane = grid => paneText(grid);
 const band = grid => bandRow(grid, specNames)?.text ?? '';
 const paneShows = (pattern, what, timeout) => waitFor(what ?? `the pane never showed ${pattern}`, grid => pane(grid).match(pattern)?.[0], timeout);
@@ -293,7 +295,7 @@ async function replaySteps(project) {
     });
 
     await step('pane-docked', 'In a 200-column terminal the pane opens beside the transcript by itself', async () => {
-        await paneShows(/1: Run\s+2: Overview\s+3: Specs/, 'no pane with the three tabs beside the transcript');
+        await paneShows(TABS, 'no pane with the three tabs beside the transcript');
         return `left border at column ${paneRows(await look()).col}`;
     });
 
@@ -323,7 +325,7 @@ async function replaySteps(project) {
         await toPane();
         await session.keys('1');
         for (const label of ['Specify', 'Plan', 'Tasks', 'Implement']) await paneShows(new RegExp(`^[✓●○] ${label}\\b`, 'm'), `the Run tab has no ${label} step`);
-        await paneShows(/^Documents$/m, 'the Run tab has no Documents heading');
+        await paneShows(/^DOCUMENTS$/m, 'the Run tab has no Documents heading');
         return paneShows(/^Phase 1.*\d+\/\d+$/m, 'the Run tab has no task phase with a count');
     });
 
@@ -342,7 +344,7 @@ async function replaySteps(project) {
     await step('tab-overview', 'Pressing 2 shows the Overview tab', async () => {
         await toPane();
         await session.keys('2');
-        const heading = await paneShows(/^(User stories|Intent|Requirements|Functional Requirements|Plan summary|The run record has no overview details yet\.|Workflow: .*|Size: .*|From the spec files\..*)$/m, 'the Overview tab shows none of its headings or facts');
+        const heading = await paneShows(/^(USER STORIES|INTENT|REQUIREMENTS.*|FUNCTIONAL REQUIREMENTS.*|PLAN SUMMARY|The run record has no overview details yet\.|Workflow: .*|Size: .*|From the spec files\..*)$/m, 'the Overview tab shows none of its headings or facts');
         if (/^[✓●○] Specify\b/m.test(pane(await look()))) throw new Error('the Run tab is still showing');
         return `shows "${heading}"`;
     });
@@ -360,7 +362,7 @@ async function replaySteps(project) {
         await bandShows(/^_03_demo-living\b/);
         await toPane();
         await session.keys('2');
-        await paneShows(/^Intent$/m, 'the Overview has no Intent heading');
+        await paneShows(/^INTENT$/m, 'the Overview has no Intent heading');
         return paneShows(/Demo fixture: a completed spec.*/);
     }, { needs: 'record' });
 
@@ -466,7 +468,7 @@ async function runSteps(project) {
     await step('specify-overview', 'The Overview tab summarises the new spec', async () => {
         await toPane();
         await session.keys('2');
-        return `shows "${await paneShows(/^(User stories|Intent)$/m, 'the Overview has neither User stories nor Intent')}"`;
+        return `shows "${await paneShows(/^(USER STORIES|INTENT)$/m, 'the Overview has neither User stories nor Intent')}"`;
     });
     if (paneHasKeyboard(await look())) await session.keys('1');
     await toPrompt();
