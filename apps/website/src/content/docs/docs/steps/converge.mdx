@@ -4,12 +4,14 @@ description: Spec Kit's step that checks the code against the spec after impleme
 ---
 
 import CodeLine from '../../../../components/CodeLine.astro';
+import { Aside, Badge } from '@astrojs/starlight/components';
 import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
 
 <Actions>
   <CodeLine command="/speckit.converge" prompt={false} />
-  <p>Type it in your assistant after implement. The viewer has no button that starts it.</p>
+  <p>Type it in your assistant after implement, or press <strong>Converge</strong> in the viewer footer once the build is done.</p>
 </Actions>
 
 Converge is Spec Kit's own command. It checks the code against one feature's spec, plan and task list.
@@ -21,11 +23,19 @@ Converge is Spec Kit's own command. It checks the code against one feature's spe
 
 You run implement and converge again until it converges.
 
-## Start it from Companion
+## Start it from Companion <Badge text="New" variant="tip" />
 
 Once a spec's build is done, the viewer footer has a **Converge** button, and the spec's row menu in the sidebar has **Converge** too. Either one sends the command to your assistant, naming the spec's folder. Spec Kit works on the feature of your current branch, so the request asks the assistant to stop if that is a different one.
 
+<DocFigure
+  src="live-converge-footer.png"
+  alt="The Overview of a completed spec with the footer reading Run complete, then Converge, Archive and Reactivate."
+  caption="A finished spec's footer offers Converge beside Archive and Reactivate."
+/>
+
+<Aside>
 If converge adds tasks to a completed spec, **Reactivate** it before you run implement again.
+</Aside>
 
 ## In the viewer
 

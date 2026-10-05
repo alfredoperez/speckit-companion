@@ -169,9 +169,31 @@ The Teamboard fixture prose (`apps/vscode/webview/src/spec-viewer/__fixtures__/t
 
 `npm run check:desktop` builds the extension, opens a real VS Code window on a throwaway project, clicks through the sidebar panes, the bug and idea pages, New Bug, Create GitHub issues, Converge and a wrapped paragraph, and saves one screenshot per step under `.desktop-check/` (gitignored). It reads the terminal too, so a step can assert which command a button sent. The project's assistant is a stand-in script, so nothing real runs.
 
-Use it for two things: to verify a change in a real window before asking anyone to look, and as the source of screenshots of the extension for the docs, the changelog and review notes. Those are taken in the **Quiet Light** theme, the script's default; pass `--theme dark` for Dark Modern. `--extension <checkout>` points it at another checkout, `--out <dir>` moves the screenshots, and `--only <step,step>` runs a subset. Add a step for every new surface: a step is a name, one sentence saying what it proves, and a function that drives the window and throws when the claim does not hold. A step that reads the throwaway project's own specs, bugs or ideas is marked `{ needs: 'fixtures' }`.
+Use it for two things: to verify a change in a real window before asking anyone to look, and as the source of screenshots of the extension for the docs, the changelog and review notes. Those are taken in the **Quiet Light** theme, the script's default; pass `--theme dark` for Dark Modern. `--extension <checkout>` points it at another checkout, `--out <dir>` moves the screenshots, `--only <step,step>` runs a subset, and `--shots <dir>` also saves the named crops described below. Add a step for every new surface: a step is a name, one sentence saying what it proves, and a function that drives the window and throws when the claim does not hold. A step that reads the throwaway project's own specs, bugs or ideas is marked `{ needs: 'fixtures' }`.
 
 `--sandbox <project folder>` opens an existing Spec Kit project in place of the throwaway one, for example a sandbox `/sandbox` built: `node tooling/scripts/desktop-check.mjs --sandbox <folder>`. It runs only the steps that hold for any project (the sidebar shows the Specs pane, the first spec opens in the viewer, and each document tab that exists renders without an error, with a screenshot of each) and lists every fixture-bound step as `skipped: needs the built-in project`. The assistant is still the stand-in and the VS Code profile is still a throwaway one. The folder is changed only by what the clicks themselves do: `specify` is kept off the window's `PATH`, so opening the project cannot install presets into it.
+
+### Screenshots for the docs and the changelog
+
+Screenshots of the extension on the docs site and the changelog page are taken with this script, in Quiet Light, never by hand: `node tooling/scripts/desktop-check.mjs --shots <dir>` (after `npm run compile && npm run compile-web`). The flag changes nothing the check asserts. It adds named crops at device scale factor 2 under `<dir>`, and runs the capture-only steps, which assert only that the thing is on screen.
+
+A step saves a crop with `capture(name, { target, padding, ratio, anchor })`. `target` is `'window'`, `'editor'`, `'sidebar'`, `'panel'`, a locator, or a list of locators whose boxes are joined. `ratio` cuts the box to that shape from its top, or from its bottom with `anchor: 'bottom'`. Crop to what matters: a figure sits in a 16:9 frame about 650px wide, so a whole window is unreadable there and a tall crop is shrunk to fit. Under `--shots` the window is 1240 by 800 for the same reason, and it widens for a moment whenever a step reads the terminal, so a long command is not wrapped. A page taller than the window is scrolled to the part that shows the feature (`scrollTo`), not stitched.
+
+| Crop | What it shows |
+| --- | --- |
+| `provider-picker` | The first-start Choose AI Provider picker. It opens only with no provider set, so this one runs in a window of its own before the rest. |
+| `sidebar-panes` | Specs, Bugs and Ideas, with the side bar widened and each pane dragged to fit its rows |
+| `sidebar-and-story` | The whole window: the three panes beside a bug's Story |
+| `bug-story-verified`, `bug-story-failed`, `bug-story-failed-checks` | A bug's Story when verified, when the fix did not hold, and that story's table of checks |
+| `report-header`, `answer-open-question` | A raw Assessment tab: its one line of facts, and an open question with the answer box open |
+| `new-bug` | The New Bug screen with a symptom typed |
+| `idea-decision`, `idea-scorecard`, `idea-assessing` | A go decision, its scorecard, and an idea still being assessed with later stages disabled |
+| `tasks-other-actions`, `other-actions-menu`, `create-issues-confirm` | Other actions on the Tasks tab, the menu alone, and the confirmation dialog |
+| `converge-footer`, `converge-sent`, `converge-terminal` | A finished spec's footer, the viewer beside the terminal after Converge, and the terminal alone |
+| `joined-paragraph` | A wrapped paragraph hovered, with its one comment button |
+| `tab-overview`, `tab-specification`, `tab-plan`, `tab-tasks` | Each tab of the tasked demo spec |
+
+Look at every crop before using it, and retake one that is clipped, blank, still loading or covered. The install prompt on a spec's Overview is dismissed by the script before a crop is taken. Copy a chosen crop to `docs/screenshots/live-<what>.png` for a docs page, under a name no file in `docs/screenshots/generated/`, `content/media/web/` or `apps/website/public/canvas/` already has, because `DocFigure` looks a file up by name across all four. Copy it to `apps/website/public/changelog/<media id>.png` for a changelog highlight. Both are published filenames: add new ones, and never rename or delete one. Pass the alt text on the `DocFigure` itself, or in `content/media/changelog.json`.
 
 It needs VS Code installed (`VSCODE_BIN` overrides the path) and opens a visible window while it runs.
 

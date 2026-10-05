@@ -3,11 +3,19 @@ title: Choose an AI provider
 description: Pick the AI assistant that runs your spec commands, in the picker SpecKit Companion shows on first start or in the speckit.aiProvider setting.
 ---
 
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
 SpecKit Companion does not run a model of its own. It sends each command to the AI assistant you already use, so the first thing it needs is to know which one.
 
 ## The first-start picker
 
 The first time the extension starts with no provider set, a picker titled **SpecKit Companion - Choose AI Provider** opens at the top of the window and asks you to select your AI coding assistant. Each row is one assistant, with a line saying what it supports, such as steering, agents, hooks and MCP.
+
+<DocFigure
+  src="live-first-start-picker.png"
+  alt="The picker titled SpecKit Companion - Choose AI Provider, with a search box and one row per assistant, from Claude Code and Oh My Pi to Antigravity, each with a line saying what it supports."
+  caption="The first-start picker lists every assistant with what it supports."
+/>
 
 | You do | What happens |
 | --- | --- |
