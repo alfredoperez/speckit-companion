@@ -945,8 +945,9 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
   /* ------------------------------------------------------------ scaffolding */
 
   /* The lightwells spill past a narrow viewport on purpose; clip keeps that
-     spill from becoming a sideways scroll without breaking the sticky nav. */
-  :global(body) {
+     spill from becoming a sideways scroll and leaves the vertical spill alone. */
+  .hero,
+  .section--demo {
     overflow-x: clip;
   }
 
