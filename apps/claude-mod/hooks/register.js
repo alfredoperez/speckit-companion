@@ -57,6 +57,8 @@ let timer = null
 let doc = null
 let focusKey = null
 let companionSkills = false
+// The pane is offered once; after that it is the user's to close and to open.
+let offered = false
 // Each followed file's text and facts, kept until its time or size changes.
 const parsed = new Map()
 
@@ -212,6 +214,16 @@ async function openDocument($, key, step, path) {
   focusKey = key
   doc = { spec, step, path, text }
   $.ui.invalidate('ui.render')
+  await moveFocus($, 'doc-back')
+}
+
+/** autoFocus only counts when the pane takes the keyboard, so a redraw that swaps the controls moves the focus itself. */
+async function moveFocus($, key) {
+  try {
+    await $.ui.focus({ requestId: PANE, key })
+  } catch {
+    // Without the keyboard there is no focus to move.
+  }
 }
 
 async function tick($) {
@@ -240,6 +252,13 @@ async function drawsHere($) {
   return surfaces.includes('terminal') || surfaces.includes('desktop')
 }
 
+/** Opened unasked, Claude Code places the pane only beside the transcript of a wide terminal. */
+async function offerPane($) {
+  if (offered || !followed || !(await drawsHere($))) return
+  offered = true
+  await $.ui.open({ id: PANE, title: TITLE })
+}
+
 async function start($, cwd) {
   root = cwd ?? (await $.session.cwd())
   const saved = await $.store.get(followKey())
@@ -247,7 +266,8 @@ async function start($, cwd) {
   await scanAll($)
   await refreshFollowed($)
   timer?.cancel()
-  timer = $.clock.every(REFRESH_MS, () => tick($))
+  // The timer offers the pane for a session's first spec, so it is placed by the same width rule as at the start.
+  timer = $.clock.every(REFRESH_MS, () => tick($).then(() => offerPane($)).catch(() => undefined))
   const commands = [
     [COMMAND, 'Show the specs and pick the one the SpecKit Companion pane follows'],
     [ALIAS, 'Same as /' + COMMAND],
@@ -259,8 +279,7 @@ async function start($, cwd) {
       // A name another command already holds is skipped, and the other name still works.
     }
   }
-  // Opened unasked, Claude Code places the pane only beside the transcript of a wide terminal.
-  if (followed && (await drawsHere($))) await $.ui.open({ id: PANE, title: TITLE })
+  await offerPane($)
 }
 
 /** The band's facts after the spec name: dim, with the running step in the warning colour. */
@@ -310,6 +329,7 @@ async function runCommand($, e) {
   }
   view = query ? 'run' : 'specs'
   doc = null
+  offered = true
   await $.ui.open({ id: PANE, title: TITLE, focus: true })
   $.ui.invalidate('ui.render')
   return {}
@@ -463,9 +483,10 @@ export function register(on) {
           hotkey: 'b',
           plain: true,
           autoFocus: true,
-          onPress: () => {
+          onPress: async () => {
             doc = null
             $.ui.invalidate('ui.render')
+            await moveFocus($, focusKey)
           },
         }),
         gap(),

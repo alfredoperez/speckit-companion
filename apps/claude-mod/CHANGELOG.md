@@ -16,6 +16,8 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 
 ### Fixed
 - **The mod starts in a session that was already open.** Installing the mod and running `/reload-plugins` loaded it without starting it, so there was no band, no pane and no `/spec` until Claude Code was restarted. It now starts on its own the first time it is needed.
+- **Back keeps the focus.** After `b` closed a document, the pane still had the keyboard but nothing was selected, so Enter did nothing and the arrow keys started again from the first tab. The focus now lands on the step or document you opened, and on Back when a document opens.
+- **The pane opens for a session's first spec.** In a project with no specs when Claude Code started, the band followed the new spec but the pane stayed shut until you ran `/speckit-tracker`. It now opens by itself when the first spec appears, in a terminal wide enough to hold it beside the transcript. It opens once: close it and it stays closed until you ask for it.
 - **A spec created during the session is followed.** In a project with no specs when Claude Code started, the band and the pane stayed empty through the whole first run. The mod now notices a new spec folder as soon as the agent creates it.
 
 ## [0.1.0]

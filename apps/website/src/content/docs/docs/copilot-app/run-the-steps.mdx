@@ -29,6 +29,16 @@ A spec keeps the workflow it was started with, so a run never switches halfway. 
   caption="The next-step button, and under it the commands this spec's buttons send."
 />
 
+## What lands in the chat
+
+A button sends two things: the command, and one sentence telling the agent to read its run instructions from a file. The instructions themselves, which tell the agent how to record the run, are written to `.speckit-companion/prompts/` in the project, so the chat stays short. That folder is ignored by git.
+
+After a send, a note at the bottom of the board shows the message that was sent, with **Show prompt**, **Copy** and the path of the instructions file.
+
+## When Companion is not installed
+
+The board still works with stock Spec Kit, and it says so in one line on the New spec form and on the next-step card. **Install it** shows the install command with a Copy button, and **Ask Copilot to install it** asks the agent to run it for you. Dismiss the line and it stays hidden for the session.
+
 <DocFigure
   src="live-copilot-install-hint.png"
   alt="The next-step card in a project without Companion. A line says SpecKit Companion is not installed in this project, so the standard Spec Kit commands run, with Install it opened to show the specify extension add command, a Copy button and Ask Copilot to install it."
@@ -37,7 +47,7 @@ A spec keeps the workflow it was started with, so a run never switches halfway. 
 
 ## Good to know
 
-- **The board only reads.** It does not touch `.spec-context.json` or any spec file. The commands it sends do that.
+- **The board never edits a spec.** It does not touch `.spec-context.json` or any spec file; the commands it sends do that. The only files it writes are its own run instructions under `.speckit-companion/prompts/`.
 - **You can ask the agent.** "Which specs are still open?" or "show me the export spec", and the board follows.
 
 ## Related

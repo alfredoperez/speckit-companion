@@ -42,3 +42,36 @@ test('switches the followed spec from the Specs view', async ($, on) => {
   expect(store.has('follow:' + ROOT)).toBe(false)
   expect(await ui.find({ type: 'Text', text: 'Demo — Tasked' })).toBeDefined()
 })
+
+test('opens by itself when the first spec of the session appears, and only once', async ($, on) => {
+  const files: Record<string, string> = {}
+  const { opened, clock } = project(on, files)
+  await startSession($)
+  await clock.advance(3000)
+  expect(opened).toEqual([])
+  Object.assign(files, DEMO_SPECS)
+  await clock.advance(3000)
+  expect(opened).toEqual(['speckit-companion'])
+  // Closing it is the user's call, so nothing later opens it again.
+  await clock.advance(3000)
+  await $.tool.call({ name: 'Write', input: {} })
+  await clock.advance(3000)
+  expect(opened).toEqual(['speckit-companion'])
+})
+
+test('opens once at the start when a spec already exists, and never again by itself', async ($, on) => {
+  const { opened, clock } = project(on, { ...DEMO_SPECS })
+  await startSession($)
+  expect(opened).toEqual(['speckit-companion'])
+  await clock.advance(6000)
+  expect(opened).toEqual(['speckit-companion'])
+})
+
+test('draws no pane for the first spec where nothing is drawn', async ($, on) => {
+  const files: Record<string, string> = {}
+  const { opened, clock } = project(on, files, { surfaces: ['vscode'] })
+  await startSession($)
+  Object.assign(files, DEMO_SPECS)
+  await clock.advance(3000)
+  expect(opened).toEqual([])
+})
