@@ -1,5 +1,61 @@
 {
   "_readme": "Screenshots for the site's /changelog page, keyed by release (<product>@<version>, product vscode or speckit) then by the media id a highlight names in its <!-- area: …; pr: …; media: … --> comment. file is a repo-relative PNG under apps/website/public/ or docs/screenshots/generated/. alt is required. highlight is optional, in the image's own pixels, and is drawn over the image by the page. The site build fails on an unknown id, a missing alt or file, an unused shot, or a key that matches no release. See apps/website/src/components/changelog/releaseMedia.ts.",
+  "vscode@unreleased": {
+    "bug-story": {
+      "file": "apps/website/public/changelog/bug-story.png",
+      "alt": "A bug open on its Story tab, badge Verified. The page starts with Fixed and verified and one line of facts, then the first timeline step, What was wrong.",
+      "caption": "A bug opens on its Story: where it stands, then what was wrong, what changed and how it was verified."
+    },
+    "bug-story-failed": {
+      "file": "apps/website/public/changelog/bug-story-failed.png",
+      "alt": "The Story of a bug with the badge Failed, scrolled to How it was verified: the reproduction passes, a fixed-amount code check fails, and lint was not run, with Risks and open questions below.",
+      "caption": "When the test fails, the story says which check failed and why."
+    },
+    "idea-decision": {
+      "file": "apps/website/public/changelog/idea-decision.png",
+      "alt": "An idea open on its Decision stage, badge Go, with all five stages checked. The page starts with Go and the rationale, and the Scorecard begins below with Problem validity rated strong.",
+      "caption": "A decided idea opens on the verdict, its rationale and the scorecard."
+    },
+    "bugs-ideas-panes": {
+      "file": "apps/website/public/changelog/bugs-ideas-panes.png",
+      "alt": "A VS Code window with the SpecKit side bar showing Specs, Bugs and Ideas panes. Bugs are grouped as To fix, Verified and Closed, ideas as Assessing and Decided, and the bug selected in the Verified group is open in the viewer on its Story.",
+      "caption": "Bugs and Ideas sit under Specs, and a click opens one in the viewer.",
+      "highlight": { "x": 104, "y": 440, "w": 592, "h": 790 }
+    },
+    "new-bug": {
+      "file": "apps/website/public/changelog/new-bug.png",
+      "alt": "The New Bug screen: a Symptom box with one sentence typed, an optional link or pasted error box, a suggested folder name under .specify/bugs/, a line saying it sends to Claude Code, and Cancel and Assess bug buttons.",
+      "caption": "New Bug asks for the symptom and suggests the folder name."
+    },
+    "answer-question": {
+      "file": "apps/website/public/changelog/answer-question.png",
+      "alt": "A bug's Assessment tab at Open Questions. The question carries a Needs an answer label and an Answer link, and the box under it holds a typed reply with Cancel and Send answer.",
+      "caption": "Answer opens a box under the question; Send answer hands it to your assistant.",
+      "highlight": { "x": 180, "y": 830, "w": 1400, "h": 450 }
+    },
+    "converge-button": {
+      "file": "apps/website/public/changelog/converge-button.png",
+      "alt": "The Overview of a completed spec, with the footer reading Run complete, then Converge, Archive and Reactivate.",
+      "caption": "A spec whose build is done has Converge in the footer.",
+      "highlight": { "x": 1128, "y": 868, "w": 200, "h": 88 }
+    },
+    "converge-sent": {
+      "file": "apps/website/public/changelog/converge-sent.png",
+      "alt": "The viewer beside a terminal named SpecKit - Converge, where the converge command was sent with a request naming specs/627-bugs-ideas-panes and asking the assistant to stop if that is not the feature it resolves.",
+      "caption": "The command goes to your assistant and names the spec."
+    },
+    "create-issues-menu": {
+      "file": "apps/website/public/changelog/create-issues-menu.png",
+      "alt": "The Tasks tab with Other actions open in the footer on Analyze and Create GitHub issues, the second with a line saying it needs a GitHub remote and the GitHub MCP server and creates real issues.",
+      "caption": "Create GitHub issues is under Other actions on the Tasks tab.",
+      "highlight": { "x": 996, "y": 676, "w": 472, "h": 164 }
+    },
+    "create-issues-confirm": {
+      "file": "apps/website/public/changelog/create-issues-confirm.png",
+      "alt": "A dialog asking Create a GitHub issue for every task in _02_demo-tasked, saying issues are created in the repository's GitHub remote and cannot be undone from here, with Cancel and Create Issues.",
+      "caption": "Companion asks first, since the issues are real."
+    }
+  },
   "vscode@0.35.0": {
     "move-to-phase": {
       "file": "apps/website/public/changelog/vscode-0.35.0-move-to-phase.png",

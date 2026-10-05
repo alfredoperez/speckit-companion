@@ -4,7 +4,9 @@ description: Spec Kit's assess extension takes an idea through five stages to a 
 ---
 
 import CodeLine from '../../../../components/CodeLine.astro';
+import { Steps } from '@astrojs/starlight/components';
 import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
 
 <Actions>
@@ -52,7 +54,21 @@ An **Ideas** pane under Specs. **Assessing** lists the ideas still in progress w
 
 </YouSee>
 
-Choose **+** on the Ideas pane to start one. **New Idea** asks for the idea in a sentence or two, who it is for, and a name for its folder. **Assess idea** sends the intake command to your assistant.
+<DocFigure
+  src="live-bugs-ideas-panes.png"
+  alt="The SpecKit side bar with three panes: Specs with its Active and Completed groups, Bugs grouped as To fix, Verified and Closed with a severity and outcome on each row, and Ideas grouped as Assessing and Decided with the verdict beside each idea."
+  caption="The Ideas pane, under Bugs: one idea still at research, and five decided with their verdicts."
+/>
+
+To start an idea from Companion:
+
+<Steps>
+
+1. Choose **+** on the Ideas pane.
+2. In **New Idea**, write the idea in a sentence or two, say who it is for, and check the name for its folder.
+3. Press **Assess idea**. It sends the intake command to your assistant.
+
+</Steps>
 
 Open an idea and the rail lists its five stages: **Intake**, **Research**, **Problem**, **Concept** and **Decision**. A stage not written yet is disabled. An idea still being assessed opens on the latest stage it reached.
 
@@ -66,9 +82,21 @@ A decided idea's **Decision** reads as a decision page. It opens with the verdic
 | **needs-clarification** | **What is blocking** |
 | **kill** | **Revisit trigger** |
 
+<DocFigure
+  src="live-idea-decision.png"
+  alt="An idea open on its Decision stage, badge Go, with all five stages checked in the rail. The page starts with Go and the first sentence of the rationale, and the Scorecard begins below with Problem validity rated strong."
+  caption="A go decision: the verdict and its rationale first, then the scorecard."
+/>
+
 The page is for reading, and it updates when the decision changes on disk.
 
-The footer offers the idea's next stage: **Research**, **Define the problem**, **Shape a concept**, then **Decide**. Once decided, a go offers **Create spec from this idea**, which opens Create Spec with the idea's title and rationale filled in for you to edit and send. A needs-clarification offers **Continue assessment**, and a kill offers **Reopen from intake**.
+The footer offers the idea's next stage: **Research**, **Define the problem**, **Shape a concept**, then **Decide**. Once decided, the button depends on the verdict.
+
+| Verdict | The footer offers |
+| --- | --- |
+| **go** | **Create spec from this idea**, which opens Create Spec with the idea's title and rationale filled in for you to edit and send |
+| **needs-clarification** | **Continue assessment** |
+| **kill** | **Reopen from intake** |
 
 Before the assess extension is installed the pane holds one row that installs it. A spec made from a go shows up in the Specs view like any other.
 

@@ -4,7 +4,9 @@ description: Spec Kit's bug extension assesses, fixes and tests a bug in three c
 ---
 
 import CodeLine from '../../../../components/CodeLine.astro';
+import { Badge, Steps } from '@astrojs/starlight/components';
 import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
 
 <Actions>
@@ -34,6 +36,12 @@ A **Bugs** pane under Specs. It groups bugs as To fix, To test, Verified and Clo
 
 </YouSee>
 
+<DocFigure
+  src="live-bugs-ideas-panes.png"
+  alt="The SpecKit side bar with three panes: Specs with its Active and Completed groups, Bugs grouped as To fix, Verified and Closed with a severity and outcome on each row, and Ideas grouped as Assessing and Decided with the verdict beside each idea."
+  caption="The Bugs pane sits between Specs and Ideas, with each bug under the group that says what it needs next."
+/>
+
 Expand a bug for Assessment, Fix and Test. A report not written yet reads `not created`.
 
 | A bug is under | When |
@@ -51,6 +59,12 @@ Click a bug and the viewer opens on **Story**, the whole bug on one page. The he
 
 The story starts with one sentence saying where the bug stands and one line of facts. Three steps follow down a timeline, **What was wrong**, **What changed** and **How it was verified**, and **Risks and open questions** closes the page. A closed bug shows only the first step.
 
+<DocFigure
+  src="live-bug-story.png"
+  alt="A bug open on its Story tab, badge Verified. The page starts with Fixed and verified, one line of facts, then the first timeline step, What was wrong, dated from the assessment."
+  caption="The Story tab: where the bug stands in one sentence, then what was wrong, what changed and how it was verified."
+/>
+
 | The story opens with | When |
 | --- | --- |
 | Assessed, not fixed yet. | The bug has no fix and no test |
@@ -66,6 +80,12 @@ Every tab is for reading: there is no Overview and no comment button, and the vi
 
 An open question in a report shows **Needs an answer** and an **Answer** button on the Assessment, Fix and Test tabs. Click **Answer**, type your reply and send it. Your answer is saved in the project's `.speckit-companion/` folder, which git ignores, and the command that wrote that report is sent to your assistant with it, so the report is rewritten with the question settled.
 
+<DocFigure
+  src="live-report-answer.png"
+  alt="A bug's Assessment tab scrolled to Open Questions. The question carries a Needs an answer label and an Answer link, and the answer box under it is open with a reply typed in and a Send answer button."
+  caption="Answer opens a box under the question, and Send answer hands your reply to the assistant."
+/>
+
 | The bug is | Main button | Also offered |
 | --- | --- | --- |
 | Waiting for a fix | **Fix bug** | **Test again**, when a test already failed |
@@ -75,9 +95,16 @@ An open question in a report shows **Needs an answer** and an **Answer** button 
 
 A button sends that step's command, with the bug's name, to your assistant. When the report it writes appears, the buttons move on by themselves.
 
-## Start a bug from Companion
+## Start a bug from Companion <Badge text="New" variant="tip" />
 
-Choose **+** on the Bugs pane. **New Bug** asks for the symptom, an optional link or pasted error, and a name for the bug's folder, which is suggested from the symptom and can be edited. **Assess bug** sends `/speckit.bug.assess` to your assistant; Fix and Test come after, from the bug's own page. A name that is already taken cannot be sent.
+<Steps>
+
+1. Choose **+** on the Bugs pane.
+2. In **New Bug**, describe the symptom and add a link or pasted error if you have one. The name for the bug's folder is suggested from the symptom and can be edited. A name that is already taken cannot be sent.
+3. Press **Assess bug**. It sends `/speckit.bug.assess` to your assistant.
+4. Fix and Test come after, from the buttons on the bug's own page.
+
+</Steps>
 
 ## Related
 

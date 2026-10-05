@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Drives a real VS Code window with this extension and a throwaway project (or an existing one, --sandbox), and saves a screenshot per step.
-// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>]
+// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>]
+// --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
 import { createRequire } from 'node:module';
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -17,6 +18,10 @@ const OUT = resolve(arg('out', join(EXTENSION, '.desktop-check')));
 const THEME = arg('theme', 'light');
 const ONLY = arg('only', '').split(',').filter(Boolean);
 const SANDBOX = arg('sandbox') ? resolve(arg('sandbox')) : undefined;
+const SHOTS = arg('shots') ? resolve(arg('shots')) : undefined;
+// A crop is read in a docs column about 650px wide, so the capture window is kept small enough for its text to survive that.
+const SHOT_WINDOW = { width: 1240, height: 800 };
+const CHECK_WINDOW = { width: 1680, height: 1050 };
 const CODE = process.env.VSCODE_BIN ?? '/Applications/Visual Studio Code.app/Contents/MacOS/Code';
 
 if (!existsSync(join(EXTENSION, 'dist', 'extension.js'))) {
@@ -35,7 +40,7 @@ if (!existsSync(CODE)) {
 const require = createRequire(join(EXTENSION, 'package.json'));
 const { _electron } = require('playwright-core');
 
-function buildProject() {
+function buildProject({ provider = 'claude' } = {}) {
     const root = mkdtempSync(join(tmpdir(), 'speckit-desktop-'));
     const project = SANDBOX ?? join(root, 'project');
     if (!SANDBOX) {
@@ -80,7 +85,7 @@ function buildProject() {
         'terminal.integrated.env.linux': { ZDOTDIR: zdotdir },
         // The DOM renderer keeps the terminal's text readable from the page.
         'terminal.integrated.gpuAcceleration': 'off',
-        'speckit.aiProvider': 'claude',
+        ...(provider ? { 'speckit.aiProvider': provider } : {}),
         'speckit.views.steering.visible': false,
         'speckit.views.settings.visible': false,
     }, null, 2));
@@ -88,7 +93,78 @@ function buildProject() {
 }
 
 const results = [];
+let app;
 let page;
+
+async function launch({ root, project, user, bin }) {
+    app = await _electron.launch({
+        executablePath: CODE,
+        args: [
+            project,
+            `--extensionDevelopmentPath=${EXTENSION}`,
+            `--user-data-dir=${user}`,
+            `--extensions-dir=${join(root, 'extensions')}`,
+            '--disable-workspace-trust',
+            '--skip-welcome',
+            '--skip-release-notes',
+            '--disable-updates',
+            '--window-size=1680,1050',
+            ...(SHOTS ? ['--force-device-scale-factor=2'] : []),
+        ],
+        // In a sandbox, keep `specify` off the extension's PATH so opening the folder cannot reinstall presets into it.
+        ...(SANDBOX ? { env: { ...process.env, PATH: `${bin}:/usr/bin:/bin:/usr/sbin:/sbin` } } : {}),
+        timeout: 60000,
+    });
+    page = await app.firstWindow();
+    await page.waitForSelector('.monaco-workbench', { timeout: 60000 });
+    if (SHOTS) await resize(SHOT_WINDOW);
+}
+
+async function resize({ width, height }) {
+    await app.evaluate(({ BrowserWindow }, size) => {
+        const window = BrowserWindow.getAllWindows()[0];
+        if (window.isMaximized()) window.unmaximize();
+        window.setSize(size.width, size.height);
+    }, { width, height });
+    await page.waitForTimeout(500);
+}
+
+/**
+ * Under --shots, saves <dir>/<name>.png at device scale factor 2; without the flag it does nothing.
+ * target: 'window', 'editor', 'sidebar', 'panel', a locator, or a list of locators whose boxes are joined.
+ * ratio crops the box to width / ratio, keeping its top (or its bottom with anchor: 'bottom').
+ */
+async function capture(name, { target = 'window', padding = 0, ratio, anchor = 'top', keepPointer = false } = {}) {
+    if (!SHOTS) return;
+    // The install prompt sits over the top of a spec's Overview; dismissing it is remembered for the rest of the run.
+    const dismiss = webview().locator('#install-banner [data-action="dismissInstallBanner"]');
+    if (await dismiss.first().isVisible().catch(() => false)) {
+        await dismiss.first().click();
+        await webview().locator('#install-banner').waitFor({ state: 'detached', timeout: 5000 });
+    }
+    if (!keepPointer) await page.mouse.move(2, 2);
+    await page.waitForTimeout(400);
+    const path = join(SHOTS, `${name}.png`);
+    if (target === 'window') return void (await page.screenshot({ path }));
+    const parts = { editor: '.part.editor', sidebar: '.part.sidebar', panel: '.part.panel' };
+    const locators = (Array.isArray(target) ? target : [target]).map(one => (typeof one === 'string' ? page.locator(parts[one]) : one));
+    const boxes = [];
+    for (const locator of locators) {
+        const box = await locator.first().boundingBox();
+        if (!box) throw new Error(`nothing on screen to capture for "${name}"`);
+        boxes.push(box);
+    }
+    const view = await page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
+    const left = Math.max(0, Math.min(...boxes.map(box => box.x)) - padding);
+    let top = Math.max(0, Math.min(...boxes.map(box => box.y)) - padding);
+    const right = Math.min(view.width, Math.max(...boxes.map(box => box.x + box.width)) + padding);
+    let bottom = Math.min(view.height, Math.max(...boxes.map(box => box.y + box.height)) + padding);
+    if (ratio && bottom - top > (right - left) / ratio) {
+        if (anchor === 'bottom') top = bottom - (right - left) / ratio;
+        else bottom = top + (right - left) / ratio;
+    }
+    await page.screenshot({ path, clip: { x: Math.round(left), y: Math.round(top), width: Math.round(right - left), height: Math.round(bottom - top) } });
+}
 
 async function shot(name) {
     const file = join(OUT, `${name}.${THEME}.png`);
@@ -133,17 +209,52 @@ async function clear() {
 async function terminalText(pattern) {
     const rows = page.locator('.xterm-rows').last();
     await rows.waitFor({ timeout: 15000 });
-    for (let tries = 0; tries < 40; tries++) {
-        const text = (await rows.innerText()).replace(/\s+/g, ' ');
-        if (pattern.test(text)) return text.match(/\[sent to assistant\][^❯$]*/)?.[0].trim().slice(0, 240) ?? text.slice(0, 240);
-        await page.waitForTimeout(500);
+    // The capture window wraps a long command across rows, so it is read at the check's own width.
+    if (SHOTS) await resize(CHECK_WINDOW);
+    try {
+        for (let tries = 0; tries < 40; tries++) {
+            const text = (await rows.innerText()).replace(/\s+/g, ' ');
+            if (pattern.test(text)) return text.match(/\[sent to assistant\][^❯$]*/)?.[0].trim().slice(0, 240) ?? text.slice(0, 240);
+            await page.waitForTimeout(500);
+        }
+        throw new Error(`the terminal never showed ${pattern}`);
+    } finally {
+        if (SHOTS) await resize(SHOT_WINDOW);
     }
-    throw new Error(`the terminal never showed ${pattern}`);
 }
 
-/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. */
-async function step(name, what, run, { needs } = {}) {
+async function drag(from, to) {
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(to.x, to.y, { steps: 8 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+}
+
+/** Drags the side bar's edge so the side bar is this wide. */
+async function sidebarWidth(width) {
+    const box = await page.locator('.part.sidebar').boundingBox();
+    const y = box.y + box.height / 2;
+    await drag({ x: box.x + box.width, y }, { x: box.x + width, y });
+}
+
+/** Drags the top of the next pane up to just under this pane's last row, so no pane is mostly empty. */
+async function fitPane(title, next) {
+    const last = await pane(title).locator('.monaco-list-row').last().boundingBox();
+    const below = await pane(next).boundingBox();
+    const x = below.x + below.width / 2;
+    await drag({ x, y: below.y }, { x, y: last.y + last.height + 10 });
+}
+
+/** Scrolls the viewer's page so the element sits at the top ('start'), middle ('center') or bottom ('end') of it. */
+async function scrollTo(locator, block = 'start') {
+    await locator.first().evaluate((element, where) => element.scrollIntoView({ block: where }), block);
+}
+
+/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. `shots: true` marks a capture-only step, which runs under --shots alone. */
+async function step(name, what, run, { needs, shots } = {}) {
     if (ONLY.length && !ONLY.includes(name)) return;
+    if (shots && !SHOTS) return;
     if (SANDBOX && needs === 'fixtures') {
         results.push({ name, what, ok: true, skipped: true, note: 'skipped: needs the built-in project' });
         console.log(`skip ${name}: ${what} (skipped: needs the built-in project)`);
@@ -170,41 +281,55 @@ async function expectText(locator, pattern) {
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
-const { root, project, user, bin } = buildProject();
-const app = await _electron.launch({
-    executablePath: CODE,
-    args: [
-        project,
-        `--extensionDevelopmentPath=${EXTENSION}`,
-        `--user-data-dir=${user}`,
-        `--extensions-dir=${join(root, 'extensions')}`,
-        '--disable-workspace-trust',
-        '--skip-welcome',
-        '--skip-release-notes',
-        '--disable-updates',
-        '--window-size=1680,1050',
-    ],
-    // In a sandbox, keep `specify` off the extension's PATH so opening the folder cannot reinstall presets into it.
-    ...(SANDBOX ? { env: { ...process.env, PATH: `${bin}:/usr/bin:/bin:/usr/sbin:/sbin` } } : {}),
-    timeout: 60000,
-});
+if (SHOTS) mkdirSync(SHOTS, { recursive: true });
+
+// The first-start picker only opens with no provider set, so it gets a window of its own.
+if (SHOTS && !SANDBOX && (!ONLY.length || ONLY.includes('provider-picker'))) {
+    const first = buildProject({ provider: null });
+    try {
+        await launch(first);
+        await step('provider-picker', 'With no provider set, the first start asks which assistant to use', async () => {
+            const picker = page.locator('.quick-input-widget');
+            await expectText(picker.locator('.quick-input-title'), /Choose AI Provider/);
+            await picker.locator('.monaco-list-row').first().waitFor({ timeout: 15000 });
+            await capture('provider-picker', { target: picker });
+            return `${await picker.locator('.monaco-list-row').count()} assistants listed`;
+        }, { shots: true });
+    } finally {
+        await app?.close().catch(() => undefined);
+        rmSync(first.root, { recursive: true, force: true });
+    }
+}
+
+const built = buildProject();
+const { root } = built;
 
 try {
-    page = await app.firstWindow();
-    await page.waitForSelector('.monaco-workbench', { timeout: 60000 });
+    await launch(built);
     await page.locator('.activitybar a.action-label[aria-label^="SpecKit"]').first().click();
 
     await step('sidebar-panes', 'Specs, Bugs and Ideas each have a pane with rows', async () => {
         await row('Specs', 'Demo');
         await row('Bugs', 'cartTotal skips the first cart item');
         await row('Ideas', 'Saved filters');
+        if (SHOTS) {
+            const width = (await page.locator('.part.sidebar').boundingBox()).width;
+            await sidebarWidth(540);
+            await fitPane('Specs', 'Bugs');
+            await fitPane('Bugs', 'Ideas');
+            await capture('sidebar-panes', { target: [pane('Specs'), pane('Bugs'), pane('Ideas').locator('.monaco-list-row').last()] });
+            await sidebarWidth(width);
+        }
         const groups = await pane('Bugs').locator('.monaco-list-row').allInnerTexts();
         return groups.filter(text => /\(\d+\)/.test(text)).map(text => text.trim().split('\n')[0]).join(', ');
     }, { needs: 'fixtures' });
 
     await step('bug-story', 'A bug opens on its Story page', async () => {
         await (await row('Bugs', 'cartTotal skips the first cart item')).click();
-        return expectText(webview().locator('.rp-lead'), /Fixed and verified\./);
+        const lead = await expectText(webview().locator('.rp-lead'), /Fixed and verified\./);
+        await capture('bug-story-verified', { target: 'editor', ratio: 3 / 2 });
+        await capture('sidebar-and-story', { target: 'window' });
+        return lead;
     }, { needs: 'fixtures' });
 
     await step('bug-report-tab', 'The Assessment tab shows the raw report', async () => {
@@ -216,7 +341,13 @@ try {
     await step('bug-test-failed', 'A bug whose test failed says the fix did not hold', async () => {
         await clear();
         await (await row('Bugs', 'promo code discount')).click();
-        return expectText(webview().locator('.rp-lead'), /The fix did not hold\./);
+        const lead = await expectText(webview().locator('.rp-lead'), /The fix did not hold\./);
+        await capture('bug-story-failed', { target: 'editor', ratio: 3 / 2 });
+        if (SHOTS) {
+            await scrollTo(webview().locator('.rp-step', { hasText: 'How it was verified' }));
+            await capture('bug-story-failed-checks', { target: 'editor', ratio: 3 / 2 });
+        }
+        return lead;
     }, { needs: 'fixtures' });
 
     await step('bug-next-step', 'Fix bug sends its command to the assistant', async () => {
@@ -228,6 +359,11 @@ try {
         await clear();
         await (await row('Ideas', 'Saved filters')).click();
         await expectText(webview().locator('.rp-lead'), /^Go\./);
+        await capture('idea-decision', { target: 'editor', ratio: 3 / 2 });
+        if (SHOTS) {
+            await scrollTo(webview().locator('#markdown-content :is(h2, h3)', { hasText: 'Scorecard' }));
+            await capture('idea-scorecard', { target: 'editor', ratio: 3 / 2 });
+        }
         return `${await webview().locator('.rp-score > li').count()} scorecard rows`;
     }, { needs: 'fixtures' });
 
@@ -236,6 +372,7 @@ try {
         await (await row('Ideas', 'Offline')).click();
         await webview().locator('.step-tab.current, .step-tab[aria-current]').first().waitFor({ timeout: 15000 });
         if (await webview().locator('.rp-lead').count()) throw new Error('a decision page showed for an undecided idea');
+        await capture('idea-assessing', { target: 'editor', ratio: 16 / 9 });
         return (await webview().locator('.step-tab[disabled]').count()) + ' stages disabled';
     }, { needs: 'fixtures' });
 
@@ -245,6 +382,7 @@ try {
         await pane('Bugs').locator('.pane-header a.action-label[aria-label^="New Bug"]').click();
         await webview().locator('textarea').first().waitFor({ timeout: 15000 });
         await webview().locator('textarea').first().fill('The export button does nothing on Safari.');
+        await capture('new-bug', { target: 'editor' });
     }, { needs: 'fixtures' });
 
     await step('tasks-other-actions', 'Other actions on the Tasks tab offers Create GitHub issues', async () => {
@@ -252,12 +390,16 @@ try {
         await (await row('Specs', 'Demo — Tasked')).click();
         await webview().locator('.step-tab', { hasText: 'Tasks' }).click();
         await webview().locator('footer.actions button', { hasText: 'Other actions' }).click();
-        return expectText(webview().locator('.action-menu'), /Create GitHub issues/);
+        const menu = await expectText(webview().locator('.action-menu'), /Create GitHub issues/);
+        await capture('tasks-other-actions', { target: 'editor', ratio: 16 / 9, anchor: 'bottom' });
+        await capture('other-actions-menu', { target: [webview().locator('.action-menu'), webview().locator('footer.actions')], padding: 16 });
+        return menu;
     }, { needs: 'fixtures' });
 
     await step('create-issues-confirm', 'Create GitHub issues asks before it sends', async () => {
         await webview().locator('.action-menu button', { hasText: 'Create GitHub issues' }).click();
         const text = await expectText(page.locator('.monaco-dialog-box'), /Create a GitHub issue for every task/);
+        await capture('create-issues-confirm', { target: page.locator('.monaco-dialog-box'), padding: 40 });
         return text.split('\n')[0];
     }, { needs: 'fixtures' });
 
@@ -270,12 +412,17 @@ try {
         await clear();
         await (await row('Specs', 'Completed')).click();
         await (await row('Specs', 'Bugs And Ideas Panes')).click();
-        return expectText(webview().locator('footer.actions button', { hasText: /^Converge$/ }), /Converge/);
+        const button = await expectText(webview().locator('footer.actions button', { hasText: /^Converge$/ }), /Converge/);
+        await capture('converge-footer', { target: 'editor', ratio: 16 / 9, anchor: 'bottom' });
+        return button;
     }, { needs: 'fixtures' });
 
     await step('converge-sends', 'Converge sends the command and names the spec', async () => {
         await webview().locator('footer.actions button', { hasText: /^Converge$/ }).click();
-        return terminalText(/\[sent to assistant\].*converge/i);
+        const sent = await terminalText(/\[sent to assistant\].*converge/i);
+        await capture('converge-terminal', { target: page.locator('.editor-group-container').last(), ratio: 16 / 9 });
+        await capture('converge-sent', { target: 'editor', ratio: 16 / 9 });
+        return sent;
     }, { needs: 'fixtures' });
 
     await step('joined-paragraph', 'A wrapped paragraph is one paragraph with one comment button', async () => {
@@ -284,6 +431,11 @@ try {
         await webview().locator('.step-tab', { hasText: 'Specification' }).click();
         const joined = webview().locator('.line[data-line-end]');
         await joined.first().waitFor({ timeout: 15000 });
+        if (SHOTS) {
+            await scrollTo(joined, 'center');
+            await joined.first().hover();
+            await capture('joined-paragraph', { target: 'editor', ratio: 16 / 9, anchor: 'bottom', keepPointer: true });
+        }
         return `${await joined.count()} joined paragraph(s)`;
     }, { needs: 'fixtures' });
 
@@ -308,6 +460,7 @@ try {
         const line = await expectText(webview().locator('#markdown-content .rp-meta'), /Reported Oct 1, 2026 from pasted text · valid · high severity/);
         const body = await webview().locator('#markdown-content').innerText();
         if (/Slug\s*:/.test(body)) throw new Error('the slug bullet is still shown');
+        await capture('report-header', { target: 'editor', ratio: 16 / 9 });
         return line;
     }, { needs: 'fixtures' });
 
@@ -317,6 +470,10 @@ try {
         await expectText(question.locator('.rp-question__badge'), /Needs an answer/);
         await question.locator('.rp-question__answer').click();
         await webview().locator('textarea').first().fill('No. The wrong totals never reached an order: checkout recomputes them on the server.');
+        if (SHOTS) {
+            await scrollTo(webview().locator('.rp-question'), 'center');
+            await capture('answer-open-question', { target: 'editor' });
+        }
     }, { needs: 'fixtures' });
 
     await step('answer-sends', 'Send answer hands the answer to the assistant with the assess command', async () => {
@@ -324,6 +481,18 @@ try {
         await expectText(webview().locator('.rp-question__sent'), /Sent to your assistant/);
         return terminalText(/\[sent to assistant\].*speckit[-.]bug[-.]assess slug=cart-total-skips-first/);
     }, { needs: 'fixtures' });
+
+    for (const tab of ['Overview', 'Specification', 'Plan', 'Tasks']) {
+        await step(`shot-tab-${tab.toLowerCase()}`, `The ${tab} tab of the tasked demo spec is on screen`, async () => {
+            await clear();
+            await (await row('Specs', 'Demo — Tasked')).click();
+            const entry = webview().locator(tab === 'Overview' ? '.rail-overview' : '.step-tab', { hasText: tab }).first();
+            await entry.click();
+            await webview().locator('[aria-current="page"]', { hasText: tab }).first().waitFor({ timeout: 15000 });
+            await page.waitForTimeout(1200);
+            await capture(`tab-${tab.toLowerCase()}`, { target: 'editor', ratio: 16 / 9 });
+        }, { needs: 'fixtures', shots: true });
+    }
 
     await step('specs-pane', 'The sidebar shows the Specs pane', async () => {
         await clear();
