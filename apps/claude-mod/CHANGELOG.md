@@ -4,6 +4,10 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 
 ## [Unreleased]
 
+### Fixed
+- **The mod starts in a session that was already open.** Installing the mod and running `/reload-plugins` loaded it without starting it, so there was no band, no pane and no `/spec` until Claude Code was restarted. It now starts on its own the first time it is needed.
+- **A spec created during the session is followed.** In a project with no specs when Claude Code started, the band and the pane stayed empty through the whole first run. The mod now notices a new spec folder as soon as the agent creates it.
+
 ## [0.1.0]
 
 First version. Tested on Claude Code 2.1.287.

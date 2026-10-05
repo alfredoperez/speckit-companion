@@ -52,6 +52,7 @@ export function project(on: any, files: Record<string, string>, options: Options
     return { value: { isPlaced: true } }
   })
   on('session.start', () => ({ cwd: ROOT }))
+  on('session.cwd', () => ({ value: ROOT }))
   on('tool.call', () => ({ result: 'ok' }))
   on('turn.complete', () => ({ text: '' }))
   on('ui.render', () => ({ type: 'Text', props: {}, children: ['drawn by Claude Code'] }))
