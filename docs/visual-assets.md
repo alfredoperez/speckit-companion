@@ -167,7 +167,7 @@ The Teamboard fixture prose (`apps/vscode/webview/src/spec-viewer/__fixtures__/t
 
 ## The real-window check
 
-`npm run check:desktop` builds the extension, opens a real VS Code window on a throwaway project, clicks through the sidebar panes, the bug and idea pages, New Bug, Create GitHub issues, Converge and a wrapped paragraph, and saves one screenshot per step under `.desktop-check/` (gitignored). It reads the terminal too, so a step can assert which command a button sent. The project's assistant is a stand-in script, so nothing real runs.
+`npm run check:desktop` builds the extension, opens a real VS Code window on a throwaway project, clicks through the sidebar panes, the bug and idea pages, New Bug, Create GitHub issues, Converge, a wrapped paragraph and the living specs, and saves one screenshot per step under `.desktop-check/` (gitignored). It reads the terminal too, so a step can assert which command a button sent. The project's assistant is a stand-in script, so nothing real runs. The project has living specs on (the registry and specs in `apps/vscode/tests/fixtures/living-specs/`, plus the Teamboard Photo Storage spec) and is made a git repository with one later commit, because drift is read from git.
 
 Use it for two things: to verify a change in a real window before asking anyone to look, and as the source of screenshots of the extension for the docs, the changelog and review notes. Those are taken in the **Quiet Light** theme, the script's default; pass `--theme dark` for Dark Modern. `--extension <checkout>` points it at another checkout, `--out <dir>` moves the screenshots, `--only <step,step>` runs a subset, and `--shots <dir>` also saves the named crops described below. Add a step for every new surface: a step is a name, one sentence saying what it proves, and a function that drives the window and throws when the claim does not hold. A step that reads the throwaway project's own specs, bugs or ideas is marked `{ needs: 'fixtures' }`.
 
@@ -175,7 +175,21 @@ Use it for two things: to verify a change in a real window before asking anyone 
 
 ### Screenshots for the docs and the changelog
 
-Screenshots of the extension on the docs site and the changelog page are taken with this script, in Quiet Light, never by hand: `node tooling/scripts/desktop-check.mjs --shots <dir>` (after `npm run compile && npm run compile-web`). The flag changes nothing the check asserts. It adds named crops at device scale factor 2 under `<dir>`, and runs the capture-only steps, which assert only that the thing is on screen.
+**One way to take a screenshot.**
+
+- **Product screenshots** come from one run. `npm run shots` opens a real VS Code window once, in Quiet Light at device scale factor 2, and saves every named crop below to `.shots/`. `npm run shots:place` then copies each crop to every place that uses it, as listed in `tooling/scripts/shots.json`, and opens no window. To reuse a picture somewhere new or crop it differently, add a line to that file and place again; `npm run shots:place -- --check` says which copies are out of date. Never take one by hand. When no crop shows the surface, add a step.
+- **Terminal screenshots** come from `npm run check:terminal`.
+- **Concept pictures** are diagrams, an SVG with a 2x PNG beside it. Never a video still, and never a caption burned into the picture.
+- **Look at every crop** before using it, and retake one that is clipped, blank, still loading or covered.
+- **A copy is a published filename.** Add new ones; never rename or delete one.
+
+| Used on | Copy the crop to |
+| --- | --- |
+| A docs page or the landing page | `docs/screenshots/live-<what>.png`, a name no file in `docs/screenshots/generated/`, `content/media/web/` or `apps/website/public/canvas/` has, because `DocFigure` finds a file by name across all four. Alt text goes on the `DocFigure`. |
+| The changelog | `apps/website/public/changelog/<media id>.png`, with its alt text in `content/media/changelog.json` |
+| An article | The post's image folder in the blog repo, numbered in reading order (`01.png`), 1400 to 1800px wide |
+
+`--shots` changes nothing the check asserts. It adds the crops under `<dir>` and runs the capture-only steps, which assert only that the thing is on screen.
 
 A step saves a crop with `capture(name, { target, padding, ratio, anchor })`. `target` is `'window'`, `'editor'`, `'sidebar'`, `'panel'`, a locator, or a list of locators whose boxes are joined. `ratio` cuts the box to that shape from its top, or from its bottom with `anchor: 'bottom'`. Crop to what matters: a figure sits in a 16:9 frame about 650px wide, so a whole window is unreadable there and a tall crop is shrunk to fit. Under `--shots` the window is 1240 by 800 for the same reason, and it widens for a moment whenever a step reads the terminal, so a long command is not wrapped. A page taller than the window is scrolled to the part that shows the feature (`scrollTo`), not stitched.
 
@@ -192,8 +206,13 @@ A step saves a crop with `capture(name, { target, padding, ratio, anchor })`. `t
 | `converge-footer`, `converge-sent`, `converge-terminal` | A finished spec's footer, the viewer beside the terminal after Converge, and the terminal alone |
 | `joined-paragraph` | A wrapped paragraph hovered, with its one comment button |
 | `tab-overview`, `tab-specification`, `tab-plan`, `tab-tasks` | Each tab of the tasked demo spec |
+| `living-specs-pane` | The Living Specs pane alone: central and colocated folders, a coverage count or a drift flag on each capability, the row in drift selected with its update button |
+| `living-spec`, `living-spec-requirement`, `living-spec-colocated` | A capability's page: its counts and covered paths, a requirement with its scenario, and a spec that lives beside its code |
+| `living-spec-drifted` | The requirement marked Drifted |
+| `living-specs-window`, `living-drift-window` | The whole window: the Living Specs tree beside a capability's requirements, and beside the drifted requirement |
+| `overview-living-specs`, `overview-living-specs-window` | A finished run's Overview with the living specs it updated and the ones it read, alone and in the whole window |
 
-Look at every crop before using it, and retake one that is clipped, blank, still loading or covered. The install prompt on a spec's Overview is dismissed by the script before a crop is taken. Copy a chosen crop to `docs/screenshots/live-<what>.png` for a docs page, under a name no file in `docs/screenshots/generated/`, `content/media/web/` or `apps/website/public/canvas/` already has, because `DocFigure` looks a file up by name across all four. Copy it to `apps/website/public/changelog/<media id>.png` for a changelog highlight. Both are published filenames: add new ones, and never rename or delete one. Pass the alt text on the `DocFigure` itself, or in `content/media/changelog.json`.
+The install prompt on a spec's Overview is dismissed by the script before a crop is taken.
 
 It needs VS Code installed (`VSCODE_BIN` overrides the path) and opens a visible window while it runs.
 
