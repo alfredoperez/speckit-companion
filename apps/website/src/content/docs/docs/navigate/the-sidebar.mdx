@@ -1,8 +1,9 @@
 ---
 title: The sidebar
-description: What each of the four SpecKit views holds, and what every icon, count and hover action on a row means.
+description: What each SpecKit view holds, and what every icon, count and hover action on a row means.
 ---
 
+import { Badge } from '@astrojs/starlight/components';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 
 Click the SpecKit icon in the activity bar to see your specs, your steering files and your living specs in one place.
@@ -12,6 +13,7 @@ Click the SpecKit icon in the activity bar to see your specs, your steering file
 | View | Shows when |
 | --- | --- |
 | Specs | Always |
+| Bugs, Ideas | The folder is a Spec Kit project |
 | Steering | Always, unless you turn off `speckit.views.steering.visible` |
 | Living Specs | The Companion Spec Kit extension is installed |
 | Settings & Feedback | You turn on `speckit.views.settings.visible` |
@@ -58,9 +60,15 @@ Click the SpecKit icon in the activity bar to see your specs, your steering file
 
 <DocFigure src="live-sidebar-more-actions.png" recapture caption="More Actions on a spec: set its status, complete or archive it, copy its name or path, reveal it, or delete it." />
 
-## Bugs
+## Bugs <Badge text="New" variant="tip" />
 
 A pane of its own, under Specs. Bugs are grouped by where they stand, and a group with nothing in it is hidden.
+
+<DocFigure
+  src="live-bugs-ideas-panes.png"
+  alt="The SpecKit side bar with three panes: Specs with its Active and Completed groups, Bugs grouped as To fix, Verified and Closed with a severity and outcome on each row, and Ideas grouped as Assessing and Decided with the verdict beside each idea."
+  caption="Specs, Bugs and Ideas, each in its own pane. A bug row ends with its severity and latest outcome, an idea row with its stage or verdict."
+/>
 
 | Group | A bug is here when |
 | --- | --- |
@@ -71,7 +79,7 @@ A pane of its own, under Specs. Bugs are grouped by where they stand, and a grou
 
 Each row is the bug's title, with its severity and latest outcome beside it. Expand it for Assessment, Fix and Test; a report not written yet reads `not created`. Click a bug or a report to read it in the viewer. [Fix a bug](/docs/ide/fix-a-bug) covers the flow.
 
-## Ideas
+## Ideas <Badge text="New" variant="tip" />
 
 The same pane for Spec Kit's idea assessment. **Assessing** lists ideas still in progress with the stage they reached; **Decided** lists the rest with the verdict: `go`, `needs-clarification` or `kill`. Expand an idea for Intake, Research, Problem, Concept and Decision. [Assess an idea](/docs/ide/assess-an-idea) covers the flow.
 

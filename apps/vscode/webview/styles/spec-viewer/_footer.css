@@ -73,7 +73,7 @@
     z-index: 7;
 }
 
-.action-menu button {
+.actions .action-menu button {
     display: block;
     width: 100%;
     padding: 9px 10px;
@@ -85,14 +85,15 @@
     cursor: pointer;
     font-family: var(--font-family);
     font-size: 12.5px;
+    white-space: normal;
 }
 
-.action-menu button:hover {
+.actions .action-menu button:hover {
     background: var(--bg-elevated);
     color: var(--text-primary);
 }
 
-.action-menu button small {
+.actions .action-menu button small {
     display: block;
     margin-top: 2px;
     color: var(--text-muted);

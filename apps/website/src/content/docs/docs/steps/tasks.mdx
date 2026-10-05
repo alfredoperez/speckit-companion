@@ -4,6 +4,7 @@ description: The step that breaks a plan into an ordered checklist. How the list
 ---
 
 import CodeLine from '../../../../components/CodeLine.astro';
+import { Aside } from '@astrojs/starlight/components';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
@@ -41,9 +42,23 @@ The Companion workflow groups each phase into waves separated by those join line
 
 **Analyze**, under **Other actions** in the footer, is Spec Kit's command that cross-checks the spec, the plan and the tasks for consistency.
 
-**Create GitHub issues**, in the same menu, sends Spec Kit's `/speckit.taskstoissues`: one GitHub issue per task. It needs a GitHub remote and the GitHub MCP server in your assistant, and it creates real issues, so Companion asks you to confirm first. Run it when the task list is settled. Spec Kit works on the feature of your current branch; Companion names this spec's tasks file in the request and asks the assistant to stop if the two differ.
+**Create GitHub issues**, in the same menu, sends Spec Kit's `/speckit.taskstoissues`: one GitHub issue per task. Run it when the task list is settled. Spec Kit works on the feature of your current branch; Companion names this spec's tasks file in the request and asks the assistant to stop if the two differ.
 
-<DocFigure src="live-footer-other-actions.png" recapture caption="The footer on the Tasks tab: Next: Implement, with Other actions open on Analyze." />
+<DocFigure
+  src="live-tasks-create-issues.png"
+  alt="The Tasks tab with four tasks under Phase 1, and Other actions open in the footer on two entries: Analyze, and Create GitHub issues with a line saying it needs a GitHub remote and the GitHub MCP server and creates real issues."
+  caption="Other actions on the Tasks tab: Analyze and Create GitHub issues."
+/>
+
+<Aside type="caution" title="It creates real issues">
+It needs a GitHub remote and the GitHub MCP server in your assistant. The issues cannot be undone from Companion, so it asks you to confirm first.
+</Aside>
+
+<DocFigure
+  src="live-create-issues-confirm.png"
+  alt="A dialog asking Create a GitHub issue for every task in _02_demo-tasked, saying issues are created in the repository's GitHub remote and cannot be undone from here, with Cancel and Create Issues buttons."
+  caption="Nothing is sent until you choose Create Issues."
+/>
 
 ## Related
 

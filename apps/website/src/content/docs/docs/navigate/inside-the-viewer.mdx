@@ -38,7 +38,11 @@ Clicking a tab only changes what you read. It never moves the run. Supporting do
 
 The main button is the next step, named after it, with a line above reading `Next: Plan`. Press it and the viewer records the current step as done, starts the next one and sends its command to your assistant.
 
-<DocFigure src="live-footer-other-actions.png" recapture caption="The footer on a spec with its tasks written: Next: Implement, with Other actions open on Analyze." />
+<DocFigure
+  src="live-tasks-create-issues.png"
+  alt="The Tasks tab with the footer reading Next: Implement, then Regenerate, Other actions and Implement. Other actions is open on Analyze and Create GitHub issues."
+  caption="The footer on a spec with its tasks written: Next: Implement, with Other actions open."
+/>
 
 | Button | What it does | Shows when |
 | --- | --- | --- |
@@ -49,6 +53,12 @@ The main button is the next step, named after it, with a line above reading `Nex
 | **Converge** | Sends Spec Kit's [converge](/docs/steps/converge), which checks the code against the spec | The build is done and the spec is not archived |
 | **Mark Completed** | Closes the spec | The work is done and the spec is not closed |
 | **Archive**, **Reactivate** | Shelves a spec, or opens a closed one again | At the end of a run |
+
+<DocFigure
+  src="live-converge-footer.png"
+  alt="The Overview of a completed spec with the footer reading Run complete, then Converge, Archive and Reactivate, and no forward button."
+  caption="A finished spec's footer: Run complete, with Converge, Archive and Reactivate."
+/>
 
 No forward button is normal while a step runs, after a run is complete, or when you are reading a tab that is not the current step. While a step runs, the footer reads **Step running, actions unlock when it settles**.
 
