@@ -44,7 +44,14 @@
   --sl-color-bg: var(--ground);
   --sl-color-bg-nav: var(--ground);
   --sl-color-bg-sidebar: var(--ground);
-  --sl-color-bg-inline-code: var(--panel);
+  --sl-color-bg-inline-code: var(--code-chip-bg);
+
+  /* Docs-only pairings, each built from a Constellation token. The chip is
+     inline code; the row is the sidebar's hover and current page. */
+  --code-chip-bg: rgb(var(--accent-rgb) / 0.16);
+  --code-chip-ink: var(--text-primary);
+  --nav-row-hover: var(--accent-a07);
+  --nav-row-current: var(--accent-solid-a25);
   --sl-color-backdrop-overlay: rgb(var(--ground-rgb) / 0.66);
 
   /* Hairlines. --rule carries every separator on the landing page too. */
@@ -81,10 +88,11 @@ body {
 }
 
 /* Panels, cards and asides sit on --panel over --border-card, the same pairing
-   the feature cards use. */
+   the feature cards use. An aside drops Starlight's heavy side bar: its title
+   keeps the variant colour, and that is enough to say what kind it is. */
 .sl-markdown-content :is(.starlight-aside, .card) {
   background: var(--panel);
-  border-color: var(--border-card);
+  border: 1px solid var(--border-card);
   border-radius: var(--radius-sm);
 }
 
@@ -96,11 +104,36 @@ body {
   color: var(--accent-hover);
 }
 
-/* Inline code reads as a chip, the same object the command row uses. */
-.sl-markdown-content code:not(:where(pre code)) {
-  border: 1px solid var(--rule);
-  border-radius: 4px;
-  color: var(--text-body);
+/* Inline code is a soft violet chip with bright text and no outline, so a
+   setting name or a command stands out of a sentence at a glance. One rule for
+   paragraphs, lists, tables and asides; the command row is not a chip and opts
+   out. */
+.sl-markdown-content code:not(:where(pre code, .code-line code)) {
+  margin-block: 0;
+  background: var(--code-chip-bg);
+  border: 0;
+  border-radius: var(--space-6);
+  color: var(--code-chip-ink);
+}
+
+.sl-markdown-content a code:not(:where(pre code, .code-line code)) {
+  color: inherit;
+}
+
+/* A chip holds together: `--auto-approve` breaking at its hyphen reads as two
+   flags. A phone column is too narrow to promise that, so there a long chip may
+   wrap, and each piece keeps its own rounded fill. */
+@media (min-width: 50rem) {
+  .sl-markdown-content code:not(:where(pre code, .code-line code)) {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 49.99rem) {
+  .sl-markdown-content code:not(:where(pre code, .code-line code)) {
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
 }
 
 :where(a, button, summary):focus-visible {
@@ -163,40 +196,32 @@ body {
   /* Chrome. A shorter nav and a narrower sidebar give the content column back
      the room the defaults spend on furniture. */
   --sl-nav-height: 3rem;
-  --sl-sidebar-width: 15.5rem;
+  --sl-sidebar-width: 17rem;
   --sl-sidebar-pad-x: 0.75rem;
+  --docs-toc-width: 14rem;
 
-  /* Two measures, not one.
+  /* One measure. Sentences, tables, figures and code fences share the column,
+     so every block on the page ends at the same right edge. --measure-prose is
+     kept as a name because the journey components size themselves from it. */
+  --sl-content-width: 44rem;
+  --measure-prose: 100%;
 
-     The column is the landing page's lead measure, so a screenshot, a table and
-     a code fence all get the same width in both halves of the site. Sentences
-     get less than that: at this body size 660px runs to about 90 characters,
-     which is where a docs page starts reading as a wall. --measure-prose is the
-     line length, applied to text blocks a little further down, and the
-     difference between the two is what lets a picture read as wider than the
-     paragraph next to it without anything breaking out of the column. */
-  --sl-content-width: var(--measure-lead);
-  --measure-prose: 38rem;
-
-  /* Horizontal room around the panel. Starlight spends 1.5rem a side at this
-     breakpoint; the column already has the whole right half of the viewport, so
-     the gutter is furniture. */
-  --sl-content-pad-x: 1.25rem;
+  /* Horizontal room around the panel. */
+  --sl-content-pad-x: 1.5rem;
 
   /* One gap between every pair of blocks. Starlight's 1rem default is set on
      the generic adjacency rule, so tables, code frames and asides all read from
      it; overriding it here keeps them in step with paragraphs instead of
      needing a rule each. */
-  --sl-content-gap-y: 0.7rem;
+  --sl-content-gap-y: 1rem;
 
   /* Expressive Code renders every fence, and it pads the <code> inside the
      <pre> from its own variables. Padding the <pre> as well buys the same space
      twice, which is where most of a code block's height was going. The box is
      its own; only these are ours. */
-  --ec-codePadBlk: 0.6rem;
-  --ec-codePadInl: 0.9rem;
-  --ec-codeLineHt: 1.5;
-  --ec-brdRad: calc(var(--radius-sm) - 1px);
+  --ec-codePadBlk: 0.8rem;
+  --ec-codePadInl: 1rem;
+  --ec-codeLineHt: 1.6;
 }
 
 /* Prose rhythm. Headings take their space from above, so a section reads as
@@ -207,19 +232,10 @@ body {
 }
 
 /* The gap between two paragraphs has to beat the gap between two lines inside
-   one, or a run of them reads as a single block of grey. Line height is 1.65,
-   so the block margin sits just above it. A component marked .not-content, as
-   Starlight's own rules allow, sets its own spacing. */
+   one, or a run of them reads as a single block of grey. A component marked
+   .not-content, as Starlight's own rules allow, sets its own spacing. */
 .sl-markdown-content :is(p, ul, ol):not(:where(.not-content *)) {
-  margin-block: 1.7em;
-}
-
-/* The line length. Only running text is held to it, so a figure, a reference
-   table or a code fence keeps the full column and reads as the wider object it
-   is. Direct children only: a paragraph inside an aside, a list item or a
-   component has already been given a measure by its own box. */
-.sl-markdown-content > :is(p, ul, ol, blockquote, dl) {
-  max-width: var(--measure-prose);
+  margin-block: 1.25em;
 }
 
 /* Starlight puts the anchor link beside the heading inside a .sl-heading-wrapper
@@ -231,14 +247,14 @@ body {
    content, so the two sets can never fight. */
 .sl-markdown-content > h2,
 .sl-markdown-content .sl-heading-wrapper.level-h2 {
-  margin-top: 1.45rem;
-  padding-top: 0.55rem;
+  margin-top: 2.25rem;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--rule);
 }
 
 .sl-markdown-content > h3,
 .sl-markdown-content .sl-heading-wrapper.level-h3 {
-  margin-top: 1.2rem;
+  margin-top: 1.75rem;
 }
 
 .sl-markdown-content > :is(h4, h5, h6),
@@ -253,7 +269,7 @@ body {
    gap between two paragraphs: the text belongs to the heading. */
 .sl-markdown-content > :is(h1, h2, h3, h4, h5, h6) + *,
 .sl-markdown-content .sl-heading-wrapper + * {
-  margin-top: 0.4rem;
+  margin-top: 0.75rem;
 }
 
 .sl-markdown-content > :is(h1, h2, h3, h4, h5, h6),
@@ -312,6 +328,25 @@ body {
   margin-top: 1rem;
 }
 
+/* A fence sits on the same surface as every other box on the page: --panel
+   inside a --border-card hairline, title bar included. Expressive Code fills
+   its frames from Starlight's grey ramp, which lands on a mid violet here and
+   made a fence the loudest block in the column. Set on the element, so it holds
+   whichever palette the frame picked. */
+.sl-markdown-content .expressive-code {
+  --ec-codeBg: var(--panel);
+  --ec-frm-edBg: var(--panel);
+  --ec-frm-trmBg: var(--panel);
+  --ec-frm-edTabBarBg: var(--panel);
+  --ec-frm-edActTabBg: var(--panel);
+  --ec-frm-trmTtbBg: var(--panel);
+  --ec-brdCol: var(--border-card);
+  --ec-frm-edTabBarBrdCol: var(--border-card);
+  --ec-frm-trmTtbBrdBtmCol: var(--border-card);
+  --ec-frm-edTabBarBrdBtmCol: var(--border-card);
+  --ec-brdRad: var(--radius-sm);
+}
+
 /* Code. Small, tight, and dense enough that a real install command fits on one
    line rather than wrapping into a paragraph-shaped block. A fence rendered by
    Expressive Code is excluded: it owns its own box, and the variables above
@@ -325,30 +360,78 @@ body {
 }
 
 /* Inline code reads one step under the text around it, so it stays a chip
-   rather than a bump in the line. In a table the surrounding text is already a
+   rather than a bump in the line. Tables and asides already set their text a
    step down, so the chip takes the step after that. */
-.sl-markdown-content code:not(:where(pre code)) {
-  padding: 0.1em 0.36em;
+.sl-markdown-content code:not(:where(pre code, .code-line code)) {
+  padding: 0.12em 0.4em;
   font-size: var(--fs-ui);
 }
 
-.sl-markdown-content :is(th, td) code:not(:where(pre code)) {
+.sl-markdown-content :is(th, td, .starlight-aside) code:not(:where(pre code, .code-line code)) {
   font-size: var(--fs-ui-sm);
 }
 
-/* Tables carry reference rows, not prose, so they set one step down and their
-   cells lose the padding a prose-sized row would need. */
-.sl-markdown-content :is(th, td) {
-  padding: 0.42rem 0.9rem;
+/* Tables carry reference rows, not prose, so they set one step down.
+
+   The table is a block that scrolls sideways, so a wide one never crushes its
+   columns or pushes the page. A chip never breaks inside itself: a run of them
+   wraps between chips, which is what gives the column that holds them a sane
+   minimum and stops `claude-vscode` splitting at its hyphen. */
+.sl-markdown-content table:not(:where(.not-content *)) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.sl-markdown-content :is(th, td):not(:where(.not-content *)) {
+  padding: var(--space-10) var(--space-14);
+  border: 1px solid var(--border-card);
   font-size: var(--fs-ui);
   line-height: var(--lh-ui);
+  vertical-align: top;
+  text-align: start;
+}
+
+.sl-markdown-content th:not(:where(.not-content *)) {
+  background: var(--panel);
+  color: var(--text-primary);
+  font-size: var(--fs-ui-sm);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.sl-markdown-content td:not(:where(.not-content *)) {
+  color: var(--text-body);
+}
+
+.sl-markdown-content :is(th, td) code:not(:where(pre code)) {
+  white-space: nowrap;
+}
+
+/* On a phone the table is wider than the screen and every column would fall
+   to its narrowest word. A floor per cell keeps sentences readable and lets
+   the table scroll instead. */
+.sl-markdown-content td:first-child:not(:where(.not-content *)) {
+  min-width: 9.5rem;
+}
+
+@media (max-width: 50rem) {
+  .sl-markdown-content td:not(:where(.not-content *)) {
+    min-width: 8rem;
+  }
+
+  .sl-markdown-content td:last-child:not(:first-child, :where(.not-content *)) {
+    min-width: 20rem;
+  }
 }
 
 /* Asides. The default is a 1rem box around body-sized text, which reads as a
    second column interrupting the first. */
 .sl-markdown-content .starlight-aside {
-  padding: 0.7rem 0.9rem;
-  border-inline-start-width: 2px;
+  padding: var(--space-12) var(--space-16);
+  font-size: var(--fs-ui);
+  line-height: var(--lh-ui);
 }
 
 /* The aside's own label is a <p>, so the paragraph rhythm above catches it and
@@ -356,7 +439,8 @@ body {
 .sl-markdown-content .starlight-aside__title {
   margin-block: 0;
   font-size: var(--fs-ui-sm);
-  letter-spacing: var(--ls-h2-stat);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0;
 }
 
 .sl-markdown-content .starlight-aside__title + .starlight-aside__content {
@@ -403,73 +487,225 @@ main > .content-panel:last-child {
   font-weight: var(--fw-black);
 }
 
-/* Every page starts its column at the same left edge. Starlight centres the
-   container on a page that has no table of contents, so moving between a page
-   with a right rail and one without slid the whole column sideways. A narrower
-   measure made the slide wider, which is how it got noticed. */
-.content-panel .sl-container {
-  margin-inline: 0;
-}
+/* The page between the rails.
 
-/* The grid, capped and centred. Starlight sizes the content pane as the column
-   plus half of whatever the viewport has spare, so on a wide screen the pane
-   keeps growing while the column stays 660px and the difference opens as dead
-   space between the last word and the contents rail. Cap the pair and there is
-   no spare to hand out: column and rail stay adjacent, and the grid centres. */
+   Starlight sizes the content pane as the column plus half of whatever the
+   viewport has spare, and the contents rail as the other half. On a wide
+   screen the column stays put while both keep growing, which opens dead space
+   between the sidebar and the first word and strands the rail at the far edge.
+
+   Here the column and the rail are one fixed-width pair, and the pair is
+   centred in the space right of the sidebar. The spare room splits evenly on
+   both sides instead of collecting on one. */
 @media (min-width: 72rem) {
   .main-frame > div {
-    max-width: 62rem;
+    max-width: calc(var(--sl-content-width) + 2 * var(--sl-content-pad-x) + var(--docs-toc-width));
     margin-inline: auto;
+  }
+
+  :root[data-has-sidebar] .main-pane,
+  :root[data-has-sidebar][data-has-toc] .main-pane {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+  }
+
+  .right-sidebar-container {
+    flex: none;
+    width: var(--docs-toc-width);
+  }
+
+  .right-sidebar {
+    width: var(--docs-toc-width);
+    border-inline-start: 0;
+  }
+
+  .right-sidebar-panel {
+    padding: var(--space-24) 0 var(--space-24) var(--space-8);
+  }
+
+  .right-sidebar-panel .sl-container {
+    width: auto;
+    max-width: none;
+  }
+
+  /* The search box starts where the text column starts. Starlight works that
+     edge out from its own pane widths, which no longer apply. */
+  .docs-header > .header {
+    --docs-column-start: calc(
+      var(--sl-sidebar-width) + var(--sl-content-pad-x) +
+        max(
+          0px,
+          (
+              100vw - var(--sl-sidebar-width) - var(--sl-content-width) - 2 * var(--sl-content-pad-x) -
+                var(--docs-toc-width)
+            ) / 2
+        )
+    );
+    grid-template-columns:
+      minmax(calc(var(--docs-column-start) - var(--sl-nav-pad-x) - var(--sl-nav-gap)), auto)
+      1fr
+      auto;
+  }
+
+  /* Every page starts its column at the same left edge, with or without a
+     contents rail, so moving between the two does not slide the text. */
+  .content-panel .sl-container {
+    margin-inline: 0;
   }
 }
 
-/* Sidebar. Quiet by default, with group labels as small tracked caps so the
-   eye finds the section without the links themselves getting louder. With the
-   guides split into groups, the row height is what decides whether the whole
-   tree is visible without scrolling. */
+/* Sidebar.
+
+   Nesting is shown by indentation alone. Starlight draws a guide line down
+   every level, so a page two groups deep sat behind three parallel rules; they
+   are gone. A row is a rounded target the full width of the rail, the current
+   page is a soft violet fill, and a top-level group is a small quiet label
+   with room above it. A group inside a group reads as a row that opens. */
 .sidebar-content {
-  padding-top: 0.75rem;
-  gap: 0.75rem;
+  padding-top: var(--space-16);
+  padding-bottom: var(--space-24);
+  gap: var(--space-16);
 }
 
-starlight-menu-button + * a,
-.sidebar-content a {
-  font-size: var(--fs-ui-sm);
-  padding-block: 0.22rem;
+.sidebar-content sl-sidebar-state-persist ul ul li {
+  margin-inline-start: 0;
+  padding-inline-start: 0;
+  border-inline-start: 0;
+}
+
+.sidebar-content sl-sidebar-state-persist ul ul ul {
+  padding-inline-start: var(--space-14);
+}
+
+.sidebar-content sl-sidebar-state-persist li + li {
+  margin-top: 1px;
+}
+
+.sidebar-content sl-sidebar-state-persist .top-level > li + li {
+  margin-top: var(--space-20);
+}
+
+.sidebar-content sl-sidebar-state-persist :is(a, summary) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-6) var(--space-10);
+  border-radius: var(--radius-button-sm);
   line-height: 1.4;
 }
 
-.sidebar-content .top-level > li + li {
-  margin-top: 0.6rem;
+.sidebar-content sl-sidebar-state-persist :is(a, summary) > * {
+  margin-inline-end: 0;
 }
 
-.sidebar-content summary,
-.sidebar-content .group-label span {
+.sidebar-content sl-sidebar-state-persist a {
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-regular);
+  color: var(--text-body);
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.sidebar-content sl-sidebar-state-persist a:hover {
+  background: var(--nav-row-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-content sl-sidebar-state-persist a[aria-current='page'],
+.sidebar-content sl-sidebar-state-persist a[aria-current='page']:is(:hover, :focus) {
+  background: var(--nav-row-current);
+  color: var(--text-primary);
+  font-weight: var(--fw-medium);
+}
+
+.sidebar-content sl-sidebar-state-persist summary {
+  justify-content: space-between;
+}
+
+.sidebar-content sl-sidebar-state-persist .group-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.sidebar-content sl-sidebar-state-persist .group-label > * {
+  margin-inline-end: 0;
+}
+
+.sidebar-content sl-sidebar-state-persist .top-level > li > details > summary .large {
   font-size: var(--fs-mono);
   font-weight: var(--fw-semibold);
-  letter-spacing: 0.09em;
+  letter-spacing: var(--ls-badge);
   text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sidebar-content sl-sidebar-state-persist ul ul summary .large {
+  font-size: var(--fs-ui);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-body);
+}
+
+.sidebar-content sl-sidebar-state-persist ul ul summary:hover {
+  background: var(--nav-row-hover);
+}
+
+.sidebar-content sl-sidebar-state-persist ul ul summary:hover .large {
+  color: var(--text-primary);
+}
+
+.sidebar-content sl-sidebar-state-persist .caret {
+  width: var(--space-14);
+  height: var(--space-14);
   color: var(--text-dim);
 }
 
-.sidebar-content summary {
-  padding-block: 0.22rem;
+.sidebar-content sl-sidebar-state-persist summary:hover .caret {
+  color: var(--text-muted);
 }
 
-.sidebar-content ul ul {
-  border-inline-start: 1px solid var(--rule);
+.sidebar-content sl-sidebar-state-persist .sl-badge {
+  padding: 1px var(--space-6);
+  background: var(--accent-a07);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-pill);
+  color: var(--accent);
+  font-family: var(--font-sans);
+  font-size: var(--fs-micro);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-badge);
+  line-height: 1.5;
+  text-transform: uppercase;
 }
 
 /* Right rail. Reference furniture, so it stays the quietest text on the page. */
+.right-sidebar-panel h2 {
+  margin-bottom: var(--space-10);
+  font-size: var(--fs-mono);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-badge);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
 starlight-toc a {
-  --pad-inline: 0.6rem;
+  --pad-inline: 0.75rem;
   font-size: var(--fs-ui-sm);
-  padding-block: 0.24rem;
-  line-height: 1.4;
+  padding-block: var(--space-4);
+  line-height: 1.45;
   color: var(--text-muted);
   border-inline-start: 2px solid transparent;
   margin-inline-start: -1px;
   border-radius: 0;
+}
+
+starlight-toc a:hover {
+  color: var(--text-primary);
 }
 
 /* Where you are. A hairline runs the length of the list and the current section
@@ -482,7 +718,23 @@ starlight-toc nav > ul {
 starlight-toc a[aria-current='true'] {
   color: var(--accent);
   border-inline-start-color: var(--accent);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-medium);
+}
+
+/* The page swap. Astro cross-fades the old page into the new one; kept short
+   so it reads as the content changing, not as an effect. Someone who asked for
+   less motion gets the swap with no fade at all. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 120ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 /* Previous / Next: a quiet row, not two billboards. */
@@ -501,4 +753,12 @@ starlight-toc a[aria-current='true'] {
 
 .pagination-links > a svg {
   font-size: var(--fs-body);
+}
+
+/* Between the phone layout and the one with a contents rail, the column has
+   spare room on one side only. Centre it. */
+@media (min-width: 50rem) and (max-width: 71.99rem) {
+  .content-panel .sl-container {
+    margin-inline: auto;
+  }
 }

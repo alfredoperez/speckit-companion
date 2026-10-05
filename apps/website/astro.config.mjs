@@ -94,6 +94,8 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'ignore',
   redirects: MOVED,
+  // A docs link starts loading on hover, so the page swap has it by the click.
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   integrations: [
     trailingSlashRedirects,
     starlight({
@@ -126,6 +128,7 @@ export default defineConfig({
         SocialIcons: './src/components/DocsHeaderNav.astro',
         SiteTitle: './src/components/DocsSiteTitle.astro',
         Head: './src/components/DocsHead.astro',
+        Header: './src/components/DocsHeader.astro',
       },
       customCss: ['./src/styles/docs.css'],
       social: [
@@ -147,6 +150,10 @@ export default defineConfig({
       //
       // Introduction and Install are /docs/ and /docs/install: the first is the
       // section root, and the second is linked from two published READMEs.
+      //
+      // Configuration sits with the IDE pages and keeps its /docs/reference/
+      // address. Telemetry is a page without a sidebar entry: Configuration
+      // links to it.
       sidebar: [
         {
           label: 'Start',
@@ -160,6 +167,7 @@ export default defineConfig({
           label: 'In your IDE',
           items: [
             { label: 'Choose an AI provider', slug: 'docs/ide/choose-a-provider' },
+            { label: 'Configuration', slug: 'docs/reference/configuration' },
             { label: 'Your first spec', slug: 'docs/start/your-first-spec' },
             { label: 'The sidebar', slug: 'docs/navigate/the-sidebar' },
             { label: 'Inside the viewer', slug: 'docs/navigate/inside-the-viewer' },
@@ -221,9 +229,7 @@ export default defineConfig({
           label: 'Reference',
           items: [
             { label: 'Commands', slug: 'docs/reference/commands' },
-            { label: 'Configuration', slug: 'docs/reference/configuration' },
             { label: 'Providers', slug: 'docs/reference/providers' },
-            { label: 'Telemetry', slug: 'docs/reference/telemetry' },
           ],
         },
       ],

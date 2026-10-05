@@ -2,6 +2,7 @@
 import Default from '@astrojs/starlight/components/Head.astro';
 import SiteIcons from './SiteIcons.astro';
 import Analytics from './Analytics.astro';
+import { ClientRouter } from 'astro:transitions';
 
 // The share card, same file BaseLayout uses. Starlight emits og:title and
 // og:description on its own but no image, so a shared docs link renders as a
@@ -30,6 +31,16 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
   Starlight's own favicon option already points at /favicon.svg, so the SVG link
   is left to it and only the raster fallbacks are added here.
+
+  ClientRouter turns a docs-to-docs click into a swap of the page body instead of
+  a new document, so the header and sidebar stop flashing. Only docs pages carry
+  it: a link to the landing page or the changelog is still a full load.
+
+  Starlight keeps the sidebar's scroll position and open groups in
+  sessionStorage, from a script that holds on to the first page's elements. After
+  a swap those elements are gone, so the script below does the same job against
+  the live document: it reads the state before a swap, puts it back after, and
+  keeps the stored copy current so a full reload restores the same sidebar.
 */
 ---
 
@@ -39,3 +50,79 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content={ogImageUrl} />
 <Analytics />
+<ClientRouter />
+<script is:inline>
+  (() => {
+    const KEY = 'sl-sidebar-state';
+    const scroller = () => document.getElementById('starlight__sidebar');
+    const groups = () =>
+      [...document.querySelectorAll('#starlight__sidebar details')].map((details) => ({
+        details,
+        index: parseInt(details.querySelector(':scope > sl-sidebar-restore')?.dataset.index ?? '', 10),
+      }));
+
+    const read = () => {
+      const open = [];
+      for (const { details, index } of groups()) if (!isNaN(index)) open[index] = details.open;
+      return {
+        hash: document.querySelector('sl-sidebar-state-persist')?.dataset.hash ?? '',
+        open,
+        scroll: scroller()?.scrollTop ?? 0,
+      };
+    };
+
+    const store = () => {
+      if (!scroller()) return;
+      try {
+        sessionStorage.setItem(KEY, JSON.stringify(read()));
+      } catch {}
+    };
+
+    let before;
+
+    document.addEventListener('astro:before-swap', (event) => {
+      before = scroller() ? read() : undefined;
+      // The header on screen is carried over, so the incoming copy is emptied
+      // before it lands. Left in, its search box would wake up for an instant
+      // and leave a keyboard shortcut bound to a dialog that no longer exists.
+      event.newDocument.querySelector('[data-astro-transition-persist="docs-header"]')?.replaceChildren();
+    });
+
+    // The group that holds the current page is always open and the page's row
+    // is always in view, whatever was stored.
+    const reveal = () => {
+      const pane = scroller();
+      const current = pane?.querySelector('a[aria-current="page"]');
+      if (!pane || !current) return;
+      for (let el = current.closest('details'); el; el = el.parentElement?.closest('details')) el.open = true;
+      const row = current.getBoundingClientRect();
+      const box = pane.getBoundingClientRect();
+      if (row.top < box.top || row.bottom > box.bottom) current.scrollIntoView({ block: 'center' });
+    };
+
+    document.addEventListener('astro:after-swap', () => {
+      document.documentElement.dataset.theme = 'dark';
+      const pane = scroller();
+      if (!pane || !before) return;
+      for (const { details, index } of groups()) details.open = before.open[index] === true;
+      pane.scrollTop = before.scroll;
+      reveal();
+      store();
+    });
+
+    document.addEventListener('DOMContentLoaded', reveal);
+
+    // Registered late on purpose: Starlight's own listener writes a stale copy
+    // on the same event, and the last writer is the one a reload reads.
+    document.addEventListener(
+      'astro:page-load',
+      () => {
+        addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') store();
+        });
+        addEventListener('pagehide', store);
+      },
+      { once: true },
+    );
+  })();
+</script>
