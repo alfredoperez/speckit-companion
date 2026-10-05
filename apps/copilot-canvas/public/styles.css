@@ -323,6 +323,15 @@ button { font: inherit; color: inherit; }
 .command-hint { margin: 0; font-size: 12px; color: var(--text-muted); }
 .command-hint code { font: 12px var(--font-mono); color: var(--text-body); }
 .command-hint__stock { color: var(--warning); }
+.install-hint { display: grid; gap: 6px; min-width: 0; font-size: 12px; color: var(--text-body); }
+.install-hint__line { display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; margin: 0; }
+.btn-link { padding: 0; border: 0; background: none; color: var(--text-body); font: inherit; text-decoration: underline; cursor: pointer; }
+.btn-link:hover { color: var(--text-primary); }
+.install-hint__dismiss { min-height: 20px; padding: 0 5px; border-color: transparent; color: var(--text-muted); font-size: 15px; line-height: 1; }
+.install-hint__dismiss:hover:not(:disabled) { color: var(--text-primary); }
+.install-hint__how { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.install-hint__how code { flex: 1 1 260px; min-width: 0; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-inset); color: var(--text-body); font: 11.5px/1.45 var(--font-mono); overflow-wrap: anywhere; }
+.install-hint__how .btn-chip { min-height: 24px; padding: 1px 8px; font-size: 12px; }
 
 
 /* tabs */
@@ -417,6 +426,9 @@ button { font: inherit; color: inherit; }
 .toast-actions .btn-chip { min-height: 24px; padding: 1px 8px; font-size: 12px; }
 .toast-close { min-height: 24px; padding: 0 6px; border-color: transparent; color: var(--text-muted); font-size: 16px; line-height: 1; }
 .toast-close:hover:not(:disabled) { color: var(--text-primary); }
+.toast-file { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; margin: 0 6px 0 0; font-size: 12px; color: var(--text-body); }
+.toast-file code { font: 11.5px var(--font-mono); overflow-wrap: anywhere; }
+.toast-file .btn-chip { min-height: 22px; padding: 0 8px; font-size: 12px; }
 .toast-prompt {
     max-height: min(160px, 30vh);
     margin: 0 6px 0 0;

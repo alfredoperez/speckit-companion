@@ -1,13 +1,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, mkdtempSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, mkdirSync, copyFileSync, writeFileSync, existsSync, readdirSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
 import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
 import { buildSpecRow, parseSpecContext, phaseTimings, sortSpecs, timingSummaryText } from '../spec-rules.mjs';
-import { OPEN_NOTE, availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, nextSpecNumber, openStatus, resolveSpecify, specifyChoices, writerPath } from '../prompts.mjs';
+import { INSTALL_COMMAND, OPEN_NOTE, PROMPTS_DIR, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, instructionsSentence, nextSpecNumber, openStatus, resolveSpecify, runInstructionsDoc, specifyChoices, specifyInstructionsName, stepInstructionsName, writeRunInstructions, writerPath } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const GRAMMAR = join(REPO, 'apps/vscode/tests/fixtures/task-grammar');
@@ -203,40 +203,62 @@ describe('workflow choice on New spec', () => {
     });
 });
 
+const MARKER = '<!-- speckit-companion:context-update -->';
+
 describe('specify prompt', () => {
-    it('sends the description, then the lifecycle preamble that seeds the run record', () => {
+    it('sends the description and one sentence naming the instruction file, and keeps the lifecycle preamble for that file', () => {
         const root = workspace({ companion: true });
-        const { prompt, command, workflow } = buildSpecifyPrompt({ description: 'Export the\nboard as CSV', workflow: 'companion', root, now: AT });
+        const { prompt, preamble, instructionsName, instructionsDoc, command, workflow } = buildSpecifyPrompt({ description: 'Export the\nboard as CSV', workflow: 'companion', root, now: AT });
         assert.equal(command, 'speckit.companion.specify');
         assert.equal(workflow, 'companion');
-        assert.ok(prompt.startsWith('/speckit.companion.specify Export the\nboard as CSV'));
-        assert.match(prompt, /<!-- speckit-companion:context-update -->/);
-        assert.match(prompt, /"workflow": "companion"/);
-        assert.match(prompt, /"selectedAt": "2026-09-29T12:00:00.000Z"/);
-        assert.match(prompt, /"step": "specify",\s*"substep": null,\s*"kind": "start",\s*"by": "extension"/);
-        assert.match(prompt, /<!-- \/speckit-companion:context-update -->/);
+        assert.equal(instructionsName, 'specify-20260929T120000000Z.md');
+        assert.equal(prompt, [
+            '/speckit.companion.specify Export the\nboard as CSV',
+            'Name the new spec folder `001-<short-name>`: 001 is one more than the highest numbered spec folder. Folders that start with `_` are fixtures, so do not count them or copy their naming. If a branch script in this run reports a higher feature number, use that number instead.',
+            'Before you start, read and follow the run instructions in `.speckit-companion/prompts/specify-20260929T120000000Z.md`.',
+        ].join('\n\n'));
+        assert.ok(preamble.startsWith(MARKER));
+        assert.match(preamble, /SEED WRITE INSTRUCTIONS/);
+        assert.match(preamble, /"workflow": "companion"/);
+        assert.match(preamble, /"selectedAt": "2026-09-29T12:00:00.000Z"/);
+        assert.match(preamble, /"step": "specify",\s*"substep": null,\s*"kind": "start",\s*"by": "extension"/);
+        assert.ok(preamble.endsWith('<!-- /speckit-companion:context-update -->'));
+        assert.ok(instructionsDoc.includes(preamble));
+        assert.match(instructionsDoc, /^# Run instructions\n\nThese belong to the `\/speckit\.companion\.specify` command/);
     });
 
     it('carries the workflow the run really is: companion for Companion and Auto, speckit for Spec Kit', () => {
         const root = workspace({ companion: true });
         const seed = (workflow) => buildSpecifyPrompt({ description: 'x', workflow, root, now: AT });
         assert.match(seed('auto').prompt, /^\/speckit\.companion\.auto x/);
-        assert.match(seed('auto').prompt, /"workflow": "companion"/);
+        assert.match(seed('auto').preamble, /"workflow": "companion"/);
         assert.match(seed('speckit').prompt, /^\/speckit\.specify x/);
-        assert.match(seed('speckit').prompt, /"workflow": "speckit"/);
+        assert.match(seed('speckit').preamble, /"workflow": "speckit"/);
     });
 
     it('gives a stock run the full lifecycle body with the specify self-close, and a Companion run the slim one', () => {
-        const stock = buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root: workspace({ companion: true }), now: AT }).prompt;
+        const stock = buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root: workspace({ companion: true }), now: AT }).preamble;
         // The folder does not exist at dispatch: every writer call is scoped to the one the command mints, and none runs before it exists.
         assert.match(stock, /python3 "[^"]+" --feature-dir "<the folder the command just created>" --step <step> --advance --by ai/);
         assert.doesNotMatch(stock, /python3 "[^"]+" --step/);
         assert.match(stock, /Run NO write-context\.py call before the command has created `specs\/<NNN>-<slug>\/` and written `\.specify\/feature\.json`\./);
         assert.match(stock, /Never run these against a folder that already has history\. That is the previous spec\./);
         assert.match(stock, /closing specify is YOUR job/);
-        const companion = buildSpecifyPrompt({ description: 'x', workflow: 'companion', root: workspace({ companion: true }), now: AT }).prompt;
+        const companion = buildSpecifyPrompt({ description: 'x', workflow: 'companion', root: workspace({ companion: true }), now: AT }).preamble;
         assert.doesNotMatch(companion, /--advance/);
         assert.match(companion, /carries the full `\.spec-context\.json` capture/);
+    });
+
+    it('keeps every word of the preamble out of the chat, for each workflow', () => {
+        const root = workspace({ companion: true });
+        for (const workflow of ['companion', 'speckit', 'auto']) {
+            const { prompt, preamble } = buildSpecifyPrompt({ description: 'x', workflow, root, now: AT });
+            assert.equal(prompt.split('Before you start, read and follow the run instructions in').length, 2, workflow);
+            for (const phrase of ['speckit-companion:context-update', 'SEED WRITE INSTRUCTIONS', '"history"', 'Invariants']) {
+                assert.ok(!prompt.includes(phrase), `${workflow}: ${phrase} stays out of the chat`);
+                assert.ok(preamble.includes(phrase), `${workflow}: ${phrase} is in the file`);
+            }
+        }
     });
 
     it('rejects an empty description and a workflow that cannot run here', () => {
@@ -281,13 +303,13 @@ describe('numbering a new spec', () => {
         assert.equal(nextSpecNumber(root, ['specs', 'docs/specs', 'missing']), '021');
     });
 
-    it('names the number in the New spec prompt, after the command and before the lifecycle preamble', () => {
+    it('names the number in the New spec prompt, after the command and before the instructions sentence', () => {
         const root = withFolders('_03_demo-living', '041-profile-photo');
         for (const workflow of ['companion', 'speckit', 'auto']) {
             const { prompt } = buildSpecifyPrompt({ description: 'x', workflow, root, now: AT });
             const rule = prompt.indexOf('Name the new spec folder `042-<short-name>`');
             assert.ok(rule > 0, workflow);
-            assert.ok(rule < prompt.indexOf('<!-- speckit-companion:context-update -->'), workflow);
+            assert.ok(rule < prompt.indexOf('Before you start, read and follow the run instructions in'), workflow);
             assert.match(prompt, /Folders that start with `_` are fixtures, so do not count them or copy their naming\./);
             assert.match(prompt, /If a branch script in this run reports a higher feature number, use that number instead\./);
         }
@@ -312,8 +334,8 @@ describe('context writer path', () => {
     });
 
     it('names the checkout script in a stock run\'s preamble when the workspace has none', () => {
-        const { prompt } = buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root: workspace({ companion: false }), now: AT });
-        assert.match(prompt, /python3 "\/[^"]+apps\/speckit-extension\/scripts\/write-context\.py"/);
+        const { preamble } = buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root: workspace({ companion: false }), now: AT });
+        assert.match(preamble, /python3 "\/[^"]+apps\/speckit-extension\/scripts\/write-context\.py"/);
     });
 });
 
@@ -327,10 +349,118 @@ describe('step preamble for the run buttons', () => {
         assert.equal(buildStepPreamble('resume', 'specs/042-x', root, 'companion', AT), null);
     });
 
-    it('puts the command line first and the preamble after', () => {
+    it('gives a Companion command the slim preamble and a stock command the full one', () => {
         const root = workspace({ companion: true });
-        const prompt = buildPrompt('plan', 'specs/042-x', 'companion', null, buildStepPreamble('plan', 'specs/042-x', root, 'companion', AT));
-        assert.ok(prompt.startsWith('/speckit.companion.plan specs/042-x\n\n<!--'));
+        const companion = buildStepPreamble('plan', 'specs/042-x', root, 'companion', AT);
+        assert.match(companion, /This command's body carries the full `\.spec-context\.json` capture & timing protocol/);
+        assert.doesNotMatch(companion, /jsonschema|MANDATORY FINAL WRITE/);
+        assert.ok(companion.split('\n').length < 10, 'a few lines');
+        const stock = buildStepPreamble('plan', 'specs/042-x', root, 'speckit', AT);
+        assert.match(stock, /```jsonschema/);
+        assert.match(stock, /MANDATORY FINAL WRITE/);
+        assert.match(stock, /--step plan --advance --by ai/);
+    });
+
+    it('puts the command line first, then one sentence naming the instruction file, and nothing of the preamble', () => {
+        const root = workspace({ companion: true });
+        for (const set of ['companion', 'speckit']) {
+            for (const step of ['plan', 'tasks', 'implement']) {
+                const preamble = buildStepPreamble(step, 'specs/042-x', root, set, AT);
+                const file = writeRunInstructions(root, stepInstructionsName(step, 'specs/042-x'), runInstructionsDoc(buildPrompt(step, 'specs/042-x', set), preamble));
+                assert.equal(file, `.speckit-companion/prompts/${step}-042-x.md`);
+                const prefix = set === 'companion' ? 'speckit.companion' : 'speckit';
+                assert.equal(buildPrompt(step, 'specs/042-x', set, null, file), `/${prefix}.${step} specs/042-x\n\nBefore you start, read and follow the run instructions in \`${file}\`.`);
+                const written = readFileSync(join(root, file), 'utf8');
+                assert.ok(written.includes(preamble), `${set} ${step}: the file holds the preamble`);
+                assert.ok(written.includes(`\`/${prefix}.${step} specs/042-x\``), 'the file names its command');
+            }
+        }
+    });
+
+    it('keeps the fallback line between the command and the instructions sentence', () => {
+        const prompt = buildPrompt('plan', 'specs/042-x', 'speckit', '.github/prompts/speckit.plan.prompt.md', '.speckit-companion/prompts/plan-042-x.md');
+        assert.deepEqual(prompt.split('\n\n'), [
+            '/speckit.plan specs/042-x',
+            'If /speckit.plan is not a command here, read `.github/prompts/speckit.plan.prompt.md` and follow it for the spec in `specs/042-x`.',
+            instructionsSentence('.speckit-companion/prompts/plan-042-x.md'),
+        ]);
+    });
+});
+
+describe('run instruction files', () => {
+    it('names a step file by step and spec folder, and a New spec file by its dispatch time', () => {
+        assert.equal(stepInstructionsName('plan', 'specs/042-export-csv'), 'plan-042-export-csv.md');
+        assert.equal(stepInstructionsName('tasks', '.specify/specs/7 odd`name'), 'tasks-7-odd-name.md');
+        assert.equal(specifyInstructionsName(AT), 'specify-20260929T120000000Z.md');
+    });
+
+    it('writes under .speckit-companion/prompts and ignores the whole folder from git', () => {
+        const root = workspace({ companion: false });
+        const file = writeRunInstructions(root, 'plan-042-x.md', 'one');
+        assert.equal(file, `${PROMPTS_DIR}/plan-042-x.md`);
+        assert.equal(readFileSync(join(root, file), 'utf8'), 'one');
+        assert.equal(readFileSync(join(root, '.speckit-companion/.gitignore'), 'utf8'), '*\n');
+    });
+
+    it('never overwrites a .gitignore that is already there', () => {
+        const root = workspace({ companion: false });
+        mkdirSync(join(root, '.speckit-companion'));
+        writeFileSync(join(root, '.speckit-companion/.gitignore'), 'prompts/\n');
+        writeRunInstructions(root, 'plan-042-x.md', 'one');
+        assert.equal(readFileSync(join(root, '.speckit-companion/.gitignore'), 'utf8'), 'prompts/\n');
+    });
+
+    it('replaces the older file for the same step and spec, and leaves the others', () => {
+        const root = workspace({ companion: false });
+        writeRunInstructions(root, 'plan-042-x.md', 'old');
+        writeRunInstructions(root, 'tasks-042-x.md', 'tasks');
+        writeRunInstructions(root, 'plan-042-x.md', 'new');
+        assert.equal(readFileSync(join(root, PROMPTS_DIR, 'plan-042-x.md'), 'utf8'), 'new');
+        assert.deepEqual(readdirSync(join(root, PROMPTS_DIR)).sort(), ['plan-042-x.md', 'tasks-042-x.md']);
+    });
+
+    it('refuses to write when .speckit-companion or prompts leads outside the project through a symlink', () => {
+        const outside = mkdtempSync(join(tmpdir(), 'canvas-outside-'));
+        const viaHome = workspace({ companion: false });
+        symlinkSync(outside, join(viaHome, '.speckit-companion'));
+        assert.throws(() => writeRunInstructions(viaHome, 'plan-042-x.md', 'x'), /`\.speckit-companion` leads outside the project/);
+        const viaPrompts = workspace({ companion: false });
+        mkdirSync(join(viaPrompts, '.speckit-companion'));
+        symlinkSync(outside, join(viaPrompts, '.speckit-companion/prompts'));
+        assert.throws(() => writeRunInstructions(viaPrompts, 'plan-042-x.md', 'x'), /`\.speckit-companion\/prompts` leads outside the project/);
+        assert.deepEqual(readdirSync(outside), [], 'nothing was written outside');
+        assert.ok(!existsSync(join(viaPrompts, '.speckit-companion/.gitignore')), 'and nothing beside the refused folder');
+    });
+
+    it('replaces a symlinked file instead of writing through it', () => {
+        const outside = mkdtempSync(join(tmpdir(), 'canvas-outside-'));
+        writeFileSync(join(outside, 'target.md'), 'untouched');
+        const root = workspace({ companion: false });
+        mkdirSync(join(root, PROMPTS_DIR), { recursive: true });
+        symlinkSync(join(outside, 'target.md'), join(root, PROMPTS_DIR, 'plan-042-x.md'));
+        writeRunInstructions(root, 'plan-042-x.md', 'new');
+        assert.equal(readFileSync(join(outside, 'target.md'), 'utf8'), 'untouched');
+        assert.equal(readFileSync(join(root, PROMPTS_DIR, 'plan-042-x.md'), 'utf8'), 'new');
+    });
+});
+
+describe('installing Companion from the board', () => {
+    it('offers the install command only where Companion is not installed', () => {
+        assert.equal(specifyChoices(workspace({ companion: false })).installCommand, INSTALL_COMMAND);
+        assert.equal(specifyChoices(workspace({ companion: true })).installCommand, null);
+    });
+
+    it('uses the command the spec-kit extension README gives, from the pinned companion-latest download', () => {
+        const readme = readFileSync(join(REPO, 'apps/speckit-extension/README.md'), 'utf8');
+        assert.ok(readme.includes(`\n${INSTALL_COMMAND}\n`), 'the README carries the same line');
+        assert.match(INSTALL_COMMAND, /\/releases\/download\/companion-latest\/companion\.zip/);
+        assert.doesNotMatch(INSTALL_COMMAND, /\/releases\/latest/);
+    });
+
+    it('asks the agent in one line to run it and commit the generated skill files', () => {
+        const prompt = buildInstallPrompt();
+        assert.ok(!prompt.includes('\n'));
+        assert.ok(prompt.includes(`Run \`${INSTALL_COMMAND}\` in this project, then commit the skill files it generates`));
     });
 });
 

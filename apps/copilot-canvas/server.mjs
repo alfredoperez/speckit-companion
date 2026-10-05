@@ -5,10 +5,10 @@ import { createServer } from 'node:http';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { watch } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSnapshot, findSpec, readSpecDetail, resolveSpecDirs } from './specs-core.mjs';
-import { availableCommands, buildAskPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, specifyChoices } from './prompts.mjs';
+import { availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions } from './prompts.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -57,7 +57,8 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         clients: new Set(),
         snapshot: null,
         selected: null,
-        watchers: [],
+        watchers: new Set(),
+        closed: false,
         timer: null,
         host: null,
         origin: null,
@@ -87,6 +88,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     }
 
     function scheduleRescan() {
+        if (state.closed) return;
         clearTimeout(state.timer);
         state.timer = setTimeout(() => {
             try {
@@ -97,12 +99,63 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         }, DEBOUNCE_MS);
     }
 
-    function startWatching() {
-        for (const dir of state.specDirs) {
+    function hold(path, options, listener) {
+        let watcher;
+        try {
+            watcher = watch(path, options, listener);
+        } catch (error) {
+            // A missing directory is the common case. Where recursive watching is unavailable, still catch folders appearing.
+            if (!options.recursive || error.code === 'ENOENT' || error.code === 'ENOTDIR') return null;
             try {
-                state.watchers.push(watch(join(state.root, dir), { recursive: true }, scheduleRescan));
-            } catch { /* directory absent */ }
+                watcher = watch(path, {}, listener);
+            } catch {
+                return null;
+            }
         }
+        state.watchers.add(watcher);
+        watcher.on('error', () => release(watcher));
+        return watcher;
+    }
+
+    function release(watcher) {
+        if (!watcher) return;
+        state.watchers.delete(watcher);
+        watcher.close();
+    }
+
+    /**
+     * Watch one spec directory, whether or not it exists yet. The directory itself is watched recursively; each folder above it,
+     * up to the project root, is watched flat for the next folder on the way down appearing, disappearing or being replaced,
+     * which re-arms everything below. Nothing else under the root is walked.
+     */
+    function watchSpecDir(dir) {
+        const inside = relative(state.root, resolve(state.root, dir));
+        const names = !inside || inside.startsWith('..') || isAbsolute(inside) ? [] : inside.split(sep);
+        const base = names.length ? state.root : resolve(state.root, dir);
+        const held = [];
+        const arm = (from) => {
+            if (state.closed) return;
+            for (let depth = from; depth <= names.length; depth++) {
+                release(held[depth]);
+                held[depth] = null;
+            }
+            for (let depth = from; depth <= names.length; depth++) {
+                const path = join(base, ...names.slice(0, depth));
+                held[depth] = depth === names.length
+                    ? hold(path, { recursive: true }, scheduleRescan)
+                    : hold(path, {}, (_event, name) => {
+                        if (name != null && String(name) !== names[depth]) return;
+                        arm(depth + 1);
+                        scheduleRescan();
+                    });
+                if (!held[depth]) return;
+            }
+        };
+        arm(0);
+    }
+
+    function startWatching() {
+        for (const dir of state.specDirs) watchSpecDir(dir);
     }
 
     function requireSpec(query) {
@@ -118,21 +171,21 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         return spec;
     }
 
+    async function deliver(spec, command, prompt, instructionsFile = null) {
+        const sent = await send(prompt);
+        emit('run', { spec, command, prompt, instructionsFile, sent, at: new Date().toISOString() });
+        return { prompt, instructionsFile, sent };
+    }
+
     async function run(query, command) {
         const spec = requireSpec(query);
+        if (command === 'ask') return deliver(spec.id, command, buildAskPrompt(spec));
         const set = commandSetFor(state.root, spec.workflow);
-        const prompt = command === 'ask'
-            ? buildAskPrompt(spec)
-            : buildPrompt(
-                command,
-                spec.id,
-                set,
-                availableCommands(set).includes(command) ? commandInstructions(state.root, command, set) : null,
-                buildStepPreamble(command, spec.id, state.root, set),
-            );
-        const sent = await send(prompt);
-        emit('run', { spec: spec.id, command, prompt, sent, at: new Date().toISOString() });
-        return { prompt, sent };
+        const instructions = availableCommands(set).includes(command) ? commandInstructions(state.root, command, set) : null;
+        const line = buildPrompt(command, spec.id, set);
+        const preamble = buildStepPreamble(command, spec.id, state.root, set);
+        const file = preamble ? writeRunInstructions(state.root, stepInstructionsName(command, spec.id), runInstructionsDoc(line, preamble)) : null;
+        return deliver(spec.id, command, buildPrompt(command, spec.id, set, instructions, file), file);
     }
 
     async function specify(description, workflow) {
@@ -142,10 +195,11 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         } catch (error) {
             throw Object.assign(error, { status: 400 });
         }
-        const sent = await send(built.prompt);
-        emit('run', { spec: null, command: 'specify', prompt: built.prompt, sent, at: new Date().toISOString() });
-        return { prompt: built.prompt, sent, workflow: built.workflow, command: built.command };
+        const file = writeRunInstructions(state.root, built.instructionsName, built.instructionsDoc);
+        return { ...await deliver(null, 'specify', built.prompt, file), workflow: built.workflow, command: built.command };
     }
+
+    const install = () => deliver(null, 'install', buildInstallPrompt());
 
     function authorized(req, url) {
         if (req.headers.host !== state.host) return false;
@@ -186,6 +240,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
             if (pathname === '/api/focus') return sendJson(res, 200, focus(body.spec));
             if (pathname === '/api/run') return sendJson(res, 200, await run(body.spec, body.command));
             if (pathname === '/api/specify') return sendJson(res, 200, await specify(body.description, body.workflow));
+            if (pathname === '/api/install') return sendJson(res, 200, await install());
         }
 
         return sendJson(res, 404, { error: 'Not found' });
@@ -237,6 +292,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         specify,
         detail: query => readSpecDetail(state.root, requireSpec(query).id, { html: false }),
         async close() {
+            state.closed = true;
             clearTimeout(state.timer);
             for (const watcher of state.watchers) watcher.close();
             for (const client of state.clients) client.end();

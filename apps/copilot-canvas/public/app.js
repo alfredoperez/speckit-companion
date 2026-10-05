@@ -41,6 +41,7 @@ const state = {
     tab: null,
     detailRequest: 0,
     workflow: null,
+    install: { dismissed: false, open: false },
 };
 
 const $ = (id) => document.getElementById(id);
@@ -58,11 +59,13 @@ const els = {
     toastMsg: $('toast-msg'),
     toastActions: $('toast-actions'),
     toastPrompt: $('toast-prompt'),
+    toastFile: $('toast-file'),
     newSpec: $('new-spec'),
     newSpecToggle: $('new-spec-toggle'),
     newSpecText: $('new-spec-text'),
     newSpecWorkflow: $('new-spec-workflow'),
     newSpecHint: $('new-spec-hint'),
+    newSpecInstall: $('new-spec-install'),
 };
 
 function el(tag, props = {}, ...children) {
@@ -105,13 +108,15 @@ function armToast() {
     if (!toast.pinned) toast.timer = setTimeout(hideToast, TOAST_MS);
 }
 
-/** A short line that fades; with `prompt`, the full prompt sits behind Show prompt and Copy. `pinned` keeps it up. */
-function showToast({ message, prompt = null, pinned = false }) {
+/** A short line that fades; with `prompt`, the message that was sent sits behind Show prompt and Copy, with the path of its instruction file. `pinned` keeps it up. */
+function showToast({ message, prompt = null, file = null, pinned = false }) {
     toast.pinned = pinned;
     els.toastMsg.replaceChildren(...[message].flat());
     els.toastPrompt.textContent = prompt ?? '';
     els.toastPrompt.hidden = !(prompt && pinned);
-    els.toastActions.replaceChildren(...(prompt ? promptActions(prompt) : []));
+    els.toastFile.replaceChildren(...(prompt && file ? fileLine(file) : []));
+    els.toastFile.hidden = els.toastPrompt.hidden || !file;
+    els.toastActions.replaceChildren(...(prompt ? promptActions(prompt, file) : []));
     els.toast.classList.add('is-visible');
     armToast();
 }
@@ -129,7 +134,20 @@ async function copyText(text) {
     }
 }
 
-function promptActions(prompt) {
+function copyButton(text, label = 'Copy') {
+    const button = el('button', {
+        class: 'btn btn-chip',
+        type: 'button',
+        onclick: async () => { button.textContent = await copyText(text) ? 'Copied' : 'Copy failed'; },
+    }, label);
+    return button;
+}
+
+function fileLine(file) {
+    return ['Run instructions: ', el('code', {}, file), ' ', copyButton(file, 'Copy path')];
+}
+
+function promptActions(prompt, file) {
     const label = () => (els.toastPrompt.hidden ? 'Show prompt' : 'Hide prompt');
     const toggle = el('button', {
         class: 'btn btn-chip',
@@ -138,6 +156,7 @@ function promptActions(prompt) {
         'aria-expanded': String(!els.toastPrompt.hidden),
         onclick: () => {
             els.toastPrompt.hidden = !els.toastPrompt.hidden;
+            els.toastFile.hidden = els.toastPrompt.hidden || !file;
             toggle.setAttribute('aria-expanded', String(!els.toastPrompt.hidden));
             toggle.textContent = label();
             if (!els.toastPrompt.hidden) {
@@ -146,27 +165,79 @@ function promptActions(prompt) {
             }
         },
     }, label());
-    const copy = el('button', {
-        class: 'btn btn-chip',
-        type: 'button',
-        onclick: async () => { copy.textContent = await copyText(prompt) ? 'Copied' : 'Copy failed'; },
-    }, 'Copy');
     const close = el('button', { class: 'btn btn-icon toast-close', type: 'button', 'aria-label': 'Dismiss', onclick: hideToast }, '×');
-    return [toggle, copy, close];
+    return [toggle, copyButton(prompt), close];
 }
 
-async function reportSend(prompt, sent) {
+async function reportSend({ prompt, sent, instructionsFile: file = null }, what = 'your question') {
     if (sent) {
         const command = prompt.split(/\s/, 1)[0];
-        showToast({ message: command.startsWith('/') ? ['Sent ', el('code', {}, command), ' to the chat'] : 'Sent your question to the chat', prompt });
+        showToast({ message: command.startsWith('/') ? ['Sent ', el('code', {}, command), ' to the chat'] : `Sent ${what} to the chat`, prompt, file });
         return;
     }
     const copied = await copyText(prompt);
     showToast({
         message: copied ? 'No chat session here, so the prompt was copied. Paste it into the chat.' : 'No chat session here. Copy the prompt and paste it into the chat.',
         prompt,
+        file,
         pinned: true,
     });
+}
+
+const INSTALL_DISMISSED = 'speckit-install-hint-dismissed';
+try {
+    state.install.dismissed = sessionStorage.getItem(INSTALL_DISMISSED) === '1';
+} catch { /* no storage: the line stays dismissible for this page */ }
+
+function refreshInstallHints() {
+    renderSpecifyChoices();
+    if (state.detail) renderDetail();
+}
+
+async function askInstall(button) {
+    button.disabled = true;
+    try {
+        await reportSend(await api('/api/install', {}), 'the install request');
+    } catch (error) {
+        toast(`Could not send: ${error.message}`);
+    } finally {
+        button.disabled = false;
+    }
+}
+
+/** One quiet line, shown only where SpecKit Companion is not installed, that opens to the install command. Null once dismissed. */
+function installHint() {
+    const command = state.snapshot?.specify?.installCommand;
+    if (!command || state.install.dismissed) return null;
+    const { open } = state.install;
+    return el('div', { class: 'install-hint' },
+        el('p', { class: 'install-hint__line' },
+            'SpecKit Companion is not installed in this project, so the standard Spec Kit commands run. ',
+            el('button', {
+                class: 'btn-link',
+                type: 'button',
+                'aria-expanded': String(open),
+                onclick: () => {
+                    state.install.open = !open;
+                    refreshInstallHints();
+                },
+            }, 'Install it'),
+            el('button', {
+                class: 'btn btn-icon install-hint__dismiss',
+                type: 'button',
+                'aria-label': 'Dismiss the install note',
+                onclick: () => {
+                    state.install.dismissed = true;
+                    try {
+                        sessionStorage.setItem(INSTALL_DISMISSED, '1');
+                    } catch { /* dismissed for this page only */ }
+                    refreshInstallHints();
+                },
+            }, '×')),
+        open ? el('div', { class: 'install-hint__how' },
+            el('code', {}, command),
+            copyButton(command),
+            el('button', { class: 'btn btn-chip', type: 'button', onclick: (e) => askInstall(e.currentTarget) }, 'Ask Copilot to install it')) : null);
 }
 
 els.toast.addEventListener('pointerenter', () => clearTimeout(toast.timer));
@@ -267,12 +338,12 @@ async function run(command, button) {
     if (!spec) return;
     button.disabled = true;
     try {
-        const { prompt, sent } = await api('/api/run', { spec: spec.id, command });
-        if (sent) {
+        const result = await api('/api/run', { spec: spec.id, command });
+        if (result.sent) {
             button.classList.add('sent');
             setTimeout(() => button.classList.remove('sent'), 2400);
         }
-        await reportSend(prompt, sent);
+        await reportSend(result);
     } catch (error) {
         toast(`Could not send: ${error.message}`);
     } finally {
@@ -299,13 +370,18 @@ function renderNext(spec) {
         .filter(([command]) => command !== next.command && !(command === 'resume' && spec.done))
         .map(([command, label, title]) => el('button', { class: 'btn btn-chip', type: 'button', title, onclick: (e) => run(command, e.currentTarget) }, label));
     const prefix = commandSet === 'companion' ? 'speckit.companion' : 'speckit';
+    const hint = installHint();
+    const stockNote = commandSet === 'companion' || hint
+        ? null
+        : state.snapshot.commandSet === 'companion' ? ' This spec uses the Spec Kit workflow, so it runs the standard commands.' : ' Stock Spec Kit commands: SpecKit Companion is not installed in this workspace.';
     return el('section', { class: 'next', 'aria-label': 'Next step' },
         el('div', { class: 'next-main' },
             el('div', { class: 'next-copy' }, el('p', { class: 'next-title' }, next.title), el('p', { class: 'next-why' }, next.why)),
             primary),
         el('div', { class: 'next-more' }, more),
         el('p', { class: 'command-hint' }, 'Buttons send ', el('code', {}, `/${prefix}.<step> ${spec.id}`), ' to the chat.',
-            commandSet === 'companion' ? null : el('span', { class: 'command-hint__stock', title: 'Install with: specify extension add companion' }, state.snapshot.commandSet === 'companion' ? ' This spec uses the Spec Kit workflow, so it runs the standard commands.' : ' Stock Spec Kit commands: SpecKit Companion is not installed in this workspace.')));
+            stockNote ? el('span', { class: 'command-hint__stock' }, stockNote) : null),
+        hint);
 }
 
 function tabsFor(detail) {
@@ -465,8 +541,11 @@ function renderSpecifyChoices() {
             renderSpecifyChoices();
         },
     }, choice.label)));
+    const hint = installHint();
     const blocked = specify.choices.find(c => !c.available);
-    els.newSpecHint.textContent = blocked ? blocked.reason : WORKFLOW_NOTES[state.workflow];
+    els.newSpecHint.textContent = blocked && !hint ? blocked.reason : WORKFLOW_NOTES[state.workflow];
+    els.newSpecInstall.replaceChildren(...(hint ? [hint] : []));
+    els.newSpecInstall.hidden = !hint;
 }
 
 function applySnapshot(snapshot) {
@@ -542,13 +621,13 @@ els.newSpec.addEventListener('submit', async (event) => {
     const description = els.newSpecText.value.trim();
     if (!description) return;
     try {
-        const { prompt, sent } = await api('/api/specify', { description, workflow: state.workflow });
-        if (sent) {
+        const result = await api('/api/specify', { description, workflow: state.workflow });
+        if (result.sent) {
             els.newSpecText.value = '';
             els.newSpec.hidden = true;
             els.newSpecToggle.setAttribute('aria-expanded', 'false');
         }
-        await reportSend(prompt, sent);
+        await reportSend(result);
     } catch (error) {
         toast(`Could not send: ${error.message}`);
     }

@@ -27,6 +27,7 @@
         <label for="new-spec-text">Describe the feature. Specify creates the spec folder and writes <code>spec.md</code>.</label>
         <div class="segmented new-spec-workflow" id="new-spec-workflow" role="radiogroup" aria-label="Workflow" aria-describedby="new-spec-hint"></div>
         <p class="new-spec-hint" id="new-spec-hint"></p>
+        <div id="new-spec-install" hidden></div>
         <div class="new-spec-row">
             <textarea id="new-spec-text" rows="2" placeholder="Let people export their board as CSV" required></textarea>
             <button class="btn btn-primary" type="submit">Specify</button>
@@ -60,6 +61,7 @@
             <div class="toast-actions" id="toast-actions"></div>
         </div>
         <pre class="toast-prompt" id="toast-prompt" tabindex="0" aria-label="Prompt" hidden></pre>
+        <p class="toast-file" id="toast-file" hidden></p>
     </div>
 </body>
 </html>
