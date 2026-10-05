@@ -10,6 +10,7 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 - **An Overview tab.** Read the run's intent, approach, decisions, checks and open concerns on tab `2: Overview`, between `1: Run` and `3: Specs`.
 
 ### Changed
+- **Install from the SpecKit Companion site.** Add the mod with `claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json`; an existing install keeps working.
 - **The command is `/speckit-tracker`.** It takes the same arguments, and `/spec` still works as a shorter name.
 - **Colour, used sparingly.** The running step takes your theme's warning colour, finished is green, failed is red, and the spec's title stays atop every tab.
 - **Steps done alongside Specify say `with Specify`.** Plan and Tasks say where their time went instead of showing an empty time, and the run shows its total.
