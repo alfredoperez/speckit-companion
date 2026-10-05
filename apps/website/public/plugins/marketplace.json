@@ -5,7 +5,11 @@
   "plugins": [
     {
       "name": "speckit-companion",
-      "source": "./apps/claude-mod",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/alfredoperez/speckit-companion.git",
+        "path": "apps/claude-mod"
+      },
       "description": "A band above the prompt with where the run stands, a pane with the pipeline, step times and tasks, and /spec to switch specs. Read only.",
       "category": "development",
       "tags": ["speckit", "spec-driven-development", "mod"]

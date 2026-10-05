@@ -7,11 +7,12 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 ### Added
 - **A useful pane without a run record.** Stock Spec Kit projects get a pane from the spec's files: step times, ticked tasks, a Documents list and the next command.
 - **Open a step's document.** On the Run tab, press a step to read its spec, plan or tasks inside the pane, and `b` to go back.
-- **Open a file in your editor.** Press `o` on a step or document to open its file in your editor, and each readable row now says `↵ read`.
+- **Open a file in your editor.** Press `o` on a step or document to open its file in your editor, and each readable row says `↵ read`.
 - **An Overview tab.** Read the run's intent, approach, decisions, checks and open concerns on tab `2: Overview`, between `1: Run` and `3: Specs`.
 
 ### Changed
 - **A colourful pane and band.** Coloured section headings, a task progress bar, a state dot in the band, and key hints at the pane's foot.
+- **Install from the SpecKit Companion site.** Add the mod with `claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json`; an existing install keeps working.
 - **The command is `/speckit-tracker`.** It takes the same arguments, and `/spec` still works as a shorter name.
 - **Colour, used sparingly.** The running step takes your theme's warning colour, finished is green, failed is red, and the spec's title stays atop every tab.
 - **Steps done alongside Specify say `with Specify`.** Plan and Tasks say where their time went instead of showing an empty time, and the run shows its total.

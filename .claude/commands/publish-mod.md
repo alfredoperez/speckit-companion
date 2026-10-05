@@ -28,15 +28,16 @@ Release the **Claude Code mod** (`apps/claude-mod/`, plugin `speckit-companion`)
    ```bash
    claude plugin validate --strict ./apps/claude-mod
    claude plugin validate --strict .
+   claude plugin validate --strict apps/website/public/plugins/marketplace.json
    npm run test:mod
    ```
-   The second line checks the marketplace file. `test:mod` also rebuilds the canvas bundle; if that leaves a diff under `apps/copilot-canvas/vendor`, `main` was stale, so stop and fix that first.
+   The second line checks the repo's marketplace file and the third the hosted one, `apps/website/public/plugins/marketplace.json`, which is the file the install command points at. The hosted file is part of the release: it fetches the mod from `apps/claude-mod` on `main`, keeps the same entry text as the repo's file, and a change to it goes live with the next site deploy. `test:mod` also rebuilds the canvas bundle; if that leaves a diff under `apps/copilot-canvas/vendor`, `main` was stale, so stop and fix that first.
 6. **README.** When the tests ran on a newer Claude Code than the "Tested on Claude Code" line in `apps/claude-mod/README.md` names, update that line.
 7. **Commit and push** `apps/claude-mod/` to `main` as `chore(claude-mod): release v<X.Y.Z>`. Nothing else goes in this commit.
 8. **Tag**: `claude plugin tag apps/claude-mod --push`. It checks that `plugin.json` and the marketplace entry agree, then creates and pushes `speckit-companion--v<X.Y.Z>`. Confirm with `gh run list --workflow=release.yml --limit 2` that no run started: the tag does not match `v*`.
 9. **Report** the tag and the commands users run:
    ```bash
-   claude plugin marketplace add alfredoperez/speckit-companion
+   claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json
    claude plugin install speckit-companion@speckit-companion
    ```
    People who already have it run `claude plugin update speckit-companion@speckit-companion`, since auto-update is off by default for a third-party marketplace.

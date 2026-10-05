@@ -42,7 +42,7 @@ The mod only reads. It never writes a spec file or the run record, and never sen
 ## Install
 
 ```bash
-claude plugin marketplace add alfredoperez/speckit-companion
+claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json
 claude plugin install speckit-companion@speckit-companion
 ```
 
