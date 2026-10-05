@@ -14,7 +14,7 @@ Five deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`,
 - `content/design/` — Pipeline Builder design-tool mockups (`*.dc.html` screens plus `canvas.json`), not a dot-folder or a fixture.
 - `.serena/`, `.pytest_cache/`, and the per-agent command mirrors in `.gitignore` — local caches, not source.
 
-The example apps and bench sandboxes that used to sit here now live in the sibling `speckit-sandboxes` repo: one recipe per reusable test sandbox (`/sandbox` builds one), the seed apps they start from, the benchmark harness under `bench/`, and kept run results under `evidence/`. `.claude/sandboxes-env.sh` is the one place that knows where that checkout is; commands and scripts source it and never spell the path out.
+The example apps and bench sandboxes that used to sit here now live in the sibling `speckit-sandboxes` repo: one recipe per reusable test sandbox (`/sandbox` builds one), the seed apps they start from, the benchmark harness in its bench folder, and kept run results in its evidence folder. `.claude/sandboxes-env.sh` is the one place that knows where that checkout is; commands and scripts source it and never spell the path out.
 
 ## Where things are documented
 
