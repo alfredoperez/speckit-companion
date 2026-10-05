@@ -80,6 +80,8 @@ let focusKey = null
 // The step or document the focus was last on, which `o` opens from the Run tab.
 let ringKey = null
 let companionSkills = false
+// When the last turn of the main loop ended; a file written before then is not being written any more.
+let settledAt = null
 // The pane is offered once; after that it is the user's to close and to open.
 let offered = false
 // Each followed file's text and facts, kept until its time or size changes.
@@ -213,7 +215,7 @@ async function refreshFollowed($) {
   if (doc && doc.spec !== id) doc = null
   for (const path of parsed.keys()) if (!id || !path.startsWith(at(id) + '/')) parsed.delete(path)
   // The texts that count minutes are part of what is shown, so a minute passing redraws too.
-  const live = next ? [bandParts(next.row, next.ctx, next.folder, now), paneModel(next.row, next.ctx, next.tasksText, { folder: next.folder, now, companionSkills })] : null
+  const live = next ? [bandParts(next.row, next.ctx, next.folder, now, settledAt), paneModel(next.row, next.ctx, next.tasksText, { folder: next.folder, now, companionSkills, settledAt })] : null
   const sig = next ? [JSON.stringify(next.row), next.ctxText, next.tasksText, JSON.stringify(next.folder), JSON.stringify(live)].join('\u0000') : ''
   followed = next
   if (sig === signature) return false
@@ -424,7 +426,7 @@ export function register(on) {
     await ensureStarted($)
     if (!followed || e.props.hasSurvey) return next(e)
     const { Box, Text } = $.ui.resolve(e)
-    const parts = bandParts(followed.row, followed.ctx, followed.folder, await $.clock.now())
+    const parts = bandParts(followed.row, followed.ctx, followed.folder, await $.clock.now(), settledAt)
     const count = followed.row.tasks
     const bar = e.props.bodyColumns >= BAND_BAR_MIN_COLUMNS ? progressBar(count?.checked ?? 0, count?.total ?? 0, BAND_BAR) : null
     const mine = Box({
@@ -489,7 +491,7 @@ export function register(on) {
       })
     const width = Math.max(12, Math.min(e.props.bodyColumns ?? ROW_WIDTH, ROW_WIDTH))
     const now = await $.clock.now()
-    const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText, { folder: followed.folder, now, companionSkills }) : null
+    const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText, { folder: followed.folder, now, companionSkills, settledAt }) : null
     const header = [Box({ flexDirection: 'row', columnGap: 2, children: [tab('run', 'Run', '1'), tab('overview', 'Overview', '2'), tab('specs', 'Specs', '3')] })]
     if (m) header.push(line(m.title, { bold: true, color: C.title }), line(m.recorded ? m.name + ' · ' + m.statusLabel : m.name, { dimColor: true }))
     if (m?.activity) header.push(line(m.activity.text, m.activity.live ? RUNNING : { dimColor: true }))
@@ -706,9 +708,10 @@ export function register(on) {
     })
   })
 
-  // A new run may have started a new spec; follow it unless the user picked one.
+  // A new run may have started a new spec; follow it unless the user picked one. Whatever the turn was writing is written.
   on('turn.complete', async ($, e, next) => {
     if (root && !e.agentId) {
+      settledAt = await $.clock.now()
       await scanAll($)
       await tick($)
     }

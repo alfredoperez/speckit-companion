@@ -137,7 +137,7 @@ test('a spec alone says when it was written, what comes next, and that nothing w
   expect(await paneText($)).toBe(
     [
       ...HEAD,
-      'Waiting: plan next',
+      'Specify written · Plan next',
       ' ',
       'STEPS',
       '✓ Specify    written 7:26 PM',
@@ -161,7 +161,7 @@ test('a spec and a plan show the gap between them, and the pane waits for tasks'
   expect(said(await ui.find({ key: 'pane' }))).toBe(
     [
       ...HEAD,
-      'Waiting: tasks next',
+      'Plan written · Tasks next',
       ' ',
       'STEPS',
       '✓ Specify    written 7:14 PM',
@@ -181,7 +181,7 @@ test('a spec and a plan show the gap between them, and the pane waits for tasks'
   expect((await ui.find({ type: 'Text', text: '· 4m after the spec' })).props.dimColor).toBe(true)
   expect((await ui.find({ type: 'Text', text: 'written 7:18 PM' })).props.dimColor).toBeUndefined()
   expect((await ui.find({ type: 'Text', text: NO_RECORD_NOTE })).props.dimColor).toBe(true)
-  expect((await ui.find({ type: 'Text', text: 'Waiting: tasks next' })).props.dimColor).toBe(true)
+  expect((await ui.find({ type: 'Text', text: 'Plan written · Tasks next' })).props.dimColor).toBe(true)
   expect((await ui.find({ type: 'Text', text: '  2 open questions' })).props.color).toBe('warning')
   expect(await ui.find({ type: 'Text', text: /No record|Timing coverage/ })).toBeUndefined()
 })
@@ -230,7 +230,7 @@ test('the minutes move on by themselves, and ticked tasks left alone stop readin
   await clock.advance(8 * 60000)
   expect(said(await ui.find({ key: 'row-implement' }))).toBe('○ Implement  3 of 10 tasks · last change 11m ago')
   expect((await ui.find({ type: 'Text', text: '3 of 10 tasks' })).props.dimColor).toBe(true)
-  expect(await ui.find({ type: 'Text', text: 'Waiting: T004 next · Add the clear button to index.html' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'Implement stopped at 3 of 10 · T004 left' })).toBeDefined()
 })
 
 test('a finished stock run ticks Implement and names no next step', async ($, on) => {
@@ -248,15 +248,57 @@ test('the activity line tells writing from waiting by how lately a file changed'
   const row = {}
   const say = (files: [string, number][]) => activityLine(row, folder(files), NOW)
   expect(say([['spec.md', NOW - 60000]])).toEqual({ text: 'Writing the spec', live: true })
-  expect(say([['spec.md', NOW - 180000]])).toEqual({ text: 'Waiting: plan next', live: false })
+  expect(say([['spec.md', NOW - 180000]])).toEqual({ text: 'Specify written · Plan next', live: false })
   expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 30000]])).toEqual({ text: 'Writing the plan', live: true })
   // The plan step writes its research after the plan file, and that is still the plan being written.
   expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000], ['research.md', NOW - 30000]])).toEqual({ text: 'Writing the plan', live: true })
-  expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000]])).toEqual({ text: 'Waiting: tasks next', live: false })
+  expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000]])).toEqual({ text: 'Plan written · Tasks next', live: false })
   expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000], ['tasks.md', NOW - 30000]])).toEqual({ text: 'Writing the tasks', live: true })
-  expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000], ['tasks.md', NOW - 300000]])).toEqual({ text: 'Waiting: implement next', live: false })
-  expect(say([['notes.md', NOW]])).toEqual({ text: 'Waiting: specify next', live: false })
+  expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000], ['tasks.md', NOW - 300000]])).toEqual({ text: 'Tasks written · Implement next', live: false })
+  expect(say([['notes.md', NOW]])).toEqual({ text: 'Specify next', live: false })
   expect(activityLine(row, null, NOW)).toBe(null)
+})
+
+const endTurn = ($: any) => $.turn.complete({ reason: 'answer', answer: 'Done.', durationMs: 60000, isAborted: false, turnId: 't1' })
+
+test('once the turn ends a plan written a moment ago reads as written, in the band\'s words', async ($, on) => {
+  const times = { ...WAITING_TIMES, [path('plan.md')]: NOW - 20000 }
+  const files: Record<string, string> = { ...WAITING_FOR_TASKS }
+  const { clock } = await open($, on, files, times)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text', text: 'Writing the plan' })).props.color).toBe('warning')
+  await endTurn($)
+  expect(await ui.find({ type: 'Text', text: 'Writing the plan' })).toBeUndefined()
+  expect((await ui.find({ type: 'Text', text: 'Plan written · Tasks next' })).props.dimColor).toBe(true)
+  expect(said(await ui.find({ key: 'pane' })).split('\n').pop()).toBe('Next: /speckit-tasks')
+  expect(await bandText($)).toBe('○ 001-clear-completed · Plan written just now · Tasks next')
+  // The next command's own writes come after the turn ended, so they read as in progress again.
+  files[path('research.md')] = RESEARCH
+  times[path('research.md')] = NOW + 30000
+  await clock.advance(40000)
+  expect(await ui.find({ type: 'Text', text: 'Writing the plan' })).toBeDefined()
+})
+
+test('a turn that ends with tasks left says where implement stopped, and nothing reads as running', async ($, on) => {
+  const files = { ...MID_IMPLEMENT, [path('tasks.md')]: tasks(9) }
+  await open($, on, files, { ...IMPLEMENT_TIMES, [path('tasks.md')]: NOW - 30000 })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text', text: 'Implementing: T010 next · Run the whole suite' })).props.color).toBe('warning')
+  await endTurn($)
+  expect(await ui.find({ type: 'Text', text: /^Implementing/ })).toBeUndefined()
+  expect((await ui.find({ type: 'Text', text: 'Implement stopped at 9 of 10 · T010 left' })).props.dimColor).toBe(true)
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('○ Implement  9 of 10 tasks · last change just now')
+  await ui.unmount()
+  const band = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(toText(await band.find({ key: 'speckit-band' }))).toBe('○ 001-clear-completed ███████░ · Implement 9/10 · last change just now')
+  expect((await band.find({ type: 'Text', text: /Implement 9\/10/ })).props.dimColor).toBe(true)
+})
+
+test('a subagent\'s turn ending settles nothing', async ($, on) => {
+  await open($, on, WAITING_FOR_TASKS, { ...WAITING_TIMES, [path('plan.md')]: NOW - 20000 })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await $.turn.complete({ reason: 'answer', answer: 'Done.', durationMs: 1000, isAborted: false, turnId: 't1', agentId: 'a1' })
+  expect(await ui.find({ type: 'Text', text: 'Writing the plan' })).toBeDefined()
 })
 
 test('a time today is a clock time, another day carries its date, and spans round down', async () => {
