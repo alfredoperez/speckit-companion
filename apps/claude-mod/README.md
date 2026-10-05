@@ -44,7 +44,7 @@ claude plugin install speckit-companion@speckit-companion
 
 Run `/reload-plugins` in a session that is already open. To check it loaded, run `/plugin`: the line under the tabs names `speckit-companion` among the active mods.
 
-The pane sits beside the transcript in a terminal at least 144 columns wide, and opens there by itself. In a narrower terminal it waits until you run `/speckit-tracker`, then sits above the prompt.
+The pane sits beside the transcript in a terminal at least 144 columns wide, and opens there by itself: at the start when the project has a spec, or as soon as the first one appears. It opens once, so a pane you closed stays closed until you run `/speckit-tracker`. In a narrower terminal it waits until you run `/speckit-tracker`, then sits above the prompt.
 
 ## Where it draws
 
