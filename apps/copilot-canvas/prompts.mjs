@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_SPEC_DIRS } from './spec-rules.mjs';
 import { isKnownStep, renderPreamble, renderSpecifyCreationLifecyclePreamble } from './vendor/preamble.mjs';
@@ -65,19 +65,66 @@ export function commandInstructions(root, command, commandSet = 'companion') {
     return candidates.find(candidate => existsSync(join(root, candidate))) ?? null;
 }
 
+/** Where the board keeps the run instructions it writes, relative to the project root. The only place it writes. */
+export const PROMPTS_DIR = '.speckit-companion/prompts';
+
+/** The one sentence that stands in the chat for the whole preamble. */
+export function instructionsSentence(file) {
+    return `Before you start, read and follow the run instructions in \`${file}\`.`;
+}
+
+const safeName = name => String(name).replace(/[^A-Za-z0-9._-]+/g, '-');
+
+/** `plan-042-export-csv.md`: one file per step and spec folder, so a re-run replaces the last one. */
+export function stepInstructionsName(command, specId) {
+    return `${command}-${safeName(basename(specId))}.md`;
+}
+
+/** New spec has no folder yet, so its file is named by the dispatch time. */
+export function specifyInstructionsName(now = new Date()) {
+    return `specify-${now.toISOString().replace(/[-:.]/g, '')}.md`;
+}
+
+/** The instruction file's text: which command it belongs to, then the preamble exactly as VS Code renders it. */
+export function runInstructionsDoc(commandLine, preamble) {
+    return `# Run instructions\n\nThese belong to the \`${commandLine}\` command the SpecKit Companion board sent to the chat. Follow them while you run it.\n\n${preamble}\n`;
+}
+
+function ownDirectory(realRoot, dir, label) {
+    mkdirSync(dir, { recursive: true });
+    if (realpathSync(dir) !== join(realRoot, label)) throw new Error(`Could not write the run instructions: \`${label}\` leads outside the project.`);
+}
+
+/**
+ * Write a run's instructions under `.speckit-companion/prompts/` and return the root-relative path the chat message names.
+ * Refuses when either folder resolves outside the project through a symlink. An older file of the same name is removed first.
+ */
+export function writeRunInstructions(root, name, content) {
+    const realRoot = realpathSync(root);
+    const [home, prompts] = PROMPTS_DIR.split('/');
+    ownDirectory(realRoot, join(root, home), home);
+    ownDirectory(realRoot, join(root, home, prompts), PROMPTS_DIR);
+    const ignore = join(root, home, '.gitignore');
+    if (!lstatSync(ignore, { throwIfNoEntry: false })) writeFileSync(ignore, '*\n', { flag: 'wx' });
+    const file = join(root, home, prompts, safeName(name));
+    rmSync(file, { force: true });
+    writeFileSync(file, content, { flag: 'wx' });
+    return `${PROMPTS_DIR}/${safeName(name)}`;
+}
+
 /**
  * The chat message a run button sends: the same `/speckit.companion.<cmd> <spec dir>` line the VS Code sidebar dispatches,
- * a pointer to the command's instructions so an agent without the slash command can still run it, and the step preamble
- * VS Code appends so the run records itself.
+ * a pointer to the command's instructions so an agent without the slash command can still run it, and one sentence naming the
+ * file that holds the step preamble VS Code appends so the run records itself.
  */
-export function buildPrompt(command, specId, commandSet = 'companion', instructions = null, preamble = null) {
+export function buildPrompt(command, specId, commandSet = 'companion', instructions = null, instructionsFile = null) {
     if (!availableCommands(commandSet).includes(command)) {
         throw new Error(`Unknown command for the ${commandSet} command set: ${command}`);
     }
     const prefix = commandSet === 'companion' ? 'speckit.companion' : 'speckit';
     let text = `/${prefix}.${command} ${specId}`;
     if (instructions) text += `\n\nIf /${prefix}.${command} is not a command here, read \`${instructions}\` and follow it for the spec in \`${specId}\`.`;
-    return preamble ? `${text}\n\n${preamble}` : text;
+    return instructionsFile ? `${text}\n\n${instructionsSentence(instructionsFile)}` : text;
 }
 
 /** The step preamble for a run button (plan, tasks, implement), or null for commands VS Code sends none for. */
@@ -94,6 +141,7 @@ export function specifyChoices(root) {
     const needs = 'Needs the SpecKit Companion extension, which is not installed in this workspace.';
     return {
         installed,
+        installCommand: installed ? null : INSTALL_COMMAND,
         default: installed ? 'companion' : 'speckit',
         choices: [
             { id: 'companion', label: 'Companion', available: installed, reason: installed ? null : needs },
@@ -151,8 +199,9 @@ export function numberingRule(root, specDirs = DEFAULT_SPEC_DIRS) {
 }
 
 /**
- * A new spec starts from a description, not a folder: specify mints the folder itself. The message is what VS Code writes to
- * its temp file, kept inline: the command line with the description, the folder number, then the lifecycle preamble that seeds `.spec-context.json`.
+ * A new spec starts from a description, not a folder: specify mints the folder itself. The message is the command line with the
+ * description, the folder number, and one sentence naming the file that will hold the lifecycle preamble that seeds `.spec-context.json`.
+ * The caller writes `preamble` to `instructionsName` (`writeRunInstructions`) before it sends `prompt`.
  */
 export function buildSpecifyPrompt({ description, workflow, root, specDirs = DEFAULT_SPEC_DIRS, now = new Date() }) {
     const text = String(description ?? '').replace(/\r\n?/g, '\n').trim();
@@ -165,7 +214,23 @@ export function buildSpecifyPrompt({ description, workflow, root, specDirs = DEF
     const numbering = numberingRule(root, specDirs);
     if (numbering) message += `\n\n${numbering}`;
     const preamble = renderSpecifyCreationLifecyclePreamble(effective, null, now.toISOString(), effective === 'companion' && installed, writerPath(root), null);
-    return { prompt: `${message}\n\n${preamble}`, command, workflow: effective };
+    const instructionsName = specifyInstructionsName(now);
+    return {
+        prompt: `${message}\n\n${instructionsSentence(`${PROMPTS_DIR}/${instructionsName}`)}`,
+        preamble,
+        instructionsName,
+        instructionsDoc: runInstructionsDoc(`/${command}`, preamble),
+        command,
+        workflow: effective,
+    };
+}
+
+/** The spec-kit command that installs Companion. It names the pinned `companion-latest` download, as the spec-kit extension README does. */
+export const INSTALL_COMMAND = 'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
+
+/** The one chat line behind "Ask Copilot to install it". */
+export function buildInstallPrompt() {
+    return `Run \`${INSTALL_COMMAND}\` in this project, then commit the skill files it generates: each session starts from the committed default branch, so the SpecKit Companion commands only exist in the next session if those files are real, committed files.`;
 }
 
 /** A read-only question about one spec, for the "Ask Copilot" button. */

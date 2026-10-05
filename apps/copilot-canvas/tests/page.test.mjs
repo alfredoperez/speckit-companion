@@ -108,7 +108,7 @@ describe('board page', { concurrency: false }, async () => {
         await page.locator('#toast').waitFor({ state: 'hidden', timeout: 6000 });
     });
 
-    it('keeps the full prompt one click away after a send', async (t) => {
+    it('keeps the short message that was sent, and its instruction file, one click away', async (t) => {
         if (skipWithoutChrome(t)) return;
         await page.click('.next .btn-primary');
         await page.waitForSelector('.toast.is-visible');
@@ -116,10 +116,14 @@ describe('board page', { concurrency: false }, async () => {
         const prompt = page.locator('#toast-prompt');
         assert.ok(await prompt.isVisible());
         assert.equal(await prompt.textContent(), sent.at(-1));
+        assert.equal(await prompt.textContent(), '/speckit.tasks specs/_01_demo-planned\n\nBefore you start, read and follow the run instructions in `.speckit-companion/prompts/tasks-_01_demo-planned.md`.');
         assert.equal(await page.getAttribute('#toast-actions [aria-controls="toast-prompt"]', 'aria-expanded'), 'true');
+        assert.equal(await page.locator('#toast-file code').textContent(), '.speckit-companion/prompts/tasks-_01_demo-planned.md');
+        assert.equal(await page.locator('#toast-file button:has-text("Copy path")').count(), 1);
+        assert.match(readFileSync(join(root, '.speckit-companion/prompts/tasks-_01_demo-planned.md'), 'utf8'), /<!-- speckit-companion:context-update -->/);
         const box = await page.locator('#toast').boundingBox();
         assert.ok(box.height < 860 * 0.4, `the open prompt stays compact, got ${box.height}px`);
-        assert.ok(await prompt.evaluate(node => node.scrollHeight > node.clientHeight), 'the long prompt scrolls inside its box');
+        assert.ok(await prompt.evaluate(node => node.scrollHeight <= node.clientHeight), 'the short message fits without scrolling');
         await toastShown();
         await shot('04c-prompt-open');
         await page.click('#toast-actions [aria-label="Dismiss"]');
@@ -135,6 +139,8 @@ describe('board page', { concurrency: false }, async () => {
             assert.match(await page.locator('#toast-msg').textContent(), /^No chat session here\b.*paste it into the chat\.$/i);
             assert.ok(await page.locator('#toast-prompt').isVisible(), 'the prompt shows without a click');
             assert.equal(await page.locator('#toast-prompt').textContent(), sent.at(-1));
+            assert.doesNotMatch(sent.at(-1), /context-update/);
+            assert.ok(await page.locator('#toast-file').isVisible(), 'the instruction file is named beside it');
             assert.equal(await page.locator('#toast-actions button:has-text("Copy")').count(), 1);
             const box = await page.locator('#toast').boundingBox();
             assert.ok(box.height < 860 * 0.4, `the failure notice stays compact, got ${box.height}px`);
@@ -192,18 +198,36 @@ describe('board page', { concurrency: false }, async () => {
         await page.click('#new-spec button[type="submit"]');
         await page.waitForSelector('.toast.is-visible');
         assert.ok(sent.at(-1).startsWith('/speckit.specify Show a footer count'));
-        assert.match(sent.at(-1), /"workflow": "speckit"/);
+        const file = sent.at(-1).match(/run instructions in `(\.speckit-companion\/prompts\/specify-[^`]+\.md)`\.$/)?.[1];
+        assert.ok(file, 'the message ends with the sentence naming the instruction file');
+        assert.doesNotMatch(sent.at(-1), /SEED WRITE INSTRUCTIONS|"workflow"/);
+        assert.match(readFileSync(join(root, file), 'utf8'), /"workflow": "speckit"/);
     });
 
-    it('disables Companion and Auto with a reason when the extension is not installed', async (t) => {
+    it('shows no install note where Companion is installed', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        await page.click('#toast-actions [aria-label="Dismiss"]');
+        await page.click('#new-spec-toggle');
+        await page.waitForSelector('.next');
+        assert.equal(await page.locator('.install-hint').count(), 0);
+        assert.equal(await page.locator('#new-spec-install').isVisible(), false);
+        await page.click('#new-spec-toggle');
+    });
+
+    it('disables Companion and Auto and says how to install it when the extension is not installed', async (t) => {
         if (skipWithoutChrome(t)) return;
         const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-stock-'));
-        mkdirSync(join(stockRoot, 'specs'));
-        const stock = await createSpecServer({ root: stockRoot, send: async () => true });
-        const stockPage = await browser.newPage({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark' });
+        mkdirSync(join(stockRoot, 'specs/001-starred-todos'), { recursive: true });
+        writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
+        const stockSent = [];
+        const stock = await createSpecServer({ root: stockRoot, send: async (prompt) => { stockSent.push(prompt); return true; } });
+        const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark', permissions: ['clipboard-read', 'clipboard-write'] });
+        const stockPage = await context.newPage();
+        const line = 'SpecKit Companion is not installed in this project, so the standard Spec Kit commands run.';
+        const command = 'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
         try {
             await stockPage.goto(stock.url);
-            await stockPage.waitForSelector('#new-spec-toggle');
+            await stockPage.waitForSelector('.next');
             await stockPage.click('#new-spec-toggle');
             const states = await stockPage.locator('#new-spec-workflow button').evaluateAll(buttons => buttons.map(b => [b.textContent.trim(), b.disabled, b.getAttribute('aria-disabled')]));
             assert.deepEqual(states, [['Companion', true, 'true'], ['Spec Kit', false, null], ['Auto', true, 'true']]);
@@ -212,10 +236,40 @@ describe('board page', { concurrency: false }, async () => {
             const focusable = await stockPage.locator('#new-spec-workflow button').evaluateAll(buttons => buttons.map(b => { b.focus(); return document.activeElement === b; }));
             assert.deepEqual(focusable, [false, true, false], 'disabled choices take no focus');
             assert.equal((await stockPage.locator('#new-spec-workflow [aria-checked="true"]').textContent()).trim(), 'Spec Kit');
-            assert.match(await stockPage.locator('#new-spec-hint').textContent(), /not installed/);
+
+            const inForm = stockPage.locator('#new-spec .install-hint');
+            const onCard = stockPage.locator('.next .install-hint');
+            for (const hint of [inForm, onCard]) {
+                assert.equal(await hint.count(), 1);
+                assert.ok((await hint.locator('.install-hint__line').textContent()).startsWith(line));
+                assert.equal(await hint.locator('.install-hint__how').count(), 0, 'the command stays folded away');
+                const box = await hint.boundingBox();
+                assert.ok(box.height < 30, `the note is one line, got ${box.height}px`);
+            }
             if (SHOTS) await stockPage.screenshot({ path: join(SHOTS, '09-new-spec-stock.png') });
+
+            await onCard.locator('.btn-link').click();
+            assert.equal(await onCard.locator('.install-hint__how code').textContent(), command);
+            assert.equal(await onCard.locator('.btn-link').getAttribute('aria-expanded'), 'true');
+            await onCard.locator('.install-hint__how button:has-text("Copy")').click();
+            await onCard.locator('.install-hint__how button:has-text("Copied")').waitFor();
+            assert.equal(await stockPage.evaluate(() => navigator.clipboard.readText()), command);
+            if (SHOTS) await stockPage.screenshot({ path: join(SHOTS, '10-install-hint-open.png') });
+
+            await onCard.locator('button:has-text("Ask Copilot to install it")').click();
+            await stockPage.waitForSelector('.toast.is-visible');
+            assert.ok(stockSent.at(-1).startsWith(`Run \`${command}\` in this project, then commit the skill files it generates`));
+            assert.equal((await stockPage.locator('#toast-msg').textContent()).trim(), 'Sent the install request to the chat');
+
+            await inForm.locator('[aria-label="Dismiss the install note"]').click();
+            assert.equal(await stockPage.locator('.install-hint').count(), 0, 'dismissing hides it in both places');
+            assert.match(await stockPage.locator('#new-spec-hint').textContent(), /not installed/);
+            assert.match(await stockPage.locator('.command-hint').textContent(), /Stock Spec Kit commands/);
+            await stockPage.reload();
+            await stockPage.waitForSelector('.next');
+            assert.equal(await stockPage.locator('.install-hint').count(), 0, 'and it stays dismissed for the session');
         } finally {
-            await stockPage.close();
+            await context.close();
             await stock.close();
         }
     });
