@@ -271,6 +271,44 @@ try {
         await joined.first().waitFor({ timeout: 15000 });
         return `${await joined.count()} joined paragraph(s)`;
     });
+
+    await step('tasks-no-blank-band', 'A short document starts right under the outline', async () => {
+        await clear();
+        await (await row('Specs', 'Demo — Tasked')).click();
+        await webview().locator('.step-tab', { hasText: 'Tasks' }).click();
+        await webview().locator('.phase-header').first().waitFor({ timeout: 15000 });
+        const gap = await webview().locator('#content-area').evaluate((area) => {
+            const top = area.querySelector('.phase-header').getBoundingClientRect().top;
+            return Math.round(top - area.getBoundingClientRect().top);
+        });
+        if (gap > 170) throw new Error(`the first phase starts ${gap}px down the page`);
+        return `${gap}px from the top of the page`;
+    });
+
+    await step('report-header-line', 'A report tab opens with one line of facts, not a bullet list', async () => {
+        await clear();
+        await (await row('Bugs', 'cartTotal skips the first cart item')).click();
+        await webview().locator('.step-tab', { hasText: 'Assessment' }).click();
+        await webview().locator('.rp-lead').waitFor({ state: 'detached', timeout: 15000 });
+        const line = await expectText(webview().locator('#markdown-content .rp-meta'), /Reported Oct 1, 2026 from pasted text · valid · high severity/);
+        const body = await webview().locator('#markdown-content').innerText();
+        if (/Slug\s*:/.test(body)) throw new Error('the slug bullet is still shown');
+        return line;
+    });
+
+    await step('answer-open-question', 'An open question has an Answer button', async () => {
+        const question = webview().locator('.rp-question').first();
+        await question.scrollIntoViewIfNeeded();
+        await expectText(question.locator('.rp-question__badge'), /Needs an answer/);
+        await question.locator('.rp-question__answer').click();
+        await webview().locator('textarea').first().fill('No. The wrong totals never reached an order: checkout recomputes them on the server.');
+    });
+
+    await step('answer-sends', 'Send answer hands the answer to the assistant with the assess command', async () => {
+        await webview().locator('button', { hasText: 'Send answer' }).click();
+        await expectText(webview().locator('.rp-question__sent'), /Sent to your assistant/);
+        return terminalText(/\[sent to assistant\].*speckit[-.]bug[-.]assess slug=cart-total-skips-first/);
+    });
 } finally {
     writeFileSync(join(OUT, `results.${THEME}.json`), JSON.stringify(results, null, 2));
     await app.close().catch(() => undefined);
