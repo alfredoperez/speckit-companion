@@ -33,7 +33,9 @@ mkdir -p ~/.copilot/extensions/speckit-companion
 echo "import '$PWD/apps/copilot-canvas/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
 ```
 
-Then open the project in the Copilot app, start a session, and ask for the **SpecKit Companion** canvas. It also appears under **Customize → Canvas**.
+Then open the project in the Copilot app, start a session, and ask for the **SpecKit Companion** canvas. It also appears in the session's **+** menu under **Canvas**.
+
+**A project copy has to be accepted first (Copilot app 1.1.26 and later).** The app treats `.github/extensions/` as code that can run on your machine and keeps it off until you accept it. Choose **Review repository content** on the notice the app shows, or in the project's settings under **Repository trust**, then **Accept for new sessions**. Only sessions started after that load the board; the one that was open when you accepted never does, and there the agent opens an empty `speckit-companion.md` in the editor instead. The app accepts the exact files, so after any change under `.github/extensions/` (an updated board included) the project shows **Update available** and new sessions lose the board until you accept again. An unaccepted project turns every extension off in its sessions, the user-folder copy included.
 
 The run buttons need the Companion commands in the project (`specify extension add companion …`, see the [spec-kit extension README](../speckit-extension/README.md)). Without them the buttons send the stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement`, and the board offers the install command.
 
