@@ -73,6 +73,7 @@ import { bugDirectoryOf } from "../bugs/bugReports";
 import { ideaDirectoryOf } from "../ideas/ideaReports";
 import { isReportPath, reportDirectoryOf, reportDocuments, type ReportSet } from "../reports/reportSet";
 import { REPORT_SETS, readReportPanel, type ReportSetId } from "./reportPanels";
+import { withHeaderLine } from "../reports/reportMeta";
 import { featureSpecPath } from "../specs/featureSpecPath";
 import { noteSpecDispatch, resolveSpecAssistant } from "../specs/specAssistant";
 import { getSpecTerminal } from "../specs/specTerminals";
@@ -886,7 +887,7 @@ export class SpecViewerProvider {
     let emptyMessage = "This report has not been created yet.";
     if (doc.exists && doc.filePath) {
       try {
-        content = await fs.promises.readFile(doc.filePath, "utf-8");
+        content = withHeaderLine(doc.type, await fs.promises.readFile(doc.filePath, "utf-8"));
       } catch (error) {
         emptyMessage = `Error reading file: ${error}`;
       }

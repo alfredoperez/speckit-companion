@@ -4,6 +4,7 @@ import * as path from 'path';
 import { getAIProvider } from '../../extension';
 import { formatCommandForProvider, getConfiguredProviderType, getProviderDisplayName } from '../../ai-providers/aiProvider';
 import { getProjectRoot } from '../../core/projectRoot';
+import { CACHE_ROOT, ensureCacheFolder } from '../../core/companionCache';
 import { BUGS_DIR, readBugReports } from '../bugs/bugReports';
 import { IDEAS_DIR, readIdeaReports } from '../ideas/ideaReports';
 import { generateNonce } from '../spec-viewer/utils';
@@ -15,7 +16,6 @@ import {
     type ProcessCreateToExtension,
 } from '../../protocol/processCreate';
 
-const CACHE_ROOT = '.speckit-companion';
 const STAGING_FOLDER = 'process-create';
 const CLOSE_DELAY_MS = 500;
 const NO_PROJECT = 'Open a project folder first.';
@@ -192,13 +192,11 @@ export class ProcessCreateProvider {
 
         try {
             post({ type: 'submissionStarted' });
-            const cacheRoot = path.join(root, CACHE_ROOT);
             const fileName = `${kind}-${slug}.md`;
             const relativePath = `${CACHE_ROOT}/${STAGING_FOLDER}/${fileName}`;
-            await fs.promises.mkdir(path.join(cacheRoot, STAGING_FOLDER), { recursive: true });
-            await fs.promises.writeFile(path.join(cacheRoot, '.gitignore'), '*\n', { flag: 'wx' }).catch(() => undefined);
+            const stagingFolder = ensureCacheFolder(root, STAGING_FOLDER);
             await fs.promises.writeFile(
-                path.join(cacheRoot, STAGING_FOLDER, fileName),
+                path.join(stagingFolder, fileName),
                 extra ? `${text.trim()}\n\n## ${copy.extraLabel}\n\n${extra}\n` : `${text.trim()}\n`,
                 'utf8',
             );

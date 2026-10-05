@@ -3,7 +3,8 @@
  * Exports markdown rendering functionality
  */
 
-export { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries, slugify } from './renderer';
+export { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setTaskSummaries, slugify } from './renderer';
+export { markClarifications, writtenQuestion } from './clarifications';
 export {
     setLivingCoverage,
     setLivingDrifted,

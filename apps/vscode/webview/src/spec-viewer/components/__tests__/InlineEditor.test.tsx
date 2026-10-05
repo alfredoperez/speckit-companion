@@ -134,3 +134,44 @@ describe('InlineEditor — edit mode never saves the text the user replaced', ()
         expect(host.querySelector('.editor-add')?.textContent).toBe('Save');
     });
 });
+
+describe('InlineEditor — answering an open question', () => {
+    const answerProps = (over: Partial<InlineEditorProps> = {}) =>
+        baseProps({ mode: 'answer', lineNum: 0, lineType: 'task', submitLabel: 'Send answer', ...over });
+
+    it('asks for an answer and labels the button as the caller says', () => {
+        const host = mount(answerProps());
+
+        expect(textarea(host).placeholder).toBe('Your answer…');
+        expect(host.querySelector('.editor-add')?.textContent).toBe('Send answer');
+        expect(host.querySelector('.editor-header')?.textContent).toBe('Your answer');
+    });
+
+    it('offers no line actions', () => {
+        const host = mount(answerProps());
+
+        expect(host.querySelector('.context-action')).toBeNull();
+    });
+
+    it('submits the typed answer', async () => {
+        const onSubmit = jest.fn();
+        const host = mount(answerProps({ onSubmit }));
+
+        await type(host, ' Since the March release. ');
+        submit(host);
+
+        expect(onSubmit).toHaveBeenCalledWith('Since the March release.');
+    });
+
+    it('cancels on Escape without submitting', async () => {
+        const onSubmit = jest.fn();
+        const onCancel = jest.fn();
+        const host = mount(answerProps({ onSubmit, onCancel }));
+
+        await type(host, 'half an answer');
+        textarea(host).dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+        expect(onCancel).toHaveBeenCalled();
+        expect(onSubmit).not.toHaveBeenCalled();
+    });
+});

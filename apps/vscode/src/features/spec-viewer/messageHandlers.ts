@@ -62,8 +62,11 @@ import {
 import type { CoreDocumentType } from "./types";
 import { isFeatureSpecFile } from "../specs/featureSpecPath";
 import { isSpecDocument } from "./utils";
-import { readReportPanel } from "./reportPanels";
-import { commandForAction, repeatsFromFolder } from "../processes/processActions";
+import { REPORT_SETS, readReportPanel } from "./reportPanels";
+import { commandForAction, commandForDocument, repeatsFromFolder } from "../processes/processActions";
+import { reportFile } from "../reports/reportSet";
+import { clarificationsIn } from "../reports/clarifications";
+import { stageReportAnswer } from "../reports/reportAnswers";
 import type { ReviewComment, ReviewCommentDoc } from "../../core/types/specContext";
 import {
   DocumentType,
@@ -232,6 +235,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     approveSpec: (msg, dir, deps) => handleLivingApprove(dir, msg.documentType, undefined, deps),
     undoLivingAction: (msg, dir, deps) => handleLivingUndo(dir, msg.token, deps),
     reportAction: (msg, dir, deps) => handleReportAction(dir, msg.id, deps),
+    reportAnswer: (msg, dir, deps) => handleReportAnswer(dir, msg, deps),
     openFile: (msg, dir, deps) => handleOpenFile(dir, msg.filename, deps),
     openLivingSpec: (msg, _dir, deps) =>
       handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps, msg.requirement),
@@ -261,7 +265,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
   };
 }
 
-/** The only messages a read-only bug or idea panel may act on. Every write is dropped, and the one dispatch allowed is `reportAction`, which re-checks its id against the item's files. */
+/** The only messages a read-only bug or idea panel may act on. Every write is dropped, and the two dispatches allowed, `reportAction` and `reportAnswer`, re-check what they were sent against the item's files. */
 const BUG_PANEL_MESSAGES: ReadonlySet<ViewerToExtensionMessage["type"]> = new Set<ViewerToExtensionMessage["type"]>([
   "ready",
   "switchDocument",
@@ -271,6 +275,7 @@ const BUG_PANEL_MESSAGES: ReadonlySet<ViewerToExtensionMessage["type"]> = new Se
   "editSource",
   "webviewError",
   "reportAction",
+  "reportAnswer",
 ]);
 
 /**
@@ -944,6 +949,62 @@ async function handleReportAction(
   const step = `/${formatCommandForProvider(command)} slug=${item.slug}`;
   await deps.executeInTerminal(
     repeatsFromFolder(action.id) ? `${step} Start again from the existing reports in ${item.folder}.` : step,
+  );
+}
+
+const MAX_QUESTION_LENGTH = 500;
+const MAX_ANSWER_LENGTH = 4000;
+
+/** An answer to one open question on a report. The question must be one the report file still asks. */
+async function handleReportAnswer(
+  specDirectory: string,
+  msg: { question?: unknown; answer?: unknown; document?: unknown },
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const drop = (why: string) => {
+    deps.outputChannel.appendLine(`[SpecViewer] Report answer dropped: ${why}`);
+    void vscode.window.showWarningMessage(`Your answer was not sent: ${why}.`);
+  };
+  const state = deps.getInstance(specDirectory)?.state;
+  if (!state?.bug) return drop("not a bug or idea page");
+  const setId = state.reportSet ?? "bugs";
+  const item = readReportPanel(setId, state.specDirectory);
+  if (!item) return drop("the item has no reports on disk");
+  if (!PROMPT_SAFE_SLUG.test(item.slug)) return drop("the folder name cannot be sent as a slug");
+
+  const set = REPORT_SETS[setId];
+  const document = typeof msg.document === "string" && set.kinds.includes(msg.document) ? msg.document : undefined;
+  if (!document) return drop("the document is not one of this item's reports");
+  const report = reportFile(set, state.specDirectory, document);
+  if (!report.exists) return drop(`${report.fileName} is not on disk`);
+
+  const question = typeof msg.question === "string" ? msg.question.trim() : "";
+  if (question === "" || question.length > MAX_QUESTION_LENGTH) return drop("the question is empty or too long");
+  if (/[\r\n]/.test(question)) return drop("the question spans more than one line");
+  const answer = typeof msg.answer === "string" ? msg.answer.trim() : "";
+  if (answer === "" || answer.length > MAX_ANSWER_LENGTH) return drop("the answer is empty or too long");
+
+  let text: string;
+  try {
+    text = fs.readFileSync(report.path, "utf-8");
+  } catch {
+    return drop(`${report.fileName} could not be read`);
+  }
+  if (!clarificationsIn(text).includes(question)) return drop(`${report.fileName} does not ask that question`);
+
+  const command = commandForDocument(item.kind, document);
+  if (!command) return drop("no command is mapped to that document");
+  const root = getProjectRoot();
+  if (!root) return drop("no project folder is open");
+
+  let staged: string;
+  try {
+    staged = stageReportAnswer(root, { kind: item.kind, slug: item.slug, document, question, answer });
+  } catch {
+    return drop("the answer could not be saved");
+  }
+  await deps.executeInTerminal(
+    `/${formatCommandForProvider(command)} slug=${item.slug} Read the answers in the file at ${staged}, resolve each [NEEDS CLARIFICATION] marker whose question appears there, and rewrite ${document}.md in ${item.folder}.`,
   );
 }
 

@@ -34,6 +34,27 @@ export function commandForAction(id: ReportActionId): string | undefined {
     return COMMANDS.get(id);
 }
 
+const DOCUMENT_ACTIONS: Record<'bug' | 'idea', ReadonlyMap<string, ReportActionId>> = {
+    bug: new Map<string, ReportActionId>([
+        ['assessment', 'bug.assess'],
+        ['fix', 'bug.fix'],
+        ['test', 'bug.test'],
+    ]),
+    idea: new Map<string, ReportActionId>([
+        ['intake', 'idea.intake'],
+        ['research', 'idea.research'],
+        ['problem', 'idea.define'],
+        ['concept', 'idea.shape'],
+        ['decision', 'idea.decide'],
+    ]),
+};
+
+/** The command that writes a report document, so an answer goes back to the step that asked. */
+export function commandForDocument(kind: 'bug' | 'idea', document: string): string | undefined {
+    const action = DOCUMENT_ACTIONS[kind]?.get(document);
+    return action && COMMANDS.get(action);
+}
+
 /** Actions that start over from the folder's existing reports, so the prompt has to point at them. */
 const REPEATS_FROM_FOLDER: ReadonlySet<ReportActionId> = new Set(['bug.assess', 'idea.intake']);
 

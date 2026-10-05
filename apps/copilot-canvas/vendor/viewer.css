@@ -516,6 +516,7 @@ body {
   justify-content: center;
   column-gap: clamp(20px, 3vw, 56px);
   align-items: start;
+  align-content: start;
 }
 .content-area > #markdown-content {
   grid-column: 1;
@@ -5342,6 +5343,50 @@ body[data-spec-status=tasks-done] #regenerate {
   #markdown-content .rp-defs > div {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+#markdown-content .rp-question {
+  color: var(--text-body);
+}
+#markdown-content .rp-question__text {
+  color: inherit;
+  font: inherit;
+}
+#markdown-content .rp-question__badge {
+  margin-left: var(--space-1);
+  color: var(--warning);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+#markdown-content .rp-question__answer {
+  margin-left: var(--space-2);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+#markdown-content .rp-question__answer:hover {
+  color: var(--accent-hover);
+}
+#markdown-content .rp-question__answer:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+#markdown-content .rp-question__sent {
+  margin-left: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+#markdown-content .rp-answer-slot {
+  margin: var(--space-2) 0;
 }
 
 /* apps/vscode/webview/styles/spec-viewer/_install-banner.css */

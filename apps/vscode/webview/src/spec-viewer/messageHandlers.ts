@@ -13,7 +13,7 @@
 import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/dispatcher';
 import { showToast } from '../shared/components/Toast';
 import { navState, viewerState, historyEntries, viewerMode, specMoved } from './signals';
-import { setCurrentTask, setHasSpecContext, setLivingCoverage, setLivingDrifted, setLivingMode, setLivingNew, setTaskSummaries } from './markdown';
+import { setCurrentTask, setHasSpecContext, setLivingCoverage, setLivingDrifted, setLivingMode, setLivingNew, setReportMode, setTaskSummaries } from './markdown';
 import { revealRequirement } from './toc';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
 
@@ -34,6 +34,7 @@ export function applyNavState(next: NavState): void {
     if (next.currentTask !== undefined) setCurrentTask(next.currentTask);
     setHasSpecContext(!!(next.specContextName || next.badgeText));
     setLivingMode(!!next.livingMode);
+    setReportMode(!!next.report);
 }
 
 /** Push a viewerState onto the signals it feeds. */
