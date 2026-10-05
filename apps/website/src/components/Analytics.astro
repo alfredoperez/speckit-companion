@@ -144,6 +144,18 @@ const host = import.meta.env.PUBLIC_POSTHOG_HOST ?? '/ingest';
           }
         }
 
+        // The docs swap pages in place, so the library only ever sees the first
+        // one load. Every swap after that is reported here. The event also
+        // fires for the first page, which the library has already counted.
+        var firstLoad = true;
+        document.addEventListener('astro:page-load', function () {
+          if (firstLoad) {
+            firstLoad = false;
+            return;
+          }
+          send('$pageview', { $current_url: location.href });
+        });
+
         document.addEventListener('click', function (e) {
           var el = e.target && e.target.closest ? e.target.closest('[data-analytics]') : null;
           if (!el) return;

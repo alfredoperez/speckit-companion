@@ -1,0 +1,17 @@
+---
+import Default from '@astrojs/starlight/components/Header.astro';
+
+// The header is the same on every docs page, so it is carried across a page
+// swap instead of rebuilt. Search depends on it: Starlight wires Pagefind up
+// once, on the first document load, and a rebuilt search box would never get it.
+---
+
+<div class="docs-header" transition:persist="docs-header">
+  <Default><slot /></Default>
+</div>
+
+<style>
+  .docs-header {
+    display: contents;
+  }
+</style>
