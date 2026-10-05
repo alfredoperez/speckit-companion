@@ -7,15 +7,21 @@ import CodeLine from '../../../../components/CodeLine.astro';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
+import actions from '../../../../../../../docs/screenshots/live-new-spec-actions.png';
 
 <Actions>
   <CodeLine command="/speckit.companion.auto <what you want to build>" prompt={false} />
   <p>Or click <strong>Auto</strong> beside <strong>Create Spec</strong> in the Create New Spec panel, or run <strong>SpecKit: Run Spec Hands-Off (Auto)</strong> from the command palette.</p>
+  <img src={actions.src} width={Math.round(actions.width / 2)} height={Math.round(actions.height / 2)} alt="The buttons at the foot of Create New Spec: Cancel, Auto and Create Spec." />
 </Actions>
 
 Auto runs specify, plan, tasks, implement and mark-complete in order, without stopping for approval between them. It runs the same step commands you would run one at a time, so the documents come out the same.
 
-<DocFigure src="live-create-spec.png" recapture caption="Auto sits beside Create Spec. It shows when the chosen workflow supports it, which SpecKit Companion does." />
+<DocFigure
+  src="live-new-spec.png"
+  alt="Create New Spec with SpecKit Companion chosen as the workflow, a one-sentence feature brief typed, and Cancel, Auto and Create Spec at the foot."
+  caption="Auto sits beside Create Spec. It shows when the chosen workflow supports it, which SpecKit Companion does."
+/>
 
 ## What it needs
 
@@ -33,7 +39,13 @@ The viewer follows the files, as it does for any run. Tabs check off in the rail
 
 </YouSee>
 
-Auto is one command your assistant follows from start to finish. The editor has no progress bar for it and cannot pause it. To stop it, stop your assistant.
+<DocFigure
+  src="live-step-implement.png"
+  alt="The Tasks tab of Profile Photo Upload during implement. The badge reads Implementing, the Tasks tab shows 50%, and tasks T001 and T002 are ticked."
+  caption="An auto run reaching implement: the earlier tabs are checked and the Tasks tab counts up."
+/>
+
+Auto is one command your assistant follows from start to finish. You cannot pause it from the editor. To stop it, stop your assistant.
 
 ## What it changes about a run
 

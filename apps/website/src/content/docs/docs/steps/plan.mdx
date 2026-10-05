@@ -7,10 +7,12 @@ import CodeLine from '../../../../components/CodeLine.astro';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
+import footer from '../../../../../../../docs/screenshots/live-footer-next-plan.png';
 
 <Actions>
   <CodeLine command="/speckit.companion.plan" prompt={false} />
-  <p>Or press <strong>Plan</strong> in the viewer footer, under <code>Next: Plan</code>. The stock Spec Kit workflow sends <code>/speckit.plan</code>.</p>
+  <p>Or press <strong>Plan</strong> in the viewer footer. The stock Spec Kit workflow sends <code>/speckit.plan</code>.</p>
+  <img src={footer.src} width={Math.round(footer.width / 2)} height={Math.round(footer.height / 2)} alt="The viewer footer reading Next: Plan, with Regenerate and a green Plan button." />
 </Actions>
 
 Plan reads the spec and decides how to build it: the approach, the files and structure involved, and the technical choices. This is where technology enters. The spec stays about what and why.
@@ -36,7 +38,11 @@ The **Plan** tab spins and keeps time while the step runs. When it settles, Plan
 
 </YouSee>
 
-<DocFigure src="workflow-documents-poster.png" caption="The plan, with Research and Data Model under it in the rail and its headings in On this page." />
+<DocFigure
+  src="live-step-plan.png"
+  alt="The Plan tab of Profile Photo Upload after plan. The badge reads Planned, Specification and Plan are checked, Data Model and Research sit beside Plan, Tasks is still empty, and the plan opens on its Technical Context and Shape of the change."
+  caption="After plan: the badge reads Planned, Plan is checked, and Data Model and Research sit beside it. Tasks waits."
+/>
 
 <DocFigure
   src="figure-mid-run.png"
