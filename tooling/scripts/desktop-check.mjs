@@ -3,7 +3,8 @@
 // usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>]
 // --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
 import { createRequire } from 'node:module';
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +23,7 @@ const SHOTS = arg('shots') ? resolve(arg('shots')) : undefined;
 // A crop is read in a docs column about 650px wide, so the capture window is kept small enough for its text to survive that.
 const SHOT_WINDOW = { width: 1240, height: 800 };
 const CHECK_WINDOW = { width: 1680, height: 1050 };
+const LIVING_SIDEBAR = 336;
 const CODE = process.env.VSCODE_BIN ?? '/Applications/Visual Studio Code.app/Contents/MacOS/Code';
 
 if (!existsSync(join(EXTENSION, 'dist', 'extension.js'))) {
@@ -40,6 +42,66 @@ if (!existsSync(CODE)) {
 const require = createRequire(join(EXTENSION, 'package.json'));
 const { _electron } = require('playwright-core');
 
+const DRIFTED_REQUIREMENT = 'Oversized uploads are rejected before the body is read';
+// The files a Photo Storage requirement is about. A requirement is marked Drifted only when it names the file that moved.
+const PHOTO_STORAGE_TOUCHES = {
+    'A replacement photo never leaves the member without an avatar': 'src/services/photoStorage/**',
+    [DRIFTED_REQUIREMENT]: 'src/api/photos/**',
+    'Variants are derived on the server, never in the browser': 'src/jobs/variants/**',
+};
+const SOURCE_FILES = [
+    'src/features/directory-search/search.ts', 'src/features/directory-search/filters.ts', 'src/features/directory-search/ranking.ts',
+    'src/features/directory-search/index.ts', 'src/features/directory-search/types.ts',
+    'src/components/Avatar/Avatar.tsx', 'src/components/Avatar/initials.ts', 'src/components/PhotoUploader/PhotoUploader.tsx',
+    'src/services/photoStorage/store.ts', 'src/services/photoStorage/replace.ts', 'src/api/photos/upload.ts', 'src/jobs/variants/derive.ts',
+    'src/features/profile/ProfilePage.tsx', 'src/api/members/update.ts', 'src/features/invites/InviteForm.tsx', 'src/api/invites/create.ts',
+];
+
+/** Living specs on: five capabilities (three central, two beside their code), coverage files, a finished run that used two of them, and a git history in which two capabilities' code moved after their spec was committed. */
+function addLivingSpecs(project, fixtures) {
+    const teamboard = join(EXTENSION, 'apps', 'vscode', 'webview', 'src', 'spec-viewer', '__fixtures__', 'teamboard');
+    cpSync(join(fixtures, 'living-specs'), project, { recursive: true });
+    const photoStorage = readFileSync(join(teamboard, 'photo-storage.spec.md'), 'utf8')
+        .replace(/^### (.+)$/gm, (line, heading) => (PHOTO_STORAGE_TOUCHES[heading] ? `${line}\n<!-- touches: ${PHOTO_STORAGE_TOUCHES[heading]} -->` : line));
+    writeFileSync(join(project, 'capabilities', 'photo-storage', 'photo-storage.spec.md'), photoStorage);
+
+    // The Living Specs pane lists capabilities only with the Companion spec-kit extension in the project. Its standard commands are marked present, so opening the folder installs nothing.
+    const companion = join(project, '.specify', 'extensions', 'companion');
+    mkdirSync(companion, { recursive: true });
+    cpSync(join(EXTENSION, 'apps', 'speckit-extension', 'extension.yml'), join(companion, 'extension.yml'));
+    mkdirSync(join(project, '.specify', 'presets', 'companion-standard'), { recursive: true });
+
+    const run = join(project, 'specs', '041-profile-photo-upload');
+    cpSync(join(teamboard, '041-profile-photo-upload'), run, { recursive: true, filter: from => !/spec-context\.\w+\.json$/.test(from) });
+    const context = JSON.parse(readFileSync(join(teamboard, '041-profile-photo-upload', 'spec-context.completed.json'), 'utf8'));
+    context.livingSpecs = { loaded: ['member-profiles', 'photo-storage'], synced: ['member-profiles'] };
+    writeFileSync(join(run, '.spec-context.json'), JSON.stringify(context, null, 2));
+
+    // Every test a coverage file names exists, so a requirement's card reads "1 test" and not "0/1 tests".
+    const tests = [];
+    const walk = (dir) => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+            if (entry.isDirectory()) walk(join(dir, entry.name));
+            else if (entry.name.endsWith('.coverage.md')) tests.push(...[...readFileSync(join(dir, entry.name), 'utf8').matchAll(/`([^`]+)`/g)].map(match => match[1]));
+        }
+    };
+    walk(join(project, 'capabilities'));
+    walk(join(project, 'src'));
+    for (const file of [...SOURCE_FILES, ...tests]) {
+        mkdirSync(dirname(join(project, file)), { recursive: true });
+        writeFileSync(join(project, file), 'export {};\n');
+    }
+
+    // Drift is read from git: a capability drifted when a file it covers changed after its spec's last commit.
+    const git = (...args) => execFileSync('git', ['-c', 'user.name=Desktop Check', '-c', 'user.email=check@example.invalid', '-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', '-c', 'init.defaultBranch=main', ...args], { cwd: project, stdio: 'ignore' });
+    git('init');
+    git('add', '-A');
+    git('commit', '-m', 'Teamboard with its living specs');
+    for (const file of ['src/api/photos/upload.ts', 'src/components/Avatar/Avatar.tsx']) appendFileSync(join(project, file), 'export const changedSinceTheSpec = true;\n');
+    git('add', '-A');
+    git('commit', '-m', 'Change the upload limit and the avatar by hand');
+}
+
 function buildProject({ provider = 'claude' } = {}) {
     const root = mkdtempSync(join(tmpdir(), 'speckit-desktop-'));
     const project = SANDBOX ?? join(root, 'project');
@@ -54,6 +116,7 @@ function buildProject({ provider = 'claude' } = {}) {
         for (const spec of ['_00_demo-specified', '_02_demo-tasked', '627-bugs-ideas-panes']) {
             cpSync(join(EXTENSION, 'specs', spec), join(project, 'specs', spec), { recursive: true });
         }
+        addLivingSpecs(project, fixtures);
     }
     // Whatever a step sends goes to this stand-in, so nothing real runs and the terminal shows what was sent.
     const bin = join(root, 'bin');
@@ -74,6 +137,8 @@ function buildProject({ provider = 'claude' } = {}) {
         'telemetry.telemetryLevel': 'off',
         'update.mode': 'none',
         'extensions.autoUpdate': false,
+        // The fixture is a git repository only so drift can be read; the window stays as it was without one.
+        'git.enabled': false,
         'window.dialogStyle': 'custom',
         'window.menuStyle': 'custom',
         // A shell that reads only this profile, so nothing puts a real assistant ahead of the stand-in on PATH.
@@ -246,9 +311,45 @@ async function fitPane(title, next) {
     await drag({ x, y: below.y }, { x, y: last.y + last.height + 10 });
 }
 
-/** Scrolls the viewer's page so the element sits at the top ('start'), middle ('center') or bottom ('end') of it. */
-async function scrollTo(locator, block = 'start') {
-    await locator.first().evaluate((element, where) => element.scrollIntoView({ block: where }), block);
+/** Opens or closes side bar panes by their headers. */
+async function setPanes(titles, open) {
+    for (const title of titles) {
+        const header = pane(title).locator('.pane-header');
+        if ((await header.getAttribute('aria-expanded')) !== String(open)) await header.click();
+    }
+    await page.waitForTimeout(400);
+}
+
+/** The Living Specs pane alone in the side bar, with every folder in its tree open. */
+async function showLivingSpecs() {
+    await setPanes(['Specs', 'Bugs', 'Ideas'], false);
+    await setPanes(['Living Specs'], true);
+    await row('Living Specs', 'Photo Storage');
+    // A folder holding no drift starts closed.
+    for (let tries = 0; tries < 5; tries++) {
+        const closed = pane('Living Specs').locator('.monaco-list-row[aria-expanded="false"]', { has: page.locator('.codicon-folder') });
+        if (!(await closed.count())) break;
+        await closed.first().click();
+        await page.waitForTimeout(300);
+    }
+}
+
+/** Opens a capability's spec from the Living Specs pane and waits for its coverage and drift to arrive. */
+async function openLivingSpec(name, fact) {
+    await clear();
+    await showLivingSpecs();
+    await (await row('Living Specs', name)).click();
+    await webview().locator('.spec-header-living', { hasText: fact }).waitFor({ timeout: 15000 });
+}
+
+/** Scrolls the viewer's page so the element sits at the top ('start'), middle ('center') or bottom ('end') of it, then `lower` pixels further down the page. */
+async function scrollTo(locator, block = 'start', lower = 0) {
+    await locator.first().evaluate((element, [where, by]) => {
+        element.scrollIntoView({ block: where, behavior: 'instant' });
+        let scroller = element.parentElement;
+        while (scroller && !(scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY))) scroller = scroller.parentElement;
+        (scroller ?? document.scrollingElement).scrollBy({ top: -by, behavior: 'instant' });
+    }, [block, lower]);
 }
 
 /** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. `shots: true` marks a capture-only step, which runs under --shots alone. */
@@ -492,6 +593,98 @@ try {
             await page.waitForTimeout(1200);
             await capture(`tab-${tab.toLowerCase()}`, { target: 'editor', ratio: 16 / 9 });
         }, { needs: 'fixtures', shots: true });
+    }
+
+    await step('overview-living-specs', 'A finished run names the living specs it updated and the ones it only read', async () => {
+        await clear();
+        const completed = await row('Specs', 'Completed');
+        if ((await completed.getAttribute('aria-expanded')) === 'false') await completed.click();
+        await (await row('Specs', 'Profile photo upload')).click();
+        await webview().locator('.rail-overview').first().click();
+        const groups = webview().locator('.living-specs-group');
+        const updated = await expectText(groups.filter({ hasText: 'Updated by this run' }), /Member Profiles/);
+        const read = await expectText(groups.filter({ hasText: 'Read for context' }), /Photo Storage/);
+        if (SHOTS) {
+            await page.waitForTimeout(1200);
+            await scrollTo(webview().locator('.living-specs-groups'), 'center');
+            await capture('overview-living-specs', { target: 'editor', ratio: 3 / 2 });
+            await capture('overview-living-specs-window', { target: 'window' });
+        }
+        return `${updated}; ${read}`.replace(/\s+/g, ' ');
+    }, { needs: 'fixtures' });
+
+    await step('living-tree', 'The Living Specs pane groups capabilities by folder, with coverage and drift on each row', async () => {
+        await clear();
+        await showLivingSpecs();
+        await expectText(await row('Living Specs', 'Capabilities'), /1 drifted/);
+        await expectText(await row('Living Specs', 'Member Profiles'), /9\/9 covered/);
+        await expectText(await row('Living Specs', 'Photo Storage'), /7\/9 covered · drift/);
+        await expectText(await row('Living Specs', 'Team Invites'), /4\/4 covered/);
+        await expectText(await row('Living Specs', 'Directory Search'), /6\/6 covered/);
+        await expectText(await row('Living Specs', 'Avatar Rendering'), /no coverage file · drift/);
+        const rows = pane('Living Specs').locator('.monaco-list-row');
+        if (SHOTS) {
+            // The selected row is the one in drift, so its Update button is in the picture.
+            await (await row('Living Specs', 'Photo Storage')).click();
+            const width = (await page.locator('.part.sidebar').boundingBox()).width;
+            await sidebarWidth(460);
+            await capture('living-specs-pane', { target: [pane('Living Specs').locator('.pane-header'), rows.last()] });
+            await sidebarWidth(width);
+        }
+        return (await rows.locator('.label-name').allInnerTexts()).join(', ');
+    }, { needs: 'fixtures' });
+
+    await step('living-spec', 'A capability opens as a page: its counts, the paths it covers, and each requirement with its scenario', async () => {
+        await openLivingSpec('Photo Storage', /7\/9 covered/);
+        const facts = await expectText(webview().locator('.spec-header-living'), /9 requirements[\s\S]*9 scenarios[\s\S]*7\/9 covered/);
+        await expectText(webview().locator('.spec-header-covers'), /src\/services\/photoStorage\/\*\*/);
+        await expectText(webview().locator('.spec-header-path'), /^capabilities\/photo-storage\/photo-storage\.spec\.md$/);
+        const first = webview().locator('.living-req-card').first();
+        await expectText(first, /WHEN[\s\S]*the upload of the new original completes[\s\S]*THEN/);
+        await capture('living-spec', { target: 'editor', ratio: 16 / 9 });
+        if (SHOTS) {
+            // Wide enough for the longest row's labels.
+            const width = (await page.locator('.part.sidebar').boundingBox()).width;
+            await sidebarWidth(LIVING_SIDEBAR);
+            // Lowered so the floating action bar lands between two requirements, not across a title.
+            await scrollTo(webview().locator('#markdown-content :is(h2, h3)', { hasText: 'Requirements' }), 'start', 76);
+            await capture('living-spec-requirement', { target: 'editor', ratio: 16 / 9 });
+            await capture('living-specs-window', { target: 'window' });
+            await sidebarWidth(width);
+        }
+        return facts.replace(/\s+/g, ' ');
+    }, { needs: 'fixtures' });
+
+    await step('living-spec-colocated', 'A spec kept beside its code says so, and opens from the same pane', async () => {
+        await openLivingSpec('Directory Search', /6\/6 covered/);
+        await expectText(webview().locator('.spec-header-location'), /Lives beside the code[\s\S]*src\/features\/directory-search\/directory-search\.spec\.md/i);
+        await capture('living-spec-colocated', { target: 'editor', ratio: 16 / 9 });
+    }, { needs: 'fixtures' });
+
+    await step('living-drift', 'Code changed after the spec was committed marks the capability and the requirement that names the file', async () => {
+        await openLivingSpec('Photo Storage', /1 drifted/);
+        const drifted = webview().locator('.living-req-card[data-req-state="drifted"]');
+        await drifted.first().waitFor({ timeout: 15000 });
+        const names = await drifted.evaluateAll(cards => cards.map(card => card.dataset.req));
+        if (names.length !== 1 || names[0] !== DRIFTED_REQUIREMENT) throw new Error(`expected only "${DRIFTED_REQUIREMENT}" drifted, saw ${JSON.stringify(names)}`);
+        const why = await expectText(drifted.locator('.living-req-meta'), /Drifted[\s\S]*changed since the spec was last updated/);
+        const update = (await row('Living Specs', 'Photo Storage')).locator('a.action-label[aria-label^="Update"]');
+        if (!(await update.count())) throw new Error('the drifted row has no Update button');
+        if (SHOTS) {
+            const width = (await page.locator('.part.sidebar').boundingBox()).width;
+            await sidebarWidth(LIVING_SIDEBAR);
+            await scrollTo(drifted, 'start', 16);
+            await capture('living-spec-drifted', { target: 'editor', ratio: 16 / 9 });
+            await capture('living-drift-window', { target: 'window' });
+            await sidebarWidth(width);
+        }
+        return why.replace(/\s+/g, ' ');
+    }, { needs: 'fixtures' });
+
+    if (!SANDBOX) {
+        await clear();
+        await setPanes(['Living Specs'], false);
+        await setPanes(['Specs', 'Bugs', 'Ideas'], true);
     }
 
     await step('specs-pane', 'The sidebar shows the Specs pane', async () => {
