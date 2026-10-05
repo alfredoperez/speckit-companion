@@ -1,6 +1,6 @@
 // The board's rules with no IO, ported from the VS Code viewer and bundled into apps/claude-mod by its build.
 
-import { countTaskCheckboxes, listTasks, phaseProgress } from './tasks.mjs';
+import { countTaskCheckboxes, firstHeading as documentTitle, hasCheckboxLine, listTasks, phaseProgress } from './tasks.mjs';
 import { deriveStepHistory, deriveTimingSummary, formatElapsed } from './vendor/step-history.mjs';
 
 export { countTaskCheckboxes, listTasks, phaseProgress, formatElapsed };
@@ -125,7 +125,8 @@ const FILE_STEPS = ['specify', 'plan', 'tasks'];
 const DOC_OF_STEP = { specify: 'spec', plan: 'plan', tasks: 'tasks' };
 const DONE_STATUS = { specify: 'specified', plan: 'planned', tasks: 'ready-to-implement', implement: 'implemented' };
 const RUNNING_STATUS = { specify: 'specifying', plan: 'planning', tasks: 'tasking', implement: 'implementing' };
-const UNFILLED_TITLE = /^#\s.*\[(?:FEATURE|FEATURE NAME|###-feature-name)\]/m;
+// The title of a stock Spec Kit template nobody has filled in, such as `Implementation Plan: [FEATURE]`.
+const UNFILLED_TITLE = /^[^[\]]*:\s*\[FEATURE(?: NAME)?\]$/;
 const squash = text => text.replace(/\s+/g, ' ').trim();
 
 /** Companion's context writer, relative to the project root: where it exists, its recorder owns the run record. */
@@ -136,12 +137,12 @@ export function recordLiveIn(exists) {
     return exists(CONTEXT_WRITER);
 }
 
-/** A document is written once it is not empty, not the template it was copied from, and for tasks holds at least one task. */
+/** A document is written once it is not empty, not the template it was copied from, and for tasks holds at least one checkbox line. */
 export function isWritten(kind, text, template = null) {
     if (typeof text !== 'string') return false;
     const body = squash(text);
-    if (!body || UNFILLED_TITLE.test(text) || (typeof template === 'string' && body === squash(template))) return false;
-    return kind !== 'tasks' || countTaskCheckboxes(text).total > 0;
+    if (!body || UNFILLED_TITLE.test(documentTitle(text) ?? '') || (typeof template === 'string' && body === squash(template))) return false;
+    return kind !== 'tasks' || hasCheckboxLine(text);
 }
 
 /** Which of the spec, plan and tasks files are written, from their texts and the project's templates. */

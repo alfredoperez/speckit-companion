@@ -439,9 +439,27 @@ describe('telling a written document from one that only exists', () => {
         assert.equal(isWritten('spec', '# Feature Specification: Todo Stars\n\nbody\n'), true);
     });
 
-    it('wants at least one task in tasks.md', () => {
+    it('wants at least one checkbox line in tasks.md, of any bullet style and with or without a task id', () => {
         assert.equal(isWritten('tasks', '# Tasks: Todo Stars\n\nNothing yet.\n'), false);
-        assert.equal(isWritten('tasks', '# Tasks: Todo Stars\n\n- [ ] T001 Add the star\n'), true);
+        assert.equal(isWritten('tasks', '# Tasks\n\n```\n- [ ] T001 only an example\n```\n'), false);
+        for (const line of ['- [ ] T001 Add the star', '1. [ ] T001 a', '- [ ] Add the star', '- [x] TASK-1 a', '* [X] **T002** b', '2) [ ] c']) {
+            assert.equal(isWritten('tasks', `# Tasks: Todo Stars\n\n${line}\n`), true, line);
+        }
+    });
+
+    it('reads a tasks file with Windows line endings: it is written, and its tasks are counted', () => {
+        const crlf = '# Tasks: Todo Stars\r\n\r\n## Phase 1\r\n\r\n- [x] T001 a\r\n- [ ] T002 b\r\n';
+        assert.equal(isWritten('tasks', crlf), true);
+        assert.deepEqual(countTaskCheckboxes(crlf), { checked: 1, total: 2 });
+        assert.deepEqual(listTasks(crlf).map(t => [t.id, t.text, t.phase]), [['T001', 'a', 'Phase 1'], ['T002', 'b', 'Phase 1']]);
+    });
+
+    it('takes a placeholder for a template only when it is the whole title of the first heading outside code', () => {
+        assert.equal(isWritten('spec', '# Flags: the [FEATURE] toggle\n\nA real spec.\n'), true);
+        assert.equal(isWritten('plan', '# Implementation Plan: Flags\n\n```md\n# Implementation Plan: [FEATURE]\n```\n'), true);
+        assert.equal(isWritten('plan', '# Implementation Plan: Flags\n\n# Appendix: [FEATURE]\n'), true);
+        assert.equal(isWritten('plan', '```\n# not the title\n```\n\n# Implementation Plan: [FEATURE]\n'), false);
+        assert.equal(isWritten('spec', '# Notes on `[###-feature-name]` branches\n\nbody\n'), true);
     });
 
     it('reads the real stock templates in this repository as not written', () => {

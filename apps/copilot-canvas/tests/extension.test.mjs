@@ -75,6 +75,30 @@ describe('how the board learns that a chat turn started and ended', () => {
     });
 });
 
+describe('a turn that starts before the send returns', () => {
+    it('is still the sent step\'s turn: its idle stops the step', async () => {
+        const [canvas] = (await loadExtension()).canvases;
+        const root = mkdtempSync(join(tmpdir(), 'canvas-ext-order-'));
+        mkdirSync(join(root, 'specs/001-x'), { recursive: true });
+        writeFileSync(join(root, 'specs/001-x/spec.md'), '# X\n');
+        const fire = (type, data) => globalThis.__copilotHandlers[type]({ type, data });
+        const ctx = { instanceId: 'test-order', session: { workingDirectory: root } };
+        const action = name => canvas.actions.find(a => a.name === name).handler;
+        const plan = async () => (await action('list_specs')({ ...ctx, input: {} })).specs[0].steps.plan;
+        await canvas.open({ ...ctx, input: null });
+        globalThis.__copilotOnSend = ({ prompt }) => fire('user.message', { content: prompt });
+        try {
+            await action('run_step')({ ...ctx, input: { spec: '001-x', command: 'plan' } });
+            assert.equal(await plan(), 'in-progress');
+            fire('session.idle', {});
+            assert.equal(await plan(), 'not-started', 'the turn ended without a plan, and the step is no longer running');
+        } finally {
+            globalThis.__copilotOnSend = null;
+            await canvas.onClose({ instanceId: 'test-order' });
+        }
+    });
+});
+
 describe('what the extension tells the agent about the board\'s actions', () => {
     const action = async (name) => (await loadExtension()).canvases[0].actions.find(a => a.name === name);
 

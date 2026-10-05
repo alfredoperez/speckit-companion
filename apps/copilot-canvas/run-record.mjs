@@ -9,6 +9,8 @@ import { PIPELINE_STEPS, parseSpecContext, statusFromSteps, statusRank } from '.
 const FILE = '.spec-context.json';
 const FINISHED = new Set(['completed', 'archived']);
 const LOCK_ABANDONED_MS = 30000;
+/** What `recordStep` returns while another writer holds the record's lock. */
+export const BUSY = 'busy';
 
 // Python's `Path.resolve()`, as `specContextWriter.ts` has it: symlinks followed as far as the path exists.
 function realPath(target) {
@@ -130,7 +132,7 @@ function advanced(record, title, step, startedAt, endedAt) {
     return { ...base, currentStep: step, status, history: [...history, entry('start', startedAt), entry('complete', endedAt)] };
 }
 
-/** Append a step's start and finish to the spec's record, forward only and under the writers' lock; false when nothing was written. */
+/** Append a step's start and finish to the spec's record, forward only and under the writers' lock; false when it must not be written, BUSY when a writer holds the lock. */
 export function recordStep(root, { id, title }, step, startedAt, endedAt) {
     const dir = join(root, id);
     try {
@@ -140,7 +142,7 @@ export function recordStep(root, { id, title }, step, startedAt, endedAt) {
     }
     const target = join(dir, FILE);
     const token = acquireLock(target);
-    if (token === false) return false;
+    if (token === false) return BUSY;
     try {
         const next = advanced(readRecord(target), title, step, startedAt, endedAt);
         if (!next) return false;

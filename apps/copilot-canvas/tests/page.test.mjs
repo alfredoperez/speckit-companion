@@ -13,9 +13,6 @@ const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const TEAMBOARD = join(REPO, 'apps/vscode/webview/src/spec-viewer/__fixtures__/teamboard/041-profile-photo-upload');
 const SHOTS = process.env.CANVAS_SHOTS ? resolve(process.env.CANVAS_SHOTS) : null;
 
-// File events for fixtures written just before a server started land late and trigger one more scan; let that pass first.
-const fileEventsToLand = () => new Promise(r => setTimeout(r, 450));
-
 async function launch() {
     let chromium;
     try {
@@ -224,7 +221,6 @@ describe('board page', { concurrency: false }, async () => {
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
         const stockSent = [];
         const stock = await createSpecServer({ root: stockRoot, send: async (prompt) => { stockSent.push(prompt); return true; } });
-        await fileEventsToLand();
         const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark', permissions: ['clipboard-read', 'clipboard-write'] });
         const stockPage = await context.newPage();
         const line = 'SpecKit Companion is not installed in this project, so the standard Spec Kit commands run.';
@@ -283,6 +279,7 @@ describe('board page', { concurrency: false }, async () => {
         const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-redraw-'));
         mkdirSync(join(stockRoot, 'specs/001-starred-todos'), { recursive: true });
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
+        writeFileSync(join(stockRoot, 'specs/001-starred-todos/.spec-context.json'), JSON.stringify({ workflow: 'speckit', specName: 'Starred todos', currentStep: 'specify', status: 'specified', history: [] }));
         const stock = await createSpecServer({ root: stockRoot, send: async () => true });
         const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark', permissions: ['clipboard-read', 'clipboard-write'] });
         const stockPage = await context.newPage();
@@ -309,6 +306,11 @@ describe('board page', { concurrency: false }, async () => {
             assert.equal(await stockPage.evaluate(() => document.querySelector('.rail') === window.kept.rail), false, 'a real change redraws');
             assert.equal(await stockPage.locator('.next .install-hint__how button:has-text("Copied")').count(), 1, 'and the install line keeps its state');
             assert.equal(await scans() >= 3, true);
+
+            mkdirSync(join(stockRoot, '.specify/extensions/companion'), { recursive: true });
+            stock.rescan();
+            await stockPage.waitForFunction(() => document.querySelectorAll('.install-hint').length === 0);
+            assert.match(await stockPage.locator('.command-hint').textContent(), /uses the Spec Kit workflow/, 'the card follows the project, not only the spec');
         } finally {
             await context.close();
             await stock.close();

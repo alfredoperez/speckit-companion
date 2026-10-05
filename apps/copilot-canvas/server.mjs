@@ -9,7 +9,7 @@ import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSnapshot, findSpec, readSpecDetail, recordLive, resolveSpecDirs } from './specs-core.mjs';
 import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
-import { recordStep } from './run-record.mjs';
+import { BUSY, recordStep } from './run-record.mjs';
 import { stepEvidence, withRunningStep } from './spec-rules.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
@@ -24,6 +24,8 @@ const BODY_LIMIT = 16 * 1024;
 const DEBOUNCE_MS = 200;
 const QUIET_MS = 120000;
 const CEILING_MS = 2 * 60 * 60 * 1000;
+const LOCK_RETRY_MS = 100;
+const LOCK_RETRIES = 20;
 
 function sendJson(res, status, data) {
     res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -68,6 +70,8 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         runs: new Map(),
         pendingSpecify: null,
         runTimer: null,
+        retries: new Set(),
+        sentKey: null,
         busy: false,
         sawTurnStart: false,
         host: null,
@@ -92,7 +96,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     /** A spec the board sent a step for shows that step as running until the turn settles. */
     function present(spec) {
         const run = state.runs.get(spec.id);
-        return run ? withRunningStep(spec, run.step) : spec;
+        return run && !run.quiet ? withRunningStep(spec, run.step) : spec;
     }
 
     function snapshot() {
@@ -128,30 +132,53 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
             const idleFor = now() - Math.max(sentAt, Date.parse(spec?.updatedAt ?? '') || 0);
             // Companion's recorder closed the step after the send: the record leads there.
             const recorded = spec && live && spec.steps[run.step] === 'completed' && Date.parse(spec.lastActivity ?? '') > sentAt;
-            // Last resort, for a host that never says a turn started: the document is written and nothing has moved since.
-            const quiet = spec && !run.started && !state.busy && didStep(run, spec) && idleFor >= quietMs;
-            if (!spec || recorded || quiet || idleFor >= ceilingMs) {
+            if (!spec || recorded || idleFor >= ceilingMs) {
                 state.runs.delete(id);
                 continue;
             }
-            wake = Math.min(wake, ceilingMs - idleFor, !run.started && !state.busy && didStep(run, spec) ? quietMs - idleFor : Infinity);
+            // Last resort with no word of a turn: a written document nothing has touched since stops looking like running, and the run waits for the idle.
+            const mayBeOver = !run.started && !state.busy && didStep(run, spec);
+            run.quiet = mayBeOver && idleFor >= quietMs;
+            wake = Math.min(wake, ceilingMs - idleFor, mayBeOver && !run.quiet ? quietMs - idleFor : Infinity);
         }
         clearTimeout(state.runTimer);
         if (Number.isFinite(wake) && !state.closed) state.runTimer = setTimeout(scheduleRescan, Math.max(50, wake)).unref();
     }
 
-    function rescan() {
+    /** Read the folders again; a scan nobody asked for (a file event) reaches the page only when it changed something. */
+    function rescan({ asked = true } = {}) {
         state.snapshot = buildSnapshot(state.root, state.specDirs);
         reviewRuns();
-        emit('snapshot', snapshot());
+        const next = snapshot();
+        const key = JSON.stringify({ ...next, generatedAt: null });
+        if (asked || key !== state.sentKey) emit('snapshot', next);
+        state.sentKey = key;
         return state.snapshot;
+    }
+
+    /** Write a settled step to the record, trying again for a couple of seconds while another writer holds its lock. */
+    function writeRecord(spec, run, endedAt, attempt = 0) {
+        let result = false;
+        try {
+            result = recordStep(state.root, spec, run.step, run.startedAt, endedAt);
+        } catch (error) {
+            log(`[speckit-canvas] run record not written: ${error.message}`);
+        }
+        if (result !== BUSY) return result;
+        if (attempt >= LOCK_RETRIES || state.closed) return log(`[speckit-canvas] run record not written: ${spec.id} is locked by another writer`);
+        const timer = setTimeout(() => {
+            state.retries.delete(timer);
+            if (writeRecord(spec, run, endedAt, attempt + 1) === true) rescan();
+        }, LOCK_RETRY_MS).unref();
+        state.retries.add(timer);
     }
 
     /** The session took a message into a turn: a run whose prompt it carries has started, and only a started run settles. */
     function began(content) {
         state.busy = true;
         state.sawTurnStart = true;
-        const carries = prompt => typeof content === 'string' && content.includes(prompt.split('\n')[0]);
+        const lines = typeof content === 'string' ? content.split(/\r\n?|\n/).map(line => line.trim()) : [];
+        const carries = prompt => lines.includes(prompt.split('\n')[0].trim());
         for (const run of state.runs.values()) if (carries(run.prompt)) run.started = true;
         if (state.pendingSpecify && carries(state.pendingSpecify.prompt)) state.pendingSpecify.started = true;
     }
@@ -169,11 +196,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
             state.runs.delete(id);
             const spec = state.snapshot.specs.find(s => s.id === id);
             if (!run.owned || writer() || !spec || !didStep(run, spec)) continue;
-            try {
-                recordStep(state.root, spec, run.step, run.startedAt, at.toISOString());
-            } catch (error) {
-                log(`[speckit-canvas] run record not written: ${error.message}`);
-            }
+            writeRecord(spec, run, at.toISOString());
         }
         if (state.pendingSpecify && over(state.pendingSpecify)) state.pendingSpecify = null;
         rescan();
@@ -184,7 +207,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         clearTimeout(state.timer);
         state.timer = setTimeout(() => {
             try {
-                rescan();
+                rescan({ asked: false });
             } catch (error) {
                 log(`[speckit-canvas] rescan failed: ${error.message}`);
             }
@@ -278,12 +301,26 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         const startedAt = new Date(now());
         const preamble = buildStepPreamble(command, spec.id, state.root, set, startedAt, writer());
         const file = preamble ? writeRunInstructions(state.root, stepInstructionsName(command, spec.id), runInstructionsDoc(line.split('\n')[0], preamble)) : null;
-        const before = STEP_COMMANDS.includes(command) ? fingerprint(spec, command) : null;
-        const result = await deliver(spec.id, command, buildPrompt(command, spec.id, set, spelling, file), file);
-        if (result.sent && STEP_COMMANDS.includes(command)) {
-            state.runs.set(spec.id, { step: command, prompt: result.prompt, startedAt: startedAt.toISOString(), started: false, before, owned: !writer() });
-            rescan();
+        const prompt = buildPrompt(command, spec.id, set, spelling, file);
+        if (!STEP_COMMANDS.includes(command)) return deliver(spec.id, command, prompt, file);
+        // The run is known before the send, so a turn that starts while the send is still in flight finds it.
+        const earlier = state.runs.get(spec.id);
+        const mine = { step: command, prompt, startedAt: startedAt.toISOString(), started: false, before: fingerprint(spec, command), owned: !writer() };
+        state.runs.set(spec.id, mine);
+        const restore = () => {
+            if (state.runs.get(spec.id) !== mine) return;
+            if (earlier) state.runs.set(spec.id, earlier);
+            else state.runs.delete(spec.id);
+        };
+        let result;
+        try {
+            result = await deliver(spec.id, command, prompt, file);
+        } catch (error) {
+            restore();
+            throw error;
         }
+        if (result.sent) rescan();
+        else restore();
         return result;
     }
 
@@ -295,10 +332,20 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
             throw Object.assign(error, { status: 400 });
         }
         const file = built.instructionsDoc ? writeRunInstructions(state.root, built.instructionsName, built.instructionsDoc) : null;
-        const result = await deliver(null, 'specify', built.prompt, file);
-        if (result.sent) {
-            state.pendingSpecify = { prompt: result.prompt, startedAt: built.startedAt, started: false, known: new Set(state.snapshot.specs.map(s => s.id)), owned: built.workflow === 'speckit' && !writer() };
+        const earlier = state.pendingSpecify;
+        const mine = { prompt: built.prompt, startedAt: built.startedAt, started: false, known: new Set(state.snapshot.specs.map(s => s.id)), owned: built.workflow === 'speckit' && !writer() };
+        state.pendingSpecify = mine;
+        const restore = () => {
+            if (state.pendingSpecify === mine) state.pendingSpecify = earlier;
+        };
+        let result;
+        try {
+            result = await deliver(null, 'specify', built.prompt, file);
+        } catch (error) {
+            restore();
+            throw error;
         }
+        if (!result.sent) restore();
         return { ...result, workflow: built.workflow, command: built.command };
     }
 
@@ -404,6 +451,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
             state.closed = true;
             clearTimeout(state.timer);
             clearTimeout(state.runTimer);
+            for (const timer of state.retries) clearTimeout(timer);
             for (const watcher of state.watchers) watcher.close();
             for (const client of state.clients) client.end();
             server.closeAllConnections();

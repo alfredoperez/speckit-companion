@@ -352,7 +352,8 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
         if (record) writeFileSync(join(root, SPEC, '.spec-context.json'), JSON.stringify(record));
         const sent = [];
         const clock = { ms: Date.now() + 1000 };
-        const board = await createSpecServer({ root, checkoutWriter: null, quietMs, ceilingMs, now: () => clock.ms, send: async (prompt) => { sent.push(prompt); return true; } });
+        const hooks = { onSend: null, delivered: true };
+        const board = await createSpecServer({ root, checkoutWriter: null, quietMs, ceilingMs, now: () => clock.ms, send: async (prompt) => { sent.push(prompt); hooks.onSend?.(prompt); return hooks.delivered; } });
         const row = () => board.snapshot.specs.find(s => s.id === SPEC);
         const context = () => JSON.parse(readFileSync(join(root, SPEC, '.spec-context.json'), 'utf8'));
         // A document written after the send: its time is set, so the test never depends on the file system's clock.
@@ -362,7 +363,7 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
             utimesSync(join(root, dir, name), new Date(clock.ms), new Date(clock.ms));
         };
         const pass = (ms) => { clock.ms += ms; board.rescan(); };
-        return { root, board, sent, row, context, clock, write, pass };
+        return { root, board, sent, row, context, clock, write, pass, hooks };
     }
 
     it('reads a record stuck on specifying as planned when spec.md and plan.md are on disk', async () => {
@@ -446,16 +447,19 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
         }
     });
 
-    it('as a last resort stops waiting once the written document has sat unchanged, on a host that never says a turn started', async () => {
-        const { board, row, context, write, pass } = await open({ quietMs: 120000 });
+    it('on a host that never says a turn started, stops looking like running once the written document sits unchanged, and still records at the idle', async () => {
+        const { board, row, context, write, pass } = await open({ record: SPECIFIED, quietMs: 120000 });
         try {
             await board.run(SPEC, 'tasks');
             write('tasks.md', '- [ ] T001 One\n');
             pass(119000);
             assert.equal(row().steps.tasks, 'in-progress', 'not quiet for long enough yet');
             pass(2000);
-            assert.equal(row().steps.tasks, 'completed', 'the files say so');
-            assert.deepEqual(context(), STALE, 'and no time is recorded for a turn nobody saw end');
+            assert.equal(row().steps.tasks, 'completed', 'it stops looking like running, and the files say where it is');
+            assert.deepEqual(context(), SPECIFIED, 'nothing is recorded on quiet alone');
+            board.settle();
+            assert.equal(context().status, 'ready-to-implement', 'the run was kept, so the idle that does arrive records it');
+            assert.deepEqual(context().history.slice(-2).map(e => [e.step, e.kind]), [['tasks', 'start'], ['tasks', 'complete']]);
         } finally {
             await board.close();
         }
@@ -489,6 +493,85 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
             board.settle();
             assert.deepEqual(context(), SPECIFIED);
         } finally {
+            await board.close();
+        }
+    });
+
+    it('settles a step whose turn started before the send returned', async () => {
+        const { board, row, context, write, hooks } = await open({ record: SPECIFIED });
+        try {
+            hooks.onSend = prompt => board.began(prompt);
+            await board.run(SPEC, 'tasks');
+            assert.equal(row().steps.tasks, 'in-progress');
+            write('tasks.md', '- [ ] T001 One\n');
+            board.settle();
+            assert.equal(row().steps.tasks, 'completed');
+            assert.equal(context().status, 'ready-to-implement');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('settles a new spec whose turn started before the send returned', async () => {
+        const { root, board, hooks } = await open();
+        try {
+            hooks.onSend = prompt => board.began(prompt);
+            await board.specify('Count the stars', 'speckit');
+            mkdirSync(join(root, 'specs/002-star-count'));
+            writeFileSync(join(root, 'specs/002-star-count/spec.md'), '# Feature Specification: Star Count\n');
+            board.settle();
+            assert.equal(JSON.parse(readFileSync(join(root, 'specs/002-star-count/.spec-context.json'), 'utf8')).status, 'specified');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('follows nothing when the send did not reach a chat', async () => {
+        const { board, row, hooks } = await open({ record: SPECIFIED });
+        try {
+            hooks.delivered = false;
+            await board.run(SPEC, 'tasks');
+            assert.equal(row().steps.tasks, 'not-started');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('starts a run only for a turn whose message carries its whole command line', async () => {
+        const { board, sent, row, context, write } = await open({ record: SPECIFIED });
+        try {
+            await board.run(SPEC, 'tasks');
+            board.began(`${sent.at(-1)}-more`);
+            board.began(`please do not run ${sent.at(-1)} yet`);
+            write('tasks.md', '- [ ] T001 One\n');
+            board.settle();
+            assert.equal(row().steps.tasks, 'in-progress', 'neither turn was this run\'s');
+            assert.deepEqual(context(), SPECIFIED);
+            board.began(`${sent.at(-1)}\n\nsomething the host added`);
+            board.settle();
+            assert.equal(context().status, 'ready-to-implement');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('keeps trying for a moment when another writer holds the record\'s lock, then writes', async () => {
+        const { root, board, context, write } = await open({ record: SPECIFIED });
+        const lock = recordLockPath(join(root, SPEC, '.spec-context.json'));
+        try {
+            await board.run(SPEC, 'tasks');
+            write('tasks.md', '- [ ] T001 One\n');
+            mkdirSync(join(lock, '..'), { recursive: true });
+            writeFileSync(lock, `${process.pid}:some-other-scope:abc`);
+            board.settle();
+            assert.deepEqual(context(), SPECIFIED, 'not while the lock is held');
+            await new Promise(r => setTimeout(r, 250));
+            assert.deepEqual(context(), SPECIFIED);
+            rmSync(lock);
+            await until(() => context().status === 'ready-to-implement', 'the record once the lock is free', 3000);
+            assert.equal(board.snapshot.specs[0].status, 'ready-to-implement');
+        } finally {
+            rmSync(lock, { force: true });
             await board.close();
         }
     });
@@ -721,7 +804,7 @@ describe('the board\'s own record writer', () => {
         mkdirSync(join(lock, '..'), { recursive: true });
         writeFileSync(lock, `${process.pid}:some-other-scope:abc`);
         try {
-            assert.equal(recordStep(root, spec, 'plan', START, END), false);
+            assert.equal(recordStep(root, spec, 'plan', START, END), 'busy');
             assert.deepEqual(read(), SPECIFIED);
         } finally {
             rmSync(lock, { force: true });
@@ -739,5 +822,37 @@ describe('the board\'s own record writer', () => {
         assert.equal(recordStep(root, spec, 'plan', START, END), true);
         assert.equal(read().status, 'planned');
         assert.ok(!existsSync(lock));
+    });
+});
+
+describe('what a file event sends to the page', () => {
+    it('sends nothing for a scan that changed nothing, and the change when there is one', async () => {
+        const root = mkdtempSync(join(tmpdir(), 'canvas-quiet-scan-'));
+        mkdirSync(join(root, 'specs/001-x'), { recursive: true });
+        const spec = join(root, 'specs/001-x/spec.md');
+        writeFileSync(spec, '# X\n');
+        const at = new Date(Date.now() - 60000);
+        utimesSync(spec, at, at);
+        utimesSync(join(root, 'specs/001-x'), at, at);
+        const board = await createSpecServer({ root, send: async () => true });
+        const stream = listen(board);
+        try {
+            await until(() => stream.snapshots.length === 1, 'the opening snapshot');
+            for (let i = 0; i < 3; i++) {
+                writeFileSync(spec, '# X\n');
+                utimesSync(spec, at, at);
+                utimesSync(join(root, 'specs/001-x'), at, at);
+                await new Promise(r => setTimeout(r, 300));
+            }
+            writeFileSync(join(root, 'specs/001-x/plan.md'), '# Plan\n\nReal.\n');
+            await until(() => stream.snapshots.at(-1).specs[0].files.plan === 'plan.md', 'the snapshot with the plan');
+            assert.equal(stream.snapshots.filter(s => s.specs[0].files.plan !== 'plan.md').length, 1, 'only the opening snapshot came before the change');
+            const count = stream.snapshots.length;
+            board.rescan();
+            await until(() => stream.snapshots.length === count + 1, 'a snapshot for a scan that was asked for');
+        } finally {
+            stream.close();
+            await board.close();
+        }
     });
 });

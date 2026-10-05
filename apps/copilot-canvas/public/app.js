@@ -501,8 +501,9 @@ async function loadDetail() {
     try {
         const detail = await api(`/api/spec?id=${encodeURIComponent(state.selected)}`);
         if (request !== state.detailRequest) return;
-        // The same detail again, as after a file event that changed nothing shown: keep the nodes that are there.
-        const key = JSON.stringify(detail);
+        // The same detail under the same project facts, as after a scan that changed nothing shown: keep the nodes that are there.
+        const { specify, commandSet, commands } = state.snapshot ?? {};
+        const key = JSON.stringify([detail, specify, commandSet, commands]);
         if (state.detail && key === state.detailKey) return;
         state.detailKey = key;
         state.detail = detail;

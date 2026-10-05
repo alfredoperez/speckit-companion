@@ -12,5 +12,5 @@ export const createCanvas = (options) => ({ ...options, __canvas: true });
 export async function joinSession(config) {
     (globalThis.__copilotJoined ??= []).push(config);
     const handlers = (globalThis.__copilotHandlers ??= {});
-    return { send: async () => {}, log: () => {}, on: (type, handler) => { handlers[type] = handler; return () => {}; } };
+    return { send: async (options) => { await globalThis.__copilotOnSend?.(options); }, log: () => {}, on: (type, handler) => { handlers[type] = handler; return () => {}; } };
 }

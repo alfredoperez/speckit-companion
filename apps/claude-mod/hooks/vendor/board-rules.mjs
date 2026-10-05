@@ -5,9 +5,10 @@ var FENCE_PATTERN = /^\s*(`{3,}|~{3,})/;
 var INLINE_CODE_PATTERN = /(`+)[^`]*?\1/g;
 var TASK_LINE_PATTERN = /^\s*[-*+]\s*\[([ xX])\]\s*(?:\*\*)?(T\d+)(?:\*\*)?\s*(.*)$/;
 var PHASE_HEADING = /^#{2,3}\s+(.+?)\s*$/;
+var CHECKBOX_LINE = /^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s+\S/;
 function* proseEntries(content) {
   let openFence = null;
-  for (const raw of content.split("\n")) {
+  for (const raw of content.split(/\r\n?|\n/)) {
     const fence = raw.match(FENCE_PATTERN)?.[1];
     if (openFence) {
       if (fence && fence[0] === openFence[0] && fence.length >= openFence.length) openFence = null;
@@ -19,6 +20,17 @@ function* proseEntries(content) {
     }
     yield { prose: raw.replace(INLINE_CODE_PATTERN, ""), raw };
   }
+}
+function hasCheckboxLine(content) {
+  for (const { prose } of proseEntries(content)) if (CHECKBOX_LINE.test(prose)) return true;
+  return false;
+}
+function firstHeading(content) {
+  for (const { raw } of proseEntries(content)) {
+    const heading = raw.match(/^#\s+(.*?)\s*$/);
+    if (heading) return heading[1];
+  }
+  return null;
 }
 function countTaskCheckboxes(content) {
   let checked = 0;
@@ -420,7 +432,7 @@ function deriveBadgesFromFiles(files, tasks) {
   }
   return { specify: done("spec"), plan: done("plan"), tasks: done("tasks"), implement };
 }
-function firstHeading(markdown) {
+function firstHeading2(markdown) {
   const line = markdown?.split("\n").find((l) => /^#\s+/.test(l));
   return line ? line.replace(/^#\s+/, "").replace(/^Feature Specification:\s*/i, "").trim() : null;
 }
@@ -428,7 +440,7 @@ var FILE_STEPS = ["specify", "plan", "tasks"];
 var DOC_OF_STEP = { specify: "spec", plan: "plan", tasks: "tasks" };
 var DONE_STATUS = { specify: "specified", plan: "planned", tasks: "ready-to-implement", implement: "implemented" };
 var RUNNING_STATUS = { specify: "specifying", plan: "planning", tasks: "tasking", implement: "implementing" };
-var UNFILLED_TITLE = /^#\s.*\[(?:FEATURE|FEATURE NAME|###-feature-name)\]/m;
+var UNFILLED_TITLE = /^[^[\]]*:\s*\[FEATURE(?: NAME)?\]$/;
 var squash = (text) => text.replace(/\s+/g, " ").trim();
 var CONTEXT_WRITER = ".specify/extensions/companion/scripts/write-context.py";
 function recordLiveIn(exists) {
@@ -437,8 +449,8 @@ function recordLiveIn(exists) {
 function isWritten(kind, text, template = null) {
   if (typeof text !== "string") return false;
   const body = squash(text);
-  if (!body || UNFILLED_TITLE.test(text) || typeof template === "string" && body === squash(template)) return false;
-  return kind !== "tasks" || countTaskCheckboxes(text).total > 0;
+  if (!body || UNFILLED_TITLE.test(firstHeading(text) ?? "") || typeof template === "string" && body === squash(template)) return false;
+  return kind !== "tasks" || hasCheckboxLine(text);
 }
 function writtenDocs(texts, templates = {}) {
   return { spec: isWritten("spec", texts.spec, templates.spec), plan: isWritten("plan", texts.plan, templates.plan), tasks: isWritten("tasks", texts.tasks, templates.tasks) };
@@ -503,7 +515,7 @@ function buildSpecRow({ id, ctx, specText, files, written = null, tasksText, upd
     name,
     number: name.match(/^(\d+)-/)?.[1] ?? null,
     local: name.startsWith("_"),
-    title: typeof ctx?.specName === "string" && ctx.specName || firstHeading(specText) || name,
+    title: typeof ctx?.specName === "string" && ctx.specName || firstHeading2(specText) || name,
     workflow: typeof ctx?.workflow === "string" ? ctx.workflow : null,
     branch: typeof ctx?.branch === "string" ? ctx.branch : null,
     hasContext: ctx != null,
