@@ -1,8 +1,8 @@
 import { expect, test } from 'claude-code/testing'
-import { FROM_FILES_NOTE, NO_RECORD_NOTE, activityLine, ago, bandLine, documentFacts, documentKind, documentLines, fileOverview, nextStepLine, paneModel, writtenAt } from '../hooks/board.js'
+import { FROM_FILES_NOTE, NO_RECORD_NOTE, activityLine, ago, bandLine, documentFacts, documentKind, documentLines, fileOverview, nextStepLine, paneModel, writtenAt, fileLink } from '../hooks/board.js'
 import { buildSpecRow } from '../hooks/vendor/board-rules.mjs'
 import { DEMO_SPECS } from './fixtures/demo-specs.js'
-import { BAND, PANE, ROOT, project, startSession, toText } from './harness.ts'
+import { BAND, PANE, ROOT, project, startSession, toText, withoutHints } from './harness.ts'
 
 // A stock Spec Kit project: spec files and no run record. Times are local, so the clock texts read the same anywhere.
 const today = (hours: number, minutes: number) => new Date(2026, 9, 4, hours, minutes).getTime()
@@ -119,7 +119,8 @@ async function open($: any, on: any, files: Record<string, string>, mtimes: Reco
   await startSession($)
   return made
 }
-const paneText = async ($: any) => toText(await (await $.ui.mount({ ...PANE, surface: 'terminal' })).find({ key: 'pane' }))
+const said = (element: any) => withoutHints(toText(element))
+const paneText = async ($: any) => said(await (await $.ui.mount({ ...PANE, surface: 'terminal' })).find({ key: 'pane' }))
 const bandText = async ($: any) => {
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   const text = toText(await ui.find({ key: 'speckit-band' }))
@@ -127,24 +128,25 @@ const bandText = async ($: any) => {
   return text
 }
 
-const HEAD = ['Run   Overview   Specs', 'Clear Completed Todos', '001-clear-completed']
+const HEAD = ['▸Run   Overview   Specs', 'Clear Completed Todos', '001-clear-completed']
 const SPEC_LINE = ['spec  3 stories (2 P1, 1 P2) · 9 requirements · 4 success criteria', '  2 open questions']
 
 test('a spec alone says when it was written, what comes next, and that nothing was recorded', async ($, on) => {
   await open($, on, { [path('spec.md')]: SPEC }, { [path('spec.md')]: today(19, 26) })
-  expect(await bandText($)).toBe('001-clear-completed · Specify written 4m ago · Plan next')
+  expect(await bandText($)).toBe('○ 001-clear-completed · Specify written 4m ago · Plan next')
   expect(await paneText($)).toBe(
     [
       ...HEAD,
-      'Waiting: plan next',
+      'Specify written · Plan next',
       ' ',
+      'STEPS',
       '✓ Specify    written 7:26 PM',
       '○ Plan       not written yet',
       '○ Tasks      not written yet',
       '○ Implement ',
       NO_RECORD_NOTE,
       ' ',
-      'Documents',
+      'DOCUMENTS',
       ...SPEC_LINE,
       ' ',
       'Next: /speckit-plan',
@@ -154,20 +156,21 @@ test('a spec alone says when it was written, what comes next, and that nothing w
 
 test('a spec and a plan show the gap between them, and the pane waits for tasks', async ($, on) => {
   await open($, on, WAITING_FOR_TASKS, WAITING_TIMES)
-  expect(await bandText($)).toBe('001-clear-completed · Plan written 12m ago · Tasks next')
+  expect(await bandText($)).toBe('○ 001-clear-completed · Plan written 12m ago · Tasks next')
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'pane' }))).toBe(
+  expect(said(await ui.find({ key: 'pane' }))).toBe(
     [
       ...HEAD,
-      'Waiting: tasks next',
+      'Plan written · Tasks next',
       ' ',
+      'STEPS',
       '✓ Specify    written 7:14 PM',
       '✓ Plan       written 7:18 PM · 4m after the spec',
       '○ Tasks      not written yet',
       '○ Implement ',
       NO_RECORD_NOTE,
       ' ',
-      'Documents',
+      'DOCUMENTS',
       ...SPEC_LINE,
       'plan  4 files named',
       'checklist: requirements  2 of 3 checked',
@@ -178,26 +181,27 @@ test('a spec and a plan show the gap between them, and the pane waits for tasks'
   expect((await ui.find({ type: 'Text', text: '· 4m after the spec' })).props.dimColor).toBe(true)
   expect((await ui.find({ type: 'Text', text: 'written 7:18 PM' })).props.dimColor).toBeUndefined()
   expect((await ui.find({ type: 'Text', text: NO_RECORD_NOTE })).props.dimColor).toBe(true)
-  expect((await ui.find({ type: 'Text', text: 'Waiting: tasks next' })).props.dimColor).toBe(true)
+  expect((await ui.find({ type: 'Text', text: 'Plan written · Tasks next' })).props.dimColor).toBe(true)
   expect((await ui.find({ type: 'Text', text: '  2 open questions' })).props.color).toBe('warning')
   expect(await ui.find({ type: 'Text', text: /No record|Timing coverage/ })).toBeUndefined()
 })
 
 test('mid-implement the pane counts the ticked tasks and names the one that is next', async ($, on) => {
   await open($, on, MID_IMPLEMENT, IMPLEMENT_TIMES)
-  expect(await bandText($)).toBe('001-clear-completed · Implement 3/10 · last change 2m ago')
+  expect(await bandText($)).toBe('● 001-clear-completed ██░░░░░░ · Implement 3/10 · last change 2m ago')
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'pane' })).split('\n').slice(0, 21)).toEqual([
+  expect(said(await ui.find({ key: 'pane' })).split('\n').slice(0, 22)).toEqual([
     ...HEAD,
     'Implementing: T004 next · Add the clear button to index.html',
     ' ',
+    'STEPS',
     '✓ Specify    written 7:14 PM',
     '✓ Plan       written 7:18 PM · 4m after the spec',
     '✓ Tasks      written 7:28 PM',
     '● Implement  3 of 10 tasks · last change 2m ago',
     NO_RECORD_NOTE,
     ' ',
-    'Documents',
+    'DOCUMENTS',
     ...SPEC_LINE,
     'plan  4 files named',
     'tasks  10 tasks in 5 phases · 4 can run in parallel',
@@ -207,7 +211,7 @@ test('mid-implement the pane counts the ticked tasks and names the one that is n
     'checklist: requirements  2 of 3 checked',
     'contracts  2 files',
   ])
-  expect(toText(await ui.find({ key: 'pane' })).split('\n').pop()).toBe('Next: /speckit-implement')
+  expect(said(await ui.find({ key: 'pane' })).split('\n').pop()).toBe('Next: /speckit-implement')
   expect((await ui.find({ type: 'Text', text: '3 of 10 tasks' })).props.color).toBe('warning')
   expect((await ui.find({ type: 'Text', text: /^Implementing: T004 next/ })).props.color).toBe('warning')
   await ui.unmount()
@@ -219,19 +223,19 @@ test('mid-implement the pane counts the ticked tasks and names the one that is n
 test('the minutes move on by themselves, and ticked tasks left alone stop reading as running', async ($, on) => {
   const { clock } = await open($, on, MID_IMPLEMENT, IMPLEMENT_TIMES)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 2m ago')
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 2m ago')
   await clock.advance(60000)
-  expect(toText(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 3m ago')
-  expect(await bandText($)).toBe('001-clear-completed · Implement 3/10 · last change 3m ago')
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 3m ago')
+  expect(await bandText($)).toBe('● 001-clear-completed ██░░░░░░ · Implement 3/10 · last change 3m ago')
   await clock.advance(8 * 60000)
-  expect(toText(await ui.find({ key: 'row-implement' }))).toBe('○ Implement  3 of 10 tasks · last change 11m ago')
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('○ Implement  3 of 10 tasks · last change 11m ago')
   expect((await ui.find({ type: 'Text', text: '3 of 10 tasks' })).props.dimColor).toBe(true)
-  expect(await ui.find({ type: 'Text', text: 'Waiting: T004 next · Add the clear button to index.html' })).toBeDefined()
+  expect(await ui.find({ type: 'Text', text: 'Implement stopped at 3 of 10 · T004 left' })).toBeDefined()
 })
 
 test('a finished stock run ticks Implement and names no next step', async ($, on) => {
   await open($, on, { ...MID_IMPLEMENT, [path('tasks.md')]: tasks(10) }, IMPLEMENT_TIMES)
-  expect(await bandText($)).toBe('001-clear-completed · Done · Tasks 10/10')
+  expect(await bandText($)).toBe('● 001-clear-completed ████████ · Done · Tasks 10/10')
   const text = await paneText($)
   expect(text).toContain('All 10 tasks ticked')
   expect(text).toContain('✓ Implement  10 of 10 tasks')
@@ -244,15 +248,57 @@ test('the activity line tells writing from waiting by how lately a file changed'
   const row = {}
   const say = (files: [string, number][]) => activityLine(row, folder(files), NOW)
   expect(say([['spec.md', NOW - 60000]])).toEqual({ text: 'Writing the spec', live: true })
-  expect(say([['spec.md', NOW - 180000]])).toEqual({ text: 'Waiting: plan next', live: false })
+  expect(say([['spec.md', NOW - 180000]])).toEqual({ text: 'Specify written · Plan next', live: false })
   expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 30000]])).toEqual({ text: 'Writing the plan', live: true })
   // The plan step writes its research after the plan file, and that is still the plan being written.
   expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000], ['research.md', NOW - 30000]])).toEqual({ text: 'Writing the plan', live: true })
-  expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000]])).toEqual({ text: 'Waiting: tasks next', live: false })
+  expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000]])).toEqual({ text: 'Plan written · Tasks next', live: false })
   expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000], ['tasks.md', NOW - 30000]])).toEqual({ text: 'Writing the tasks', live: true })
-  expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000], ['tasks.md', NOW - 300000]])).toEqual({ text: 'Waiting: implement next', live: false })
-  expect(say([['notes.md', NOW]])).toEqual({ text: 'Waiting: specify next', live: false })
+  expect(say([['spec.md', NOW - 600000], ['plan.md', NOW - 300000], ['tasks.md', NOW - 300000]])).toEqual({ text: 'Tasks written · Implement next', live: false })
+  expect(say([['notes.md', NOW]])).toEqual({ text: 'Specify next', live: false })
   expect(activityLine(row, null, NOW)).toBe(null)
+})
+
+const endTurn = ($: any) => $.turn.complete({ reason: 'answer', answer: 'Done.', durationMs: 60000, isAborted: false, turnId: 't1' })
+
+test('once the turn ends a plan written a moment ago reads as written, in the band\'s words', async ($, on) => {
+  const times = { ...WAITING_TIMES, [path('plan.md')]: NOW - 20000 }
+  const files: Record<string, string> = { ...WAITING_FOR_TASKS }
+  const { clock } = await open($, on, files, times)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text', text: 'Writing the plan' })).props.color).toBe('warning')
+  await endTurn($)
+  expect(await ui.find({ type: 'Text', text: 'Writing the plan' })).toBeUndefined()
+  expect((await ui.find({ type: 'Text', text: 'Plan written · Tasks next' })).props.dimColor).toBe(true)
+  expect(said(await ui.find({ key: 'pane' })).split('\n').pop()).toBe('Next: /speckit-tasks')
+  expect(await bandText($)).toBe('○ 001-clear-completed · Plan written just now · Tasks next')
+  // The next command's own writes come after the turn ended, so they read as in progress again.
+  files[path('research.md')] = RESEARCH
+  times[path('research.md')] = NOW + 30000
+  await clock.advance(40000)
+  expect(await ui.find({ type: 'Text', text: 'Writing the plan' })).toBeDefined()
+})
+
+test('a turn that ends with tasks left says where implement stopped, and nothing reads as running', async ($, on) => {
+  const files = { ...MID_IMPLEMENT, [path('tasks.md')]: tasks(9) }
+  await open($, on, files, { ...IMPLEMENT_TIMES, [path('tasks.md')]: NOW - 30000 })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect((await ui.find({ type: 'Text', text: 'Implementing: T010 next · Run the whole suite' })).props.color).toBe('warning')
+  await endTurn($)
+  expect(await ui.find({ type: 'Text', text: /^Implementing/ })).toBeUndefined()
+  expect((await ui.find({ type: 'Text', text: 'Implement stopped at 9 of 10 · T010 left' })).props.dimColor).toBe(true)
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('○ Implement  9 of 10 tasks · last change just now')
+  await ui.unmount()
+  const band = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect(toText(await band.find({ key: 'speckit-band' }))).toBe('○ 001-clear-completed ███████░ · Implement 9/10 · last change just now')
+  expect((await band.find({ type: 'Text', text: /Implement 9\/10/ })).props.dimColor).toBe(true)
+})
+
+test('a subagent\'s turn ending settles nothing', async ($, on) => {
+  await open($, on, WAITING_FOR_TASKS, { ...WAITING_TIMES, [path('plan.md')]: NOW - 20000 })
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await $.turn.complete({ reason: 'answer', answer: 'Done.', durationMs: 1000, isAborted: false, turnId: 't1', agentId: 'a1' })
+  expect(await ui.find({ type: 'Text', text: 'Writing the plan' })).toBeDefined()
 })
 
 test('a time today is a clock time, another day carries its date, and spans round down', async () => {
@@ -274,7 +320,7 @@ test('every document line opens its file, and Back returns to that line', async 
   for (const [key, file, text] of opens) {
     expect((await ui.find({ key })).type).toBe('Button')
     await ui.press({ key })
-    expect((await ui.find({ type: 'Text', text: path(file) })).props.bold).toBe(true)
+    expect((await ui.find({ key: 'doc-path' })).props.text).toBe(fileLink(ROOT, path(file)))
     expect((await ui.find({ key: 'doc-0' })).props.text).toBe(text.trim())
     await ui.press({ key: 'doc-back' })
     expect((await ui.find({ key })).props.autoFocus).toBe(true)
@@ -295,7 +341,7 @@ test('a count the file does not give is left out, never shown as zero', async ($
   }
   await open($, on, files, {})
   const lines = (await paneText($)).split('\n')
-  const block = lines.slice(lines.indexOf('Documents') + 1, lines.indexOf(' ', lines.indexOf('Documents')))
+  const block = lines.slice(lines.indexOf('DOCUMENTS') + 1, lines.indexOf(' ', lines.indexOf('DOCUMENTS')))
   expect(block).toEqual([
     'spec  2 stories',
     'plan  One module and its tests, wired into the toolbar that every…',
@@ -325,20 +371,20 @@ test('the Overview of a stock project comes from its spec and plan', async ($, o
   await open($, on, WAITING_FOR_TASKS, WAITING_TIMES)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   await ui.press({ key: 'tab-overview' })
-  expect(toText(await ui.find({ key: 'pane' })).split('\n').slice(4)).toEqual([
+  expect(said(await ui.find({ key: 'pane' })).split('\n').slice(4)).toEqual([
     ' ',
     'Let me clear all completed todos with one button',
     ' ',
-    'User stories',
+    'USER STORIES',
     '- Clear all completed todos at once · P1',
     '- Cleared todos stay gone · P1',
     '- The button hides when it has nothing to do · P2',
     ' ',
-    'Open questions',
+    'OPEN QUESTIONS',
     '- Should clearing ask for confirmation?',
     '- Is there an undo, and for how long?',
     ' ',
-    'Requirements · 9',
+    'REQUIREMENTS · 9',
     '- FR-001 The app MUST provide one control that removes all completed todos.',
     '- FR-002 Activating the control MUST remove every todo marked as done.',
     '- FR-003 The remaining todos MUST keep their order.',
@@ -346,20 +392,20 @@ test('the Overview of a stock project comes from its spec and plan', async ($, o
     '- FR-005 The removal MUST persist.',
     '4 more in the spec',
     ' ',
-    'Success criteria',
+    'SUCCESS CRITERIA',
     '- SC-001 A user can remove all completed todos with 1 action.',
     '- SC-002 100% of active todos remain.',
     '- SC-003 The list reflects the clear in under 1 second.',
     '- SC-004 Cleared todos stay gone after reopening.',
     ' ',
-    'Plan summary',
+    'PLAN SUMMARY',
     'Add one "Clear completed" button that removes every todo marked as done and saves the result.',
     ' ',
     FROM_FILES_NOTE,
   ])
   expect((await ui.find({ type: 'Text', text: '- Is there an undo, and for how long?' })).props.color).toBe('warning')
   expect((await ui.find({ type: 'Text', text: FROM_FILES_NOTE })).props.dimColor).toBe(true)
-  expect((await ui.find({ type: 'Text', text: 'User stories' })).props.bold).toBe(true)
+  expect((await ui.find({ type: 'Text', text: 'USER STORIES' })).props.bold).toBe(true)
   expect(await ui.find({ type: 'Text', text: /run record/ })).toBeUndefined()
 })
 
@@ -369,7 +415,7 @@ test('an Overview with nothing to draw from says so, and a part the files lack i
   await ui.press({ key: 'tab-overview' })
   expect(await ui.find({ type: 'Text', text: 'The spec files have nothing to summarise yet.' })).toBeDefined()
   expect(await ui.find({ type: 'Text', text: FROM_FILES_NOTE })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /^(User stories|Open questions|Requirements|Success criteria|Plan summary)/ })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: /^(User stories|Open questions|Requirements|Success criteria|Plan summary)/i })).toBeUndefined()
   expect(fileOverview(null)).toMatchObject({ empty: true, stories: [], requirements: null })
 })
 
@@ -380,18 +426,18 @@ test('a recorded run keeps its measured times, and gains the stories and questio
   await clock.set(NOW)
   await startSession($)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  const run = toText(await ui.find({ key: 'pane' }))
+  const run = said(await ui.find({ key: 'pane' }))
   for (const time of ['6m', '7m 30s', '2m 30s', '22m 30s', '38m 30s active']) expect(run).toContain(time)
   expect(run).toContain('_03_demo-living · Completed')
   expect(run).not.toMatch(/written \d|last change|Nothing recorded|Waiting|Next:/)
   expect(run).toContain(SPEC_LINE[0])
   await ui.press({ key: 'tab-overview' })
-  const overview = toText(await ui.find({ key: 'pane' }))
-  expect(overview).toContain('Intent')
-  expect(overview).toContain('User stories\n- Clear all completed todos at once · P1')
-  expect(overview).toContain('Open questions\n- Should clearing ask for confirmation?')
+  const overview = said(await ui.find({ key: 'pane' }))
+  expect(overview).toContain('INTENT')
+  expect(overview).toContain('USER STORIES\n- Clear all completed todos at once · P1')
+  expect(overview).toContain('OPEN QUESTIONS\n- Should clearing ask for confirmation?')
   expect(overview).not.toContain(FROM_FILES_NOTE)
-  expect(overview).not.toContain('Success criteria')
+  expect(overview).not.toContain('SUCCESS CRITERIA')
 })
 
 test('a recorded step nobody measured takes its file time, and a measured one never does', async () => {
@@ -454,7 +500,7 @@ test('a file is read again only when its time or size changed', async ($, on) =>
   await clock.advance(3000)
   expect(counted.map(count)).toEqual([2, 1, 3, 1, 1, 1])
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'row-implement' }))).toBe('● Implement  4 of 10 tasks · last change just now')
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('● Implement  4 of 10 tasks · last change just now')
 })
 
 test('where nothing draws, the text answer for a stock project reads like the band', async ($, on) => {

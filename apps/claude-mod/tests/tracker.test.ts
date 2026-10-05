@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 import { DEMO_SPECS } from './fixtures/demo-specs.js'
-import { BAND, PANE, ROOT, project, startSession } from './harness.ts'
+import { BAND, PANE, ROOT, project, startSession, toText } from './harness.ts'
 
 test('registers /speckit-tracker and keeps /spec as an alias of it', async ($, on) => {
   const { commands } = project(on, { ...DEMO_SPECS })
@@ -82,10 +82,17 @@ test('colours the running step in the band and in the pane with the theme warnin
   expect((await band.find({ type: 'Text', text: '042-export-csv' })).props.bold).toBe(true)
   expect((await band.find({ type: 'Text', text: ' · Plan done · Tasks 1/2 · ' })).props.dimColor).toBe(true)
   expect((await band.find({ type: 'Text', text: 'Implement running' })).props.color).toBe('warning')
+  expect((await band.find({ type: 'Text', text: '● ' })).props.color).toBe('warning')
+  expect(toText(await band.find({ key: 'speckit-band' }))).toBe('● 042-export-csv ████░░░░ · Plan done · Tasks 1/2 · Implement running')
   await band.unmount()
   const pane = await $.ui.mount({ ...PANE, surface: 'terminal' })
   expect((await pane.find({ type: 'Text', text: 'running' })).props.color).toBe('warning')
   expect((await pane.find({ type: 'Text', text: '●' })).props.color).toBe('warning')
-  expect((await pane.find({ type: 'Text', text: '✓' })).props.color).toBe('green')
-  expect((await pane.find({ type: 'Text', text: 'Tasks  1/2' })).props.bold).toBe(true)
+  expect((await pane.find({ type: 'Text', text: '✓' })).props.color).toBe('success')
+  expect((await pane.find({ type: 'Text', text: 'STEPS' })).props.color).toBe('suggestion')
+  expect((await pane.find({ type: 'Text', text: 'TASKS' })).props.bold).toBe(true)
+  expect(toText(await pane.find({ key: 'task-bar' }))).toBe('█'.repeat(15) + '░'.repeat(15) + ' 1/2')
+  expect(toText(await pane.find({ key: 'hints' }))).toBe(' 1  Run   2  Overview   3  Specs   ↵  Read   o  Editor   Esc  Prompt')
+  expect((await pane.find({ type: 'Text', text: ' Esc ' })).props.backgroundColor).toBe('subtle')
+  expect((await pane.find({ type: 'Text', text: ' Esc ' })).props.inverse).toBeUndefined()
 })

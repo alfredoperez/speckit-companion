@@ -1,8 +1,8 @@
 import { expect, test } from 'claude-code/testing'
-import { documentChunks, paneModel, stepDocument, taskSummaryLines } from '../hooks/board.js'
+import { documentChunks, editorCommands, fileLink, paneModel, stepDocument, taskSummaryLines } from '../hooks/board.js'
 import { buildSpecRow } from '../hooks/vendor/board-rules.mjs'
 import { DEMO_SPECS } from './fixtures/demo-specs.js'
-import { PANE, ROOT, project, startSession } from './harness.ts'
+import { PANE, ROOT, project, startSession, toText } from './harness.ts'
 
 const follow = (id: string) => ({ store: new Map([['follow:' + ROOT, id]]) })
 const at = (minutes: number, seconds = 0) => new Date(Date.UTC(2026, 0, 1, 10, minutes, seconds)).toISOString()
@@ -23,7 +23,7 @@ test('pressing a step opens its document, and Back returns to the same step', as
   for (const [step, path] of opens) {
     expect((await ui.find({ key: 'step-' + step })).type).toBe('Button')
     await ui.press({ key: 'step-' + step })
-    expect((await ui.find({ type: 'Text', text: path })).props.bold).toBe(true)
+    expect((await ui.find({ key: 'doc-path' })).props.text).toBe(fileLink(ROOT, path))
     const shown = await ui.find({ key: 'doc-0' })
     expect(shown.type).toBe('Markdown')
     expect(shown.props.text).toBe(DEMO_SPECS[path].trim())
@@ -156,4 +156,83 @@ test('a step that ran but was not measured is not called folded, and the coverag
 test('each step opens its own file, and a step with no file opens nothing', async () => {
   const some = buildSpecRow({ id: 'specs/042-export-csv', ctx: null, specText: null, files: { spec: 'export-csv.spec.md', plan: 'plan.md', tasks: null }, tasksText: null, updatedAt: null })
   expect(['specify', 'plan', 'tasks', 'implement'].map(step => stepDocument(some, step))).toEqual(['specs/042-export-csv/export-csv.spec.md', 'specs/042-export-csv/plan.md', null, null])
+})
+
+test('every row with a file says Enter reads it, and the foot lists the keys', async ($, on) => {
+  project(on, { ...DEMO_SPECS }, follow('specs/_01_demo-planned'))
+  await startSession($)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  expect(toText(await ui.find({ key: 'row-plan' }))).toMatch(/ ↵ read$/)
+  expect(toText(await ui.find({ key: 'row-doc-plan.md' }))).toMatch(/ ↵ read$/)
+  expect((await ui.find({ type: 'Text', text: '↵ read' })).props.dimColor).toBe(true)
+  // Tasks has no file yet, so nothing says it can be read.
+  expect(toText(await ui.find({ key: 'row-tasks' }))).not.toContain('↵')
+  expect(toText(await ui.find({ key: 'hints' }))).toBe(' 1  Run   2  Overview   3  Specs   ↵  Read   o  Editor   Esc  Prompt')
+  await ui.press({ key: 'step-plan' })
+  expect(toText(await ui.find({ key: 'doc-controls' }))).toBe('Back   Open in editor')
+  expect((await ui.find({ key: 'open-editor' })).props.hotkey).toBe('o')
+  expect(toText(await ui.find({ key: 'hints' }))).toBe(' 1  Run   2  Overview   3  Specs   b  Back   o  Editor   Esc  Prompt')
+  await ui.press({ key: 'tab-specs' })
+  expect(toText(await ui.find({ key: 'hints' }))).toBe(' 1  Run   2  Overview   3  Specs   Esc  Prompt')
+})
+
+test('o opens the open document in the editor, trying each command until one works', async ($, on) => {
+  const { ran, toasts, copied } = project(on, { ...DEMO_SPECS }, { ...follow('specs/_02_demo-tasked'), env: { EDITOR: 'vim', TERM_PROGRAM: 'vscode' }, installed: ['open'] })
+  await startSession($)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await ui.press({ key: 'step-plan' })
+  await ui.press({ key: 'open-editor' })
+  const file = ROOT + '/specs/_02_demo-tasked/plan.md'
+  // vim needs the terminal, so it is never run; VS Code is not installed here, so the system opener takes it.
+  expect(ran).toEqual([['code', file], ['open', file]])
+  expect(toasts).toEqual(['Opened specs/_02_demo-tasked/plan.md with open'])
+  expect(copied).toEqual([])
+})
+
+test('o on the Run tab opens the file of the step or document the focus is on', async ($, on) => {
+  const { ran, toasts } = project(on, { ...DEMO_SPECS }, { ...follow('specs/_02_demo-tasked'), installed: ['code'] })
+  await startSession($)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await ui.press({ key: 'open-editor' })
+  expect(ran).toEqual([])
+  expect(toasts).toEqual(['Move to a step or a document first, then press o'])
+  await $.ui.focus({ requestId: 'speckit-companion', key: 'step-tasks' })
+  await ui.press({ key: 'open-editor' })
+  await $.ui.focus({ requestId: 'speckit-companion', key: 'doc-spec.md' })
+  await ui.press({ key: 'open-editor' })
+  // Moving on to a tab keeps the last file, so pressing the control itself still has one to open.
+  await $.ui.focus({ requestId: 'speckit-companion', key: 'tab-overview' })
+  await ui.press({ key: 'open-editor' })
+  expect(ran).toEqual([
+    ['code', ROOT + '/specs/_02_demo-tasked/tasks.md'],
+    ['code', ROOT + '/specs/_02_demo-tasked/spec.md'],
+    ['code', ROOT + '/specs/_02_demo-tasked/spec.md'],
+  ])
+})
+
+test('when no editor command works the path is copied instead', async ($, on) => {
+  const { ran, toasts, copied } = project(on, { ...DEMO_SPECS }, follow('specs/_02_demo-tasked'))
+  await startSession($)
+  const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
+  await ui.press({ key: 'step-plan' })
+  await ui.press({ key: 'open-editor' })
+  expect(ran.map(argv => argv[0])).toEqual(['code', 'open', 'xdg-open'])
+  expect(copied).toEqual([ROOT + '/specs/_02_demo-tasked/plan.md'])
+  expect(toasts).toEqual(['No editor command worked, so the path of specs/_02_demo-tasked/plan.md is on the clipboard'])
+})
+
+test('the editor is $VISUAL or $EDITOR when it has a window, then the terminal\'s own editor, then VS Code and the system opener', async () => {
+  const first = (env: any) => editorCommands('/p/a.md', env)[0]
+  expect(first({ visual: 'zed', editor: 'code' })).toEqual(['zed', '/p/a.md'])
+  expect(first({ editor: '/usr/local/bin/code --wait --reuse-window' })).toEqual(['/usr/local/bin/code', '--reuse-window', '/p/a.md'])
+  expect(first({ editor: 'nvim', termProgram: 'vscode', cursor: 'abc' })).toEqual(['cursor', '/p/a.md'])
+  expect(first({ editor: 'nano', termProgram: 'vscode' })).toEqual(['code', '/p/a.md'])
+  expect(editorCommands('/p/a.md', { editor: 'vim', termProgram: 'iTerm.app' })).toEqual([['code', '/p/a.md'], ['open', '/p/a.md'], ['xdg-open', '/p/a.md']])
+  expect(editorCommands('/p/a.md')).toEqual([['code', '/p/a.md'], ['open', '/p/a.md'], ['xdg-open', '/p/a.md']])
+})
+
+test('the path of an open document is a file link, with what markdown would read as marks escaped', async () => {
+  expect(fileLink('/work', 'specs/_02_demo-tasked/plan.md')).toBe('[specs/\\_02\\_demo-tasked/plan.md](file:///work/specs/_02_demo-tasked/plan.md)')
+  expect(fileLink('/my work/', 'specs/a (b)/plan.md')).toBe('[specs/a (b)/plan.md](file:///my%20work/specs/a%20%28b%29/plan.md)')
+  expect(fileLink('C:\\work', 'specs/a/plan.md')).toBe(null)
 })

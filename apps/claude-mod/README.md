@@ -15,25 +15,29 @@ Tested on Claude Code 2.1.287, the first version with mods on by default. The mo
 
 Everything updates while the agent works: after each tool call, and every few seconds for changes made outside the session.
 
-The colours follow your terminal: a finished step is green, the running step and the word `running` use the theme's warning colour, a failed check is red, and secondary facts are dim.
+The colours come from your Claude Code theme: a finished step is green, the running step, the next step in the band and the tab in view use the warning colour, a failed check is red, and times and secondary facts are dim. Each section heading is in capitals with a colour of its own, a bar of block characters shows the ticked tasks out of the total (green once all are ticked), and the foot of the pane lists the keys: `1` Run, `2` Overview, `3` Specs, `↵` Read, `o` Editor, `b` Back, `Esc` Prompt.
 
 ### Open a step's document
 
-On the Run tab each step is a control. Move to it with Tab or the arrow keys and press Enter to read that step's file inside the pane, rendered as markdown: Specify opens the spec, Plan opens `plan.md`, and Tasks and Implement open `tasks.md`. When the record has a summary of what each finished task did, Implement lists those first. The first line names the file, and `b` goes back to the step you came from. The document refreshes as the agent writes it. A step whose file does not exist yet says `not written yet` and cannot be opened, and a very long file shows its first 60,000 characters with a line saying how much was left out.
+On the Run tab each step is a control, and every step and document that has a file ends in a dim `↵ read`. Move to it with Tab or the arrow keys and press Enter to read that step's file inside the pane, rendered as markdown: Specify opens the spec, Plan opens `plan.md`, and Tasks and Implement open `tasks.md`. When the record has a summary of what each finished task did, Implement lists those first. The first line names the file, as a link to it where your terminal opens file links, and `b` goes back to the step you came from. The document refreshes as the agent writes it. A step whose file does not exist yet says `not written yet` and cannot be opened, and a very long file shows its first 60,000 characters with a line saying how much was left out.
+
+### Open a file in your editor
+
+Press `o` to open a file in your editor: the document you are reading, or on the Run tab the step or document the focus is on. The mod runs the first of these that works: `$VISUAL` or `$EDITOR` when it names an editor with a window of its own (`code`, `cursor`, `zed`, `subl` and the like, never `vim`), `cursor` or `code` when the terminal is that editor's own, `code`, then the system's `open` or `xdg-open`. When none of them works the file's full path is copied to the clipboard and a toast says so.
 
 ### Without a run record
 
 A stock Spec Kit project has no `.spec-context.json`, because the Companion Spec Kit extension is what writes it. The pane then works from the files in the spec folder alone:
 
 - **A timeline from the files.** Each step says when its document was last written, such as `✓ Plan  written 7:18 PM · 4m after the spec`, and a file from another day carries its date. Implement reads `3 of 10 tasks · last change 2m ago` while tasks are being ticked. A line under the steps says these are file times, not measured ones, and a step the record did measure never shows a file time.
-- **What is happening now.** The line under the title reads `Writing the plan`, `Implementing: T004 next` or `Waiting: tasks next`, from which files exist and how lately each changed. The band reads the same way: `001-clear-completed · Plan written 4m ago · Tasks next`.
+- **What is happening now.** While a step is being written the line under the title reads `Writing the plan` or `Implementing: T004 next`, from which files exist and how lately each changed. Once the turn ends it reads as the band does, `Plan written · Tasks next`, or `Implement stopped at 9 of 10 · T010 left` when tasks remain. The band: `001-clear-completed · Plan written 4m ago · Tasks next`.
 - **Documents.** One line per file in the spec folder with what it holds: the spec's stories, requirements, success criteria and open questions, the files the plan names, the tasks by phase and how many can run in parallel, the decisions in the research, and how much of each checklist is checked. Press a line to read that file, including the ones in `checklists/` and `contracts/`. A count the file does not give is left out.
 - **An Overview from the spec.** The feature's description, its user stories with their priority, the open questions, the first five requirements, the success criteria and the plan's summary.
 - **The next command.** The last line of the Run tab names it, such as `Next: /speckit-tasks`, or the `/speckit-companion-*` command with the spec folder when the project has the Companion skills.
 
 A run that has a record shows the Documents block and the next command too, and its Overview adds the user stories and open questions from the spec.
 
-The mod only reads. It never writes a spec file or the run record, and never sends a prompt: you run the `/speckit-*` commands yourself.
+The mod only reads. It never writes a spec file or the run record, and never sends a prompt: you run the `/speckit-*` commands yourself. The one command it runs is your editor's, when you press `o`.
 
 ## Install
 

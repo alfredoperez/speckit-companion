@@ -24,6 +24,8 @@ const PLAN_KINDS = ['plan', 'research', 'data-model', 'quickstart', 'contract']
 export const NO_RECORD_NOTE = 'Times are when each file was last written. Nothing recorded this run.'
 export const FROM_FILES_NOTE = 'From the spec files. Install the Companion Spec Kit extension to record step times, decisions and what was verified.'
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1)
+// A file last written before the turn ended is finished, however lately that was; `settledAt` is when the last turn ended.
+const lately = (at, now, within, settledAt) => at > 0 && now - at <= within && (settledAt == null || at > settledAt)
 
 /** The most recently active unfinished spec, else the most recent one. Rows arrive sorted. */
 export function defaultFollow(rows) {
@@ -31,16 +33,17 @@ export function defaultFollow(rows) {
 }
 
 /** The band's facts in order, the one naming a running step marked; empty with no spec. */
-export function bandParts(row, ctx, folder, now) {
+export function bandParts(row, ctx, folder, now, settledAt = null) {
   if (!row) return []
   const { steps, tasks } = row
   const counted = tasks != null && tasks.total > 0
   const fact = text => (text ? { text, running: false } : null)
   if (!ctx && folder && now != null && !row.done) {
-    const fromFiles = fileBandParts(row, folder, now)
+    const fromFiles = fileBandParts(row, folder, now, settledAt)
     if (fromFiles) return fromFiles
   }
   const live = step => (step ? { text: `${cap(step)} running`, running: true } : null)
+  const upNext = step => (step ? { text: `${cap(step)} next`, running: false, next: true } : null)
   const count = fact(counted ? `Tasks ${tasks.checked}/${tasks.total}` : null)
   if (row.done || steps.implement === 'completed') {
     const timings = ctx ? phaseTimings(ctx) : null
@@ -53,16 +56,16 @@ export function bandParts(row, ctx, folder, now) {
   const done = PIPELINE_STEPS.filter(s => steps[s] === 'completed' && !(s === 'tasks' && counted)).pop()
   const running = PIPELINE_STEPS.find(s => steps[s] === 'in-progress')
   const next = running ? null : PIPELINE_STEPS.find(s => steps[s] === 'not-started')
-  return [fact(done ? `${cap(done)} done` : null), count, live(running), fact(next ? `${cap(next)} next` : null)].filter(Boolean)
+  return [fact(done ? `${cap(done)} done` : null), count, live(running), upNext(next)].filter(Boolean)
 }
 
 /** The band of a run with no record: the last document written and how long ago, or the task count while tasks are ticked. */
-function fileBandParts(row, folder, now) {
+function fileBandParts(row, folder, now, settledAt) {
   const written = kind => folder.files.find(f => f.kind === kind)?.mtimeMs || null
   const tasks = row.tasks
   if (tasks?.total > 0 && tasks.checked > 0) {
     const changed = written('tasks')
-    const count = { text: `Implement ${tasks.checked}/${tasks.total}`, running: changed != null && now - changed <= TICKING_MS }
+    const count = { text: `Implement ${tasks.checked}/${tasks.total}`, running: lately(changed, now, TICKING_MS, settledAt) }
     return changed != null ? [count, { text: `last change ${ago(now - changed)}`, running: false }] : [count]
   }
   const last = ['tasks', 'plan', 'spec'].find(kind => written(kind))
@@ -70,8 +73,17 @@ function fileBandParts(row, folder, now) {
   const next = PIPELINE_STEPS.find(s => row.steps[s] !== 'completed')
   return [
     { text: `${STEP_OF_DOC[last]} written ${ago(now - written(last))}`, running: false },
-    ...(next ? [{ text: `${cap(next)} next`, running: false }] : []),
+    ...(next ? [{ text: `${cap(next)} next`, running: false, next: true }] : []),
   ]
+}
+
+/** A bar of `width` cells for real task counts: full only when every task is ticked, never empty once one is. Null with no tasks. */
+export function progressBar(checked, total, width) {
+  if (!(total > 0) || !(width >= 1)) return null
+  const done = checked >= total
+  const share = Math.floor((Math.max(0, checked) / total) * width)
+  const cells = done ? width : Math.min(width - 1, checked > 0 ? Math.max(1, share) : 0)
+  return { filled: '█'.repeat(cells), empty: '░'.repeat(width - cells), done }
 }
 
 /** "Plan done · Tasks 7/12 · Implement running" for a spec, or null with no spec. */
@@ -107,7 +119,7 @@ const between = ms => {
 }
 
 /** What a step says from its file when nothing measured it: when it was written, or the task count for Implement. */
-function fileNotes(step, row, folder, now, recorded) {
+function fileNotes(step, row, folder, now, recorded, settledAt) {
   if (!folder || now == null) return []
   const written = kind => folder.files.find(f => f.kind === kind)?.mtimeMs || null
   if (step === 'implement') {
@@ -116,7 +128,7 @@ function fileNotes(step, row, folder, now, recorded) {
     const count = `${tasks.checked} of ${tasks.total} tasks`
     if (tasks.checked === tasks.total) return [{ text: count, tone: 'plain' }]
     const changed = written('tasks')
-    const live = changed != null && now - changed <= TICKING_MS
+    const live = lately(changed, now, TICKING_MS, settledAt)
     return [{ text: count, tone: live ? 'running' : 'dim' }, ...(changed != null ? [{ text: `· last change ${ago(now - changed)}`, tone: 'dim' }] : [])]
   }
   const at = written(DOC_OF_STEP[step])
@@ -137,6 +149,32 @@ export function stepDocument(row, step) {
   return file ? `${row.id}/${file}` : null
 }
 
+const WINDOWED_EDITORS = ['code', 'code-insiders', 'codium', 'cursor', 'windsurf', 'zed', 'subl', 'mate', 'idea', 'webstorm', 'fleet']
+
+/** The commands that could open a file in an editor window, in the order to try them: $VISUAL or $EDITOR, the editor whose terminal this is, VS Code, then the system's opener. */
+export function editorCommands(path, env = {}) {
+  const commands = []
+  const add = argv => {
+    if (!commands.some(c => c[0] === argv[0])) commands.push(argv)
+  }
+  for (const set of [env.visual, env.editor]) {
+    const [bin, ...flags] = String(set ?? '').trim().split(/\s+/)
+    const name = bin.split(/[\\/]/).pop().replace(/\.(exe|cmd)$/i, '')
+    // vim and its kind need the terminal the pane is drawn in, so only an editor with a window of its own is run, and never told to wait.
+    if (WINDOWED_EDITORS.includes(name)) add([bin, ...flags.filter(f => f !== '-w' && f !== '--wait'), path])
+  }
+  if (/vscode|cursor/i.test(env.termProgram ?? '')) add([env.cursor || /cursor/i.test(env.termProgram) ? 'cursor' : 'code', path])
+  for (const bin of ['code', 'open', 'xdg-open']) add([bin, path])
+  return commands
+}
+
+/** A markdown link that shows a workspace path and points at the file itself, for a terminal that opens file links; null off POSIX paths. */
+export function fileLink(root, path) {
+  if (typeof root !== 'string' || !root.startsWith('/')) return null
+  const href = 'file://' + encodeURI(root.replace(/\/+$/, '') + '/' + path).replace(/[()#?]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase())
+  return `[${path.replace(/[\\\[\]_*`<>]/g, '\\$&')}](${href})`
+}
+
 /** Plan or tasks finished inside the specify pass: done, with no span of its own, while specify has one. */
 export function foldedSteps(row, ctx) {
   const timing = stepTiming(ctx ?? {})
@@ -151,7 +189,7 @@ export function foldedSteps(row, ctx) {
 }
 
 /** Everything the pane's Run view draws for the followed spec. */
-export function paneModel(row, ctx, tasksText, { folder = null, now = null, companionSkills = false } = {}) {
+export function paneModel(row, ctx, tasksText, { folder = null, now = null, companionSkills = false, settledAt = null } = {}) {
   const recorded = Boolean(ctx)
   const fromFiles = !recorded && folder != null && now != null
   const timings = phaseTimings(ctx ?? {})
@@ -167,7 +205,7 @@ export function paneModel(row, ctx, tasksText, { folder = null, now = null, comp
       const state = row.steps[step]
       // A step takes its file's time only when nothing measured it, so the two never share a line.
       const silent = measured || isFolded || (recorded && state !== 'completed')
-      const notes = silent ? [] : fileNotes(step, row, folder, now, recorded)
+      const notes = silent ? [] : fileNotes(step, row, folder, now, recorded, settledAt)
       // Without a record, tasks ticked a while ago do not mean Implement is running now.
       const stalled = fromFiles && step === 'implement' && state === 'in-progress' && notes[0]?.tone !== 'running'
       return [{ step, label: cap(step), state: stalled ? 'not-started' : state, time: measured, folded: isFolded, document: stepDocument(row, step), notes }]
@@ -195,9 +233,10 @@ export function paneModel(row, ctx, tasksText, { folder = null, now = null, comp
     steps,
     total: timings.phases.length ? summary : null,
     phases,
+    tasks: { checked: phases.reduce((sum, p) => sum + p.checked, 0), total: phases.reduce((sum, p) => sum + p.total, 0) },
     recorded,
     footnote: fromFiles && steps.some(st => st.notes.length) ? NO_RECORD_NOTE : null,
-    activity: recorded ? null : activityLine(row, folder, now),
+    activity: recorded ? null : activityLine(row, folder, now, settledAt),
     documents: documentLines(row, folder),
     next: nextStepLine(row, ctx, companionSkills),
   }
@@ -543,29 +582,27 @@ export function documentLines(row, folder) {
   return lines
 }
 
-/** What is happening in a run with no record, from which files exist and how lately each changed. */
-export function activityLine(row, folder, now) {
+/** What is happening in a run with no record, from which files exist and how lately each changed; nothing written before `settledAt` reads as in progress. */
+export function activityLine(row, folder, now, settledAt = null) {
   if (!row || !folder || now == null) return null
   const has = kind => folder.files.some(f => f.kind === kind)
-  const fresh = (kinds, within = RECENT_MS) => {
-    const newest = Math.max(0, ...folder.files.filter(f => kinds.includes(f.kind)).map(f => f.mtimeMs || 0))
-    return newest > 0 && now - newest <= within
-  }
+  const fresh = (kinds, within = RECENT_MS) => lately(Math.max(0, ...folder.files.filter(f => kinds.includes(f.kind)).map(f => f.mtimeMs || 0)), now, within, settledAt)
   const writing = text => ({ text, live: true })
-  const waiting = step => ({ text: `Waiting: ${step} next`, live: false })
+  // The band's own words, without its minutes: the step row beside it carries the time.
+  const written = (doc, step) => ({ text: (doc ? STEP_OF_DOC[doc] + ' written' + SEP : '') + cap(step) + ' next', live: false })
   if (has('tasks')) {
     const tasks = factsOf(folder, 'tasks')
     if (tasks?.total > 0 && tasks.checked === tasks.total) return { text: `All ${plural(tasks.total, 'task')} ticked`, live: false }
     if (tasks?.checked > 0 && tasks.firstOpen) {
-      const live = fresh(['tasks'], TICKING_MS)
-      const what = tasks.firstOpen.text ? SEP + short(tasks.firstOpen.text, NOTE_MAX) : ''
-      return { text: `${live ? 'Implementing' : 'Waiting'}: ${tasks.firstOpen.id} next${what}`, live }
+      const { id, text } = tasks.firstOpen
+      if (fresh(['tasks'], TICKING_MS)) return writing(`Implementing: ${id} next${text ? SEP + short(text, NOTE_MAX) : ''}`)
+      return { text: `Implement stopped at ${tasks.checked} of ${tasks.total}${SEP}${id} left`, live: false }
     }
-    return fresh(['tasks']) ? writing('Writing the tasks') : waiting('implement')
+    return fresh(['tasks']) ? writing('Writing the tasks') : written('tasks', 'implement')
   }
-  if (has('plan')) return fresh(PLAN_KINDS) ? writing('Writing the plan') : waiting('tasks')
-  if (has('spec')) return fresh(['spec', 'checklist']) ? writing('Writing the spec') : waiting('plan')
-  return waiting('specify')
+  if (has('plan')) return fresh(PLAN_KINDS) ? writing('Writing the plan') : written('plan', 'tasks')
+  if (has('spec')) return fresh(['spec', 'checklist']) ? writing('Writing the spec') : written('spec', 'plan')
+  return written(null, 'specify')
 }
 
 /** The Overview a spec's own files can give: what it is for, its stories, open questions, requirements and plan summary. */

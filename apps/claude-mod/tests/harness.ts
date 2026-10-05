@@ -17,7 +17,7 @@ export const PANE = {
   props: { title: 'SpecKit Companion', isFocused: true, bodyColumns: 60, placement: 'dock', scroll: { offset: 0, bodyRows: 30 }, view: {} },
 } as const
 
-type Options = { surfaces?: string[]; store?: Map<string, unknown>; mtimes?: Record<string, number> }
+type Options = { surfaces?: string[]; store?: Map<string, unknown>; mtimes?: Record<string, number>; env?: Record<string, string>; installed?: string[] }
 
 /** Stubs every call the mod makes over an in-memory project; change `files` between calls to simulate the agent writing. */
 export function project(on: any, files: Record<string, string>, options: Options = {}) {
@@ -61,12 +61,30 @@ export function project(on: any, files: Record<string, string>, options: Options
     opened.push(e.id)
     return { value: { isPlaced: true } }
   })
+  // The commands the mod ran, the ones of `installed` exiting 0 and any other failing to start.
+  const ran: string[][] = []
+  on('process.run', ($: any, e: any) => {
+    ran.push([...e.argv])
+    return (options.installed ?? []).includes(e.argv[0]) ? { value: { exitCode: 0, stdout: '', stderr: '', isStdoutTruncated: false, isStderrTruncated: false } } : { deny: 'ENOENT' }
+  })
+  on('env.get', ($: any, e: any) => ({ value: options.env?.[e.name] }))
+  const copied: string[] = []
+  on('ui.copy', ($: any, e: any) => {
+    copied.push(e.text)
+    return { value: { isCopied: true } }
+  })
+  const toasts: string[] = []
+  on('ui.toast', ($: any, e: any) => {
+    toasts.push(e.text)
+    return { value: undefined }
+  })
+  on('ui.focus', () => ({}))
   on('session.start', () => ({ cwd: ROOT }))
   on('session.cwd', () => ({ value: ROOT }))
   on('tool.call', () => ({ result: 'ok' }))
   on('turn.complete', () => ({ text: '' }))
   on('ui.render', () => ({ type: 'Text', props: {}, children: ['drawn by Claude Code'] }))
-  return { store, opened, commands, reads, clock: mock.clock(on) }
+  return { store, opened, commands, reads, ran, copied, toasts, clock: mock.clock(on) }
 }
 
 export async function startSession($: any) {
@@ -88,3 +106,6 @@ export function toText(element: any): string {
   })
   return cells.join(' '.repeat(element.props?.columnGap ?? 0))
 }
+
+/** A pane's text without the hint each readable row ends in and the editor control, for tests about what the rows say. */
+export const withoutHints = (text: string) => text.replace(/ +↵ read$/gm, '').replace('\n \nOpen the focused file in your editor', '')

@@ -24,11 +24,12 @@ export function paneText(grid) {
     return paneRows(grid)?.lines.join('\n').replace(/\n{2,}/g, '\n') ?? '';
 }
 
-/** The band: the row above the prompt that starts with a spec folder's name. */
+/** The band: the row above the prompt that names a spec folder, read without its state dot and task bar. */
 export function bandRow(grid, names) {
     const col = paneColumn(grid) ?? Infinity;
     for (let row = grid.length - 1; row >= 0; row--) {
-        const text = rowText(grid[row], 0, col).replace(/\s*\[[-+]\]\s*$/, '');
+        // The state dot before the name and the task bar after it are drawing, not words.
+        const text = rowText(grid[row], 0, col).replace(/\s*\[[-+]\]\s*$/, '').replace(/^[●○] /, '').replace(/^(\S+) [█░]+(?= · |$)/, '$1');
         const name = names.find(n => text === n || text.startsWith(n + ' · '));
         if (name) return { row, text, name };
     }

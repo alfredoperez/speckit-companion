@@ -1,6 +1,6 @@
 import { expect, test } from 'claude-code/testing'
 import { DEMO_SPECS } from './fixtures/demo-specs.js'
-import { PANE, ROOT, project, startSession } from './harness.ts'
+import { PANE, ROOT, project, startSession, toText } from './harness.ts'
 
 test('shows each step with its measured time, the active total, and no billing for the waits', async ($, on) => {
   project(on, { ...DEMO_SPECS }, { store: new Map([['follow:' + ROOT, 'specs/_03_demo-living']]) })
@@ -23,8 +23,9 @@ test('lists the tasks by phase and follows the latest unfinished spec by default
   await startSession($)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   expect(await ui.find({ type: 'Text', text: 'Demo — Tasked' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: 'Phase 1: Core Implementation  0/4' })).toBeDefined()
-  expect(await ui.find({ type: 'Text', text: /^○ T003 Palette modal/ })).toBeDefined()
+  expect(toText(await ui.find({ key: 'phase-0' }))).toBe('Phase 1: Core Implementation  0/4')
+  expect(toText(await ui.find({ key: 'task-bar' }))).toBe('░'.repeat(30) + ' 0/4')
+  expect(await ui.find({ type: 'Text', text: /^T003 Palette modal/ })).toBeDefined()
 })
 
 test('switches the followed spec from the Specs view', async ($, on) => {

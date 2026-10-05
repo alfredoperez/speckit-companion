@@ -1,4 +1,4 @@
-// Every $ call lives here, as the hooks module rules require; the mod only reads and never submits a prompt.
+// Every $ call lives here, as the hooks module rules require; the mod only reads, never submits a prompt, and runs one command: the editor, when asked.
 
 import {
   DEFAULT_SPEC_DIRS,
@@ -18,11 +18,14 @@ import {
   documentChunks,
   documentFacts,
   documentKind,
+  editorCommands,
+  fileLink,
   fileOverview,
   followText,
   listText,
   overviewModel,
   paneModel,
+  progressBar,
   taskSummaryLines,
 } from './board.js'
 
@@ -40,10 +43,28 @@ const MAX_PARSED_BYTES = 1 << 20
 const PARSED = ['spec', 'plan', 'tasks', 'research', 'data-model', 'checklist']
 const COMPANION_SKILL = ['.claude', 'skills', 'speckit-companion-plan']
 const GLYPH = { completed: '✓', 'in-progress': '●', 'not-started': '○' }
-// 'warning' is the one theme key the mods types name for text; done and failed use the terminal's own green and red.
-const RUNNING = { color: 'warning' }
-const FAILED = { color: 'red' }
-const STEP_STYLE = { completed: { color: 'green' }, 'in-progress': RUNNING, 'not-started': { dimColor: true } }
+// Every colour is a theme key, so the pane follows the user's theme: one per state, one per section heading.
+const C = { accent: 'warning', done: 'success', failed: 'error', title: 'claude', steps: 'suggestion', documents: 'autoAccept', tasks: 'planMode', chip: 'subtle' }
+const HEADING = {
+  intent: C.steps,
+  approach: C.title,
+  'user stories': C.documents,
+  'open questions': C.accent,
+  expectations: C.tasks,
+  decisions: C.documents,
+  verified: C.done,
+  concerns: C.accent,
+  'success criteria': C.done,
+  'plan summary': C.title,
+}
+const RUNNING = { color: C.accent }
+const FAILED = { color: C.failed }
+const STEP_STYLE = { completed: { color: C.done }, 'in-progress': RUNNING, 'not-started': { dimColor: true } }
+const BAND_BAR = 8
+const BAND_BAR_MIN_COLUMNS = 80
+const ROW_WIDTH = 34
+const EDITOR_TIMEOUT_MS = 10000
+const READ_HINT = '↵ read'
 const TONE = { plain: {}, dim: { dimColor: true }, running: RUNNING }
 
 let view = 'run'
@@ -56,7 +77,11 @@ let timer = null
 // The document that is open, and the control the Run view puts the focus on.
 let doc = null
 let focusKey = null
+// The step or document the focus was last on, which `o` opens from the Run tab.
+let ringKey = null
 let companionSkills = false
+// When the last turn of the main loop ended; a file written before then is not being written any more.
+let settledAt = null
 // The pane is offered once; after that it is the user's to close and to open.
 let offered = false
 // Each followed file's text and facts, kept until its time or size changes.
@@ -190,7 +215,7 @@ async function refreshFollowed($) {
   if (doc && doc.spec !== id) doc = null
   for (const path of parsed.keys()) if (!id || !path.startsWith(at(id) + '/')) parsed.delete(path)
   // The texts that count minutes are part of what is shown, so a minute passing redraws too.
-  const live = next ? [bandParts(next.row, next.ctx, next.folder, now), paneModel(next.row, next.ctx, next.tasksText, { folder: next.folder, now, companionSkills })] : null
+  const live = next ? [bandParts(next.row, next.ctx, next.folder, now, settledAt), paneModel(next.row, next.ctx, next.tasksText, { folder: next.folder, now, companionSkills, settledAt })] : null
   const sig = next ? [JSON.stringify(next.row), next.ctxText, next.tasksText, JSON.stringify(next.folder), JSON.stringify(live)].join('\u0000') : ''
   followed = next
   if (sig === signature) return false
@@ -211,10 +236,31 @@ async function refreshDocument($) {
 async function openDocument($, key, step, path) {
   const spec = followed?.row.id
   const text = await readText($, at(path))
-  focusKey = key
+  focusKey = ringKey = key
   doc = { spec, step, path, text }
   $.ui.invalidate('ui.render')
   await moveFocus($, 'doc-back')
+}
+
+/** Opens a workspace file in the user's editor; when no command works the path goes to the clipboard instead. */
+async function openInEditor($, path) {
+  const set = read => read.catch(() => undefined)
+  const env = {
+    visual: await set($.env.get('VISUAL')),
+    editor: await set($.env.get('EDITOR')),
+    termProgram: await set($.env.get('TERM_PROGRAM')),
+    cursor: await set($.env.get('CURSOR_TRACE_ID')),
+  }
+  for (const argv of editorCommands(at(path), env)) {
+    try {
+      const { exitCode } = await $.process.run(argv, { timeoutMs: EDITOR_TIMEOUT_MS })
+      if (exitCode === 0) return $.ui.toast(`Opened ${path} with ${argv[0].split('/').pop()}`)
+    } catch {
+      // Not installed here; the next command may be.
+    }
+  }
+  const copied = await $.ui.copy({ text: at(path) }).catch(() => null)
+  $.ui.toast(copied?.isCopied ? `No editor command worked, so the path of ${path} is on the clipboard` : `No editor command worked for ${path}`)
 }
 
 /** autoFocus only counts when the pane takes the keyboard, so a redraw that swaps the controls moves the focus itself. */
@@ -282,18 +328,35 @@ async function start($, cwd) {
   await offerPane($)
 }
 
-/** The band's facts after the spec name: dim, with the running step in the warning colour. */
+/** A task bar: the filled part in the running colour, or the done colour once every task is ticked. */
+function barText(Text, bar) {
+  return Text({
+    children: [
+      ...(bar.filled ? [Text({ color: bar.done ? C.done : C.accent, children: [bar.filled] })] : []),
+      ...(bar.empty ? [Text({ dimColor: true, children: [bar.empty] })] : []),
+    ],
+  })
+}
+
+/** The band's facts after the spec name: dim, with the running step bold and the next step in the accent colour. */
 function bandTexts(Text, parts) {
-  const at = parts.findIndex(p => p.running)
+  const at = parts.findIndex(p => p.running || p.next)
   const live = parts[at]
   const texts = some => some.map(p => p.text)
   const lead = [''].concat(texts(live ? parts.slice(0, at) : parts), live ? [''] : []).join(' · ')
   const trail = live ? [''].concat(texts(parts.slice(at + 1))).join(' · ') : ''
   return [
     ...(lead ? [Text({ dimColor: true, wrap: 'truncate-end', children: [lead] })] : []),
-    ...(live ? [Text({ ...RUNNING, wrap: 'truncate-end', children: [live.text] })] : []),
+    ...(live ? [Text({ ...RUNNING, bold: live.running, wrap: 'truncate-end', children: [live.text] })] : []),
     ...(trail ? [Text({ dimColor: true, wrap: 'truncate-end', children: [trail] })] : []),
   ]
+}
+
+/** The band's leading dot: done, running, or waiting for its next step. */
+function bandDot(Text, row, parts) {
+  if (row.done || row.steps.implement === 'completed') return Text({ color: C.done, children: ['● '] })
+  if (parts.some(p => p.running)) return Text({ ...RUNNING, children: ['● '] })
+  return Text({ dimColor: true, children: ['○ '] })
 }
 
 let starting = null
@@ -341,6 +404,13 @@ export function register(on) {
     return next(e)
   })
 
+  on('ui.focus', ($, e, next) => {
+    // The person's move names the element; the mod's own $.ui.focus names it as the key it asked for.
+    const key = e.element ?? e.key
+    if (e.requestId === PANE && typeof key === 'string' && /^(step-|doc-)/.test(key) && key !== 'doc-back') ringKey = key
+    return next(e)
+  })
+
   on('command.run', { command: COMMAND }, runCommand)
   on('command.run', { command: ALIAS }, runCommand)
 
@@ -356,12 +426,17 @@ export function register(on) {
     await ensureStarted($)
     if (!followed || e.props.hasSurvey) return next(e)
     const { Box, Text } = $.ui.resolve(e)
+    const parts = bandParts(followed.row, followed.ctx, followed.folder, await $.clock.now(), settledAt)
+    const count = followed.row.tasks
+    const bar = e.props.bodyColumns >= BAND_BAR_MIN_COLUMNS ? progressBar(count?.checked ?? 0, count?.total ?? 0, BAND_BAR) : null
     const mine = Box({
       key: 'speckit-band',
       flexDirection: 'row',
       children: [
+        bandDot(Text, followed.row, parts),
         Text({ bold: true, wrap: 'truncate-end', children: [followed.row.name] }),
-        ...bandTexts(Text, bandParts(followed.row, followed.ctx, followed.folder, await $.clock.now())),
+        ...(bar ? [Text({ children: [' '] }), barText(Text, bar)] : []),
+        ...bandTexts(Text, parts),
       ],
     })
     const theirs = await next(e)
@@ -371,30 +446,57 @@ export function register(on) {
   on('ui.render', { component: 'Pane' }, async ($, e, next) => {
     if (e.requestId !== PANE) return next(e)
     const { Box, Text, Button, Markdown } = $.ui.resolve(e)
+    // A Button takes no colour, so the tab in view is marked by the Text beside it.
     const tab = (name, label, hotkey) =>
-      Button({
-        key: 'tab-' + name,
-        label,
-        hotkey,
-        plain: true,
-        dimColor: view !== name,
-        onPress: async () => {
-          view = name
-          doc = null
-          if (name === 'specs') await scanAll($)
-          $.ui.invalidate('ui.render')
-        },
+      Box({
+        flexDirection: 'row',
+        children: [
+          Text({ ...RUNNING, bold: true, children: [view === name ? '▸' : ' '] }),
+          Button({
+            key: 'tab-' + name,
+            label,
+            hotkey,
+            plain: true,
+            dimColor: view !== name,
+            onPress: async () => {
+              view = name
+              doc = null
+              if (name === 'specs') await scanAll($)
+              $.ui.invalidate('ui.render')
+            },
+          }),
+        ],
       })
     const line = (text, style = {}) => Text({ wrap: 'truncate-end', ...style, children: [text] })
     const para = (text, style = {}) => Text({ wrap: 'wrap', ...style, children: [text] })
     const gap = () => line(' ')
-    const section = title => [gap(), line(title, { bold: true })]
+    const heading = (title, color) => line(title.toUpperCase(), { bold: true, color: color ?? HEADING[title.toLowerCase()] ?? C.tasks })
+    const section = (title, color) => [gap(), heading(title, color)]
+    // A background, not reverse video: the terminal draws the focused control in reverse.
+    const chip = (key, label) =>
+      Box({ flexDirection: 'row', columnGap: 1, children: [Text({ backgroundColor: C.chip, bold: true, children: [' ' + key + ' '] }), Text({ dimColor: true, children: [label] })] })
+    const readHint = () => Box({ flexShrink: 0, children: [Text({ dimColor: true, children: [READ_HINT] })] })
+    const editorButton = (path, label = 'Open in editor') =>
+      Button({
+        key: 'open-editor',
+        label,
+        hotkey: 'o',
+        plain: true,
+        dimColor: true,
+        onPress: async () => {
+          const file = path()
+          if (file) await openInEditor($, file)
+          else $.ui.toast('Move to a step or a document first, then press o')
+        },
+      })
+    const width = Math.max(12, Math.min(e.props.bodyColumns ?? ROW_WIDTH, ROW_WIDTH))
     const now = await $.clock.now()
-    const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText, { folder: followed.folder, now, companionSkills }) : null
-    const header = [Box({ flexDirection: 'row', columnGap: 3, children: [tab('run', 'Run', '1'), tab('overview', 'Overview', '2'), tab('specs', 'Specs', '3')] })]
-    if (m) header.push(line(m.title, { bold: true }), line(m.recorded ? m.name + ' · ' + m.statusLabel : m.name, { dimColor: true }))
+    const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText, { folder: followed.folder, now, companionSkills, settledAt }) : null
+    const header = [Box({ flexDirection: 'row', columnGap: 2, children: [tab('run', 'Run', '1'), tab('overview', 'Overview', '2'), tab('specs', 'Specs', '3')] })]
+    if (m) header.push(line(m.title, { bold: true, color: C.title }), line(m.recorded ? m.name + ' · ' + m.statusLabel : m.name, { dimColor: true }))
     if (m?.activity) header.push(line(m.activity.text, m.activity.live ? RUNNING : { dimColor: true }))
     const body = []
+    let readable = false
 
     if (view === 'specs') {
       body.push(line('Pick the spec this pane and the band follow.', { dimColor: true }))
@@ -429,7 +531,7 @@ export function register(on) {
       const o = overviewModel(followed.row, followed.ctx)
       const f = fileOverview(followed.folder)
       const item = text => para('- ' + text)
-      const titled = title => (body.length ? section(title) : [line(title, { bold: true })])
+      const titled = title => (body.length ? section(title) : [heading(title)])
       const stories = () => {
         if (f.stories.length) body.push(...titled('User stories'), ...f.stories.map(s => item(s.priority ? s.title + ' · ' + s.priority : s.title)))
         if (f.questions.length) body.push(...titled('Open questions'), ...f.questions.map(q => para('- ' + q, RUNNING)))
@@ -449,7 +551,7 @@ export function register(on) {
         body.push(para('The run record has no overview details yet.', { dimColor: true }))
         stories()
       } else {
-        if (o.intent) body.push(line('Intent', { bold: true }), para(o.intent))
+        if (o.intent) body.push(heading('Intent'), para(o.intent))
         if (o.approach) body.push(...titled('Approach'), para(o.approach))
         if (o.facts) body.push(...(body.length ? [gap()] : []), line(o.facts, { dimColor: true }))
         stories()
@@ -475,25 +577,34 @@ export function register(on) {
         if (o.requirements) body.push(gap(), line(o.requirements))
       }
     } else if (doc) {
-      body.push(line(doc.path, { bold: true }))
+      const link = fileLink(root, doc.path)
+      body.push(link ? Markdown({ key: 'doc-path', text: link }) : line(doc.path, { bold: true, color: C.documents }))
       body.push(
-        Button({
-          key: 'doc-back',
-          label: 'Back',
-          hotkey: 'b',
-          plain: true,
-          autoFocus: true,
-          onPress: async () => {
-            doc = null
-            $.ui.invalidate('ui.render')
-            await moveFocus($, focusKey)
-          },
+        Box({
+          key: 'doc-controls',
+          flexDirection: 'row',
+          columnGap: 3,
+          children: [
+            Button({
+              key: 'doc-back',
+              label: 'Back',
+              hotkey: 'b',
+              plain: true,
+              autoFocus: true,
+              onPress: async () => {
+                doc = null
+                $.ui.invalidate('ui.render')
+                await moveFocus($, focusKey)
+              },
+            }),
+            editorButton(() => doc?.path),
+          ],
         }),
         gap(),
       )
       const did = doc.step === 'implement' ? taskSummaryLines(followed.ctx) : []
       if (did.length) {
-        body.push(line('What each finished task did', { bold: true }), ...did.map(t => para(t.id + ' ' + t.did)), gap())
+        body.push(line('What each finished task did', { bold: true, color: C.tasks }), ...did.map(t => para(t.id + ' ' + t.did)), gap())
       }
       if (doc.text == null) {
         body.push(line('not written yet', { dimColor: true }))
@@ -505,10 +616,13 @@ export function register(on) {
       }
     } else {
       const focus = key => (focusKey === key ? { autoFocus: true } : {})
+      body.push(heading('Steps', C.steps))
+      // Measured times sit in one column, so the read hints after them do too.
+      const timed = m.steps.some(s => s.time)
       for (const s of m.steps) {
         const pressable = Boolean(s.document)
         const notes = []
-        if (s.time) notes.push(Text({ dimColor: true, children: [s.time] }))
+        if (s.time) notes.push(Box({ flexGrow: 1 }), Box({ flexShrink: 0, children: [Text({ dimColor: true, children: [s.time] })] }))
         else if (s.notes.length) notes.push(...s.notes.map(n => Text({ ...TONE[n.tone], wrap: 'truncate-end', children: [n.text] })))
         else if (s.state === 'in-progress') notes.push(Text({ ...RUNNING, children: ['running'] }))
         else if (s.folded) notes.push(Text({ dimColor: true, children: ['with Specify'] }))
@@ -523,40 +637,81 @@ export function register(on) {
             key: 'row-' + s.step,
             flexDirection: 'row',
             columnGap: 1,
-            children: [Text({ ...STEP_STYLE[s.state], children: [GLYPH[s.state]] }), Box({ width: 10, children: [name] }), ...notes],
+            ...(s.time || (timed && pressable) ? { width } : {}),
+            children: [Text({ ...STEP_STYLE[s.state], children: [GLYPH[s.state]] }), Box({ width: 10, children: [name] }), ...notes, ...(pressable ? [...(timed && !s.time ? [Box({ flexGrow: 1 })] : []), readHint()] : [])],
           }),
         )
       }
       if (m.total) body.push(line(m.total, { dimColor: true }))
       if (m.footnote) body.push(para(m.footnote, { dimColor: true }))
-      if (m.documents.length) body.push(...section('Documents'))
+      if (m.documents.length) body.push(...section('Documents', C.documents))
       for (const d of m.documents) {
         const name = d.path
           ? Button({ key: d.key, label: d.label, plain: true, ...focus(d.key), onPress: () => openDocument($, d.key, null, d.path) })
           : Text({ children: [d.label] })
         body.push(
-          Box({ key: 'row-' + d.key, flexDirection: 'row', columnGap: 2, children: [name, ...(d.note ? [Text({ dimColor: true, wrap: 'truncate-end', children: [d.note] })] : [])] }),
+          Box({ key: 'row-' + d.key, flexDirection: 'row', columnGap: 2, children: [name, ...(d.note ? [Text({ dimColor: true, wrap: 'truncate-end', children: [d.note] })] : []), ...(d.path ? [readHint()] : [])] }),
         )
         // A line of its own, so a narrow pane cannot cut the one fact that needs an answer.
         if (d.warn) body.push(line('  ' + d.warn, RUNNING))
       }
-      for (const phase of m.phases) {
-        body.push(gap(), line(phase.name + '  ' + phase.checked + '/' + phase.total, { bold: true }))
-        for (const t of phase.tasks) {
-          const mark = t.checked ? '✓' : t.current ? '▸' : '○'
-          const style = t.checked ? { dimColor: true } : t.current ? RUNNING : {}
-          body.push(line(mark + ' ' + t.id + ' ' + t.text, style))
-        }
+      const files = { ...Object.fromEntries(m.steps.map(s => ['step-' + s.step, s.document])), ...Object.fromEntries(m.documents.map(d => [d.key, d.path])) }
+      readable = Object.values(files).some(Boolean)
+      if (readable) body.push(gap(), editorButton(() => files[ringKey], 'Open the focused file in your editor'))
+      const bar = progressBar(m.tasks.checked, m.tasks.total, width - (m.tasks.checked + '/' + m.tasks.total).length - 1)
+      if (bar) {
+        body.push(
+          ...section('Tasks', C.tasks),
+          Box({
+            key: 'task-bar',
+            flexDirection: 'row',
+            columnGap: 1,
+            width,
+            children: [barText(Text, bar), Text({ ...(bar.done ? { color: C.done } : { dimColor: true }), children: [m.tasks.checked + '/' + m.tasks.total] })],
+          }),
+        )
       }
+      // Tasks under no phase heading are counted by the bar alone.
+      const named = m.phases.length > 1 || m.phases[0]?.name !== 'Tasks'
+      m.phases.forEach((phase, i) => {
+        if (named) {
+          body.push(
+            ...(i ? [gap()] : []),
+            Box({
+              key: 'phase-' + i,
+              flexDirection: 'row',
+              columnGap: 2,
+              children: [
+                Box({ flexShrink: 1, children: [line(phase.name, { bold: true })] }),
+                Box({ flexShrink: 0, children: [Text({ ...(phase.checked === phase.total ? { color: C.done } : { dimColor: true }), children: [phase.checked + '/' + phase.total] })] }),
+              ],
+            }),
+          )
+        }
+        for (const t of phase.tasks) {
+          const mark = t.checked ? Text({ color: C.done, children: ['✓'] }) : t.current ? Text({ ...RUNNING, bold: true, children: ['▸'] }) : Text({ dimColor: true, children: ['○'] })
+          const style = t.checked ? { dimColor: true } : t.current ? RUNNING : {}
+          body.push(Box({ flexDirection: 'row', columnGap: 1, children: [mark, Box({ flexShrink: 1, children: [line(t.id + ' ' + t.text, style)] })] }))
+        }
+      })
       if (m.next) body.push(gap(), para(m.next, { dimColor: true }))
     }
 
-    return Box({ key: 'pane', flexDirection: 'column', children: [Box({ key: 'header', flexDirection: 'column', children: header }), gap(), ...body] })
+    const hints = [chip('1', 'Run'), chip('2', 'Overview'), chip('3', 'Specs'), ...(doc && view === 'run' ? [chip('b', 'Back'), chip('o', 'Editor')] : []), ...(readable ? [chip('↵', 'Read'), chip('o', 'Editor')] : []), chip('Esc', 'Prompt')]
+    return Box({
+      flexDirection: 'column',
+      children: [
+        Box({ key: 'pane', flexDirection: 'column', children: [Box({ key: 'header', flexDirection: 'column', children: header }), gap(), ...body] }),
+        gap(),
+        Box({ key: 'hints', flexDirection: 'row', flexWrap: 'wrap', columnGap: 2, children: hints }),
+      ],
+    })
   })
 
-  // A new run may have started a new spec; follow it unless the user picked one.
+  // A new run may have started a new spec; follow it unless the user picked one. Whatever the turn was writing is written.
   on('turn.complete', async ($, e, next) => {
     if (root && !e.agentId) {
+      settledAt = await $.clock.now()
       await scanAll($)
       await tick($)
     }
