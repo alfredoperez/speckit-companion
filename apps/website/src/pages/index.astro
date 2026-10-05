@@ -81,7 +81,7 @@ const makeItYours = media('make-it-yours');
 // later rather than stopping at the comment.
 const review = media('review');
 
-// The Living Specs tab and the accordion figure both play the drawn explainer
+// The Living Specs tab plays the drawn explainer
 // rather than a screenshot tour. A tour can only show the tree; the argument is
 // what the tree replaces, and that needs a diagram.
 const livingExplained = media('living-specs-explained');
@@ -166,6 +166,7 @@ const tabs = [
     heading: 'You stop reading four markdown files',
     body: 'A finished run becomes one page: what it was for, how it was approached, where in the codebase it landed, and what it decided against — with a coverage table that puts untraced requirements first.',
     clip: overview,
+    link: { label: 'read the Overview guide', href: '/docs/results/the-overview/' },
   },
   {
     id: 'customize',
@@ -174,6 +175,7 @@ const tabs = [
     heading: 'The workflow is yours, not the tool’s',
     body: 'Define your own phases, commands and output files in settings, and attach a shell command, an inline instruction, or a node file of your own before or after any named step. Those attachments are instructions your assistant reads at run time.',
     clip: makeItYours,
+    link: { label: 'compare the two workflows', href: '/docs/start/spec-driven-development/#the-two-workflows-that-ship' },
   },
   {
     id: 'living',
@@ -182,6 +184,7 @@ const tabs = [
     heading: 'The learning outlives the ticket',
     body: 'Spec Kit leaves each spec in a folder that goes quiet when the feature ships. Turn living specs on and every capability keeps one durable spec instead — at the root, or next to the code it describes.',
     clip: livingExplained,
+    link: { label: 'living specs', href: '/docs/results/living-specs/' },
   },
   {
     id: 'review',
@@ -190,84 +193,35 @@ const tabs = [
     heading: 'Say it in the margin, not in the chat box',
     body: 'Comment on a line the way you’d review a pull request. Notes persist the moment you add them, and Refine sends the pending ones to your agent as an in-place edit request.',
     clip: review,
-  },
-];
-
-/*
-  Living specs leads, because it is the row nothing else in this category has.
-  Order is the literal array order: it is consumed twice, once for the toggles
-  and once for the stacked stills, so moving an entry moves both.
-*/
-const rows = [
-  {
-    id: 'living',
-    title: 'Specs that outlive the ticket',
-    body: 'Spec Kit writes the spec, ships the feature, and leaves the folder behind. What you learned about how that capability works goes quiet with it. Turn living specs on and each capability keeps one durable spec instead — at capabilities/<name>/spec.md, or next to the code with a path you choose. Drift lists the source files that changed since a capability’s spec was last committed. Drift and coverage are read-only reports that always exit zero, so neither can block a build.',
-    link: { label: 'living specs', href: '/docs/results/living-specs/' },
-    still: livingExplained,
-    open: true,
-  },
-  {
-    id: 'read',
-    title: 'Runs you can read',
-    body: 'A finished run becomes a page. It leads with the intent, the approach and the area worked in, fences the constraints against the declared non-goals, and lists each decision with what it rejected. The coverage table traces every requirement to the tasks that delivered it and the tests that exercise it, and untraced requirements sort to the top.',
-    link: { label: 'read the Overview guide', href: '/docs/results/the-overview/' },
-    still: overview,
-  },
-  {
-    id: 'bend',
-    title: 'A pipeline you can bend',
-    body: 'Two workflows ship in the box: stock SpecKit, and SpecKit Companion with a fifth step that marks the spec complete. Define your own phases, commands and output files in settings and Create Spec offers them. A companion.yml attaches a shell command, an inline instruction, or a node file of your own before or after any named node. Those attachments are instructions your assistant reads at run time, not an engine that executes them.',
-    link: { label: 'compare the two workflows', href: '/docs/start/spec-driven-development/#the-two-workflows-that-ship' },
-    still: makeItYours,
-  },
-  {
-    id: 'review',
-    title: 'Reviews with a reply button',
-    body: 'Comment on a line of a spec, the way you’d review a pull request. Your notes persist the moment you add them, and Refine sends the pending ones to your agent, so you’re not copy-pasting into a chat box. The sidebar keeps every spec and its status one click away.',
     link: { label: 'explore the review flow', href: '/docs/steps/review-with-comments/' },
-    still: review,
   },
-];
-
-/*
-  Bugs and ideas are Spec Kit's own extensions, not Companion commands. The copy
-  says who runs what: your assistant runs the commands, Companion shows the
-  reports and sends the next command when you press its button.
-*/
-const processes = [
+  // Bugs and ideas are Spec Kit's own extensions. Your assistant runs the
+  // commands; Companion shows the reports and sends the next command.
   {
-    id: 'spec',
-    eyebrow: 'A FEATURE',
-    title: 'A spec, from idea to merged code',
-    steps: ['specify', 'plan', 'tasks', 'implement'],
-    body: 'The pipeline you already know, with the run written down as it happens and one page to read when it is done.',
-    link: { label: 'your first spec', href: '/docs/start/your-first-spec/' },
-    image: overview.panel,
-    alt: overview.panelAlt,
-    window: 'Spec · Overview',
-  },
-  {
-    id: 'bug',
-    eyebrow: 'A BUG',
-    title: 'A bug, told as one story',
+    id: 'bugs',
+    label: 'Bugs',
+    window: 'Bug · the story of one fix',
+    heading: 'A bug reads as one story',
     steps: ['assess', 'fix', 'test'],
     body: 'Spec Kit’s bug extension writes three reports. Companion joins them into one page: what was wrong, what changed, how it was verified. A button sends the next command to your assistant.',
+    still: {
+      src: '/landing/bug-story.png',
+      alt: 'A bug page in VS Code: the lead reads Fixed and verified, then What was wrong with the root cause.',
+    },
     link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
-    image: '/landing/bug-story.png',
-    alt: 'A bug page in VS Code: the lead reads Fixed and verified, then What was wrong with the root cause.',
-    window: 'Bug · Story',
   },
   {
-    id: 'idea',
-    eyebrow: 'AN IDEA',
-    title: 'An idea, judged before it is built',
+    id: 'ideas',
+    label: 'Ideas',
+    window: 'Idea · the decision',
+    heading: 'An idea is judged before it is built',
     steps: ['intake', 'research', 'problem', 'concept', 'decision'],
     body: 'Spec Kit’s assess extension takes an idea through five stages to go, needs clarification or kill. Companion opens a decided idea on its verdict and scorecard, and a go becomes a spec in one press.',
+    still: {
+      src: '/landing/idea-decision.png',
+      alt: 'An idea page in VS Code: the verdict Go with its reason, then a scorecard.',
+    },
     link: { label: 'assess an idea', href: '/docs/ide/assess-an-idea/' },
-    image: '/landing/idea-decision.png',
-    alt: 'An idea page in VS Code: the verdict Go with its reason, then a scorecard.',
-    window: 'Idea · Decision',
   },
 ];
 
@@ -346,7 +300,7 @@ const cards = [
 // One leaf per section below the hero, in document order. The script measures
 // where each section boundary falls and places its leaf on the stem; a leaf
 // with no section to mark stays hidden.
-const stemLeaves = ['quick start', 'demo', 'processes', 'features', 'box', 'claim', 'install'];
+const stemLeaves = ['quick start', 'demo', 'box', 'claim', 'install'];
 
 // Entrances stagger at 60ms. The delay is data, not a magic number in the CSS.
 const REVEAL_STAGGER = 60;
@@ -373,7 +327,7 @@ type Spore = {
   tone?: 'green';
 };
 
-const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
+const spores: Record<'hero' | 'cards', Spore[]> = {
   // The hero's field is the densest of the three and it is not spread evenly:
   // most of it gathers in the upper middle, around and above the mascot, and
   // thins out towards the edges and the floor. That is what makes it read as a
@@ -396,12 +350,6 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     { x: 90, y: 36, size: 3, dx: -14, dy: -28, dur: 14300, delay: -4100, bright: 0.65 },
     { x: 71, y: 79, size: 4, dx: -21, dy: -50, dur: 24100, delay: -18300, bright: 0.8, tone: 'green' },
     { x: 29, y: 84, size: 5, dx: 16, dy: -60, dur: 27700, delay: -11300, bright: 0.75 },
-  ],
-  accordion: [
-    { x: 6, y: 78, size: 4, dx: 14, dy: -44, dur: 27100, delay: -3700 },
-    { x: 44, y: 92, size: 3, dx: -18, dy: -36, dur: 13900, delay: -16300, tone: 'green' },
-    { x: 88, y: 62, size: 4, dx: -20, dy: -52, dur: 25300, delay: -7100 },
-    { x: 71, y: 18, size: 3, dx: 12, dy: -26, dur: 18700, delay: -12900 },
   ],
   cards: [
     { x: 14, y: 86, size: 4, dx: 20, dy: -50, dur: 22300, delay: -1900, tone: 'green' },
@@ -644,6 +592,28 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
   <!-- DEMO -->
   <section class="section section--demo">
     <div class="inner demo-stack" data-tabs>
+      <div class="pills" role="tablist" aria-label="Product demos">
+        {
+          tabs.map((tab, index) => (
+            <button
+              type="button"
+              class="pill"
+              role="tab"
+              data-tab={tab.id}
+              data-window={tab.window}
+              aria-controls={`panel-${tab.id}`}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              tabindex={index === 0 ? 0 : -1}
+              data-analytics="demo_tab_click"
+              data-analytics-tab={tab.id}
+              data-analytics-tab={tab.id}
+            >
+              {tab.label}
+            </button>
+          ))
+        }
+      </div>
+
       {/* The point arrives before the clip does. All four sit in one grid cell
           so the frame below never jumps when the copy swaps. */}
       <div class="demo-say">
@@ -656,7 +626,15 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
               aria-hidden={index === 0 ? 'false' : 'true'}
             >
               <h2>{tab.heading}</h2>
+              {tab.steps && (
+                <ol class="say-steps" aria-label={`Steps: ${tab.steps.join(', ')}`}>
+                  {tab.steps.map((step) => <li>{step}</li>)}
+                </ol>
+              )}
               <p>{tab.body}</p>
+              <a class="say-link" href={tab.link.href} tabindex={index === 0 ? 0 : -1}>
+                {tab.link.label} →
+              </a>
             </div>
           ))
         }
@@ -693,165 +671,33 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
                     aria-label={tab.label}
                     aria-hidden={index === 0 ? 'false' : 'true'}
                   >
-                    <video
-                      muted
-                      loop
-                      playsinline
-                      preload="none"
-                      poster={tab.clip.poster}
-                      aria-label={tab.clip.alt}
-                    >
-                      {tab.clip.webm && <source src={tab.clip.webm} type="video/webm" />}
-                      {tab.clip.mp4 && <source src={tab.clip.mp4} type="video/mp4" />}
-                    </video>
+                    {tab.clip ? (
+                      <video
+                        muted
+                        loop
+                        playsinline
+                        preload="none"
+                        poster={tab.clip.poster}
+                        aria-label={tab.clip.alt}
+                      >
+                        {tab.clip.webm && <source src={tab.clip.webm} type="video/webm" />}
+                        {tab.clip.mp4 && <source src={tab.clip.mp4} type="video/mp4" />}
+                      </video>
+                    ) : (
+                      <img src={tab.still.src} alt={tab.still.alt} loading="lazy" decoding="async" />
+                    )}
                   </div>
                 ))
               }
             </div>
           </div>
 
-          <div class="pills" role="tablist" aria-label="Product demos">
-            {
-              tabs.map((tab, index) => (
-                <button
-                  type="button"
-                  class="pill"
-                  role="tab"
-                  data-tab={tab.id}
-                  data-window={tab.window}
-                  aria-controls={`panel-${tab.id}`}
-                  aria-selected={index === 0 ? 'true' : 'false'}
-                  tabindex={index === 0 ? 0 : -1}
-                  data-analytics="demo_tab_click"
-                  data-analytics-tab={tab.id}
-                  data-analytics-tab={tab.id}
-                >
-                  {tab.label}
-                </button>
-              ))
-            }
-          </div>
         </div>
       </div>
 
       <p class="demo-caption">
-        Four tabs, four clips. Each one is recorded from the extension, not a mockup.
+        Pick one. The first four are clips recorded from the extension; Bugs and Ideas are screenshots of it.
       </p>
-    </div>
-  </section>
-
-  <!-- THREE PROCESSES -->
-  <section class="section section--processes" id="processes">
-    <div class="inner stack-20">
-      <p class="eyebrow">NOT ONLY SPECS</p>
-      <h2 class="processes-heading">Three kinds of work, one place to read them</h2>
-      <p class="processes-lead">
-        A feature, a bug and an idea each have their own steps in Spec Kit. Companion lists all
-        three in the sidebar and opens each on a page written for it.
-      </p>
-
-      <div class="processes">
-        {
-          processes.map((process, index) => (
-            <article
-              class="process"
-              data-reveal
-              style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
-            >
-              <p class="card-eyebrow">{process.eyebrow}</p>
-              <h3 class="process-title">{process.title}</h3>
-              <ol class="process-steps" aria-label={`Steps: ${process.steps.join(', ')}`}>
-                {process.steps.map((step) => <li>{step}</li>)}
-              </ol>
-              <p class="card-body">{process.body}</p>
-              <a class="card-link" href={process.link.href}>
-                {process.link.label} →
-              </a>
-              <div class="window process-window">
-                <div class="window-bar">
-                  <span class="dot" aria-hidden="true" />
-                  <span class="dot" aria-hidden="true" />
-                  <span class="dot" aria-hidden="true" />
-                  <span class="window-label">{process.window}</span>
-                </div>
-                <img src={process.image} alt={process.alt} loading="lazy" decoding="async" />
-              </div>
-            </article>
-          ))
-        }
-      </div>
-    </div>
-  </section>
-
-  <!-- ACCORDION FEATURE SECTION -->
-  <section class="section section--accordion">
-    <div class="spores" aria-hidden="true">
-      {
-        spores.accordion.map((spore) => (
-          <span
-            class="spore"
-            data-tone={spore.tone}
-            style={`--sx:${spore.x}%;--sy:${spore.y}%;--ss:${spore.size}px;--sdx:${spore.dx}px;--sdy:${spore.dy}px;--sdur:${spore.dur}ms;--sdelay:${spore.delay}ms`}
-          />
-        ))
-      }
-    </div>
-
-    <div class="inner split">
-      <div class="accordion" data-accordion>
-        {
-          rows.map((row, index) => (
-            <div
-              class="acc-row"
-              data-acc-row={row.id}
-              data-open={row.open ? '' : undefined}
-              data-reveal
-              style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
-            >
-              <h2 class="acc-heading">
-                <button
-                  type="button"
-                  class="acc-toggle"
-                  data-acc-toggle={row.id}
-                  aria-expanded={row.open ? 'true' : 'false'}
-                  aria-controls={`acc-body-${row.id}`}
-                >
-                  <span class="acc-title">{row.title}</span>
-                  <span class="acc-plus" aria-hidden="true">
-                    +
-                  </span>
-                </button>
-              </h2>
-
-              <div class="acc-body" id={`acc-body-${row.id}`}>
-                <div class="acc-body-inner">
-                  <p>{row.body}</p>
-                  <a class="acc-link" href={row.link.href}>
-                    {row.link.label} →
-                  </a>
-                </div>
-              </div>
-            </div>
-          ))
-        }
-      </div>
-
-      <!-- flex: 1.15 is one layout ratio in one section, so it stays literal. -->
-      <div class="acc-figure" data-reveal>
-        {
-          rows.map((row) => (
-            <img
-              class="acc-still"
-              data-acc-still={row.id}
-              data-active={row.open ? '' : undefined}
-              src={row.still.panel}
-              alt={row.still.panelAlt}
-              loading="lazy"
-              decoding="async"
-            />
-          ))
-        }
-      </div>
     </div>
   </section>
 
@@ -1489,11 +1335,49 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     pointer-events: auto;
   }
 
-  .stage-layer video {
+  .stage-layer video,
+  .stage-layer img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top left;
+  }
+
+  .say-steps {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: var(--space-10) 0 var(--space-10);
+    padding: 0;
+    list-style: none;
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+
+  .say-steps li + li::before {
+    content: '→';
+    margin: 0 6px;
+    color: var(--accent);
+  }
+
+  .say-link {
+    display: inline-block;
+    margin-top: var(--space-8);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    text-decoration: none;
+  }
+
+  .say-link:hover {
+    color: var(--accent-hover);
+  }
+
+  .say-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .pills {
@@ -1585,149 +1469,6 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     text-align: center;
   }
 
-  /* ------------------------------------------------------------- accordion */
-
-  .section--accordion .inner {
-    max-width: 1220px;
-    padding-top: 80px;
-    padding-bottom: 80px;
-  }
-
-  .split {
-    display: flex;
-    align-items: center;
-    gap: 56px;
-  }
-
-  .accordion {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .acc-row {
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .acc-heading {
-    margin: 0;
-    font-size: inherit;
-    font-weight: inherit;
-  }
-
-  .acc-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-16);
-    width: 100%;
-    padding: var(--space-18) 0;
-    background: none;
-    border: 0;
-    color: inherit;
-    font-family: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .acc-toggle:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  .acc-title {
-    color: var(--text-muted);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-semibold);
-    transition:
-      color 160ms cubic-bezier(0.23, 1, 0.32, 1),
-      font-size 160ms cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .acc-toggle:hover .acc-title {
-    color: var(--text-primary);
-  }
-
-  .acc-plus {
-    flex: none;
-    color: var(--accent);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-regular);
-    line-height: 1;
-  }
-
-  .acc-row[data-open] .acc-title {
-    color: var(--text-primary);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-black);
-  }
-
-  .acc-row[data-open] .acc-plus {
-    display: none;
-  }
-
-  .acc-body {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 220ms cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .acc-row[data-open] .acc-body {
-    grid-template-rows: 1fr;
-  }
-
-  .acc-body-inner {
-    overflow: hidden;
-  }
-
-  .acc-body-inner p {
-    margin: 0;
-    color: var(--text-body);
-    font-size: var(--fs-ui);
-    line-height: var(--lh-prose);
-  }
-
-  .acc-link {
-    display: inline-block;
-    margin-top: var(--space-10);
-    padding-bottom: var(--space-22);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: var(--fs-ui-sm);
-    text-decoration: none;
-  }
-
-  .acc-link:hover {
-    color: var(--accent-hover);
-  }
-
-  .acc-figure {
-    position: relative;
-    flex: 1.45;
-    aspect-ratio: 1836 / 1164;
-    overflow: hidden;
-    background: var(--panel);
-    border: 1px solid var(--border-panel);
-    border-radius: var(--radius-md);
-    box-shadow: var(--glow-card);
-  }
-
-  .acc-still {
-    position: absolute;
-    inset: 0;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    transition: opacity 150ms cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .acc-still[data-active] {
-    opacity: 1;
-  }
-
   /* ----------------------------------------------------------------- cards */
 
   .section--cards .inner {
@@ -1808,89 +1549,6 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
     border-radius: var(--radius-sm);
   }
 
-  /* ------------------------------------------------------------- processes */
-
-  .section--processes .inner {
-    padding-top: 72px;
-    padding-bottom: 72px;
-  }
-
-  .processes-heading {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--fs-h2);
-    line-height: 1.15;
-  }
-
-  .processes-lead {
-    max-width: var(--measure-lead);
-    margin: 0;
-    color: var(--text-body);
-    font-size: var(--fs-lead);
-    line-height: var(--lh-ui);
-  }
-
-  .processes {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-14);
-    margin-top: var(--space-8);
-  }
-
-  .process {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
-    grid-template-rows: auto auto auto auto 1fr;
-    column-gap: var(--space-22);
-    row-gap: var(--space-8);
-    align-items: start;
-    padding: var(--space-22);
-    background: var(--panel);
-    border: 1px solid var(--border-card);
-    border-radius: var(--radius-sm);
-  }
-
-  .process > :not(.process-window) {
-    grid-column: 1;
-  }
-
-  .process-title {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-bold);
-  }
-
-  .process-steps {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4) 0;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    color: var(--text-body);
-    font-family: var(--font-mono);
-    font-size: var(--fs-mono);
-  }
-
-  .process-steps li + li::before {
-    content: '→';
-    margin: 0 6px;
-    color: var(--accent);
-  }
-
-  .process-window {
-    grid-column: 2;
-    grid-row: 1 / -1;
-    box-shadow: none;
-  }
-
-  .process-window img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
   .card--shot {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
@@ -1909,7 +1567,6 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
   }
 
   @media (max-width: 980px) {
-    .process,
     .card--shot {
       display: flex;
       flex-direction: column;
@@ -2714,6 +2371,8 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
         const on = say.dataset.say === id;
         say.toggleAttribute('data-active', on);
         say.setAttribute('aria-hidden', on ? 'false' : 'true');
+        const link = say.querySelector('a');
+        if (link) link.tabIndex = on ? 0 : -1;
       });
 
       panels.forEach((panel) => {
@@ -2792,31 +2451,6 @@ const spores: Record<'hero' | 'accordion' | 'cards', Spore[]> = {
       armed = true;
       start(activeVideo());
     }
-  });
-
-  // --- accordion -----------------------------------------------------------
-  document.querySelectorAll('[data-accordion]').forEach((root) => {
-    const section = root.closest('section');
-    const rows = Array.from(root.querySelectorAll('[data-acc-row]'));
-    const stills = section ? Array.from(section.querySelectorAll('[data-acc-still]')) : [];
-
-    const open = (id) => {
-      rows.forEach((row) => {
-        const on = row.dataset.accRow === id;
-        row.toggleAttribute('data-open', on);
-        const toggle = row.querySelector('[data-acc-toggle]');
-        if (toggle) toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
-      });
-      stills.forEach((still) => {
-        still.toggleAttribute('data-active', still.dataset.accStill === id);
-      });
-    };
-
-    rows.forEach((row) => {
-      const toggle = row.querySelector('[data-acc-toggle]');
-      if (!toggle) return;
-      toggle.addEventListener('click', () => open(row.dataset.accRow));
-    });
   });
 
   // --- motion --------------------------------------------------------------
