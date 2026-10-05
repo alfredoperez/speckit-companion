@@ -1,8 +1,8 @@
 import { expect, test } from 'claude-code/testing'
-import { FROM_FILES_NOTE, NO_RECORD_NOTE, activityLine, ago, bandLine, documentFacts, documentKind, documentLines, fileOverview, nextStepLine, paneModel, writtenAt } from '../hooks/board.js'
+import { FROM_FILES_NOTE, NO_RECORD_NOTE, activityLine, ago, bandLine, documentFacts, documentKind, documentLines, fileOverview, nextStepLine, paneModel, writtenAt, fileLink } from '../hooks/board.js'
 import { buildSpecRow } from '../hooks/vendor/board-rules.mjs'
 import { DEMO_SPECS } from './fixtures/demo-specs.js'
-import { BAND, PANE, ROOT, project, startSession, toText } from './harness.ts'
+import { BAND, PANE, ROOT, project, startSession, toText, withoutHints } from './harness.ts'
 
 // A stock Spec Kit project: spec files and no run record. Times are local, so the clock texts read the same anywhere.
 const today = (hours: number, minutes: number) => new Date(2026, 9, 4, hours, minutes).getTime()
@@ -119,7 +119,8 @@ async function open($: any, on: any, files: Record<string, string>, mtimes: Reco
   await startSession($)
   return made
 }
-const paneText = async ($: any) => toText(await (await $.ui.mount({ ...PANE, surface: 'terminal' })).find({ key: 'pane' }))
+const said = (element: any) => withoutHints(toText(element))
+const paneText = async ($: any) => said(await (await $.ui.mount({ ...PANE, surface: 'terminal' })).find({ key: 'pane' }))
 const bandText = async ($: any) => {
   const ui = await $.ui.mount({ ...BAND, surface: 'terminal' })
   const text = toText(await ui.find({ key: 'speckit-band' }))
@@ -157,7 +158,7 @@ test('a spec and a plan show the gap between them, and the pane waits for tasks'
   await open($, on, WAITING_FOR_TASKS, WAITING_TIMES)
   expect(await bandText($)).toBe('○ 001-clear-completed · Plan written 12m ago · Tasks next')
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'pane' }))).toBe(
+  expect(said(await ui.find({ key: 'pane' }))).toBe(
     [
       ...HEAD,
       'Waiting: tasks next',
@@ -189,7 +190,7 @@ test('mid-implement the pane counts the ticked tasks and names the one that is n
   await open($, on, MID_IMPLEMENT, IMPLEMENT_TIMES)
   expect(await bandText($)).toBe('● 001-clear-completed ██░░░░░░ · Implement 3/10 · last change 2m ago')
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'pane' })).split('\n').slice(0, 22)).toEqual([
+  expect(said(await ui.find({ key: 'pane' })).split('\n').slice(0, 22)).toEqual([
     ...HEAD,
     'Implementing: T004 next · Add the clear button to index.html',
     ' ',
@@ -210,7 +211,7 @@ test('mid-implement the pane counts the ticked tasks and names the one that is n
     'checklist: requirements  2 of 3 checked',
     'contracts  2 files',
   ])
-  expect(toText(await ui.find({ key: 'pane' })).split('\n').pop()).toBe('Next: /speckit-implement')
+  expect(said(await ui.find({ key: 'pane' })).split('\n').pop()).toBe('Next: /speckit-implement')
   expect((await ui.find({ type: 'Text', text: '3 of 10 tasks' })).props.color).toBe('warning')
   expect((await ui.find({ type: 'Text', text: /^Implementing: T004 next/ })).props.color).toBe('warning')
   await ui.unmount()
@@ -222,12 +223,12 @@ test('mid-implement the pane counts the ticked tasks and names the one that is n
 test('the minutes move on by themselves, and ticked tasks left alone stop reading as running', async ($, on) => {
   const { clock } = await open($, on, MID_IMPLEMENT, IMPLEMENT_TIMES)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 2m ago')
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 2m ago')
   await clock.advance(60000)
-  expect(toText(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 3m ago')
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('● Implement  3 of 10 tasks · last change 3m ago')
   expect(await bandText($)).toBe('● 001-clear-completed ██░░░░░░ · Implement 3/10 · last change 3m ago')
   await clock.advance(8 * 60000)
-  expect(toText(await ui.find({ key: 'row-implement' }))).toBe('○ Implement  3 of 10 tasks · last change 11m ago')
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('○ Implement  3 of 10 tasks · last change 11m ago')
   expect((await ui.find({ type: 'Text', text: '3 of 10 tasks' })).props.dimColor).toBe(true)
   expect(await ui.find({ type: 'Text', text: 'Waiting: T004 next · Add the clear button to index.html' })).toBeDefined()
 })
@@ -277,7 +278,7 @@ test('every document line opens its file, and Back returns to that line', async 
   for (const [key, file, text] of opens) {
     expect((await ui.find({ key })).type).toBe('Button')
     await ui.press({ key })
-    expect((await ui.find({ type: 'Text', text: path(file) })).props.bold).toBe(true)
+    expect((await ui.find({ key: 'doc-path' })).props.text).toBe(fileLink(ROOT, path(file)))
     expect((await ui.find({ key: 'doc-0' })).props.text).toBe(text.trim())
     await ui.press({ key: 'doc-back' })
     expect((await ui.find({ key })).props.autoFocus).toBe(true)
@@ -328,7 +329,7 @@ test('the Overview of a stock project comes from its spec and plan', async ($, o
   await open($, on, WAITING_FOR_TASKS, WAITING_TIMES)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
   await ui.press({ key: 'tab-overview' })
-  expect(toText(await ui.find({ key: 'pane' })).split('\n').slice(4)).toEqual([
+  expect(said(await ui.find({ key: 'pane' })).split('\n').slice(4)).toEqual([
     ' ',
     'Let me clear all completed todos with one button',
     ' ',
@@ -383,13 +384,13 @@ test('a recorded run keeps its measured times, and gains the stories and questio
   await clock.set(NOW)
   await startSession($)
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  const run = toText(await ui.find({ key: 'pane' }))
+  const run = said(await ui.find({ key: 'pane' }))
   for (const time of ['6m', '7m 30s', '2m 30s', '22m 30s', '38m 30s active']) expect(run).toContain(time)
   expect(run).toContain('_03_demo-living · Completed')
   expect(run).not.toMatch(/written \d|last change|Nothing recorded|Waiting|Next:/)
   expect(run).toContain(SPEC_LINE[0])
   await ui.press({ key: 'tab-overview' })
-  const overview = toText(await ui.find({ key: 'pane' }))
+  const overview = said(await ui.find({ key: 'pane' }))
   expect(overview).toContain('INTENT')
   expect(overview).toContain('USER STORIES\n- Clear all completed todos at once · P1')
   expect(overview).toContain('OPEN QUESTIONS\n- Should clearing ask for confirmation?')
@@ -457,7 +458,7 @@ test('a file is read again only when its time or size changed', async ($, on) =>
   await clock.advance(3000)
   expect(counted.map(count)).toEqual([2, 1, 3, 1, 1, 1])
   const ui = await $.ui.mount({ ...PANE, surface: 'terminal' })
-  expect(toText(await ui.find({ key: 'row-implement' }))).toBe('● Implement  4 of 10 tasks · last change just now')
+  expect(said(await ui.find({ key: 'row-implement' }))).toBe('● Implement  4 of 10 tasks · last change just now')
 })
 
 test('where nothing draws, the text answer for a stock project reads like the band', async ($, on) => {

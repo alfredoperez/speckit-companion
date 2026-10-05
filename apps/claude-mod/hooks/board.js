@@ -147,6 +147,32 @@ export function stepDocument(row, step) {
   return file ? `${row.id}/${file}` : null
 }
 
+const WINDOWED_EDITORS = ['code', 'code-insiders', 'codium', 'cursor', 'windsurf', 'zed', 'subl', 'mate', 'idea', 'webstorm', 'fleet']
+
+/** The commands that could open a file in an editor window, in the order to try them: $VISUAL or $EDITOR, the editor whose terminal this is, VS Code, then the system's opener. */
+export function editorCommands(path, env = {}) {
+  const commands = []
+  const add = argv => {
+    if (!commands.some(c => c[0] === argv[0])) commands.push(argv)
+  }
+  for (const set of [env.visual, env.editor]) {
+    const [bin, ...flags] = String(set ?? '').trim().split(/\s+/)
+    const name = bin.split(/[\\/]/).pop().replace(/\.(exe|cmd)$/i, '')
+    // vim and its kind need the terminal the pane is drawn in, so only an editor with a window of its own is run, and never told to wait.
+    if (WINDOWED_EDITORS.includes(name)) add([bin, ...flags.filter(f => f !== '-w' && f !== '--wait'), path])
+  }
+  if (/vscode|cursor/i.test(env.termProgram ?? '')) add([env.cursor || /cursor/i.test(env.termProgram) ? 'cursor' : 'code', path])
+  for (const bin of ['code', 'open', 'xdg-open']) add([bin, path])
+  return commands
+}
+
+/** A markdown link that shows a workspace path and points at the file itself, for a terminal that opens file links; null off POSIX paths. */
+export function fileLink(root, path) {
+  if (typeof root !== 'string' || !root.startsWith('/')) return null
+  const href = 'file://' + encodeURI(root.replace(/\/+$/, '') + '/' + path).replace(/[()#?]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase())
+  return `[${path.replace(/[\\\[\]_*`<>]/g, '\\$&')}](${href})`
+}
+
 /** Plan or tasks finished inside the specify pass: done, with no span of its own, while specify has one. */
 export function foldedSteps(row, ctx) {
   const timing = stepTiming(ctx ?? {})

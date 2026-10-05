@@ -15,7 +15,7 @@ export function outsideEnv(env = process.env) {
     return out;
 }
 
-export async function startSession({ name, cols, rows, cwd, command }) {
+export async function startSession({ name, cols, rows, cwd, command, env = {} }) {
     // A private server reads no user config, and a manual window size survives someone attaching to watch.
     const tmux = (...args) => run('tmux', ['-L', name, ...args], { env: outsideEnv(), maxBuffer: 16 << 20 });
     await tmux(
@@ -25,7 +25,7 @@ export async function startSession({ name, cols, rows, cwd, command }) {
         'set-option', '-g', 'window-size', 'manual', ';',
         'set-option', '-g', 'status', 'off', ';',
         'set-option', '-g', 'escape-time', '50', ';',
-        'new-session', '-d', '-s', name, '-x', String(cols), '-y', String(rows), '-c', cwd, '-e', 'COLORTERM=truecolor', '--', ...command,
+        'new-session', '-d', '-s', name, '-x', String(cols), '-y', String(rows), '-c', cwd, '-e', 'COLORTERM=truecolor', ...Object.entries(env).flatMap(([key, value]) => ['-e', `${key}=${value}`]), '--', ...command,
     );
     // A killed server leaves its socket file behind.
     const socket = (await tmux('display-message', '-p', '-t', name, '#{socket_path}')).stdout.trim();

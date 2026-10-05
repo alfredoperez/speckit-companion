@@ -1,4 +1,4 @@
-// Every $ call lives here, as the hooks module rules require; the mod only reads and never submits a prompt.
+// Every $ call lives here, as the hooks module rules require; the mod only reads, never submits a prompt, and runs one command: the editor, when asked.
 
 import {
   DEFAULT_SPEC_DIRS,
@@ -18,6 +18,8 @@ import {
   documentChunks,
   documentFacts,
   documentKind,
+  editorCommands,
+  fileLink,
   fileOverview,
   followText,
   listText,
@@ -61,6 +63,8 @@ const STEP_STYLE = { completed: { color: C.done }, 'in-progress': RUNNING, 'not-
 const BAND_BAR = 8
 const BAND_BAR_MIN_COLUMNS = 80
 const ROW_WIDTH = 34
+const EDITOR_TIMEOUT_MS = 10000
+const READ_HINT = '↵ read'
 const TONE = { plain: {}, dim: { dimColor: true }, running: RUNNING }
 
 let view = 'run'
@@ -73,6 +77,8 @@ let timer = null
 // The document that is open, and the control the Run view puts the focus on.
 let doc = null
 let focusKey = null
+// The step or document the focus was last on, which `o` opens from the Run tab.
+let ringKey = null
 let companionSkills = false
 // The pane is offered once; after that it is the user's to close and to open.
 let offered = false
@@ -228,10 +234,31 @@ async function refreshDocument($) {
 async function openDocument($, key, step, path) {
   const spec = followed?.row.id
   const text = await readText($, at(path))
-  focusKey = key
+  focusKey = ringKey = key
   doc = { spec, step, path, text }
   $.ui.invalidate('ui.render')
   await moveFocus($, 'doc-back')
+}
+
+/** Opens a workspace file in the user's editor; when no command works the path goes to the clipboard instead. */
+async function openInEditor($, path) {
+  const set = read => read.catch(() => undefined)
+  const env = {
+    visual: await set($.env.get('VISUAL')),
+    editor: await set($.env.get('EDITOR')),
+    termProgram: await set($.env.get('TERM_PROGRAM')),
+    cursor: await set($.env.get('CURSOR_TRACE_ID')),
+  }
+  for (const argv of editorCommands(at(path), env)) {
+    try {
+      const { exitCode } = await $.process.run(argv, { timeoutMs: EDITOR_TIMEOUT_MS })
+      if (exitCode === 0) return $.ui.toast(`Opened ${path} with ${argv[0].split('/').pop()}`)
+    } catch {
+      // Not installed here; the next command may be.
+    }
+  }
+  const copied = await $.ui.copy({ text: at(path) }).catch(() => null)
+  $.ui.toast(copied?.isCopied ? `No editor command worked, so the path of ${path} is on the clipboard` : `No editor command worked for ${path}`)
 }
 
 /** autoFocus only counts when the pane takes the keyboard, so a redraw that swaps the controls moves the focus itself. */
@@ -375,6 +402,13 @@ export function register(on) {
     return next(e)
   })
 
+  on('ui.focus', ($, e, next) => {
+    // The person's move names the element; the mod's own $.ui.focus names it as the key it asked for.
+    const key = e.element ?? e.key
+    if (e.requestId === PANE && typeof key === 'string' && /^(step-|doc-)/.test(key) && key !== 'doc-back') ringKey = key
+    return next(e)
+  })
+
   on('command.run', { command: COMMAND }, runCommand)
   on('command.run', { command: ALIAS }, runCommand)
 
@@ -439,6 +473,20 @@ export function register(on) {
     // A background, not reverse video: the terminal draws the focused control in reverse.
     const chip = (key, label) =>
       Box({ flexDirection: 'row', columnGap: 1, children: [Text({ backgroundColor: C.chip, bold: true, children: [' ' + key + ' '] }), Text({ dimColor: true, children: [label] })] })
+    const readHint = () => Box({ flexShrink: 0, children: [Text({ dimColor: true, children: [READ_HINT] })] })
+    const editorButton = (path, label = 'Open in editor') =>
+      Button({
+        key: 'open-editor',
+        label,
+        hotkey: 'o',
+        plain: true,
+        dimColor: true,
+        onPress: async () => {
+          const file = path()
+          if (file) await openInEditor($, file)
+          else $.ui.toast('Move to a step or a document first, then press o')
+        },
+      })
     const width = Math.max(12, Math.min(e.props.bodyColumns ?? ROW_WIDTH, ROW_WIDTH))
     const now = await $.clock.now()
     const m = followed ? paneModel(followed.row, followed.ctx, followed.tasksText, { folder: followed.folder, now, companionSkills }) : null
@@ -446,6 +494,7 @@ export function register(on) {
     if (m) header.push(line(m.title, { bold: true, color: C.title }), line(m.recorded ? m.name + ' · ' + m.statusLabel : m.name, { dimColor: true }))
     if (m?.activity) header.push(line(m.activity.text, m.activity.live ? RUNNING : { dimColor: true }))
     const body = []
+    let readable = false
 
     if (view === 'specs') {
       body.push(line('Pick the spec this pane and the band follow.', { dimColor: true }))
@@ -526,19 +575,28 @@ export function register(on) {
         if (o.requirements) body.push(gap(), line(o.requirements))
       }
     } else if (doc) {
-      body.push(line(doc.path, { bold: true, color: C.documents }))
+      const link = fileLink(root, doc.path)
+      body.push(link ? Markdown({ key: 'doc-path', text: link }) : line(doc.path, { bold: true, color: C.documents }))
       body.push(
-        Button({
-          key: 'doc-back',
-          label: 'Back',
-          hotkey: 'b',
-          plain: true,
-          autoFocus: true,
-          onPress: async () => {
-            doc = null
-            $.ui.invalidate('ui.render')
-            await moveFocus($, focusKey)
-          },
+        Box({
+          key: 'doc-controls',
+          flexDirection: 'row',
+          columnGap: 3,
+          children: [
+            Button({
+              key: 'doc-back',
+              label: 'Back',
+              hotkey: 'b',
+              plain: true,
+              autoFocus: true,
+              onPress: async () => {
+                doc = null
+                $.ui.invalidate('ui.render')
+                await moveFocus($, focusKey)
+              },
+            }),
+            editorButton(() => doc?.path),
+          ],
         }),
         gap(),
       )
@@ -557,6 +615,8 @@ export function register(on) {
     } else {
       const focus = key => (focusKey === key ? { autoFocus: true } : {})
       body.push(heading('Steps', C.steps))
+      // Measured times sit in one column, so the read hints after them do too.
+      const timed = m.steps.some(s => s.time)
       for (const s of m.steps) {
         const pressable = Boolean(s.document)
         const notes = []
@@ -575,8 +635,8 @@ export function register(on) {
             key: 'row-' + s.step,
             flexDirection: 'row',
             columnGap: 1,
-            ...(s.time ? { width } : {}),
-            children: [Text({ ...STEP_STYLE[s.state], children: [GLYPH[s.state]] }), Box({ width: 10, children: [name] }), ...notes],
+            ...(s.time || (timed && pressable) ? { width } : {}),
+            children: [Text({ ...STEP_STYLE[s.state], children: [GLYPH[s.state]] }), Box({ width: 10, children: [name] }), ...notes, ...(pressable ? [...(timed && !s.time ? [Box({ flexGrow: 1 })] : []), readHint()] : [])],
           }),
         )
       }
@@ -588,11 +648,14 @@ export function register(on) {
           ? Button({ key: d.key, label: d.label, plain: true, ...focus(d.key), onPress: () => openDocument($, d.key, null, d.path) })
           : Text({ children: [d.label] })
         body.push(
-          Box({ key: 'row-' + d.key, flexDirection: 'row', columnGap: 2, children: [name, ...(d.note ? [Text({ dimColor: true, wrap: 'truncate-end', children: [d.note] })] : [])] }),
+          Box({ key: 'row-' + d.key, flexDirection: 'row', columnGap: 2, children: [name, ...(d.note ? [Text({ dimColor: true, wrap: 'truncate-end', children: [d.note] })] : []), ...(d.path ? [readHint()] : [])] }),
         )
         // A line of its own, so a narrow pane cannot cut the one fact that needs an answer.
         if (d.warn) body.push(line('  ' + d.warn, RUNNING))
       }
+      const files = { ...Object.fromEntries(m.steps.map(s => ['step-' + s.step, s.document])), ...Object.fromEntries(m.documents.map(d => [d.key, d.path])) }
+      readable = Object.values(files).some(Boolean)
+      if (readable) body.push(gap(), editorButton(() => files[ringKey], 'Open the focused file in your editor'))
       const bar = progressBar(m.tasks.checked, m.tasks.total, width - (m.tasks.checked + '/' + m.tasks.total).length - 1)
       if (bar) {
         body.push(
@@ -632,7 +695,7 @@ export function register(on) {
       if (m.next) body.push(gap(), para(m.next, { dimColor: true }))
     }
 
-    const hints = [chip('1', 'Run'), chip('2', 'Overview'), chip('3', 'Specs'), ...(doc && view === 'run' ? [chip('b', 'Back')] : []), chip('Esc', 'Prompt')]
+    const hints = [chip('1', 'Run'), chip('2', 'Overview'), chip('3', 'Specs'), ...(doc && view === 'run' ? [chip('b', 'Back'), chip('o', 'Editor')] : []), ...(readable ? [chip('↵', 'Read'), chip('o', 'Editor')] : []), chip('Esc', 'Prompt')]
     return Box({
       flexDirection: 'column',
       children: [

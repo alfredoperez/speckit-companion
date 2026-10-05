@@ -92,7 +92,7 @@ test('colours the running step in the band and in the pane with the theme warnin
   expect((await pane.find({ type: 'Text', text: 'STEPS' })).props.color).toBe('suggestion')
   expect((await pane.find({ type: 'Text', text: 'TASKS' })).props.bold).toBe(true)
   expect(toText(await pane.find({ key: 'task-bar' }))).toBe('█'.repeat(15) + '░'.repeat(15) + ' 1/2')
-  expect(toText(await pane.find({ key: 'hints' }))).toBe(' 1  Run   2  Overview   3  Specs   Esc  Prompt')
+  expect(toText(await pane.find({ key: 'hints' }))).toBe(' 1  Run   2  Overview   3  Specs   ↵  Read   o  Editor   Esc  Prompt')
   expect((await pane.find({ type: 'Text', text: ' Esc ' })).props.backgroundColor).toBe('subtle')
   expect((await pane.find({ type: 'Text', text: ' Esc ' })).props.inverse).toBeUndefined()
 })

@@ -7,6 +7,7 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 ### Added
 - **A useful pane without a run record.** Stock Spec Kit projects get a pane from the spec's files: step times, ticked tasks, a Documents list and the next command.
 - **Open a step's document.** On the Run tab, press a step to read its spec, plan or tasks inside the pane, and `b` to go back.
+- **Open a file in your editor.** Press `o` on a step or document to open its file in your editor, and each readable row now says `↵ read`.
 - **An Overview tab.** Read the run's intent, approach, decisions, checks and open concerns on tab `2: Overview`, between `1: Run` and `3: Specs`.
 
 ### Changed

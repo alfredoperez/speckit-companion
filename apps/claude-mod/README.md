@@ -15,11 +15,15 @@ Tested on Claude Code 2.1.287, the first version with mods on by default. The mo
 
 Everything updates while the agent works: after each tool call, and every few seconds for changes made outside the session.
 
-The colours come from your Claude Code theme: a finished step is green, the running step, the next step in the band and the tab in view use the warning colour, a failed check is red, and times and secondary facts are dim. Each section heading is in capitals with a colour of its own, a bar of block characters shows the ticked tasks out of the total (green once all are ticked), and the foot of the pane lists the keys: `1` Run, `2` Overview, `3` Specs, `b` Back, `Esc` Prompt.
+The colours come from your Claude Code theme: a finished step is green, the running step, the next step in the band and the tab in view use the warning colour, a failed check is red, and times and secondary facts are dim. Each section heading is in capitals with a colour of its own, a bar of block characters shows the ticked tasks out of the total (green once all are ticked), and the foot of the pane lists the keys: `1` Run, `2` Overview, `3` Specs, `↵` Read, `o` Editor, `b` Back, `Esc` Prompt.
 
 ### Open a step's document
 
-On the Run tab each step is a control. Move to it with Tab or the arrow keys and press Enter to read that step's file inside the pane, rendered as markdown: Specify opens the spec, Plan opens `plan.md`, and Tasks and Implement open `tasks.md`. When the record has a summary of what each finished task did, Implement lists those first. The first line names the file, and `b` goes back to the step you came from. The document refreshes as the agent writes it. A step whose file does not exist yet says `not written yet` and cannot be opened, and a very long file shows its first 60,000 characters with a line saying how much was left out.
+On the Run tab each step is a control, and every step and document that has a file ends in a dim `↵ read`. Move to it with Tab or the arrow keys and press Enter to read that step's file inside the pane, rendered as markdown: Specify opens the spec, Plan opens `plan.md`, and Tasks and Implement open `tasks.md`. When the record has a summary of what each finished task did, Implement lists those first. The first line names the file, as a link to it where your terminal opens file links, and `b` goes back to the step you came from. The document refreshes as the agent writes it. A step whose file does not exist yet says `not written yet` and cannot be opened, and a very long file shows its first 60,000 characters with a line saying how much was left out.
+
+### Open a file in your editor
+
+Press `o` to open a file in your editor: the document you are reading, or on the Run tab the step or document the focus is on. The mod runs the first of these that works: `$VISUAL` or `$EDITOR` when it names an editor with a window of its own (`code`, `cursor`, `zed`, `subl` and the like, never `vim`), `cursor` or `code` when the terminal is that editor's own, `code`, then the system's `open` or `xdg-open`. When none of them works the file's full path is copied to the clipboard and a toast says so.
 
 ### Without a run record
 
@@ -33,7 +37,7 @@ A stock Spec Kit project has no `.spec-context.json`, because the Companion Spec
 
 A run that has a record shows the Documents block and the next command too, and its Overview adds the user stories and open questions from the spec.
 
-The mod only reads. It never writes a spec file or the run record, and never sends a prompt: you run the `/speckit-*` commands yourself.
+The mod only reads. It never writes a spec file or the run record, and never sends a prompt: you run the `/speckit-*` commands yourself. The one command it runs is your editor's, when you press `o`.
 
 ## Install
 

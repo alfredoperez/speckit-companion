@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // Drives a real Claude Code session in tmux with the SpecKit Companion mod and a throwaway Spec Kit project, and saves the screen as text and as a picture per step.
-// usage: node tooling/scripts/terminal-check.mjs [--mode replay|run] [--recipe claude-mod-stock|claude-mod] [--out <dir>] [--only <step,step>] [--keep]
+// usage: node tooling/scripts/terminal-check.mjs [--mode replay|run] [--recipe claude-mod-stock|claude-mod] [--look plain|site] [--out <dir>] [--only <step,step>] [--keep]
 import { execFile, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { gridHtml, gridText, parseAnsi } from './lib/terminal/ansi.mjs';
+import { LOOKS, gridHtml, gridText, parseAnsi } from './lib/terminal/ansi.mjs';
 import { bandRow, dialog, focusedControl, isWorking, paneHasKeyboard, paneRows, paneText, promptBox } from './lib/terminal/screen.mjs';
 import { outsideEnv, sleep, startSession } from './lib/terminal/tmux.mjs';
 
@@ -24,6 +24,9 @@ const RECIPE = arg('recipe', 'claude-mod-stock');
 const OUT = resolve(arg('out', join(REPO, '.terminal-check', `${RECIPE}-${MODE}`)));
 const ONLY = arg('only', '').split(',').filter(Boolean);
 const KEEP = process.argv.includes('--keep');
+// How the pictures are drawn; what a step reads off the screen is the same in every look.
+const LOOK = arg('look', 'plain');
+const WINDOW_TITLE = 'claude — speckit-tracker';
 const COLS = 200;
 const ROWS = 50;
 const STEP_TIMEOUT_MS = 15 * 60 * 1000;
@@ -39,6 +42,7 @@ const fail = (message) => {
     process.exit(2);
 };
 if (!RECIPES[RECIPE]) fail(`Unknown --recipe "${RECIPE}". Use claude-mod-stock or claude-mod.`);
+if (!Object.hasOwn(LOOKS, LOOK)) fail(`Unknown --look "${LOOK}". Use ${Object.keys(LOOKS).join(' or ')}.`);
 if (!['replay', 'run'].includes(MODE)) fail(`Unknown --mode "${MODE}". Use replay or run.`);
 for (const [bin, flag] of [['tmux', '-V'], ['claude', '--version']]) {
     try {
@@ -98,6 +102,10 @@ async function buildProject() {
     }
     mkdirSync(join(project, '.claude'), { recursive: true });
     writeFileSync(join(project, '.claude', 'settings.json'), JSON.stringify(settingsFor(project), null, 2));
+    // A stand-in `code` that only writes down what it was asked to open, so no editor window opens during the check.
+    mkdirSync(join(root, 'bin'));
+    writeFileSync(join(root, 'bin', 'code'), `#!/bin/sh\necho "$@" >> "${join(root, 'editor.log')}"\n`);
+    chmodSync(join(root, 'bin', 'code'), 0o755);
     return { root, project };
 }
 
@@ -111,9 +119,10 @@ let specNames = MODE === 'replay' ? DEMOS : [];
 
 async function render(html, file) {
     browser ??= await chromium.launch({ channel: 'chrome' });
-    page ??= await browser.newPage({ deviceScaleFactor: 2, viewport: { width: 1800, height: 1000 } });
+    page ??= await browser.newPage({ deviceScaleFactor: 2, viewport: LOOK === 'plain' ? { width: 1800, height: 1000 } : { width: 2200, height: 1400 } });
     await page.setContent(html);
-    await page.locator('#screen').screenshot({ path: file });
+    // The site look leaves the margin around its frame transparent, so the shadow falls on whatever page the picture sits on.
+    await page.locator('#screen').screenshot({ path: file, omitBackground: LOOK !== 'plain' });
     return file;
 }
 
@@ -121,13 +130,14 @@ async function render(html, file) {
 async function shot(name) {
     const grid = parseAnsi(await session.capture());
     writeFileSync(join(OUT, `${name}.txt`), gridText(grid) + '\n');
-    const file = await render(gridHtml(grid, { to: COLS }), join(OUT, `${name}.png`));
     const pane = paneRows(grid);
+    const file = await render(gridHtml(grid, { to: COLS, look: LOOK, title: WINDOW_TITLE, pane }), join(OUT, `${name}.png`));
     const band = bandRow(grid, specNames);
-    if (band) await render(gridHtml(grid, { to: pane?.col ?? COLS, rowFrom: band.row, rowTo: band.row + 1 }), join(OUT, `${name}.band.png`));
+    const crop = { look: LOOK, frame: 'card' };
+    if (band) await render(gridHtml(grid, { ...crop, to: pane?.col ?? COLS, rowFrom: band.row, rowTo: band.row + 1 }), join(OUT, `${name}.band.png`));
     if (pane) {
         const used = pane.lines.findLastIndex(line => line.trim()) + 2;
-        await render(gridHtml(grid, { from: pane.col + 1, to: COLS, rowFrom: pane.top, rowTo: Math.min(pane.bottom, pane.top + used) }), join(OUT, `${name}.pane.png`));
+        await render(gridHtml(grid, { ...crop, from: pane.col + 1, to: COLS, rowFrom: pane.top, rowTo: Math.min(pane.bottom, pane.top + used) }), join(OUT, `${name}.pane.png`));
     }
     return file;
 }
@@ -143,7 +153,7 @@ async function answer(found, grid) {
     }
     const n = findings.length + 1;
     writeFileSync(join(OUT, `prompt-${n}.txt`), gridText(grid) + '\n');
-    await render(gridHtml(grid, { to: COLS }), join(OUT, `prompt-${n}.png`)).catch(() => undefined);
+    await render(gridHtml(grid, { to: COLS, look: LOOK, title: WINDOW_TITLE }), join(OUT, `prompt-${n}.png`)).catch(() => undefined);
     if (found.kind === 'permission') {
         const offered = found.options.find(o => /don.t ask again/.test(o.label))?.label.replace(/^.*?don.t ask again for:?\s*/, '') ?? null;
         findings.push({ step: current, kind: 'needs an allow rule', tool: found.title, asked: found.asked.slice(0, 600), why: found.why, offered, shot: `prompt-${n}.png` });
@@ -286,7 +296,7 @@ async function step(name, what, body, { needs } = {}) {
 const firstHeading = file => readFileSync(file, 'utf8').split('\n').find(line => line.startsWith('# ')).replace(/^#\s+/, '');
 const specFolders = project => (existsSync(join(project, 'specs')) ? readdirSync(join(project, 'specs'), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name) : []);
 
-async function replaySteps(project) {
+async function replaySteps(project, root) {
     let first = '';
     await step('band', 'The band above the prompt names a spec', async () => {
         const text = await bandShows(/^_0\d_demo-\w+ · .+/, 'no band line that starts with a spec name', 20000);
@@ -326,6 +336,9 @@ async function replaySteps(project) {
         await session.keys('1');
         for (const label of ['Specify', 'Plan', 'Tasks', 'Implement']) await paneShows(new RegExp(`^[✓●○] ${label}\\b`, 'm'), `the Run tab has no ${label} step`);
         await paneShows(/^DOCUMENTS$/m, 'the Run tab has no Documents heading');
+        await paneShows(/^[✓●○] Plan\b.*↵ read$/m, 'the Plan step does not say Enter reads it');
+        await paneShows(/^plan\b.*↵ read$/m, 'the plan document does not say Enter reads it');
+        await paneShows(/↵\s+Read\s+o\s+Editor/, 'the foot of the pane does not list Enter and o');
         return paneShows(/^Phase 1.*\d+\/\d+$/m, 'the Run tab has no task phase with a count');
     });
 
@@ -382,7 +395,7 @@ async function replaySteps(project) {
         await focusOn('Plan');
         await session.keys('Enter');
         await paneShows(/^specs\/_02_demo-tasked\/plan\.md$/m, 'the first line does not name plan.md');
-        await paneShows(/^b: Back$/m, 'no Back control');
+        await paneShows(/^b: Back\s+o: Open in editor$/m, 'no Back and Open in editor controls');
         await waitFor(`the pane does not show the plan's first heading "${heading}"`, grid => pane(grid).includes(heading));
         return heading;
     });
@@ -400,6 +413,15 @@ async function replaySteps(project) {
         const focus = focusedControl(grid);
         if (focus !== 'Plan') throw new Error(focus ? `the focus is on "${focus}", not on Plan` : 'the pane has the keyboard but no control has the focus, so Enter does nothing and Down starts again from the first tab');
         return 'focus on "Plan"';
+    });
+
+    await step('open-editor', 'o opens the focused step\'s file with the editor command', async () => {
+        await focusOn('Tasks');
+        await session.keys('o');
+        const log = join(root, 'editor.log');
+        const file = join(project, 'specs', '_02_demo-tasked', 'tasks.md');
+        await waitFor(`the editor command was not run with ${file}`, () => existsSync(log) && readFileSync(log, 'utf8').trim().split('\n').at(-1) === file, 8000);
+        return `ran: code ${file.replace(project + '/', '')}`;
     });
 
     await step('escape', 'Esc gives the keyboard back to the prompt', async () => {
@@ -513,6 +535,8 @@ session = await startSession({
     rows: ROWS,
     cwd: project,
     command: ['claude', '--plugin-dir', join(REPO, 'apps', 'claude-mod')],
+    // The mod runs $VISUAL first, so the stand-in is what `o` opens with.
+    env: { VISUAL: join(root, 'bin', 'code'), EDITOR: '' },
 });
 for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
     process.on(signal, () => {
@@ -535,7 +559,7 @@ try {
             await sleep(500);
         }
     });
-    if (started || ONLY.length) await (MODE === 'run' ? runSteps(project) : replaySteps(project));
+    if (started || ONLY.length) await (MODE === 'run' ? runSteps(project) : replaySteps(project, root));
 } finally {
     writeFileSync(join(OUT, 'results.json'), JSON.stringify({ recipe: RECIPE, mode: MODE, results, findings }, null, 2));
     await session.kill();
