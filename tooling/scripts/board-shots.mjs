@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { createSpecServer } from '../../apps/copilot-canvas/server.mjs';
+import { RUN_FOLDER, RUN_STATES, writeTeamboardRun } from './lib/teamboard-run.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const at = process.argv.indexOf('--out');
@@ -49,6 +50,28 @@ await page.click('#new-spec-toggle');
 await page.fill('#new-spec-text', 'Show a footer count');
 await page.waitForTimeout(300);
 await shot(page, 'board-new-spec');
+
+// One spec walked through a run, a step at a time: each state is the picture for that step in the docs.
+const walkRoot = join(mkdtempSync(join(tmpdir(), 'canvas-page-walk-')), 'teamboard');
+mkdirSync(join(walkRoot, '.specify/extensions/companion'), { recursive: true });
+for (const demo of ['_02_demo-tasked', '_03_demo-living']) cpSync(join(REPO, 'specs', demo), join(walkRoot, 'specs', demo), { recursive: true });
+writeTeamboardRun(REPO, join(walkRoot, 'specs', RUN_FOLDER), RUN_STATES[0]);
+const walk = await createSpecServer({ root: walkRoot, send: async () => true });
+const wp = await browser.newPage(opts);
+for (const state of RUN_STATES) {
+    writeTeamboardRun(REPO, join(walkRoot, 'specs', RUN_FOLDER), state);
+    await wp.goto(walk.url);
+    await wp.waitForSelector('.spec-card');
+    await wp.waitForFunction(() => document.body.classList.contains('vscode-light'));
+    await wp.click('[data-filter="all"]');
+    await wp.click(`.spec-card[data-id="specs/${RUN_FOLDER}"]`);
+    await wp.waitForSelector('.next');
+    if (state === 'planned') await wp.click('.tab:has-text("Plan")');
+    if (state === 'tasked' || state === 'implementing') await wp.click('.tab:has-text("Tasks")');
+    await wp.waitForTimeout(400);
+    await shot(wp, `board-walk-${state}`);
+}
+await walk.close();
 
 const stockRoot = join(mkdtempSync(join(tmpdir(), 'canvas-page-stock-')), 'todo-app');
 mkdirSync(join(stockRoot, 'specs'), { recursive: true });

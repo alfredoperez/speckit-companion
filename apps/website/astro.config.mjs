@@ -205,6 +205,7 @@ export default defineConfig({
             { label: 'Install', slug: 'docs/copilot-app/install' },
             { label: 'Navigate the board', slug: 'docs/copilot-app/navigate-the-board' },
             { label: 'Run the steps', slug: 'docs/copilot-app/run-the-steps' },
+            { label: 'A run, step by step', slug: 'docs/copilot-app/a-run-step-by-step' },
           ],
         },
         {
@@ -213,6 +214,7 @@ export default defineConfig({
           items: [
             { label: 'Install', slug: 'docs/claude-code/install' },
             { label: 'What it shows', slug: 'docs/claude-code/what-it-shows' },
+            { label: 'A run, step by step', slug: 'docs/claude-code/a-run-step-by-step' },
             { label: 'Switch specs with /speckit-tracker', slug: 'docs/claude-code/switch-specs' },
           ],
         },

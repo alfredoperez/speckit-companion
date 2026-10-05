@@ -5,6 +5,7 @@ description: Comment on a spec line by line, keep the comments in the repo, and 
 
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
+import refine from '../../../../../../../docs/screenshots/live-footer-refine.png';
 
 Open a spec in the viewer and hover any line. Click the comment button that appears, type your note, and the card pins under that line as **Pending**. A paragraph that is wrapped over several lines in the file counts as one line here: it has one comment button, and a comment made on any of its lines stays with it. When you are done, press **Refine (N)** in the footer to send every pending comment on the document to your assistant in one prompt.
 
@@ -15,6 +16,12 @@ Open a spec in the viewer and hover any line. Click the comment button that appe
 />
 
 You can review at any step. It works the same on the spec, the plan and the task list.
+
+<DocFigure
+  src="live-review-comments.png"
+  alt="The Specification tab of Profile Photo Upload with two comment cards under Why this exists. The first, under the first paragraph, reads Applied. The second, under the second paragraph, reads Pending."
+  caption="Two comments in the viewer, each under its paragraph: one already sent, one still pending."
+/>
 
 ## Comment on a line
 
@@ -38,6 +45,8 @@ A card starts collapsed and reads **Pending** or **Applied**. Expanded, it offer
 
 The footer button reads **Refine (N)** once N comments are pending, and is hidden when none are. Pressing it, or **Refine** on any card, does the same thing.
 
+<p class="not-content"><img src={refine.src} width={Math.round(refine.width / 2)} height={Math.round(refine.height / 2)} alt="The viewer footer reading Next: Plan, with Regenerate, Plan and a Refine (1) button at the end." /></p>
+
 | The prompt | Detail |
 | --- | --- |
 | Covers the current document only | Comments on the plan do not ride along with the spec |
@@ -48,7 +57,7 @@ The prompt goes to the assistant you configured: a terminal, an IDE chat or the 
 
 <YouSee>
 
-The sent comments flip to **Applied** and stay as history. Applied means sent, not checked. SpecKit Companion never reads the file back, so read the change yourself, then comment again on anything missed.
+The sent comments flip to **Applied** and stay as history. Applied means sent, not checked. Read the change yourself, then comment again on anything missed.
 
 </YouSee>
 
@@ -64,7 +73,7 @@ A comment is written to `.spec-context.json` in the spec's folder. Commit it and
 
 | What happened | Where to look |
 | --- | --- |
-| A comment did not save | The write is skipped when the run record is missing or unreadable. The viewer creates it on first open, so check the spec folder for `.spec-context.json`. |
+| A comment did not save | Check the spec folder for `.spec-context.json`. The viewer creates it when the spec is first opened, and a comment cannot be saved without it. |
 | A comment vanished after an edit | The Activity list under Run log |
 
 ## Related

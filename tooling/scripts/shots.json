@@ -105,5 +105,171 @@
     {
       "to": "docs/screenshots/live-copilot-install-hint.png"
     }
+  ],
+  "step-specify": [
+    {
+      "to": "docs/screenshots/live-step-specify.png"
+    }
+  ],
+  "step-plan": [
+    {
+      "to": "docs/screenshots/live-step-plan.png"
+    }
+  ],
+  "step-tasks": [
+    {
+      "to": "docs/screenshots/live-step-tasks.png"
+    }
+  ],
+  "step-implement": [
+    {
+      "to": "docs/screenshots/live-step-implement.png"
+    }
+  ],
+  "footer-next-plan": [
+    {
+      "to": "docs/screenshots/live-footer-next-plan.png",
+      "crop": "in_w-18:in_h-18:9:9"
+    }
+  ],
+  "footer-next-tasks": [
+    {
+      "to": "docs/screenshots/live-footer-next-tasks.png",
+      "crop": "in_w-18:in_h-18:9:9"
+    }
+  ],
+  "footer-next-implement": [
+    {
+      "to": "docs/screenshots/live-footer-next-implement.png",
+      "crop": "in_w-18:in_h-18:9:9"
+    }
+  ],
+  "footer-step-running": [
+    {
+      "to": "docs/screenshots/live-footer-step-running.png",
+      "crop": "in_w-18:in_h-18:9:9"
+    }
+  ],
+  "footer-converge": [
+    {
+      "to": "docs/screenshots/live-footer-converge.png",
+      "crop": "in_w-18:in_h-18:9:9"
+    }
+  ],
+  "footer-refine": [
+    {
+      "to": "docs/screenshots/live-footer-refine.png",
+      "crop": "in_w-18:in_h-18:9:9"
+    }
+  ],
+  "review-comments": [
+    {
+      "to": "docs/screenshots/live-review-comments.png"
+    }
+  ],
+  "new-spec-window": [
+    {
+      "to": "docs/screenshots/live-new-spec.png",
+      "crop": "1768:1466:704:70"
+    }
+  ],
+  "new-spec-actions": [
+    {
+      "to": "docs/screenshots/live-new-spec-actions.png",
+      "crop": "560:128:1080:0"
+    }
+  ],
+  "steering-constitution-window": [
+    {
+      "to": "docs/screenshots/live-step-constitution.png",
+      "crop": "2040:1100:96:60"
+    }
+  ],
+  "settings-list": [
+    {
+      "to": "docs/screenshots/live-settings-filter.png",
+      "crop": "1994:474:146:118"
+    }
+  ],
+  "settings-provider": [
+    {
+      "to": "docs/screenshots/live-settings-provider.png",
+      "crop": "1516:850:32:18"
+    }
+  ],
+  "board-walk-specified": [
+    {
+      "to": "docs/screenshots/live-copilot-walk-specified.png",
+      "crop": "1640:1100:720:114"
+    }
+  ],
+  "board-walk-planned": [
+    {
+      "to": "docs/screenshots/live-copilot-walk-planned.png",
+      "crop": "1640:1100:720:114"
+    }
+  ],
+  "board-walk-tasked": [
+    {
+      "to": "docs/screenshots/live-copilot-walk-tasked.png",
+      "crop": "1640:1406:720:114"
+    }
+  ],
+  "board-walk-implementing": [
+    {
+      "to": "docs/screenshots/live-copilot-walk-implementing.png",
+      "crop": "1640:1406:720:114"
+    }
+  ],
+  "mod-walk-implementing": [
+    {
+      "to": "docs/screenshots/live-mod-window.png",
+      "width": 2400
+    }
+  ],
+  "mod-walk-implementing-band": [
+    {
+      "to": "docs/screenshots/live-mod-band.png"
+    }
+  ],
+  "mod-walk-specified-pane": [
+    {
+      "to": "docs/screenshots/live-mod-walk-specified.png"
+    }
+  ],
+  "mod-walk-planned-pane": [
+    {
+      "to": "docs/screenshots/live-mod-walk-planned.png"
+    }
+  ],
+  "mod-walk-tasked-pane": [
+    {
+      "to": "docs/screenshots/live-mod-walk-tasked.png"
+    }
+  ],
+  "mod-walk-implementing-pane": [
+    {
+      "to": "docs/screenshots/live-mod-run.png"
+    }
+  ],
+  "mod-stock-walk-implementing-pane": [
+    {
+      "to": "docs/screenshots/live-mod-run-files.png"
+    }
+  ],
+  "mod-open-plan-pane": [
+    {
+      "to": "docs/screenshots/live-mod-document.png"
+    }
+  ],
+  "mod-overview-recorded-pane": [
+    {
+      "to": "docs/screenshots/live-mod-overview.png"
+    }
+  ],
+  "mod-tracker-opens-pane": [
+    {
+      "to": "docs/screenshots/live-mod-specs.png"
+    }
   ]
 }
