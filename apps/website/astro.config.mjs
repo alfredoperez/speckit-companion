@@ -205,7 +205,7 @@ export default defineConfig({
           items: [
             { label: 'Install', slug: 'docs/claude-code/install' },
             { label: 'What it shows', slug: 'docs/claude-code/what-it-shows' },
-            { label: 'Switch specs with /spec', slug: 'docs/claude-code/switch-specs' },
+            { label: 'Switch specs with /speckit-tracker', slug: 'docs/claude-code/switch-specs' },
           ],
         },
         {

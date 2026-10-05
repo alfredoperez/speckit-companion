@@ -1,4 +1,4 @@
 {
-  "description": "The SpecKit Companion hooks module: the run band, the spec pane, and /spec",
+  "description": "The SpecKit Companion hooks module: the run band, the spec pane, and /speckit-tracker",
   "modules": ["./register.js"]
 }

@@ -19,9 +19,9 @@ Step times follow the same rules as the viewer. A step ends at its own finish, t
 | Where you run Claude Code | What you see |
 | --- | --- |
 | A terminal at least 144 columns wide | The band, and the pane beside the transcript by itself |
-| A narrower terminal | The band. The pane waits until you run `/spec`, then sits above the prompt. |
+| A narrower terminal | The band. The pane waits until you run `/speckit-tracker`, then sits above the prompt. |
 | The Code tab of the Claude Desktop app | The band and the pane |
-| The VS Code extension's chat panel, or `claude -p` | Nothing a mod draws. `/spec` answers in text: the spec you are following, its band line, and the recent specs. |
+| The VS Code extension's chat panel, or `claude -p` | Nothing a mod draws. `/speckit-tracker` answers in text: the spec you are following, its band line, and the recent specs. |
 
 In VS Code itself, the SpecKit Companion extension already shows all of this.
 
@@ -29,7 +29,17 @@ In VS Code itself, the SpecKit Companion extension already shows all of this.
 
 The mod only reads. It never writes a spec file or sends a prompt, so you still run `/speckit-companion-plan`, `/speckit-implement` and the rest yourself.
 
+## Open a step's document
+
+In the pane's **Run** view each step is something you can move to and press. Pressing one opens its document inside the pane: the spec for Specify, the plan for Plan, the task list for Tasks and Implement. Press `b` to go back. A step whose document is not written yet says so and cannot be opened.
+
+A small change that Specify plans and tasks in one pass shows **with Specify** beside Plan and Tasks where a time would be.
+
+## The Overview tab
+
+The pane has three tabs, switched with `1`, `2` and `3`: **Run**, **Overview** and **Specs**. Overview shows what the run recorded about itself: the intent, the approach, what was left out of scope, the decisions and why, what was verified, any concerns, and how many requirements have tests. Each part shows only when the run recorded it.
+
 ## Related
 
 - [Install](/docs/claude-code/install) adds the mod to Claude Code.
-- [Switch specs with /spec](/docs/claude-code/switch-specs) changes the spec the band and the pane follow.
+- [Switch specs with /speckit-tracker](/docs/claude-code/switch-specs) changes the spec the band and the pane follow.

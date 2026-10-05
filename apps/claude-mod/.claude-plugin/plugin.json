@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "version": "0.1.0",
-  "description": "Follow a Spec Kit run from inside Claude Code: a band above the prompt with where the run stands, a pane with the pipeline, step times and tasks ticking off, and /spec to switch specs. Read only.",
+  "description": "Follow a Spec Kit run from inside Claude Code: a band above the prompt with where the run stands, a pane with the pipeline, step times and tasks ticking off, and /speckit-tracker to switch specs. Read only.",
   "author": { "name": "Alfredo Perez", "url": "https://github.com/alfredoperez" },
   "homepage": "https://speckit-companion.dev",
   "repository": "https://github.com/alfredoperez/speckit-companion",
