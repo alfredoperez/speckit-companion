@@ -41,15 +41,16 @@ for (const [name, uses] of Object.entries(map)) {
   for (const use of uses) {
     const target = join(root, use.to);
     if (flag('check')) {
-      if (!use.crop && !same(source, target)) {
+      if (!use.crop && !use.width && !same(source, target)) {
         console.log(`Out of date: ${use.to}`);
         stale += 1;
       }
       continue;
     }
     mkdirSync(dirname(target), { recursive: true });
-    if (use.crop) {
-      execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', source, '-vf', `crop=${use.crop}`, target]);
+    if (use.crop || use.width) {
+      const filters = [use.crop && `crop=${use.crop}`, use.width && `scale=${use.width}:-2`].filter(Boolean).join(',');
+      execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', source, '-vf', filters, target]);
     } else {
       if (same(source, target)) continue;
       copyFileSync(source, target);
