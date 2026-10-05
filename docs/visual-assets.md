@@ -177,7 +177,7 @@ Use it for two things: to verify a change in a real window before asking anyone 
 
 **One way to take a screenshot.**
 
-- **Product screenshots** come from `npm run check:desktop -- --shots <dir>`: a real VS Code window in Quiet Light at device scale factor 2, saved as the named crops below. Never take one by hand. When no crop shows the surface, add a step.
+- **Product screenshots** come from one run. `npm run shots` opens a real VS Code window once, in Quiet Light at device scale factor 2, and saves every named crop below to `.shots/`. `npm run shots:place` then copies each crop to every place that uses it, as listed in `tooling/scripts/shots.json`, and opens no window. To reuse a picture somewhere new or crop it differently, add a line to that file and place again; `npm run shots:place -- --check` says which copies are out of date. Never take one by hand. When no crop shows the surface, add a step.
 - **Terminal screenshots** come from `npm run check:terminal`.
 - **Concept pictures** are diagrams, an SVG with a 2x PNG beside it. Never a video still, and never a caption burned into the picture.
 - **Look at every crop** before using it, and retake one that is clipped, blank, still loading or covered.
