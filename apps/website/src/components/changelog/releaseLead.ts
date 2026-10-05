@@ -29,6 +29,7 @@ const FIRST_PARAGRAPH = /^(?!#|-|\s*$)(.+)$/m;
 /** Strips inline markdown so the result reads as plain text. */
 function toPlainText(value: string): string {
   return value
+    .replace(/==(.+?)==/g, '$1')
     .replace(/\*\*(.+?)\*\*/g, '$1')
     .replace(/\*(.+?)\*/g, '$1')
     .replace(/`(.+?)`/g, '$1')

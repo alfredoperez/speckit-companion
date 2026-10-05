@@ -19,7 +19,11 @@ export interface RenderedHighlight {
 
 export interface RenderedEntry {
   type: string;
+  /** The lead is the entry's bold title, so it is drawn bold. */
+  titled: boolean;
   leadHtml: string;
+  /** The one sentence after the title, shown on the same line. */
+  sayHtml: string;
   restHtml: string;
   prs: PrLink[];
 }
@@ -87,7 +91,7 @@ const prLabel = (pr: PrLink) => (/\/issues\//.test(pr.url) ? `Issue ${pr.number}
                 <div class="cl-entry-main">
                   <span class="cl-entry-line">
                     <strong>{highlight.title}.</strong>{' '}
-                    <span set:html={highlight.leadHtml} />
+                    <span class="cl-say" set:html={highlight.leadHtml} />
                     {highlight.prs.map((pr) => (
                       <a class="cl-pr" href={pr.url} aria-label={prLabel(pr)}>#{pr.number}</a>
                     ))}
@@ -106,7 +110,8 @@ const prLabel = (pr: PrLink) => (/\/issues\//.test(pr.url) ? `Issue ${pr.number}
                 <span class:list={['cl-tag', `cl-tag--${entry.type.toLowerCase()}`]}>{entry.type}</span>
                 <div class="cl-entry-main">
                   <span class="cl-entry-line">
-                    <span set:html={entry.leadHtml} />
+                    {entry.titled ? <strong set:html={entry.leadHtml} /> : <span set:html={entry.leadHtml} />}
+                    {entry.sayHtml && <Fragment>{' '}<span class="cl-say" set:html={entry.sayHtml} /></Fragment>}
                     {entry.prs.map((pr) => (
                       <a class="cl-pr" href={pr.url} aria-label={prLabel(pr)}>#{pr.number}</a>
                     ))}

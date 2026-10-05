@@ -36,7 +36,7 @@ import SiteIcons from '../components/SiteIcons.astro';
 import ogCard from '../../../../docs/screenshots/generated/og-card.png';
 import ReleaseCard from '../components/changelog/ReleaseCard.astro';
 import type { RenderedTopic } from '../components/changelog/ReleaseCard.astro';
-import { mergeReleases, parseChangelog, unreleasedOf } from '../components/changelog/parseChangelog';
+import { isBrief, markHighlights, mergeReleases, parseChangelog, unreleasedOf } from '../components/changelog/parseChangelog';
 import type { Release } from '../components/changelog/parseChangelog';
 import { mediaKey, resolveMedia } from '../components/changelog/releaseMedia';
 import { leadFor } from '../components/changelog/releaseLead';
@@ -73,7 +73,8 @@ if (guessedOld > 0) {
 }
 
 const processor = await createMarkdownProcessor({});
-const renderBlock = async (markdown: string) => (markdown ? (await processor.render(markdown)).code : '');
+const renderBlock = async (markdown: string) =>
+  markdown ? markHighlights((await processor.render(markdown)).code) : '';
 const renderInline = async (markdown: string) =>
   (await renderBlock(markdown)).trim().replace(/^<p>/, '').replace(/<\/p>$/, '');
 
@@ -105,7 +106,8 @@ const renderRelease = async (release: Release, open: boolean) => {
 
   for (const highlight of release.highlights) {
     const topic = topicFor(highlight.area);
-    const [first, rest] = splitLead(highlight.markdown);
+    // Two short sentences sit on the line together; only a longer body waits behind More.
+    const [first, rest] = isBrief(highlight.markdown, 50) ? [highlight.markdown.trim(), ''] : splitLead(highlight.markdown);
     topic.shots.push(...highlight.media.map((id) => shots!.get(id)!));
     topic.highlights.push({
       id: highlight.id,
@@ -116,10 +118,13 @@ const renderRelease = async (release: Release, open: boolean) => {
     });
   }
   for (const entry of release.entries) {
+    const inline = entry.titled && isBrief(entry.rest);
     topicFor(entry.area).entries.push({
       type: entry.type,
+      titled: entry.titled,
       leadHtml: await renderInline(entry.lead),
-      restHtml: await renderBlock(entry.rest),
+      sayHtml: inline ? await renderInline(entry.rest) : '',
+      restHtml: inline ? '' : await renderBlock(entry.rest),
       prs: entry.prs,
     });
   }
@@ -998,6 +1003,27 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       .cl-entry-line strong {
         font-weight: var(--fw-semibold);
+      }
+
+      .cl-say {
+        color: var(--text-body);
+      }
+
+      /* A marker stroke over the lower part of the line, in the accent hue. */
+      .cl-hi {
+        padding: 0 0.12em;
+        margin: 0 -0.12em;
+        background: linear-gradient(
+          to bottom,
+          transparent 30%,
+          color-mix(in srgb, var(--accent) 38%, transparent) 30%,
+          color-mix(in srgb, var(--accent) 26%, transparent) 92%,
+          transparent 92%
+        );
+        border-radius: 0.3em 0.15em 0.35em 0.2em;
+        color: var(--text-primary);
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
       }
 
       .cl-more {

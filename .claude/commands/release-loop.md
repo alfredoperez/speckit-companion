@@ -16,7 +16,7 @@ Triage the open issues (`gh issue list`), or take the numbers in `$ARGUMENTS`. V
 
 ## 2. Fix
 
-Run `/fix-tickets` with the batch's issue numbers, so it does not stop to confirm the queue. Full tickets run the full loop sequentially, one at a time; light tickets go in a separate `--light` run. Anything already built by hand goes through `/ship-ticket`. Merge a PR only after every CI check has finished and passed, never with a check still pending. Nothing is desktop-tested per ticket.
+Run `/fix-tickets` with the batch's issue numbers, so it does not stop to confirm the queue. Full tickets run the full loop sequentially, one at a time; light tickets go in a separate `--light` run. Anything already built by hand goes through `/ship-ticket`. Merge a PR only after every CI check has finished and passed, never with a check still pending. Nothing is desktop-tested per ticket. Every merged change a user will meet has an entry under `## [Unreleased]`; write a missing one with `/changelog-entry`.
 
 ## 3. QA
 
