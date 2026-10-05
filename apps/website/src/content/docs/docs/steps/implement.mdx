@@ -7,10 +7,13 @@ import CodeLine from '../../../../components/CodeLine.astro';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
+import running from '../../../../../../../docs/screenshots/live-footer-step-running.png';
+import footer from '../../../../../../../docs/screenshots/live-footer-next-implement.png';
 
 <Actions>
   <CodeLine command="/speckit.companion.implement" prompt={false} />
-  <p>Or press <strong>Implement</strong> in the viewer footer, under <code>Next: Implement</code>. The stock Spec Kit workflow sends <code>/speckit.implement</code>.</p>
+  <p>Or press <strong>Implement</strong> in the viewer footer. The stock Spec Kit workflow sends <code>/speckit.implement</code>.</p>
+  <img src={footer.src} width={Math.round(footer.width / 2)} height={Math.round(footer.height / 2)} alt="The viewer footer reading Next: Implement, with Regenerate, Other actions and a green Implement button." />
 </Actions>
 
 Implement works through `tasks.md` in order and writes the code. It writes no document of its own, so it has no tab in the rail. Its progress shows on the Tasks tab.
@@ -23,13 +26,21 @@ The Tasks tab shows a live percentage, counted from the checked boxes in `tasks.
 
 </YouSee>
 
-<DocFigure src="run-in-flight-x16x9.png" caption="A run in the viewer. During implement, the Tasks tab carries the percentage." />
+<DocFigure
+  src="live-step-implement.png"
+  alt="The Tasks tab of Profile Photo Upload during implement. The badge reads Implementing, the Tasks tab shows 50%, and under Phase 1 tasks T001 and T002 are ticked, each with a line saying what was done and the files it touched."
+  caption="Implement, halfway: the badge reads Implementing, the Tasks tab carries the percentage, and each finished task is ticked."
+/>
+
+The footer has no next step while the run is going. It reads **Step running, actions unlock when it settles**.
+
+<p class="not-content"><img src={running.src} width={Math.round(running.width / 2)} height={Math.round(running.height / 2)} alt="The viewer footer during implement: Step running, actions unlock when it settles, with Regenerate and Other actions and no next-step button." /></p>
 
 When a step or a phase of tasks completes, a notification offers **Open spec**. Turn it off with `speckit.notifications.stepComplete`.
 
 ## How the Companion workflow runs it
 
-The Companion command records each task the moment it finishes, so a run that stops halfway can pick up at the next unchecked task. On an assistant that can hand work to sub-agents, a user story phase that owns five or more files goes to its own worker. On one that cannot, the tasks are built one after another.
+The Companion command records each task the moment it finishes, with one line on what it did and the files it touched. A run that stops halfway picks up at the next unchecked task. Where your assistant can run work in parallel, large user stories are built side by side.
 
 ## How it ends
 

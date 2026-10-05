@@ -8,10 +8,12 @@ import { Aside, Badge } from '@astrojs/starlight/components';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
+import footer from '../../../../../../../docs/screenshots/live-footer-converge.png';
 
 <Actions>
   <CodeLine command="/speckit.converge" prompt={false} />
   <p>Type it in your assistant after implement, or press <strong>Converge</strong> in the viewer footer once the build is done.</p>
+  <img src={footer.src} width={Math.round(footer.width / 2)} height={Math.round(footer.height / 2)} alt="The viewer footer of a finished spec reading Run complete, with Converge, Archive and a green Reactivate button." />
 </Actions>
 
 Converge is Spec Kit's own command. It checks the code against one feature's spec, plan and task list.
@@ -25,7 +27,7 @@ You run implement and converge again until it converges.
 
 ## Start it from Companion <Badge text="New" variant="tip" />
 
-Once a spec's build is done, the viewer footer has a **Converge** button, and the spec's row menu in the sidebar has **Converge** too. Either one sends the command to your assistant, naming the spec's folder. Spec Kit works on the feature of your current branch, so the request asks the assistant to stop if that is a different one.
+Once a spec's build is done, the viewer footer has a **Converge** button, and the spec's row menu in the sidebar has **Converge** too. Either one sends the command to your assistant and names the spec. Spec Kit works on the feature of your current branch, so the assistant is asked to stop if that is a different one.
 
 <DocFigure
   src="live-converge-footer.png"
@@ -45,13 +47,11 @@ While converge runs, the **Tasks** entry in the rail shows it running, with its 
 
 </YouSee>
 
-Recording converge needs the Companion Spec Kit extension, which notes its start and finish.
+The timing needs the Companion Spec Kit extension. Only the first converge pass is timed.
 
 ## What it leaves alone
 
-- **The spec's status.** Converge never changes it. A spec that ran converge still offers **Mark Completed** and **Archive**.
-- **Its own records.** The **Converge** button only sends the command. Spec Kit's hooks note the start and finish, so Companion never times the wait.
-- **The timing of later passes.** A step keeps one start and one finish, so the first converge pass is the one timed.
+Converge never changes the spec's status. A spec that ran converge still offers **Mark Completed** and **Archive**.
 
 ## Converge is not a living-spec check
 

@@ -8,6 +8,7 @@ import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeTeamboardRun } from './lib/teamboard-run.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const arg = (name, fallback) => {
@@ -153,6 +154,8 @@ function buildProject({ provider = 'claude' } = {}) {
         ...(provider ? { 'speckit.aiProvider': provider } : {}),
         'speckit.views.steering.visible': false,
         'speckit.views.settings.visible': false,
+        // A walked run would raise a step-complete toast over the crop.
+        ...(SHOTS ? { 'speckit.notifications.stepComplete': false } : {}),
     }, null, 2));
     return { root, project, user, bin };
 }
@@ -515,6 +518,7 @@ try {
         await (await row('Specs', 'Bugs And Ideas Panes')).click();
         const button = await expectText(webview().locator('footer.actions button', { hasText: /^Converge$/ }), /Converge/);
         await capture('converge-footer', { target: 'editor', ratio: 16 / 9, anchor: 'bottom' });
+        await capture('footer-converge', { target: webview().locator('footer.actions'), padding: 10 });
         return button;
     }, { needs: 'fixtures' });
 
@@ -686,6 +690,136 @@ try {
         await setPanes(['Living Specs'], false);
         await setPanes(['Specs', 'Bugs', 'Ideas'], true);
     }
+
+    // One spec walked through a run, a step at a time: each state is the picture on that step's docs page.
+    const WALK = [
+        { state: 'specified', tab: 'Specification', footer: /Next: Plan/, crop: 'footer-next-plan', page: 'step-specify' },
+        { state: 'planned', tab: 'Plan', footer: /Next: Tasks/, crop: 'footer-next-tasks', page: 'step-plan' },
+        { state: 'tasked', tab: 'Tasks', footer: /Next: Implement/, crop: 'footer-next-implement', page: 'step-tasks' },
+        { state: 'implementing', tab: 'Tasks', footer: /Step running/, crop: 'footer-step-running', page: 'step-implement' },
+    ];
+    const walkFolder = join(built.project, 'specs', '042-profile-photo-upload');
+    const openWalk = async (state, tab, options) => {
+        await clear();
+        writeTeamboardRun(EXTENSION, walkFolder, state, options);
+        await page.waitForTimeout(2500);
+        await (await row('Specs', 'Profile photo upload')).click();
+        const entry = webview().locator('.step-tab', { hasText: tab }).first();
+        await entry.click();
+        await webview().locator('[aria-current="page"]', { hasText: tab }).first().waitFor({ timeout: 15000 });
+        await page.waitForTimeout(1500);
+    };
+    for (const { state, tab, footer, crop, page: name } of WALK) {
+        await step(`shot-${name}`, `A run at ${state} shows its ${tab} tab and what the footer offers next`, async () => {
+            await openWalk(state, tab);
+            await capture(`${name}-window`, { target: 'window' });
+            await capture(name, { target: 'editor', ratio: 16 / 9 });
+            await capture(`${name}-foot`, { target: 'editor', ratio: 16 / 9, anchor: 'bottom' });
+            const text = await expectText(webview().locator('footer.actions'), footer);
+            await capture(crop, { target: webview().locator('footer.actions'), padding: 10 });
+            return text.replace(/\s+/g, ' ');
+        }, { needs: 'fixtures', shots: true });
+    }
+
+    await step('shot-review-comments', 'A spec with one pending and one applied comment shows both cards and Refine (1) in the footer', async () => {
+        const at = new Date(Date.now() - 60000).toISOString();
+        const comment = (id, line, blockText, text, status) => ({ id, doc: 'spec', anchor: { heading: 'Why this exists', blockText, line }, comment: text, status, createdAt: at });
+        await openWalk('specified', 'Specification', { comments: [
+            comment('ref-walk-1', 9, 'Teamboard shows a grey placeholder where every face should be.', 'Say where: the directory, the profile page, or both.', 'applied'),
+            comment('ref-walk-2', 11, 'Members want to put their own photo there, without filing a ticket.', 'Name who approves a photo, or say nobody does.', 'pending'),
+        ] });
+        await capture('review-comments-window', { target: 'window' });
+        await capture('review-comments', { target: 'editor', ratio: 16 / 9 });
+        const text = await expectText(webview().locator('#refine-submit-btn'), /Refine \(1\)/);
+        await capture('footer-refine', { target: webview().locator('footer.actions'), padding: 10 });
+        return text;
+    }, { needs: 'fixtures', shots: true });
+
+    await step('shot-new-spec', 'New Spec opens the create screen with the workflow, the brief, and Auto beside Create Spec', async () => {
+        await clear();
+        await pane('Specs').locator('.pane-header').hover();
+        await pane('Specs').locator('.pane-header a.action-label[aria-label^="New Spec"]').click();
+        await webview().locator('#specContent').waitFor({ timeout: 15000 });
+        await webview().locator('#specContent').fill('Let a member upload a profile photo from their own profile page, and reject a file that is too large with the reason.');
+        await page.waitForTimeout(800);
+        await capture('new-spec-window', { target: 'window' });
+        await capture('new-spec', { target: 'editor', ratio: 16 / 9 });
+        const actions = webview().locator('footer.spec-editor-actions');
+        const text = await expectText(actions, /Create Spec/);
+        await capture('new-spec-actions', { target: actions, padding: 10 });
+        return text.replace(/\s+/g, ' ');
+    }, { needs: 'fixtures', shots: true });
+
+    await step('shot-steering-constitution', 'With a written constitution, the Steering view lists it under SpecKit Project Files', async () => {
+        await clear();
+        const settings = join(built.user, 'User', 'settings.json');
+        const before = readFileSync(settings, 'utf8');
+        mkdirSync(join(built.project, '.specify', 'memory'), { recursive: true });
+        writeFileSync(join(built.project, '.specify', 'memory', 'constitution.md'), [
+            '# Teamboard Constitution', '', '## Core Principles', '',
+            '### I. Tests come first', 'Every change ships with a test that fails without it.', '',
+            '### II. Keep it simple', 'No new dependency when the standard library does the job.', '',
+            '### III. Never lose a member\'s data', 'A write that replaces something keeps the old copy until the new one is confirmed.', '',
+            '## Governance', '', 'A plan that breaks a principle says so and says why.', '',
+            '**Version**: 1.0.0 | **Ratified**: 2026-05-12', '',
+        ].join('\n'));
+        writeFileSync(settings, JSON.stringify({ ...JSON.parse(before), 'speckit.views.steering.visible': true }, null, 2));
+        try {
+            await pane('Steering').waitFor({ timeout: 15000 });
+            await setPanes(['Specs', 'Bugs', 'Ideas'], false);
+            await setPanes(['Steering'], true);
+            const constitution = await row('Steering', 'Constitution');
+            await constitution.click();
+            await page.waitForTimeout(1200);
+            await capture('steering-constitution-window', { target: 'window' });
+            await capture('steering-constitution', { target: [pane('Steering').locator('.pane-header'), pane('Steering').locator('.monaco-list-row').last()] });
+            return (await pane('Steering').locator('.monaco-list-row .label-name').allInnerTexts()).join(', ');
+        } finally {
+            writeFileSync(settings, before);
+            await page.waitForTimeout(800);
+            await setPanes(['Specs', 'Bugs', 'Ideas'], true).catch(() => undefined);
+        }
+    }, { needs: 'fixtures', shots: true });
+
+    await step('shot-settings', 'Settings filtered to the extension lists its settings, and speckit.aiProvider opens as one dropdown', async () => {
+        await clear();
+        // The picture shows the defaults, so the one setting this run turned off is put back while Settings is open.
+        const settings = join(built.user, 'User', 'settings.json');
+        const before = readFileSync(settings, 'utf8');
+        const { 'speckit.notifications.stepComplete': _off, ...defaults } = JSON.parse(before);
+        writeFileSync(settings, JSON.stringify(defaults, null, 2));
+        await command('View: Toggle Primary Side Bar Visibility');
+        try {
+            await command('Preferences: Open Settings (UI)');
+            const editor = page.locator('.settings-editor');
+            await editor.locator('.setting-item-contents').first().waitFor({ timeout: 15000 });
+            const search = async (query) => {
+                await editor.locator('.suggest-input-container').first().click();
+                await page.keyboard.press('ControlOrMeta+A');
+                await page.keyboard.type(query);
+                await page.waitForTimeout(2500);
+            };
+            await search('@ext:alfredoperez.speckit-companion');
+            const provider = editor.locator('.setting-item-contents[data-key="speckit.aiProvider"]');
+            await provider.first().waitFor({ timeout: 15000 });
+            await capture('settings-list', { target: 'editor', ratio: 16 / 9 });
+            await search('speckit.aiProvider');
+            await provider.first().waitFor({ timeout: 15000 });
+            await provider.first().locator('select').click();
+            const list = page.locator('.monaco-select-box-dropdown-container');
+            await list.first().waitFor({ timeout: 8000 });
+            await page.waitForTimeout(600);
+            await capture('settings-provider-window', { target: 'window', keepPointer: true });
+            await capture('settings-provider', { target: [provider, list], padding: 16, keepPointer: true });
+            const count = await list.locator('.monaco-list-row').count();
+            await page.keyboard.press('Escape');
+            return `${count} assistants in the dropdown`;
+        } finally {
+            await page.keyboard.press('Escape').catch(() => undefined);
+            await command('View: Toggle Primary Side Bar Visibility');
+            writeFileSync(settings, before);
+        }
+    }, { shots: true });
 
     await step('specs-pane', 'The sidebar shows the Specs pane', async () => {
         await clear();

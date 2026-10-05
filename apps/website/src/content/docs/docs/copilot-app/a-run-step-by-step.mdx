@@ -1,0 +1,58 @@
+---
+title: A run, step by step
+description: One spec taken from specify to implement on the SpecKit Companion board in the GitHub Copilot app, with what you press and what the board shows after each step.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+You press one button per step. The board sends the command to the chat, your agent runs it, and the board moves on by itself. The pictures follow one spec, a profile photo upload.
+
+<Steps>
+
+1. **Specify**
+
+   Press **New spec**, choose **Companion**, describe what you want and submit. When the agent finishes, the spec is on the board as **Specified**, and the card offers **Run plan**.
+
+   <DocFigure
+     src="live-copilot-walk-specified.png"
+     alt="Profile photo upload on the board after specify. The status reads Specified, Specify is done in the pipeline and Plan, Tasks and Implement are not started, the card reads Next: Plan with a Run plan button, and the Overview shows the intent."
+     caption="After specify: one step done, and Run plan on the card."
+   />
+
+2. **Plan**
+
+   Press **Run plan**. Plan turns done, and the plan, the research and the data model get a tab each.
+
+   <DocFigure
+     src="live-copilot-walk-planned.png"
+     alt="The same spec after plan. The status reads Planned, Specify and Plan are done, the card reads Next: Tasks with a Run tasks button, and the Plan tab is open on the plan."
+     caption="After plan: the plan on its own tab, and Run tasks on the card."
+   />
+
+3. **Tasks**
+
+   Press **Run tasks**. The Tasks tab lists every task by phase and counts `0/6`.
+
+   <DocFigure
+     src="live-copilot-walk-tasked.png"
+     alt="The same spec after tasks. The status reads Ready to Implement, three steps are done, the card reads Next: Implement with a Run implement button, and the Tasks tab reads 0/6 with Phase 1's tasks unticked."
+     caption="After tasks: the task list by phase, and Run implement on the card."
+   />
+
+4. **Implement**
+
+   Press **Run implement**. Implement reads **Running**, and each task is ticked as the agent finishes it, with what it did and the files it touched. If the run stops, press **Resume**.
+
+   <DocFigure
+     src="live-copilot-walk-implementing.png"
+     alt="The same spec during implement. The status reads Implementing, Implement is running in the pipeline, the card reads Implement is running with a Resume button, and the Tasks tab reads 3/6 with T001 and T002 ticked and the files each one touched."
+     caption="During implement: three of six tasks ticked, and Resume on the card."
+   />
+
+</Steps>
+
+## Related
+
+- [Run the steps](/docs/copilot-app/run-the-steps) covers which commands the buttons send.
+- [Navigate the board](/docs/copilot-app/navigate-the-board) covers what each part of the board shows.

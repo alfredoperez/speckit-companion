@@ -1,40 +1,33 @@
 ---
 title: Telemetry
-description: What the extension sends, what gates it, and what it never collects.
+description: What the VS Code extension counts, what it never sends, and how to turn it off.
 ---
 
-SpecKit Companion sends **anonymous, PII-free** usage events to PostHog, to help decide which AI providers and pipeline features to invest in. If **either** switch below is off, nothing is sent.
+SpecKit Companion counts how the extension is used, anonymously. The counts decide which assistants and features get worked on.
 
-| Switch | Effect when off |
-|--------|-----------------|
-| `speckit.telemetry` (default `true`) | No extension telemetry, whatever the global setting says |
-| VS Code's `telemetry.telemetryLevel` | No extension telemetry, whatever `speckit.telemetry` says |
+## Turn it off
+
+Set `speckit.telemetry` to `false` in Settings. Turning off VS Code's own telemetry (`telemetry.telemetryLevel`) also turns it off. With either one off, nothing is sent.
 
 ## What is collected
 
-| Signal | Value |
-|--------|-------|
-| AI provider selected | `claude`, `copilot`, `gemini`, ... |
-| Workflow: default, and chosen at spec creation | `speckit`, `companion` or the literal `custom` |
-| How the workflow was chosen | `default`, `picked` or `trial` |
-| Phase dispatched | `specify`, `plan`, `tasks`, `implement` (or `custom`) |
-| Spec created, completed, archived | Events. Completion counts once, from whichever path finished it. |
-| Extension installed | A bare event, once ever per install |
-| Every event carries | Extension version, VS Code version, platform |
-| At activation | Spec Kit CLI version, spec count, whether the Companion Spec Kit extension is installed, and the on/off state of `defaultWorkflow`, `viewer.activityPanel`, `companion.installPrompt` and `telemetry` |
-| Install prompt | `shown` or `clicked`, per surface |
-| Specs panel visible, sample opened | Bare events, once per session |
-| Spec opened, living spec opened | Bare events, once per item per session |
-| Living-spec drift or sync run, steering doc opened | Bare events, per run or open |
-| Identity | VS Code's random machine id. It is not derived from you. |
+- Which assistant and which workflow you chose.
+- That a step was sent: specify, plan, tasks or implement.
+- That a spec was created, opened, completed or archived.
+- That the Specs view, a living spec, a steering file or the sample was opened, and that a living-spec drift or sync check ran.
+- That an install prompt was shown or clicked.
+- That the extension was installed, once.
+- The versions of the extension, VS Code and the Spec Kit CLI, your platform, how many specs the project has, whether the Companion Spec Kit extension is installed, and how four settings are set: the default workflow, the Activity panel, the install prompt and telemetry.
+
+Events are tied to a random id for your VS Code install and a random id per spec. Neither is derived from you or from the spec.
 
 ## What is never collected
 
-Prompt content, file paths, spec names, capability names and custom workflow names. Only enum-like values, booleans, versions, counts and a random per-spec id.
+Your prompts, file paths, spec names, capability names and the names of your own workflows.
 
-The per-spec id is a random UUID stored in the spec's `.spec-context.json`. It links one spec's events into a funnel without revealing which spec it is.
+## The full list
 
-A completion that happens while VS Code is closed goes unobserved.
+Every event and its properties are listed in [docs/telemetry.md](https://github.com/alfredoperez/speckit-companion/blob/main/docs/telemetry.md) in the repository.
 
 ## Related
 

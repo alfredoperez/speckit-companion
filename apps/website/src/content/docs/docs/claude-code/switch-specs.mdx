@@ -5,25 +5,25 @@ description: The /speckit-tracker command of the SpecKit Companion mod picks whi
 
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 
-The mod follows the latest spec until you tell it otherwise, and `/speckit-tracker` is how you tell it.
+The mod follows the most recently active spec until you tell it otherwise. `/speckit-tracker` is how you tell it.
 
 ## What you can type
 
 | You type | It does |
 | --- | --- |
-| `/speckit-tracker` | Lists the most recent specs to pick from |
+| `/speckit-tracker` | Opens the pane on its Specs tab, with the recent specs to pick from |
 | `/speckit-tracker 42` or `/speckit-tracker export-csv` | Follows that spec |
-| `/speckit-tracker auto` | Goes back to following the latest one |
+| `/speckit-tracker auto` | Goes back to following the most recently active one |
 
 <DocFigure
-  src="live-claude-mod-specs.png"
-  alt="The pane on its Specs tab after /speckit-tracker. Under Pick the spec this pane and the band follow are three rows: Follow the latest (now), _03_demo-living Completed, and _02_demo-tasked Ready to Implement."
-  caption="/speckit-tracker opens the pane on Specs, with the recent specs to pick from."
+  src="live-mod-specs.png"
+  alt="The pane on its Specs tab after /speckit-tracker. Under Pick the spec this pane and the band follow are three rows: Follow the latest (now), _03_demo-living Completed, and _02_demo-tasked Ready to Implement. The foot lists the keys 1 Run, 2 Overview, 3 Specs and Esc Prompt."
+  caption="/speckit-tracker opens the pane on Specs. Move to a row and press Enter to follow it."
 />
 
-`/spec` still works as a shorter name for the same command.
+Your pick is remembered for the project. `/spec` is a shorter name for the same command.
 
 ## Related
 
-- [What it shows](/docs/claude-code/what-it-shows) covers the band and the pane, and where `/speckit-tracker` answers in text.
+- [What it shows](/docs/claude-code/what-it-shows) covers the band and the pane.
 - [Install](/docs/claude-code/install) adds the mod to Claude Code.

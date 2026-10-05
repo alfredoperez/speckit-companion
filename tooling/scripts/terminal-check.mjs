@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Drives a real Claude Code session in tmux with the SpecKit Companion mod and a throwaway Spec Kit project, and saves the screen as text and as a picture per step.
-// usage: node tooling/scripts/terminal-check.mjs [--mode replay|run] [--recipe claude-mod-stock|claude-mod] [--look plain|site] [--out <dir>] [--only <step,step>] [--keep]
+// usage: node tooling/scripts/terminal-check.mjs [--mode replay|run] [--recipe claude-mod-stock|claude-mod] [--look plain|site] [--out <dir>] [--only <step,step>] [--shots <dir>] [--keep]
+// --shots also copies every picture into the shots library as mod-<step>.png, mod-<step>-pane.png and mod-<step>-band.png (mod-stock-* for the stock recipe).
 import { execFile, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +12,7 @@ import { promisify } from 'node:util';
 import { LOOKS, gridHtml, gridText, parseAnsi } from './lib/terminal/ansi.mjs';
 import { bandRow, dialog, focusedControl, isWorking, paneHasKeyboard, paneRows, paneText, promptBox } from './lib/terminal/screen.mjs';
 import { outsideEnv, sleep, startSession } from './lib/terminal/tmux.mjs';
+import { RUN_FOLDER, writeTeamboardRun } from './lib/teamboard-run.mjs';
 
 const run = promisify(execFile);
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -24,6 +26,7 @@ const RECIPE = arg('recipe', 'claude-mod-stock');
 const OUT = resolve(arg('out', join(REPO, '.terminal-check', `${RECIPE}-${MODE}`)));
 const ONLY = arg('only', '').split(',').filter(Boolean);
 const KEEP = process.argv.includes('--keep');
+const SHOTS = arg('shots') ? resolve(arg('shots')) : undefined;
 // How the pictures are drawn; what a step reads off the screen is the same in every look.
 const LOOK = arg('look', 'plain');
 const WINDOW_TITLE = 'claude — speckit-tracker';
@@ -138,6 +141,12 @@ async function shot(name) {
     if (pane) {
         const used = pane.lines.findLastIndex(line => line.trim()) + 2;
         await render(gridHtml(grid, { ...crop, from: pane.col + 1, to: COLS, rowFrom: pane.top, rowTo: Math.min(pane.bottom, pane.top + used) }), join(OUT, `${name}.pane.png`));
+    }
+    if (SHOTS) {
+        const prefix = RECIPE === 'claude-mod' ? 'mod' : 'mod-stock';
+        for (const [from, to] of [['', ''], ['.band', '-band'], ['.pane', '-pane']]) {
+            if (existsSync(join(OUT, `${name}${from}.png`))) copyFileSync(join(OUT, `${name}${from}.png`), join(SHOTS, `${prefix}-${name}${to}.png`));
+        }
     }
     return file;
 }
@@ -445,6 +454,38 @@ async function replaySteps(project, root) {
         const text = await bandShows(/(Tasks|Implement) 1\/4.*/, 'the band did not count the ticked task', 5000);
         return `${count} after ${((Date.now() - started) / 1000).toFixed(1)}s; band: ${text}`;
     });
+    // One spec walked through a run, a step at a time. Each step's pane is the picture for that step in the docs.
+    const walk = async (state, what, check) => step(`walk-${state}`, what, async () => {
+        const companion = RECIPES[RECIPE].companion;
+        writeTeamboardRun(REPO, join(project, 'specs', RUN_FOLDER), state, { record: companion });
+        specNames = [...DEMOS, RUN_FOLDER];
+        await slash('/speckit-tracker 41');
+        await bandShows(new RegExp(`^${RUN_FOLDER}\\b`), `the band did not move to ${RUN_FOLDER}`);
+        await toPane();
+        await session.keys('1');
+        const seen = await check();
+        // The keyboard goes back to the prompt, so the picture has no focused control.
+        await toPrompt();
+        await sleep(600);
+        return `${seen}; band: ${band(await look())}`;
+    });
+    await walk('specified', 'After specify the pane ticks Specify and leaves the other three open', async () => {
+        await paneShows(/^○ Plan\b.*$/m, 'Plan is not open', 12000);
+        return paneShows(/^✓ Specify\b.*$/m, 'Specify is not ticked');
+    });
+    await walk('planned', 'After plan the pane ticks Plan and lists the plan among the documents', async () => {
+        await paneShows(/^plan\b.*$/m, 'the documents do not list the plan', 12000);
+        return paneShows(/^✓ Plan\b.*$/m, 'Plan is not ticked', 12000);
+    });
+    await walk('tasked', 'After tasks the pane ticks Tasks and lists both phases with nothing ticked', async () => {
+        await paneShows(/^✓ Tasks\b.*$/m, 'Tasks is not ticked', 12000);
+        return paneShows(/^Phase 1.*\b0\/4$/m, 'the first phase does not read 0/4', 12000);
+    });
+    await walk('implementing', 'During implement the pane and the band count three of six tasks', async () => {
+        await paneShows(/^✓ T003\b/m, 'T003 is not ticked in the list', 12000);
+        await bandShows(/\b3\/6\b/, 'the band does not count 3/6', 12000);
+        return paneShows(/^Phase 1.*\b3\/4$/m, 'the first phase does not read 3/4');
+    });
 }
 
 async function runSteps(project) {
@@ -524,6 +565,7 @@ async function runSteps(project) {
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
+if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 console.log(`Building a ${RECIPE} project...`);
 const { root, project } = await buildProject();
 const cleanUp = () => {

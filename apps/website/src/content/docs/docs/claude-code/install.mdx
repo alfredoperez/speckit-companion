@@ -14,12 +14,12 @@ import YouSee from '../../../../components/journey/YouSee.astro';
   <p>You need Claude Code 2.1.287 or later. Check with <code>claude --version</code>.</p>
 </Actions>
 
-If you run the Spec Kit commands in the Claude Code terminal, the SpecKit Companion mod keeps the run in view while you work. It reads the same run record as the VS Code viewer and the [Copilot app board](/docs/copilot-app/navigate-the-board), so the three always agree on steps, times and task counts.
+If you run the Spec Kit commands in Claude Code, the mod keeps the run in view while you work. It shows the same steps, times and task counts as the VS Code viewer and the [Copilot app board](/docs/copilot-app/navigate-the-board).
 
 <DocFigure
-  src="live-claude-mod-pane-running.png"
-  alt="The mod's pane in Claude Code during an implement run of 001-clear-completed-todos. Specify, Plan and Tasks are ticked, Implement shows 7 of 8 tasks with the last change just now, and the spec's documents are listed under it."
-  caption="The pane during a real run: the four steps, how far Implement has got, and the spec's documents."
+  src="live-mod-window.png"
+  alt="Claude Code with the mod during an implement run. A band above the prompt reads 041-profile-photo-upload, Plan done, Tasks 3/6, Implement running. A pane beside the transcript lists the four steps with Implement running, the spec's documents, and six tasks in two phases with three ticked."
+  caption="Claude Code with the mod: a band above the prompt and a pane beside the transcript."
 />
 
 In a session that is already open, run `/reload-plugins` after installing.
@@ -32,5 +32,6 @@ Run `/plugin`. The line under the tabs lists `speckit-companion` among the activ
 
 ## Related
 
-- [What it shows](/docs/claude-code/what-it-shows) covers the band, the pane and where each one appears.
+- [What it shows](/docs/claude-code/what-it-shows) covers the band and the pane.
+- [A run, step by step](/docs/claude-code/a-run-step-by-step) follows one spec from specify to implement.
 - [Switch specs with /speckit-tracker](/docs/claude-code/switch-specs) changes the spec the mod follows.

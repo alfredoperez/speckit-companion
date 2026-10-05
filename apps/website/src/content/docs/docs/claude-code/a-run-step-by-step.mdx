@@ -1,0 +1,60 @@
+---
+title: A run, step by step
+description: One spec taken from specify to implement in Claude Code, with what you type and what the SpecKit Companion mod shows after each step.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+You type each command at the prompt. The mod shows where the run stands after it. The pictures are the pane's Run tab for one spec, a profile photo upload.
+
+<Steps>
+
+1. **Specify**
+
+   Type `/speckit-companion-specify` and what you want to build. When the turn ends, Specify is ticked with its time, and the last line names the next command.
+
+   <DocFigure
+     src="live-mod-walk-specified.png"
+     alt="The pane after specify. The status reads Specified, Specify is ticked with 5m 40s, Plan, Tasks and Implement read not written yet, the documents are the spec and its checklist, and the last line reads Next: /speckit-companion-plan specs/041-profile-photo-upload."
+     caption="After specify: one step ticked, and the spec among the documents."
+   />
+
+2. **Plan**
+
+   Type `/speckit-companion-plan`. Plan is ticked, and the plan, the research and the data model join the documents.
+
+   <DocFigure
+     src="live-mod-walk-planned.png"
+     alt="The pane after plan. The status reads Planned, Specify and Plan are ticked with their times, Tasks and Implement read not written yet, and the documents now include plan, research and data-model."
+     caption="After plan: two steps ticked, and three more documents to read."
+   />
+
+3. **Tasks**
+
+   Type `/speckit-companion-tasks`. Tasks is ticked, and the task list appears by phase with an empty bar.
+
+   <DocFigure
+     src="live-mod-walk-tasked.png"
+     alt="The pane after tasks. The status reads Ready to Implement, Specify, Plan and Tasks are ticked, the task bar reads 0/6, and six tasks are listed with empty circles under Phase 1 and Phase 2."
+     caption="After tasks: six tasks in two phases, none ticked yet."
+   />
+
+4. **Implement**
+
+   Type `/speckit-companion-implement`. Implement reads **running**, the bar fills, and each task is ticked as the agent finishes it. The band above the prompt counts along.
+
+   <DocFigure
+     src="live-mod-run.png"
+     alt="The pane during implement. The status reads Implementing, Implement reads running, the task bar reads 3/6, and tasks T001 to T003 are ticked under Phase 1."
+     caption="During implement: three of six tasks ticked."
+   />
+
+</Steps>
+
+On stock Spec Kit the commands are `/speckit-specify`, `/speckit-plan`, `/speckit-tasks` and `/speckit-implement`. The pane names the right one on its last line.
+
+## Related
+
+- [What it shows](/docs/claude-code/what-it-shows) covers the band, the tabs and the keys.
+- [The steps](/docs/steps/specify) explain what each command writes.

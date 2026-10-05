@@ -8,10 +8,12 @@ import { Aside } from '@astrojs/starlight/components';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
+import footer from '../../../../../../../docs/screenshots/live-footer-next-tasks.png';
 
 <Actions>
   <CodeLine command="/speckit.companion.tasks" prompt={false} />
-  <p>Or press <strong>Tasks</strong> in the viewer footer, under <code>Next: Tasks</code>. The stock Spec Kit workflow sends <code>/speckit.tasks</code>.</p>
+  <p>Or press <strong>Tasks</strong> in the viewer footer. The stock Spec Kit workflow sends <code>/speckit.tasks</code>.</p>
+  <img src={footer.src} width={Math.round(footer.width / 2)} height={Math.round(footer.height / 2)} alt="The viewer footer reading Next: Tasks, with Regenerate, Other actions and a green Tasks button." />
 </Actions>
 
 Tasks turns the plan into `tasks.md`, a checklist in the order the work has to happen. It is the map [Implement](/docs/steps/implement) follows.
@@ -36,7 +38,11 @@ The Companion workflow groups each phase into waves separated by those join line
 
 </YouSee>
 
-<DocFigure src="panel-step-rail.png" caption="Tasks grouped by phase, each with its checkbox, and the rail showing which documents are done." />
+<DocFigure
+  src="live-step-tasks.png"
+  alt="The Tasks tab of Profile Photo Upload after tasks. The badge reads Tasks Created, Specification, Plan and Tasks are checked, and Phase 1, Service, lists tasks T001 to T004 with empty checkboxes."
+  caption="After tasks: the badge reads Tasks Created, every document is checked, and each phase lists its tasks with empty boxes."
+/>
 
 ## Check the list before implementing
 

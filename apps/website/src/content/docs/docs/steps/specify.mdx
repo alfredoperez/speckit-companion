@@ -7,15 +7,22 @@ import CodeLine from '../../../../components/CodeLine.astro';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
+import nextPlan from '../../../../../../../docs/screenshots/live-footer-next-plan.png';
+import actions from '../../../../../../../docs/screenshots/live-new-spec-actions.png';
 
 <Actions>
   <CodeLine command="/speckit.companion.specify <what you want to build>" prompt={false} />
-  <p>Or click <code>+</code> in the Specs view and press <strong>Create Spec</strong>. The stock Spec Kit workflow sends <code>/speckit.specify</code>.</p>
+  <p>Or click <code>+</code> in the Specs view, write the brief and press <strong>Create Spec</strong>. The stock Spec Kit workflow sends <code>/speckit.specify</code>.</p>
+  <img src={actions.src} width={Math.round(actions.width / 2)} height={Math.round(actions.height / 2)} alt="The buttons at the foot of Create New Spec: Cancel, Auto and Create Spec." />
 </Actions>
 
 Specify turns a short brief into a spec: what is being built, for whom, and how you will know it works. It says nothing about how to build it. That is the plan's job.
 
-<DocFigure src="live-create-spec.png" recapture caption="Create New Spec: the workflow, then the brief. Create Spec sends specify." />
+<DocFigure
+  src="live-new-spec.png"
+  alt="Create New Spec with SpecKit Companion chosen as the workflow, a one-sentence feature brief typed, an Attach image button, and Cancel, Auto and Create Spec at the foot."
+  caption="Create New Spec: the workflow, then the brief. Create Spec sends specify."
+/>
 
 ## What it writes
 
@@ -48,7 +55,13 @@ While it runs, the footer reads **Step running, actions unlock when it settles**
 
 </YouSee>
 
-<DocFigure src="step-rail-x16x9.png" caption="After specify: Specification is checked, with its checklist under it. Plan and Tasks wait for their documents." />
+<DocFigure
+  src="live-step-specify.png"
+  alt="The Specification tab of Profile Photo Upload after specify. The badge reads Specified, Specification is checked with Requirements beside it, Plan and Tasks are empty, and the spec opens on Why this exists."
+  caption="After specify: the badge reads Specified and Specification is checked, with its checklist beside it. Plan and Tasks wait for their documents."
+/>
+
+<p class="not-content"><img src={nextPlan.src} width={Math.round(nextPlan.width / 2)} height={Math.round(nextPlan.height / 2)} alt="The viewer footer reading Next: Plan, with Regenerate and a green Plan button." /></p>
 
 ## Related
 
