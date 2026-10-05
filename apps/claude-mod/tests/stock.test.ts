@@ -469,9 +469,10 @@ test('the next step names the stock command, or the Companion one with the spec 
   expect(nextStepLine(row(all, tasks(3)), null)).toBe('Next: /speckit-implement')
   expect(nextStepLine(row(all, tasks(10)), null)).toBe(null)
   const planned = { workflow: 'speckit-companion', status: 'planned', currentStep: 'plan', history: [] }
-  expect(nextStepLine(row(all, null, planned), planned)).toBe('Next: /speckit-companion-tasks specs/001-clear-completed')
+  const upToPlan = { ...all, tasks: null }
+  expect(nextStepLine(row(upToPlan, null, planned), planned)).toBe('Next: /speckit-companion-tasks specs/001-clear-completed')
   // A record says which workflow ran, whatever skills the project has.
-  expect(nextStepLine(row(all, null, { ...planned, workflow: 'speckit' }), { ...planned, workflow: 'speckit' }, true)).toBe('Next: /speckit-tasks')
+  expect(nextStepLine(row(upToPlan, null, { ...planned, workflow: 'speckit' }), { ...planned, workflow: 'speckit' }, true)).toBe('Next: /speckit-tasks')
   const implementing = { ...planned, status: 'implementing', currentStep: 'implement' }
   expect(nextStepLine(row(all, tasks(3), implementing), implementing)).toBe(null)
   const completed = { ...planned, status: 'completed', currentStep: 'implement' }

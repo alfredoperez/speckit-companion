@@ -8,8 +8,8 @@ const at = (minutes: number) => new Date(Date.UTC(2026, 0, 1, 10, minutes)).toIS
 const entry = (step: string, kind: string, minutes: number) => ({ step, kind, by: 'extension', at: at(minutes) })
 const tasksText = (checked: number, total: number) =>
   Array.from({ length: total }, (_, i) => `- [${i < checked ? 'x' : ' '}] **T${String(i + 1).padStart(3, '0')}** task`).join('\n')
-const row = (ctx: any, text: string | null) =>
-  buildSpecRow({ id: 'specs/042-export-csv', ctx, specText: null, files: { spec: 'spec.md', plan: 'plan.md', tasks: text ? 'tasks.md' : null }, tasksText: text, updatedAt: null })
+const row = (ctx: any, text: string | null, plan: string | null = 'plan.md') =>
+  buildSpecRow({ id: 'specs/042-export-csv', ctx, specText: null, files: { spec: 'spec.md', plan, tasks: text ? 'tasks.md' : null }, tasksText: text, updatedAt: null })
 
 test('names the last finished step, the task count and the step in flight', async () => {
   const ctx = {
@@ -22,7 +22,13 @@ test('names the last finished step, the task count and the step in flight', asyn
 
 test('names the next step when nothing is running', async () => {
   const ctx = { status: 'specified', currentStep: 'specify', history: [entry('specify', 'start', 0), entry('specify', 'complete', 4)] }
-  expect(bandLine(row(ctx, null), ctx)).toBe('Specify done · Plan next')
+  expect(bandLine(row(ctx, null, null), ctx)).toBe('Specify done · Plan next')
+})
+
+test('follows the files when a document exists that the record never heard of', async () => {
+  const ctx = { status: 'specifying', currentStep: 'specify', history: [entry('specify', 'start', 0)] }
+  expect(bandLine(row(ctx, null, null), ctx)).toBe('Specify running')
+  expect(bandLine(row(ctx, null), ctx)).toBe('Plan done · Tasks next')
 })
 
 test('gives a finished spec its status, task count and active time', async () => {

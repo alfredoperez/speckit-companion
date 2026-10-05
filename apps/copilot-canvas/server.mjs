@@ -8,7 +8,9 @@ import { watch } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSnapshot, findSpec, readSpecDetail, resolveSpecDirs } from './specs-core.mjs';
-import { availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions } from './prompts.mjs';
+import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, hasWorkspaceWriter, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
+import { recordStep } from './run-record.mjs';
+import { withRunningStep } from './spec-rules.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -20,6 +22,7 @@ const ASSETS = {
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'";
 const BODY_LIMIT = 16 * 1024;
 const DEBOUNCE_MS = 200;
+const QUIET_MS = 120000;
 
 function sendJson(res, status, data) {
     res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -48,8 +51,10 @@ function tokenMatches(given, expected) {
 /**
  * Start the board server for a workspace.
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
+ * `checkoutWriter` is the context writer outside the workspace that run instructions may name; null says there is none.
+ * `quietMs` is how long a sent step's folder must sit unchanged before the board stops waiting for `settle()`.
  */
-export async function createSpecServer({ root, specDirs, send = async () => false, log = () => {} }) {
+export async function createSpecServer({ root, specDirs, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS }) {
     const state = {
         root,
         specDirs: specDirs ?? resolveSpecDirs(root),
@@ -60,6 +65,9 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         watchers: new Set(),
         closed: false,
         timer: null,
+        runs: new Map(),
+        pendingSpecify: null,
+        quietTimer: null,
         host: null,
         origin: null,
     };
@@ -77,14 +85,70 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         }
     }
 
+    const writer = () => writerPath(state.root, checkoutWriter);
+
+    /** A spec the board sent a step for shows that step as running until the turn settles. */
+    function present(spec) {
+        const run = state.runs.get(spec.id);
+        return run ? withRunningStep(spec, run.step) : spec;
+    }
+
     function snapshot() {
-        return { ...state.snapshot, selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
+        return { ...state.snapshot, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
+    }
+
+    /**
+     * Drop the runs that are over without a settle: the spec is gone, a live record closed the step after it was sent, or the
+     * step's document has sat unchanged for `quietMs`. A new folder that appears after New spec was sent is that run's spec.
+     */
+    function reviewRuns() {
+        const { specs } = state.snapshot;
+        const pending = state.pendingSpecify;
+        const created = pending && specs.find(spec => !pending.known.has(spec.id));
+        if (created) {
+            state.runs.set(created.id, { step: 'specify', startedAt: pending.startedAt, owned: pending.owned });
+            state.pendingSpecify = null;
+        }
+        const live = hasWorkspaceWriter(state.root);
+        for (const [id, run] of state.runs) {
+            const spec = specs.find(s => s.id === id);
+            const written = spec?.steps[run.step] === 'completed';
+            const sentAt = Date.parse(run.startedAt);
+            const recorded = written && live && Date.parse(spec.lastActivity ?? '') > sentAt;
+            const quiet = written && Date.now() - Math.max(sentAt, Date.parse(spec.updatedAt ?? '') || 0) >= quietMs;
+            if (!spec || recorded || quiet) state.runs.delete(id);
+        }
+        clearTimeout(state.quietTimer);
+        if (state.runs.size && !state.closed) state.quietTimer = setTimeout(scheduleRescan, Math.max(1000, quietMs / 4)).unref();
     }
 
     function rescan() {
         state.snapshot = buildSnapshot(state.root, state.specDirs);
+        reviewRuns();
         emit('snapshot', snapshot());
         return state.snapshot;
+    }
+
+    /**
+     * The chat turn ended, so nothing the board sent is running any more. Where no context writer exists the board keeps the
+     * record itself: a step whose document is there gets its start (the send) and its finish (now), both seen here.
+     */
+    function settle(now = new Date()) {
+        if (!state.runs.size && !state.pendingSpecify) return;
+        state.snapshot = buildSnapshot(state.root, state.specDirs);
+        reviewRuns();
+        for (const [id, run] of state.runs) {
+            const spec = state.snapshot.specs.find(s => s.id === id);
+            if (!run.owned || spec?.steps[run.step] !== 'completed') continue;
+            try {
+                recordStep(state.root, spec, run.step, run.startedAt, now.toISOString());
+            } catch (error) {
+                log(`[speckit-canvas] run record not written: ${error.message}`);
+            }
+        }
+        state.runs.clear();
+        state.pendingSpecify = null;
+        rescan();
     }
 
     function scheduleRescan() {
@@ -179,24 +243,34 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
 
     async function run(query, command) {
         const spec = requireSpec(query);
-        if (command === 'ask') return deliver(spec.id, command, buildAskPrompt(spec));
+        if (command === 'ask') return deliver(spec.id, command, buildAskPrompt(present(spec)));
         const set = commandSetFor(state.root, spec.workflow);
-        const instructions = availableCommands(set).includes(command) ? commandInstructions(state.root, command, set) : null;
-        const line = buildPrompt(command, spec.id, set);
-        const preamble = buildStepPreamble(command, spec.id, state.root, set);
-        const file = preamble ? writeRunInstructions(state.root, stepInstructionsName(command, spec.id), runInstructionsDoc(line, preamble)) : null;
-        return deliver(spec.id, command, buildPrompt(command, spec.id, set, instructions, file), file);
+        const spelling = availableCommands(set).includes(command) ? resolveCommand(state.root, command, set) : null;
+        const line = buildPrompt(command, spec.id, set, spelling);
+        const startedAt = new Date();
+        const preamble = buildStepPreamble(command, spec.id, state.root, set, startedAt, writer());
+        const file = preamble ? writeRunInstructions(state.root, stepInstructionsName(command, spec.id), runInstructionsDoc(line.split('\n')[0], preamble)) : null;
+        const result = await deliver(spec.id, command, buildPrompt(command, spec.id, set, spelling, file), file);
+        if (result.sent && STEP_COMMANDS.includes(command)) {
+            state.runs.set(spec.id, { step: command, startedAt: startedAt.toISOString(), owned: !writer() });
+            rescan();
+        }
+        return result;
     }
 
     async function specify(description, workflow) {
         let built;
         try {
-            built = buildSpecifyPrompt({ description, workflow: workflow ?? specifyChoices(state.root).default, root: state.root, specDirs: state.specDirs });
+            built = buildSpecifyPrompt({ description, workflow: workflow ?? specifyChoices(state.root).default, root: state.root, specDirs: state.specDirs, writer: writer() });
         } catch (error) {
             throw Object.assign(error, { status: 400 });
         }
-        const file = writeRunInstructions(state.root, built.instructionsName, built.instructionsDoc);
-        return { ...await deliver(null, 'specify', built.prompt, file), workflow: built.workflow, command: built.command };
+        const file = built.instructionsDoc ? writeRunInstructions(state.root, built.instructionsName, built.instructionsDoc) : null;
+        const result = await deliver(null, 'specify', built.prompt, file);
+        if (result.sent) {
+            state.pendingSpecify = { startedAt: built.startedAt, known: new Set(state.snapshot.specs.map(s => s.id)), owned: built.workflow === 'speckit' && !writer() };
+        }
+        return { ...result, workflow: built.workflow, command: built.command };
     }
 
     const install = () => deliver(null, 'install', buildInstallPrompt());
@@ -219,7 +293,8 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         if (req.method === 'GET' && pathname === '/api/spec') {
             const spec = requireSpec(url.searchParams.get('id'));
             const set = commandSetFor(state.root, spec.workflow);
-            return sendJson(res, 200, { ...readSpecDetail(state.root, spec.id), commandSet: set, commands: availableCommands(set) });
+            const detail = readSpecDetail(state.root, spec.id);
+            return sendJson(res, 200, { ...detail, spec: present(detail.spec), commandSet: set, commands: availableCommands(set), commandHint: commandPattern(state.root, set) });
         }
 
         if (req.method === 'GET' && pathname === '/api/events') {
@@ -290,10 +365,15 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         focus,
         run,
         specify,
-        detail: query => readSpecDetail(state.root, requireSpec(query).id, { html: false }),
+        settle,
+        detail: (query) => {
+            const detail = readSpecDetail(state.root, requireSpec(query).id, { html: false });
+            return { ...detail, spec: present(detail.spec) };
+        },
         async close() {
             state.closed = true;
             clearTimeout(state.timer);
+            clearTimeout(state.quietTimer);
             for (const watcher of state.watchers) watcher.close();
             for (const client of state.clients) client.end();
             server.closeAllConnections();

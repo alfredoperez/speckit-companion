@@ -369,7 +369,7 @@ function renderNext(spec) {
         .filter(([command]) => command === 'ask' || commands.includes(command))
         .filter(([command]) => command !== next.command && !(command === 'resume' && spec.done))
         .map(([command, label, title]) => el('button', { class: 'btn btn-chip', type: 'button', title, onclick: (e) => run(command, e.currentTarget) }, label));
-    const prefix = commandSet === 'companion' ? 'speckit.companion' : 'speckit';
+    const pattern = state.detail?.commandHint ?? (commandSet === 'companion' ? '/speckit.companion.<step>' : '/speckit.<step>');
     const hint = installHint();
     const stockNote = commandSet === 'companion' || hint
         ? null
@@ -379,7 +379,7 @@ function renderNext(spec) {
             el('div', { class: 'next-copy' }, el('p', { class: 'next-title' }, next.title), el('p', { class: 'next-why' }, next.why)),
             primary),
         el('div', { class: 'next-more' }, more),
-        el('p', { class: 'command-hint' }, 'Buttons send ', el('code', {}, `/${prefix}.<step> ${spec.id}`), ' to the chat.',
+        el('p', { class: 'command-hint' }, 'Buttons send ', el('code', {}, `${pattern} ${spec.id}`), ' to the chat.',
             stockNote ? el('span', { class: 'command-hint__stock' }, stockNote) : null),
         hint);
 }

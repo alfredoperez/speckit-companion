@@ -46,6 +46,10 @@ A spec whose build is done has a ==**Converge** button== in the viewer footer an
 - **The moss mascot is the new logo.** The ==small moss character== replaces the seedling in the activity bar and the double chevron on the Copilot app board. ([#831](https://github.com/alfredoperez/speckit-companion/pull/831)) <!-- area: other -->
 
 ### Fixed
+- **The Copilot board follows a stock run.** Each step reads as done ==from the files on disk==, so the next step unlocks without Companion installed. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: copilot-app -->
+- **Stock runs get no Companion-only instructions.** The board sends ==the command alone== where Companion's script is missing, so nothing tells the agent to hold a document back. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: copilot-app -->
+- **The board sends the command your project registers.** A project whose commands are skills gets `/speckit-plan`, and the card and **Show prompt** show ==that spelling==. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: copilot-app -->
+- **A sent step shows as running.** It stays ==Running== until the chat turn ends, and a stock run's Overview times only the steps the board watched. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: copilot-app -->
 - **Other actions keeps its text inside the menu.** Each item's description ==wraps to fit== instead of running off the window. ([#858](https://github.com/alfredoperez/speckit-companion/pull/858)) <!-- area: spec-viewer -->
 - **The Copilot board shows your first spec.** In a project with no `specs/` folder, the first spec shows up ==without a refresh==. ([#854](https://github.com/alfredoperez/speckit-companion/pull/854)) <!-- area: copilot-app -->
 - **No blank band above a short document.** In a narrow viewer, a short document starts right ==under the outline box==, not halfway down the page. ([#850](https://github.com/alfredoperez/speckit-companion/pull/850)) <!-- area: spec-viewer -->

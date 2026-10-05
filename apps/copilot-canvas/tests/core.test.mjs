@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
 import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, scanSpec, specStatusLabel } from '../specs-core.mjs';
-import { buildSpecRow, parseSpecContext, phaseTimings, sortSpecs, timingSummaryText } from '../spec-rules.mjs';
-import { INSTALL_COMMAND, OPEN_NOTE, PROMPTS_DIR, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandSetFor, detectCommandSet, instructionsSentence, nextSpecNumber, openStatus, resolveSpecify, runInstructionsDoc, specifyChoices, specifyInstructionsName, stepInstructionsName, writeRunInstructions, writerPath } from '../prompts.mjs';
+import { buildSpecRow, parseSpecContext, phaseTimings, sortSpecs, statusFromSteps, timingSummaryText } from '../spec-rules.mjs';
+import { INSTALL_COMMAND, OPEN_NOTE, PROMPTS_DIR, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandPattern, commandSetFor, detectCommandSet, instructionsSentence, nextSpecNumber, openStatus, resolveCommand, resolveSpecify, runInstructionsDoc, specifyChoices, specifyInstructionsName, stepInstructionsName, writeRunInstructions, writerPath } from '../prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const GRAMMAR = join(REPO, 'apps/vscode/tests/fixtures/task-grammar');
@@ -132,16 +132,17 @@ describe('prompts', () => {
         assert.throws(() => buildPrompt('resume', 'specs/042-x', 'speckit'));
     });
 
-    it('points at the command instructions when the host may not know the slash command', () => {
+    it('points at the command body only when the project registers neither spelling of the slash command', () => {
         const root = mkdtempSync(join(tmpdir(), 'canvas-'));
         assert.equal(commandInstructions(root, 'plan'), null);
-        mkdirSync(join(root, '.claude/skills/speckit-companion-plan'), { recursive: true });
-        writeFileSync(join(root, '.claude/skills/speckit-companion-plan/SKILL.md'), '# plan');
-        const file = commandInstructions(root, 'plan');
-        assert.equal(file, '.claude/skills/speckit-companion-plan/SKILL.md');
-        const prompt = buildPrompt('plan', 'specs/042-x', 'companion', file);
-        assert.equal(prompt.split('\n')[0], '/speckit.companion.plan specs/042-x');
-        assert.match(prompt, /read `\.claude\/skills\/speckit-companion-plan\/SKILL\.md` and follow it for the spec in `specs\/042-x`/);
+        assert.equal(buildPrompt('plan', 'specs/042-x', 'speckit', resolveCommand(root, 'plan', 'speckit')), '/speckit.plan specs/042-x');
+        mkdirSync(join(root, '.specify/templates/commands'), { recursive: true });
+        writeFileSync(join(root, '.specify/templates/commands/plan.md'), '# plan');
+        const spelling = resolveCommand(root, 'plan', 'speckit');
+        assert.deepEqual(spelling, { name: 'speckit.plan', registered: false, instructions: '.specify/templates/commands/plan.md' });
+        const prompt = buildPrompt('plan', 'specs/042-x', 'speckit', spelling);
+        assert.equal(prompt.split('\n')[0], '/speckit.plan specs/042-x');
+        assert.match(prompt, /If \/speckit\.plan is not a command here, read `\.specify\/templates\/commands\/plan\.md` and follow it for the spec in `specs\/042-x`/);
     });
 
     it('rejects unknown commands', () => {
@@ -154,6 +155,11 @@ describe('prompts', () => {
         assert.match(prompt, /do not change any files/);
     });
 });
+
+function skill(root, name, dir = '.github/skills') {
+    mkdirSync(join(root, dir, name), { recursive: true });
+    writeFileSync(join(root, dir, name, 'SKILL.md'), `# ${name}`);
+}
 
 function workspace({ companion }) {
     const root = mkdtempSync(join(tmpdir(), 'canvas-ws-'));
@@ -267,13 +273,126 @@ describe('specify prompt', () => {
         assert.throws(() => buildSpecifyPrompt({ description: 'x', workflow: 'auto', root }), /Auto needs/);
     });
 
-    it('keeps the fallback line after the command line when a skill file exists', () => {
+    it('sends the dashed name a skill folder registers, with no fallback line', () => {
         const root = workspace({ companion: true });
-        mkdirSync(join(root, '.github/skills/speckit-companion-specify'), { recursive: true });
-        writeFileSync(join(root, '.github/skills/speckit-companion-specify/SKILL.md'), '# specify');
-        const lines = buildSpecifyPrompt({ description: 'x', workflow: 'companion', root, now: AT }).prompt.split('\n');
-        assert.equal(lines[0], '/speckit.companion.specify x');
-        assert.match(lines[2], /If \/speckit\.companion\.specify is not a command here, read `\.github\/skills\/speckit-companion-specify\/SKILL\.md`/);
+        skill(root, 'speckit-companion-specify');
+        const built = buildSpecifyPrompt({ description: 'x', workflow: 'companion', root, now: AT });
+        assert.equal(built.command, 'speckit-companion-specify');
+        assert.equal(built.prompt.split('\n')[0], '/speckit-companion-specify x');
+        assert.doesNotMatch(built.prompt, /is not a command here/);
+        assert.match(built.instructionsDoc, /These belong to the `\/speckit-companion-specify` command/);
+    });
+});
+
+describe('the spelling a project registers for a command', () => {
+    it('sends the dashed name when the project has a skill folder for the command', () => {
+        const root = workspace({ companion: false });
+        skill(root, 'speckit-plan');
+        assert.deepEqual(resolveCommand(root, 'plan', 'speckit'), { name: 'speckit-plan', registered: true, instructions: '.github/skills/speckit-plan/SKILL.md' });
+        assert.equal(buildPrompt('plan', 'specs/001-todo-stars', 'speckit', resolveCommand(root, 'plan', 'speckit')), '/speckit-plan specs/001-todo-stars');
+        assert.equal(commandPattern(root, 'speckit'), '/speckit-<step>');
+        skill(root, 'speckit-specify');
+        assert.equal(buildSpecifyPrompt({ description: 'Star a todo', workflow: 'speckit', root, now: AT, writer: null }).prompt.split('\n')[0], '/speckit-specify Star a todo');
+    });
+
+    it('sends the dotted name when the project has a prompt or agent file for the command', () => {
+        for (const file of ['.github/prompts/speckit.plan.prompt.md', '.github/agents/speckit.plan.agent.md']) {
+            const root = workspace({ companion: false });
+            mkdirSync(join(root, file, '..'), { recursive: true });
+            writeFileSync(join(root, file), '# plan');
+            assert.deepEqual(resolveCommand(root, 'plan', 'speckit'), { name: 'speckit.plan', registered: true, instructions: file });
+            assert.equal(buildPrompt('plan', 'specs/042-x', 'speckit', resolveCommand(root, 'plan', 'speckit')), '/speckit.plan specs/042-x');
+            assert.equal(commandPattern(root, 'speckit'), '/speckit.<step>');
+        }
+    });
+
+    it('spells the Companion commands the same way: dashed for a skill, dotted for a prompt', () => {
+        const dashed = workspace({ companion: true });
+        skill(dashed, 'speckit-companion-tasks', '.claude/skills');
+        assert.equal(buildPrompt('tasks', 'specs/042-x', 'companion', resolveCommand(dashed, 'tasks')), '/speckit-companion-tasks specs/042-x');
+        const dotted = workspace({ companion: true });
+        mkdirSync(join(dotted, '.github/prompts'), { recursive: true });
+        writeFileSync(join(dotted, '.github/prompts/speckit.companion.tasks.prompt.md'), '# tasks');
+        assert.equal(buildPrompt('tasks', 'specs/042-x', 'companion', resolveCommand(dotted, 'tasks')), '/speckit.companion.tasks specs/042-x');
+    });
+
+    it('prefers the skill when a project has both', () => {
+        const root = workspace({ companion: false });
+        skill(root, 'speckit-plan');
+        mkdirSync(join(root, '.github/prompts'), { recursive: true });
+        writeFileSync(join(root, '.github/prompts/speckit.plan.prompt.md'), '# plan');
+        assert.equal(resolveCommand(root, 'plan', 'speckit').name, 'speckit-plan');
+    });
+});
+
+describe('a stock run in a project with no context writer', () => {
+    it('gets no lifecycle instructions for a step: no preamble, so no file and no sentence', () => {
+        const root = workspace({ companion: false });
+        skill(root, 'speckit-plan');
+        for (const step of ['plan', 'tasks', 'implement']) assert.equal(buildStepPreamble(step, 'specs/001-x', root, 'speckit', AT, null), null);
+        assert.match(buildStepPreamble('plan', 'specs/001-x', root, 'companion', AT, null), /This command's body carries the full/);
+    });
+
+    it('gets no seed and no mention of write-context.py for a new spec', () => {
+        const root = workspace({ companion: false });
+        const built = buildSpecifyPrompt({ description: 'Star a todo', workflow: 'speckit', root, now: AT, writer: null });
+        assert.equal(built.preamble, null);
+        assert.equal(built.instructionsDoc, null);
+        assert.equal(built.instructionsName, null);
+        assert.doesNotMatch(built.prompt, /write-context|spec-context|run instructions/);
+        assert.deepEqual(built.prompt.split('\n\n').map(p => p.split(' ')[0]), ['/speckit.specify', 'Name']);
+    });
+
+    it('never names a writer script that is not on disk', () => {
+        const root = workspace({ companion: false });
+        assert.equal(writerPath(root, null), null);
+        assert.equal(writerPath(root, join(root, 'nowhere/write-context.py')), null);
+    });
+});
+
+describe('a run record that is behind the files', () => {
+    const START = { step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-10-05T14:54:53.999Z' };
+    const stale = { workflow: 'speckit', specName: 'Todo Stars', currentStep: 'specify', status: 'specifying', history: [START] };
+    const row = (ctx, files, options = {}) => buildSpecRow({ id: 'specs/001-todo-stars', ctx, specText: '# Spec', files: { spec: null, plan: null, tasks: null, ...files }, tasksText: options.tasksText ?? null, recordLive: options.recordLive });
+
+    it('reads Specify and Plan as done when the record stopped at specifying and both documents exist', () => {
+        const got = row(stale, { spec: 'spec.md', plan: 'plan.md' });
+        assert.deepEqual(got.steps, { specify: 'completed', plan: 'completed', tasks: 'not-started', implement: 'not-started' });
+        assert.equal(got.status, 'planned');
+        assert.equal(got.statusLabel, 'Planned');
+    });
+
+    it('reads implement progress off the ticked tasks', () => {
+        const got = row(stale, { spec: 'spec.md', plan: 'plan.md', tasks: 'tasks.md' }, { tasksText: '- [x] T001 one\n- [ ] T002 two\n' });
+        assert.equal(got.steps.tasks, 'completed');
+        assert.equal(got.steps.implement, 'in-progress');
+        assert.equal(got.status, 'implementing');
+    });
+
+    it('keeps a step running while its own document exists and something can still advance the record', () => {
+        const got = row(stale, { spec: 'spec.md' });
+        assert.equal(got.steps.specify, 'in-progress');
+        assert.equal(got.status, 'specifying');
+    });
+
+    it('reads that step as done from its document where nothing can advance the record', () => {
+        const got = row(stale, { spec: 'spec.md' }, { recordLive: false });
+        assert.equal(got.steps.specify, 'completed');
+        assert.equal(got.status, 'specified');
+        assert.equal(row({ ...stale, currentStep: 'plan', status: 'planning' }, { spec: 'spec.md' }, { recordLive: false }).steps.plan, 'not-started');
+    });
+
+    it('never takes back what the record finished, and leaves a closed spec closed', () => {
+        const done = { ...stale, currentStep: 'implement', status: 'implemented' };
+        assert.equal(row(done, { spec: 'spec.md' }, { recordLive: false }).status, 'implemented');
+        const closed = { ...stale, currentStep: 'specify', status: 'completed' };
+        assert.equal(row(closed, { spec: 'spec.md', plan: 'plan.md' }, { recordLive: false }).status, 'completed');
+    });
+
+    it('names the status a set of badges amounts to', () => {
+        assert.equal(statusFromSteps({ specify: 'completed', plan: 'in-progress' }), 'planning');
+        assert.equal(statusFromSteps({ specify: 'completed', plan: 'completed', tasks: 'completed' }), 'ready-to-implement');
+        assert.equal(statusFromSteps({}), 'draft');
     });
 });
 
@@ -324,13 +443,14 @@ describe('numbering a new spec', () => {
 });
 
 describe('context writer path', () => {
-    it('prefers the workspace copy, else this checkout\'s script', () => {
+    it('prefers the workspace copy, else this checkout\'s script when the board runs from the repository', () => {
         const withScript = workspace({ companion: true });
         writeFileSync(join(withScript, '.specify/extensions/companion/scripts/write-context.py'), '');
         assert.equal(writerPath(withScript), '.specify/extensions/companion/scripts/write-context.py');
         const without = writerPath(workspace({ companion: false }));
         assert.match(without, /apps\/speckit-extension\/scripts\/write-context\.py$/);
         assert.ok(without.startsWith('/'));
+        assert.ok(existsSync(without));
     });
 
     it('names the checkout script in a stock run\'s preamble when the workspace has none', () => {
@@ -378,10 +498,11 @@ describe('step preamble for the run buttons', () => {
     });
 
     it('keeps the fallback line between the command and the instructions sentence', () => {
-        const prompt = buildPrompt('plan', 'specs/042-x', 'speckit', '.github/prompts/speckit.plan.prompt.md', '.speckit-companion/prompts/plan-042-x.md');
+        const spelling = { name: 'speckit.plan', registered: false, instructions: '.specify/templates/commands/plan.md' };
+        const prompt = buildPrompt('plan', 'specs/042-x', 'speckit', spelling, '.speckit-companion/prompts/plan-042-x.md');
         assert.deepEqual(prompt.split('\n\n'), [
             '/speckit.plan specs/042-x',
-            'If /speckit.plan is not a command here, read `.github/prompts/speckit.plan.prompt.md` and follow it for the spec in `specs/042-x`.',
+            'If /speckit.plan is not a command here, read `.specify/templates/commands/plan.md` and follow it for the spec in `specs/042-x`.',
             instructionsSentence('.speckit-companion/prompts/plan-042-x.md'),
         ]);
     });

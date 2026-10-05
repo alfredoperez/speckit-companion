@@ -5,6 +5,7 @@ import { join, basename, relative, sep } from 'node:path';
 import { listTasks, phaseProgress } from './tasks.mjs';
 import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './vendor/viewer-markdown.mjs';
 import { renderOverview } from './overview.mjs';
+import { hasWorkspaceWriter } from './prompts.mjs';
 import {
     DEFAULT_SPEC_DIRS,
     buildSpecRow,
@@ -97,7 +98,7 @@ export function scanSpec(root, id) {
         tasks: existsSync(join(dir, 'tasks.md')) ? 'tasks.md' : null,
     };
     const tasksText = files.tasks ? readText(join(dir, 'tasks.md')) : null;
-    return buildSpecRow({ id, ctx: readSpecContext(dir), specText, files, tasksText, updatedAt: latestMtime(dir) });
+    return buildSpecRow({ id, ctx: readSpecContext(dir), specText, files, tasksText, updatedAt: latestMtime(dir), recordLive: hasWorkspaceWriter(root) });
 }
 
 /** The repository's name, even from a linked worktree (the Copilot app runs sessions in one). */
@@ -164,7 +165,7 @@ export function readSpecDetail(root, id, { html = true } = {}) {
         const raw = readText(join(dir, doc.fileName));
         return html ? { ...doc, html: renderMarkdown(raw ?? '') } : doc;
     });
-    const overviewHtml = html ? renderOverview(ctx, root) : undefined;
+    const overviewHtml = html ? renderOverview(ctx, root, { steps: spec.steps, boardTimed: !hasWorkspaceWriter(root) }) : undefined;
     const tasksText = spec.files.tasks ? readText(join(dir, 'tasks.md')) ?? '' : '';
     const history = (Array.isArray(ctx.history) ? ctx.history : [])
         .filter(e => e && typeof e.step === 'string' && typeof e.at === 'string')

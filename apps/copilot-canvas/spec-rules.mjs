@@ -121,12 +121,52 @@ function firstHeading(markdown) {
     return line ? line.replace(/^#\s+/, '').replace(/^Feature Specification:\s*/i, '').trim() : null;
 }
 
-/** The board row for one spec folder, from the texts read off disk; `files` names the spec, plan and tasks files that exist. */
-export function buildSpecRow({ id, ctx, specText, files, tasksText, updatedAt }) {
+const FILE_STEPS = ['specify', 'plan', 'tasks'];
+const DONE_STATUS = { specify: 'specified', plan: 'planned', tasks: 'ready-to-implement', implement: 'implemented' };
+const RUNNING_STATUS = { specify: 'specifying', plan: 'planning', tasks: 'tasking', implement: 'implementing' };
+
+/** The status a set of step badges amounts to. */
+export function statusFromSteps(steps) {
+    const running = PIPELINE_STEPS.find(step => steps[step] === 'in-progress');
+    if (running) return RUNNING_STATUS[running];
+    const last = [...PIPELINE_STEPS].reverse().find(step => steps[step] === 'completed');
+    return last ? DONE_STATUS[last] : 'draft';
+}
+
+/** A row with one step shown as running: the step a caller knows is in flight, whatever the record or the files say. */
+export function withRunningStep(row, step) {
+    const steps = { ...row.steps, [step]: 'in-progress' };
+    const status = RUNNING_STATUS[step];
+    return { ...row, steps, status, statusLabel: specStatusLabel(status), done: false };
+}
+
+/**
+ * The record's badges checked against the files. A record that never heard of a document that exists is behind, and one nothing
+ * can advance (`recordLive` false) only knows what finished: in both cases a step whose document exists is done and the rest is
+ * read off the files. Null when the record stands as it is.
+ */
+function reconcileSteps(recorded, fromFiles, recordLive) {
+    const accounted = PIPELINE_STEPS.reduce((count, step, idx) => (recorded[step] === 'not-started' ? count : idx + 1), 0);
+    const behind = FILE_STEPS.some((step, idx) => idx >= accounted && fromFiles[step] === 'completed' && recorded[step] !== 'completed');
+    if (recordLive && !behind) return null;
+    const steps = {};
+    for (const step of PIPELINE_STEPS) steps[step] = recorded[step] === 'completed' ? 'completed' : fromFiles[step];
+    return PIPELINE_STEPS.every(step => steps[step] === recorded[step]) ? null : steps;
+}
+
+/**
+ * The board row for one spec folder, from the texts read off disk; `files` names the spec, plan and tasks files that exist.
+ * `recordLive` is false where nothing can advance the run record, so the files are the only news.
+ */
+export function buildSpecRow({ id, ctx, specText, files, tasksText, updatedAt, recordLive = true }) {
     const name = id.split('/').pop();
     const tasks = tasksText != null ? countTaskCheckboxes(tasksText) : null;
-    const status = typeof ctx?.status === 'string' ? ctx.status : null;
-    const steps = ctx ? deriveStepBadges(ctx) : deriveBadgesFromFiles(files, tasks);
+    const fromFiles = deriveBadgesFromFiles(files, tasks);
+    const recorded = ctx ? deriveStepBadges(ctx) : null;
+    const reconciled = ctx ? reconcileSteps(recorded, fromFiles, recordLive) : null;
+    const steps = reconciled ?? recorded ?? fromFiles;
+    const recordedStatus = typeof ctx?.status === 'string' ? ctx.status : null;
+    const status = reconciled && !TERMINAL.has(recordedStatus) ? statusFromSteps(steps) : recordedStatus;
     const history = Array.isArray(ctx?.history) ? ctx.history : [];
     const lastActivity = history.reduce((max, e) => (typeof e?.at === 'string' && e.at > max ? e.at : max), '') || null;
     const done = status ? TERMINAL.has(status) : steps.implement === 'completed';

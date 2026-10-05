@@ -274,6 +274,55 @@ describe('board page', { concurrency: false }, async () => {
         }
     });
 
+    it('follows a stock run from the files: a record stuck on specifying, the dashed command, and the step it sent shown as running', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-stock-run-'));
+        const spec = join(stockRoot, 'specs/001-todo-stars');
+        mkdirSync(spec, { recursive: true });
+        for (const name of ['spec.md', 'plan.md']) writeFileSync(join(spec, name), `# Todo stars: ${name}\n`);
+        writeFileSync(join(spec, '.spec-context.json'), JSON.stringify({
+            workflow: 'speckit',
+            specName: 'Todo Stars',
+            currentStep: 'specify',
+            status: 'specifying',
+            history: [{ step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-10-05T14:54:53.999Z' }],
+        }));
+        for (const step of ['specify', 'plan', 'tasks', 'implement']) {
+            mkdirSync(join(stockRoot, '.github/skills', `speckit-${step}`), { recursive: true });
+            writeFileSync(join(stockRoot, '.github/skills', `speckit-${step}`, 'SKILL.md'), `# ${step}\n`);
+        }
+        const stockSent = [];
+        const stock = await createSpecServer({ root: stockRoot, checkoutWriter: null, send: async (prompt) => { stockSent.push(prompt); return true; } });
+        const stockPage = await browser.newPage({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark' });
+        try {
+            await stockPage.goto(stock.url);
+            await stockPage.waitForSelector('.next-title:has-text("Next: Tasks")');
+            assert.equal((await stockPage.locator('.spec-card .pill').textContent()).trim(), 'Planned');
+            assert.deepEqual(await stockPage.locator('.rail .rail-state').allTextContents(), ['Done', 'Done', 'Not started', 'Not started']);
+            assert.match(await stockPage.locator('.command-hint').textContent(), /Buttons send \/speckit-<step> specs\/001-todo-stars to the chat\./);
+            if (SHOTS) await stockPage.screenshot({ path: join(SHOTS, '12-stock-run-from-files.png') });
+
+            await stockPage.click('.next .btn-primary');
+            await stockPage.waitForSelector('.next-title:has-text("Tasks is running")');
+            assert.equal(stockSent.at(-1), '/speckit-tasks specs/001-todo-stars');
+            assert.equal((await stockPage.locator('#toast-msg').textContent()).trim(), 'Sent /speckit-tasks to the chat');
+            await stockPage.click('#toast-actions button:has-text("Show prompt")');
+            assert.equal(await stockPage.locator('#toast-prompt').textContent(), '/speckit-tasks specs/001-todo-stars');
+            assert.equal(await stockPage.locator('#toast-file').isVisible(), false, 'no instruction file for a stock run');
+            assert.deepEqual(await stockPage.locator('.rail .rail-state').allTextContents(), ['Done', 'Done', 'Running', 'Not started']);
+            assert.equal((await stockPage.locator('.spec-card .pill').textContent()).trim(), 'Tasking');
+            if (SHOTS) await stockPage.screenshot({ path: join(SHOTS, '13-stock-run-step-running.png') });
+
+            writeFileSync(join(spec, 'tasks.md'), '- [ ] T001 Add the star\n');
+            stock.settle();
+            await stockPage.waitForSelector('.next-title:has-text("Next: Implement")');
+            assert.deepEqual(await stockPage.locator('.rail .rail-state').allTextContents(), ['Done', 'Done', 'Done', 'Not started']);
+        } finally {
+            await stockPage.close();
+            await stock.close();
+        }
+    });
+
     it('reads in light mode', async (t) => {
         if (skipWithoutChrome(t)) return;
         await page.emulateMedia({ colorScheme: 'light' });

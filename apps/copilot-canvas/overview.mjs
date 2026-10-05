@@ -18,19 +18,25 @@ const text = v => (typeof v === 'string' ? v.trim() : '');
 const list = v => (Array.isArray(v) ? v : []);
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
-function timingSection(ctx) {
+/** What a time means on a record the board kept, said where the times are shown. */
+export const BOARD_TIMED_NOTE = 'Timed by the board: from the moment it sent a step to the end of that chat turn. A step run any other way has no time.';
+export const BOARD_UNTIMED_NOTE = 'No step has a time. The board times a step it sends, from the send to the end of that chat turn.';
+
+function timingSection(ctx, { steps = null, boardTimed = false } = {}) {
     const timings = phaseTimings(ctx);
     if (!timings.phases.length) return '';
     const summary = timingSummaryText(timings);
     const items = timings.phases.map((p, i) => {
-        return `<div role="listitem" class="dossier-timing__phase${p.inFlight ? ' is-in-flight' : ''}">`
+        // A record that stopped at a step's start still says "running"; the files may know the step finished.
+        const inFlight = p.inFlight && steps?.[p.step] !== 'completed';
+        return `<div role="listitem" class="dossier-timing__phase${inFlight ? ' is-in-flight' : ''}">`
             + (i > 0 ? '<span class="dossier-timing__connector" aria-hidden="true"></span>' : '')
             + '<span class="dossier-timing__dot" aria-hidden="true"></span>'
             + `<span class="dossier-timing__name">${e(cap(p.step))}</span>`
             + (p.durationMs != null ? `<span class="dossier-timing__duration">${e(formatElapsed(p.durationMs))}</span>` : '')
             + '</div>';
     }).join('');
-    return `<section class="dossier-timing" aria-label="Run timing overview"><div class="dossier-timing__head"><span class="dossier-kicker">Run overview</span><strong>${e(summary)}</strong></div><div class="dossier-timing__phases" role="list">${items}</div></section>`;
+    return `<section class="dossier-timing" aria-label="Run timing overview"><div class="dossier-timing__head"><span class="dossier-kicker">Run overview</span><strong>${e(summary)}</strong></div><div class="dossier-timing__phases" role="list">${items}</div>${boardTimed ? `<p class="dossier-timing__note">${e(timings.measuredPhases > 0 ? BOARD_TIMED_NOTE : BOARD_UNTIMED_NOTE)}</p>` : ''}</section>`;
 }
 
 function sectionHead(kicker, title, count, tone) {
@@ -45,12 +51,12 @@ function sizingLine(c) {
     return parts.length ? `Sized ${c.verdict}: ${parts.join(', ')} projected` : `Sized ${c.verdict}`;
 }
 
-function intentSection(ctx) {
+function intentSection(ctx, options) {
     const intent = text(ctx.intent);
     const approach = text(ctx.approach);
     const area = list(ctx.context).find(i => typeof i === 'string' && i.startsWith(AREA_PREFIX))?.slice(AREA_PREFIX.length);
     const sizing = ctx.classification && typeof ctx.classification.verdict === 'string' ? sizingLine(ctx.classification) : null;
-    const timing = timingSection(ctx);
+    const timing = timingSection(ctx, options);
     if (!intent && !approach && !area && !sizing && !timing) return '';
     const meta = [];
     if (approach) meta.push(`<div class="dossier-intent__approach"><span class="dossier-meta-label">Approach</span><p>${e(approach)}</p></div>`);
@@ -174,8 +180,8 @@ function runLog(ctx) {
 }
 
 /** The whole dossier, or an empty string when the record carries nothing worth a page. */
-export function renderOverview(ctx, root) {
+export function renderOverview(ctx, root, options = {}) {
     if (!ctx || typeof ctx !== 'object') return '';
-    const body = [intentSection(ctx), expectationsSection(ctx), verifiedSection(ctx), decisionsSection(ctx), coverageSection(ctx, root), runLog(ctx)].join('');
+    const body = [intentSection(ctx, options), expectationsSection(ctx), verifiedSection(ctx), decisionsSection(ctx), coverageSection(ctx, root), runLog(ctx)].join('');
     return body ? `<div class="dossier">${body}</div>` : '';
 }

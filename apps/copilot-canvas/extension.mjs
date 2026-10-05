@@ -145,3 +145,8 @@ const session = await joinSession({
         }),
     ],
 });
+
+// The end of a chat turn is the only sign that a step the board sent has stopped running.
+session.on?.('session.idle', () => {
+    for (const entry of servers.values()) entry.settle();
+});

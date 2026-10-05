@@ -27,7 +27,7 @@ describe('what the extension tells the agent about opening the board', () => {
     });
 
     it('does not stop the agent from running a /speckit command the board sends', () => {
-        assert.match(SYSTEM_RULE, /A message that starts with a \/speckit command is a request to run that command, so run it\.$/);
+        assert.match(SYSTEM_RULE, /A message that starts with a \/speckit command is a request to run that command, or the skill of that name, so run it\.$/);
     });
 
     it('opens with the wait note in its status and accepts a null input', async () => {
@@ -41,6 +41,19 @@ describe('what the extension tells the agent about opening the board', () => {
             assert.match(result.url, /^http:\/\/127\.0\.0\.1:\d+\/\?token=/);
         } finally {
             await canvas.onClose({ instanceId: 'test-1' });
+        }
+    });
+});
+
+describe('how the board learns that a chat turn ended', () => {
+    it('settles every open board when the session goes idle', async () => {
+        const [canvas] = (await loadExtension()).canvases;
+        assert.equal(typeof globalThis.__copilotHandlers['session.idle'], 'function');
+        await canvas.open({ instanceId: 'test-idle', input: null, session: { workingDirectory: process.cwd() } });
+        try {
+            assert.doesNotThrow(() => globalThis.__copilotHandlers['session.idle']());
+        } finally {
+            await canvas.onClose({ instanceId: 'test-idle' });
         }
     });
 });
