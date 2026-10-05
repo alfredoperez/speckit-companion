@@ -5,21 +5,21 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 ## [Unreleased]
 
 ### Added
-- **A useful pane without a run record.** In a stock Spec Kit project the pane used to show `No record`, four step names and the task list. It now works from the spec folder's files: each step says when its document was written and how long after the one before, Implement counts the ticked tasks and when the last one changed, and a line under the title says what is happening now, such as `Writing the plan` or `Implementing: T004 next`. A new Documents block lists every file with what it holds (stories, requirements, open questions, files named, tasks by phase, checklist progress) and opens it when pressed. The Overview tab shows the feature's description, user stories, open questions, requirements, success criteria and plan summary, and the Run tab ends with the command for the next step. The band reads the same way, such as `Plan written 4m ago · Tasks next`. A run that has a record gets the Documents block and the next command too.
-- **Open a step's document.** On the Run tab each of the four steps is now a control: press one to read its spec, plan or task file inside the pane, rendered as markdown, with `b` to go back to the step you came from. The document refreshes while the agent writes it, Implement lists what each finished task did when the record has it, and a step whose file is not written yet says so.
-- **An Overview tab.** It shows what the run record says about the change: intent, approach, size and workflow, what is out of scope, the decisions and the reason for each, what was verified and how each check came out, the open concerns, and how many requirements are covered by tests. The tabs are now `1: Run`, `2: Overview` and `3: Specs`.
+- **A useful pane without a run record.** Stock Spec Kit projects get a pane from the spec's files: step times, ticked tasks, a Documents list and the next command.
+- **Open a step's document.** On the Run tab, press a step to read its spec, plan or tasks inside the pane, and `b` to go back.
+- **An Overview tab.** Read the run's intent, approach, decisions, checks and open concerns on tab `2: Overview`, between `1: Run` and `3: Specs`.
 
 ### Changed
-- **A colourful pane and band.** Coloured section headings, a task progress bar, right-aligned step times, a state dot in the band, and key hints at the pane's foot.
-- **The command is now `/speckit-tracker`.** It takes the same arguments as before, and `/spec` still works as a shorter name for it.
-- **Colour, used sparingly.** The running step and the word `running` use your theme's warning colour, in the pane and in the band; a finished step is green, a failed check is red and says `failed`, section titles are bold, and secondary facts are dim. The spec's title and status now stay at the top of every tab.
-- **A step done in the same pass as Specify reads `with Specify`.** When a small change is specified, planned and tasked at once, Plan and Tasks used to show an empty time, and the run showed a timing coverage count in place of its total. They now say where their time went, and the total is shown.
+- **A colourful pane and band.** Coloured section headings, a task progress bar, a state dot in the band, and key hints at the pane's foot.
+- **The command is `/speckit-tracker`.** It takes the same arguments, and `/spec` still works as a shorter name.
+- **Colour, used sparingly.** The running step takes your theme's warning colour, finished is green, failed is red, and the spec's title stays atop every tab.
+- **Steps done alongside Specify say `with Specify`.** Plan and Tasks say where their time went instead of showing an empty time, and the run shows its total.
 
 ### Fixed
-- **The mod starts in a session that was already open.** Installing the mod and running `/reload-plugins` loaded it without starting it, so there was no band, no pane and no `/spec` until Claude Code was restarted. It now starts on its own the first time it is needed.
-- **Back keeps the focus.** After `b` closed a document, the pane still had the keyboard but nothing was selected, so Enter did nothing and the arrow keys started again from the first tab. The focus now lands on the step or document you opened, and on Back when a document opens.
-- **The pane opens for a session's first spec.** In a project with no specs when Claude Code started, the band followed the new spec but the pane stayed shut until you ran `/speckit-tracker`. It now opens by itself when the first spec appears, in a terminal wide enough to hold it beside the transcript. It opens once: close it and it stays closed until you ask for it.
-- **A spec created during the session is followed.** In a project with no specs when Claude Code started, the band and the pane stayed empty through the whole first run. The mod now notices a new spec folder as soon as the agent creates it.
+- **The mod starts in a session already open.** After installing and running `/reload-plugins`, the band, pane and `/spec` start on first use, no restart of Claude Code needed.
+- **Back keeps the focus.** After `b` closes a document, focus lands on the step you opened, so Enter and the arrow keys carry on from there.
+- **The pane opens for a session's first spec.** When the first spec appears, the pane opens by itself, once, if the terminal is wide enough to hold it.
+- **A spec created during the session is followed.** The band and pane pick up a new spec folder as soon as your agent creates it.
 
 ## [0.1.0]
 

@@ -1,0 +1,109 @@
+{
+  "answer-open-question": [
+    {
+      "to": "docs/screenshots/live-report-answer.png"
+    },
+    {
+      "to": "apps/website/public/changelog/answer-question.png"
+    }
+  ],
+  "bug-story-verified": [
+    {
+      "to": "docs/screenshots/live-bug-story.png"
+    },
+    {
+      "to": "apps/website/public/changelog/bug-story.png"
+    },
+    {
+      "to": "apps/website/public/landing/bug-story.png",
+      "crop": "1500:940:0:70"
+    }
+  ],
+  "bug-story-failed-checks": [
+    {
+      "to": "apps/website/public/changelog/bug-story-failed.png"
+    }
+  ],
+  "idea-decision": [
+    {
+      "to": "docs/screenshots/live-idea-decision.png"
+    },
+    {
+      "to": "apps/website/public/changelog/idea-decision.png"
+    },
+    {
+      "to": "apps/website/public/landing/idea-decision.png",
+      "crop": "1500:940:0:70"
+    }
+  ],
+  "sidebar-panes": [
+    {
+      "to": "docs/screenshots/live-bugs-ideas-panes.png"
+    }
+  ],
+  "sidebar-and-story": [
+    {
+      "to": "apps/website/public/changelog/bugs-ideas-panes.png"
+    }
+  ],
+  "converge-footer": [
+    {
+      "to": "docs/screenshots/live-converge-footer.png"
+    },
+    {
+      "to": "apps/website/public/changelog/converge-button.png"
+    }
+  ],
+  "converge-sent": [
+    {
+      "to": "apps/website/public/changelog/converge-sent.png"
+    }
+  ],
+  "create-issues-confirm": [
+    {
+      "to": "docs/screenshots/live-create-issues-confirm.png"
+    },
+    {
+      "to": "apps/website/public/changelog/create-issues-confirm.png"
+    }
+  ],
+  "tasks-other-actions": [
+    {
+      "to": "docs/screenshots/live-tasks-create-issues.png"
+    },
+    {
+      "to": "apps/website/public/changelog/create-issues-menu.png"
+    }
+  ],
+  "new-bug": [
+    {
+      "to": "apps/website/public/changelog/new-bug.png"
+    }
+  ],
+  "provider-picker": [
+    {
+      "to": "docs/screenshots/live-first-start-picker.png"
+    }
+  ],
+  "board": [
+    {
+      "to": "docs/screenshots/live-copilot-board.png",
+      "width": 1800
+    }
+  ],
+  "board-next-step": [
+    {
+      "to": "docs/screenshots/live-copilot-next-step.png"
+    }
+  ],
+  "board-sent-prompt": [
+    {
+      "to": "docs/screenshots/live-copilot-sent-prompt.png"
+    }
+  ],
+  "board-install-hint": [
+    {
+      "to": "docs/screenshots/live-copilot-install-hint.png"
+    }
+  ]
+}

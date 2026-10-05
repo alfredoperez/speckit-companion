@@ -1,0 +1,14 @@
+enabled: true
+capabilities:
+  - name: member-profiles
+    match: ['src/features/profile/**', 'src/api/members/**']
+  - name: photo-storage
+    match: ['src/services/photoStorage/**', 'src/api/photos/**', 'src/components/PhotoUploader/**', 'src/jobs/variants/**']
+  - name: team-invites
+    match: ['src/features/invites/**', 'src/api/invites/**']
+  - name: directory-search
+    match: ['src/features/directory-search/**']
+    spec: src/features/directory-search/directory-search.spec.md
+  - name: avatar-rendering
+    match: ['src/components/Avatar/**']
+    spec: src/components/Avatar/avatar-rendering.spec.md

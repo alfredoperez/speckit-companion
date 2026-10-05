@@ -1,8 +1,9 @@
 ---
 /**
- * One release: its header and lead, a section per highlight, then the small
- * entries grouped by area, one line each. The HTML arrives already rendered
- * from the page, which owns the single markdown processor.
+ * One release: its header and lead, then a section per topic. A topic opens on
+ * its screenshots, names its highlights in one sentence each, and lists its
+ * small entries one line each. The HTML arrives already rendered from the page,
+ * which owns the single markdown processor.
  */
 import HighlightMedia from './HighlightMedia.astro';
 import type { PrLink, ProductId } from './parseChangelog';
@@ -11,23 +12,27 @@ import type { Shot } from './releaseMedia';
 export interface RenderedHighlight {
   id: string;
   title: string;
-  html: string;
-  area: string;
-  areaLabel: string;
-  prs: PrLink[];
-  shots: Shot[];
-}
-
-export interface RenderedEntry {
-  type: string;
   leadHtml: string;
   restHtml: string;
   prs: PrLink[];
 }
 
-export interface RenderedGroup {
+export interface RenderedEntry {
+  type: string;
+  /** The lead is the entry's bold title, so it is drawn bold. */
+  titled: boolean;
+  leadHtml: string;
+  /** The one sentence after the title, shown on the same line. */
+  sayHtml: string;
+  restHtml: string;
+  prs: PrLink[];
+}
+
+export interface RenderedTopic {
   area: string;
   label: string;
+  shots: Shot[];
+  highlights: RenderedHighlight[];
   entries: RenderedEntry[];
 }
 
@@ -40,17 +45,14 @@ interface Props {
   unreleased: boolean;
   latest?: boolean;
   lead: string;
-  highlights: RenderedHighlight[];
-  groups: RenderedGroup[];
-  entryCount: number;
-  openAlso: boolean;
+  topics: RenderedTopic[];
+  changeCount: number;
+  open: boolean;
 }
 
-const { id, product, productLabel, version, date, unreleased, latest, lead, highlights, groups, entryCount, openAlso } =
-  Astro.props;
+const { id, product, productLabel, version, date, unreleased, latest, lead, topics, changeCount, open } = Astro.props;
 
 const prLabel = (pr: PrLink) => (/\/issues\//.test(pr.url) ? `Issue ${pr.number}` : `Pull request ${pr.number}`);
-const alsoTitle = highlights.length > 0 ? 'Also in this release' : 'In this release';
 ---
 
 <article class="cl-release" id={id} data-product={product} data-unreleased={unreleased ? 'true' : 'false'}>
@@ -70,59 +72,62 @@ const alsoTitle = highlights.length > 0 ? 'Also in this release' : 'In this rele
     <p class="cl-lead">{lead}</p>
   </header>
 
-  {highlights.map((highlight) => (
-    <section class="cl-hl" id={highlight.id} data-area={highlight.area}>
-      <div class="cl-hl-head">
-        <h3 class="cl-hl-title">{highlight.title}</h3>
-        <span class="cl-area-chip">{highlight.areaLabel}</span>
-      </div>
-      <div class="cl-hl-body cl-prose" set:html={highlight.html} />
-      {highlight.shots.length > 0 && <HighlightMedia shots={highlight.shots} label={`${highlight.title}, screenshots`} />}
-      {highlight.prs.length > 0 && (
-        <p class="cl-hl-prs">
-          {highlight.prs.map((pr) => (
-            <a class="cl-pr" href={pr.url} aria-label={prLabel(pr)}>#{pr.number}</a>
-          ))}
-        </p>
-      )}
-    </section>
-  ))}
-
-  {entryCount > 0 && (
-    <details class="cl-also" open={openAlso}>
+  {changeCount > 0 && (
+    <details class="cl-body" open={open}>
       <summary class="cl-also-head">
-        <span class="cl-also-title">{alsoTitle}</span>
-        <span class="cl-also-count">{entryCount} {entryCount === 1 ? 'change' : 'changes'}</span>
+        <span class="cl-also-title">{open ? 'Changes' : 'Show changes'}</span>
+        <span class="cl-also-count">{changeCount} {changeCount === 1 ? 'change' : 'changes'}</span>
         <span class="cl-chevron" aria-hidden="true"></span>
       </summary>
-      <div class="cl-also-body">
-        {groups.map((group) => (
-          <section class="cl-group" data-area={group.area}>
-            <h4 class="cl-group-label">{group.label}</h4>
-            <ul class="cl-entries">
-              {group.entries.map((entry) => (
-                <li class="cl-entry" data-area={group.area}>
-                  <span class:list={['cl-tag', `cl-tag--${entry.type.toLowerCase()}`]}>{entry.type}</span>
-                  <div class="cl-entry-main">
-                    <span class="cl-entry-line">
-                      <span set:html={entry.leadHtml} />
-                      {entry.prs.map((pr) => (
-                        <a class="cl-pr" href={pr.url} aria-label={prLabel(pr)}>#{pr.number}</a>
-                      ))}
-                    </span>
-                    {entry.restHtml && (
-                      <details class="cl-more">
-                        <summary>More</summary>
-                        <div class="cl-prose" set:html={entry.restHtml} />
-                      </details>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
-      </div>
+
+      {topics.map((topic) => (
+        <section class="cl-topic">
+          <h3 class="cl-topic-title">{topic.label}</h3>
+          {topic.shots.length > 0 && <HighlightMedia shots={topic.shots} label={`${topic.label}, screenshots`} />}
+          <ul class="cl-entries">
+            {topic.highlights.map((highlight) => (
+              <li class="cl-entry cl-entry--highlight" id={highlight.id}>
+                <span class="cl-tag cl-tag--new">New</span>
+                <div class="cl-entry-main">
+                  <span class="cl-entry-line">
+                    <strong>{highlight.title}.</strong>{' '}
+                    <span class="cl-say" set:html={highlight.leadHtml} />
+                    {highlight.prs.map((pr) => (
+                      <a class="cl-pr" href={pr.url} aria-label={prLabel(pr)}>#{pr.number}</a>
+                    ))}
+                  </span>
+                  {highlight.restHtml && (
+                    <details class="cl-more">
+                      <summary>More</summary>
+                      <div class="cl-prose" set:html={highlight.restHtml} />
+                    </details>
+                  )}
+                </div>
+              </li>
+            ))}
+            {topic.entries.map((entry) => (
+              <li class="cl-entry">
+                <span class:list={['cl-tag', `cl-tag--${entry.type.toLowerCase()}`]}>{entry.type}</span>
+                <div class="cl-entry-main">
+                  <span class="cl-entry-line">
+                    {entry.titled ? <strong set:html={entry.leadHtml} /> : <span set:html={entry.leadHtml} />}
+                    {entry.sayHtml && <Fragment>{' '}<span class="cl-say" set:html={entry.sayHtml} /></Fragment>}
+                    {entry.prs.map((pr) => (
+                      <a class="cl-pr" href={pr.url} aria-label={prLabel(pr)}>#{pr.number}</a>
+                    ))}
+                  </span>
+                  {entry.restHtml && (
+                    <details class="cl-more">
+                      <summary>More</summary>
+                      <div class="cl-prose" set:html={entry.restHtml} />
+                    </details>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
     </details>
   )}
 </article>

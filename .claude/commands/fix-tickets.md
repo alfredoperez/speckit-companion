@@ -105,6 +105,7 @@ Dispatch all disjoint tasks **in a single message** so they run concurrently. Ea
 - **Verifies the defect still reproduces on current `main`** before building. Stale tasks are common; if it's already fixed, STOP and report that with evidence instead of inventing a change.
 - Fixes it **directly** — no `/speckit-companion-*` chain, no `specs/NNN-*/` folder.
 - Updates the docs the change requires (`CLAUDE.md`'s doc-map is not optional in light mode).
+- Writes the changelog entry with `/changelog-entry` when a user will meet the change.
 - Runs `npm run compile && npm test` (+ `npm run package` if the manifest/webview changed). **Does not return green if red.**
 - Commits on a branch named `light/<slug>` and **pushes**.
 - Returns `{ branch, filesChanged[], testsPassed, summary, escalate? }`.
