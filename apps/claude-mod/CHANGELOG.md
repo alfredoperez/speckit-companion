@@ -18,6 +18,8 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 - **Steps done alongside Specify say `with Specify`.** Plan and Tasks say where their time went instead of showing an empty time, and the run shows its total.
 
 ### Fixed
+- **A record behind the files follows the files.** Without Companion's recorder, a written document finishes its step even when the run record stopped earlier.
+- **A copied template is not a finished step.** An empty file, an untouched Spec Kit template or a task list with no task leaves its step open.
 - **The activity line stops when the turn does.** After a turn ends the pane reads `Plan written · Tasks next` or `Implement stopped at 9 of 10 · T010 left`, never `Writing the plan`.
 - **The mod starts in a session already open.** After installing and running `/reload-plugins`, the band, pane and `/spec` start on first use, no restart of Claude Code needed.
 - **Back keeps the focus.** After `b` closes a document, focus lands on the step you opened, so Enter and the arrow keys carry on from there.

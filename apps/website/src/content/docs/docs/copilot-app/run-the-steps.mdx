@@ -18,10 +18,12 @@ Each button on the board sends one command into the chat, and your agent runs th
 | The project and the spec | The buttons send |
 | --- | --- |
 | The [Companion Spec Kit extension](/docs/install) is installed | `/speckit.companion.*` |
-| It is not installed | The stock `/speckit.plan`, `/speckit.tasks` and `/speckit.implement` |
+| It is not installed | The stock plan, tasks and implement commands |
 | The spec was started with the Spec Kit workflow | The stock commands, even where Companion is installed |
 
 A spec keeps the workflow it was started with, so a run never switches halfway. The board says which commands it is using under the next-step button.
+
+The board spells each command the way your project registers it. A project whose commands are skills (`.github/skills/speckit-plan/`) gets `/speckit-plan`, and one whose commands are prompt files (`.github/prompts/speckit.plan.prompt.md`) gets `/speckit.plan`. The line under the button and **Show prompt** both show the spelling that was sent.
 
 <DocFigure
   src="live-copilot-next-step.png"
@@ -31,9 +33,21 @@ A spec keeps the workflow it was started with, so a run never switches halfway. 
 
 ## What lands in the chat
 
-A button sends two things: the command, and one sentence telling the agent to read its run instructions from a file. The instructions themselves, which tell the agent how to record the run, are written to `.speckit-companion/prompts/` in the project, so the chat stays short. That folder is ignored by git.
+Where Companion is installed, a button sends two things: the command, and one sentence telling the agent to read its run instructions from a file. The instructions themselves, which tell the agent how to record the run, are written to `.speckit-companion/prompts/` in the project, so the chat stays short. That folder is ignored by git.
 
-After a send, a note at the bottom of the board shows the message that was sent, with **Show prompt**, **Copy** and the path of the instructions file.
+In a stock Spec Kit project a button sends the command and nothing else. There are no run instructions, because the script they rely on comes with Companion.
+
+After a send, a note at the bottom of the board shows the message that was sent, with **Show prompt**, **Copy** and the path of the instructions file when there is one.
+
+## How the board knows where a spec stands
+
+While the agent works on a step the board sent, that step shows as **Running**. It stays that way until the chat turn ends.
+
+In a stock project the board reads each step from the files: a written spec file means Specify is done, a written `plan.md` means Plan is done, a written `tasks.md` means Tasks is done, and ticked tasks show how far Implement is. An empty file, or the template Spec Kit copies in when a step starts, does not count. The next step's button is there as soon as the previous step's document is written. The board reads the files the same way when a run record has fallen behind them.
+
+Where Companion is installed its run record leads, so a step that is still running is never shown as done because a file appeared early.
+
+For a step you send from the board in a stock project, the board notes when it sent the step and when that chat turn ended, if the step's document was written during it. The Overview shows a time for those steps only, and says so. A step you type into the chat yourself has no time, and neither does a second run of a step the spec is already past.
 
 ## When Companion is not installed
 
@@ -47,7 +61,7 @@ The board still works with stock Spec Kit, and it says so in one line on the New
 
 ## Good to know
 
-- **The board never edits a spec.** It does not touch `.spec-context.json` or any spec file; the commands it sends do that. The only files it writes are its own run instructions under `.speckit-companion/prompts/`.
+- **The board never edits a spec document.** The commands it sends write the spec, the plan and the tasks. The board writes its own run instructions under `.speckit-companion/prompts/`, and in a stock project the start and finish of each step it sent, in the spec's `.spec-context.json`.
 - **You can ask the agent.** "Which specs are still open?" or "show me the export spec", and the board follows.
 
 ## Related

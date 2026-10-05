@@ -5,9 +5,10 @@ var FENCE_PATTERN = /^\s*(`{3,}|~{3,})/;
 var INLINE_CODE_PATTERN = /(`+)[^`]*?\1/g;
 var TASK_LINE_PATTERN = /^\s*[-*+]\s*\[([ xX])\]\s*(?:\*\*)?(T\d+)(?:\*\*)?\s*(.*)$/;
 var PHASE_HEADING = /^#{2,3}\s+(.+?)\s*$/;
+var CHECKBOX_LINE = /^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]\s+\S/;
 function* proseEntries(content) {
   let openFence = null;
-  for (const raw of content.split("\n")) {
+  for (const raw of content.split(/\r\n?|\n/)) {
     const fence = raw.match(FENCE_PATTERN)?.[1];
     if (openFence) {
       if (fence && fence[0] === openFence[0] && fence.length >= openFence.length) openFence = null;
@@ -19,6 +20,17 @@ function* proseEntries(content) {
     }
     yield { prose: raw.replace(INLINE_CODE_PATTERN, ""), raw };
   }
+}
+function hasCheckboxLine(content) {
+  for (const { prose } of proseEntries(content)) if (CHECKBOX_LINE.test(prose)) return true;
+  return false;
+}
+function firstHeading(content) {
+  for (const { raw } of proseEntries(content)) {
+    const heading = raw.match(/^#\s+(.*?)\s*$/);
+    if (heading) return heading[1];
+  }
+  return null;
 }
 function countTaskCheckboxes(content) {
   let checked = 0;
@@ -420,15 +432,80 @@ function deriveBadgesFromFiles(files, tasks) {
   }
   return { specify: done("spec"), plan: done("plan"), tasks: done("tasks"), implement };
 }
-function firstHeading(markdown) {
+function firstHeading2(markdown) {
   const line = markdown?.split("\n").find((l) => /^#\s+/.test(l));
   return line ? line.replace(/^#\s+/, "").replace(/^Feature Specification:\s*/i, "").trim() : null;
 }
-function buildSpecRow({ id, ctx, specText, files, tasksText, updatedAt }) {
+var FILE_STEPS = ["specify", "plan", "tasks"];
+var DOC_OF_STEP = { specify: "spec", plan: "plan", tasks: "tasks" };
+var DONE_STATUS = { specify: "specified", plan: "planned", tasks: "ready-to-implement", implement: "implemented" };
+var RUNNING_STATUS = { specify: "specifying", plan: "planning", tasks: "tasking", implement: "implementing" };
+var UNFILLED_TITLE = /^[^[\]]*:\s*\[FEATURE(?: NAME)?\]$/;
+var squash = (text) => text.replace(/\s+/g, " ").trim();
+var CONTEXT_WRITER = ".specify/extensions/companion/scripts/write-context.py";
+function recordLiveIn(exists) {
+  return exists(CONTEXT_WRITER);
+}
+function isWritten(kind, text, template = null) {
+  if (typeof text !== "string") return false;
+  const body = squash(text);
+  if (!body || UNFILLED_TITLE.test(firstHeading(text) ?? "") || typeof template === "string" && body === squash(template)) return false;
+  return kind !== "tasks" || hasCheckboxLine(text);
+}
+function writtenDocs(texts, templates = {}) {
+  return { spec: isWritten("spec", texts.spec, templates.spec), plan: isWritten("plan", texts.plan, templates.plan), tasks: isWritten("tasks", texts.tasks, templates.tasks) };
+}
+function statusRank(status) {
+  return Object.keys(STATUS_REACH).indexOf(status);
+}
+function statusFromSteps(steps) {
+  const running = PIPELINE_STEPS.find((step) => steps[step] === "in-progress");
+  if (running) return RUNNING_STATUS[running];
+  const last = [...PIPELINE_STEPS].reverse().find((step) => steps[step] === "completed");
+  return last ? DONE_STATUS[last] : "draft";
+}
+function withRunningStep(row, step) {
+  const steps = { ...row.steps, [step]: "in-progress" };
+  const status = RUNNING_STATUS[step];
+  return { ...row, steps, status, statusLabel: specStatusLabel(status), done: false };
+}
+function stepEvidence(row, step) {
+  if (step === "implement") return Boolean(row.tasks && row.tasks.total > 0 && row.tasks.checked === row.tasks.total);
+  return Boolean(row.written?.[DOC_OF_STEP[step]]);
+}
+function fillFromFiles(ctx, recorded, fromFiles) {
+  const history = Array.isArray(ctx.history) ? ctx.history : [];
+  const open = PIPELINE_STEPS.findIndex((step) => recorded[step] === "in-progress");
+  const steps = { ...recorded };
+  FILE_STEPS.forEach((step, idx) => {
+    const untouched = recorded[step] === "not-started" && !history.some((e) => e?.step === step);
+    if (untouched && (open === -1 || idx < open) && fromFiles[step] === "completed") steps[step] = "completed";
+  });
+  return steps;
+}
+function filesLead(recorded, fromFiles) {
+  const steps = {};
+  for (const step of PIPELINE_STEPS) steps[step] = recorded[step] === "completed" ? "completed" : fromFiles[step];
+  PIPELINE_STEPS.forEach((step, idx) => {
+    const overtaken = PIPELINE_STEPS.slice(idx + 1).some((later) => steps[later] !== "not-started");
+    if (recorded[step] === "in-progress" && steps[step] === "not-started" && !overtaken) steps[step] = "in-progress";
+  });
+  return steps;
+}
+function reconcileSteps(ctx, recorded, fromFiles, recordLive) {
+  const steps = recordLive ? fillFromFiles(ctx, recorded, fromFiles) : filesLead(recorded, fromFiles);
+  return PIPELINE_STEPS.every((step) => steps[step] === recorded[step]) ? null : steps;
+}
+function buildSpecRow({ id, ctx, specText, files, written = null, tasksText, updatedAt, recordLive = true }) {
   const name = id.split("/").pop();
   const tasks = tasksText != null ? countTaskCheckboxes(tasksText) : null;
-  const status = typeof ctx?.status === "string" ? ctx.status : null;
-  const steps = ctx ? deriveStepBadges(ctx) : deriveBadgesFromFiles(files, tasks);
+  const present = written ?? { spec: Boolean(files.spec), plan: Boolean(files.plan), tasks: Boolean(files.tasks) };
+  const fromFiles = deriveBadgesFromFiles(present, tasks);
+  const recorded = ctx ? deriveStepBadges(ctx) : null;
+  const reconciled = ctx ? reconcileSteps(ctx, recorded, fromFiles, recordLive) : null;
+  const steps = reconciled ?? recorded ?? fromFiles;
+  const recordedStatus = typeof ctx?.status === "string" ? ctx.status : null;
+  const status = reconciled && !TERMINAL.has(recordedStatus) ? statusFromSteps(steps) : recordedStatus;
   const history = Array.isArray(ctx?.history) ? ctx.history : [];
   const lastActivity = history.reduce((max, e) => typeof e?.at === "string" && e.at > max ? e.at : max, "") || null;
   const done = status ? TERMINAL.has(status) : steps.implement === "completed";
@@ -438,7 +515,7 @@ function buildSpecRow({ id, ctx, specText, files, tasksText, updatedAt }) {
     name,
     number: name.match(/^(\d+)-/)?.[1] ?? null,
     local: name.startsWith("_"),
-    title: typeof ctx?.specName === "string" && ctx.specName || firstHeading(specText) || name,
+    title: typeof ctx?.specName === "string" && ctx.specName || firstHeading2(specText) || name,
     workflow: typeof ctx?.workflow === "string" ? ctx.workflow : null,
     branch: typeof ctx?.branch === "string" ? ctx.branch : null,
     hasContext: ctx != null,
@@ -448,6 +525,7 @@ function buildSpecRow({ id, ctx, specText, files, tasksText, updatedAt }) {
     steps,
     tasks,
     files,
+    written: present,
     done,
     pendingReviews,
     lastActivity,
@@ -497,6 +575,7 @@ function timingSummaryText(timings) {
   return timings.totalMs != null ? `${formatElapsed(timings.totalMs)} active` : `Timing coverage: ${timings.measuredPhases} of ${timings.expectedPhases} phases`;
 }
 export {
+  CONTEXT_WRITER,
   DEFAULT_SPEC_DIRS,
   PIPELINE_STEPS,
   buildSpecRow,
@@ -507,14 +586,21 @@ export {
   findSpec,
   formatElapsed,
   isSpecFolder,
+  isWritten,
   listTasks,
   parseSpecContext,
   parseSpecDirsSetting,
   phaseProgress,
   phaseTimings,
   pickFeatureSpecName,
+  recordLiveIn,
   sortSpecs,
   specStatusLabel,
+  statusFromSteps,
+  statusRank,
+  stepEvidence,
   stepTiming,
-  timingSummaryText
+  timingSummaryText,
+  withRunningStep,
+  writtenDocs
 };

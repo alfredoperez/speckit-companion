@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DEFAULT_SPEC_DIRS } from './spec-rules.mjs';
+import { CONTEXT_WRITER, DEFAULT_SPEC_DIRS } from './spec-rules.mjs';
 import { isKnownStep, renderPreamble, renderSpecifyCreationLifecyclePreamble } from './vendor/preamble.mjs';
 
 export const STEP_COMMANDS = ['plan', 'tasks', 'implement'];
@@ -23,20 +23,20 @@ export function commandSetFor(root, workflow) {
     return workflow === 'speckit' ? 'speckit' : detectCommandSet(root);
 }
 
-const WORKSPACE_WRITER = '.specify/extensions/companion/scripts/write-context.py';
+const WORKSPACE_WRITER = CONTEXT_WRITER;
 const CHECKOUT_WRITER = fileURLToPath(new URL('../speckit-extension/scripts/write-context.py', import.meta.url));
 
-/** The context writer a stock run's preamble tells the agent to call: the workspace's copy, else this checkout's. */
-export function writerPath(root) {
+/** The context writer run instructions may name: the workspace's copy, else this checkout's; null when neither exists. */
+export function writerPath(root, checkout = CHECKOUT_WRITER) {
     if (existsSync(join(root, WORKSPACE_WRITER))) return WORKSPACE_WRITER;
-    return existsSync(CHECKOUT_WRITER) ? CHECKOUT_WRITER : WORKSPACE_WRITER;
+    return checkout && existsSync(checkout) ? checkout : null;
 }
 
 /** The model reads only title, status and url from a canvas's `open` result, so the instruction to stop rides in `status`. */
 export const OPEN_NOTE = 'The board is open: wait for the user\'s next instruction and do not start any work.';
 
 /** The rule appended to the session's system message: the strongest place to say what opening the board means. */
-export const SYSTEM_RULE = 'If the user only asks to open the SpecKit Companion canvas, open it and stop: do not read, test or implement any spec until they ask. A message that starts with a /speckit command is a request to run that command, so run it.';
+export const SYSTEM_RULE = 'If the user only asks to open the SpecKit Companion canvas, open it and stop: do not read, test or implement any spec until they ask. A message that starts with a /speckit command is a request to run that command, or the skill of that name, so run it.';
 
 /** What the catalog shows the model for the canvas, in the same words as the rule. */
 export const CANVAS_DESCRIPTION = 'A live board of every spec: its specify → plan → tasks → implement pipeline, task progress and run history, with a button that runs the next step. When the user only asks to open it, show it and stop: do not read, test or implement any spec until they ask.';
@@ -50,19 +50,30 @@ export function availableCommands(commandSet) {
     return SPEC_COMMANDS.filter(command => commandSet === 'companion' || !COMPANION_ONLY.has(command));
 }
 
-/** Where the command's body lives on disk, for hosts that don't resolve the slash command themselves. */
-export function commandInstructions(root, command, commandSet = 'companion') {
-    const dotted = commandSet === 'companion' ? `speckit.companion.${command}` : `speckit.${command}`;
+const dottedName = (command, commandSet) => (commandSet === 'companion' ? `speckit.companion.${command}` : `speckit.${command}`);
+const SKILL_DIRS = ['.github/skills', '.agents/skills', '.claude/skills'];
+
+/** How this project spells a command: dashed for a skill folder, dotted for a prompt or agent file, and a dotted guess (`registered` false) with the command's body when neither exists. */
+export function resolveCommand(root, command, commandSet = 'companion') {
+    const dotted = dottedName(command, commandSet);
     const dashed = dotted.replace(/\./g, '-');
-    const candidates = [
-        `.github/agents/${dotted}.agent.md`,
-        `.github/prompts/${dotted}.prompt.md`,
-        `.github/skills/${dashed}/SKILL.md`,
-        `.agents/skills/${dashed}/SKILL.md`,
-        `.claude/skills/${dashed}/SKILL.md`,
-        commandSet === 'companion' ? `.specify/extensions/companion/commands/${dotted}.md` : `.specify/templates/commands/${command}.md`,
-    ];
-    return candidates.find(candidate => existsSync(join(root, candidate))) ?? null;
+    const first = candidates => candidates.find(candidate => existsSync(join(root, candidate))) ?? null;
+    const skill = first(SKILL_DIRS.map(dir => `${dir}/${dashed}/SKILL.md`));
+    if (skill) return { name: dashed, registered: true, instructions: skill };
+    const prompt = first([`.github/prompts/${dotted}.prompt.md`, `.github/agents/${dotted}.agent.md`]);
+    if (prompt) return { name: dotted, registered: true, instructions: prompt };
+    const body = first([commandSet === 'companion' ? `.specify/extensions/companion/commands/${dotted}.md` : `.specify/templates/commands/${command}.md`]);
+    return { name: dotted, registered: false, instructions: body };
+}
+
+/** Where the command's body lives on disk. */
+export function commandInstructions(root, command, commandSet = 'companion') {
+    return resolveCommand(root, command, commandSet).instructions;
+}
+
+/** `/speckit-<step>` or `/speckit.<step>`: the pattern the board's buttons send for a command set, in this project's spelling. */
+export function commandPattern(root, commandSet = 'companion') {
+    return `/${resolveCommand(root, 'plan', commandSet).name.replace(/plan$/, '<step>')}`;
 }
 
 /** Where the board keeps the run instructions it writes, relative to the project root. The only place it writes. */
@@ -112,25 +123,23 @@ export function writeRunInstructions(root, name, content) {
     return `${PROMPTS_DIR}/${safeName(name)}`;
 }
 
-/**
- * The chat message a run button sends: the same `/speckit.companion.<cmd> <spec dir>` line the VS Code sidebar dispatches,
- * a pointer to the command's instructions so an agent without the slash command can still run it, and one sentence naming the
- * file that holds the step preamble VS Code appends so the run records itself.
- */
-export function buildPrompt(command, specId, commandSet = 'companion', instructions = null, instructionsFile = null) {
+/** The chat message a run button sends: the command as `spelling` has it, its body's path only when unregistered, and the instruction file's sentence when there is one. */
+export function buildPrompt(command, specId, commandSet = 'companion', spelling = null, instructionsFile = null) {
     if (!availableCommands(commandSet).includes(command)) {
         throw new Error(`Unknown command for the ${commandSet} command set: ${command}`);
     }
-    const prefix = commandSet === 'companion' ? 'speckit.companion' : 'speckit';
-    let text = `/${prefix}.${command} ${specId}`;
-    if (instructions) text += `\n\nIf /${prefix}.${command} is not a command here, read \`${instructions}\` and follow it for the spec in \`${specId}\`.`;
+    const name = spelling?.name ?? dottedName(command, commandSet);
+    let text = `/${name} ${specId}`;
+    if (spelling && !spelling.registered && spelling.instructions) text += `\n\nIf /${name} is not a command here, read \`${spelling.instructions}\` and follow it for the spec in \`${specId}\`.`;
     return instructionsFile ? `${text}\n\n${instructionsSentence(instructionsFile)}` : text;
 }
 
-/** The step preamble for a run button (plan, tasks, implement), or null for commands VS Code sends none for. */
-export function buildStepPreamble(command, specId, root, commandSet, now = new Date()) {
+/** The step preamble for a run button, or null: for commands VS Code sends none for, and for a stock run with no context writer to call. */
+export function buildStepPreamble(command, specId, root, commandSet, now = new Date(), writer = writerPath(root)) {
     if (!STEP_COMMANDS.includes(command) || !isKnownStep(command)) return null;
-    return renderPreamble(command, specId, now.toISOString(), commandSet === 'companion', writerPath(root));
+    const companion = commandSet === 'companion';
+    if (!companion && !writer) return null;
+    return renderPreamble(command, specId, now.toISOString(), companion, writer ?? WORKSPACE_WRITER);
 }
 
 /** What the New spec form offers, mirroring VS Code's create-spec dialog: Companion, Spec Kit, and Auto (Companion only). */
@@ -201,27 +210,28 @@ export function numberingRule(root, specDirs = DEFAULT_SPEC_DIRS) {
 /**
  * A new spec starts from a description, not a folder: specify mints the folder itself. The message is the command line with the
  * description, the folder number, and one sentence naming the file that will hold the lifecycle preamble that seeds `.spec-context.json`.
- * The caller writes `preamble` to `instructionsName` (`writeRunInstructions`) before it sends `prompt`.
+ * The caller writes `preamble` to `instructionsName` (`writeRunInstructions`) before it sends `prompt`; a stock run with no context writer gets neither.
  */
-export function buildSpecifyPrompt({ description, workflow, root, specDirs = DEFAULT_SPEC_DIRS, now = new Date() }) {
+export function buildSpecifyPrompt({ description, workflow, root, specDirs = DEFAULT_SPEC_DIRS, now = new Date(), writer = writerPath(root) }) {
     const text = String(description ?? '').replace(/\r\n?/g, '\n').trim();
     if (!text) throw new Error('Describe the feature to specify.');
     const installed = isCompanionInstalled(root);
     const { command, effective } = resolveSpecify(workflow, installed);
-    const instructions = commandInstructions(root, command.replace(/^speckit\.(companion\.)?/, ''), command.startsWith('speckit.companion') ? 'companion' : 'speckit');
-    let message = `/${command} ${text}`;
-    if (instructions) message += `\n\nIf /${command} is not a command here, read \`${instructions}\` and follow it with the feature description above.`;
+    const spelling = resolveCommand(root, command.replace(/^speckit\.(companion\.)?/, ''), effective);
+    let message = `/${spelling.name} ${text}`;
+    if (!spelling.registered && spelling.instructions) message += `\n\nIf /${spelling.name} is not a command here, read \`${spelling.instructions}\` and follow it with the feature description above.`;
     const numbering = numberingRule(root, specDirs);
     if (numbering) message += `\n\n${numbering}`;
-    const preamble = renderSpecifyCreationLifecyclePreamble(effective, null, now.toISOString(), effective === 'companion' && installed, writerPath(root), null);
+    const sent = { command: spelling.name, workflow: effective, startedAt: now.toISOString() };
+    if (effective !== 'companion' && !writer) return { ...sent, prompt: message, preamble: null, instructionsName: null, instructionsDoc: null };
+    const preamble = renderSpecifyCreationLifecyclePreamble(effective, null, now.toISOString(), effective === 'companion' && installed, writer ?? WORKSPACE_WRITER, null);
     const instructionsName = specifyInstructionsName(now);
     return {
+        ...sent,
         prompt: `${message}\n\n${instructionsSentence(`${PROMPTS_DIR}/${instructionsName}`)}`,
         preamble,
         instructionsName,
-        instructionsDoc: runInstructionsDoc(`/${command}`, preamble),
-        command,
-        workflow: effective,
+        instructionsDoc: runInstructionsDoc(`/${spelling.name}`, preamble),
     };
 }
 
@@ -237,7 +247,7 @@ export function buildInstallPrompt() {
 export function buildAskPrompt(spec) {
     return [
         `Look at the spec in \`${spec.id}\` (titled ${JSON.stringify(spec.title)}).`,
-        `Its run record says status "${spec.statusLabel}", current step "${spec.currentStep ?? 'none'}".`,
+        `The board shows it as "${spec.statusLabel}", current step "${spec.currentStep ?? 'none'}".`,
         'Tell me in a few lines where it stands, what is left, and the single next step. Read only: do not change any files.',
     ].join(' ');
 }

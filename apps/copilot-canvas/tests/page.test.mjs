@@ -274,6 +274,98 @@ describe('board page', { concurrency: false }, async () => {
         }
     });
 
+    it('keeps the nodes it has through a rescan that changed nothing, and a "Copied" through one that did', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-redraw-'));
+        mkdirSync(join(stockRoot, 'specs/001-starred-todos'), { recursive: true });
+        writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
+        writeFileSync(join(stockRoot, 'specs/001-starred-todos/.spec-context.json'), JSON.stringify({ workflow: 'speckit', specName: 'Starred todos', currentStep: 'specify', status: 'specified', history: [] }));
+        const stock = await createSpecServer({ root: stockRoot, send: async () => true });
+        const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark', permissions: ['clipboard-read', 'clipboard-write'] });
+        const stockPage = await context.newPage();
+        try {
+            await stockPage.goto(stock.url);
+            await stockPage.waitForSelector('.next .install-hint');
+            await stockPage.locator('.next .install-hint .btn-link').click();
+            await stockPage.locator('.next .install-hint__how button:has-text("Copy")').click();
+            await stockPage.locator('.next .install-hint__how button:has-text("Copied")').waitFor();
+            await stockPage.evaluate(() => { window.kept = { rail: document.querySelector('.rail'), card: document.querySelector('.spec-card') }; });
+            const scans = () => stockPage.evaluate(() => window.scans ?? 0);
+            await stockPage.evaluate(() => { new EventSource(`/api/events${location.search}`).addEventListener('snapshot', () => { window.scans = (window.scans ?? 0) + 1; }); });
+            await stockPage.waitForFunction(() => window.scans === 1);
+
+            stock.rescan();
+            await stockPage.waitForFunction(() => window.scans === 2);
+            await stockPage.waitForTimeout(150);
+            assert.deepEqual(await stockPage.evaluate(() => [document.querySelector('.rail') === window.kept.rail, document.querySelector('.spec-card') === window.kept.card]), [true, true], 'nothing was rebuilt');
+            assert.equal(await stockPage.locator('.next .install-hint__how button:has-text("Copied")').count(), 1);
+
+            writeFileSync(join(stockRoot, 'specs/001-starred-todos/plan.md'), '# Plan\n\nStore the flag.\n');
+            stock.rescan();
+            await stockPage.waitForSelector('.next-title:has-text("Next: Tasks")');
+            assert.equal(await stockPage.evaluate(() => document.querySelector('.rail') === window.kept.rail), false, 'a real change redraws');
+            assert.equal(await stockPage.locator('.next .install-hint__how button:has-text("Copied")').count(), 1, 'and the install line keeps its state');
+            assert.equal(await scans() >= 3, true);
+
+            mkdirSync(join(stockRoot, '.specify/extensions/companion'), { recursive: true });
+            stock.rescan();
+            await stockPage.waitForFunction(() => document.querySelectorAll('.install-hint').length === 0);
+            assert.match(await stockPage.locator('.command-hint').textContent(), /uses the Spec Kit workflow/, 'the card follows the project, not only the spec');
+        } finally {
+            await context.close();
+            await stock.close();
+        }
+    });
+
+    it('follows a stock run from the files: a record stuck on specifying, the dashed command, and the step it sent shown as running', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-stock-run-'));
+        const spec = join(stockRoot, 'specs/001-todo-stars');
+        mkdirSync(spec, { recursive: true });
+        for (const name of ['spec.md', 'plan.md']) writeFileSync(join(spec, name), `# Todo stars: ${name}\n`);
+        writeFileSync(join(spec, '.spec-context.json'), JSON.stringify({
+            workflow: 'speckit',
+            specName: 'Todo Stars',
+            currentStep: 'specify',
+            status: 'specifying',
+            history: [{ step: 'specify', substep: null, kind: 'start', by: 'extension', at: '2026-10-05T14:54:53.999Z' }],
+        }));
+        for (const step of ['specify', 'plan', 'tasks', 'implement']) {
+            mkdirSync(join(stockRoot, '.github/skills', `speckit-${step}`), { recursive: true });
+            writeFileSync(join(stockRoot, '.github/skills', `speckit-${step}`, 'SKILL.md'), `# ${step}\n`);
+        }
+        const stockSent = [];
+        const stock = await createSpecServer({ root: stockRoot, checkoutWriter: null, send: async (prompt) => { stockSent.push(prompt); return true; } });
+        const stockPage = await browser.newPage({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark' });
+        try {
+            await stockPage.goto(stock.url);
+            await stockPage.waitForSelector('.next-title:has-text("Next: Tasks")');
+            assert.equal((await stockPage.locator('.spec-card .pill').textContent()).trim(), 'Planned');
+            assert.deepEqual(await stockPage.locator('.rail .rail-state').allTextContents(), ['Done', 'Done', 'Not started', 'Not started']);
+            assert.match(await stockPage.locator('.command-hint').textContent(), /Buttons send \/speckit-<step> specs\/001-todo-stars to the chat\./);
+            if (SHOTS) await stockPage.screenshot({ path: join(SHOTS, '12-stock-run-from-files.png') });
+
+            await stockPage.click('.next .btn-primary');
+            await stockPage.waitForSelector('.next-title:has-text("Tasks is running")');
+            assert.equal(stockSent.at(-1), '/speckit-tasks specs/001-todo-stars');
+            assert.equal((await stockPage.locator('#toast-msg').textContent()).trim(), 'Sent /speckit-tasks to the chat');
+            await stockPage.click('#toast-actions button:has-text("Show prompt")');
+            assert.equal(await stockPage.locator('#toast-prompt').textContent(), '/speckit-tasks specs/001-todo-stars');
+            assert.equal(await stockPage.locator('#toast-file').isVisible(), false, 'no instruction file for a stock run');
+            assert.deepEqual(await stockPage.locator('.rail .rail-state').allTextContents(), ['Done', 'Done', 'Running', 'Not started']);
+            assert.equal((await stockPage.locator('.spec-card .pill').textContent()).trim(), 'Tasking');
+            if (SHOTS) await stockPage.screenshot({ path: join(SHOTS, '13-stock-run-step-running.png') });
+
+            writeFileSync(join(spec, 'tasks.md'), '- [ ] T001 Add the star\n');
+            stock.settle();
+            await stockPage.waitForSelector('.next-title:has-text("Next: Implement")');
+            assert.deepEqual(await stockPage.locator('.rail .rail-state').allTextContents(), ['Done', 'Done', 'Done', 'Not started']);
+        } finally {
+            await stockPage.close();
+            await stock.close();
+        }
+    });
+
     it('reads in light mode', async (t) => {
         if (skipWithoutChrome(t)) return;
         await page.emulateMedia({ colorScheme: 'light' });

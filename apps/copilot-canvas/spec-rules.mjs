@@ -1,6 +1,6 @@
 // The board's rules with no IO, ported from the VS Code viewer and bundled into apps/claude-mod by its build.
 
-import { countTaskCheckboxes, listTasks, phaseProgress } from './tasks.mjs';
+import { countTaskCheckboxes, firstHeading as documentTitle, hasCheckboxLine, listTasks, phaseProgress } from './tasks.mjs';
 import { deriveStepHistory, deriveTimingSummary, formatElapsed } from './vendor/step-history.mjs';
 
 export { countTaskCheckboxes, listTasks, phaseProgress, formatElapsed };
@@ -121,12 +121,101 @@ function firstHeading(markdown) {
     return line ? line.replace(/^#\s+/, '').replace(/^Feature Specification:\s*/i, '').trim() : null;
 }
 
-/** The board row for one spec folder, from the texts read off disk; `files` names the spec, plan and tasks files that exist. */
-export function buildSpecRow({ id, ctx, specText, files, tasksText, updatedAt }) {
+const FILE_STEPS = ['specify', 'plan', 'tasks'];
+const DOC_OF_STEP = { specify: 'spec', plan: 'plan', tasks: 'tasks' };
+const DONE_STATUS = { specify: 'specified', plan: 'planned', tasks: 'ready-to-implement', implement: 'implemented' };
+const RUNNING_STATUS = { specify: 'specifying', plan: 'planning', tasks: 'tasking', implement: 'implementing' };
+// The title of a stock Spec Kit template nobody has filled in, such as `Implementation Plan: [FEATURE]`.
+const UNFILLED_TITLE = /^[^[\]]*:\s*\[FEATURE(?: NAME)?\]$/;
+const squash = text => text.replace(/\s+/g, ' ').trim();
+
+/** Companion's context writer, relative to the project root: where it exists, its recorder owns the run record. */
+export const CONTEXT_WRITER = '.specify/extensions/companion/scripts/write-context.py';
+
+/** Whether a run record in this project can still advance; `exists` answers for a root-relative path, sync or async. */
+export function recordLiveIn(exists) {
+    return exists(CONTEXT_WRITER);
+}
+
+/** A document is written once it is not empty, not the template it was copied from, and for tasks holds at least one checkbox line. */
+export function isWritten(kind, text, template = null) {
+    if (typeof text !== 'string') return false;
+    const body = squash(text);
+    if (!body || UNFILLED_TITLE.test(documentTitle(text) ?? '') || (typeof template === 'string' && body === squash(template))) return false;
+    return kind !== 'tasks' || hasCheckboxLine(text);
+}
+
+/** Which of the spec, plan and tasks files are written, from their texts and the project's templates. */
+export function writtenDocs(texts, templates = {}) {
+    return { spec: isWritten('spec', texts.spec, templates.spec), plan: isWritten('plan', texts.plan, templates.plan), tasks: isWritten('tasks', texts.tasks, templates.tasks) };
+}
+
+/** How far along a status is, for a writer that must never move a record backwards; -1 for a status it does not know. */
+export function statusRank(status) {
+    return Object.keys(STATUS_REACH).indexOf(status);
+}
+
+/** The status a set of step badges amounts to. */
+export function statusFromSteps(steps) {
+    const running = PIPELINE_STEPS.find(step => steps[step] === 'in-progress');
+    if (running) return RUNNING_STATUS[running];
+    const last = [...PIPELINE_STEPS].reverse().find(step => steps[step] === 'completed');
+    return last ? DONE_STATUS[last] : 'draft';
+}
+
+/** A row with one step shown as running: the step a caller knows is in flight, whatever the record or the files say. */
+export function withRunningStep(row, step) {
+    const steps = { ...row.steps, [step]: 'in-progress' };
+    const status = RUNNING_STATUS[step];
+    return { ...row, steps, status, statusLabel: specStatusLabel(status), done: false };
+}
+
+/** Whether the files show a step finished: its document written, or for implement every task ticked. */
+export function stepEvidence(row, step) {
+    if (step === 'implement') return Boolean(row.tasks && row.tasks.total > 0 && row.tasks.checked === row.tasks.total);
+    return Boolean(row.written?.[DOC_OF_STEP[step]]);
+}
+
+// Where Companion records the run, the record leads: a written document only finishes a step the record has no entry for and that is not past an open step.
+function fillFromFiles(ctx, recorded, fromFiles) {
+    const history = Array.isArray(ctx.history) ? ctx.history : [];
+    const open = PIPELINE_STEPS.findIndex(step => recorded[step] === 'in-progress');
+    const steps = { ...recorded };
+    FILE_STEPS.forEach((step, idx) => {
+        const untouched = recorded[step] === 'not-started' && !history.some(e => e?.step === step);
+        if (untouched && (open === -1 || idx < open) && fromFiles[step] === 'completed') steps[step] = 'completed';
+    });
+    return steps;
+}
+
+// Where nothing can advance the record, the files lead: a written document finishes its step, and a step the record left open stays open only while no later step is done.
+function filesLead(recorded, fromFiles) {
+    const steps = {};
+    for (const step of PIPELINE_STEPS) steps[step] = recorded[step] === 'completed' ? 'completed' : fromFiles[step];
+    PIPELINE_STEPS.forEach((step, idx) => {
+        const overtaken = PIPELINE_STEPS.slice(idx + 1).some(later => steps[later] !== 'not-started');
+        if (recorded[step] === 'in-progress' && steps[step] === 'not-started' && !overtaken) steps[step] = 'in-progress';
+    });
+    return steps;
+}
+
+/** The record's badges checked against the files, or null when the record stands as it is. */
+function reconcileSteps(ctx, recorded, fromFiles, recordLive) {
+    const steps = recordLive ? fillFromFiles(ctx, recorded, fromFiles) : filesLead(recorded, fromFiles);
+    return PIPELINE_STEPS.every(step => steps[step] === recorded[step]) ? null : steps;
+}
+
+/** The board row for one spec folder; `files` names the documents that exist, `written` says which hold real content (existence when omitted). */
+export function buildSpecRow({ id, ctx, specText, files, written = null, tasksText, updatedAt, recordLive = true }) {
     const name = id.split('/').pop();
     const tasks = tasksText != null ? countTaskCheckboxes(tasksText) : null;
-    const status = typeof ctx?.status === 'string' ? ctx.status : null;
-    const steps = ctx ? deriveStepBadges(ctx) : deriveBadgesFromFiles(files, tasks);
+    const present = written ?? { spec: Boolean(files.spec), plan: Boolean(files.plan), tasks: Boolean(files.tasks) };
+    const fromFiles = deriveBadgesFromFiles(present, tasks);
+    const recorded = ctx ? deriveStepBadges(ctx) : null;
+    const reconciled = ctx ? reconcileSteps(ctx, recorded, fromFiles, recordLive) : null;
+    const steps = reconciled ?? recorded ?? fromFiles;
+    const recordedStatus = typeof ctx?.status === 'string' ? ctx.status : null;
+    const status = reconciled && !TERMINAL.has(recordedStatus) ? statusFromSteps(steps) : recordedStatus;
     const history = Array.isArray(ctx?.history) ? ctx.history : [];
     const lastActivity = history.reduce((max, e) => (typeof e?.at === 'string' && e.at > max ? e.at : max), '') || null;
     const done = status ? TERMINAL.has(status) : steps.implement === 'completed';
@@ -149,6 +238,7 @@ export function buildSpecRow({ id, ctx, specText, files, tasksText, updatedAt })
         steps,
         tasks,
         files,
+        written: present,
         done,
         pendingReviews,
         lastActivity,

@@ -1,5 +1,5 @@
 // A stand-in for `@github/copilot-sdk/extension`, which the Copilot host supplies and the repo does not install.
-// joinSession records its config on globalThis so a test can read what an extension registered.
+// joinSession records its config and the session events it is asked to watch on globalThis, so a test can read what an extension registered.
 export class CanvasError extends Error {
     constructor(code, message) {
         super(message);
@@ -11,5 +11,6 @@ export const createCanvas = (options) => ({ ...options, __canvas: true });
 
 export async function joinSession(config) {
     (globalThis.__copilotJoined ??= []).push(config);
-    return { send: async () => {}, log: () => {} };
+    const handlers = (globalThis.__copilotHandlers ??= {});
+    return { send: async (options) => { await globalThis.__copilotOnSend?.(options); }, log: () => {}, on: (type, handler) => { handlers[type] = handler; return () => {}; } };
 }
