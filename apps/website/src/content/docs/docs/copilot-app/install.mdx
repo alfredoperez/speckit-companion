@@ -18,7 +18,13 @@ cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion
 cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion
 ```
 
-Then start a new session in the Copilot app and ask: **Open the SpecKit Companion canvas**. It also appears under **Customize, Canvas**.
+A project copy is code the app will not run until you accept it. Since version 1.1.26 of the Copilot app:
+
+1. Commit the copy and open the project in the Copilot app.
+2. Choose **Review repository content** on the notice the app shows (it is also in the project's settings under **Repository trust**), check that it lists `speckit-companion`, and choose **Accept for new sessions**.
+3. Start a **new** session and ask: **Open the SpecKit Companion canvas**. It is also in the session's **+** menu under **Canvas**.
+
+The session that was already open when you accepted never gets the board. If the agent opens an empty `speckit-companion.md` in the editor instead, you are in one of those: start another session.
 
 <DocFigure
   src="live-copilot-board.png"
@@ -28,8 +34,10 @@ Then start a new session in the Copilot app and ask: **Open the SpecKit Companio
 
 | Where you copied it | When it shows up |
 | --- | --- |
-| Your user folder | In every new session |
-| The project | Only once the copy is on your default branch, because the Copilot app runs each session in a fresh worktree cut from that branch |
+| Your user folder | In every new session, with nothing to accept. Not in a project that ships extensions you have not accepted, because the app turns every extension off there |
+| The project | In sessions started after you accept the repository content, and only once the copy is on your default branch, because the Copilot app runs each session in a fresh worktree cut from that branch |
+
+The app accepts the exact files under `.github/extensions/`. When any of them changes, such as after you update the board, the project's **Repository trust** shows **Update available** and new sessions lose the board until you accept again.
 
 Use the user folder while you try it out.
 
