@@ -3,7 +3,15 @@ title: Run the steps from the board
 description: Which commands the board's buttons send into the GitHub Copilot app chat, and what the board does and does not do by itself.
 ---
 
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
 Each button on the board sends one command into the chat, and your agent runs the step from there.
+
+<DocFigure
+  src="live-copilot-sent-prompt.png"
+  alt="The board after Run tasks was pressed. A note reads Sent /speckit.tasks to the chat, with Hide prompt and Copy beside it, and under it the short message that was sent and the path of its run instructions file with Copy path."
+  caption="After a button is pressed: a short note, with Show prompt to see the message that went to the chat."
+/>
 
 ## Which commands the buttons send
 
@@ -14,6 +22,18 @@ Each button on the board sends one command into the chat, and your agent runs th
 | The spec was started with the Spec Kit workflow | The stock commands, even where Companion is installed |
 
 A spec keeps the workflow it was started with, so a run never switches halfway. The board says which commands it is using under the next-step button.
+
+<DocFigure
+  src="live-copilot-next-step.png"
+  alt="A planned spec on the board with its next step, Next: Tasks, and a Run tasks button. The line under it says buttons send /speckit.<step> specs/_01_demo-planned to the chat, and that this spec uses the Spec Kit workflow so it runs the standard commands."
+  caption="The next-step button, and under it the commands this spec's buttons send."
+/>
+
+<DocFigure
+  src="live-copilot-install-hint.png"
+  alt="The next-step card in a project without Companion. A line says SpecKit Companion is not installed in this project, so the standard Spec Kit commands run, with Install it opened to show the specify extension add command, a Copy button and Ask Copilot to install it."
+  caption="Where Companion is missing, the card says so and Install it shows the command to add it."
+/>
 
 ## Good to know
 
