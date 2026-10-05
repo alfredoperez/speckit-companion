@@ -672,17 +672,22 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
                     aria-hidden={index === 0 ? 'false' : 'true'}
                   >
                     {tab.clip ? (
-                      <video
-                        muted
-                        loop
-                        playsinline
-                        preload="none"
-                        poster={tab.clip.poster}
-                        aria-label={tab.clip.alt}
-                      >
-                        {tab.clip.webm && <source src={tab.clip.webm} type="video/webm" />}
-                        {tab.clip.mp4 && <source src={tab.clip.mp4} type="video/mp4" />}
-                      </video>
+                      <>
+                        <img
+                          class="stage-still"
+                          src={tab.clip.panel}
+                          alt={tab.clip.panelAlt}
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <video muted loop playsinline preload="none" aria-label={tab.clip.alt}>
+                          {tab.clip.webm && <source src={tab.clip.webm} type="video/webm" />}
+                          {tab.clip.mp4 && <source src={tab.clip.mp4} type="video/mp4" />}
+                        </video>
+                        <button type="button" class="stage-play" data-play data-analytics="demo_play_click" data-analytics-tab={tab.id}>
+                          <span aria-hidden="true">▶</span> Play the clip
+                        </button>
+                      </>
                     ) : (
                       <img src={tab.still.src} alt={tab.still.alt} loading="lazy" decoding="async" />
                     )}
@@ -696,7 +701,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       </div>
 
       <p class="demo-caption">
-        Pick one. The first four are clips recorded from the extension; Bugs and Ideas are screenshots of it.
+        Every picture is the extension itself. The first four have a short clip behind Play.
       </p>
     </div>
   </section>
@@ -1342,6 +1347,46 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     height: 100%;
     object-fit: cover;
     object-position: top left;
+  }
+
+  .stage-layer video {
+    position: absolute;
+    inset: 0;
+    display: none;
+    cursor: pointer;
+  }
+
+  .stage-layer[data-playing] video {
+    display: block;
+  }
+
+  .stage-layer[data-playing] .stage-play {
+    display: none;
+  }
+
+  .stage-play {
+    position: absolute;
+    right: var(--space-16);
+    bottom: var(--space-16);
+    padding: var(--space-9) var(--space-16);
+    background: var(--accent-solid);
+    border: 0;
+    border-radius: var(--radius-pill);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-bold);
+    cursor: pointer;
+    box-shadow: var(--shadow-lift);
+  }
+
+  .stage-play:hover {
+    filter: brightness(1.1);
+  }
+
+  .stage-play:focus-visible {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
   }
 
   .say-steps {
@@ -2326,35 +2371,14 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     const label = root.querySelector('[data-window-label]');
     if (!tabs.length) return;
 
-    // A clip is only worth playing once the viewer can see the whole frame.
-    // Until then the poster stands in, so the opening hold every composition
-    // now carries is actually the first thing anyone sees. `armed` flips once
-    // and stays flipped: after the first arrival, a tab click plays at once.
-    let armed = false;
     let current = tabs[0].dataset.tab;
 
-    const activeVideo = () => {
-      const panel = panels.find((p) => p.dataset.panel === current);
-      return panel ? panel.querySelector('video') : null;
-    };
-
-    // Always from frame one. Resuming mid-tour is the same bug as starting
-    // before arrival: the viewer sees a highlight with no idea what preceded it.
     // preload="none" means the element may never have fetched anything, and
     // raising preload alone does not start one: it needs an explicit load().
     const warmOne = (video) => {
       if (!video) return;
       if (video.preload !== 'auto') video.preload = 'auto';
       if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) video.load();
-    };
-
-    const start = (video) => {
-      if (!video || reduced.matches) return;
-      warmOne(video);
-      try {
-        video.currentTime = 0;
-      } catch {}
-      video.play().catch(() => {});
     };
 
     const select = (id) => {
@@ -2380,13 +2404,30 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         panel.toggleAttribute('data-active', on);
         panel.setAttribute('aria-hidden', on ? 'false' : 'true');
 
+        // Every tab opens on its still. A clip plays only when asked.
+        panel.removeAttribute('data-playing');
         const video = panel.querySelector('video');
-        if (!video) return;
-        // Reduced motion never plays. The poster is the whole experience.
-        if (on && armed) start(video);
-        else video.pause();
+        if (video) video.pause();
       });
     };
+
+    panels.forEach((panel) => {
+      const play = panel.querySelector('[data-play]');
+      const video = panel.querySelector('video');
+      if (!play || !video) return;
+      play.addEventListener('click', () => {
+        panel.setAttribute('data-playing', '');
+        warmOne(video);
+        try {
+          video.currentTime = 0;
+        } catch {}
+        video.play().catch(() => {});
+      });
+      video.addEventListener('click', () => {
+        video.pause();
+        panel.removeAttribute('data-playing');
+      });
+    });
 
     tabs.forEach((tab, index) => {
       tab.addEventListener('click', () => select(tab.dataset.tab));
@@ -2401,56 +2442,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     });
 
     select(tabs[0].dataset.tab);
-
-    // data-tabs and data-demo-frame sit on the same element, so the frame is
-    // the root; the query is only here if they ever come apart.
-    const frame = root.matches('[data-demo-frame]')
-      ? root
-      : root.querySelector('[data-demo-frame]') || root;
-
-    // preload="none" keeps the clips off the critical path, but it also means
-    // nothing is buffered when the frame arrives and the opening hold would
-    // stall exactly where it needs to be still. Fetch on approach instead.
-    if ('IntersectionObserver' in window && !reduced.matches) {
-      const warm = new IntersectionObserver(
-        (entries) => {
-          if (!entries.some((e) => e.isIntersecting)) return;
-          warm.disconnect();
-          // Only the clip that is about to play. The other three stay unfetched
-          // until someone actually picks their tab, which is the whole point of
-          // preload="none".
-          warmOne(activeVideo());
-        },
-        { rootMargin: '600px 0px' }
-      );
-      warm.observe(frame);
-
-      // Fully in view, not merely intersecting. A frame taller than the
-      // viewport can never reach ratio 0.9, so covering most of the screen
-      // counts too.
-      const seen = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            const whole = entry.intersectionRatio >= 0.9;
-            const fills = entry.intersectionRect.height >= window.innerHeight * 0.85;
-            const video = activeVideo();
-            if (entry.isIntersecting && (whole || fills)) {
-              armed = true;
-              // Paused means either never started or scrolled away from. Both
-              // want the same thing: run it again from the opening hold.
-              if (video && video.paused) start(video);
-            } else if (!entry.isIntersecting && video) {
-              video.pause();
-            }
-          }
-        },
-        { threshold: [0, 0.5, 0.9, 1] }
-      );
-      seen.observe(frame);
-    } else {
-      armed = true;
-      start(activeVideo());
-    }
   });
 
   // --- motion --------------------------------------------------------------
