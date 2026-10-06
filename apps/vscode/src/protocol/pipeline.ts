@@ -37,6 +37,53 @@ export interface StockHook {
     conditional: boolean;
 }
 
+/**
+ * A project running stock Spec Kit, drawn by the same panel.
+ *
+ * None of the Companion graph applies there: there are no nodes, no phases and
+ * no `companion.yml`, so the board is read from the project's own stock files
+ * and the only thing it can change is what stock Spec Kit itself offers.
+ */
+export interface StockStepRow {
+    id: string;
+    /** The command it dispatches. Empty for a gate, which waits for a person. */
+    command: string;
+    label: string;
+    kind: 'command' | 'gate';
+    /** The documents a run of it writes. */
+    writes: string[];
+    hooks: StockHookRow[];
+}
+
+/** One entry in `.specify/extensions.yml`, with the one switch stock Spec Kit owns. */
+export interface StockHookRow {
+    when: HookWhen;
+    /** The lifecycle step it attaches to, which is half of its address. */
+    step: string;
+    /** Its place among that key's entries — the other half. */
+    index: number;
+    extension: string;
+    command: string;
+    description: string;
+    enabled: boolean;
+    optional: boolean;
+    conditional: boolean;
+}
+
+export interface StockWorkflowView {
+    /** Whether the steps came from a workflow file or from the installed commands. */
+    source: 'workflow' | 'commands';
+    /** The workflow the steps were read from, when one is installed. */
+    workflow: { id: string; name: string; description: string } | null;
+    steps: StockStepRow[];
+    /** Presets applied under `.specify/presets/`, which override command bodies. */
+    presets: Array<{ id: string; name: string; description: string }>;
+    /** Whether the registry hooks live in a file this project has. */
+    registry: boolean;
+    /** Why Build does nothing here, said once. */
+    buildBlocked: string;
+}
+
 export interface PipelineHook {
     when: HookWhen;
     type: HookType;
@@ -540,10 +587,22 @@ export type BuilderToExtensionMessage =
         phases: Array<{ name: string; nodes: string[] }>;
     }
     /** The first-run line is read once; this is the person saying so. */
-    | { type: 'dismissFirstRun' };
+    | { type: 'dismissFirstRun' }
+    /** Switch one `.specify/extensions.yml` hook on or off. Stock projects only. */
+    | {
+        type: 'setStockHook';
+        step: string;
+        when: HookWhen;
+        index: number;
+        enabled: boolean;
+    }
+    /** Open a stock file the board drew from, named by the board. */
+    | { type: 'openStockFile'; file: 'registry' | 'workflow' };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }
+    /** This project runs stock Spec Kit, so the board draws that instead. */
+    | { type: 'stock'; view: StockWorkflowView }
     | { type: 'busy'; busy: boolean }
     /** A node's instructions, with the frontmatter and shared-part fences taken out. */
     | {

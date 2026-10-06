@@ -2664,3 +2664,223 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
     .pb-aside { max-width: none; }
 }
+
+/* ============================================
+   Stock Spec Kit
+   ============================================ */
+
+/* A project without the Companion extension reads top to bottom rather than
+   left to right: there are no phases to lay out side by side, and the honest
+   shape of a stock run is a numbered list of commands. */
+.pb-stock {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-4);
+    overflow-y: auto;
+}
+
+.pb-stock-workflow {
+    color: var(--text-primary);
+    cursor: default;
+}
+
+.pb-stock-section {
+    max-width: 44rem;
+}
+
+.pb-stock-heading {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.pb-stock-prose {
+    margin: var(--space-3) 0 0;
+    max-width: 40rem;
+    color: var(--text-body);
+    line-height: var(--leading-normal);
+}
+
+.pb-stock-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: stock-step;
+}
+
+.pb-stock-step {
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated);
+}
+
+/* A gate is the run waiting for a person, so it is drawn as a pause in the
+   sequence rather than as another command. */
+.pb-stock-step--gate {
+    background: none;
+    border-style: dashed;
+}
+
+.pb-stock-step-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.pb-stock-step-name {
+    counter-increment: stock-step;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.pb-stock-step-name::before {
+    content: counter(stock-step) '. ';
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.pb-stock-command {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pb-stock-chip {
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pb-stock-writes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-2) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Green is the panel's word for a file here too. */
+.pb-stock-file {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--success);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pb-stock-hooks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin: var(--space-3) 0 0;
+    padding: var(--space-2) 0 0;
+    border-top: 1px dashed var(--border);
+    list-style: none;
+}
+
+.pb-stock-hook {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.pb-stock-switch { margin: 0; }
+
+.pb-stock-hook-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    min-width: 0;
+    cursor: pointer;
+}
+
+.pb-stock-hook-when {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pb-stock-hook-text {
+    color: var(--text-body);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pb-stock-hook-meta {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+/* Switched off, and still legible: the switch is the way back on. */
+.pb-stock-hook--off .pb-stock-hook-text { color: var(--text-secondary); }
+
+.pb-stock-presets,
+.pb-stock-locked {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pb-stock-preset {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.pb-stock-preset-name { color: var(--text-primary); }
+
+.pb-stock-preset-note {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+/* The disabled register the rest of the panel already uses for a control that
+   is drawn and cannot act: the same opacity, and no hover of any kind. */
+.pb-stock-locked-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    opacity: 0.5;
+    cursor: default;
+}
+
+.pb-stock-locked-name { color: var(--text-primary); }
+
+.pb-stock-locked-note {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+@container builder (max-width: 640px) {
+    .pb-stock { padding: var(--space-3); }
+}

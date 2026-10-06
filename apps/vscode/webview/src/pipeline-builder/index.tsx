@@ -20,8 +20,10 @@ import {
     HookWhen,
     PipelineNode,
     PipelineStatus,
+    StockWorkflowView,
     isGraphError,
 } from '../../../src/protocol/pipeline';
+import { StockBoard } from './StockBoard';
 import { BrokenPipeline } from './BrokenPipeline';
 import { Canvas, hooksAt, withoutNode as withoutNodeOf } from './Canvas';
 import { Header } from './Header';
@@ -126,6 +128,8 @@ function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
 
 function App() {
     const [graph, setGraph] = useState<PipelineGraphResult | null>(null);
+    // A stock project is a different board, not a graph with things missing.
+    const [stock, setStock] = useState<StockWorkflowView | null>(null);
     const [buildState, setBuildState] = useState<PipelineBuildKind>('unconfigured');
     const [busy, setBusy] = useState(false);
     const [side, setSide] = useState<Side>(null);
@@ -148,7 +152,11 @@ function App() {
             const message = event.data as ExtensionToBuilderMessage;
             if (message.type === 'graph') {
                 setGraph(message.graph);
+                setStock(null);
                 setBuildState(message.buildState);
+            } else if (message.type === 'stock') {
+                setStock(message.view);
+                setGraph(null);
             } else if (message.type === 'busy') {
                 setBusy(message.busy);
             } else if (message.type === 'notice') {
@@ -184,6 +192,20 @@ function App() {
         vscode.postMessage({ type: 'ready' });
         return () => window.removeEventListener('message', onMessage);
     }, []);
+
+    if (stock) {
+        return (
+            <StockBoard
+                view={stock}
+                status={status ?? (notice ? { tone: 'warning', text: notice } : null)}
+                onSetHook={flip => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'setStockHook', ...flip });
+                }}
+                onOpenFile={file => vscode.postMessage({ type: 'openStockFile', file })}
+            />
+        );
+    }
 
     if (!graph) {
         return <div class="builder-empty">Reading the pipeline…</div>;

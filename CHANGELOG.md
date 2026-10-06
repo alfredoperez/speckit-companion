@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **The Workflow Builder opens on stock Spec Kit.** It draws your project's own workflow, switches an extension hook on or off, and ==writes nothing Companion owns==. ([#887](https://github.com/alfredoperez/speckit-companion/pull/887)) <!-- area: pipeline-builder -->
+
 ### Changed
 
 - **The Pipeline Builder is renamed Workflow Builder.** The board that draws your Companion pipeline has a ==new name== in the command, the tab and the docs. ([#883](https://github.com/alfredoperez/speckit-companion/pull/883)) <!-- area: pipeline-builder -->

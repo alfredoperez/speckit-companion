@@ -13,6 +13,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { BrokenPipeline } from '../BrokenPipeline';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
+import { StockBoard } from '../StockBoard';
 import type {
     PipelineGraph,
     PipelineHook,
@@ -20,6 +21,9 @@ import type {
     PipelinePhase,
     PipelineRepair,
     PipelineStep,
+    StockHookRow,
+    StockStepRow,
+    StockWorkflowView,
 } from '../../../../src/protocol/pipeline';
 
 // ── Fixtures ────────────────────────────────────────────
@@ -593,5 +597,123 @@ export const RepairInFlight: Story = {
     render: () => (
         <BrokenPipeline error={EMPTY_PHASE_ERROR} repairs={[DROP_EMPTY]} busy
             {...REPAIR_ACTIONS} />
+    ),
+};
+
+// ── 7. A project without the Companion extension ────────
+
+const STOCK_ACTIONS = { onSetHook: noop, onOpenFile: noop };
+
+/** The steps stock Spec Kit's bundled workflow runs, as its YAML declares them. */
+const STOCK_STEPS: StockStepRow[] = [
+    {
+        id: 'specify', command: 'speckit.specify', kind: 'command',
+        label: 'Write the spec', writes: ['spec.md'], hooks: [],
+    },
+    {
+        id: 'review-spec', command: '', kind: 'gate',
+        label: 'Review the generated spec before planning.', writes: [], hooks: [],
+    },
+    {
+        id: 'plan', command: 'speckit.plan', kind: 'command',
+        label: 'Plan the work', writes: ['plan.md', 'research.md', 'data-model.md'], hooks: [],
+    },
+    {
+        id: 'tasks', command: 'speckit.tasks', kind: 'command',
+        label: 'Break it into tasks', writes: ['tasks.md'], hooks: [],
+    },
+    {
+        id: 'implement', command: 'speckit.implement', kind: 'command',
+        label: 'Implement the tasks', writes: [], hooks: [],
+    },
+];
+
+function stock(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
+    return {
+        source: 'workflow',
+        workflow: {
+            id: 'speckit',
+            name: 'Full SDD Cycle',
+            description: 'Runs specify → plan → tasks → implement with review gates',
+        },
+        steps: STOCK_STEPS,
+        presets: [],
+        registry: true,
+        buildBlocked: 'Build writes Companion\'s command files, and this project runs '
+            + 'stock Spec Kit. Nothing here is built.',
+        ...over,
+    };
+}
+
+function stockHook(
+    step: string, when: 'before' | 'after', index: number,
+    description: string, over: Partial<StockHookRow> = {},
+): StockHookRow {
+    return {
+        when, step, index, extension: 'git', command: 'speckit.git.commit',
+        description, enabled: true, optional: false, conditional: false, ...over,
+    };
+}
+
+export const StockProject: Story = {
+    name: '28 · A stock Spec Kit project',
+    render: () => <StockBoard view={stock()} status={null} {...STOCK_ACTIONS} />,
+};
+
+export const StockWithHooks: Story = {
+    name: '29 · Stock, with extension hooks',
+    render: () => {
+        const steps = STOCK_STEPS.map(step => {
+            if (step.id === 'specify') {
+                return {
+                    ...step,
+                    hooks: [
+                        stockHook('specify', 'before', 0,
+                            'Create feature branch before specification',
+                            { command: 'speckit.git.feature' }),
+                        stockHook('specify', 'after', 0,
+                            'Auto-commit after specification', { optional: true }),
+                    ],
+                };
+            }
+            if (step.id === 'implement') {
+                return {
+                    ...step,
+                    hooks: [
+                        stockHook('implement', 'before', 0,
+                            'Commit outstanding changes before implementation',
+                            { optional: true }),
+                        stockHook('implement', 'after', 0,
+                            'Open a pull request when the branch is clean',
+                            { enabled: false, conditional: true, extension: 'github' }),
+                    ],
+                };
+            }
+            return step;
+        });
+        return <StockBoard view={stock({ steps })} status={null} {...STOCK_ACTIONS} />;
+    },
+};
+
+export const StockWithPreset: Story = {
+    name: '30 · Stock, with a preset applied',
+    render: () => (
+        <StockBoard
+            view={stock({
+                source: 'commands',
+                workflow: null,
+                presets: [{
+                    id: 'companion-standard',
+                    name: 'Companion Standard',
+                    description: 'Stock spec-kit pipeline, unchanged, with Companion timing '
+                        + 'capture baked into every command.',
+                }],
+            })}
+            status={{
+                tone: 'done',
+                text: 'specify before hook is off',
+                detail: 'Saved to .specify/extensions.yml',
+            }}
+            {...STOCK_ACTIONS} />
     ),
 };

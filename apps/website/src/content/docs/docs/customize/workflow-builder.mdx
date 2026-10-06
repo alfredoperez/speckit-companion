@@ -7,7 +7,7 @@ import DocFigure from '../../../../components/journey/DocFigure.astro';
 
 The Workflow Builder draws the Companion pipeline your project runs as a board. Each step is a lane, and each lane is built from **nodes**, small blocks of instruction your assistant reads. You change them on the board, then build.
 
-Open it from the circuit icon at the top of the Specs view, or run **SpecKit Companion: Open Workflow Builder**. It needs the Companion Spec Kit extension.
+Open it from the circuit icon at the top of the Specs view, or run **SpecKit Companion: Open Workflow Builder**. On a project without the Companion Spec Kit extension it shows [the stock Spec Kit workflow](#a-project-without-the-companion-extension) instead.
 
 <DocFigure
   src="builder-board.png"
@@ -181,6 +181,20 @@ A failed build changes nothing. It names the step and leaves the working workflo
 | `.specify/extensions/companion/commands/` | What a build produces. Never edited by hand. |
 
 If the panel cannot draw, it offers repairs as buttons, narrowest first. **Open companion.yml** is always there.
+
+## A project without the Companion extension
+
+On a project that runs stock Spec Kit the board draws that project's own workflow, read from its files: `.specify/workflows/` when a workflow is installed, otherwise the `/speckit.*` commands your assistant has. Each step shows in run order with the documents it writes, the extension hooks attached to it, and any preset applied under `.specify/presets/`.
+
+The one thing you can change there is what stock Spec Kit itself offers: a hook's switch. Turning one on or off writes `enabled` straight into `.specify/extensions.yml`, which is the file Spec Kit reads, and nothing else in that file moves.
+
+| On a stock project | What happens |
+| --- | --- |
+| A hook's checkbox | Writes `enabled: true` or `false` into `.specify/extensions.yml`. Takes effect on the next run. |
+| **Build** | Disabled. A build assembles Companion's command files, and this project has none. |
+| Nodes, phases, node instructions, routing decisions, document shape, workflows | Listed and not editable. They are Companion's. |
+
+Nothing is written to `.specify/companion.yml` or `.specify/companion/` on a stock project. To shape the rest on this board, install the Companion extension for Spec Kit from [Install in VS Code](/docs/ide/install/#vscode-companion).
 
 ## Related
 
