@@ -228,6 +228,14 @@ function renderTable(rows: string[]): string {
 /**
  * Parse and render markdown content to HTML
  */
+const FENCE_LANGUAGE = /^[a-z0-9][a-z0-9_+#.-]{0,31}$/;
+
+/** A fence's info string is someone else's text and lands in two attributes, so only a plain language name survives. */
+function fenceLanguage(info: string): string {
+    const word = info.trim().split(/\s+/, 1)[0].toLowerCase();
+    return FENCE_LANGUAGE.test(word) ? word : '';
+}
+
 export function renderMarkdown(markdown: string): string {
     // Normalize line endings (CRLF / lone CR → LF) before anything else. The
     // block-level regexes below are $-anchored and JS '.' does not match '\r',
@@ -319,7 +327,7 @@ export function renderMarkdown(markdown: string): string {
             }
             if (!inCodeBlock) {
                 inCodeBlock = true;
-                codeBlockLang = trimmedLine.slice(3).trim();
+                codeBlockLang = fenceLanguage(trimmedLine.slice(3));
                 codeContent = [];
             } else {
                 inCodeBlock = false;
@@ -335,8 +343,8 @@ export function renderMarkdown(markdown: string): string {
                     html += `<pre class="tree-structure"><code>${body}</code></pre>\n`;
                 } else {
                     // Regular code block with language
-                    const langClass = codeBlockLang ? ` class="language-${escapeHtml(codeBlockLang)}"` : '';
-                    const dataLang = codeBlockLang ? ` data-language="${escapeHtml(codeBlockLang)}"` : '';
+                    const langClass = ` class="language-${codeBlockLang}"`;
+                    const dataLang = ` data-language="${codeBlockLang}"`;
                     html += `<pre class="code-block"${dataLang}><code${langClass}>${escapeHtml(codeText)}</code></pre>\n`;
                 }
             }
