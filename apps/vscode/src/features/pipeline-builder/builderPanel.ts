@@ -560,7 +560,7 @@ export class PipelineBuilderPanel {
         openStockFile: async message => {
             const file = message.file === 'registry'
                 ? path.join(this.workspaceRoot, EXTENSIONS_REL)
-                : this.stockWorkflowFile();
+                : stockWorkflowFile(this.workspaceRoot);
             if (!file || !fs.existsSync(file)) {
                 this.say('That file is not in this project.');
                 return;
@@ -824,9 +824,6 @@ export class PipelineBuilderPanel {
         await this.dispatch(message);
     };
 
-    private stockWorkflowFile(): string | null {
-        return stockWorkflowFile(this.workspaceRoot);
-    }
 
     /**
      * Run the build, and say here what it did.
