@@ -1220,6 +1220,269 @@
       },
       "referencedBy": {},
       "notes": "Captured from the Copilot app canvas in apps/copilot-canvas and shown on the docs page guides/copilot-app. Retake by hand against the canvas, keep the filenames."
+    },
+    {
+      "id": "live-bugs-ideas-panes",
+      "name": "Sidebar: Specs, Bugs and Ideas panes",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-bugs-ideas-panes.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-bugs-ideas-panes.png": "The SpecKit side bar with three panes: Specs with its Active and Completed groups, Bugs grouped as To fix, Verified and Closed with a severity and outcome on each row, and Ideas grouped as Assessing and Decided with the verdict beside each idea."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-bugs-ideas-panes.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
+    },
+    {
+      "id": "live-bug-story",
+      "name": "A bug's Story page",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-bug-story.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-bug-story.png": "A bug open on its Story tab, badge Verified. The page starts with Fixed and verified, one line of facts, then the first timeline step, What was wrong, dated from the assessment."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-bug-story.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
+    },
+    {
+      "id": "live-idea-decision",
+      "name": "An idea's Decision page",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-idea-decision.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-idea-decision.png": "An idea open on its Decision stage, badge Go, with all five stages checked in the rail. The page starts with Go and the first sentence of the rationale, and the Scorecard begins below with Problem validity rated strong."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-idea-decision.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
+    },
+    {
+      "id": "live-report-answer",
+      "name": "Answer an open question from a report",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-report-answer.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-report-answer.png": "A bug's Assessment tab scrolled to Open Questions. The question carries a Needs an answer label and an Answer link, and the answer box under it is open with a reply typed in and a Send answer button."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-report-answer.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
+    },
+    {
+      "id": "live-tasks-create-issues",
+      "name": "Tasks tab: Create GitHub issues",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-tasks-create-issues.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-tasks-create-issues.png": "The Tasks tab with the footer reading Next: Implement, then Regenerate, Other actions and Implement. Other actions is open on Analyze and Create GitHub issues."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-tasks-create-issues.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
+    },
+    {
+      "id": "live-converge-footer",
+      "name": "A finished spec's footer with Converge",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-converge-footer.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-converge-footer.png": "The Overview of a completed spec with the footer reading Run complete, then Converge, Archive and Reactivate, and no forward button."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-converge-footer.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
+    },
+    {
+      "id": "live-copilot-board",
+      "name": "The Copilot app spec board",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-copilot-board.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-copilot-board.png": "The SpecKit Companion board open on a project with five specs. The list on the left gives each spec a status and a four-step bar, and Demo, Tasked is open on the right with its pipeline and a Run implement button."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-copilot-board.png": [
+          "README.md",
+          "apps/speckit-extension/README.md"
+        ]
+      },
+      "notes": "Taken headless by npm run shots:board; keep the filename."
+    },
+    {
+      "id": "live-mod-window",
+      "name": "The Claude Code mod in a terminal window",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-mod-window.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-mod-window.png": "A Claude Code terminal with the mod's pane beside the transcript on its Run tab: Specify, Plan and Tasks ticked with their times, Implement running, the documents, and three of six tasks ticked. The band above the prompt names the spec and reads Plan done, Tasks 3/6, Implement running."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-mod-window.png": [
+          "README.md",
+          "apps/speckit-extension/README.md"
+        ]
+      },
+      "notes": "Drawn by npm run check:terminal --look site; keep the filename."
+    },
+    {
+      "id": "builder-board",
+      "name": "Pipeline Builder board",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/generated/builder-board.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/generated/builder-board.png": "The Pipeline Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark."
+      },
+      "referencedBy": {
+        "docs/screenshots/generated/builder-board.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Generated by npm run clips:capture; keep the filename."
     }
   ]
 }

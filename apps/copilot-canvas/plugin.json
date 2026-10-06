@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "speckit-companion",
-  "description": "A live board of every spec in your repo: the specify → plan → tasks → implement pipeline, task progress and run history, with a button that runs the next SpecKit Companion step.",
+  "description": "A live board of every spec in your repo, next to the chat: each spec's specify → plan → tasks → implement pipeline, its documents, task progress and run history, and a button that runs the next step. Works with stock Spec Kit and with SpecKit Companion.",
   "version": "0.1.0",
   "author": {
     "name": "Alfredo Perez",
