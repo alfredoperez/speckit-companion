@@ -1,6 +1,6 @@
 ---
 title: Hooks
-description: Attach your own work before or after a part of a Companion step, from the Pipeline Builder or by hand in companion.yml.
+description: Attach your own work before or after a part of a Companion step, from the Workflow Builder or by hand in companion.yml.
 ---
 
 import DocFigure from '../../../../components/journey/DocFigure.astro';
@@ -11,14 +11,14 @@ Hooks need the Companion Spec Kit extension and live in `.specify/companion.yml`
 
 ## The four kinds
 
-| In the Pipeline Builder | In `companion.yml` | What it is |
+| In the Workflow Builder | In `companion.yml` | What it is |
 | --- | --- | --- |
 | **Skill** | `{ type: skill, ref: <name> }` | Asks the assistant to use a skill you already have. Try this first. |
 | **Instruction** | `{ type: prompt, text: "..." }` | One instruction, kept in the file and dropped in at that point |
 | **Command** | `{ type: command, run: "..." }` | A shell line. Your assistant needs a terminal. |
 | **Node** | `{ type: node, ref: <id> }` | Your own file at `.specify/companion/nodes/<id>.md`, reusable in more than one place |
 
-## Attach one from the Pipeline Builder
+## Attach one from the Workflow Builder
 
 Use **Add hook** from a phase's `+` menu, a node's panel, or the dotted slot between nodes. Pick where it runs, then the kind.
 
@@ -28,7 +28,7 @@ Use **Add hook** from a phase's `+` menu, a node's panel, or the dotted slot bet
   caption="Add hook: where it runs, then what kind of work it is."
 />
 
-Your hooks show under the Companion mascot. Hooks from an installed extension show as `via <extension>`. Nothing takes effect until you **Build**. See [Pipeline Builder](/docs/customize/pipeline-builder#build).
+Your hooks show under the Companion mascot. Hooks from an installed extension show as `via <extension>`. Nothing takes effect until you **Build**. See [Workflow Builder](/docs/customize/workflow-builder#build).
 
 ## Move one
 
@@ -85,5 +85,5 @@ Spec Kit has its own hooks that fire after each stock command, such as `after_sp
 
 ## Related
 
-- [Pipeline Builder](/docs/customize/pipeline-builder) covers the board the hooks sit on.
+- [Workflow Builder](/docs/customize/workflow-builder) covers the board the hooks sit on.
 - [Your own workflow](/docs/customize/your-own-workflow) covers the other keys in `companion.yml`.

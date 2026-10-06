@@ -1,5 +1,5 @@
 /**
- * The pipeline builder panel.
+ * The Workflow Builder panel.
  *
  * Shows the pipeline a build would produce — steps, phases, nodes, hooks, the
  * decision and where its verdicts route — and what this project changed from the
@@ -143,7 +143,7 @@ export class PipelineBuilderPanel {
         }
         const panel = vscode.window.createWebviewPanel(
             VIEW_TYPE,
-            'Pipeline Builder',
+            'Workflow Builder',
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -784,7 +784,7 @@ export class PipelineBuilderPanel {
         const script = resolveGraphScript(this.workspaceRoot, this.context.extensionPath);
         const graph: PipelineGraphResult = script
             ? await readPipelineGraph(script, this.workspaceRoot)
-            : { error: 'The pipeline builder needs the companion spec-kit extension.' };
+            : { error: 'The Workflow Builder needs the companion spec-kit extension.' };
         // Whether the board still has to explain itself is a fact about this
         // workspace's reader, not about the pipeline, so the graph script has no
         // way to know it and the panel fills it in on the way out.
@@ -822,7 +822,7 @@ export class PipelineBuilderPanel {
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${id}'; font-src ${webview.cspSource};">
 <link href="${tokens}" rel="stylesheet">
 <link href="${styles}" rel="stylesheet">
-<title>Pipeline Builder</title>
+<title>Workflow Builder</title>
 </head>
 <body>
 <div id="app-root"></div>

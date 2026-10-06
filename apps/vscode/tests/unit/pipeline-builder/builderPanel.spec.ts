@@ -121,7 +121,7 @@ describe('drawing the pipeline', () => {
         graph.resolveGraphScript.mockReturnValue(null);
         await panel.__receive({ type: 'ready' });
         expect(panel.__lastPosted('graph').graph).toEqual({
-            error: 'The pipeline builder needs the companion spec-kit extension.',
+            error: 'The Workflow Builder needs the companion spec-kit extension.',
         });
         expect(graph.readPipelineGraph).not.toHaveBeenCalled();
     });

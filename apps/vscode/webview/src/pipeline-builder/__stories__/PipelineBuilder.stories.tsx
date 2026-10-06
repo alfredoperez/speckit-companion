@@ -1,5 +1,5 @@
 /**
- * Every situation the Pipeline Builder can be in, side by side.
+ * Every situation the Workflow Builder can be in, side by side.
  *
  * The panel is hard to review from a running extension: reaching a state means
  * editing `companion.yml`, rebuilding, and hoping the state you wanted is the

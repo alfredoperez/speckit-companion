@@ -1087,7 +1087,7 @@
     },
     {
       "id": "builder-move-to-phase",
-      "name": "Pipeline Builder: Move to phase",
+      "name": "Workflow Builder: Move to phase",
       "kind": "still",
       "status": "shipped",
       "composition": null,
@@ -1108,11 +1108,11 @@
         "docs/screenshots/generated/builder-move-to-phase.png": "The panel for the Create the feature branch node, its Order row offering Move up, Move down and Move to phase, with the phase list open on gather, author and classify, each marked Joins the end of it."
       },
       "referencedBy": {},
-      "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'Moving a node to another phase'. Shown on the site's guides/pipeline-builder page."
+      "notes": "Shot by capture-docs-images.mjs from the Workflow Builder Guide story 'Moving a node to another phase'. Shown on the site's customize/workflow-builder page."
     },
     {
       "id": "builder-side-panel",
-      "name": "Pipeline Builder in a side panel",
+      "name": "Workflow Builder in a side panel",
       "kind": "still",
       "status": "shipped",
       "composition": null,
@@ -1130,14 +1130,14 @@
       },
       "unnormalized": [],
       "alt": {
-        "docs/screenshots/generated/builder-side-panel.png": "The Pipeline Builder docked narrow: the specify step's gather and author phases at the panel's full width, a dashed rule with a plus between steps, and the plan step stacked underneath."
+        "docs/screenshots/generated/builder-side-panel.png": "The Workflow Builder docked narrow: the specify step's gather and author phases at the panel's full width, a dashed rule with a plus between steps, and the plan step stacked underneath."
       },
       "referencedBy": {},
-      "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'The board in a side panel'. Shown on the site's guides/pipeline-builder page."
+      "notes": "Shot by capture-docs-images.mjs from the Workflow Builder Guide story 'The board in a side panel'. Shown on the site's customize/workflow-builder page."
     },
     {
       "id": "builder-move-hook",
-      "name": "Pipeline Builder: moving a hook",
+      "name": "Workflow Builder: moving a hook",
       "kind": "still",
       "status": "shipped",
       "composition": null,
@@ -1158,7 +1158,7 @@
         "docs/screenshots/generated/builder-move-hook.png": "A hook being dragged above another, with the drop line showing where it lands."
       },
       "referencedBy": {},
-      "notes": "Shot by capture-docs-images.mjs from the Pipeline Builder Guide story 'Moving a hook'. Shown on the site's guides/pipeline-builder page."
+      "notes": "Shot by capture-docs-images.mjs from the Workflow Builder Guide story 'Moving a hook'. Shown on the site's customize/workflow-builder page."
     },
     {
       "id": "viewer-removed-doc",
@@ -1450,7 +1450,7 @@
     },
     {
       "id": "builder-board",
-      "name": "Pipeline Builder board",
+      "name": "Workflow Builder board",
       "kind": "still",
       "status": "shipped",
       "composition": null,
@@ -1468,7 +1468,7 @@
       },
       "unnormalized": [],
       "alt": {
-        "docs/screenshots/generated/builder-board.png": "The Pipeline Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark."
+        "docs/screenshots/generated/builder-board.png": "The Workflow Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark."
       },
       "referencedBy": {
         "docs/screenshots/generated/builder-board.png": [

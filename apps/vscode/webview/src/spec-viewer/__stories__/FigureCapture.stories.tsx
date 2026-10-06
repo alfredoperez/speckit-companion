@@ -311,14 +311,14 @@ function LivingSpecBody() {
     return <LivingViewerPanel specOnly />;
 }
 
-// ── The Pipeline Builder ──────────────────────────────────────────────────
+// ── The Workflow Builder ──────────────────────────────────────────────────
 
 export const F11Builder: Story = {
-    name: 'F11 · The Pipeline Builder',
+    name: 'F11 · The Workflow Builder',
     parameters: { capture: { width: 1200, height: 840 } },
     render: () => (
         <CaptureFrame>
-            <Figure compact windowName="Pipeline Builder">
+            <Figure compact windowName="Workflow Builder">
                 <div style="height: 100%; overflow: hidden;">{(TheBoard.render as () => ComponentChildren)()}</div>
             </Figure>
         </CaptureFrame>

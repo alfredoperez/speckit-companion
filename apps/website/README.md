@@ -20,7 +20,7 @@ The docs sidebar is organized by where you work. A group is a list in the sideba
 | In your IDE | `ide/`, `start/your-first-spec.mdx`, `navigate/`, `steps/`, `results/` | Install, choosing a provider, the first spec, the sidebar and the viewer, then two collapsed sub-groups (Each step, Read the results), then fixing a bug and assessing an idea |
 | In the Copilot app | `copilot-app/` | Install, Navigate the board, Run the steps |
 | In Claude Code | `claude-code/` | Install, What it shows, Switch specs with /spec |
-| Customize | `customize/` | Pipeline Builder, hooks, your own workflow, steering |
+| Customize | `customize/` | Workflow Builder, hooks, your own workflow, steering |
 | Reference | `reference/` | Commands, configuration, providers, telemetry |
 
 The regroup retired the `processes/` folder. Fix a bug and Assess an idea moved to `ide/`, the Copilot app page and the Claude Code page each split into three, and Choose an AI provider is new. The four old `/docs/processes/` addresses redirect, and the two split pages land on their Install page.

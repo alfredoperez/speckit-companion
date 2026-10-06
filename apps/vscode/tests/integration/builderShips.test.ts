@@ -40,7 +40,7 @@ const REQUIRED_SCRIPTS = [
     'instruction-budget.py',  // the count a build reports
 ];
 
-describe('the pipeline builder ships with what it reads', () => {
+describe('the Workflow Builder ships with what it reads', () => {
     it.each(REQUIRED_SCRIPTS)('packs %s', script => {
         expect(shipped.has(`apps/speckit-extension/scripts/${script}`)).toBe(true);
     });

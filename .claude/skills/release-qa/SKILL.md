@@ -250,9 +250,9 @@ Grep the files the diff changed for `showInformationMessage|showWarningMessage|s
 
 Open the AI provider picker and assert it lists the configured providers. Dispatch one step to the terminal. If `terminal-run` or `vscode-run` already ran, that dispatch counts and only the picker needs checking.
 
-### Pipeline builder
+### Workflow Builder
 
-Open the pipeline builder. Assert the phase menu opens, Add step adds a step that shows in the canvas, and the builder holds at a narrow width (split the editor as in Narrow panel). `shot.sh` it as `builder-<state>`.
+Open the Workflow Builder. Assert the phase menu opens, Add step adds a step that shows in the canvas, and the builder holds at a narrow width (split the editor as in Narrow panel). `shot.sh` it as `builder-<state>`.
 
 ### Bugs and Ideas panes
 

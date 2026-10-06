@@ -30,7 +30,7 @@ checks:
   mod-terminal: { kind: desktop, recipe: "Claude Code mod pass", what: "start `claude --plugin-dir ./apps/claude-mod` in a project with specs in a terminal at least 144 columns wide: the band names the latest spec, the pane opens beside the transcript, `/spec` lists specs and switching one updates both, and checking a task in its tasks.md ticks the band within a few seconds" }
   canvas-new-spec: { kind: desktop, recipe: "Copilot canvas pass › Full run", what: "New spec once per workflow (stock Spec Kit and Companion); the chat receives the matching command each time, in the spelling the project registers, plus one sentence naming the run-instructions file" }
   site-pages: { kind: desktop, recipe: "Website pages", what: "serve with `npm run preview` in apps/website and look at each changed page in a browser" }
-  builder: { kind: desktop, recipe: "VS Code pass › Pipeline builder", what: "phase menu opens, Add step adds a step, the builder holds at a narrow width" }
+  builder: { kind: desktop, recipe: "VS Code pass › Workflow Builder", what: "phase menu opens, Add step adds a step, the builder holds at a narrow width" }
   process-panes: { kind: desktop, recipe: "VS Code pass › Bugs and Ideas panes", what: "the Bugs and Ideas panes list their groups, a report opens read-only, and a pane with no extension shows its install row" }
 
 # Runs on every release whatever the diff says.
@@ -61,7 +61,7 @@ surfaces:
     paths: ["apps/website/**"]
     checks: [docs-build, site-pages]
 
-  - name: pipeline builder
+  - name: workflow builder
     paths:
       - "apps/vscode/src/features/pipeline-builder/**"
       - "apps/vscode/src/features/specs/pipelineBuildCommands.ts"
