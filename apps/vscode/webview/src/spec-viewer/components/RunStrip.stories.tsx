@@ -29,7 +29,7 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
 // Mid-run: status, phase, task progress, traceability gap, one concern.
 export const MidRun: Story = {
     render: () => {
-        navState.value = mockNavState({ taskCompletionPercent: 60 });
+        navState.value = mockNavState({ taskCompletionPercent: 60, taskCounts: { checked: 3, total: 5 } });
         viewerState.value = baseState({
             taskSummaries: {
                 T001: { status: 'DONE', did: 'a', files: [] },

@@ -29,7 +29,7 @@ import {
 import { SpecStatuses } from "../../core/constants";
 import {
     calculatePhases,
-    calculateTaskCompletion,
+    taskCompletionPercentOf,
     calculateWorkflowPhase,
     computeBadgeText,
     computeCreatedDate,
@@ -38,6 +38,7 @@ import {
     mapStepToTab,
 } from "./phaseCalculation";
 import { isStepCompleted } from "./stateDerivation";
+import { countTaskCheckboxes, type TaskCounts } from "../../core/utils/taskCheckboxes";
 import { computeRunRecovery, RunRecoveryState } from "./runRecovery";
 import type { FeatureWorkflowContext } from "../workflows/types";
 import { deriveStepHistory, getSpecStatus } from "../specs/stepHistoryDerivation";
@@ -143,6 +144,8 @@ export interface PanelDerivedState {
     workflowPhase: string;
 
     taskCompletionPercent: number;
+    /** The ticked and total boxes `taskCompletionPercent` is computed from. */
+    taskCounts: TaskCounts;
     specStatus: SpecStatus;
 
     badgeText: string | null;
@@ -189,7 +192,8 @@ export function computePanelDerivedState(
     const phases = calculatePhases(documents, docType, tasksContent, undefined, stepBadges);
     const currentPhase = getPhaseNumber(docType);
 
-    const taskCompletionPercent = calculateTaskCompletion(tasksContent, CORE_DOCUMENTS.TASKS);
+    const taskCounts = countTaskCheckboxes(tasksContent);
+    const taskCompletionPercent = taskCompletionPercentOf(taskCounts);
 
     const specStatus = resolveSpecStatus(featureCtx, taskCompletionPercent);
 
@@ -228,6 +232,7 @@ export function computePanelDerivedState(
         currentPhase,
         workflowPhase,
         taskCompletionPercent,
+        taskCounts,
         specStatus,
         badgeText,
         createdDate,
@@ -241,6 +246,14 @@ export function computePanelDerivedState(
 }
 
 // ─── Helpers (also exported for tests) ──────────────────────────────────────
+
+const FINISHED_STATUSES = new Set<string>([SpecStatuses.IMPLEMENTED, SpecStatuses.COMPLETED, SpecStatuses.ARCHIVED]);
+
+/** The task the record names as current, or null once the run has finished: the writer keeps the last finished task there. */
+export function inFlightTask(featureCtx: FeatureWorkflowContext | undefined): string | null {
+    if (!featureCtx?.currentTask) return null;
+    return FINISHED_STATUSES.has(String(featureCtx.status)) ? null : featureCtx.currentTask;
+}
 
 /**
  * Spec status derivation — re-exported from the canonical home in

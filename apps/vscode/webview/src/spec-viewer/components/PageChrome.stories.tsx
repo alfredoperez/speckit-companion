@@ -145,6 +145,7 @@ export const MidRun: Story = {
             specContextName: 'Composable Command Nodes',
             branch: '172-composable-command-nodes',
             taskCompletionPercent: 66,
+            taskCounts: { checked: 2, total: 3 },
         });
         viewerState.value = baseState({
             taskSummaries: {

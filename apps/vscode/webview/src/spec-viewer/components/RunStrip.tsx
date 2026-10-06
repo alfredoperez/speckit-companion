@@ -16,8 +16,10 @@ export function RunStrip() {
 
     const stats = heroStats(vs);
     const facts: Array<{ key: FactKey; value: string; warning?: boolean }> = [];
-    if (stats.tasksTotal !== undefined) {
-        facts.push({ key: 'tasks', value: `${stats.tasksDone}/${stats.tasksTotal} tasks` });
+    // Ticked boxes in tasks.md, the same read the rail's percentage comes from.
+    const counts = ns?.taskCounts;
+    if (counts && counts.total > 0) {
+        facts.push({ key: 'tasks', value: `${counts.checked}/${counts.total} tasks` });
     } else if (typeof ns?.taskCompletionPercent === 'number' && ns.taskCompletionPercent > 0) {
         facts.push({ key: 'tasks', value: `${ns.taskCompletionPercent}% tasks` });
     }

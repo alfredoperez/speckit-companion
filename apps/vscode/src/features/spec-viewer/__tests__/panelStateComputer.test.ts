@@ -9,6 +9,7 @@
 import {
     computeApproveFooter,
     computePanelDerivedState,
+    inFlightTask,
     deriveStepBadgesWithAlias,
     mapStepHistoryToTabKeys,
     resolveDisplayDocument,
@@ -239,5 +240,36 @@ describe('computePanelDerivedState (integration of pure pieces)', () => {
         );
         expect(result.taskCompletionPercent).toBe(100);
         expect(result.specStatus).toBe(SpecStatuses.TASKS_DONE);
+    });
+});
+
+describe('inFlightTask', () => {
+    const ctx = (status: string, currentTask: string | null = 'T006') =>
+        ({ status, currentTask } as unknown as FeatureWorkflowContext);
+
+    it('names the current task while the run is implementing', () => {
+        expect(inFlightTask(ctx('implementing'))).toBe('T006');
+    });
+
+    it.each(['implemented', 'completed', 'archived'])('is empty once the spec is %s, whatever the record still names', (status) => {
+        expect(inFlightTask(ctx(status))).toBeNull();
+    });
+
+    it('is empty with no record or no current task', () => {
+        expect(inFlightTask(undefined)).toBeNull();
+        expect(inFlightTask(ctx('implementing', null))).toBeNull();
+    });
+});
+
+describe('the task counts behind the percentage', () => {
+    it('come from the same read of tasks.md', () => {
+        const tasksContent = ['- [x] T001 a', '- [x] T002 b', '- [x] T003 c', '- [ ] T004 d', '- [ ] T005 e', '- [ ] T006 f'].join('\n');
+        const derived = computePanelDerivedState(
+            { documents: [makeDoc()], doc: makeDoc(), tasksContent, featureCtx: undefined },
+            [],
+        );
+
+        expect(derived.taskCounts).toEqual({ checked: 3, total: 6 });
+        expect(derived.taskCompletionPercent).toBe(50);
     });
 });
