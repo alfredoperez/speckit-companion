@@ -29,7 +29,7 @@ import { nodeFile, readableNode } from './readableNode';
 import { projectKind } from './projectKind';
 import { stockRefusal } from './stockGuard';
 import { setHookEnabled } from './stockHooks';
-import { readStockWorkflow, stockFileToOpen } from './stockWorkflow';
+import { formatStockCommands, readStockWorkflow, stockFileToOpen } from './stockWorkflow';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
@@ -882,12 +882,11 @@ export class PipelineBuilderPanel {
         // otherwise fall back to the copy bundled here and draw Companion's
         // pipeline over a project that cannot run a single node of it.
         if (projectKind(this.workspaceRoot) === 'stock') {
-            const view = readStockWorkflow(this.workspaceRoot, this.drawing);
-            // The spelling a host registers is the editor's to know, so the
-            // row names the command the way a run of it would be typed.
-            if (view.constitution) {
-                view.constitution.command = formatCommandForProvider(view.constitution.command);
-            }
+            // The spelling a host registers is the editor's to know, so every
+            // command the board draws is named the way a run of it is typed.
+            const view = formatStockCommands(
+                readStockWorkflow(this.workspaceRoot, this.drawing),
+                formatCommandForProvider);
             await this.post({ type: 'stock', view });
             return;
         }

@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { StockWorkflowView } from '../../../protocol/pipeline';
 import { projectKind } from '../projectKind';
-import { readStockWorkflow, stockFileToOpen } from '../stockWorkflow';
+import { formatStockCommands, readStockWorkflow, stockFileToOpen } from '../stockWorkflow';
 
 function project(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'stock-workflow-'));
@@ -177,9 +178,10 @@ describe('the stock workflow read from a project', () => {
         expect(view.templates[0]).toMatchObject({
             label: 'Spec',
             path: path.join('.specify', 'templates', 'spec-template.md'),
+            command: 'speckit.specify',
         });
-        expect(view.templates[0].note).toContain('/speckit.specify');
-        expect(view.templates[2].label).toBe('house');
+        expect(view.templates[0].note).not.toContain('speckit');
+        expect(view.templates[2]).toMatchObject({ label: 'house', command: '' });
     });
 
     it('says whether the constitution has been written, and names its command', () => {
@@ -210,6 +212,61 @@ describe('the stock workflow read from a project', () => {
         // Asked for one that is not installed, it draws the first rather than
         // nothing: a board with no steps says the project has none.
         expect(readStockWorkflow(root, 'invented').workflow?.id).toBe('quick');
+    });
+});
+
+describe('how the board spells a command', () => {
+    /** A project with a command in all three places the board names one. */
+    function named(): string {
+        const root = project();
+        write(root, '.specify/workflows/speckit/workflow.yml', WORKFLOW);
+        write(root, '.specify/templates/spec-template.md', '# shape');
+        write(root, '.specify/templates/plan-template.md', '# shape');
+        return root;
+    }
+
+    const DOTTED = (command: string) => command;
+    const DASHED = (command: string) => command.replace(/\./g, '-');
+
+    /** The view as a reader sees it, with the file locations taken out. */
+    function words(view: StockWorkflowView): string {
+        return JSON.stringify(view, (key, value) => (key === 'path' ? undefined : value));
+    }
+
+    it.each([['dotted', DOTTED], ['dashed', DASHED]] as const)(
+        'emits no command the %s formatter did not produce', (_host, format) => {
+            const view = formatStockCommands(readStockWorkflow(named()), format);
+
+            // A leading slash is the board's to draw, so a name carrying one is
+            // a name baked into prose that no formatter ever saw.
+            expect(words(view)).not.toContain('/speckit');
+            for (const command of [
+                ...view.steps.map(step => step.command),
+                ...view.templates.map(template => template.command),
+                view.constitution!.command,
+            ].filter(Boolean)) {
+                expect(command).toBe(format(command.replace(/-/g, '.')));
+            }
+        });
+
+    it('leaves a dashed host no dotted name anywhere in the view', () => {
+        const view = formatStockCommands(readStockWorkflow(named()), DASHED);
+
+        expect(words(view)).not.toContain('speckit.');
+        expect(view.constitution!.command).toBe('speckit-constitution');
+        expect(view.steps[0].command).toBe('speckit-specify');
+        expect(view.templates.find(template => template.file === 'spec-template.md')!.command)
+            .toBe('speckit-specify');
+    });
+
+    it('leaves a gate and a template with no command alone', () => {
+        const root = named();
+        write(root, '.specify/templates/agent-file-template.md', '# context');
+
+        const view = formatStockCommands(readStockWorkflow(root), DASHED);
+
+        expect(view.steps.find(step => step.kind === 'gate')!.command).toBe('');
+        expect(view.templates.find(t => t.file === 'agent-file-template.md')!.command).toBe('');
     });
 });
 

@@ -1274,6 +1274,39 @@ describe('what the stock board can change', () => {
         expect(view.templates).toHaveLength(1);
         expect(view.templates[0].path)
             .toBe(path.join('.specify', 'templates', 'spec-template.md'));
-        expect(view.templates[0].note).toContain('/speckit.specify');
+        // Dashed, because the mocked host is the one that registers dashes.
+        expect(view.templates[0].command).toBe('speckit-specify');
+        expect(view.templates[0].note).not.toContain('speckit');
+    });
+
+    /**
+     * A board showing two spellings cannot say which one a host answers to, and
+     * the dotted one resolves to nothing where dashes are registered.
+     */
+    it.each([
+        ['dash', 'speckit-specify', 'speckit-constitution'],
+        ['dot', 'speckit.specify', 'speckit.constitution'],
+    ])('spells every command the way a %s host registers it', async (
+        format, specify, constitution,
+    ) => {
+        const configured = vscode.workspace.getConfiguration as jest.Mock;
+        const before = configured.getMockImplementation();
+        configured.mockReturnValue({
+            get: (key: string, fallback: unknown) => (
+                key === 'commandFormat' ? format : fallback),
+            inspect: () => undefined,
+        });
+        try {
+            await panel.__receive({ type: 'ready' });
+
+            const view = panel.__lastPosted('stock').view;
+            expect(view.templates[0].command).toBe(specify);
+            expect(view.constitution.command).toBe(constitution);
+            expect(JSON.stringify(view.steps)).not.toContain(
+                format === 'dash' ? 'speckit.' : 'speckit-');
+        } finally {
+            configured.mockReset();
+            if (before) { configured.mockImplementation(before); }
+        }
     });
 });

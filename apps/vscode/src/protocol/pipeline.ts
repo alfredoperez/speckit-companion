@@ -77,8 +77,16 @@ export interface StockTemplate {
     /** Workspace-relative, so opening it names a path the panel can check. */
     path: string;
     label: string;
-    /** What the step uses it for. */
+    /**
+     * What the step uses it for, naming no command.
+     *
+     * A spelling belongs in `command`, where the panel can put the one this
+     * project registers; written into the prose it was a second spelling on a
+     * board that already showed the right one.
+     */
     note: string;
+    /** The command that fills it, in this project's spelling. Empty for none. */
+    command: string;
 }
 
 /** One workflow installed under `.specify/workflows/`. */

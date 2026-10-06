@@ -34,9 +34,10 @@ function view(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
         ],
         templates: [{
             file: 'spec-template.md', path: '.specify/templates/spec-template.md',
-            label: 'Spec', note: 'The shape of spec.md, filled in by /speckit.specify',
+            label: 'Spec', note: 'The shape of spec.md, filled in by',
+            command: 'speckit-specify',
         }],
-        constitution: { command: 'speckit.constitution', written: true },
+        constitution: { command: 'speckit-constitution', written: true },
         presets: [],
         registry: { path: '.specify/extensions.yml' },
         buildBlocked: 'Nothing here is built.',
@@ -109,7 +110,7 @@ describe('the board on a stock Spec Kit project', () => {
 
         const row = rowNamed(host, 'Spec');
         expect(row.querySelector('.pb-stock-row-note')!.textContent)
-            .toContain('filled in by /speckit.specify');
+            .toContain('filled in by /speckit-specify');
         row.click();
 
         expect(opened).toEqual(['.specify/templates/spec-template.md']);

@@ -155,7 +155,7 @@ export function StockBoard(
                     {view.steps.length === 0 ? (
                         <p class="pb-stock-prose">
                             No Spec Kit steps found in this project yet. Install a workflow,
-                            or the <code>/speckit.*</code> commands for your assistant.
+                            or the Spec Kit command family for your assistant.
                         </p>
                     ) : (
                         <ol class="pb-stock-steps">
@@ -205,7 +205,12 @@ export function StockBoard(
                                         onClick={() => onOpenFile(template.path)}>
                                         <span class="pb-stock-row-name">{template.label}</span>
                                         <code class="pb-stock-command">{template.file}</code>
-                                        <span class="pb-stock-row-note">{template.note}</span>
+                                        <span class="pb-stock-row-note">
+                                            {template.note}
+                                            {template.command
+                                                ? <> <code>/{template.command}</code></>
+                                                : ''}
+                                        </span>
                                     </button>
                                 </li>
                             ))}

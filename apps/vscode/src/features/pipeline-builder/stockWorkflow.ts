@@ -10,7 +10,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import {
-    HookWhen, StockHookRow, StockStepRow, StockTemplate, StockWorkflowChoice, StockWorkflowView,
+    HookWhen, StockHookRow, StockStepRow, StockTemplate, StockWorkflowChoice,
+    StockWorkflowView,
 } from '../../protocol/pipeline';
 
 const WORKFLOWS_REL = path.join('.specify', 'workflows');
@@ -40,31 +41,43 @@ const STOCK_STEPS: Record<string, { label: string; writes: string[] }> = {
     taskstoissues: { label: 'Turn tasks into issues', writes: [] },
 };
 
-/** What each template shapes, in the order a run reaches them. */
-const STOCK_TEMPLATES: Array<{ file: string; label: string; note: string }> = [
+/**
+ * What each template shapes, in the order a run reaches them.
+ *
+ * A note never spells a command. Every command on the board is named in a
+ * `command` field, so one formatter decides how all of them read — a dotted
+ * name written into prose resolves to nothing in a host that registered dashes.
+ */
+const STOCK_TEMPLATES: Array<Omit<StockTemplate, 'path'>> = [
     {
         file: 'constitution-template.md', label: 'Constitution',
-        note: 'The principles /speckit.constitution writes into memory/constitution.md',
+        note: 'The principles written into memory/constitution.md by',
+        command: 'speckit.constitution',
     },
     {
         file: 'spec-template.md', label: 'Spec',
-        note: 'The shape of spec.md, filled in by /speckit.specify',
+        note: 'The shape of spec.md, filled in by',
+        command: 'speckit.specify',
     },
     {
         file: 'plan-template.md', label: 'Plan',
-        note: 'The shape of plan.md, filled in by /speckit.plan',
+        note: 'The shape of plan.md, filled in by',
+        command: 'speckit.plan',
     },
     {
         file: 'tasks-template.md', label: 'Tasks',
-        note: 'The shape of tasks.md, filled in by /speckit.tasks',
+        note: 'The shape of tasks.md, filled in by',
+        command: 'speckit.tasks',
     },
     {
         file: 'checklist-template.md', label: 'Checklist',
-        note: 'The shape of a checklist under checklists/, written by /speckit.checklist',
+        note: 'The shape of a checklist under checklists/, written by',
+        command: 'speckit.checklist',
     },
     {
         file: 'agent-file-template.md', label: 'Agent context',
         note: 'The context file a plan writes for your assistant',
+        command: '',
     },
 ];
 
@@ -206,6 +219,29 @@ function presets(workspaceRoot: string): StockWorkflowView['presets'] {
 }
 
 /**
+ * Every command in the view, spelled the way this project registers them.
+ *
+ * One pass over the whole view rather than a call at each site: the board draws
+ * command names in three places, and a reader seeing two spellings in one view
+ * cannot tell which of them a host would answer to. The formatter is passed in
+ * so this module stays free of the editor's configuration.
+ */
+export function formatStockCommands(
+    view: StockWorkflowView, format: (command: string) => string,
+): StockWorkflowView {
+    const spelled = (command: string) => (command ? format(command) : command);
+    return {
+        ...view,
+        steps: view.steps.map(step => ({ ...step, command: spelled(step.command) })),
+        templates: view.templates.map(
+            template => ({ ...template, command: spelled(template.command) })),
+        constitution: view.constitution
+            ? { ...view.constitution, command: spelled(view.constitution.command) }
+            : null,
+    };
+}
+
+/**
  * The file this project would open for a path the board offered, or null.
  *
  * Membership of what the board drew, not a shape test: the panel opens one of
@@ -244,6 +280,7 @@ function templates(workspaceRoot: string): StockTemplate[] {
             path: path.join(TEMPLATES_REL, file),
             label: file.replace(/-template\.md$/, '').replace(/\.md$/, ''),
             note: 'A template this project added',
+            command: '',
         }));
     return [...known, ...rest];
 }
@@ -304,8 +341,6 @@ export function readStockWorkflow(workspaceRoot: string, drawing?: string): Stoc
         steps,
         templates: templates(workspaceRoot),
         constitution: {
-            // Named by the panel, which knows the spelling this project
-            // registers; the reader cannot see the editor's configuration.
             command: 'speckit.constitution',
             written: fs.existsSync(path.join(workspaceRoot, CONSTITUTION_REL)),
         },

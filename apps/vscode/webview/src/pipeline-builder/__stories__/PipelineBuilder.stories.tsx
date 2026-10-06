@@ -607,10 +607,15 @@ const STOCK_ACTIONS = {
     onSetHook: noop, onOpenFile: noop, onSelectWorkflow: noop, onRunCommand: noop,
 };
 
-/** The steps stock Spec Kit's bundled workflow runs, as its YAML declares them. */
+/**
+ * Every spelling in these fixtures is dashed, as Claude Code registers the
+ * family, because that is what the panel's formatter would hand the board on
+ * such a host. One host per fixture: two spellings in one view is the defect
+ * these stories exist to show.
+ */
 const STOCK_STEPS: StockStepRow[] = [
     {
-        id: 'specify', command: 'speckit.specify', kind: 'command',
+        id: 'specify', command: 'speckit-specify', kind: 'command',
         label: 'Write the spec', writes: ['spec.md'], hooks: [],
     },
     {
@@ -618,15 +623,15 @@ const STOCK_STEPS: StockStepRow[] = [
         label: 'Review the generated spec before planning.', writes: [], hooks: [],
     },
     {
-        id: 'plan', command: 'speckit.plan', kind: 'command',
+        id: 'plan', command: 'speckit-plan', kind: 'command',
         label: 'Plan the work', writes: ['plan.md', 'research.md', 'data-model.md'], hooks: [],
     },
     {
-        id: 'tasks', command: 'speckit.tasks', kind: 'command',
+        id: 'tasks', command: 'speckit-tasks', kind: 'command',
         label: 'Break it into tasks', writes: ['tasks.md'], hooks: [],
     },
     {
-        id: 'implement', command: 'speckit.implement', kind: 'command',
+        id: 'implement', command: 'speckit-implement', kind: 'command',
         label: 'Implement the tasks', writes: [], hooks: [],
     },
 ];
@@ -636,29 +641,31 @@ const STOCK_TEMPLATES: StockTemplate[] = [
     {
         file: 'constitution-template.md', path: '.specify/templates/constitution-template.md',
         label: 'Constitution',
-        note: 'The principles /speckit.constitution writes into memory/constitution.md',
+        note: 'The principles written into memory/constitution.md by',
+        command: 'speckit-constitution',
     },
     {
         file: 'spec-template.md', path: '.specify/templates/spec-template.md', label: 'Spec',
-        note: 'The shape of spec.md, filled in by /speckit.specify',
+        note: 'The shape of spec.md, filled in by', command: 'speckit-specify',
     },
     {
         file: 'plan-template.md', path: '.specify/templates/plan-template.md', label: 'Plan',
-        note: 'The shape of plan.md, filled in by /speckit.plan',
+        note: 'The shape of plan.md, filled in by', command: 'speckit-plan',
     },
     {
         file: 'tasks-template.md', path: '.specify/templates/tasks-template.md', label: 'Tasks',
-        note: 'The shape of tasks.md, filled in by /speckit.tasks',
+        note: 'The shape of tasks.md, filled in by', command: 'speckit-tasks',
     },
     {
         file: 'checklist-template.md', path: '.specify/templates/checklist-template.md',
         label: 'Checklist',
-        note: 'The shape of a checklist under checklists/, written by /speckit.checklist',
+        note: 'The shape of a checklist under checklists/, written by',
+        command: 'speckit-checklist',
     },
     {
         file: 'agent-file-template.md', path: '.specify/templates/agent-file-template.md',
         label: 'Agent context',
-        note: 'The context file a plan writes for your assistant',
+        note: 'The context file a plan writes for your assistant', command: '',
     },
 ];
 
@@ -677,7 +684,7 @@ function stock(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
         }],
         steps: STOCK_STEPS,
         templates: STOCK_TEMPLATES,
-        constitution: { command: 'speckit.constitution', written: true },
+        constitution: { command: 'speckit-constitution', written: true },
         presets: [],
         registry: { path: '.specify/extensions.yml' },
         buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
@@ -696,12 +703,12 @@ function stockHook(
 }
 
 export const StockProject: Story = {
-    name: '28 · A stock Spec Kit project',
+    name: '28 · A stock Spec Kit project (Claude Code spelling)',
     render: () => <StockBoard view={stock()} status={null} {...STOCK_ACTIONS} />,
 };
 
 export const StockWithHooks: Story = {
-    name: '29 · Stock, with extension hooks',
+    name: '29 · Stock, with extension hooks (Claude Code spelling)',
     render: () => {
         const steps = STOCK_STEPS.map(step => {
             if (step.id === 'specify') {
@@ -736,7 +743,7 @@ export const StockWithHooks: Story = {
 };
 
 export const StockWithPreset: Story = {
-    name: '30 · Stock, with a preset and two workflows',
+    name: '30 · Stock, a preset and two workflows (Claude Code spelling)',
     render: () => (
         <StockBoard
             view={stock({
