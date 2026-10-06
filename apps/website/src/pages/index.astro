@@ -329,6 +329,7 @@ const installPaths: Array<{
   hash: string;
   label: string;
   full: { label: string; href: string };
+  shot: { src: string; width: number; height: number; window: string; alt: string };
   steps: InstallStep[];
 }> = [
   {
@@ -336,6 +337,13 @@ const installPaths: Array<{
     hash: 'install-vscode',
     label: 'VS Code',
     full: { label: 'the full VS Code path, with what you should see at each step', href: '/docs/install/#in-vs-code' },
+    shot: {
+      src: '/landing/quickstart-vscode.png',
+      width: 1300,
+      height: 800,
+      window: 'VS Code · the spec viewer',
+      alt: 'The spec viewer in a VS Code tab: a spec marked Implementing, its documents as tabs, and the Tasks tab at 50% with the first two tasks ticked.',
+    },
     steps: [
       { title: 'Get Spec Kit', sub: SPEC_KIT_SUB, actions: [{ kind: 'code', command: SOURCE_CLI }] },
       companionStep,
@@ -353,6 +361,13 @@ const installPaths: Array<{
     full: {
       label: 'the full Copilot app path, with what you should see at each step',
       href: '/docs/install/#in-the-github-copilot-app',
+    },
+    shot: {
+      src: '/landing/quickstart-copilot-app.png',
+      width: 1400,
+      height: 728,
+      window: 'Copilot app · the spec board',
+      alt: 'The spec board in the GitHub Copilot app: every spec with its status on the left, and the selected spec on the right with its four steps and a Run implement button.',
     },
     steps: [
       {
@@ -385,6 +400,13 @@ const installPaths: Array<{
     full: {
       label: 'the full Claude Code path, with what you should see at each step',
       href: '/docs/install/#in-claude-code',
+    },
+    shot: {
+      src: '/landing/quickstart-claude-code.png',
+      width: 1000,
+      height: 942,
+      window: 'Claude Code · /speckit-tracker',
+      alt: 'The Companion pane in a Claude Code terminal: the four steps with Implement running, the documents the spec has, and its tasks at 3 of 6.',
     },
     steps: [
       {
@@ -670,6 +692,8 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         installPaths.map((path) => (
           <div class="path" id={path.hash} role="tabpanel" aria-labelledby={`tab-${path.hash}`} data-path-panel>
             <h3 class="path-name">{path.label}</h3>
+            <div class="path-body">
+            <div class="path-main">
             <div class="steps" data-steps>
               <span class="spark" data-spark aria-hidden="true" />
               {path.steps.map((step, index) => (
@@ -714,6 +738,24 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
             <a class="watch-link path-full" href={path.full.href}>
               {path.full.label} →
             </a>
+            </div>
+            <figure class="path-shot window">
+              <div class="window-bar" aria-hidden="true">
+                <span class="dot" />
+                <span class="dot" />
+                <span class="dot" />
+                <span class="window-label">{path.shot.window}</span>
+              </div>
+              <img
+                src={path.shot.src}
+                alt={path.shot.alt}
+                width={path.shot.width}
+                height={path.shot.height}
+                loading="lazy"
+                decoding="async"
+              />
+            </figure>
+            </div>
           </div>
         ))
       }
@@ -1342,6 +1384,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   }
 
   .steps {
+    container-type: inline-size;
     position: relative;
     background: var(--panel);
     border: 1px solid var(--border-panel);
@@ -1423,6 +1466,55 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     display: none;
   }
 
+  /* The steps, and beside them what you get for following them. */
+  .path-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-24);
+  }
+
+  .path-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    min-width: 0;
+  }
+
+  .path-shot {
+    width: 100%;
+    max-width: 620px;
+    margin: 0;
+  }
+
+  .path-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Two columns need more room than the page column has, so this section opens
+     to the hero's width, the same way and for the same reason. */
+  @media (min-width: 1100px) {
+    .section--quickstart .inner {
+      max-width: 1220px;
+      padding-left: var(--pad-hero-x);
+      padding-right: var(--pad-hero-x);
+    }
+
+    .path-body {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      align-items: start;
+      gap: var(--space-40);
+    }
+
+    .path-shot {
+      position: sticky;
+      top: var(--space-24);
+      max-width: none;
+    }
+  }
+
   /* With no script every path is on the page, one after the other, and each
      needs its name. With the switcher working, the selected pill is the name. */
   .path-name {
@@ -1466,6 +1558,37 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .step-actions > :global(.btn) {
     align-self: flex-end;
+  }
+
+  /* Beside a picture the steps column is too narrow for a command at the side
+     of its step, so the command goes under the text, on the text's own edge.
+     A phone already stacks them, edge to edge, further down. */
+  @media (min-width: 861px) {
+    @container (max-width: 620px) {
+      .step {
+        flex-wrap: wrap;
+        align-items: flex-start;
+        row-gap: var(--space-12);
+      }
+
+      .step-num {
+        padding-top: 3px;
+      }
+
+      .step-text {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+
+      .step-actions {
+        flex: 1 1 100%;
+        padding-left: calc(var(--step-col) + var(--space-20));
+      }
+
+      .step-actions > :global(.btn) {
+        align-self: flex-start;
+      }
+    }
   }
 
   .watch-link {
