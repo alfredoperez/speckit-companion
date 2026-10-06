@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **The Copilot board unlocks the next step.** A step the agent wrote the document for but never closed in the run record is closed when the turn ends. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: copilot-app -->
+
 ## [0.36.0] - 2026-10-06
 
 Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.
