@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Bash(tooling/scripts/merge-pr.sh:*), Bash(tooling/scripts/new-worktree.sh:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
 description: Autonomously fix one or more speckit-companion GitHub issues with /speckit-companion-auto — fresh main, auto (fix + reviews + PR), merge, learnings — then one install-local and a run report. Self-hosting build loop.
 argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | <path to backlog .md> | --light [free-text tasks]"
 ---
@@ -86,7 +86,7 @@ Four things collide if you're not careful. Note that the first two are precisely
 1. **Spec numbering race.** Specify picks the next `NNN-` by scanning `specs/`. Two agents starting together both choose the same number. — *Cannot happen in light mode: no spec pipeline.*
 2. **A fresh worktree has no companion commands.** `.specify/extensions/companion/` is **gitignored** (it's the `--dev` install), so a new worktree checks out tracked files only and `/speckit.companion.*` does not exist there. An agent running the pipeline in a worktree fails — or silently falls back, which is worse. — *Cannot happen in light mode: no pipeline. If you ever need it, the worktree must run `specify extension add ./apps/speckit-extension --dev --force` first.*
 3. **`install-local` is a global singleton.** One VS Code extension host, one `~/.vscode/extensions`. It cannot be parallelized — run it **once, after all merges**.
-4. **A fresh worktree has no `node_modules` — run `npm ci` FIRST or every test run lies.** `node_modules/` is gitignored, so a new worktree checks out source only. Worse than an obvious "command not found": jest's `moduleNameMapper` is pinned to `rootDir`, so ~10 suites fail on *module resolution* and read like real regressions. Two of four agents hit this on the first light run and one nearly reported it as a broken build. **`npm ci` in the worktree before you trust any `npm test` / `npm run compile` output** — and if a test suite fails on `Cannot find module`, that is this, not your change.
+4. **A fresh worktree has no `node_modules` — make it with `tooling/scripts/new-worktree.sh <name> <branch>`, which links them, or run `npm ci` FIRST, or every test run lies.** `node_modules/` is gitignored, so a new worktree checks out source only. Worse than an obvious "command not found": jest's `moduleNameMapper` is pinned to `rootDir`, so ~10 suites fail on *module resolution* and read like real regressions. Two of four agents hit this on the first light run and one nearly reported it as a broken build. **`npm ci` in the worktree before you trust any `npm test` / `npm run compile` output** — and if a test suite fails on `Cannot find module`, that is this, not your change.
 
 **Disjointness gate.** Before fanning out, name the files each task will touch. **If two tasks touch the same file, do not run them in parallel** — run those two sequentially (or fold them into one PR). Parallel PRs on the same file just move the conflict to merge time.
 
@@ -171,18 +171,14 @@ The installed companion commands (`.specify/extensions/companion/`, `.claude/ski
 Then write one result line for the ticket (PR, spec dir, summary, findings, subagent tally) and work from that, not the transcript, for the rest of the run.
 
 #### 3. Merge + cleanup — main loop
-```bash
-gh pr checks <PR> --watch || true     # let CI finish
-gh pr checks <PR>                     # every check must now read pass; pending or fail means no merge
-```
-Merge only when every check has finished and passed. Never merge with a check still pending.
-
 **Review-gate check.** If this ticket is **review-gated** (the `⏸️ Review-gated` group, or `--review-merge`), do **not** merge. Post the PR link and a one-line summary, record it as "merged: NO — awaiting your review," and move to the next ticket.
 
 Otherwise:
 ```bash
-gh pr merge <PR> --squash --delete-branch
+tooling/scripts/merge-pr.sh <PR>      # merges once every check has passed: queued on GitHub when the repo allows auto-merge, otherwise it waits here
 ```
+When it queues the merge it returns at once: move to the next ticket and read the outcome with `gh pr view <PR> --json state` before the final report. Exit 3 means the pull request changes what a person sees and the owner has not looked: record "merged: NO — awaiting your review" and re-run with `--seen` only after they approve. Never merge around the script with `gh pr merge`.
+
 If checks fail and can't be fixed on the branch, leave the PR open, record "merged: NO — checks failing," continue.
 
 #### 4. Learnings + tick the box — main loop

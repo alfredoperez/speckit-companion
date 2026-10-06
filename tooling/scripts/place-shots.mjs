@@ -16,7 +16,7 @@ if (!existsSync(library)) {
   process.exit(2);
 }
 
-const taken = readdirSync(library).filter((f) => f.endsWith('.png')).map((f) => f.slice(0, -4));
+const taken = readdirSync(library).filter((f) => f.endsWith('.png') && !f.startsWith('_')).map((f) => f.slice(0, -4));
 
 if (flag('list')) {
   for (const name of taken) {
