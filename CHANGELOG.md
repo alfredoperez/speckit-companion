@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-10-06
+
 Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.
 
 ### Highlights

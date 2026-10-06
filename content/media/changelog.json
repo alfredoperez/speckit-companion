@@ -1,6 +1,6 @@
 {
   "_readme": "Screenshots for the site's /changelog page, keyed by release (<product>@<version>, product vscode or speckit) then by the media id a highlight names in its <!-- area: …; pr: …; media: … --> comment. file is a repo-relative PNG under apps/website/public/ or docs/screenshots/generated/. alt is required. highlight is optional, in the image's own pixels, and is drawn over the image by the page. The site build fails on an unknown id, a missing alt or file, an unused shot, or a key that matches no release. See apps/website/src/components/changelog/releaseMedia.ts.",
-  "vscode@unreleased": {
+  "vscode@0.36.0": {
     "bug-story": {
       "file": "apps/website/public/changelog/bug-story.png",
       "alt": "A bug open on its Story tab, badge Verified. The page starts with Fixed and verified and one line of facts, then the first timeline step, What was wrong.",

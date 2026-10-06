@@ -15,7 +15,7 @@ SpecKit Companion is a VS Code extension for developers who build with an AI ass
      here); the retired illustrated hero stays on disk at docs/screenshots/hero.jpg. -->
 ![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
-**What's new in 0.35.0:** move a node to another phase and drag hooks between steps in the Pipeline Builder, which now also works in a narrow side panel. Step times show the work and not the wait, links between spec documents open in the viewer, and commands wait until the terminal is ready instead of losing their first letter. Spec Kit's converge step and its bug reports now show up too. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
+**What's new in 0.36.0:** follow a Spec Kit run from inside Claude Code with the new mod, which pins your spec above the prompt and ticks off steps and tasks beside the transcript. Bugs and ideas get their own sidebar panes and open as pages: a bug reads as a story, a decided idea as a decision. The viewer gains buttons to answer an open question, run Converge and create GitHub issues from the task list, and the Copilot app board now follows any Spec Kit project. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
 
 ## Install
 
