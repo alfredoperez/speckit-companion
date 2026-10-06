@@ -21,7 +21,8 @@ import CourseSignup from '../components/CourseSignup.astro';
   the assistant reads, not an engine that runs them. And there is no templates
   lesson, because no template setting is contributed anywhere.
 */
-const modules = [
+type Lesson = { title: string; body: string; soon?: boolean };
+const modules: { n: string; title: string; lessons: Lesson[] }[] = [
   {
     n: '1',
     title: 'Set up',

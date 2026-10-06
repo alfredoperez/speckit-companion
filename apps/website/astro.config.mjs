@@ -55,6 +55,7 @@ const MOVED = {
 // the 404 page, and published READMEs link with the slash. A second route for
 // the slash form is a route collision in Astro, so the slash form is covered by
 // a static page at that address which forwards to the same place.
+/** @param {string} to */
 const forward = (to) =>
   `<!doctype html><meta charset="utf-8"><title>Moved</title><link rel="canonical" href="https://speckit-companion.dev${to}"><meta http-equiv="refresh" content="0;url=${to}"><meta name="robots" content="noindex"><a href="${to}">This page moved to ${to}</a>`;
 

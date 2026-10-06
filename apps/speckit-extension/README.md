@@ -153,12 +153,9 @@ The specs themselves get smaller, too. Same four steps, smaller output: the spec
 
 ### Build what you configured
 
-What you write in `companion.yml` takes effect when you build. Preview first, then apply:
+If you only use the CLI, edit `.specify/companion.yml` and run your command. Hooks attached to a node take effect on the next run, because the assistant reads the file as it goes. A hook that points at one of your own node files reads it from `.specify/companion/nodes/<id>.md` the same way. There is nothing to build.
 
-```bash
-python3 .specify/extensions/companion/scripts/build-pipeline.py --dry-run   # what would change
-python3 .specify/extensions/companion/scripts/build-pipeline.py             # apply it
-```
+The rest takes a build: `nodes:` order, phase hooks, `templates:` and `decisions:`. The release zip does not carry the build script. The VS Code extension's [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder) runs it for you, and the repo's `apps/speckit-extension/scripts/build-pipeline.py` does the same from a checkout.
 
 A build resolves four things and writes the commands your assistant reads:
 

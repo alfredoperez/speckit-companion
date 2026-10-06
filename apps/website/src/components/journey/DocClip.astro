@@ -19,7 +19,7 @@ interface Props {
 interface Feature {
   id: string;
   outputs: { webWebm?: string | null; webMp4?: string | null; poster?: string | null };
-  alt?: Record<string, string>;
+  alt?: Record<string, string | undefined>;
 }
 
 const { id, caption, alt: altOverride } = Astro.props;
