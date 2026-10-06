@@ -40,7 +40,7 @@ Note the Mac clock time at each click and each settle.
 
 **F. GitHub Copilot app.** Only if the app is up to date and signed in; otherwise BLOCKED with the reason.
 1. Open the project `{{SANDBOX_PATH}}`, new session, send exactly `Open the SpecKit Companion canvas`. The board opens and the agent says it is waiting. Copy its reply.
-2. On the board, New spec, pick Spec Kit, type `Add a Clear completed button.`, click Specify. The chat gets a message starting `/speckit.specify`.
+2. On the board, New spec, pick Spec Kit, type `Add a Clear completed button.`, click Specify. The chat gets a message starting `/speckit-specify` (`/speckit.specify` in a project with no skill folders), ending with one sentence that names a run-instructions file under `.speckit-companion/prompts/`.
 
 ## Reply
 
