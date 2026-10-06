@@ -2,30 +2,18 @@
   One source for the top-bar links, read by the landing-page nav and by the docs
   header, so the two halves of the site cannot drift apart.
 
-  The groups are the layout, not decoration. Two pairs sit across the bar.
-
-  Docs and changelog are the two places you actually go, so they lead, right
-  next to the install button, rather than sitting behind the unshipped things.
-
-  The workflow builder and the course are both unshipped, so they trail as a
-  pair, and both carry a SOON chip. The chip is never dropped from either one:
-  it is the site's only mechanism for saying a thing is not built.
+  The bar holds the two places you actually go, docs and changelog, next to the
+  install button. Nothing unshipped sits in it: the course has one line near the
+  foot of the landing page, and the footer keeps the workflow builder link.
 */
 export interface NavLink {
   label: string;
   href: string;
-  soon: boolean;
 }
 
-export const navGroups: NavLink[][] = [
-  [
-    { label: 'docs', href: '/docs/', soon: false },
-    { label: 'changelog', href: '/changelog/', soon: false },
-  ],
-  [
-    { label: 'workflow builder', href: '/workflow-builder/', soon: true },
-    { label: 'course', href: '/course/', soon: true },
-  ],
+export const navLinks: NavLink[] = [
+  { label: 'docs', href: '/docs/' },
+  { label: 'changelog', href: '/changelog/' },
 ];
 
 export const INSTALL_HREF = '/#quick-start';

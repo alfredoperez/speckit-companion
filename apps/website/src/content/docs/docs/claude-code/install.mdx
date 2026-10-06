@@ -1,44 +1,109 @@
 ---
-title: Install the Claude Code mod
-description: Add the SpecKit Companion mod to Claude Code with two commands, and check that it is active.
+title: Install in Claude Code
+description: The Claude Code path from Spec Kit to a first spec. Get Spec Kit, add the Companion extension for Spec Kit, add the mod with two commands and check that it is active.
 ---
 
+import { Steps } from '@astrojs/starlight/components';
 import CodeLine from '../../../../components/CodeLine.astro';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 import YouSee from '../../../../components/journey/YouSee.astro';
+import { COMPANION_COMMAND, SOURCE_CLI } from '../../../../data/installCommands';
 
-If you run the Spec Kit commands in Claude Code, the mod keeps the run in view while you work. It shows the same steps, times and task counts as the VS Code viewer and the [Copilot app board](/docs/copilot-app/navigate-the-board).
+If you run the Spec Kit commands in Claude Code, the mod keeps the run in view while you work. It shows the same steps, times and task counts as the VS Code viewer and the [Copilot app board](/docs/copilot-app/navigate-the-board). You do not need the VS Code extension for this path. The mod draws in the Claude Code terminal and in the Code tab of the Claude Desktop app.
 
-This page is the mod's own steps. The project needs Spec Kit first, and the Companion extension for Spec Kit is optional but recommended. [Install where you work](/docs/install#in-claude-code) has the whole path in order.
+The path has the same shape everywhere: Spec Kit itself, then the Companion extension for Spec Kit, which is optional but recommended, then the one thing your tool needs. [Install where you work](/docs/install) has the other two places.
 
-<Actions>
-  <CodeLine command="claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json" />
-  <CodeLine command="claude plugin install speckit-companion@speckit-companion" />
-  <p>You need Claude Code 2.1.287 or later. Check with <code>claude --version</code>.</p>
-  <p>In a session that is already open, load it with:</p>
-  <CodeLine command="/reload-plugins" prompt={false} />
-  <p>Then open the pane and pick the spec to follow:</p>
-  <CodeLine command="/speckit-tracker" prompt={false} />
-</Actions>
+<Steps>
 
-<YouSee label="You should see">
+1. <span id="claude-spec-kit"></span>**Get Spec Kit**
 
-Run `/plugin`. The line under the tabs lists `speckit-companion` among the active mods.
+   Spec Kit is GitHub's toolkit for spec-driven development. Its `specify` command sets a project up with the `/speckit` commands Claude Code runs.
 
-</YouSee>
+   <Actions>
+     <CodeLine command={SOURCE_CLI} />
+   </Actions>
 
-<DocFigure
-  src="live-mod-run.png"
-  alt="The mod's pane during an implement run: Specify, Plan and Tasks ticked with their times, Implement running, the documents, and three of six tasks ticked."
-  caption="The pane beside the transcript after installing: steps, documents and tasks for the spec you are working on."
-/>
+   This installs the GitHub build. The stock PyPI `specify-cli` has no `extension` command, so step 2 would fail with it. The command changes your global `uv` tools.
+
+   Then set the project up for Claude Code, from its root:
+
+   <Actions>
+     <CodeLine command="specify init --here --integration claude" />
+   </Actions>
+
+   <YouSee label="You should see">
+
+   A `.specify` folder in the project, and `/speckit-specify` among the commands Claude Code offers.
+
+   </YouSee>
+
+2. <span id="claude-companion"></span>**Add the Companion extension for Spec Kit** (optional, recommended)
+
+   This is the engine half. It records each run, adds the Companion pipeline and Auto, and brings living specs. It needs Spec Kit 0.9.5 or newer.
+
+   <Actions>
+     <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="install" />
+   </Actions>
+
+   Run it from your project root and copy it whole.
+
+   **Without it** the mod still follows your run, from the files alone. Each step says when its document was last written, where a recorded run shows how long the step took. The Overview tab shows what the spec says, not what the run decided and checked.
+
+   <YouSee label="You should see">
+
+   A one-time **untrusted source** prompt. Accept it. Then Claude Code offers `/speckit-companion-specify` next to `/speckit-specify`.
+
+   </YouSee>
+
+3. <span id="claude-mod"></span>**Add the mod**
+
+   You need Claude Code 2.1.287 or later. Check with `claude --version`.
+
+   <Actions>
+     <CodeLine command="claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json" />
+     <CodeLine command="claude plugin install speckit-companion@speckit-companion" />
+     <p>In a session that is already open, load it with:</p>
+     <CodeLine command="/reload-plugins" prompt={false} />
+     <p>Then open the pane and pick the spec to follow:</p>
+     <CodeLine command="/speckit-tracker" prompt={false} />
+   </Actions>
+
+   <YouSee label="You should see">
+
+   Run `/plugin`. The line under the tabs lists `speckit-companion` among the active mods. `/speckit-tracker` opens the pane on its Specs tab.
+
+   </YouSee>
+
+4. <span id="claude-check"></span>**Check that it took**
+
+   Type `/speckit-companion-specify` and a small change you want. On stock Spec Kit, type `/speckit-specify`.
+
+   <YouSee label="You should see">
+
+   A line above the prompt naming the spec. In the pane, Specify is ticked when the turn ends, and the last line names the next command.
+
+   </YouSee>
+
+   <DocFigure
+     src="live-mod-run.png"
+     alt="The mod's pane during an implement run: Specify, Plan and Tasks ticked with their times, Implement running, the documents, and three of six tasks ticked."
+     caption="The pane a few steps later: each step with its time, the documents and the tasks."
+   />
+
+   [A run, step by step](/docs/claude-code/a-run-step-by-step) follows one spec from specify to implement.
+
+</Steps>
 
 If nothing shows, run `/reload-plugins`, then widen the terminal or run `/speckit-tracker`. The pane opens by itself only in a wide terminal.
 
+## Update it, or fix it
+
+[Update later](/docs/install#update-later) has the command for each piece. [If something did not work](/docs/install#if-something-did-not-work) lists what you might see and what to do.
+
 ## Related
 
-- [Install where you work](/docs/install#in-claude-code) is the full path, from Spec Kit to a first spec.
 - [What it shows](/docs/claude-code/what-it-shows) covers the band and the pane.
 - [A run, step by step](/docs/claude-code/a-run-step-by-step) follows one spec from specify to implement.
 - [Switch specs with /speckit-tracker](/docs/claude-code/switch-specs) changes the spec the mod follows.
+- [Install where you work](/docs/install) says what each piece is and where it installs.

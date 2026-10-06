@@ -20,6 +20,8 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import Button from '../components/Button.astro';
 import CodeLine from '../components/CodeLine.astro';
+import CourseSignup from '../components/CourseSignup.astro';
+import SoonChip from '../components/SoonChip.astro';
 import manifest from '../../../../content/media/manifest.json';
 
 const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
@@ -87,30 +89,22 @@ const review = media('review');
 const livingExplained = media('living-specs-explained');
 
 /*
-  The hero stills. Built by scripts/build-hero-stills.mjs, which crops them out
-  of the clip compositions' own DPR-2 source captures, so a palette change is a
-  re-shoot plus a re-run and the hero can never drift from what the clips show.
+  The hero stills. Cut by tooling/scripts/build-stills.mjs and named in
+  content/media/manifest.json as each feature's heroStill, so the path and the
+  alt text are read from there and the hero cannot drift from the files.
 
-  Captions carry the benefit, not the feature name: someone who reads only the
-  hero should still learn what the product is for. Each one is a cleared claim —
-  the Overview one avoids a flat timing claim, and the Review one says the note
-  is sent rather than applied, because Refine dispatches a request and never
-  reads the file back.
+  Each still shows ONE benefit, cropped tight enough that its own words are
+  readable in the hero's column. The pip names the benefit in plain words and
+  the caption under the frame says it as a sentence. Each caption is a cleared
+  claim: the Review one says the note is sent rather than applied, because
+  Refine dispatches a request and never reads the file back.
 */
-/*
-  The ambient chips drifting around the hero. Every string is one the product
-  actually renders — a coverage count, a drift flag, a comment state, a phase
-  timing — so the field teaches the vocabulary before anyone clicks. Positions
-  are hand-placed to sit clear of the frame in the middle.
-*/
-const motes = [
-  { text: '6/6 traced', x: -6, y: 8, dx: 12, dy: -10, dur: 9200, delay: 0 },
-  { text: 'drift', x: 87, y: -1, dx: -9, dy: 12, dur: 10400, delay: 900 },
-  { text: 'PENDING', x: 93, y: 34, dx: -13, dy: -8, dur: 8600, delay: 1800 },
-  { text: '54m 36s active', x: -9, y: 56, dx: 10, dy: 11, dur: 11200, delay: 600 },
-  { text: '{ } capability', x: 86, y: 86, dx: -11, dy: -12, dur: 9800, delay: 2400 },
-  { text: 'APPLIED', x: -3, y: 92, dx: 13, dy: -9, dur: 10100, delay: 1400 },
-];
+function heroStill(id: string) {
+  const feature = features.find((entry) => entry.id === id);
+  const rel = feature?.outputs.heroStill;
+  if (!feature || !rel) throw new Error(`content/media/manifest.json has no heroStill for "${id}"`);
+  return { src: siteUrl(rel) as string, alt: feature.alt?.[rel] || '' };
+}
 
 /*
   The focal light a product frame sits in front of. Painted by
@@ -128,25 +122,22 @@ const lightwell = (() => {
 
 const surfaces = [
   {
-    id: 'overview',
-    label: 'Overview',
-    src: `${urlPrefix}/hero-overview.png`,
-    caption: 'The whole run on one page: what it was for, what it decided, and what traced to a test.',
-    alt: 'The Overview of a finished run: the intent it answers to, the four phases with the time each took, the approach, and the corner of the codebase it changed.',
-  },
-  {
-    id: 'living',
-    label: 'Living Specs',
-    src: `${urlPrefix}/hero-living-specs.png`,
-    caption: 'What you learned, kept next to the code it describes.',
-    alt: 'The Living Specs tree: capabilities kept at a root and beside the code in features, jobs and services, each row carrying its coverage count or a drift flag.',
+    id: 'decisions',
+    label: 'Decisions, with reasons',
+    caption: 'What a run decided, why, and what it rejected. Kept on one page.',
+    ...heroStill('overview'),
   },
   {
     id: 'review',
-    label: 'Review',
-    src: `${urlPrefix}/hero-review.png`,
+    label: 'Review in the margin',
     caption: 'Comment on the line. Refine sends the note to your agent.',
-    alt: 'Two review comments pinned under a requirement, the second one open with its Refine, Edit and Delete actions.',
+    ...heroStill('review'),
+  },
+  {
+    id: 'bug',
+    label: 'A bug, start to finish',
+    caption: 'A bug reads as one page: what was wrong, what changed, how it was verified.',
+    ...heroStill('live-bug-story'),
   },
 ];
 
@@ -154,9 +145,9 @@ const surfaces = [
   Each tab states its point before its clip plays, because a clip cannot argue
   and a label cannot explain. Every sentence here traces to a cleared row in the
   claim ledger; three phrasings are deliberate and should not be "improved":
-  timing is only reported where both ends were recorded, hook attachments are
-  instructions the assistant reads rather than an engine that runs them, and
-  Refine dispatches a request rather than applying an edit.
+  timing is only reported where both ends were recorded, and Refine dispatches
+  a request rather than applying an edit. The Customize tab is about workflows
+  written in settings; the board and its hooks have their own section below.
 */
 const tabs = [
   {
@@ -166,16 +157,16 @@ const tabs = [
     heading: 'You stop reading four markdown files',
     body: 'A finished run becomes one page: what it was for, how it was approached, where in the codebase it landed, and what it decided against — with a coverage table that puts untraced requirements first.',
     clip: overview,
-    link: { label: 'read the Overview guide', href: '/docs/results/the-overview/' },
+    link: { label: 'Read the Overview guide', href: '/docs/results/the-overview/' },
   },
   {
     id: 'customize',
     label: 'Customize',
     window: 'Custom workflows · the one you wrote, at every step',
     heading: 'The workflow is yours, not the tool’s',
-    body: 'Define your own phases, commands and output files in settings, and attach a shell command, an inline instruction, or a node file of your own before or after any named step. Those attachments are instructions your assistant reads at run time.',
+    body: 'Write your own steps, commands and output files in settings. Create Spec offers your workflow next to the two built in, and each step sends the command you wrote.',
     clip: makeItYours,
-    link: { label: 'compare the two workflows', href: '/docs/start/spec-driven-development/#the-two-workflows-that-ship' },
+    link: { label: 'Write your own workflow', href: '/docs/customize/your-own-workflow/' },
   },
   {
     id: 'living',
@@ -184,7 +175,7 @@ const tabs = [
     heading: 'The learning outlives the ticket',
     body: 'Spec Kit leaves each spec in a folder that goes quiet when the feature ships. Turn living specs on and every capability keeps one durable spec instead — at the root, or next to the code it describes.',
     clip: livingExplained,
-    link: { label: 'living specs', href: '/docs/results/living-specs/' },
+    link: { label: 'How living specs work', href: '/docs/results/living-specs/' },
   },
   {
     id: 'review',
@@ -193,7 +184,7 @@ const tabs = [
     heading: 'Say it in the margin, not in the chat box',
     body: 'Comment on a line the way you’d review a pull request. Notes persist the moment you add them, and Refine sends the pending ones to your agent as an in-place edit request.',
     clip: review,
-    link: { label: 'explore the review flow', href: '/docs/steps/review-with-comments/' },
+    link: { label: 'See the review flow', href: '/docs/steps/review-with-comments/' },
   },
   // Bugs and ideas are Spec Kit's own extensions. Your assistant runs the
   // commands; Companion shows the reports and sends the next command.
@@ -208,7 +199,7 @@ const tabs = [
       src: '/landing/bug-story.png',
       alt: 'A bug page in VS Code: the lead reads Fixed and verified, then What was wrong with the root cause.',
     },
-    link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
+    link: { label: 'How fixing a bug works', href: '/docs/ide/fix-a-bug/' },
   },
   {
     id: 'ideas',
@@ -221,93 +212,89 @@ const tabs = [
       src: '/landing/idea-decision.png',
       alt: 'An idea page in VS Code: the verdict Go with its reason, then a scorecard.',
     },
-    link: { label: 'assess an idea', href: '/docs/ide/assess-an-idea/' },
+    link: { label: 'How assessing an idea works', href: '/docs/ide/assess-an-idea/' },
   },
 ];
 
+/*
+  The Pipeline Builder, as it ships in the VS Code extension today. Every point
+  is a row of the Pipeline Builder or Hooks docs page. Two phrasings are
+  deliberate: a hook is something your assistant reads at that point, not an
+  engine that runs it, and nothing changes until you press Build.
+*/
+const builder = {
+  shot: {
+    src: '/changelog/vscode-0.33.0-pipeline-builder.png',
+    width: 3120,
+    height: 1960,
+    alt: 'The Pipeline Builder: specify, plan, tasks and implement as four columns, each with its phases and nodes. Two steps are marked changed, and hooks from companion.yml sit before and after the nodes they are attached to.',
+    caption: 'The Pipeline Builder, in a VS Code tab',
+  },
+  points: [
+    {
+      title: 'See the run before you start one',
+      body: 'Each step is a column. Inside it are its phases, the nodes your assistant reads, and the files a run writes.',
+    },
+    {
+      title: 'Spot what is yours',
+      body: 'Anything your project changed carries one color. A chip in the header says how many steps differ from shipped.',
+    },
+    {
+      title: 'Edit, move or replace a node',
+      body: 'Rewrite a node, drag it to reorder, or swap it for an alternative. Your version is saved in your repo and the shipped one is untouched.',
+    },
+    {
+      title: 'Attach your own work',
+      body: 'Add a skill, an instruction, a shell command or a node of your own before or after any node. Your assistant reads it at that point.',
+    },
+    {
+      title: 'Build when you are ready',
+      body: 'Add a step, or start a workflow from a preset. Nothing takes effect until you press Build, and a failed build changes nothing.',
+    },
+  ],
+};
+
+// What the page has not shown yet. The Overview, living specs, review and the
+// pipeline each have a section above, so none of them gets a card here.
 const cards = [
   {
-    eyebrow: 'OVERVIEW',
-    title: 'Runs you can read',
-    // ledger: "the command that proved it" implies re-execution. Nothing re-runs.
-    body: 'A finished run becomes one page: the intent, the decisions, and each check with its result.',
-  },
-  {
-    eyebrow: 'LIVING SPECS',
-    title: 'One spec per capability',
-    // ledger: living specs do not update themselves, and they are opt-in.
-    body: 'Turn it on and each capability keeps one durable spec, updated when a run finishes.',
-  },
-  {
-    eyebrow: 'REVIEW',
-    title: 'Comments that travel',
-    body: 'Comment on a line like a pull request. Refine sends the pending ones to your agent.',
-  },
-  {
-    eyebrow: 'LIVE · RECORD',
     title: 'Watch it run, keep the record',
     body: 'Phases and timing while the agent works, written to one file you can commit.',
+    link: { label: 'Track progress', href: '/docs/results/track-progress/' },
   },
   {
-    eyebrow: 'PIPELINE',
-    title: 'A pipeline you can bend',
-    body: 'Two workflows in the box. Add your own phases, commands and hooks in settings.',
-  },
-  {
-    eyebrow: 'PROVIDERS',
     // ledger: "any agent can drive it" is a never-say. Three of the twelve
     // cannot submit for you.
     title: 'Twelve providers',
     body: 'Terminal CLIs, IDE chat, the Claude Code panel. Not every provider supports every piece.',
+    link: { label: 'Compare providers', href: '/docs/reference/providers/' },
   },
   {
-    eyebrow: 'CONVERGE',
+    title: 'Steering in view',
+    body: 'The standing instruction files your assistant already reads, listed in one view.',
+    link: { label: 'Steering', href: '/docs/customize/steering/' },
+  },
+  {
     title: 'Check the code against the spec',
     body: 'On a finished spec, one button sends Spec Kit’s converge command.',
-    link: { label: 'converge', href: '/docs/steps/converge/' },
+    link: { label: 'Converge', href: '/docs/steps/converge/' },
   },
   {
-    eyebrow: 'GITHUB ISSUES',
     title: 'Tasks to issues',
     body: 'Turn the task list into GitHub issues from the Tasks tab. It asks first.',
-    link: { label: 'the tasks step', href: '/docs/steps/tasks/' },
+    link: { label: 'The tasks step', href: '/docs/steps/tasks/' },
   },
   {
-    eyebrow: 'OPEN QUESTIONS',
     title: 'Answer where you read',
     body: 'A report marks what it still needs to know. Answer on the page.',
-    link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
-  },
-];
-
-// The same spec files, read from three places. The board and the tracker are
-// their own surfaces, not providers, so the provider count stays at twelve.
-const places = [
-  {
-    id: 'vscode',
-    name: 'VS Code',
-    kind: 'EXTENSION',
-    body: 'The full workspace: sidebar, viewer, review, live runs and the Overview.',
-    link: { label: 'install in VS Code', href: '/docs/install/#in-vs-code' },
-  },
-  {
-    id: 'copilot',
-    name: 'GitHub Copilot app',
-    kind: 'CANVAS',
-    body: 'A live board of every spec beside the chat. A button runs the next step.',
-    link: { label: 'install in the Copilot app', href: '/docs/install/#in-the-github-copilot-app' },
-  },
-  {
-    id: 'claude',
-    name: 'Claude Code',
-    kind: 'MOD',
-    body: 'One line above the prompt and a pane with the steps and tasks, in your terminal.',
-    link: { label: 'install in Claude Code', href: '/docs/install/#in-claude-code' },
+    link: { label: 'Fix a bug', href: '/docs/ide/fix-a-bug/' },
   },
 ];
 
 // The quick start, once per place you can work. The steps, their order and
-// their wording follow /docs/install/, which holds the full path for each.
+// their wording follow that place's own Install page in the docs, which holds
+// the full path. `shot.window` is the caption: what the picture is, then the
+// one sentence about what you get in that place.
 type InstallAction =
   | { kind: 'code'; command: string; prompt?: boolean; analytics?: string }
   | { kind: 'button'; href: string; label: string; analytics: string };
@@ -336,12 +323,12 @@ const installPaths: Array<{
     id: 'vscode',
     hash: 'install-vscode',
     label: 'VS Code',
-    full: { label: 'See the full VS Code path, with what to expect at each step', href: '/docs/install/#in-vs-code' },
+    full: { label: 'See the full VS Code path, with what to expect at each step', href: '/docs/ide/install/' },
     shot: {
       src: '/landing/quickstart-vscode.png',
       width: 1300,
       height: 800,
-      window: 'The spec viewer, in a VS Code tab',
+      window: 'The spec viewer, in a VS Code tab. The full workspace: sidebar, viewer, review, live runs and the Overview.',
       alt: 'The spec viewer in a VS Code tab: a spec marked Implementing, its documents as tabs, and the Tasks tab at 50% with the first two tasks ticked.',
     },
     steps: [
@@ -360,13 +347,13 @@ const installPaths: Array<{
     label: 'GitHub Copilot app',
     full: {
       label: 'See the full Copilot app path, with what to expect at each step',
-      href: '/docs/install/#in-the-github-copilot-app',
+      href: '/docs/copilot-app/install/',
     },
     shot: {
       src: '/landing/quickstart-copilot-app.png',
       width: 1400,
       height: 728,
-      window: 'The spec board, beside the chat',
+      window: 'The spec board, beside the chat. Every spec in the repo, and a button that runs the next step.',
       alt: 'The spec board in the GitHub Copilot app: every spec with its status on the left, and the selected spec on the right with its four steps and a Run implement button.',
     },
     steps: [
@@ -399,13 +386,13 @@ const installPaths: Array<{
     label: 'Claude Code',
     full: {
       label: 'See the full Claude Code path, with what to expect at each step',
-      href: '/docs/install/#in-claude-code',
+      href: '/docs/claude-code/install/',
     },
     shot: {
       src: '/landing/quickstart-claude-code.png',
       width: 1000,
       height: 942,
-      window: 'The tracker pane, beside the transcript',
+      window: 'The tracker pane, beside the transcript. One line above the prompt, and the steps and tasks in your terminal.',
       alt: 'The Companion pane in a Claude Code terminal: the four steps with Implement running, the documents the spec has, and its tasks at 3 of 6.',
     },
     steps: [
@@ -436,7 +423,7 @@ const installPaths: Array<{
 // One leaf per section below the hero, in document order. The script measures
 // where each section boundary falls and places its leaf on the stem; a leaf
 // with no section to mark stays hidden.
-const stemLeaves = ['surfaces', 'demo', 'quick start', 'box', 'claim', 'install'];
+const stemLeaves = ['demo', 'builder', 'quick start', 'box', 'claim', 'course', 'install'];
 
 // Entrances stagger at 60ms. The delay is data, not a magic number in the CSS.
 const REVEAL_STAGGER = 60;
@@ -529,7 +516,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   <!-- HERO -->
   <section class="hero">
-    <SiteNav installHref="#quick-start" />
+    <SiteNav installHref="#quick-start" wide />
 
     {/* Bigger points get a softer edge, so the field has depth instead of one
         uniform dot size. The blur follows the size rather than being placed by
@@ -577,32 +564,16 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         </div>
       </div>
 
-      {/* The product, in the first screenful. Three surfaces cycle in one frame
+      {/* The product, in the first screenful. Three benefits cycle in one frame
           with a caption that changes with them, so someone who never scrolls
           still learns what this is.
 
-          The stills are crops, not whole windows: a full IDE shrunk into this
-          column is unreadable, which is the reason the hero used to be words.
-          Same crossfade the accordion uses. Under reduced motion nothing
-          cycles, surface one shows, and all three buttons still work. */}
+          The stills are tight crops, not whole windows, and the frame takes
+          most of the hero's width, so the words in the picture can be read.
+          Under reduced motion nothing cycles, the first one shows, and all
+          three buttons still work. */}
       <div class="hero-show" data-hero-show>
         <div class="hero-orbit">
-          {/* Ambient chips. They are real strings from the product, not filler:
-              a visitor reading them picks up the vocabulary before they have
-              clicked anything. Decorative to a screen reader. */}
-          <div class="hero-motes" aria-hidden="true">
-            {
-              motes.map((mote) => (
-                <span
-                  class="mote"
-                  style={`--mx:${mote.x}%;--my:${mote.y}%;--mdx:${mote.dx}px;--mdy:${mote.dy}px;--mdur:${mote.dur}ms;--mdelay:${mote.delay}ms`}
-                >
-                  {mote.text}
-                </span>
-              ))
-            }
-          </div>
-
           <div class="hero-stagebox">
             <img
               class="lightwell lightwell--hero"
@@ -634,10 +605,9 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           </div>
         </div>
 
-        {/* The chips are the only naming the hero has now: no fake window title,
-            no caption line under the frame. The one you pick stays lit and its
-            sentence surfaces inside the bloom for a beat as the shot arrives. */}
-        <div class="hero-pips" role="tablist" aria-label="Product surfaces">
+        {/* Each pip names a benefit. The one you pick stays lit, and its
+            sentence stays under the frame. */}
+        <div class="hero-pips" role="tablist" aria-label="What you get">
           {
             surfaces.map((surface, index) => (
               <button
@@ -657,33 +627,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         </div>
 
         <p class="hero-flash" data-hero-flash aria-live="polite">{surfaces[0].caption}</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- WHERE IT RUNS -->
-  <section class="section section--surfaces" id="where-it-runs">
-    <div class="inner stack-16">
-      <p class="eyebrow">WHERE IT RUNS</p>
-      <h2 class="surfaces-heading">One set of spec files, three places to follow them</h2>
-      <div class="surfaces">
-        {
-          places.map((surface, index) => (
-            <a
-              class="surface"
-              href={surface.link.href}
-              data-reveal
-              style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
-              data-analytics="surface_click"
-              data-analytics-surface={surface.id}
-            >
-              <span class="surface-kind">{surface.kind}</span>
-              <span class="surface-name">{surface.name}</span>
-              <span class="surface-body">{surface.body}</span>
-              <span class="surface-link">{surface.link.label} →</span>
-            </a>
-          ))
-        }
       </div>
     </div>
   </section>
@@ -732,7 +675,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
               )}
               <p>{tab.body}</p>
               <a class="say-link" href={tab.link.href} tabindex={index === 0 ? 0 : -1}>
-                {tab.link.label} →
+                {tab.link.label}
               </a>
             </div>
           ))
@@ -798,6 +741,51 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
       <p class="demo-caption">
         Every picture is the extension itself. The first four are short clips.
+      </p>
+    </div>
+  </section>
+
+  <!-- PIPELINE BUILDER -->
+  <section class="section section--builder" id="pipeline-builder">
+    <div class="inner pb">
+      <div class="qs-say">
+        <h2>Your pipeline, drawn as a board</h2>
+        <p>
+          The Pipeline Builder shows what your assistant does at each Companion step. Change it on
+          the board, then build.
+        </p>
+      </div>
+
+      <div class="qs-sheet pb-sheet" data-reveal>
+        <figure class="qs-shot pb-shot">
+          <img
+            src={builder.shot.src}
+            alt={builder.shot.alt}
+            width={builder.shot.width}
+            height={builder.shot.height}
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>{builder.shot.caption}</figcaption>
+        </figure>
+        <ul class="pb-points" aria-label="What you do in the Pipeline Builder">
+          {
+            builder.points.map((point) => (
+              <li>
+                <p class="pb-point-title">{point.title}</p>
+                <p class="pb-point-body">{point.body}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <p class="pb-note">
+        <span>
+          It opens from the circuit icon at the top of the Specs view, and needs the Companion
+          extension for Spec Kit.
+        </span>
+        <a class="qs-full" href="/docs/customize/pipeline-builder/">Read the Pipeline Builder guide</a>
       </p>
     </div>
   </section>
@@ -904,8 +892,11 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       }
     </div>
 
-    <div class="inner stack-20">
-      <p class="eyebrow">WHAT'S IN THE BOX</p>
+    <div class="inner cards-stack">
+      <div class="qs-say">
+        <h2>Also in the box</h2>
+        <p>The smaller things you get with the VS Code extension.</p>
+      </div>
 
       <div class="cards">
         {
@@ -915,14 +906,11 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
               data-reveal
               style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
             >
-              <p class="card-eyebrow">{card.eyebrow}</p>
-              <h2 class="card-title">{card.title}</h2>
+              <h3 class="card-title">{card.title}</h3>
               <p class="card-body">{card.body}</p>
-              {card.link && (
-                <a class="card-link" href={card.link.href}>
-                  {card.link.label} →
-                </a>
-              )}
+              <a class="card-link" href={card.link.href}>
+                {card.link.label}
+              </a>
             </article>
           ))
         }
@@ -947,9 +935,25 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         Ceremony sized to the change, not to the template. The Companion pipeline skips the sections
         a typical change never needs.
       </p>
-      <a class="claim-link" href={METHODOLOGY} target="_blank" rel="noreferrer noopener">
-        read the methodology →
-      </a>
+      <a class="claim-link" href={METHODOLOGY}>Read the methodology</a>
+    </div>
+  </section>
+
+  <!-- COURSE -->
+  <section class="section section--course" id="course">
+    <div class="inner course">
+      <div class="qs-say">
+        <h2>
+          A course is coming
+          <SoonChip class="course-chip" />
+        </h2>
+        <p>
+          Applying spec-driven development with Spec Kit: from a vague idea to a spec, a plan, tasks
+          and shipped code, on real projects. Nothing is recorded yet and there is no date.
+        </p>
+      </div>
+      <CourseSignup id="course-landing" placement="landing" />
+      <a class="qs-full" href="/course/">See the outline it would follow</a>
     </div>
   </section>
 
@@ -1047,12 +1051,12 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
      other section keeps --page-width. */
   .hero-inner {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr);
     align-items: center;
-    gap: 56px;
-    max-width: 1220px;
+    gap: 48px;
+    max-width: 1560px;
     margin: 0 auto;
-    padding: 56px var(--pad-hero-x) 84px;
+    padding: 40px var(--pad-section-x) 64px;
   }
 
   .hero-copy {
@@ -1070,7 +1074,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   h1 {
     margin: 0 0 var(--space-22);
-    font-size: clamp(34px, 4.6vw, 52px);
+    font-size: clamp(34px, 3.5vw, 52px);
     line-height: var(--lh-display);
     font-weight: var(--fw-black);
     letter-spacing: var(--ls-display);
@@ -1124,13 +1128,12 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   .hero-orbit {
     position: relative;
     width: 100%;
-    padding: 34px 30px;
   }
 
   .hero-stagebox {
     position: relative;
-    padding: 22px;
-    border-radius: 26px;
+    padding: 10px;
+    border-radius: 18px;
     border: 1px solid var(--border-panel);
     background: linear-gradient(
       180deg,
@@ -1138,36 +1141,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       var(--panel) 42%,
       var(--ground) 100%
     );
-  }
-
-  .hero-motes {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  .mote {
-    position: absolute;
-    left: var(--mx);
-    top: var(--my);
-    padding: 6px 11px;
-    border: 1px solid var(--border-panel);
-    border-radius: 999px;
-    /* Translucent, and lit from behind rather than shadowed: an opaque pill
-       with a black drop-shadow punched a dark hole in the light it floats in. */
-    background: rgb(var(--ground-rgb) / 0.62);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 4px 14px rgb(var(--ground-rgb) / 0.45);
-    color: var(--text-body);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    white-space: nowrap;
-    opacity: 0.72;
-  }
-
-  :global(html[data-motion]) .mote {
-    animation: mote-drift var(--mdur, 9000ms) var(--mdelay, 0ms) ease-in-out infinite alternate;
   }
 
   @keyframes mote-drift {
@@ -1308,22 +1281,16 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     outline-offset: 2px;
   }
 
-  /* The benefit line, surfaced for a beat on a change rather than parked under
-     the frame forever. It holds its space so nothing below it moves. */
+  /* The benefit line. It stays under the frame, and holds its space so nothing
+     below it moves when the sentence changes. */
   .hero-flash {
     margin: 0;
     min-height: 2.6em;
-    max-width: 46ch;
+    max-width: 60ch;
     color: var(--text-body);
     font-size: var(--fs-body);
     line-height: var(--lh-prose);
     text-align: center;
-    opacity: 0;
-    transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .hero-flash[data-show] {
-    opacity: 1;
   }
 
   @media (max-width: 980px) {
@@ -1341,13 +1308,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       justify-content: center;
     }
 
-    /* The drifting chips need room the narrow layout does not have. */
-    .hero-motes {
-      display: none;
-    }
+  }
 
-    .hero-orbit {
-      padding: 0;
+  /* On a phone the whole crop would shrink past reading, so the frame goes
+     square and shows the left of the picture at a size you can read. */
+  @media (max-width: 600px) {
+    .hero-stage {
+      aspect-ratio: 1 / 1;
     }
   }
 
@@ -1721,11 +1688,12 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .say-link {
     display: inline-block;
-    margin-top: var(--space-8);
+    margin-top: var(--space-10);
     color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: var(--fs-ui-sm);
-    text-decoration: none;
+    font-size: var(--fs-ui);
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
   }
 
   .say-link:hover {
@@ -1826,78 +1794,108 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     text-align: center;
   }
 
-  /* -------------------------------------------------------------- surfaces */
+  /* -------------------------------------------------------- pipeline builder */
 
-  .section--surfaces .inner {
-    padding-top: 56px;
-    padding-bottom: 56px;
+  .section--builder .inner {
+    max-width: 1220px;
+    padding-top: 72px;
+    padding-bottom: 72px;
   }
 
-  .surfaces-heading {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-bold);
-  }
-
-  .surfaces {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-14);
-  }
-
-  .surface {
+  .pb,
+  .cards-stack,
+  .course {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
-    padding: var(--space-22);
-    background: var(--panel);
-    border: 1px solid var(--border-card);
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    align-items: center;
+    gap: var(--space-26);
   }
 
-  .surface:hover {
-    border-color: var(--border-accent);
+  /* The quick start's sheet, with the picture across the top: the board is
+     the point, and it needs the width for its words to be read. The five
+     things you do with it sit in a row under it. */
+  .qs-sheet.pb-sheet {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .surface:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+  .qs-shot.pb-shot {
+    border: 0;
   }
 
-  .surface-kind {
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls-eyebrow-sm);
+  .pb-shot img {
+    aspect-ratio: 16 / 9;
   }
 
-  .surface-name {
+  .pb-points {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-22);
+    margin: 0;
+    padding: var(--space-26) 34px;
+    list-style: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  .pb-point-title {
+    margin: 0;
     color: var(--text-primary);
-    font-size: var(--fs-lead);
+    font-size: var(--fs-body);
     font-weight: var(--fw-bold);
+    line-height: 1.3;
   }
 
-  .surface-body {
-    flex: 1;
+  .pb-point-body {
+    margin: var(--space-6) 0 0;
     color: var(--text-body);
     font-size: var(--fs-ui);
     line-height: var(--lh-ui);
   }
 
-  .surface-link {
-    margin-top: var(--space-4);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: var(--fs-ui-sm);
+  .pb-note {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-10);
+    max-width: 62ch;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    text-align: center;
   }
 
-  @media (max-width: 980px) {
-    .surfaces {
-      grid-template-columns: minmax(0, 1fr);
+  @media (min-width: 700px) {
+    .pb-points {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+  }
+
+  @media (min-width: 1100px) {
+    .pb-points {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    .pb-points {
+      padding: var(--space-22) var(--space-16);
+    }
+
+    .pb-shot img {
+      aspect-ratio: 1 / 1;
+    }
+  }
+
+  /* ---------------------------------------------------------------- course */
+
+  .section--course .inner {
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+
+  .course h2 :global(.course-chip) {
+    margin-left: var(--space-8);
+    vertical-align: middle;
   }
 
   /* ----------------------------------------------------------------- cards */
@@ -1923,14 +1921,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     border-radius: var(--radius-sm);
   }
 
-  .card-eyebrow {
-    margin: 0;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls-eyebrow-sm);
-  }
-
   .card-title {
     margin: 0;
     color: var(--text-primary);
@@ -1947,11 +1937,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .card-link {
     align-self: flex-start;
-    margin-top: var(--space-4);
+    margin-top: auto;
+    padding-top: var(--space-4);
     color: var(--accent);
-    font-family: var(--font-mono);
     font-size: var(--fs-ui-sm);
-    text-decoration: none;
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
   }
 
   .card-link:hover {
@@ -1999,10 +1991,11 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .claim-link {
     margin-top: var(--space-4);
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: var(--fs-mono);
-    text-decoration: none;
+    color: var(--accent);
+    font-size: var(--fs-ui);
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
   }
 
   .claim-link:hover {
@@ -2626,10 +2619,9 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // --- hero: three surfaces, one glowing centre ----------------------------
-  // Chips drift in a field; the one you pick lights up, the centre flares, and
-  // the shot resolves out of the glow. There is no window title and no standing
-  // caption: the chip names it and its sentence surfaces for a beat.
+  // --- hero: three benefits, one frame --------------------------------------
+  // The pip you pick lights up, the light behind the frame lifts, and the shot
+  // and the sentence under it change together.
   document.querySelectorAll('[data-hero-show]').forEach((root) => {
     const pips = Array.from(root.querySelectorAll('[data-hero-pip]'));
     const shots = Array.from(root.querySelectorAll('[data-hero-shot]'));
@@ -2638,10 +2630,8 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     if (pips.length < 2) return;
 
     const DWELL = 4600;
-    const FLASH_HOLD = 2600;
     let index = 0;
     let timer = null;
-    let flashTimer = null;
     let stopped = false;
 
     let flareTimer = null;
@@ -2670,13 +2660,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
       if (flash) {
         flash.textContent = pip.dataset.heroCaption || '';
-        flash.setAttribute('data-show', '');
-        if (flashTimer) window.clearTimeout(flashTimer);
-        // Under reduced motion the sentence is the only thing carrying the
-        // benefit, so it stays put instead of fading out.
-        if (!reduced.matches) {
-          flashTimer = window.setTimeout(() => flash.removeAttribute('data-show'), FLASH_HOLD);
-        }
       }
     };
 

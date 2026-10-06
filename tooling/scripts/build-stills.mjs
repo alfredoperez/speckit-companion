@@ -3,13 +3,14 @@
  * Build the landing page's still images.
  *
  *   npm run clips:stills
+ *   npm run clips:stills -- --only hero-decisions,hero-bug
  *
  * Two sets, same rule behind both: **crop to the content, never show a whole
  * IDE window.** A full window shrunk into a 600px column is unreadable, which is
  * how the hero ended up as a wall of words and the feature panels ended up
  * showing nothing you could actually read.
  *
- *   hero-*    the three surfaces the hero cycles through
+ *   hero-*    the three benefits the hero cycles through
  *   panel-*   the figure beside each row of the feature accordion
  *
  * Sources are the clip compositions' own captures and renders, so a palette
@@ -41,24 +42,31 @@ const ASPECT = 1836 / 1164;
 
 const STILLS = [
   // ---------------------------------------------------------------- hero
+  // Each one is cut tight around ONE thing a stranger can read in two
+  // seconds, so the words in the picture stay legible in the hero's column.
   {
-    id: 'hero-overview',
+    // The Decisions region alone: three choices, each with its why and what it
+    // rejected.
+    id: 'hero-decisions',
     from: 'overview/assets/captures/overview-tall.png',
-    crop: { x: 0, y: 0, w: 2448 },
+    crop: { x: 620, y: 2940, w: 1640 },
     aspect: ASPECT,
     width: 1600,
   },
   {
-    id: 'hero-living-specs',
-    from: 'living-specs/assets/captures/ls-tree.png',
-    crop: { x: 0, y: 0, w: 1500 },
-    aspect: ASPECT,
-    width: 1600,
-  },
-  {
+    // Two comments under the requirement they annotate, one open on Refine.
     id: 'hero-review',
     from: 'review/assets/captures/cm-open.png',
-    crop: { x: 435, y: 163, w: 1415 },
+    crop: { x: 430, y: 180, w: 1400 },
+    aspect: ASPECT,
+    width: 1600,
+  },
+  {
+    // A hand-taken real-window shot, not a clip capture: the bug page has no
+    // composition of its own.
+    id: 'hero-bug',
+    fromFile: 'docs/screenshots/live-bug-story.png',
+    crop: { x: 0, y: 70, w: 1700 },
     aspect: ASPECT,
     width: 1600,
   },
@@ -131,6 +139,10 @@ function newestRender(id) {
 }
 
 function sourceFor(still) {
+  if (still.fromFile) {
+    const p = path.join(ROOT, still.fromFile);
+    return fs.existsSync(p) ? p : null;
+  }
   if (still.from) {
     const p = path.join(CLIPS, still.from);
     return fs.existsSync(p) ? p : null;
@@ -138,11 +150,17 @@ function sourceFor(still) {
   return newestRender(still.fromRender);
 }
 
-const missing = STILLS.filter((s) => !sourceFor(s));
+// --only builds a subset, so one still can be recut without every other
+// still's gitignored capture or render being on disk.
+const onlyAt = process.argv.indexOf('--only');
+const only = onlyAt > -1 ? new Set((process.argv[onlyAt + 1] || '').split(',')) : null;
+const wanted = only ? STILLS.filter((s) => only.has(s.id)) : STILLS;
+
+const missing = wanted.filter((s) => !sourceFor(s));
 if (missing.length) {
   console.error('build-stills: sources are missing.\n');
   for (const s of missing) {
-    console.error(`  ${s.id.padEnd(20)} ${s.from || `${s.fromRender} (no render yet)`}`);
+    console.error(`  ${s.id.padEnd(20)} ${s.fromFile || s.from || `${s.fromRender} (no render yet)`}`);
   }
   console.error(
     '\n  Captures:  npm run clips:capture -- --clips overview,living-specs,review' +
@@ -154,7 +172,7 @@ if (missing.length) {
 
 fs.mkdirSync(OUT, { recursive: true });
 
-for (const still of STILLS) {
+for (const still of wanted) {
   const src = sourceFor(still);
   const dest = path.join(OUT, `${still.id}.png`);
   const { x, y, w } = still.crop;

@@ -16,6 +16,7 @@ import SoonChip from './SoonChip.astro';
     lead     the two sentences saying what it will be
     default  whatever is true and useful today
     back     the links out
+    form     replaces the waitlist form, for a list with a backend of its own
 
   The waitlist posts to a PostHog survey when one is configured for the list,
   and says plainly that it stored nothing when one is not. Both halves matter:
@@ -88,35 +89,37 @@ const fieldId = `${waitlistId}-email`;
           <p class="waitlist-body">{waitlistNote}</p>
         </div>
 
-        <form
-          class="waitlist-form"
-          data-waitlist={waitlistId}
-          data-survey={surveyId || undefined}
-          novalidate
-        >
-          <div class="field">
-            <label for={fieldId}>Email address</label>
-            <input
-              id={fieldId}
-              name="email"
-              type="email"
-              inputmode="email"
-              autocomplete="email"
-              placeholder="you@example.com"
-              aria-describedby={`${waitlistId}-status`}
-            />
-          </div>
+        <slot name="form">
+          <form
+            class="waitlist-form"
+            data-waitlist={waitlistId}
+            data-survey={surveyId || undefined}
+            novalidate
+          >
+            <div class="field">
+              <label for={fieldId}>Email address</label>
+              <input
+                id={fieldId}
+                name="email"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                aria-describedby={`${waitlistId}-status`}
+              />
+            </div>
 
-          <Button type="submit" size="md">Join the list</Button>
+            <Button type="submit" size="md">Join the list</Button>
 
-          <p class="form-note" id={`${waitlistId}-status`} role="status" aria-live="polite" data-waitlist-status>
-            {
-              surveyId
-                ? 'One message, on the day it ships. No newsletter, and you can reply to be taken off.'
-                : 'This form has no backend yet, so nothing you type here is stored or sent.'
-            }
-          </p>
-        </form>
+            <p class="form-note" id={`${waitlistId}-status`} role="status" aria-live="polite" data-waitlist-status>
+              {
+                surveyId
+                  ? 'One message, on the day it ships. No newsletter, and you can reply to be taken off.'
+                  : 'This form has no backend yet, so nothing you type here is stored or sent.'
+              }
+            </p>
+          </form>
+        </slot>
       </div>
     </div>
   </section>

@@ -1,0 +1,133 @@
+---
+/**
+ * /course/signup/
+ *
+ * Where a plain form post to /api/course-signup lands when the browser has no
+ * JavaScript. The endpoint redirects here with the outcome as the hash, and the
+ * matching sentence shows through :target, so this page needs no script either.
+ * Opened with no hash, it is just the form.
+ */
+import BaseLayout from '../../components/BaseLayout.astro';
+import CourseSignup from '../../components/CourseSignup.astro';
+import SoonChip from '../../components/SoonChip.astro';
+import { SIGNUP_MESSAGES } from '../../data/courseSignup';
+
+const outcomes = [
+  { id: 'ok', title: 'You’re on the list', body: 'One message, on the day it opens. No newsletter.' },
+  { id: 'invalid', title: 'That address did not work', body: SIGNUP_MESSAGES.invalid },
+  { id: 'closed', title: 'The list is not open yet', body: SIGNUP_MESSAGES.closed },
+  { id: 'error', title: 'That did not go through', body: SIGNUP_MESSAGES.error },
+];
+---
+
+<BaseLayout
+  title="Course list"
+  description="Leave an address to hear when the SpecKit Companion course on spec-driven development with Spec Kit opens."
+>
+  <meta slot="head" name="robots" content="noindex" />
+  <section class="signup">
+    <div class="inner">
+      {
+        outcomes.map((outcome) => (
+          <div class="outcome" id={outcome.id} role="status">
+            <h1>{outcome.title}</h1>
+            <p>{outcome.body}</p>
+          </div>
+        ))
+      }
+
+      <div class="ask">
+        <h1>
+          A course is coming
+          <SoonChip class="chip" />
+        </h1>
+        <p>
+          Applying spec-driven development with Spec Kit: from a vague idea to a spec, a plan, tasks
+          and shipped code, on real projects. Nothing is recorded yet and there is no date.
+        </p>
+        <CourseSignup id="course-signup" placement="signup" />
+      </div>
+
+      <p class="back"><a href="/course/">See the outline it would follow</a> or <a href="/">go back to the start</a>.</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-26);
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 72px var(--pad-section-x) 96px;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0 0 var(--space-12);
+    font-size: var(--fs-h2);
+    font-weight: var(--fw-black);
+    letter-spacing: var(--ls-h2-stat);
+  }
+
+  h1 :global(.chip) {
+    margin-left: var(--space-8);
+    vertical-align: middle;
+  }
+
+  p {
+    max-width: 58ch;
+    margin: 0 auto;
+    color: var(--text-body);
+    font-size: var(--fs-lead);
+    line-height: var(--lh-ui);
+  }
+
+  .ask {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-18);
+  }
+
+  .ask h1 {
+    margin: 0;
+  }
+
+  /* One outcome shows, the one the address names. Success replaces the form;
+     the other three sit above it so you can try again. */
+  .outcome {
+    display: none;
+  }
+
+  .outcome:target {
+    display: block;
+  }
+
+  .outcome:not(#ok):target h1 {
+    font-size: var(--fs-h3);
+    color: var(--text-error);
+  }
+
+  #ok:target ~ .ask {
+    display: none;
+  }
+
+  .back {
+    font-size: var(--fs-ui);
+    color: var(--text-muted);
+  }
+
+  .back a {
+    color: var(--accent);
+    text-underline-offset: 4px;
+  }
+
+  @media (max-width: 860px) {
+    .inner {
+      padding: 48px var(--space-20) 72px;
+    }
+  }
+</style>

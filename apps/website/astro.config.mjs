@@ -148,8 +148,10 @@ export default defineConfig({
       // navigate/, steps/, results/ and ide/, which kept their addresses when
       // the sidebar was regrouped.
       //
-      // Introduction and Install are /docs/ and /docs/install: the first is the
-      // section root, and the second is linked from two published READMEs.
+      // Introduction and Install where you work are /docs/ and /docs/install:
+      // the first is the section root, and the second is linked from published
+      // READMEs. It is a launchpad: three cards, each opening the Install page
+      // that leads its own group below and holds that tool's full path.
       //
       // Configuration sits with the IDE pages and keeps its /docs/reference/
       // address. Telemetry is a page without a sidebar entry: Configuration
@@ -166,6 +168,7 @@ export default defineConfig({
         {
           label: 'In your IDE',
           items: [
+            { label: 'Install', slug: 'docs/ide/install' },
             { label: 'Choose an AI provider', slug: 'docs/ide/choose-a-provider' },
             { label: 'Configuration', slug: 'docs/reference/configuration' },
             { label: 'Your first spec', slug: 'docs/start/your-first-spec' },

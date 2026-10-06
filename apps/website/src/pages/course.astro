@@ -12,6 +12,7 @@
  * that exists today, except the builder one, which is marked as not shipped.
  */
 import SoonPageLayout from '../components/SoonPageLayout.astro';
+import CourseSignup from '../components/CourseSignup.astro';
 
 /*
   Three titles here read differently from how the feature is usually described,
@@ -93,27 +94,25 @@ const guides = [
   },
 ];
 
-/* The PostHog survey this list posts to. Unset, the form still renders and
-   still counts the interest, but tells the visitor nothing was stored. */
-const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_COURSE;
 ---
 
 <SoonPageLayout
   title="Course"
-  description="A course on spec-driven development with SpecKit Companion is not recorded yet. Here is the outline it would follow, the written guides that cover the same ground, and a list to join."
+  description="A course on applying spec-driven development with Spec Kit is coming. It is not recorded yet. Here is the outline it would follow, the written guides that cover the same ground, and a list to join."
   headline="A course, once there is one worth sitting through"
   standing="Nothing is recorded and there is no date. What follows is the outline it would run, so you know what you would be joining a list for."
-  surveyId={surveyId}
   waitlistId="course"
-  waitlistNote="Once this list is wired up, an address here gets exactly one message, on the day the thing ships. There is no newsletter behind it."
+  waitlistNote="An address here gets exactly one message, on the day the course opens. There is no newsletter behind it."
   pose="reading"
   poseAlt="The SpecKit Companion mascot sitting with an open book, reading."
 >
   <p slot="lead">
-    The plan is a walkthrough of taking real work through the pipeline end to end: writing the spec,
-    reading the plan, reviewing the tasks, and reading the run once it finishes. It has not been
-    made, so the honest answer to when is that we do not know.
+    The plan is a course on applying spec-driven development with Spec Kit: taking real work from a
+    vague idea to a spec, a plan, tasks and shipped code. It has not been made, so the honest answer
+    to when is that we do not know.
   </p>
+
+  <CourseSignup slot="form" id="course-page" placement="course" align="start" />
 
   <section class="section">
     <div class="inner">

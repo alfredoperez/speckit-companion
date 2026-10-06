@@ -1,7 +1,6 @@
 ---
 import StarlightSocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
-import SoonChip from './SoonChip.astro';
-import { INSTALL_HREF, isCurrentPath, navGroups } from './navLinks';
+import { INSTALL_HREF, isCurrentPath, navLinks } from './navLinks';
 
 /*
   Starlight's header has no slot for product links, so this component stands in
@@ -9,8 +8,13 @@ import { INSTALL_HREF, isCurrentPath, navGroups } from './navLinks';
   desktop bar and in the mobile menu.
 
   It reads the same ./navLinks.ts the landing-page nav does, so the two halves of
-  the site show one bar in one order: docs, the unshipped pair, changelog, then
-  install. Starlight's own social links render after it, unchanged.
+  the site show one bar in one order: docs, changelog, then install. Starlight's
+  own social links render after it, unchanged.
+
+  Every link here leaves the docs or lands on a page the docs do not own, so
+  each one is a plain navigation (data-astro-reload). Left to the page router,
+  a click on changelog downloaded the whole page, found it could not be swapped
+  in, and only then started the real load.
 */
 const here = Astro.url.pathname;
 ---
@@ -18,21 +22,20 @@ const here = Astro.url.pathname;
 <nav class="docs-nav" aria-label="Site">
   <ul>
     {
-      navGroups.map((group) => (
-        <li class:list={['group', group.length > 1 && 'is-pair']}>
-          {group.map((link) => (
-            <span class="item">
-              <a href={link.href} aria-current={isCurrentPath(here, link.href) ? 'page' : undefined}>
-                {link.label}
-              </a>
-              {link.soon && <SoonChip />}
-            </span>
-          ))}
+      navLinks.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            aria-current={isCurrentPath(here, link.href) ? 'page' : undefined}
+            data-astro-reload={link.href.startsWith('/docs/') ? undefined : ''}
+          >
+            {link.label}
+          </a>
         </li>
       ))
     }
-    <li class="group">
-      <a class="install" href={INSTALL_HREF}>install</a>
+    <li>
+      <a class="install" href={INSTALL_HREF} data-astro-reload>install</a>
     </li>
   </ul>
 </nav>
@@ -54,23 +57,6 @@ const here = Astro.url.pathname;
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-
-  .group {
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* The unshipped pair sits tighter than the gap between groups, the same
-     14px against 22px the landing-page nav uses. */
-  .group.is-pair {
-    gap: var(--space-14);
-  }
-
-  .item {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-6);
   }
 
   a {
