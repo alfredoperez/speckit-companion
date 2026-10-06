@@ -336,12 +336,12 @@ const installPaths: Array<{
     id: 'vscode',
     hash: 'install-vscode',
     label: 'VS Code',
-    full: { label: 'the full VS Code path, with what you should see at each step', href: '/docs/install/#in-vs-code' },
+    full: { label: 'See the full VS Code path, with what to expect at each step', href: '/docs/install/#in-vs-code' },
     shot: {
       src: '/landing/quickstart-vscode.png',
       width: 1300,
       height: 800,
-      window: 'VS Code · the spec viewer',
+      window: 'The spec viewer, in a VS Code tab',
       alt: 'The spec viewer in a VS Code tab: a spec marked Implementing, its documents as tabs, and the Tasks tab at 50% with the first two tasks ticked.',
     },
     steps: [
@@ -359,14 +359,14 @@ const installPaths: Array<{
     hash: 'install-copilot-app',
     label: 'GitHub Copilot app',
     full: {
-      label: 'the full Copilot app path, with what you should see at each step',
+      label: 'See the full Copilot app path, with what to expect at each step',
       href: '/docs/install/#in-the-github-copilot-app',
     },
     shot: {
       src: '/landing/quickstart-copilot-app.png',
       width: 1400,
       height: 728,
-      window: 'Copilot app · the spec board',
+      window: 'The spec board, beside the chat',
       alt: 'The spec board in the GitHub Copilot app: every spec with its status on the left, and the selected spec on the right with its four steps and a Run implement button.',
     },
     steps: [
@@ -398,14 +398,14 @@ const installPaths: Array<{
     hash: 'install-claude-code',
     label: 'Claude Code',
     full: {
-      label: 'the full Claude Code path, with what you should see at each step',
+      label: 'See the full Claude Code path, with what to expect at each step',
       href: '/docs/install/#in-claude-code',
     },
     shot: {
       src: '/landing/quickstart-claude-code.png',
       width: 1000,
       height: 942,
-      window: 'Claude Code · /speckit-tracker',
+      window: 'The tracker pane, beside the transcript',
       alt: 'The Companion pane in a Claude Code terminal: the four steps with Implement running, the documents the spec has, and its tasks at 3 of 6.',
     },
     steps: [
@@ -436,7 +436,7 @@ const installPaths: Array<{
 // One leaf per section below the hero, in document order. The script measures
 // where each section boundary falls and places its leaf on the stem; a leaf
 // with no section to mark stays hidden.
-const stemLeaves = ['quick start', 'surfaces', 'demo', 'box', 'claim', 'install'];
+const stemLeaves = ['surfaces', 'demo', 'quick start', 'box', 'claim', 'install'];
 
 // Entrances stagger at 60ms. The delay is data, not a magic number in the CSS.
 const REVEAL_STAGGER = 60;
@@ -661,115 +661,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     </div>
   </section>
 
-  <!-- QUICK START -->
-  <section class="section section--quickstart" id="quick-start">
-    <div class="inner stack-16">
-      <p class="eyebrow">QUICK START</p>
-
-      <h2 class="quick-heading">Install it where you work</h2>
-
-      <div class="pills pills--paths" role="tablist" aria-label="Where you work" data-path-tabs>
-        {
-          installPaths.map((path, index) => (
-            <a
-              class="pill"
-              role="tab"
-              id={`tab-${path.hash}`}
-              href={`#${path.hash}`}
-              data-path-tab={path.hash}
-              aria-controls={path.hash}
-              aria-selected={index === 0 ? 'true' : 'false'}
-              data-analytics="install_path_click"
-              data-analytics-path={path.id}
-            >
-              {path.label}
-            </a>
-          ))
-        }
-      </div>
-
-      {
-        installPaths.map((path) => (
-          <div class="path" id={path.hash} role="tabpanel" aria-labelledby={`tab-${path.hash}`} data-path-panel>
-            <h3 class="path-name">{path.label}</h3>
-            <div class="path-body">
-            <div class="path-main">
-            <div class="steps" data-steps>
-              <span class="spark" data-spark aria-hidden="true" />
-              {path.steps.map((step, index) => (
-                <div class="step" data-step>
-                  <span class="step-flare" aria-hidden="true" />
-                  <span class="step-num" aria-hidden="true">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <div class="step-text">
-                    <span class="step-title">
-                      {step.title}
-                      {step.optional && <span class="step-tag">optional</span>}
-                    </span>
-                    <span class="step-sub">{step.sub}</span>
-                  </div>
-                  <div class="step-action step-actions">
-                    {step.actions.map((action) =>
-                      action.kind === 'button' ? (
-                        <Button
-                          href={action.href}
-                          size="md"
-                          data-analytics={action.analytics}
-                          data-analytics-placement="quick-start"
-                        >
-                          {action.label}
-                        </Button>
-                      ) : action.analytics ? (
-                        <CodeLine
-                          command={action.command}
-                          prompt={action.prompt}
-                          data-analytics={action.analytics}
-                          data-analytics-placement="quick-start"
-                        />
-                      ) : (
-                        <CodeLine command={action.command} prompt={action.prompt} />
-                      )
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <a class="watch-link path-full" href={path.full.href}>
-              {path.full.label} →
-            </a>
-            </div>
-            <figure class="path-shot window">
-              <div class="window-bar" aria-hidden="true">
-                <span class="dot" />
-                <span class="dot" />
-                <span class="dot" />
-                <span class="window-label">{path.shot.window}</span>
-              </div>
-              <img
-                src={path.shot.src}
-                alt={path.shot.alt}
-                width={path.shot.width}
-                height={path.shot.height}
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
-            </div>
-          </div>
-        ))
-      }
-
-      <a class="watch-link" href="/docs/start/your-first-spec/">
-        <svg width="16" height="16" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-          <circle cx="13" cy="13" r="11" stroke="currentColor" stroke-width="1.6"></circle>
-          <path d="M10.5 8.5L18 13L10.5 17.5V8.5Z" fill="currentColor"></path>
-        </svg>
-        <span>watch: your first spec, from Create Spec to the Overview →</span>
-      </a>
-    </div>
-  </section>
-
   <!-- WHERE IT RUNS -->
   <section class="section section--surfaces" id="where-it-runs">
     <div class="inner stack-16">
@@ -908,6 +799,94 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       <p class="demo-caption">
         Every picture is the extension itself. The first four are short clips.
       </p>
+    </div>
+  </section>
+
+  <!-- QUICK START -->
+  <section class="section section--quickstart" id="quick-start">
+    <div class="inner qs">
+      <div class="pills pills--paths" role="tablist" aria-label="Where you work" data-path-tabs>
+        {
+          installPaths.map((path, index) => (
+            <a
+              class="pill"
+              role="tab"
+              id={`tab-${path.hash}`}
+              href={`#${path.hash}`}
+              data-path-tab={path.hash}
+              aria-controls={path.hash}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              data-analytics="install_path_click"
+              data-analytics-path={path.id}
+            >
+              {path.label}
+            </a>
+          ))
+        }
+      </div>
+
+      <div class="qs-say">
+        <h2>Install it where you work</h2>
+        <p>Three steps wherever you are. They all read the same spec files, so you can use more than one.</p>
+      </div>
+
+      {
+        installPaths.map((path) => (
+          <div class="path" id={path.hash} role="tabpanel" aria-labelledby={`tab-${path.hash}`} data-path-panel>
+            <h3 class="path-name">{path.label}</h3>
+            <div class="qs-sheet">
+              <ol class="qs-steps">
+                {path.steps.map((step) => (
+                  <li class="qs-step">
+                    <p class="qs-step-title">
+                      {step.title}
+                      {step.optional && <span class="qs-optional">optional</span>}
+                    </p>
+                    <p class="qs-step-sub">{step.sub}</p>
+                    <div class="qs-step-actions">
+                      {step.actions.map((action) =>
+                        action.kind === 'button' ? (
+                          <Button
+                            href={action.href}
+                            size="md"
+                            data-analytics={action.analytics}
+                            data-analytics-placement="quick-start"
+                          >
+                            {action.label}
+                          </Button>
+                        ) : action.analytics ? (
+                          <CodeLine
+                            command={action.command}
+                            prompt={action.prompt}
+                            data-analytics={action.analytics}
+                            data-analytics-placement="quick-start"
+                          />
+                        ) : (
+                          <CodeLine command={action.command} prompt={action.prompt} />
+                        )
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <figure class="qs-shot">
+                <img
+                  src={path.shot.src}
+                  alt={path.shot.alt}
+                  width={path.shot.width}
+                  height={path.shot.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>{path.shot.window}</figcaption>
+              </figure>
+            </div>
+            <a class="qs-full" href={path.full.href}>
+              {path.full.label}
+            </a>
+          </div>
+        ))
+      }
     </div>
   </section>
 
@@ -1374,220 +1353,225 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   /* ----------------------------------------------------------- quick start */
 
-  .section--quickstart .inner {
-    padding-top: 56px;
-    padding-bottom: 56px;
-  }
-
   .section--quickstart {
     scroll-margin-top: var(--space-24);
   }
 
-  .steps {
-    container-type: inline-size;
-    position: relative;
-    background: var(--panel);
-    border: 1px solid var(--border-panel);
-    border-radius: var(--radius-sm);
+  .section--quickstart .inner {
+    max-width: 1220px;
+    padding-top: 72px;
+    padding-bottom: 72px;
   }
 
-  .step {
-    position: relative;
+  .qs {
     display: flex;
-    align-items: center;
-    gap: var(--space-20);
-    padding: var(--space-22) var(--space-24);
-  }
-
-  .step + .step {
-    border-top: 1px solid var(--rule);
-  }
-
-  .step-num {
-    flex: none;
-    width: var(--step-col);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: var(--fs-ui-sm);
-  }
-
-  .step-text {
-    display: flex;
-    flex: 1 1 auto;
     flex-direction: column;
-    gap: var(--space-4);
-    min-width: 200px;
+    align-items: center;
+    gap: var(--space-26);
   }
 
-  .step-title {
-    font-size: var(--fs-body);
-    font-weight: var(--fw-bold);
-  }
-
-  .step-sub {
-    color: var(--text-muted);
-    font-size: var(--fs-ui-sm);
-  }
-
-  /* The install command is long. The chip keeps its right-hand place and lets
-     the command scroll inside itself rather than pushing the row wide. */
-  .step-action {
-    flex: 0 1 auto;
-    min-width: 0;
-    max-width: 480px;
-  }
-
-  .quick-heading {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-bold);
-  }
-
-  /* The switcher is the first thing in the section, so it sits at the left
-     edge with the eyebrow, not centred like the demo's. */
-  .pills.pills--paths {
-    align-self: flex-start;
-  }
-
-  .pills.pills--paths .pill {
+  .pills--paths .pill {
     text-decoration: none;
+  }
+
+  .qs-say {
+    max-width: 62ch;
     text-align: center;
   }
 
+  .qs-say h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-h2);
+    line-height: 1.15;
+  }
+
+  .qs-say p {
+    margin: var(--space-10) 0 0;
+    color: var(--text-body);
+    font-size: var(--fs-lead);
+    line-height: var(--lh-ui);
+  }
+
   .path {
+    width: 100%;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: var(--space-16);
-    scroll-margin-top: var(--space-24);
   }
 
   .path[hidden] {
     display: none;
   }
 
-  /* The steps, and beside them what you get for following them. */
-  .path-body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-24);
-  }
-
-  .path-main {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-16);
-    min-width: 0;
-  }
-
-  .path-shot {
-    width: 100%;
-    max-width: 620px;
-    margin: 0;
-  }
-
-  .path-shot img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  /* Two columns need more room than the page column has, so this section opens
-     to the hero's width, the same way and for the same reason. */
-  @media (min-width: 1100px) {
-    .section--quickstart .inner {
-      max-width: 1220px;
-      padding-left: var(--pad-hero-x);
-      padding-right: var(--pad-hero-x);
-    }
-
-    .path-body {
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      align-items: start;
-      gap: var(--space-40);
-    }
-
-    .path-shot {
-      position: sticky;
-      top: var(--space-24);
-      max-width: none;
-    }
-  }
-
-  /* With no script every path is on the page, one after the other, and each
-     needs its name. With the switcher working, the selected pill is the name. */
   .path-name {
-    margin: var(--space-8) 0 0;
+    margin: 0;
     color: var(--text-primary);
-    font-size: var(--fs-lead);
-    font-weight: var(--fw-bold);
+    font-size: var(--fs-h3);
   }
 
   .section--quickstart[data-paths-ready] .path-name {
     display: none;
   }
 
-  .step-tag {
-    display: inline-block;
-    margin-left: var(--space-8);
-    padding: 1px var(--space-8);
+  /* One sheet: the steps on the left, what you end up with on the right. The
+     picture is flush with the sheet, so there is one frame, not two. */
+  .qs-sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    overflow: hidden;
+    background: var(--panel);
     border: 1px solid var(--border-accent);
-    border-radius: var(--radius-pill);
-    color: var(--text-body);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    font-weight: var(--fw-semibold);
-    letter-spacing: var(--ls-eyebrow-sm);
-    text-transform: uppercase;
-    vertical-align: middle;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lift);
   }
 
-  .step-actions {
+  .qs-steps {
+    counter-reset: qs;
     display: flex;
-    flex: 0 0 min(440px, 46%);
     flex-direction: column;
-    align-items: stretch;
+    margin: 0;
+    padding: var(--space-26) 34px;
+    list-style: none;
+  }
+
+  .qs-step {
+    counter-increment: qs;
+    position: relative;
+    padding: 0 0 var(--space-26) 44px;
+  }
+
+  .qs-step:last-child {
+    padding-bottom: 0;
+  }
+
+  /* The number and the line under it: the steps really are a sequence. */
+  .qs-step::before {
+    content: counter(qs);
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--border-accent);
+    border-radius: 50%;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+
+  .qs-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 32px;
+    bottom: 6px;
+    left: 13px;
+    width: 1px;
+    background: var(--rule);
+  }
+
+  .qs-step-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
     gap: var(--space-8);
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+    line-height: 26px;
   }
 
-  .step-actions > :global(*) {
+  .qs-optional {
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-medium);
+  }
+
+  .qs-step-sub {
+    max-width: 52ch;
+    margin: var(--space-4) 0 0;
+    color: var(--text-body);
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+  }
+
+  .qs-step-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-8);
+    margin-top: var(--space-10);
+  }
+
+  .qs-step-actions > :global(.code-line) {
+    width: 100%;
     max-width: 100%;
-    min-width: 0;
   }
 
-  .step-actions > :global(.btn) {
-    align-self: flex-end;
+  .qs-shot {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    border-top: 1px solid var(--rule);
+    background: var(--demo-fill);
   }
 
-  /* Beside a picture the steps column is too narrow for a command at the side
-     of its step, so the command goes under the text, on the text's own edge.
-     A phone already stacks them, edge to edge, further down. */
-  @media (min-width: 861px) {
-    @container (max-width: 620px) {
-      .step {
-        flex-wrap: wrap;
-        align-items: flex-start;
-        row-gap: var(--space-12);
-      }
+  .qs-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    flex: 1;
+    object-fit: cover;
+    object-position: top left;
+  }
 
-      .step-num {
-        padding-top: 3px;
-      }
+  .qs-shot figcaption {
+    padding: var(--space-10) var(--space-16);
+    border-top: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+  }
 
-      .step-text {
-        flex: 1 1 0;
-        min-width: 0;
-      }
+  .qs-full {
+    color: var(--accent);
+    font-size: var(--fs-ui);
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
+  }
 
-      .step-actions {
-        flex: 1 1 100%;
-        padding-left: calc(var(--step-col) + var(--space-20));
-      }
+  .qs-full:hover {
+    color: var(--accent-hover);
+  }
 
-      .step-actions > :global(.btn) {
-        align-self: flex-start;
-      }
+  .qs-full:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 1000px) {
+    .qs-sheet {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    }
+
+    .qs-shot {
+      border-top: 0;
+      border-left: 1px solid var(--rule);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .qs-steps {
+      padding: var(--space-22) var(--space-16);
+    }
+
+    .qs-step {
+      padding-left: 38px;
     }
   }
 
