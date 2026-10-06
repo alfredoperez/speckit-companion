@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **The header and the Tasks tab agree.** The header counts ticked boxes out of every task in `tasks.md`, the same read the tab's percentage uses. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: spec-viewer -->
+- **A finished task never reads as in progress.** The chip shows only on an open task while the run is still implementing. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: spec-viewer -->
+- **A line action reaches the line you clicked.** Comments, edits and ticked boxes use the line's place in the file, so Refine names the right section. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: spec-viewer -->
+
 ## [0.36.0] - 2026-10-06
 
 Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.

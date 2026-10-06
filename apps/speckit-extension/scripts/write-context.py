@@ -355,6 +355,8 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     if from_implementing_at_100:
         append_complete(log, "implement", by=by, at=_now_iso())
     ctx["status"] = "completed"
+    # Nothing is in flight in a finished spec; the task steps leave the last finished id here.
+    ctx["currentTask"] = None
     commit_log(ctx, log)
     atomic_write(target, ctx)
     _gc_events_log(feature_dir)

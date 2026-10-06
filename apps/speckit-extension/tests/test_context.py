@@ -1029,6 +1029,15 @@ class MarkCompleteTests(unittest.TestCase):
         self.assertEqual(ctx["currentStep"], "implement")
         self.assertEqual(ctx["history"][-1]["step"], "implement")
 
+    def test_leaves_no_task_in_flight(self) -> None:
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
+        wc.sync_tasks(self.fd, self.fd / "tasks.md", "implemented", "extension")
+        self.assertEqual(_ctx(self.fd)["currentTask"], "T002")
+        wc.mark_spec_complete(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        self.assertIsNone(ctx["currentTask"])
+
     def test_history_is_untouched(self) -> None:
         self._implemented_spec()
         before = list(_ctx(self.fd)["history"])

@@ -36,7 +36,7 @@ Each region has a title and, on the right, a count. Skim the counts first. They 
 | Intent | The one sentence the run answers to. Beside it: the approach, the working area, a sizing line such as `Sized simple: 6 files, 8 tasks projected`, and any living specs the run loaded. |
 | Run overview | One entry per phase with the time it took, and the run's total as active time |
 | Expectations | Constraints on one side, declared non-goals on the other |
-| Verified | Each check, the command the assistant said it ran, and the outcome it reported |
+| Verified | Each check with its command and outcome: the ones the recorder ran, then the ones the assistant only reported |
 | Decisions | The choice, why, and what was rejected |
 | Coverage | Each requirement, the tasks that delivered it and the tests that exercise it |
 | Run log | Collapsed: the per-phase timeline, per-task records, concerns, files touched and review comments |
@@ -60,7 +60,7 @@ When some phases have no time, the head reads "Timing coverage: N of M phases", 
 
 **Expectations.** Something you expected is not in the diff? Check the non-goals before calling it a gap.
 
-**Verified.** The count reads `3 passed`, or `2 passed · 1 warned` when the run reported harmless warnings. This is a report, not a re-run. A green row means the assistant said it passed. Use it to learn which commands to run yourself.
+**Verified.** The count reads `3 checked`, or `2 checked · 1 reported`. A checked row is a command the recorder ran itself, and it keeps the exit code. A reported row, marked with a quote, is the assistant's own account of something that could not be run, so `0 checked · 5 reported` means nothing was run for you. Use the list to learn which commands to run yourself.
 
 **Decisions.** The first three show and the rest sit behind "Show N more decisions". The rejected line is the useful part. It is what a later session would otherwise rediscover the slow way.
 

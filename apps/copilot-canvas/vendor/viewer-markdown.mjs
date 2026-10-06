@@ -827,6 +827,37 @@ function writtenQuestion(index) {
   return asked.length === marked ? asked[index] : void 0;
 }
 
+// apps/vscode/webview/src/spec-viewer/markdown/sourceLines.ts
+function mapToSourceLines(source, processed) {
+  const processedLines = processed.split("\n");
+  if (source === processed) return processedLines.map((_, i) => i + 1);
+  const sourceLines = source.split("\n");
+  const map = new Array(processedLines.length).fill(0);
+  let cursor = 0;
+  for (let i = 0; i < processedLines.length; i++) {
+    const line = processedLines[i];
+    if (!line.trim()) continue;
+    const found = sourceLines.indexOf(line, cursor);
+    if (found === -1) continue;
+    map[i] = found + 1;
+    cursor = found + 1;
+  }
+  let prevIndex = -1;
+  let prevSource = 0;
+  for (let i = 0; i <= processedLines.length; i++) {
+    const atEnd = i === processedLines.length;
+    if (!atEnd && map[i] === 0) continue;
+    const nextSource = atEnd ? sourceLines.length + 1 : map[i];
+    const floor = Math.min(prevSource + 1, Math.max(nextSource - 1, 1));
+    for (let j = prevIndex + 1; j < i; j++) {
+      map[j] = Math.max(floor, nextSource - (i - j));
+    }
+    prevIndex = i;
+    prevSource = nextSource;
+  }
+  return map;
+}
+
 // apps/vscode/webview/src/spec-viewer/markdown/renderer.ts
 var currentTaskId = null;
 var hasSpecContext = false;
@@ -961,6 +992,7 @@ function renderMarkdown(markdown) {
   let html = "";
   const slugCounts = /* @__PURE__ */ new Map();
   const lines = markdown.split("\n");
+  const sourceLineOf = mapToSourceLines(source, markdown);
   let inCodeBlock = false;
   let codeBlockLang = "";
   let codeContent = [];
@@ -988,7 +1020,7 @@ function renderMarkdown(markdown) {
   let paragraph = null;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const sourceLineNum = i + 1;
+    const sourceLineNum = sourceLineOf[i];
     const trimmedLine = line.trim();
     if (trimmedLine.startsWith("```")) {
       if (inList && !inCodeBlock) {
@@ -1121,7 +1153,7 @@ function renderMarkdown(markdown) {
         const taskId = taskIdExtract ? taskIdExtract[1] : null;
         const classes = ["task-item", "line"];
         if (checked) classes.push("checked");
-        if (taskId && taskId === currentTaskId) classes.push("in-progress");
+        if (taskId && taskId === currentTaskId && !checked) classes.push("in-progress");
         const classAttr = `class="${classes.join(" ")}"`;
         const dataTaskAttr = taskId ? ` data-task-id="${taskId}"` : "";
         let body = taskId ? taskText.replace(/^\s*(?:<strong>\s*)?T\d+(?:\s*<\/strong>)?\s*/i, "") : taskText;
@@ -1195,13 +1227,14 @@ function renderMarkdown(markdown) {
       html += line + "\n";
       continue;
     }
-    if (paragraph && paragraph.htmlEnd === html.length && paragraph.lastLine === sourceLineNum - 1 && continuesParagraph(paragraph.lines[paragraph.lines.length - 1], line)) {
+    if (paragraph && paragraph.htmlEnd === html.length && paragraph.lastIndex === i - 1 && continuesParagraph(paragraph.lines[paragraph.lines.length - 1], line)) {
       html = html.slice(0, paragraph.htmlStart);
       paragraph.lines.push(line.trimStart());
     } else {
-      paragraph = { lines: [line], firstLine: sourceLineNum, lastLine: sourceLineNum, htmlStart: html.length, htmlEnd: 0 };
+      paragraph = { lines: [line], firstLine: sourceLineNum, lastLine: sourceLineNum, lastIndex: i, htmlStart: html.length, htmlEnd: 0 };
     }
     paragraph.lastLine = sourceLineNum;
+    paragraph.lastIndex = i;
     html += wrapWithLineActions(`<p>${parseInline(paragraph.lines.join(" "))}</p>`, paragraph.firstLine, paragraph.lastLine);
     paragraph.htmlEnd = html.length;
   }
