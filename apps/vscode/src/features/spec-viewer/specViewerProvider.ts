@@ -14,6 +14,7 @@ import { createMessageHandlers, type LivingUndoAction } from "./messageHandlers"
 import { computeStaleness, isStalenessRelevant } from "./staleness";
 import {
   computePanelDerivedState,
+  inFlightTask,
   resolveDisplayDocument,
   resolveTabClickDocument,
   resolveSpecStatus,
@@ -1090,6 +1091,7 @@ export class SpecViewerProvider {
         phases: derived.phases,
         currentPhase: derived.currentPhase,
         taskCompletionPercent: derived.taskCompletionPercent,
+        taskCounts: derived.taskCounts,
       };
 
       if (instance.state.landing === "overview" && instance.overviewAvailable === undefined) {
@@ -1139,6 +1141,9 @@ export class SpecViewerProvider {
         undefined,     // readOnly — default
         resolveSpecAssistant(featureCtx),
         getSpecTerminal(specDirectory) !== undefined,
+        undefined,     // reportActions — default
+        undefined,     // report — default
+        derived.taskCounts,
       );
 
       this.outputChannel.appendLine(
@@ -1338,6 +1343,7 @@ export class SpecViewerProvider {
 
       instance.state.currentDocument = resolvedType;
       instance.state.taskCompletionPercent = derived.taskCompletionPercent;
+      instance.state.taskCounts = derived.taskCounts;
       instance.state.currentPhase = getPhaseNumber(resolvedType);
 
       instance.panel.title = this.panelTitle(instance, doc.label);
@@ -1445,6 +1451,9 @@ export class SpecViewerProvider {
     const effectiveTaskPct = options?.skipContentAndStaleness
       ? instance.state.taskCompletionPercent
       : derived.taskCompletionPercent;
+    const effectiveTaskCounts = options?.skipContentAndStaleness
+      ? instance.state.taskCounts
+      : derived.taskCounts;
     const effectiveSpecStatus = options?.skipContentAndStaleness
       ? resolveSpecStatus(featureCtx, effectiveTaskPct)
       : derived.specStatus;
@@ -1463,11 +1472,12 @@ export class SpecViewerProvider {
       currentDoc: resolvedType,
       workflowPhase: derived.workflowPhase,
       taskCompletionPercent: effectiveTaskPct,
+      taskCounts: effectiveTaskCounts,
       isViewingRelatedDoc: derived.isViewingRelatedDoc,
       enhancementButtons,
       stalenessMap,
       specStatus: effectiveSpecStatus,
-      currentTask: featureCtx?.currentTask ?? null,
+      currentTask: inFlightTask(featureCtx),
       activeStep: runInfo.tab,
       stepHistory: derived.stepHistoryByTab,
       badgeText: derived.badgeText,

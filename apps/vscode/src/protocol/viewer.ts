@@ -1,4 +1,5 @@
 import type { ReviewCommentDoc } from '../core/types/specContext';
+import type { TaskCounts } from '../core/utils/taskCheckboxes';
 import type { ReportNav } from '../features/reports/reportPageModel';
 
 /** Which banner a surface shows: the install pitch, or the out-of-date update naming both versions. */
@@ -201,6 +202,9 @@ export interface SpecViewerState {
 
     /** Task completion percentage (0-100) */
     taskCompletionPercent: number;
+
+    /** Ticked and total task boxes in tasks.md, cached beside the percentage they produce. */
+    taskCounts?: TaskCounts;
 }
 
 // ============================================
@@ -322,6 +326,8 @@ export interface NavState {
     workflowPhase: string;
     /** Task completion percentage */
     taskCompletionPercent: number;
+    /** Ticked and total task boxes in tasks.md: the header's task count, from the same read as the percentage. */
+    taskCounts?: TaskCounts;
     /** Whether viewing a related doc */
     isViewingRelatedDoc: boolean;
     /** Enhancement buttons config */

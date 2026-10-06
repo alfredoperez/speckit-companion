@@ -25,6 +25,7 @@ import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
 import { mockDoc, mockRelatedDoc, mockNavState } from '../components/__stories__/mockData';
 import { deriveStepHistory, deriveTimingSummary } from '../../../../src/features/specs/stepHistoryDerivation';
+import { countTaskCheckboxes } from '../../../../src/core/utils/taskCheckboxes';
 
 /** The slice of an on-disk .spec-context.json these stories consume. */
 export interface SpecContextData {
@@ -250,6 +251,10 @@ export function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view, l
         specContextName: livingName ?? ctx.specName,
         ...extraNav,
     });
+    const counts = docs.tasks ? countTaskCheckboxes(docs.tasks.md) : null;
+    if (counts && counts.total > 0 && Math.round((counts.checked / counts.total) * 100) === nav.taskCompletionPercent) {
+        nav.taskCounts = counts;
+    }
 
     return <FullViewer md={activeDoc?.md ?? docs[initialDoc].md} nav={nav} vs={vs} view={livingName ? 'document' : view} />;
 }

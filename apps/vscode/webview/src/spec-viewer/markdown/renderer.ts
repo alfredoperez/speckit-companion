@@ -28,6 +28,7 @@ import {
     preprocessLivingUncovered
 } from './livingComponents';
 import { markClarifications, rememberClarifications } from './clarifications';
+import { mapToSourceLines } from './sourceLines';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -280,6 +281,7 @@ export function renderMarkdown(markdown: string): string {
     let html = '';
     const slugCounts = new Map<string, number>();
     const lines = markdown.split('\n');
+    const sourceLineOf = mapToSourceLines(source, markdown);
     let inCodeBlock = false;
     let codeBlockLang = '';
     let codeContent: string[] = [];
@@ -308,12 +310,11 @@ export function renderMarkdown(markdown: string): string {
         blockquoteStartLine = 0;
     };
 
-    let paragraph: { lines: string[]; firstLine: number; lastLine: number; htmlStart: number; htmlEnd: number } | null = null;
+    let paragraph: { lines: string[]; firstLine: number; lastLine: number; lastIndex: number; htmlStart: number; htmlEnd: number } | null = null;
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
-        // Track the original line number (1-indexed)
-        const sourceLineNum = i + 1;
+        const sourceLineNum = sourceLineOf[i];
 
         // Code blocks (detect indented fences too, e.g. inside list items)
         const trimmedLine = line.trim();
@@ -480,7 +481,7 @@ export function renderMarkdown(markdown: string): string {
                 // Build classes — include 'line' so hover/comment affordances activate
                 const classes = ['task-item', 'line'];
                 if (checked) classes.push('checked');
-                if (taskId && taskId === currentTaskId) classes.push('in-progress');
+                if (taskId && taskId === currentTaskId && !checked) classes.push('in-progress');
 
                 const classAttr = `class="${classes.join(' ')}"`;
                 const dataTaskAttr = taskId ? ` data-task-id="${taskId}"` : '';
@@ -608,14 +609,15 @@ export function renderMarkdown(markdown: string): string {
         }
 
         // Paragraph. A source line directly under another paragraph line is the same paragraph, hard-wrapped.
-        if (paragraph && paragraph.htmlEnd === html.length && paragraph.lastLine === sourceLineNum - 1 &&
+        if (paragraph && paragraph.htmlEnd === html.length && paragraph.lastIndex === i - 1 &&
             continuesParagraph(paragraph.lines[paragraph.lines.length - 1], line)) {
             html = html.slice(0, paragraph.htmlStart);
             paragraph.lines.push(line.trimStart());
         } else {
-            paragraph = { lines: [line], firstLine: sourceLineNum, lastLine: sourceLineNum, htmlStart: html.length, htmlEnd: 0 };
+            paragraph = { lines: [line], firstLine: sourceLineNum, lastLine: sourceLineNum, lastIndex: i, htmlStart: html.length, htmlEnd: 0 };
         }
         paragraph.lastLine = sourceLineNum;
+        paragraph.lastIndex = i;
         html += wrapWithLineActions(`<p>${parseInline(paragraph.lines.join(' '))}</p>`, paragraph.firstLine, paragraph.lastLine);
         paragraph.htmlEnd = html.length;
     }

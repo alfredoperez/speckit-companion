@@ -6,6 +6,8 @@
   "author": { "name": "Alfredo Perez", "url": "https://github.com/alfredoperez" },
   "homepage": "https://speckit-companion.dev",
   "repository": "https://github.com/alfredoperez/speckit-companion",
+  "documentationUrl": "https://speckit-companion.dev/docs/claude-code/install/",
+  "supportUrl": "https://github.com/alfredoperez/speckit-companion/issues",
   "license": "MIT",
   "keywords": ["speckit", "spec-kit", "spec-driven-development", "specs", "pipeline", "mod"]
 }
