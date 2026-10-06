@@ -271,6 +271,38 @@ def _parked_hooks(project_root: str) -> dict:
     return {command: entry["hooks"] for command, entry in plan.items()}
 
 
+def _living_specs(project_root: str) -> dict:
+    """The living-specs settings, and where they were read from.
+
+    Two of the five keys are a choice someone makes once — whether living specs
+    run at all, and whether the specs sit in one place or beside the code. The
+    other three are a registry written by adoption and by the capability
+    commands, so they travel as facts to show rather than fields to edit: a
+    panel that let you retype a capability's globs would be a second writer for
+    a file that already has one.
+    """
+    import companion_config as cc
+
+    living, meta = cc.resolve_living_specs(project_root)
+    return {
+        "enabled": living["enabled"],
+        "layout": living["layout"],
+        # Where the answers came from, so the panel can say it rather than
+        # imply the settings are part of companion.yml. `none` means neither
+        # file exists and nothing has been adopted.
+        "origin": meta["origin"],
+        "path": (meta["path"] or "").replace(os.sep, "/"),
+        "capabilities": [
+            {"name": c["name"], "match": c["match"], "exclude": c["exclude"],
+             "spec": c["spec"], "retire": c["retire"]}
+            for c in living["capabilities"]
+        ],
+        "exempt": living["exempt"],
+        "rules": living["rules"],
+        "warnings": list(meta["warnings"]),
+    }
+
+
 def build_graph(project_root: str) -> dict:
     use_project_nodes(project_root)
     build.use_project_hook_nodes(project_root)
@@ -447,6 +479,10 @@ def build_graph(project_root: str) -> dict:
         # What a hook can be pointed at in this project, so the form offers
         # names instead of asking you to remember them.
         "choices": choices,
+        # The other half of what a Companion run reads. It had no route from
+        # the panel at all: a project could be running living specs, or not,
+        # and the builder drew the same board either way.
+        "livingSpecs": _living_specs(project_root),
         "configured": bool(config),
         "customised": customised,
         "warnings": warnings,

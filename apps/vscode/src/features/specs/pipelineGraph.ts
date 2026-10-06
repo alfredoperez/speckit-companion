@@ -189,6 +189,59 @@ export function writeTemplateSection(
     ]);
 }
 
+/**
+ * Save where one verdict routes. Returns the reason on refusal.
+ *
+ * The script refuses a verdict the step does not declare and a step that does
+ * not exist, so a routing change the build would ignore never reaches the file.
+ */
+export function writeDecision(
+    script: string,
+    workspaceRoot: string,
+    command: string,
+    node: string,
+    verdict: string,
+    folds: string[],
+    warns: string,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, [
+        '--command', command, '--decision', node, verdict,
+        '--folds', folds.join(','), '--warns', warns,
+    ]);
+}
+
+/** Give one verdict back to its declared routing. */
+export function restoreDecision(
+    script: string,
+    workspaceRoot: string,
+    command: string,
+    node: string,
+    verdict: string,
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, [
+        '--command', command, '--decision', node, verdict, '--restore-decision',
+    ]);
+}
+
+/**
+ * Turn living specs on or off, or choose where the specs live.
+ *
+ * Written into whichever file the resolver reads — the registry at the project
+ * root, or the legacy block in `companion.yml` — because a setting written into
+ * the other one is reported as saved and never read.
+ */
+export function writeLivingSpecs(
+    script: string,
+    workspaceRoot: string,
+    change: { enabled?: boolean; layout?: 'central' | 'colocated' },
+): Promise<string | null> {
+    return runConfigWrite(script, workspaceRoot, [
+        ...(change.enabled === undefined
+            ? [] : ['--living-enabled', change.enabled ? 'true' : 'false']),
+        ...(change.layout === undefined ? [] : ['--living-layout', change.layout]),
+    ]);
+}
+
 /** Create a step of the project's own, seeded runnable. */
 export function createStep(
     script: string,

@@ -12,9 +12,12 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { BrokenPipeline } from '../BrokenPipeline';
 import { Canvas } from '../Canvas';
+import { DecisionForm } from '../DecisionForm';
 import { Header } from '../Header';
+import { LivingSpecsPanel } from '../LivingSpecsPanel';
 import type {
     PipelineGraph,
+    PipelineLivingSpecs,
     PipelineHook,
     PipelineNode,
     PipelinePhase,
@@ -594,4 +597,161 @@ export const RepairInFlight: Story = {
         <BrokenPipeline error={EMPTY_PHASE_ERROR} repairs={[DROP_EMPTY]} busy
             {...REPAIR_ACTIONS} />
     ),
+};
+
+
+// ── 8. The decision, and the two settings beside the pipeline ──
+//
+// Both halves of this were read-only: the board drew where a verdict routes
+// with no way to disagree, and living specs — whether they run, where the
+// specs live, what has been adopted — had no route from the panel at all.
+//
+// Each state is shot in both cuts, because the review is the point: a pane
+// that reads as grey-on-grey in one theme reads that way in the panel.
+
+/** This repository's own decision, as `specify` declares it. */
+const ROUTING = {
+    node: 'classify-size',
+    verdicts: [
+        { name: 'simple', folds: ['plan', 'tasks'], warns: '' },
+        { name: 'normal', folds: [], warns: '' },
+        {
+            name: 'oversized', folds: [],
+            warns: 'Oversized change — running the full pipeline, no phase skipped',
+        },
+    ],
+};
+
+const DECIDING = step('specify', [
+    phase('classify', [
+        node('classify-size', 'Classify the change size', { kind: 'control' }),
+        node('persist-size', 'Record the verdict', { kind: 'control' }),
+    ]),
+], {
+    decisions: [ROUTING],
+    changes: { ...NO_CHANGES, decisions: ['classify-size.simple'] },
+});
+
+const DECISION_ACTIONS = {
+    onCancel: () => undefined, onSave: () => undefined, onRestore: () => undefined,
+};
+
+function routingBoard() {
+    const g = graph([DECIDING, PLAN], { configured: true, customised: true });
+    return (
+        <div class="builder builder--inspecting">
+            <Header graph={g} buildState="current" busy={false} {...HEADER_ACTIONS} />
+            <div class="builder-body">
+                <Canvas graph={g} {...CANVAS_ACTIONS}
+                    onOpenDecision={() => undefined} />
+                <DecisionForm step={DECIDING} decision={ROUTING}
+                    skippable={['plan', 'tasks', 'implement']}
+                    changed={['classify-size.simple']} {...DECISION_ACTIONS} />
+            </div>
+        </div>
+    );
+}
+
+export const DecisionRoutingEditable: Story = {
+    name: '26 · Where a verdict routes, editable',
+    render: routingBoard,
+};
+
+export const DecisionRoutingEditableLight: Story = {
+    name: '26L · Where a verdict routes, editable (light)',
+    globals: { vscodeTheme: 'vivid-light' },
+    render: routingBoard,
+};
+
+/** A project that adopted living specs, with the registry it carries. */
+const ADOPTED: PipelineLivingSpecs = {
+    enabled: true,
+    layout: 'colocated',
+    origin: 'registry',
+    path: 'living-specs.yml',
+    capabilities: [
+        {
+            name: 'spec-viewer', match: ['apps/vscode/webview/src/spec-viewer/**'],
+            exclude: ['**/__tests__/**'],
+            spec: 'apps/vscode/webview/src/spec-viewer/spec-viewer.spec.md',
+            retire: false,
+        },
+        {
+            name: 'pipeline-builder', match: ['apps/vscode/webview/src/pipeline-builder/**'],
+            exclude: [],
+            spec: 'apps/vscode/webview/src/pipeline-builder/pipeline-builder.spec.md',
+            retire: false,
+        },
+        {
+            name: 'legacy-cart', match: ['src/cart/**'], exclude: [], spec: '', retire: true,
+        },
+    ],
+    exempt: ['**/*.config.*', '**/*.test.*', '**/__tests__/**'],
+    rules: { spec: ['Say what the reader sees, not what the module does.'], plan: [] },
+    warnings: [],
+};
+
+/** Never adopted: the state every project starts in, and the chip still says so. */
+const NOT_ADOPTED: PipelineLivingSpecs = {
+    enabled: false,
+    layout: 'central',
+    origin: 'none',
+    path: '',
+    capabilities: [],
+    exempt: ['**/*.config.*', '**/*.test.*', '**/__tests__/**', '**/migrations/**'],
+    rules: { spec: [], plan: [] },
+    warnings: [],
+};
+
+function livingBoard(living: PipelineLivingSpecs) {
+    const g = graph([SPECIFY, PLAN], { configured: true, livingSpecs: living });
+    return (
+        <div class="builder builder--inspecting">
+            <Header graph={g} buildState="current" busy={false} {...HEADER_ACTIONS}
+                onOpenLivingSpecs={() => undefined} />
+            <div class="builder-body">
+                <Canvas graph={g} {...CANVAS_ACTIONS} />
+                <LivingSpecsPanel living={living}
+                    onCancel={() => undefined} onSet={() => undefined} />
+            </div>
+        </div>
+    );
+}
+
+export const LivingSpecsOn: Story = {
+    name: '27 · Living specs on',
+    render: () => livingBoard(ADOPTED),
+};
+
+export const LivingSpecsOnLight: Story = {
+    name: '27L · Living specs on (light)',
+    globals: { vscodeTheme: 'vivid-light' },
+    render: () => livingBoard(ADOPTED),
+};
+
+export const LivingSpecsOff: Story = {
+    name: '28 · Living specs off',
+    render: () => livingBoard(NOT_ADOPTED),
+};
+
+export const LivingSpecsOffLight: Story = {
+    name: '28L · Living specs off (light)',
+    globals: { vscodeTheme: 'vivid-light' },
+    render: () => livingBoard(NOT_ADOPTED),
+};
+
+/**
+ * The legacy block still in `companion.yml`, which the registry overrides.
+ *
+ * The resolver warns about it rather than merging the two, so the pane has to
+ * carry that warning — a project in this state has capabilities it believes it
+ * registered and nothing is reading them.
+ */
+export const LivingSpecsWithAStaleBlock: Story = {
+    name: '29 · Living specs, with the old block left behind',
+    render: () => livingBoard({
+        ...ADOPTED,
+        warnings: ['.specify/companion.yml still has a livingSpecs block; '
+            + 'living-specs.yml is the registry and the old block is ignored — delete it'],
+    }),
 };

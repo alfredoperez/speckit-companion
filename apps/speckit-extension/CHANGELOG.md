@@ -8,7 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **The configuration writer sets a verdict's routing.** A verdict's skipped steps and its notice are written together, and removing the entry ==restores the declared routing==. ([#887](https://github.com/alfredoperez/speckit-companion/pull/887)) <!-- area: pipeline-builder -->
+- **Living specs travel with the pipeline graph.** The graph carries whether they run, where specs live and ==which capabilities are registered==, so a panel can draw them. ([#887](https://github.com/alfredoperez/speckit-companion/pull/887)) <!-- area: living-specs -->
+
 ### Fixed
+- **A registry rewrite keeps the chosen layout.** Registering a capability re-emits the registry, which dropped `layout` and sent ==every later adoption back to asking==. ([#887](https://github.com/alfredoperez/speckit-companion/pull/887)) <!-- area: living-specs -->
 - **The manual check records its result.** The brownfield preset's click-through step called the recorder with `--concerns`, a flag that does not exist, so the result was dropped. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: run-record -->
 - **A completed spec names no current task.** Marking a spec complete clears the current task, which had kept naming the last one finished. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: run-record -->
 
