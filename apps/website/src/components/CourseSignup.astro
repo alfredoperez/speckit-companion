@@ -33,7 +33,7 @@ const { id, placement, align = 'center', layout = 'stack' } = Astro.props;
 const open = signupProvider() !== null;
 const strip = layout === 'strip';
 const idle = !open
-  ? 'The list is not open yet. Check back soon.'
+  ? ''
   : strip
     ? ''
     : 'One message, on the day it opens. No newsletter.';
@@ -63,10 +63,9 @@ const idle = !open
       autocomplete="email"
       placeholder="you@example.com"
       required
-      disabled={!open}
       aria-describedby={`${id}-status`}
     />
-    <Button class="cs-button" type="submit" size="md" disabled={!open}>{SIGNUP_BUTTON}</Button>
+    <Button class="cs-button" type="submit" size="md">{SIGNUP_BUTTON}</Button>
   </div>
 
   <p class="cs-status" id={`${id}-status`} role="status" aria-live="polite" data-cs-status>{idle}</p>
@@ -162,14 +161,15 @@ const idle = !open
   }
 
   .cs--strip .cs-row {
-    flex: 0 1 400px;
+    flex: 0 1 480px;
     width: auto;
     min-width: 0;
   }
 
   .cs--strip .cs-input {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 13px;
+    padding-bottom: 13px;
+    font-size: var(--fs-body);
   }
 
   .cs--strip .cs-status {
