@@ -751,6 +751,212 @@ describe('a project where the agent keeps the record', () => {
     });
 });
 
+describe('a Companion project where the agent wrote the document and never closed the step', () => {
+    const SPEC = 'specs/001-todo-stars';
+    const entry = (step, kind, at, by = 'extension') => ({ step, substep: null, kind, by, at });
+    const SPECIFIED = {
+        workflow: 'companion',
+        specName: 'Todo Stars',
+        currentStep: 'specify',
+        status: 'specified',
+        history: [entry('specify', 'start', '2026-10-05T14:54:53.999Z'), entry('specify', 'complete', '2026-10-05T14:56:35.000Z')],
+    };
+
+    async function open({ record = SPECIFIED, files = ['spec.md'] } = {}) {
+        const root = mkdtempSync(join(tmpdir(), 'canvas-unclosed-'));
+        mkdirSync(join(root, '.specify/extensions/companion/scripts'), { recursive: true });
+        writeFileSync(join(root, '.specify/extensions/companion/scripts/write-context.py'), '');
+        mkdirSync(join(root, SPEC), { recursive: true });
+        for (const file of files) writeFileSync(join(root, SPEC, file), file === 'tasks.md' ? '- [ ] T001 One\n' : `# ${file}\n\nReal.\n`);
+        const sent = [];
+        const clock = { ms: Date.now() + 1000 };
+        const board = await createSpecServer({ root, now: () => clock.ms, send: async (prompt) => { sent.push(prompt); return true; } });
+        const file = (dir) => join(root, dir, '.spec-context.json');
+        const context = (dir = SPEC) => JSON.parse(readFileSync(file(dir), 'utf8'));
+        const seed = (value, dir = SPEC) => writeFileSync(file(dir), JSON.stringify(value));
+        const write = (name, text, dir = SPEC) => {
+            clock.ms += 1000;
+            writeFileSync(join(root, dir, name), text);
+            utimesSync(join(root, dir, name), new Date(clock.ms), new Date(clock.ms));
+        };
+        const row = (dir = SPEC) => board.snapshot.specs.find(s => s.id === dir);
+        const sentAt = () => new Date(clock.ms).toISOString();
+        // What the agent leaves behind: the step's start at the dispatch time, the in-flight status, and no complete.
+        const opened = (step, status, at, base = SPECIFIED) => ({ ...base, currentStep: step, status, history: [...base.history, entry(step, 'start', at)] });
+        const later = () => new Date(clock.ms + 90000);
+        if (record) seed(record);
+        board.rescan();
+        return { root, board, sent, clock, context, seed, write, row, sentAt, opened, later };
+    }
+
+    it('closes plan in the record once its turn ends with plan.md written, so the next step unlocks', async () => {
+        const { board, sent, context, seed, write, row, sentAt, opened, later } = await open();
+        try {
+            const at = sentAt();
+            await board.run(SPEC, 'plan');
+            board.began(sent[0]);
+            const left = opened('plan', 'planning', at);
+            seed(left);
+            write('plan.md', '# Plan\n\nReal.\n');
+            board.rescan();
+            assert.equal(row().steps.plan, 'in-progress');
+            assert.deepEqual(context(), left, 'nothing is written before the turn ends');
+            board.settle(later());
+            assert.equal(row().steps.plan, 'completed');
+            assert.equal(row().statusLabel, 'Planned');
+            const record = context();
+            assert.deepEqual([record.status, record.currentStep, record.workflow], ['planned', 'plan', 'companion']);
+            assert.deepEqual(record.history.slice(0, -1), left.history, 'history is appended to');
+            assert.deepEqual([record.history.at(-1).step, record.history.at(-1).kind, record.history.at(-1).by], ['plan', 'complete', 'extension']);
+            assert.equal(board.detail(SPEC).timing.plan.durationTrusted, true, 'from the send to the end of the turn');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('closes specify for a new spec whose record the agent seeded by hand', async () => {
+        const { root, board, sent, context, seed, row, sentAt, later } = await open();
+        try {
+            const at = sentAt();
+            await board.specify('Count the stars', 'companion');
+            board.began(sent[0]);
+            const created = 'specs/002-star-count';
+            mkdirSync(join(root, created));
+            const left = { workflow: 'companion', specName: 'Star Count', selectedAt: at, currentStep: 'specify', status: 'specifying', history: [entry('specify', 'start', at)] };
+            seed(left, created);
+            writeFileSync(join(root, created, 'spec.md'), '# Feature Specification: Star Count\n\nReal.\n');
+            board.rescan();
+            assert.equal(row(created).steps.specify, 'in-progress');
+            board.settle(later());
+            assert.equal(row(created).steps.specify, 'completed');
+            assert.equal(row(created).statusLabel, 'Specified');
+            assert.equal(context(created).status, 'specified');
+            assert.deepEqual(context(created).history.map(e => [e.step, e.kind, e.by]), [['specify', 'start', 'extension'], ['specify', 'complete', 'extension']]);
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('writes nothing while the turn has not ended, even when an earlier turn goes idle', async () => {
+        const { board, context, seed, write, row, sentAt, opened } = await open();
+        try {
+            board.began('an earlier message');
+            const at = sentAt();
+            await board.run(SPEC, 'plan');
+            const left = opened('plan', 'planning', at);
+            seed(left);
+            write('plan.md', '# Plan\n\nReal.\n');
+            board.settle();
+            assert.deepEqual(context(), left);
+            assert.equal(row().steps.plan, 'in-progress');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('writes nothing when the document is empty or still the copied template', async () => {
+        const { root, board, sent, context, seed, write, row, sentAt, opened } = await open();
+        try {
+            const template = '# Implementation Plan: [FEATURE]\n\n## Summary\n';
+            mkdirSync(join(root, '.specify/templates'), { recursive: true });
+            writeFileSync(join(root, '.specify/templates/plan-template.md'), template);
+            for (const text of [template, '']) {
+                const at = sentAt();
+                await board.run(SPEC, 'plan');
+                board.began(sent.at(-1));
+                const left = opened('plan', 'planning', at);
+                seed(left);
+                write('plan.md', text);
+                board.settle();
+                assert.deepEqual(context(), left);
+                assert.equal(row().steps.plan, 'in-progress', 'the record still leads');
+            }
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('writes nothing when the recorder closed the step itself before the turn ended', async () => {
+        const { board, sent, context, seed, write, row, sentAt, opened, clock } = await open();
+        try {
+            const at = sentAt();
+            await board.run(SPEC, 'plan');
+            board.began(sent[0]);
+            write('plan.md', '# Plan\n\nReal.\n');
+            const left = opened('plan', 'planning', at);
+            const done = { ...left, status: 'planned', history: [...left.history, entry('plan', 'complete', new Date(clock.ms + 500).toISOString(), 'ai')] };
+            seed(done);
+            board.settle();
+            assert.deepEqual(context(), done);
+            assert.equal(row().steps.plan, 'completed');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('does not show a folded run mid-specify further along, and closes only specify when that turn ends', async () => {
+        const { root, board, sent, context, seed, row, sentAt, later } = await open();
+        try {
+            const at = sentAt();
+            await board.specify('Count the stars', 'companion');
+            board.began(sent[0]);
+            const created = 'specs/002-star-count';
+            mkdirSync(join(root, created));
+            const left = { workflow: 'companion', specName: 'Star Count', currentStep: 'specify', status: 'specifying', history: [entry('specify', 'start', at)] };
+            seed(left, created);
+            writeFileSync(join(root, created, 'spec.md'), '# Feature Specification: Star Count\n\nReal.\n');
+            writeFileSync(join(root, created, 'plan.md'), '# Plan\n\nReal.\n');
+            board.rescan();
+            assert.deepEqual([row(created).steps.specify, row(created).steps.plan], ['in-progress', 'not-started']);
+            assert.equal(row(created).statusLabel, 'Specifying');
+            assert.deepEqual(context(created), left);
+            board.settle(later());
+            assert.deepEqual(context(created).history.map(e => [e.step, e.kind]), [['specify', 'start'], ['specify', 'complete']]);
+            assert.equal(context(created).status, 'specified');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('leaves a step it did not send to the record', async () => {
+        const { board, context, seed, write, row, opened } = await open();
+        try {
+            const left = opened('plan', 'planning', '2026-10-05T15:00:00.000Z');
+            seed(left);
+            write('plan.md', '# Plan\n\nReal.\n');
+            board.settle();
+            board.rescan();
+            assert.deepEqual(context(), left);
+            assert.equal(row().steps.plan, 'in-progress');
+        } finally {
+            await board.close();
+        }
+    });
+
+    it('never moves a record backwards, and leaves implement to the recorder', async () => {
+        const { board, sent, context, seed, write, sentAt, opened } = await open({ files: ['spec.md', 'plan.md', 'tasks.md'] });
+        try {
+            const tasked = { ...SPECIFIED, currentStep: 'tasks', status: 'ready-to-implement' };
+            seed(tasked);
+            await board.run(SPEC, 'plan');
+            board.began(sent.at(-1));
+            write('plan.md', '# Plan\n\nRewritten.\n');
+            board.settle();
+            assert.deepEqual(context(), tasked);
+            const at = sentAt();
+            await board.run(SPEC, 'implement');
+            board.began(sent.at(-1));
+            const left = opened('implement', 'implementing', at, tasked);
+            seed(left);
+            write('tasks.md', '- [x] T001 One\n');
+            board.settle();
+            assert.deepEqual(context(), left);
+        } finally {
+            await board.close();
+        }
+    });
+});
+
 describe('the board\'s own record writer', () => {
     const START = '2026-10-05T15:00:00.000Z';
     const END = '2026-10-05T15:02:00.000Z';
@@ -794,6 +1000,24 @@ describe('the board\'s own record writer', () => {
             const { root, spec, read } = project(record);
             assert.equal(recordStep(root, spec, step, START, END), false, `${status} then ${step}`);
             assert.deepEqual(read(), record);
+        }
+    });
+
+    it('closes only a step the record shows open, and gives a start from an earlier run no time', () => {
+        const start = at => ({ step: 'plan', substep: null, kind: 'start', by: 'extension', at });
+        const open = at => ({ ...SPECIFIED, currentStep: 'plan', status: 'planning', history: [start(at)] });
+        const fresh = project(open(START));
+        assert.equal(recordStep(fresh.root, fresh.spec, 'plan', START, END, { closing: true }), true);
+        assert.deepEqual([fresh.read().status, fresh.read().history.map(e => e.kind).join()], ['planned', 'start,complete']);
+        assert.equal(recordStep(fresh.root, fresh.spec, 'plan', START, END, { closing: true }), false, 'already closed');
+        const stale = project(open('2026-10-01T09:00:00.000Z'));
+        assert.equal(recordStep(stale.root, stale.spec, 'plan', START, END, { closing: true }), true);
+        assert.deepEqual(stale.read().history.map(e => [e.kind, e.at]), [['start', '2026-10-01T09:00:00.000Z'], ['start', START], ['complete', END]]);
+        for (const record of [undefined, '{ not json', SPECIFIED, { ...SPECIFIED, currentStep: 'tasks', status: 'tasking', history: [{ ...start(START), step: 'tasks' }] }, { ...open(START), status: 'completed' }]) {
+            const { root, file, spec } = project(record);
+            const before = existsSync(file) ? readFileSync(file, 'utf8') : null;
+            assert.equal(recordStep(root, spec, 'plan', START, END, { closing: true }), false);
+            assert.equal(existsSync(file) ? readFileSync(file, 'utf8') : null, before);
         }
     });
 
