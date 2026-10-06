@@ -70,6 +70,8 @@ RUNTIME_SCRIPTS = frozenset({
     "doctor_drift.py",
     "doctor_bleed.py",
     "doctor_chat.py",
+    # Called by the attachable `call-paths` part, which no shipped command carries.
+    "check_plan.py",
 })
 
 BUILD_ONLY = frozenset({
@@ -159,6 +161,9 @@ def shipped_command_bodies() -> list[str]:
         for entry in sorted(os.listdir(workflows)):
             if entry.endswith((".yml", ".yaml", ".md")):
                 paths.append(os.path.join(workflows, entry))
+    # A part is body text too: fenced into a command, or attached by a project's hook.
+    parts = os.path.join(EXT_ROOT, "presets", "_parts")
+    paths += [os.path.join(parts, f) for f in sorted(os.listdir(parts)) if f.endswith(".md")]
     return paths
 
 
