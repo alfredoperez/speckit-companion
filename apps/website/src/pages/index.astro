@@ -124,18 +124,6 @@ function heroLoop(id: string) {
 
 const heroEntries: Array<{ id: string; label: string; caption: string; loop: string; still?: string; motes: Mote[] }> = [
   {
-    id: 'talk',
-    label: 'Talk to your specs',
-    caption: 'Comment on a line. Refine sends your pending comments to your assistant.',
-    loop: 'hero-talk',
-    motes: [
-      { text: 'APPLIED', x: 60, y: -5, dx: -8, dy: 10, dur: 10800, delay: 1200 },
-      { text: 'Commenting on line 26', x: 6, y: 96, dx: 11, dy: -9, dur: 9400, delay: 300 },
-      { text: 'PENDING', x: 92, y: 60, dx: -12, dy: -8, dur: 8800, delay: 700 },
-      { text: 'Refine (1)', x: 58, y: 96, dx: 10, dy: -10, dur: 10200, delay: 2000 },
-    ],
-  },
-  {
     id: 'overview',
     label: 'The Overview',
     caption: 'The whole run on one page: what it was for, what it decided, and what traced to a test.',
@@ -145,6 +133,18 @@ const heroEntries: Array<{ id: string; label: string; caption: string; loop: str
       { text: '4/4 traced', x: -6, y: 60, dx: 12, dy: -10, dur: 9200, delay: 0 },
       { text: 'REJECTED', x: 92, y: 44, dx: -11, dy: -9, dur: 9800, delay: 1800 },
       { text: 'WHY', x: 14, y: 96, dx: 12, dy: -9, dur: 10100, delay: 1400 },
+    ],
+  },
+  {
+    id: 'talk',
+    label: 'Talk to your specs',
+    caption: 'Comment on a line. Refine sends your pending comments to your assistant.',
+    loop: 'hero-talk',
+    motes: [
+      { text: 'APPLIED', x: 60, y: -5, dx: -8, dy: 10, dur: 10800, delay: 1200 },
+      { text: 'Commenting on line 26', x: 6, y: 96, dx: 11, dy: -9, dur: 9400, delay: 300 },
+      { text: 'PENDING', x: 92, y: 60, dx: -12, dy: -8, dur: 8800, delay: 700 },
+      { text: 'Refine (1)', x: 58, y: 96, dx: 10, dy: -10, dur: 10200, delay: 2000 },
     ],
   },
   {
