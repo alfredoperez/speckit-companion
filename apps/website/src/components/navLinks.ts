@@ -3,8 +3,8 @@
   header, so the two halves of the site cannot drift apart.
 
   The bar holds the two places you actually go, docs and changelog, next to the
-  install button. Nothing unshipped sits in it: the course has one line near the
-  foot of the landing page, and the footer keeps the workflow builder link.
+  install button. Nothing unshipped sits in it: the course has one slim strip
+  under the landing page's hero.
 */
 export interface NavLink {
   label: string;

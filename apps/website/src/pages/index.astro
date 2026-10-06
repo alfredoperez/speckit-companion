@@ -447,7 +447,7 @@ const installPaths: Array<{
 // One leaf per section below the hero, in document order. The script measures
 // where each section boundary falls and places its leaf on the stem; a leaf
 // with no section to mark stays hidden.
-const stemLeaves = ['demo', 'builder', 'quick start', 'box', 'claim', 'course', 'install'];
+const stemLeaves = ['course', 'demo', 'quick start', 'builder', 'box', 'claim', 'install'];
 
 // Entrances stagger at 60ms. The delay is data, not a magic number in the CSS.
 const REVEAL_STAGGER = 60;
@@ -672,6 +672,21 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     </div>
   </section>
 
+  <!-- COURSE -->
+  {/* One quiet row under the hero. The chip says it is not made yet, and the
+      form's status line appears under the row only when it has something to
+      say. */}
+  <section class="section section--course" id="course" aria-label="Course">
+    <div class="inner course">
+      <p class="course-say">
+        <SoonChip />
+        <span>A course on spec-driven development with Spec Kit</span>
+      </p>
+      <CourseSignup id="course-landing" placement="landing" layout="strip" />
+      <a class="course-link" href="/course/">See the outline</a>
+    </div>
+  </section>
+
   <!-- DEMO -->
   <section class="section section--demo">
     <div class="inner demo-stack" data-tabs>
@@ -786,51 +801,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     </div>
   </section>
 
-  <!-- PIPELINE BUILDER -->
-  <section class="section section--builder" id="pipeline-builder">
-    <div class="inner pb">
-      <div class="qs-say">
-        <h2>Your pipeline, drawn as a board</h2>
-        <p>
-          The Pipeline Builder shows what your assistant does at each Companion step. Change it on
-          the board, then build.
-        </p>
-      </div>
-
-      <div class="qs-sheet pb-sheet" data-reveal>
-        <figure class="qs-shot pb-shot">
-          <img
-            src={builder.shot.src}
-            alt={builder.shot.alt}
-            width={builder.shot.width}
-            height={builder.shot.height}
-            loading="lazy"
-            decoding="async"
-          />
-          <figcaption>{builder.shot.caption}</figcaption>
-        </figure>
-        <ul class="pb-points" aria-label="What you do in the Pipeline Builder">
-          {
-            builder.points.map((point) => (
-              <li>
-                <p class="pb-point-title">{point.title}</p>
-                <p class="pb-point-body">{point.body}</p>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-
-      <p class="pb-note">
-        <span>
-          It opens from the circuit icon at the top of the Specs view, and needs the Companion
-          extension for Spec Kit.
-        </span>
-        <a class="qs-full" href="/docs/customize/pipeline-builder/">Read the Pipeline Builder guide</a>
-      </p>
-    </div>
-  </section>
-
   <!-- QUICK START -->
   <section class="section section--quickstart" id="quick-start">
     <div class="inner qs">
@@ -919,6 +889,55 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     </div>
   </section>
 
+  <!-- PIPELINE BUILDER -->
+  <section class="section section--builder" id="pipeline-builder">
+    <div class="inner pb">
+      <div class="qs-say">
+        <h2>
+          Your pipeline, drawn as a board
+          <SoonChip class="h2-chip" label="beta" />
+        </h2>
+        <p>
+          The Pipeline Builder shows what your assistant does at each Companion step. Change it on
+          the board, then build. It ships in the VS Code extension today, in beta, and it is still
+          changing.
+        </p>
+      </div>
+
+      <div class="qs-sheet pb-sheet" data-reveal>
+        <figure class="qs-shot pb-shot">
+          <img
+            src={builder.shot.src}
+            alt={builder.shot.alt}
+            width={builder.shot.width}
+            height={builder.shot.height}
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>{builder.shot.caption}</figcaption>
+        </figure>
+        <ul class="pb-points" aria-label="What you do in the Pipeline Builder">
+          {
+            builder.points.map((point) => (
+              <li>
+                <p class="pb-point-title">{point.title}</p>
+                <p class="pb-point-body">{point.body}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <p class="pb-note">
+        <span>
+          It opens from the circuit icon at the top of the Specs view, and needs the Companion
+          extension for Spec Kit.
+        </span>
+        <a class="qs-full" href="/docs/customize/pipeline-builder/">Read the Pipeline Builder guide</a>
+      </p>
+    </div>
+  </section>
+
   <!-- WHAT'S IN THE BOX -->
   <section class="section section--cards">
     <div class="spores" aria-hidden="true">
@@ -977,24 +996,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         a typical change never needs.
       </p>
       <a class="claim-link" href={METHODOLOGY}>Read the methodology</a>
-    </div>
-  </section>
-
-  <!-- COURSE -->
-  <section class="section section--course" id="course">
-    <div class="inner course">
-      <div class="qs-say">
-        <h2>
-          A course is coming
-          <SoonChip class="course-chip" />
-        </h2>
-        <p>
-          Applying spec-driven development with Spec Kit: from a vague idea to a spec, a plan, tasks
-          and shipped code, on real projects. Nothing is recorded yet and there is no date.
-        </p>
-      </div>
-      <CourseSignup id="course-landing" placement="landing" />
-      <a class="qs-full" href="/course/">See the outline it would follow</a>
     </div>
   </section>
 
@@ -1892,8 +1893,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   }
 
   .pb,
-  .cards-stack,
-  .course {
+  .cards-stack {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1978,11 +1978,56 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   /* ---------------------------------------------------------------- course */
 
   .section--course .inner {
-    padding-top: 64px;
-    padding-bottom: 64px;
+    max-width: 1220px;
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-16);
   }
 
-  .course h2 :global(.course-chip) {
+  .course {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-10) var(--space-18);
+  }
+
+  .course-say {
+    display: flex;
+    align-items: center;
+    gap: var(--space-10);
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-ui);
+    font-weight: var(--fw-semibold);
+  }
+
+  .course-link {
+    color: var(--accent);
+    font-size: var(--fs-ui-sm);
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
+    white-space: nowrap;
+  }
+
+  .course-link:hover {
+    color: var(--accent-hover);
+  }
+
+  .course-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 860px) {
+    .course-say {
+      flex-basis: 100%;
+      justify-content: center;
+      text-align: center;
+    }
+  }
+
+  .qs-say h2 :global(.h2-chip) {
     margin-left: var(--space-8);
     vertical-align: middle;
   }

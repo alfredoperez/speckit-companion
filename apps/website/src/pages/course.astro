@@ -9,7 +9,7 @@
  * No runtime, no price, no platform. None of that is decided, and inventing any
  * of it is exactly the failure the claim ledger exists to stop. The outline is
  * held to the same bar as the rest of the site: every lesson names something
- * that exists today, except the builder one, which is marked as not shipped.
+ * that exists today. The Pipeline Builder lesson says it is in beta.
  */
 import SoonPageLayout from '../components/SoonPageLayout.astro';
 import CourseSignup from '../components/CourseSignup.astro';
@@ -56,7 +56,7 @@ const modules = [
     lessons: [
       { title: 'Living specs', body: 'Turning them on, adopting a capability, and keeping it central or beside the code.' },
       { title: 'Drift and coverage', body: 'What each report tells you, and why neither one can ever block a build.' },
-      { title: 'The workflow builder', body: 'Not built yet. This lesson arrives with it.', soon: true },
+      { title: 'The Pipeline Builder', body: 'In beta. Change what a step does on a board, then build.' },
     ],
   },
 ];
@@ -120,7 +120,7 @@ const guides = [
       <h2>Four parts, from an empty workspace to a spec that outlives the ticket</h2>
       <p class="section-lede">
         This is the shape, not a schedule. Every lesson below covers something the product does
-        today, apart from the last one, which waits on the builder.
+        today. The last one, the Pipeline Builder, is in beta.
       </p>
 
       <ol class="modules">

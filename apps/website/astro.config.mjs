@@ -21,6 +21,9 @@ import { mkdir, writeFile } from 'node:fs/promises';
 // fix-a-bug, assess-an-idea   moved in with the IDE pages.
 // copilot-app, claude-code    each split into three pages; the old address
 //                             lands on Install, the first of them.
+//
+// /workflow-builder was a page for a builder that was not built. It shipped
+// as the Pipeline Builder, so the address lands on its docs page.
 const MOVED = {
   '/docs/start/getting-started': '/docs/start/your-first-spec',
   '/docs/anatomy/the-sidebar': '/docs/navigate/the-sidebar',
@@ -44,6 +47,7 @@ const MOVED = {
   '/docs/processes/assess-an-idea': '/docs/ide/assess-an-idea',
   '/docs/processes/copilot-app': '/docs/copilot-app/install',
   '/docs/processes/claude-code': '/docs/claude-code/install',
+  '/workflow-builder': '/docs/customize/pipeline-builder',
 };
 
 // The adapter turns each redirect into a Vercel route that matches the path

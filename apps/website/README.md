@@ -91,7 +91,7 @@ Set them in the Vercel project's environment variables. Never commit a key.
 
 ### The course list
 
-The course signup form is on the landing page, on `/course/` and on `/course/signup/`. It posts to `src/pages/api/course-signup.ts`, the site's second serverless function, which checks the address, drops anything that filled the hidden `company` field, and hands the address to one provider. `src/data/courseSignup.ts` picks the provider and holds the words for every outcome.
+The course signup form is the slim strip under the landing page's hero, and it is on `/course/` and `/course/signup/` too. It posts to `src/pages/api/course-signup.ts`, the site's second serverless function, which checks the address, drops anything that filled the hidden `company` field, and hands the address to one provider. `src/data/courseSignup.ts` picks the provider and holds the words for every outcome.
 
 | Variable | What it does |
 | --- | --- |
@@ -134,7 +134,6 @@ The funnel this feeds is landing view to install click to getting-started view. 
 | `install_click_speckit_copy` | The copy button on the `specify extension add companion` row, on the landing quick start and on the three Install pages | `placement`: `quick-start`, `install` |
 | `demo_tab_click` | Each of the six demo tabs on the landing page | `tab`: `understand`, `customize`, `living`, `review`, `bugs`, `ideas` |
 | `install_path_click` | The three choices in the landing quick start | `path`: `vscode`, `copilot`, `claude` |
-| `waitlist_submit` | Submit on the workflow builder page's waitlist form, fired from the handler | `list`: `workflow-builder` |
 | `course_signup` | A stored signup on the course list, sent by the server from `src/pages/api/course-signup.ts`. It never carries the address | `placement`: `landing`, `course`, `signup`; `provider`: `webhook`, `posthog` |
 
 The `code --install-extension` fallback on the VS Code Install page is deliberately untagged. It is a copy, not a click through to the Marketplace, and giving it `install_click_vscode` would make it indistinguishable from the Marketplace button one line above it.
