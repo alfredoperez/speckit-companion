@@ -138,7 +138,7 @@ From the board you can:
 
 Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder).
 
-On a project that runs stock Spec Kit, the board draws that project's own workflow from its files and lets you switch an extension hook on or off. The rest is listed and not editable until you install the Companion Spec Kit extension.
+On a project that runs stock Spec Kit, the board draws that project's own workflow from its files and changes what Spec Kit itself owns: an extension hook's switch, the document templates it writes from, and the constitution, which it hands to `/speckit.constitution`.
 
 | Command | What it does |
 |---|---|

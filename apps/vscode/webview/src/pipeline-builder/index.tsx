@@ -202,7 +202,12 @@ function App() {
                     setNotice(null);
                     vscode.postMessage({ type: 'setStockHook', ...flip });
                 }}
-                onOpenFile={file => vscode.postMessage({ type: 'openStockFile', file })}
+                onOpenFile={path => vscode.postMessage({ type: 'openStockFile', path })}
+                onSelectWorkflow={id => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'selectStockWorkflow', id });
+                }}
+                onRunCommand={command => vscode.postMessage({ type: 'runStockCommand', command })}
             />
         );
     }

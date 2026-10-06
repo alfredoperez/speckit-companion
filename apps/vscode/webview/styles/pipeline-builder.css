@@ -2835,7 +2835,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-stock-hook--off .pb-stock-hook-text { color: var(--text-secondary); }
 
 .pb-stock-presets,
-.pb-stock-locked {
+.pb-stock-rows {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
@@ -2859,24 +2859,63 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     color: var(--text-secondary);
 }
 
-/* The disabled register the rest of the panel already uses for a control that
-   is drawn and cannot act: the same opacity, and no hover of any kind. */
-.pb-stock-locked-row {
-    display: flex;
-    flex-wrap: wrap;
+/* A row that acts: it opens a file, draws a workflow or sends a command. The
+   whole row is the target, because a name with a separate verb beside it makes
+   the reader aim. */
+.pb-stock-row {
+    display: grid;
+    grid-template-columns: auto auto;
     align-items: baseline;
-    gap: var(--space-2);
+    gap: 0 var(--space-2);
+    width: 100%;
     min-width: 0;
     padding: var(--space-2) var(--space-3);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    opacity: 0.5;
-    cursor: default;
+    background: var(--bg-elevated);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
 }
 
-.pb-stock-locked-name { color: var(--text-primary); }
+.pb-stock-row:hover,
+.pb-stock-row:focus-visible { border-color: var(--border-hover); }
 
-.pb-stock-locked-note {
+.pb-stock-row-name {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Under the name and across both columns, so a long line wraps as prose
+   rather than squeezing the file name beside it into two characters. */
+.pb-stock-row-note {
+    grid-column: 1 / -1;
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+/* The one the board is showing. The accent is the panel's forward mark, so a
+   drawn row takes the quieter outline instead. */
+.pb-stock-row--drawn { border-color: var(--border-accent); }
+
+/* Sends a command rather than opening a file, which is the row's whole point. */
+.pb-stock-row--runs .pb-stock-row-name { color: var(--text-primary); }
+
+.pb-stock-rowline {
+    display: flex;
+    align-items: start;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.pb-stock-rowline .pb-stock-row { flex-grow: 1; }
+
+/* The way on to Companion, at the foot where it cannot be mistaken for part of
+   this project's workflow. */
+.pb-stock-foot {
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
     font-size: var(--text-xs);
     color: var(--text-secondary);
 }

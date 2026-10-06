@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { projectKind } from '../projectKind';
-import { readStockWorkflow, stockWorkflowFile } from '../stockWorkflow';
+import { readStockWorkflow, stockFileToOpen } from '../stockWorkflow';
 
 function project(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'stock-workflow-'));
@@ -80,8 +80,13 @@ describe('the stock workflow read from a project', () => {
         expect(view.source).toBe('workflow');
         expect(view.workflow?.name).toBe('Full SDD Cycle');
         expect(view.steps.map(step => step.id)).toEqual(['specify', 'review-spec', 'plan']);
-        expect(stockWorkflowFile(root))
-            .toBe(path.join(root, '.specify', 'workflows', 'speckit', 'workflow.yml'));
+        expect(view.workflows).toEqual([{
+            id: 'speckit',
+            name: 'Full SDD Cycle',
+            description: 'Runs specify → plan with a review gate',
+            path: path.join('.specify', 'workflows', 'speckit', 'workflow.yml'),
+            drawn: true,
+        }]);
     });
 
     it('says what each step writes, and that a gate writes nothing', () => {
@@ -154,7 +159,90 @@ describe('the stock workflow read from a project', () => {
 
         const view = readStockWorkflow(root);
 
-        expect(view.registry).toBe(false);
+        expect(view.registry).toBeNull();
         expect(view.steps.every(step => step.hooks.length === 0)).toBe(true);
+    });
+
+    it('lists the templates it has, in run order, each with its path', () => {
+        const root = project();
+        fs.mkdirSync(path.join(root, '.specify'), { recursive: true });
+        for (const file of ['spec-template.md', 'plan-template.md', 'house-template.md']) {
+            write(root, `.specify/templates/${file}`, '# shape');
+        }
+
+        const view = readStockWorkflow(root);
+
+        expect(view.templates.map(template => template.file))
+            .toEqual(['spec-template.md', 'plan-template.md', 'house-template.md']);
+        expect(view.templates[0]).toMatchObject({
+            label: 'Spec',
+            path: path.join('.specify', 'templates', 'spec-template.md'),
+        });
+        expect(view.templates[0].note).toContain('/speckit.specify');
+        expect(view.templates[2].label).toBe('house');
+    });
+
+    it('says whether the constitution has been written, and names its command', () => {
+        const root = project();
+        fs.mkdirSync(path.join(root, '.specify'), { recursive: true });
+
+        expect(readStockWorkflow(root).constitution)
+            .toEqual({ command: 'speckit.constitution', written: false });
+
+        write(root, '.specify/memory/constitution.md', '# Principles');
+        expect(readStockWorkflow(root).constitution?.written).toBe(true);
+    });
+
+    it('draws the workflow it is asked for, and marks which one that is', () => {
+        const root = project();
+        write(root, '.specify/workflows/speckit/workflow.yml', WORKFLOW);
+        write(root, '.specify/workflows/quick/workflow.yml', [
+            'workflow:', '  id: "quick"', '  name: "Quick fix"',
+            'steps:', '  - id: implement', '    command: speckit.implement', '',
+        ].join('\n'));
+
+        const drawn = readStockWorkflow(root, 'quick');
+
+        expect(drawn.workflow?.id).toBe('quick');
+        expect(drawn.steps.map(step => step.id)).toEqual(['implement']);
+        expect(drawn.workflows.map(choice => [choice.id, choice.drawn]))
+            .toEqual([['quick', true], ['speckit', false]]);
+        // Asked for one that is not installed, it draws the first rather than
+        // nothing: a board with no steps says the project has none.
+        expect(readStockWorkflow(root, 'invented').workflow?.id).toBe('quick');
+    });
+});
+
+describe('the files the board will open', () => {
+    it('opens a path it drew', () => {
+        const root = project();
+        write(root, '.specify/templates/spec-template.md', '# shape');
+        write(root, '.specify/extensions.yml', REGISTRY);
+        write(root, '.specify/workflows/speckit/workflow.yml', WORKFLOW);
+
+        for (const rel of [
+            path.join('.specify', 'templates', 'spec-template.md'),
+            path.join('.specify', 'extensions.yml'),
+            path.join('.specify', 'workflows', 'speckit', 'workflow.yml'),
+        ]) {
+            expect(stockFileToOpen(root, rel)).toBe(path.join(root, rel));
+        }
+    });
+
+    it('refuses anything it did not draw', () => {
+        const root = project();
+        write(root, '.specify/templates/spec-template.md', '# shape');
+        write(root, '.specify/companion.yml', 'steps: {}');
+        write(root, 'package.json', '{}');
+
+        for (const rel of [
+            path.join('.specify', 'companion.yml'),
+            'package.json',
+            path.join('.specify', 'templates', '..', '..', 'package.json'),
+            path.join('..', 'elsewhere', 'secrets.env'),
+            '',
+        ]) {
+            expect(stockFileToOpen(root, rel)).toBeNull();
+        }
     });
 });

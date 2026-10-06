@@ -70,16 +70,48 @@ export interface StockHookRow {
     conditional: boolean;
 }
 
+/** One template under `.specify/templates/`, and the step that fills it. */
+export interface StockTemplate {
+    /** Its file name, which is how Spec Kit refers to it. */
+    file: string;
+    /** Workspace-relative, so opening it names a path the panel can check. */
+    path: string;
+    label: string;
+    /** What the step uses it for. */
+    note: string;
+}
+
+/** One workflow installed under `.specify/workflows/`. */
+export interface StockWorkflowChoice {
+    id: string;
+    name: string;
+    description: string;
+    path: string;
+    /** Whether this is the one the board is drawing. */
+    drawn: boolean;
+}
+
 export interface StockWorkflowView {
     /** Whether the steps came from a workflow file or from the installed commands. */
     source: 'workflow' | 'commands';
     /** The workflow the steps were read from, when one is installed. */
     workflow: { id: string; name: string; description: string } | null;
+    /** Every installed workflow, so the board can draw another one. */
+    workflows: StockWorkflowChoice[];
     steps: StockStepRow[];
+    /** The document shapes this project writes from, each opening in an editor. */
+    templates: StockTemplate[];
+    /**
+     * The constitution, which a command owns rather than a file.
+     *
+     * `command` is the spelling this project registers, so the row names what
+     * the run will actually name.
+     */
+    constitution: { command: string; written: boolean } | null;
     /** Presets applied under `.specify/presets/`, which override command bodies. */
     presets: Array<{ id: string; name: string; description: string }>;
-    /** Whether the registry hooks live in a file this project has. */
-    registry: boolean;
+    /** The extension registry, when this project has one. */
+    registry: { path: string } | null;
     /** Why Build does nothing here, said once. */
     buildBlocked: string;
 }
@@ -596,8 +628,18 @@ export type BuilderToExtensionMessage =
         index: number;
         enabled: boolean;
     }
-    /** Open a stock file the board drew from, named by the board. */
-    | { type: 'openStockFile'; file: 'registry' | 'workflow' };
+    /**
+     * Open one of the files the stock board drew from, in an editor.
+     *
+     * A workspace-relative path under `.specify/`, which the panel checks
+     * before opening: this is the board saying which of the paths it was given
+     * was clicked, not a free choice of file.
+     */
+    | { type: 'openStockFile'; path: string }
+    /** Draw another installed workflow. Reads a second file; writes nothing. */
+    | { type: 'selectStockWorkflow'; id: string }
+    /** Run a stock Spec Kit command that owns what a row is about. */
+    | { type: 'runStockCommand'; command: 'constitution' };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }

@@ -1,10 +1,9 @@
 /**
  * The board on a project that runs stock Spec Kit.
  *
- * Read from the project's own files — its workflow, its extension registry, the
- * presets applied to it — so the steps drawn are the steps it can actually run.
- * Everything Companion adds is drawn too, switched off, because "there is more
- * than this" is worth knowing and an empty board does not say it.
+ * Read from the project's own files — its workflows, its templates, its
+ * extension registry, the presets applied to it — so what is drawn is what this
+ * project can run, and what can be changed here is what Spec Kit itself owns.
  */
 
 import {
@@ -12,7 +11,7 @@ import {
 } from '../../../src/protocol/pipeline';
 import { StatusIcon } from './Header';
 
-/** Where the one line of prose about Companion-only work points. */
+/** The one way on to Companion, for a reader who wants more than this. */
 const INSTALL_DOCS = 'https://speckit-companion.dev/docs/ide/install/#vscode-companion';
 
 interface Props {
@@ -20,18 +19,13 @@ interface Props {
     status: PipelineStatus | null;
     /** Switch one registry hook on or off. */
     onSetHook: (flip: { step: string; when: HookWhen; index: number; enabled: boolean }) => void;
-    onOpenFile: (file: 'registry' | 'workflow') => void;
+    /** Open one of the files the board drew, by the path it was given. */
+    onOpenFile: (path: string) => void;
+    /** Draw another installed workflow. */
+    onSelectWorkflow: (id: string) => void;
+    /** Run the stock command that owns the constitution. */
+    onRunCommand: (command: 'constitution') => void;
 }
-
-/** What Companion would add here, each row a thing the board cannot edit. */
-const COMPANION_ONLY = [
-    { label: 'Nodes', note: 'The blocks of instruction a step is built from' },
-    { label: 'Phases', note: 'Named groups of nodes inside a step' },
-    { label: 'Node instructions', note: 'The words a step tells your assistant' },
-    { label: 'Routing decisions', note: 'Verdicts that skip steps a change does not need' },
-    { label: 'Document shape', note: 'An alternative for one section of a template' },
-    { label: 'Workflows', note: 'Whole named configurations you switch between' },
-];
 
 function tally(count: number, noun: string): string {
     return `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -90,7 +84,9 @@ function Step({ step, onSetHook }: { step: StockStepRow; onSetHook: Props['onSet
     );
 }
 
-export function StockBoard({ view, status, onSetHook, onOpenFile }: Props) {
+export function StockBoard(
+    { view, status, onSetHook, onOpenFile, onSelectWorkflow, onRunCommand }: Props,
+) {
     const hooks = view.steps.reduce((n, step) => n + step.hooks.length, 0);
     const running = view.steps.reduce(
         (n, step) => n + step.hooks.filter(hook => hook.enabled).length, 0);
@@ -121,14 +117,8 @@ export function StockBoard({ view, status, onSetHook, onOpenFile }: Props) {
                 <div class="builder-facts">
                     {view.registry && (
                         <button class="builder-action builder-action--quiet"
-                            onClick={() => onOpenFile('registry')}>
+                            onClick={() => onOpenFile(view.registry!.path)}>
                             Open extensions.yml
-                        </button>
-                    )}
-                    {view.workflow && (
-                        <button class="builder-action builder-action--quiet"
-                            onClick={() => onOpenFile('workflow')}>
-                            Open workflow.yml
                         </button>
                     )}
                     <button class="builder-action" disabled
@@ -177,9 +167,88 @@ export function StockBoard({ view, status, onSetHook, onOpenFile }: Props) {
                     <p class="pb-stock-prose">
                         A hook&rsquo;s switch is written straight to
                         {' '}<code>.specify/extensions.yml</code>, which is where Spec Kit
-                        reads it. There is nothing to build.
+                        reads it.
                     </p>
                 </section>
+
+                {/* A command owns the constitution, so the row runs it rather
+                    than opening the file it produces. */}
+                {view.constitution && (
+                    <section class="pb-stock-section">
+                        <h2 class="pb-stock-heading">The constitution</h2>
+                        <button class="pb-stock-row pb-stock-row--runs"
+                            onClick={() => onRunCommand('constitution')}>
+                            <span class="pb-stock-row-name">
+                                {view.constitution.written
+                                    ? 'Revise the constitution'
+                                    : 'Set the constitution'}
+                            </span>
+                            <code class="pb-stock-command">/{view.constitution.command}</code>
+                            <span class="pb-stock-row-note">
+                                {view.constitution.written
+                                    ? 'Sends the command to your assistant, which rewrites '
+                                      + 'memory/constitution.md'
+                                    : 'Not written yet. Sends the command to your assistant, '
+                                      + 'which writes memory/constitution.md'}
+                            </span>
+                        </button>
+                    </section>
+                )}
+
+                {view.templates.length > 0 && (
+                    <section class="pb-stock-section">
+                        <h2 class="pb-stock-heading">Document shapes</h2>
+                        <ul class="pb-stock-rows">
+                            {view.templates.map(template => (
+                                <li key={template.path}>
+                                    <button class="pb-stock-row"
+                                        onClick={() => onOpenFile(template.path)}>
+                                        <span class="pb-stock-row-name">{template.label}</span>
+                                        <code class="pb-stock-command">{template.file}</code>
+                                        <span class="pb-stock-row-note">{template.note}</span>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                        <p class="pb-stock-prose">
+                            A template opens in an editor, where it is yours to change. Spec Kit
+                            reads it on the next run.
+                        </p>
+                    </section>
+                )}
+
+                {view.workflows.length > 0 && (
+                    <section class="pb-stock-section">
+                        <h2 class="pb-stock-heading">Workflows installed here</h2>
+                        <ul class="pb-stock-rows">
+                            {view.workflows.map(choice => (
+                                <li class="pb-stock-rowline" key={choice.id}>
+                                    <button
+                                        class={`pb-stock-row${
+                                            choice.drawn ? ' pb-stock-row--drawn' : ''}`}
+                                        aria-pressed={choice.drawn}
+                                        onClick={() => onSelectWorkflow(choice.id)}>
+                                        <span class="pb-stock-row-name">{choice.name}</span>
+                                        <code class="pb-stock-command">{choice.id}</code>
+                                        <span class="pb-stock-row-note">
+                                            {choice.drawn ? 'Drawn above. ' : ''}
+                                            {choice.description}
+                                        </span>
+                                    </button>
+                                    <button class="builder-action builder-action--quiet"
+                                        onClick={() => onOpenFile(choice.path)}>
+                                        Open
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                        <p class="pb-stock-prose">
+                            Picking one draws it here. Which workflow a run takes is chosen when
+                            the run starts, with <code>specify workflow run &lt;id&gt;</code>, and
+                            the registry records no active one — so there is nothing here to set.
+                        </p>
+                    </section>
+                )}
 
                 {view.presets.length > 0 && (
                     <section class="pb-stock-section">
@@ -201,24 +270,11 @@ export function StockBoard({ view, status, onSetHook, onOpenFile }: Props) {
                     </section>
                 )}
 
-                {/* Said once for the whole group, rather than on each row. */}
-                <section class="pb-stock-section pb-stock-section--locked"
-                    aria-describedby="stock-locked-reason">
-                    <h2 class="pb-stock-heading">What Companion would add</h2>
-                    <ul class="pb-stock-locked">
-                        {COMPANION_ONLY.map(item => (
-                            <li class="pb-stock-locked-row" key={item.label} aria-disabled="true">
-                                <span class="pb-stock-locked-name">{item.label}</span>
-                                <span class="pb-stock-locked-note">{item.note}</span>
-                            </li>
-                        ))}
-                    </ul>
-                    <p class="pb-stock-prose" id="stock-locked-reason">
-                        Install the Companion Spec Kit extension to shape these on this board.
-                        {' '}
-                        <a class="builder-link" href={INSTALL_DOCS}>How to install it</a>
-                    </p>
-                </section>
+                <p class="pb-stock-foot">
+                    <a class="builder-link" href={INSTALL_DOCS}>
+                        The Companion Spec Kit extension
+                    </a>{' '}adds nodes, hooks of your own and a pipeline you shape here.
+                </p>
             </div>
         </div>
     );

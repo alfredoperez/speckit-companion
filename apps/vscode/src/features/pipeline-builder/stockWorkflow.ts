@@ -9,11 +9,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { HookWhen, StockHookRow, StockStepRow, StockWorkflowView } from '../../protocol/pipeline';
+import {
+    HookWhen, StockHookRow, StockStepRow, StockTemplate, StockWorkflowChoice, StockWorkflowView,
+} from '../../protocol/pipeline';
 
 const WORKFLOWS_REL = path.join('.specify', 'workflows');
 const EXTENSIONS_REL = path.join('.specify', 'extensions.yml');
 const PRESETS_REL = path.join('.specify', 'presets');
+const TEMPLATES_REL = path.join('.specify', 'templates');
+const CONSTITUTION_REL = path.join('.specify', 'memory', 'constitution.md');
 
 const WHENS: HookWhen[] = ['before', 'after'];
 
@@ -35,6 +39,34 @@ const STOCK_STEPS: Record<string, { label: string; writes: string[] }> = {
     implement: { label: 'Implement the tasks', writes: [] },
     taskstoissues: { label: 'Turn tasks into issues', writes: [] },
 };
+
+/** What each template shapes, in the order a run reaches them. */
+const STOCK_TEMPLATES: Array<{ file: string; label: string; note: string }> = [
+    {
+        file: 'constitution-template.md', label: 'Constitution',
+        note: 'The principles /speckit.constitution writes into memory/constitution.md',
+    },
+    {
+        file: 'spec-template.md', label: 'Spec',
+        note: 'The shape of spec.md, filled in by /speckit.specify',
+    },
+    {
+        file: 'plan-template.md', label: 'Plan',
+        note: 'The shape of plan.md, filled in by /speckit.plan',
+    },
+    {
+        file: 'tasks-template.md', label: 'Tasks',
+        note: 'The shape of tasks.md, filled in by /speckit.tasks',
+    },
+    {
+        file: 'checklist-template.md', label: 'Checklist',
+        note: 'The shape of a checklist under checklists/, written by /speckit.checklist',
+    },
+    {
+        file: 'agent-file-template.md', label: 'Agent context',
+        note: 'The context file a plan writes for your assistant',
+    },
+];
 
 /** Where an installed `/speckit.*` command can be found, by provider layout. */
 const COMMAND_DIRS = [
@@ -94,32 +126,41 @@ function registryHooks(registry: Record<string, unknown> | null, step: string): 
     return rows;
 }
 
-/** The workflow a run would take, when the project has one installed. */
-function installedWorkflow(workspaceRoot: string): {
-    file: string; id: string; name: string; description: string;
+interface InstalledWorkflow {
+    /** The directory under `.specify/workflows/`, which is its address. */
+    dir: string;
+    rel: string;
+    id: string;
+    name: string;
+    description: string;
     steps: Array<Record<string, unknown>>;
-} | null {
+}
+
+/** Every workflow installed in the project, each with its step graph. */
+function installedWorkflows(workspaceRoot: string): InstalledWorkflow[] {
     const dir = path.join(workspaceRoot, WORKFLOWS_REL);
-    let ids: string[] = [];
+    let dirs: string[] = [];
     try {
-        ids = fs.readdirSync(dir, { withFileTypes: true })
+        dirs = fs.readdirSync(dir, { withFileTypes: true })
             .filter(entry => entry.isDirectory()).map(entry => entry.name).sort();
-    } catch { return null; }
-    for (const id of ids) {
-        const file = path.join(dir, id, 'workflow.yml');
-        const doc = loadYaml(file);
+    } catch { return []; }
+    const found: InstalledWorkflow[] = [];
+    for (const name of dirs) {
+        const rel = path.join(WORKFLOWS_REL, name, 'workflow.yml');
+        const doc = loadYaml(path.join(workspaceRoot, rel));
         const steps = doc?.steps;
         if (!Array.isArray(steps)) { continue; }
         const meta = (doc?.workflow ?? {}) as Record<string, unknown>;
-        return {
-            file,
-            id: String(meta.id ?? id),
-            name: String(meta.name ?? id),
+        found.push({
+            dir: name,
+            rel,
+            id: String(meta.id ?? name),
+            name: String(meta.name ?? name),
             description: String(meta.description ?? '').trim(),
             steps: steps.filter(step => step && typeof step === 'object') as Array<Record<string, unknown>>,
-        };
+        });
     }
-    return null;
+    return found;
 }
 
 /** The `/speckit.*` commands this project actually has, by step name. */
@@ -164,18 +205,60 @@ function presets(workspaceRoot: string): StockWorkflowView['presets'] {
     });
 }
 
-/** The workflow file the board drew its steps from, when it drew them from one. */
-export function stockWorkflowFile(workspaceRoot: string): string | null {
-    return installedWorkflow(workspaceRoot)?.file ?? null;
+/**
+ * The file this project would open for a path the board offered, or null.
+ *
+ * Membership of what the board drew, not a shape test: the panel opens one of
+ * the paths it just handed out, so a path invented anywhere else — a traversal,
+ * a file outside `.specify/` — has nothing to match and is refused.
+ */
+export function stockFileToOpen(
+    workspaceRoot: string, rel: string, drawing?: string,
+): string | null {
+    const view = readStockWorkflow(workspaceRoot, drawing);
+    const offered = [
+        ...view.templates.map(template => template.path),
+        ...view.workflows.map(choice => choice.path),
+        ...(view.registry ? [view.registry.path] : []),
+    ];
+    if (!offered.includes(rel)) { return null; }
+    const file = path.join(workspaceRoot, rel);
+    return fs.existsSync(file) ? file : null;
+}
+
+/** The templates this project has, named by what their step does with them. */
+function templates(workspaceRoot: string): StockTemplate[] {
+    const dir = path.join(workspaceRoot, TEMPLATES_REL);
+    let files: string[] = [];
+    try {
+        files = fs.readdirSync(dir).filter(file => file.endsWith('.md'));
+    } catch { return []; }
+    const known = STOCK_TEMPLATES
+        .filter(template => files.includes(template.file))
+        .map(template => ({ ...template, path: path.join(TEMPLATES_REL, template.file) }));
+    const rest = files
+        .filter(file => !STOCK_TEMPLATES.some(template => template.file === file))
+        .sort()
+        .map(file => ({
+            file,
+            path: path.join(TEMPLATES_REL, file),
+            label: file.replace(/-template\.md$/, '').replace(/\.md$/, ''),
+            note: 'A template this project added',
+        }));
+    return [...known, ...rest];
 }
 
 /**
  * The whole stock board: the steps in run order, each with what it writes and
  * the registry hooks attached to it.
+ *
+ * `drawing` names which installed workflow to read the steps from. Absent, the
+ * board draws the first one, which is what a project with one workflow wants.
  */
-export function readStockWorkflow(workspaceRoot: string): StockWorkflowView {
+export function readStockWorkflow(workspaceRoot: string, drawing?: string): StockWorkflowView {
     const registry = loadYaml(path.join(workspaceRoot, EXTENSIONS_REL));
-    const workflow = installedWorkflow(workspaceRoot);
+    const all = installedWorkflows(workspaceRoot);
+    const workflow = all.find(found => found.id === drawing) ?? all[0];
 
     const steps: StockStepRow[] = workflow
         ? workflow.steps.map(raw => {
@@ -204,14 +287,30 @@ export function readStockWorkflow(workspaceRoot: string): StockWorkflowView {
             hooks: registryHooks(registry, step),
         }));
 
+    const choices: StockWorkflowChoice[] = all.map(found => ({
+        id: found.id,
+        name: found.name,
+        description: found.description,
+        path: found.rel,
+        drawn: found.id === workflow?.id,
+    }));
+
     return {
         source: workflow ? 'workflow' : 'commands',
         workflow: workflow
             ? { id: workflow.id, name: workflow.name, description: workflow.description }
             : null,
+        workflows: choices,
         steps,
+        templates: templates(workspaceRoot),
+        constitution: {
+            // Named by the panel, which knows the spelling this project
+            // registers; the reader cannot see the editor's configuration.
+            command: 'speckit.constitution',
+            written: fs.existsSync(path.join(workspaceRoot, CONSTITUTION_REL)),
+        },
         presets: presets(workspaceRoot),
-        registry: registry !== null,
+        registry: registry !== null ? { path: EXTENSIONS_REL } : null,
         buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
     };
 }

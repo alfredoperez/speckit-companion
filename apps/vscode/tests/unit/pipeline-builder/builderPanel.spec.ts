@@ -1199,3 +1199,81 @@ describe('a project that runs stock Spec Kit', () => {
         expect(panel.__lastPosted('stock').view.steps[0].hooks[0].enabled).toBe(false);
     });
 });
+
+describe('what the stock board can change', () => {
+    function stockProject(): Panel {
+        panel.__fireDispose();
+        fs.rmSync(path.join(workspace, '.specify', 'extensions', 'companion'),
+            { recursive: true, force: true });
+        const write = (rel: string, body: string) => {
+            const file = path.join(workspace, rel);
+            fs.mkdirSync(path.dirname(file), { recursive: true });
+            fs.writeFileSync(file, body, 'utf8');
+        };
+        write('.specify/workflows/speckit/workflow.yml', [
+            'workflow:', '  id: "speckit"', '  name: "Full SDD Cycle"',
+            'steps:', '  - id: specify', '    command: speckit.specify', '',
+        ].join('\n'));
+        write('.specify/workflows/quick/workflow.yml', [
+            'workflow:', '  id: "quick"', '  name: "Quick fix"',
+            'steps:', '  - id: implement', '    command: speckit.implement', '',
+        ].join('\n'));
+        write('.specify/templates/spec-template.md', '# Spec\n');
+        return openPanel();
+    }
+
+    beforeEach(() => { panel = stockProject(); });
+
+    it('opens a template without reading anything back or writing to it', async () => {
+        const template = path.join('.specify', 'templates', 'spec-template.md');
+        const before = fs.readFileSync(path.join(workspace, template), 'utf8');
+
+        await panel.__receive({ type: 'openStockFile', path: template });
+
+        expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
+            expect.objectContaining({ fsPath: path.join(workspace, template) }));
+        expect(fs.readFileSync(path.join(workspace, template), 'utf8')).toBe(before);
+        expect(panel.__lastPosted('notice')).toBeUndefined();
+    });
+
+    it('refuses to open a path the board never drew', async () => {
+        fs.writeFileSync(path.join(workspace, 'secrets.env'), 'TOKEN=1', 'utf8');
+
+        for (const asked of ['secrets.env', path.join('.specify', 'companion.yml'),
+            path.join('.specify', 'templates', '..', '..', 'secrets.env')]) {
+            await panel.__receive({ type: 'openStockFile', path: asked });
+            expect(panel.__lastPosted('notice').text).toContain('not one this board drew');
+        }
+        expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+    });
+
+    it('draws another installed workflow, and writes nothing to do it', async () => {
+        await panel.__receive({ type: 'selectStockWorkflow', id: 'quick' });
+
+        const view = panel.__lastPosted('stock').view;
+        expect(view.workflow.id).toBe('quick');
+        expect(view.steps.map((step: { id: string }) => step.id)).toEqual(['implement']);
+        expect(view.workflows.find((w: { id: string }) => w.id === 'quick').drawn).toBe(true);
+        expect(fs.existsSync(path.join(workspace, '.specify', 'companion.yml'))).toBe(false);
+    });
+
+    it('refuses a workflow that is not installed', async () => {
+        await panel.__receive({ type: 'selectStockWorkflow', id: 'invented' });
+        expect(panel.__lastPosted('notice').text).toContain('not installed');
+    });
+
+    it('hands the constitution to the command that owns it', async () => {
+        await panel.__receive({ type: 'runStockCommand', command: 'constitution' });
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.constitution');
+    });
+
+    it('names the templates it can open, each with the step that fills it', async () => {
+        await panel.__receive({ type: 'ready' });
+
+        const view = panel.__lastPosted('stock').view;
+        expect(view.templates).toHaveLength(1);
+        expect(view.templates[0].path)
+            .toBe(path.join('.specify', 'templates', 'spec-template.md'));
+        expect(view.templates[0].note).toContain('/speckit.specify');
+    });
+});

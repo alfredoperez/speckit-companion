@@ -184,17 +184,21 @@ If the panel cannot draw, it offers repairs as buttons, narrowest first. **Open 
 
 ## A project without the Companion extension
 
-On a project that runs stock Spec Kit the board draws that project's own workflow, read from its files: `.specify/workflows/` when a workflow is installed, otherwise the `/speckit.*` commands your assistant has. Each step shows in run order with the documents it writes, the extension hooks attached to it, and any preset applied under `.specify/presets/`.
+On a project that runs stock Spec Kit the board draws that project's own workflow, read from its files: `.specify/workflows/` when a workflow is installed, otherwise the `/speckit.*` commands your assistant has. Each step shows in run order with the documents it writes and the extension hooks attached to it.
 
-The one thing you can change there is what stock Spec Kit itself offers: a hook's switch. Turning one on or off writes `enabled` straight into `.specify/extensions.yml`, which is the file Spec Kit reads, and nothing else in that file moves.
+Everything it changes there is Spec Kit's own.
 
 | On a stock project | What happens |
 | --- | --- |
-| A hook's checkbox | Writes `enabled: true` or `false` into `.specify/extensions.yml`. Takes effect on the next run. |
+| A hook's checkbox | Writes `enabled: true` or `false` into `.specify/extensions.yml`, the file Spec Kit reads. Nothing else in that file moves. |
+| A **document shape** row | Opens that template from `.specify/templates/` in an editor tab. Spec Kit reads it on the next run. |
+| **The constitution** | Sends `/speckit.constitution` to your assistant, in the spelling your project registers. A command owns that document, so the board does not edit it. |
+| A **workflow** row | Draws that installed workflow here. **Open** opens its `workflow.yml`. |
 | **Build** | Disabled. A build assembles Companion's command files, and this project has none. |
-| Nodes, phases, node instructions, routing decisions, document shape, workflows | Listed and not editable. They are Companion's. |
 
-Nothing is written to `.specify/companion.yml` or `.specify/companion/` on a stock project. To shape the rest on this board, install the Companion extension for Spec Kit from [Install in VS Code](/docs/ide/install/#vscode-companion).
+Which workflow a run takes is chosen when the run starts, with `specify workflow run <id>`; Spec Kit's registry records no active one, so there is nothing on the board to set.
+
+Nothing is written to `.specify/companion.yml` or `.specify/companion/` on a stock project, and the board draws no Companion-only controls. Nodes, phases, your own hooks and the rest arrive with the Companion extension for Spec Kit, from [Install in VS Code](/docs/ide/install/#vscode-companion).
 
 ## Related
 

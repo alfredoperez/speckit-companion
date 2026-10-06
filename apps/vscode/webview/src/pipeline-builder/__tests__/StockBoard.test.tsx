@@ -2,9 +2,8 @@
  * @jest-environment jsdom
  *
  * What a project without the Companion extension sees. The board is the only
- * thing telling it which half of this panel it has, so the three claims worth
- * pinning are: the steps are its own, Build cannot run, and the Companion-only
- * work is said to be Companion's exactly once.
+ * thing telling it what it can change, so what is pinned here is: the steps are
+ * its own, each stock-owned thing is reachable, and Build cannot run.
  */
 import { StockBoard } from '../StockBoard';
 import type { StockWorkflowView } from '../../../../src/protocol/pipeline';
@@ -14,6 +13,10 @@ function view(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
     return {
         source: 'workflow',
         workflow: { id: 'speckit', name: 'Full SDD Cycle', description: 'specify then plan' },
+        workflows: [{
+            id: 'speckit', name: 'Full SDD Cycle', description: 'specify then plan',
+            path: '.specify/workflows/speckit/workflow.yml', drawn: true,
+        }],
         steps: [
             {
                 id: 'specify', command: 'speckit.specify', kind: 'command',
@@ -29,15 +32,28 @@ function view(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
                 label: 'Review the spec before planning.', writes: [], hooks: [],
             },
         ],
+        templates: [{
+            file: 'spec-template.md', path: '.specify/templates/spec-template.md',
+            label: 'Spec', note: 'The shape of spec.md, filled in by /speckit.specify',
+        }],
+        constitution: { command: 'speckit.constitution', written: true },
         presets: [],
-        registry: true,
+        registry: { path: '.specify/extensions.yml' },
         buildBlocked: 'Nothing here is built.',
         ...over,
     };
 }
 
 const noop = () => undefined;
-const ACTIONS = { onSetHook: noop, onOpenFile: noop };
+const ACTIONS = {
+    onSetHook: noop, onOpenFile: noop, onSelectWorkflow: noop, onRunCommand: noop,
+};
+
+function rowNamed(host: HTMLElement, name: string): HTMLButtonElement {
+    return Array.from(host.querySelectorAll('.pb-stock-row'))
+        .find(row => row.querySelector('.pb-stock-row-name')?.textContent === name
+        ) as HTMLButtonElement;
+}
 
 describe('the board on a stock Spec Kit project', () => {
     it('draws the project\'s own steps, with what each writes', () => {
@@ -60,25 +76,22 @@ describe('the board on a stock Spec Kit project', () => {
             .toContain('Nothing here is built');
     });
 
-    it('says what installing Companion would allow, once for the whole group', () => {
+    it('does not list what Companion would add, and keeps one way to it', () => {
         const host = mount(<StockBoard view={view()} status={null} {...ACTIONS} />);
 
-        const locked = Array.from(host.querySelectorAll('.pb-stock-locked-row'));
-        expect(locked.length).toBeGreaterThan(1);
-        expect(locked.every(row => row.getAttribute('aria-disabled') === 'true')).toBe(true);
-
-        const said = Array.from(host.querySelectorAll('.pb-stock-prose'))
-            .filter(el => el.textContent!.includes('Install the Companion'));
-        expect(said).toHaveLength(1);
-        expect(host.querySelector('#stock-locked-reason a')!.getAttribute('href'))
+        expect(host.textContent).not.toContain('What Companion would add');
+        expect(host.querySelectorAll('[aria-disabled="true"]')).toHaveLength(0);
+        const foot = host.querySelectorAll('.pb-stock-foot');
+        expect(foot).toHaveLength(1);
+        expect(foot[0].querySelector('a')!.getAttribute('href'))
             .toContain('/docs/ide/install/');
     });
 
     it('asks for one hook to be switched off, by its address in the registry', async () => {
         const flips: unknown[] = [];
         const host = mount(
-            <StockBoard view={view()} status={null}
-                onSetHook={flip => flips.push(flip)} onOpenFile={noop} />);
+            <StockBoard view={view()} status={null} {...ACTIONS}
+                onSetHook={flip => flips.push(flip)} />);
 
         (host.querySelector('.pb-stock-switch') as HTMLInputElement).click();
         await flush();
@@ -88,9 +101,74 @@ describe('the board on a stock Spec Kit project', () => {
         ]);
     });
 
+    it('opens a template by the path it was given, and says what the step uses it for', () => {
+        const opened: string[] = [];
+        const host = mount(
+            <StockBoard view={view()} status={null} {...ACTIONS}
+                onOpenFile={path => opened.push(path)} />);
+
+        const row = rowNamed(host, 'Spec');
+        expect(row.querySelector('.pb-stock-row-note')!.textContent)
+            .toContain('filled in by /speckit.specify');
+        row.click();
+
+        expect(opened).toEqual(['.specify/templates/spec-template.md']);
+    });
+
+    it('runs the command that owns the constitution, in this project\'s spelling', () => {
+        const ran: string[] = [];
+        const host = mount(
+            <StockBoard
+                view={view({ constitution: { command: 'speckit-constitution', written: false } })}
+                status={null} {...ACTIONS} onRunCommand={command => ran.push(command)} />);
+
+        const row = rowNamed(host, 'Set the constitution');
+        expect(row.textContent).toContain('/speckit-constitution');
+        row.click();
+
+        expect(ran).toEqual(['constitution']);
+    });
+
+    it('draws another installed workflow, and opens the one it is drawing', () => {
+        const picked: string[] = [];
+        const opened: string[] = [];
+        const host = mount(
+            <StockBoard
+                view={view({
+                    workflows: [
+                        {
+                            id: 'speckit', name: 'Full SDD Cycle', description: 'the long way',
+                            path: '.specify/workflows/speckit/workflow.yml', drawn: true,
+                        },
+                        {
+                            id: 'quick-fix', name: 'Quick fix', description: 'the short way',
+                            path: '.specify/workflows/quick-fix/workflow.yml', drawn: false,
+                        },
+                    ],
+                })}
+                status={null} {...ACTIONS}
+                onSelectWorkflow={id => picked.push(id)}
+                onOpenFile={path => opened.push(path)} />);
+
+        expect(rowNamed(host, 'Full SDD Cycle').getAttribute('aria-pressed')).toBe('true');
+        rowNamed(host, 'Quick fix').click();
+        expect(picked).toEqual(['quick-fix']);
+
+        const line = rowNamed(host, 'Quick fix').closest('.pb-stock-rowline')!;
+        (line.querySelector('.builder-action') as HTMLButtonElement).click();
+        expect(opened).toEqual(['.specify/workflows/quick-fix/workflow.yml']);
+    });
+
+    it('says the run picks its own workflow, since the registry names none', () => {
+        const host = mount(<StockBoard view={view()} status={null} {...ACTIONS} />);
+
+        expect(host.textContent).toContain('specify workflow run');
+        expect(host.textContent).toContain('nothing here to set');
+    });
+
     it('names the installed commands as the source when there is no workflow file', () => {
         const host = mount(
-            <StockBoard view={view({ source: 'commands', workflow: null })}
+            <StockBoard view={view({ source: 'commands', workflow: null, workflows: [] })}
                 status={null} {...ACTIONS} />);
 
         expect(host.querySelector('.pb-stock-workflow')!.textContent)

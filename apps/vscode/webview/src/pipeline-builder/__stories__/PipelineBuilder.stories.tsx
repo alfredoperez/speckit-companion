@@ -23,6 +23,7 @@ import type {
     PipelineStep,
     StockHookRow,
     StockStepRow,
+    StockTemplate,
     StockWorkflowView,
 } from '../../../../src/protocol/pipeline';
 
@@ -602,7 +603,9 @@ export const RepairInFlight: Story = {
 
 // ── 7. A project without the Companion extension ────────
 
-const STOCK_ACTIONS = { onSetHook: noop, onOpenFile: noop };
+const STOCK_ACTIONS = {
+    onSetHook: noop, onOpenFile: noop, onSelectWorkflow: noop, onRunCommand: noop,
+};
 
 /** The steps stock Spec Kit's bundled workflow runs, as its YAML declares them. */
 const STOCK_STEPS: StockStepRow[] = [
@@ -628,6 +631,37 @@ const STOCK_STEPS: StockStepRow[] = [
     },
 ];
 
+/** The six templates a `specify init` leaves in a project. */
+const STOCK_TEMPLATES: StockTemplate[] = [
+    {
+        file: 'constitution-template.md', path: '.specify/templates/constitution-template.md',
+        label: 'Constitution',
+        note: 'The principles /speckit.constitution writes into memory/constitution.md',
+    },
+    {
+        file: 'spec-template.md', path: '.specify/templates/spec-template.md', label: 'Spec',
+        note: 'The shape of spec.md, filled in by /speckit.specify',
+    },
+    {
+        file: 'plan-template.md', path: '.specify/templates/plan-template.md', label: 'Plan',
+        note: 'The shape of plan.md, filled in by /speckit.plan',
+    },
+    {
+        file: 'tasks-template.md', path: '.specify/templates/tasks-template.md', label: 'Tasks',
+        note: 'The shape of tasks.md, filled in by /speckit.tasks',
+    },
+    {
+        file: 'checklist-template.md', path: '.specify/templates/checklist-template.md',
+        label: 'Checklist',
+        note: 'The shape of a checklist under checklists/, written by /speckit.checklist',
+    },
+    {
+        file: 'agent-file-template.md', path: '.specify/templates/agent-file-template.md',
+        label: 'Agent context',
+        note: 'The context file a plan writes for your assistant',
+    },
+];
+
 function stock(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
     return {
         source: 'workflow',
@@ -636,9 +670,16 @@ function stock(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
             name: 'Full SDD Cycle',
             description: 'Runs specify → plan → tasks → implement with review gates',
         },
+        workflows: [{
+            id: 'speckit', name: 'Full SDD Cycle',
+            description: 'Runs specify → plan → tasks → implement with review gates',
+            path: '.specify/workflows/speckit/workflow.yml', drawn: true,
+        }],
         steps: STOCK_STEPS,
+        templates: STOCK_TEMPLATES,
+        constitution: { command: 'speckit.constitution', written: true },
         presets: [],
-        registry: true,
+        registry: { path: '.specify/extensions.yml' },
         buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
         ...over,
     };
@@ -695,12 +736,25 @@ export const StockWithHooks: Story = {
 };
 
 export const StockWithPreset: Story = {
-    name: '30 · Stock, with a preset applied',
+    name: '30 · Stock, with a preset and two workflows',
     render: () => (
         <StockBoard
             view={stock({
                 source: 'commands',
                 workflow: null,
+                workflows: [
+                    {
+                        id: 'speckit', name: 'Full SDD Cycle',
+                        description: 'specify → plan → tasks → implement with review gates',
+                        path: '.specify/workflows/speckit/workflow.yml', drawn: false,
+                    },
+                    {
+                        id: 'quick-fix', name: 'Quick fix',
+                        description: 'spec and implement, no planning',
+                        path: '.specify/workflows/quick-fix/workflow.yml', drawn: true,
+                    },
+                ],
+                constitution: { command: 'speckit-constitution', written: false },
                 presets: [{
                     id: 'companion-standard',
                     name: 'Companion Standard',

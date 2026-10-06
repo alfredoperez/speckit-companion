@@ -5,7 +5,7 @@ type MessageType = BuilderToExtensionMessage['type'];
 
 /**
  * Every message the board can send. Listed rather than derived so a new one has
- * to be considered here: the default is refusal, and this says which four are
+ * to be considered here: the default is refusal, and this says which ones are
  * not, in a project that has nothing to run a Companion pipeline.
  */
 const EVERY_MESSAGE: MessageType[] = [
@@ -14,12 +14,16 @@ const EVERY_MESSAGE: MessageType[] = [
     'addHook', 'moveHook', 'removeHook', 'readNode', 'readFrame', 'replaceStep',
     'addNode', 'newStep', 'selectWorkflow', 'newWorkflow', 'undo', 'removeNode',
     'moveNode', 'dismissFirstRun', 'setStockHook', 'openStockFile',
+    'selectStockWorkflow', 'runStockCommand',
 ];
 
-const ALLOWED: MessageType[] = ['ready', 'setStockHook', 'openStockFile', 'dismissFirstRun'];
+const ALLOWED: MessageType[] = [
+    'ready', 'dismissFirstRun', 'setStockHook', 'openStockFile',
+    'selectStockWorkflow', 'runStockCommand',
+];
 
 describe('what the builder may do on a stock Spec Kit project', () => {
-    it('refuses everything that is not one of the four stock actions', () => {
+    it('refuses every message but the stock ones', () => {
         for (const type of EVERY_MESSAGE) {
             const refusal = stockRefusal('stock', type);
             if (ALLOWED.includes(type)) {

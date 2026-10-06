@@ -29,7 +29,8 @@ import { nodeFile, readableNode } from './readableNode';
 import { projectKind } from './projectKind';
 import { stockRefusal } from './stockGuard';
 import { setHookEnabled } from './stockHooks';
-import { readStockWorkflow, stockWorkflowFile } from './stockWorkflow';
+import { readStockWorkflow, stockFileToOpen } from './stockWorkflow';
+import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
     readPipelineGraph,
@@ -99,6 +100,9 @@ export class PipelineBuilderPanel {
 
     /** The way back from the last write, while the status line still offers it. */
     private pendingUndo: { token: string; run: () => Promise<void> } | null = null;
+
+    /** Which installed stock workflow the board is drawing. */
+    private drawing: string | undefined;
 
     private constructor(
         private readonly panel: vscode.WebviewPanel,
@@ -557,15 +561,41 @@ export class PipelineBuilderPanel {
             });
         },
 
+        /**
+         * Open one of the stock files the board drew, in an editor.
+         *
+         * A template is the project's to edit, and an editor is where that is
+         * done — the panel reads nothing back and writes nothing here.
+         */
         openStockFile: async message => {
-            const file = message.file === 'registry'
-                ? path.join(this.workspaceRoot, EXTENSIONS_REL)
-                : stockWorkflowFile(this.workspaceRoot);
-            if (!file || !fs.existsSync(file)) {
-                this.say('That file is not in this project.');
+            const file = stockFileToOpen(this.workspaceRoot, message.path, this.drawing);
+            if (!file) {
+                this.say('That file is not one this board drew.');
                 return;
             }
             await vscode.window.showTextDocument(vscode.Uri.file(file));
+        },
+
+        /**
+         * Draw another installed workflow.
+         *
+         * Which workflow a run takes is Spec Kit's to decide when the run
+         * starts, and its registry records no active one — so this changes
+         * which one the board is reading, and no file.
+         */
+        selectStockWorkflow: async message => {
+            const known = readStockWorkflow(this.workspaceRoot)
+                .workflows.some(choice => choice.id === message.id);
+            if (!known) {
+                this.say(`${message.id} is not installed in this project.`);
+                return;
+            }
+            this.drawing = message.id;
+            await this.send();
+        },
+
+        runStockCommand: async () => {
+            await vscode.commands.executeCommand('speckit.constitution');
         },
 
         /** Read once. The panel does not say it again in this workspace. */
@@ -852,7 +882,13 @@ export class PipelineBuilderPanel {
         // otherwise fall back to the copy bundled here and draw Companion's
         // pipeline over a project that cannot run a single node of it.
         if (projectKind(this.workspaceRoot) === 'stock') {
-            await this.post({ type: 'stock', view: readStockWorkflow(this.workspaceRoot) });
+            const view = readStockWorkflow(this.workspaceRoot, this.drawing);
+            // The spelling a host registers is the editor's to know, so the
+            // row names the command the way a run of it would be typed.
+            if (view.constitution) {
+                view.constitution.command = formatCommandForProvider(view.constitution.command);
+            }
+            await this.post({ type: 'stock', view });
             return;
         }
         const script = resolveGraphScript(this.workspaceRoot, this.context.extensionPath);
