@@ -21,6 +21,9 @@ import { mkdir, writeFile } from 'node:fs/promises';
 // fix-a-bug, assess-an-idea   moved in with the IDE pages.
 // copilot-app, claude-code    each split into three pages; the old address
 //                             lands on Install, the first of them.
+//
+// /workflow-builder was a page for a builder that was not built. It shipped
+// as the Pipeline Builder, so the address lands on its docs page.
 const MOVED = {
   '/docs/start/getting-started': '/docs/start/your-first-spec',
   '/docs/anatomy/the-sidebar': '/docs/navigate/the-sidebar',
@@ -44,6 +47,7 @@ const MOVED = {
   '/docs/processes/assess-an-idea': '/docs/ide/assess-an-idea',
   '/docs/processes/copilot-app': '/docs/copilot-app/install',
   '/docs/processes/claude-code': '/docs/claude-code/install',
+  '/workflow-builder': '/docs/customize/pipeline-builder',
 };
 
 // The adapter turns each redirect into a Vercel route that matches the path
@@ -148,8 +152,10 @@ export default defineConfig({
       // navigate/, steps/, results/ and ide/, which kept their addresses when
       // the sidebar was regrouped.
       //
-      // Introduction and Install are /docs/ and /docs/install: the first is the
-      // section root, and the second is linked from two published READMEs.
+      // Introduction and Install where you work are /docs/ and /docs/install:
+      // the first is the section root, and the second is linked from published
+      // READMEs. It is a launchpad: three cards, each opening the Install page
+      // that leads its own group below and holds that tool's full path.
       //
       // Configuration sits with the IDE pages and keeps its /docs/reference/
       // address. Telemetry is a page without a sidebar entry: Configuration
@@ -166,6 +172,7 @@ export default defineConfig({
         {
           label: 'In your IDE',
           items: [
+            { label: 'Install', slug: 'docs/ide/install' },
             { label: 'Choose an AI provider', slug: 'docs/ide/choose-a-provider' },
             { label: 'Configuration', slug: 'docs/reference/configuration' },
             { label: 'Your first spec', slug: 'docs/start/your-first-spec' },

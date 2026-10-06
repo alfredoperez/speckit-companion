@@ -92,6 +92,8 @@
   --text-muted: #9d97bd;
   --text-dim: #6f6994;
   --on-accent: #ffffff;
+  /* The one error colour: a form that did not go through. */
+  --text-error: #f5a3ad;
 
   /* ------------------------------------------------------------ accents */
 

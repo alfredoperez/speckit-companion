@@ -1,0 +1,102 @@
+---
+title: Install in VS Code
+description: The VS Code path from Spec Kit to a first spec. Get Spec Kit, add the Companion extension for Spec Kit, install the VS Code extension and check that it took.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Button from '../../../../components/Button.astro';
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+import { COMPANION_COMMAND, MARKETPLACE, OPEN_IN_VSCODE, SOURCE_CLI } from '../../../../data/installCommands';
+
+In VS Code, SpecKit Companion is the full workspace: the sidebar, the spec viewer, review comments and the Overview. It works the same in Cursor, Windsurf and other editors built on VS Code.
+
+The path has the same shape everywhere: Spec Kit itself, then the Companion extension for Spec Kit, which is optional but recommended, then the one thing your tool needs. [Install where you work](/docs/install) has the other two places.
+
+<Steps>
+
+1. <span id="vscode-spec-kit"></span>**Get Spec Kit**
+
+   Spec Kit is GitHub's toolkit for spec-driven development. Its `specify` command sets a project up with the `/speckit` commands your assistant runs.
+
+   <Actions>
+     <CodeLine command={SOURCE_CLI} />
+   </Actions>
+
+   This installs the GitHub build. The stock PyPI `specify-cli` has no `extension` command, so step 2 would fail with it. The command changes your global `uv` tools.
+
+   Then set the project up, from its root. Swap `claude` for your assistant, such as `copilot`, `gemini` or `codex`:
+
+   <Actions>
+     <CodeLine command="specify init --here --integration claude" />
+   </Actions>
+
+   You can skip that second command. In step 3 the Specs view offers **Initialize Workspace**, which runs it for the assistant you chose.
+
+   <YouSee label="You should see">
+
+   `specify extension --help` lists `add` and `list`, and the project has a `.specify` folder.
+
+   </YouSee>
+
+2. <span id="vscode-companion"></span>**Add the Companion extension for Spec Kit** (optional, recommended)
+
+   This is the engine half. It records each run, adds the Companion pipeline and Auto, and brings living specs. It needs Spec Kit 0.9.5 or newer.
+
+   <Actions>
+     <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="install" />
+   </Actions>
+
+   Run it from your project root and copy it whole. The short catalog form does not work.
+
+   **Without it** the sidebar and the viewer still work with stock Spec Kit. You lose the run record, so the Overview has no step times, decisions or checks to show. You also lose the `/speckit.companion.*` commands, Auto and the Living Specs view.
+
+   <YouSee label="You should see">
+
+   A one-time **untrusted source** prompt, because the archive comes from a URL and not the catalog. Accept it. Then `specify extension list` has `companion` in it.
+
+   </YouSee>
+
+3. <span id="vscode-extension"></span>**Install the VS Code extension and choose your assistant**
+
+   <Actions>
+     <Button href={MARKETPLACE} external size="md" data-analytics="install_click_vscode" data-analytics-placement="install">Get it on the Marketplace</Button>
+     <p>Or <a href={OPEN_IN_VSCODE}>open it in VS Code</a>. It is on Open VSX too, for Cursor, Windsurf and other editors. From a terminal:</p>
+     <CodeLine command="code --install-extension alfredoperez.speckit-companion" />
+   </Actions>
+
+   The first time it starts, a picker asks which AI assistant runs your steps. Pick the one you use. [Choose an AI provider](/docs/ide/choose-a-provider) covers the picker and how to change it later.
+
+   <YouSee label="You should see">
+
+   A SpecKit icon in the activity bar with the **Specs** and **Steering** views. With the Companion extension from step 2, a **Living Specs** view too.
+
+   </YouSee>
+
+   <DocFigure src="sidebar-triptych.png" caption="The sidebar's three views. Living Specs is the one the Companion extension adds." />
+
+4. <span id="vscode-check"></span>**Check that it took**
+
+   Click `+` in the Specs view, describe a small change and press **Create Spec**.
+
+   <YouSee label="You should see">
+
+   A new spec under **Active** in the Specs view, and the spec open in the viewer when your assistant finishes. With the Companion extension, your assistant also offers `/speckit.companion.*` commands next to the stock `/speckit.*` ones.
+
+   </YouSee>
+
+   [Your first spec](/docs/start/your-first-spec) walks through it with pictures.
+
+</Steps>
+
+## Update it, or fix it
+
+[Update later](/docs/install#update-later) has the command for each piece. [If something did not work](/docs/install#if-something-did-not-work) lists what you might see and what to do.
+
+## Related
+
+- [Choose an AI provider](/docs/ide/choose-a-provider) covers the picker and how to change it later.
+- [Your first spec](/docs/start/your-first-spec) creates a spec and runs its first step.
+- [Install where you work](/docs/install) says what each piece is and where it installs.

@@ -112,7 +112,6 @@
         "extraStills": [
           "docs/screenshots/generated/overview-annotated.png"
         ],
-        "heroStill": "content/media/web/hero-overview.png",
         "panelStill": "content/media/web/panel-read.png"
       },
       "unnormalized": [],
@@ -122,7 +121,6 @@
         "content/media/web/overview-x16x9.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
         "docs/screenshots/generated/overview.png": "The completed Overview page for the Teamboard fixture run",
         "docs/screenshots/generated/overview-annotated.png": "The completed Overview dossier with its honest per-phase timing called out: run status, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the coverage table",
-        "content/media/web/hero-overview.png": "The Overview of a finished run: the intent it answers to, the four phases with the time each took, the approach, and the corner of the codebase it changed.",
         "content/media/web/panel-read.png": "The Overview's content column: the intent the run answers to, each phase with the time it took, the approach, the corner of the codebase it changed, how it was sized, and the expectations fence."
       },
       "referencedBy": {
@@ -440,8 +438,7 @@
         "xCrop": "content/media/web/living-specs-x16x9.png",
         "readmeGif": null,
         "docsStill": "docs/screenshots/generated/living-specs-pair.png",
-        "extraStills": [],
-        "heroStill": "content/media/web/hero-living-specs.png"
+        "extraStills": []
       },
       "unnormalized": [
         "content/media/feature-clips/living-specs/renders/living-specs_2026-08-28_10-29-43.mp4"
@@ -449,8 +446,7 @@
       "alt": {
         "docs/screenshots/generated/living-specs-pair.png": "The Living Specs pair: the sidebar's Living Specs view with per-capability coverage counts and drift flags, beside the viewer open on the photo-storage capability with its LIVING badge, covered globs, purpose, and WHEN/THEN requirement rows",
         "content/media/web/living-specs-poster.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished",
-        "content/media/web/living-specs-x16x9.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished",
-        "content/media/web/hero-living-specs.png": "The Living Specs tree: capabilities kept at a root and beside the code in features, jobs and services, each row carrying its coverage count or a drift flag."
+        "content/media/web/living-specs-x16x9.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished"
       },
       "referencedBy": {
         "docs/screenshots/generated/living-specs-pair.png": [
@@ -477,7 +473,6 @@
         "readmeGif": null,
         "docsStill": null,
         "extraStills": [],
-        "heroStill": "content/media/web/hero-review.png",
         "panelStill": "content/media/web/panel-review.png"
       },
       "unnormalized": [
@@ -486,7 +481,6 @@
       "alt": {
         "content/media/web/review-poster.png": "Correcting a spec before it becomes code: a comment pins under the line it annotates, the card opens to say exactly what has to change, Refine hands the pending comments to your AI, the note stays on the card as history, and the side bar opens on the same spec sitting with every other one, grouped by lifecycle, with the steering material beneath",
         "content/media/web/review-x16x9.png": "Correcting a spec before it becomes code: a comment pins under the line it annotates, the card opens to say exactly what has to change, Refine hands the pending comments to your AI, the note stays on the card as history, and the side bar opens on the same spec sitting with every other one, grouped by lifecycle, with the steering material beneath",
-        "content/media/web/hero-review.png": "Two review comments pinned under a requirement, the second one open with its Refine, Edit and Delete actions.",
         "content/media/web/panel-review.png": "A review comment open under the requirement it annotates, its whole note visible with Refine, Edit and Delete, among the other requirements on the page."
       },
       "referencedBy": {},
@@ -1513,6 +1507,106 @@
         ]
       },
       "notes": "Supplied by hand, not produced by any script here: clips:render, clips:gifs and clips:capture never touch these four files. The composition is not on main. It lives on the spike/video-workflow branch under content/media/loops/board-story/, rebuilt with its capture/ scripts and hyperframes render. A recreation of a run, sped up: the board is the real page, and the window around it (title bar, tab, chat column) is a neutral stand-in, not the Copilot app's own chrome. Captions must say so. 1920x1080, 25.5 s; the GIF is 880x495 at 12 fps. Keep the filenames."
+    },
+    {
+      "id": "hero-talk",
+      "name": "Hero loop: talk to your specs",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": null,
+      "films": "A requirement is hovered, a comment is typed on its line and added as pending, Refine (1) is pressed in the footer, and the comment reads applied.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": "content/media/web/hero-talk.webm",
+        "webMp4": "content/media/web/hero-talk.mp4",
+        "poster": "content/media/web/hero-talk-poster.png",
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "content/media/web/hero-talk-poster.png": "A requirement in a spec is hovered, a comment is typed under it and added as a pending card, Refine (1) is pressed in the footer, and the card reads Applied."
+      },
+      "referencedBy": {},
+      "notes": "A hero loop for the landing page. Supplied by hand, not produced by any script here: clips:render never touches these three files. The composition is not on main. It lives on the media/hero-loops-and-reply branch under content/media/loops/hero-talk/. 1600x1000, 8.4 s, silent, seamless, product UI only with no added words. Keep the filenames."
+    },
+    {
+      "id": "hero-overview",
+      "name": "Hero loop: the Overview",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": null,
+      "films": "A finished run's Overview scrolling from the intent and the time per step through expectations, the checks, the decisions and the coverage table, and back to the top.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": "content/media/web/hero-overview.webm",
+        "webMp4": "content/media/web/hero-overview.mp4",
+        "poster": "content/media/web/hero-overview-poster.png",
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "content/media/web/hero-overview-poster.png": "The Overview of a finished run scrolls from its intent and the four steps with their times, down to the decisions with the reason and the rejected option for each, and on to the table that traces each requirement to its tasks and tests."
+      },
+      "referencedBy": {},
+      "notes": "A hero loop for the landing page. Supplied by hand, not produced by any script here: clips:render never touches these three files. The composition is not on main. It lives on the media/hero-loops-and-reply branch under content/media/loops/hero-overview/. 1600x1000, 8.2 s, silent, seamless, product UI only with no added words. Keep the filenames."
+    },
+    {
+      "id": "hero-steps",
+      "name": "Hero loop: step by step",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": null,
+      "films": "A spec marked Implementing, with the pointer moving through its tabs: Specification, Plan, then Tasks at 50% with the first tasks ticked, and back.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": "content/media/web/hero-steps.webm",
+        "webMp4": "content/media/web/hero-steps.mp4",
+        "poster": "content/media/web/hero-steps-poster.png",
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "content/media/web/hero-steps-poster.png": "The pointer clicks from the Specification to the Plan to the Tasks of one feature, where three of six tasks are ticked and the tab reads 50%, then back to the Specification."
+      },
+      "referencedBy": {},
+      "notes": "A hero loop for the landing page. Supplied by hand, not produced by any script here: clips:render never touches these three files. The composition is not on main. It lives on the media/hero-loops-and-reply branch under content/media/loops/hero-steps/. 1600x1000, 7.8 s, silent, seamless, product UI only with no added words. Keep the filenames."
+    },
+    {
+      "id": "hero-sidebar",
+      "name": "Hero loop: everything in the sidebar",
+      "kind": "clip",
+      "status": "shipped",
+      "composition": null,
+      "films": "The SpecKit side bar beside the viewer in a VS Code window: the pointer opens a bug from the Bugs pane, goes back to a spec, then scrolls the side bar down to Steering and its constitution.",
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": "content/media/web/hero-sidebar.webm",
+        "webMp4": "content/media/web/hero-sidebar.mp4",
+        "poster": "content/media/web/hero-sidebar-poster.png",
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": null,
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "content/media/web/hero-sidebar-poster.png": "A VS Code window with the SpecKit side bar beside the viewer. The side bar lists Specs, Bugs and Ideas, each grouped by where it stands. The pointer opens a bug, returns to a spec, then scrolls the side bar down to Steering."
+      },
+      "referencedBy": {},
+      "notes": "A hero loop for the landing page. Supplied by hand, not produced by any script here: clips:render never touches these three files. The composition is not on main. It lives on the media/hero-loops-and-reply branch under content/media/loops/hero-sidebar/. 1600x1000, silent, seamless, product UI only with no added words. Keep the filenames."
     }
   ]
 }

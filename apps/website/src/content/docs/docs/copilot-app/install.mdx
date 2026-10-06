@@ -1,20 +1,62 @@
 ---
-title: Install the board in the Copilot app
-description: Copy the SpecKit Companion canvas into your project or your user folder, accept it, then open it beside the chat in the GitHub Copilot app.
+title: Install in the GitHub Copilot app
+description: The Copilot app path from Spec Kit to a first spec. Get Spec Kit, add the Companion extension for Spec Kit, copy the board in, accept it and open it beside the chat.
 ---
 
 import { Steps } from '@astrojs/starlight/components';
 import CodeLine from '../../../../components/CodeLine.astro';
 import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+import { COMPANION_COMMAND, SOURCE_CLI } from '../../../../data/installCommands';
 
-If you work in the GitHub Copilot app, SpecKit Companion opens as a canvas beside your chat. It shows every spec in the repo, where each one is in the pipeline, and a button for the next step. You do not need the VS Code extension for it.
+If you work in the GitHub Copilot app, SpecKit Companion opens as a canvas beside your chat. It shows every spec in the repo, where each one is in the pipeline, and a button for the next step. You do not need the VS Code extension for this path.
 
-This page is the board's own steps. The project needs Spec Kit first, and the Companion extension for Spec Kit is optional but recommended. [Install where you work](/docs/install#in-the-github-copilot-app) has the whole path in order.
+The path has the same shape everywhere: Spec Kit itself, then the Companion extension for Spec Kit, which is optional but recommended, then the one thing your tool needs. [Install where you work](/docs/install) has the other two places.
 
 <Steps>
 
-1. **Add the board**
+1. <span id="copilot-spec-kit"></span>**Get Spec Kit**
+
+   Spec Kit is GitHub's toolkit for spec-driven development. Its `specify` command sets a project up with the `/speckit` commands your agent runs.
+
+   <Actions>
+     <CodeLine command={SOURCE_CLI} />
+   </Actions>
+
+   This installs the GitHub build. The stock PyPI `specify-cli` has no `extension` command, so step 2 would fail with it. The command changes your global `uv` tools.
+
+   Then set the project up for Copilot, from its root:
+
+   <Actions>
+     <CodeLine command="specify init --here --integration copilot" />
+   </Actions>
+
+   <YouSee label="You should see">
+
+   A `.specify` folder in the project, and the `/speckit` commands under `.github/`.
+
+   </YouSee>
+
+2. <span id="copilot-companion"></span>**Add the Companion extension for Spec Kit** (optional, recommended)
+
+   This is the engine half. It records each run, adds the Companion pipeline and Auto, and brings living specs. It needs Spec Kit 0.9.5 or newer.
+
+   <Actions>
+     <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="install" />
+   </Actions>
+
+   Run it from your project root and copy it whole.
+
+   **Without it** the board still works. Its buttons send the stock Spec Kit commands, and **Companion** and **Auto** are disabled when you start a spec. The board reads each step from the files, and shows a time only for a step you sent from the board.
+
+   <YouSee label="You should see">
+
+   A one-time **untrusted source** prompt. Accept it. Then `specify extension list` has `companion` in it.
+
+   </YouSee>
+
+3. <span id="copilot-board"></span>**Add the board**
 
    Copy the `apps/copilot-canvas` folder from a checkout of the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project. Swap `<project>` for your project's path:
 
@@ -25,9 +67,15 @@ This page is the board's own steps. The project needs Spec Kit first, and the Co
      <p>If the <code>extensions</code> folder does not exist yet, create it first with <code>mkdir -p</code>.</p>
    </Actions>
 
-   Commit a project copy and get it onto your default branch. The Copilot app runs each session in a fresh copy of that branch.
+   Then commit what steps 1 and 2 added, and the board if you copied it into the project. Get the commit onto your default branch. The Copilot app runs each session in a fresh copy of that branch, so anything uncommitted is missing there.
 
-2. **Accept the repository content and start a new session**
+   <YouSee label="You should see">
+
+   A `speckit-companion` folder with an `extension.mjs` file in it, at the place you copied to.
+
+   </YouSee>
+
+4. <span id="copilot-accept"></span>**Accept the repository content and start a new session**
 
    Open the project in the Copilot app. Since version 1.1.26 the app will not run code from a project until you accept it:
 
@@ -35,17 +83,35 @@ This page is the board's own steps. The project needs Spec Kit first, and the Co
    - Check that it lists `speckit-companion`, and choose **Accept for new sessions**.
    - Start a **new** session. The session that was open when you accepted never gets the board.
 
-3. **Open the board**
+   Then ask: **Open the SpecKit Companion canvas.** It is also in the session's **+** menu under **Canvas**, as **SpecKit Companion**.
 
-   Ask: **Open the SpecKit Companion canvas.** It is also in the session's **+** menu under **Canvas**, as **SpecKit Companion**.
+   A user-folder copy has nothing to accept, unless the project ships other extensions you have not accepted. The app turns every extension off there.
+
+   <YouSee label="You should see">
+
+   The board beside the chat, with every spec in the repo on the left.
+
+   </YouSee>
+
+   <DocFigure
+     src="live-copilot-board.png"
+     alt="The SpecKit Companion board open on a project with five specs. The list on the left gives each spec a status and a four-step bar, and Demo, Tasked is open on the right with its pipeline and a Run implement button."
+     caption="The board once it opens: every spec in the repo on the left, the selected one on the right."
+   />
+
+5. <span id="copilot-check"></span>**Check that it took**
+
+   Press **New spec**, choose **Companion**, describe a small change and submit. On stock Spec Kit, choose **Spec Kit**.
+
+   <YouSee label="You should see">
+
+   The command land in the chat. When the agent finishes, the spec is on the board as **Specified**, and its card offers **Run plan**.
+
+   </YouSee>
+
+   [A run, step by step](/docs/copilot-app/a-run-step-by-step) follows one spec from there to implement.
 
 </Steps>
-
-<DocFigure
-  src="live-copilot-board.png"
-  alt="The SpecKit Companion board open on a project with five specs. The list on the left gives each spec a status and a four-step bar, and Demo, Tasked is open on the right with its pipeline and a Run implement button."
-  caption="The board once it opens: every spec in the repo on the left, the selected one on the right."
-/>
 
 ## When it shows up
 
@@ -56,10 +122,14 @@ This page is the board's own steps. The project needs Spec Kit first, and the Co
 
 The app accepts the exact files under `.github/extensions/`. When any of them changes, such as after you update the board, the project's **Repository trust** shows **Update available** and new sessions lose the board until you accept again.
 
-If the agent opens an empty `speckit-companion.md` in the editor instead of the board, you are in a session from before you accepted. Start another one. [If something did not work](/docs/install#if-something-did-not-work) has the rest.
+If the agent opens an empty `speckit-companion.md` in the editor instead of the board, you are in a session from before you accepted. Start another one.
+
+## Update it, or fix it
+
+[Update later](/docs/install#update-later) has the command for each piece. [If something did not work](/docs/install#if-something-did-not-work) lists what you might see and what to do.
 
 ## Related
 
-- [Install where you work](/docs/install#in-the-github-copilot-app) is the full path, from Spec Kit to a first spec.
 - [Navigate the board](/docs/copilot-app/navigate-the-board) covers what each part of the board shows.
 - [Run the steps](/docs/copilot-app/run-the-steps) covers which commands the buttons send.
+- [Install where you work](/docs/install) says what each piece is and where it installs.

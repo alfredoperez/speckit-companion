@@ -1,6 +1,11 @@
 ---
-// The three places you can work, as cards that jump to that place's steps on the same page.
+// The three places you can work, as cards that open that place's Install page.
+// `id` and `stepIds` keep the anchors of the page that once held every path, so
+// an old hash link lands on the card that leads to those steps.
 interface Choice {
+  id?: string;
+  stepIds?: string[];
+  go?: string;
   kind: string;
   name: string;
   body: string;
@@ -17,12 +22,19 @@ const { choices } = Astro.props;
 <nav class="jpath not-content" aria-label="Where you work">
   {
     choices.map((choice) => (
-      <a class="jpath__card" href={choice.href}>
+      <a class="jpath__card" id={choice.id} href={choice.href}>
+        {choice.stepIds && (
+          <span class="jpath__anchors" aria-hidden="true">
+            {choice.stepIds.map((stepId) => (
+              <span id={stepId} />
+            ))}
+          </span>
+        )}
         <span class="jpath__kind">{choice.kind}</span>
         <span class="jpath__name">{choice.name}</span>
         <span class="jpath__body">{choice.body}</span>
         <span class="jpath__go" aria-hidden="true">
-          Show the steps ↓
+          {choice.go ?? 'Open the steps'} →
         </span>
       </a>
     ))
@@ -37,7 +49,13 @@ const { choices } = Astro.props;
     margin-block: var(--space-20) var(--space-24);
   }
 
+  .jpath__anchors {
+    position: absolute;
+    inset: 0 auto auto 0;
+  }
+
   .jpath__card {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--space-6);

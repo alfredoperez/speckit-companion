@@ -20,6 +20,8 @@ import SiteNav from '../components/SiteNav.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import Button from '../components/Button.astro';
 import CodeLine from '../components/CodeLine.astro';
+import CourseSignup from '../components/CourseSignup.astro';
+import SoonChip from '../components/SoonChip.astro';
 import manifest from '../../../../content/media/manifest.json';
 
 const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
@@ -87,30 +89,96 @@ const review = media('review');
 const livingExplained = media('living-specs-explained');
 
 /*
-  The hero stills. Built by scripts/build-hero-stills.mjs, which crops them out
-  of the clip compositions' own DPR-2 source captures, so a palette change is a
-  re-shoot plus a re-run and the hero can never drift from what the clips show.
+  The hero. Four parts of the product cycle in one frame, each as a short
+  silent loop of the real UI.
 
-  Captions carry the benefit, not the feature name: someone who reads only the
-  hero should still learn what the product is for. Each one is a cleared claim —
-  the Overview one avoids a flat timing claim, and the Review one says the note
-  is sent rather than applied, because Refine dispatches a request and never
-  reads the file back.
+  A loop is a feature in content/media/manifest.json whose id is the entry's
+  `loop` below: its WebM, MP4 and poster are read from there. An entry whose
+  loop is not in the manifest yet shows its `still` instead (a heroStill, cut
+  by tooling/scripts/build-stills.mjs), so a loop is added by registering it
+  in the manifest and nothing here changes.
+
+  The pip names the part and the caption under the frame says in one sentence
+  what the picture shows. The Talk caption is deliberate: Refine SENDS your
+  pending comments to your assistant, it does not apply them.
+
+  Each entry brings its own chips, the pills that drift around the frame.
+  Every chip is a string you can find in that loop, so the field teaches the
+  vocabulary before anyone clicks. Positions are a percentage of the frame and
+  hand-placed on its edges, clear of the words in the picture.
 */
-/*
-  The ambient chips drifting around the hero. Every string is one the product
-  actually renders — a coverage count, a drift flag, a comment state, a phase
-  timing — so the field teaches the vocabulary before anyone clicks. Positions
-  are hand-placed to sit clear of the frame in the middle.
-*/
-const motes = [
-  { text: '6/6 traced', x: -6, y: 8, dx: 12, dy: -10, dur: 9200, delay: 0 },
-  { text: 'drift', x: 87, y: -1, dx: -9, dy: 12, dur: 10400, delay: 900 },
-  { text: 'PENDING', x: 93, y: 34, dx: -13, dy: -8, dur: 8600, delay: 1800 },
-  { text: '54m 36s active', x: -9, y: 56, dx: 10, dy: 11, dur: 11200, delay: 600 },
-  { text: '{ } capability', x: 86, y: 86, dx: -11, dy: -12, dur: 9800, delay: 2400 },
-  { text: 'APPLIED', x: -3, y: 92, dx: 13, dy: -9, dur: 10100, delay: 1400 },
+type Mote = { text: string; x: number; y: number; dx: number; dy: number; dur: number; delay: number };
+
+function heroStill(id: string) {
+  const feature = features.find((entry) => entry.id === id);
+  const rel = feature?.outputs.heroStill;
+  if (!feature || !rel) throw new Error(`content/media/manifest.json has no heroStill for "${id}"`);
+  return { src: siteUrl(rel) as string, alt: feature.alt?.[rel] || '' };
+}
+
+function heroLoop(id: string) {
+  if (!features.some((entry) => entry.id === id)) return null;
+  const clip = media(id);
+  return clip.ready ? clip : null;
+}
+
+const heroEntries: Array<{ id: string; label: string; caption: string; loop: string; still?: string; motes: Mote[] }> = [
+  {
+    id: 'overview',
+    label: 'The Overview',
+    caption: 'The whole run on one page: what it was for, what it decided, and what traced to a test.',
+    loop: 'hero-overview',
+    motes: [
+      { text: '51m 28s active', x: 72, y: -5, dx: -9, dy: 10, dur: 10400, delay: 900 },
+      { text: '4/4 traced', x: -6, y: 60, dx: 12, dy: -10, dur: 9200, delay: 0 },
+      { text: 'REJECTED', x: 92, y: 44, dx: -11, dy: -9, dur: 9800, delay: 1800 },
+      { text: 'WHY', x: 14, y: 96, dx: 12, dy: -9, dur: 10100, delay: 1400 },
+    ],
+  },
+  {
+    id: 'talk',
+    label: 'Talk to your specs',
+    caption: 'Comment on a line. Refine sends your pending comments to your assistant.',
+    loop: 'hero-talk',
+    motes: [
+      { text: 'APPLIED', x: 60, y: -5, dx: -8, dy: 10, dur: 10800, delay: 1200 },
+      { text: 'Commenting on line 26', x: 6, y: 96, dx: 11, dy: -9, dur: 9400, delay: 300 },
+      { text: 'PENDING', x: 92, y: 60, dx: -12, dy: -8, dur: 8800, delay: 700 },
+      { text: 'Refine (1)', x: 58, y: 96, dx: 10, dy: -10, dur: 10200, delay: 2000 },
+    ],
+  },
+  {
+    id: 'steps',
+    label: 'Step by step',
+    caption: 'Read the spec, the plan and the tasks one step at a time.',
+    loop: 'hero-steps',
+    motes: [
+      { text: 'Plan', x: 62, y: -5, dx: -8, dy: 10, dur: 10800, delay: 1200 },
+      { text: 'Tasks 50%', x: 91, y: 44, dx: -12, dy: -8, dur: 8800, delay: 700 },
+      { text: 'Specification', x: 8, y: 96, dx: 12, dy: -9, dur: 9400, delay: 300 },
+      { text: 'T003', x: 46, y: 96, dx: -9, dy: -10, dur: 10200, delay: 1600 },
+    ],
+  },
+  {
+    id: 'sidebar',
+    label: 'Everything in the sidebar',
+    caption: 'Specs, bugs, ideas and steering in one side bar, each grouped by where it stands.',
+    loop: 'hero-sidebar',
+    motes: [
+      { text: '2 active specs', x: 5, y: -5, dx: 10, dy: 8, dur: 9600, delay: 500 },
+      { text: '2 bugs to fix', x: 52, y: -6, dx: -9, dy: 9, dur: 10600, delay: 1500 },
+      { text: '5 ideas decided', x: 20, y: 96, dx: 10, dy: -10, dur: 9000, delay: 0 },
+      { text: 'Constitution', x: 62, y: 96, dx: -10, dy: -9, dur: 11000, delay: 1000 },
+    ],
+  },
 ];
+
+const surfaces = heroEntries.map((entry) => {
+  const clip = heroLoop(entry.loop);
+  if (clip) return { ...entry, clip, src: clip.poster as string, alt: clip.alt };
+  if (!entry.still) throw new Error(`The hero entry "${entry.id}" has neither a loop in the manifest nor a still`);
+  return { ...entry, clip: null, ...heroStill(entry.still) };
+});
 
 /*
   The focal light a product frame sits in front of. Painted by
@@ -126,37 +194,13 @@ const lightwell = (() => {
   };
 })();
 
-const surfaces = [
-  {
-    id: 'overview',
-    label: 'Overview',
-    src: `${urlPrefix}/hero-overview.png`,
-    caption: 'The whole run on one page: what it was for, what it decided, and what traced to a test.',
-    alt: 'The Overview of a finished run: the intent it answers to, the four phases with the time each took, the approach, and the corner of the codebase it changed.',
-  },
-  {
-    id: 'living',
-    label: 'Living Specs',
-    src: `${urlPrefix}/hero-living-specs.png`,
-    caption: 'What you learned, kept next to the code it describes.',
-    alt: 'The Living Specs tree: capabilities kept at a root and beside the code in features, jobs and services, each row carrying its coverage count or a drift flag.',
-  },
-  {
-    id: 'review',
-    label: 'Review',
-    src: `${urlPrefix}/hero-review.png`,
-    caption: 'Comment on the line. Refine sends the note to your agent.',
-    alt: 'Two review comments pinned under a requirement, the second one open with its Refine, Edit and Delete actions.',
-  },
-];
-
 /*
   Each tab states its point before its clip plays, because a clip cannot argue
   and a label cannot explain. Every sentence here traces to a cleared row in the
   claim ledger; three phrasings are deliberate and should not be "improved":
-  timing is only reported where both ends were recorded, hook attachments are
-  instructions the assistant reads rather than an engine that runs them, and
-  Refine dispatches a request rather than applying an edit.
+  timing is only reported where both ends were recorded, and Refine dispatches
+  a request rather than applying an edit. The Customize tab is about workflows
+  written in settings; the board and its hooks have their own section below.
 */
 const tabs = [
   {
@@ -166,16 +210,16 @@ const tabs = [
     heading: 'You stop reading four markdown files',
     body: 'A finished run becomes one page: what it was for, how it was approached, where in the codebase it landed, and what it decided against — with a coverage table that puts untraced requirements first.',
     clip: overview,
-    link: { label: 'read the Overview guide', href: '/docs/results/the-overview/' },
+    link: { label: 'Read the Overview guide', href: '/docs/results/the-overview/' },
   },
   {
     id: 'customize',
     label: 'Customize',
     window: 'Custom workflows · the one you wrote, at every step',
     heading: 'The workflow is yours, not the tool’s',
-    body: 'Define your own phases, commands and output files in settings, and attach a shell command, an inline instruction, or a node file of your own before or after any named step. Those attachments are instructions your assistant reads at run time.',
+    body: 'Write your own steps, commands and output files in settings. Create Spec offers your workflow next to the two built in, and each step sends the command you wrote.',
     clip: makeItYours,
-    link: { label: 'compare the two workflows', href: '/docs/start/spec-driven-development/#the-two-workflows-that-ship' },
+    link: { label: 'Write your own workflow', href: '/docs/customize/your-own-workflow/' },
   },
   {
     id: 'living',
@@ -184,7 +228,7 @@ const tabs = [
     heading: 'The learning outlives the ticket',
     body: 'Spec Kit leaves each spec in a folder that goes quiet when the feature ships. Turn living specs on and every capability keeps one durable spec instead — at the root, or next to the code it describes.',
     clip: livingExplained,
-    link: { label: 'living specs', href: '/docs/results/living-specs/' },
+    link: { label: 'How living specs work', href: '/docs/results/living-specs/' },
   },
   {
     id: 'review',
@@ -193,7 +237,7 @@ const tabs = [
     heading: 'Say it in the margin, not in the chat box',
     body: 'Comment on a line the way you’d review a pull request. Notes persist the moment you add them, and Refine sends the pending ones to your agent as an in-place edit request.',
     clip: review,
-    link: { label: 'explore the review flow', href: '/docs/steps/review-with-comments/' },
+    link: { label: 'See the review flow', href: '/docs/steps/review-with-comments/' },
   },
   // Bugs and ideas are Spec Kit's own extensions. Your assistant runs the
   // commands; Companion shows the reports and sends the next command.
@@ -208,7 +252,7 @@ const tabs = [
       src: '/landing/bug-story.png',
       alt: 'A bug page in VS Code: the lead reads Fixed and verified, then What was wrong with the root cause.',
     },
-    link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
+    link: { label: 'How fixing a bug works', href: '/docs/ide/fix-a-bug/' },
   },
   {
     id: 'ideas',
@@ -221,93 +265,89 @@ const tabs = [
       src: '/landing/idea-decision.png',
       alt: 'An idea page in VS Code: the verdict Go with its reason, then a scorecard.',
     },
-    link: { label: 'assess an idea', href: '/docs/ide/assess-an-idea/' },
+    link: { label: 'How assessing an idea works', href: '/docs/ide/assess-an-idea/' },
   },
 ];
 
+/*
+  The Pipeline Builder, as it ships in the VS Code extension today. Every point
+  is a row of the Pipeline Builder or Hooks docs page. Two phrasings are
+  deliberate: a hook is something your assistant reads at that point, not an
+  engine that runs it, and nothing changes until you press Build.
+*/
+const builder = {
+  shot: {
+    src: '/changelog/vscode-0.33.0-pipeline-builder.png',
+    width: 3120,
+    height: 1960,
+    alt: 'The Pipeline Builder: specify, plan, tasks and implement as four columns, each with its phases and nodes. Two steps are marked changed, and hooks from companion.yml sit before and after the nodes they are attached to.',
+    caption: 'The Pipeline Builder, in a VS Code tab',
+  },
+  points: [
+    {
+      title: 'See the run before you start one',
+      body: 'Each step is a column. Inside it are its phases, the nodes your assistant reads, and the files a run writes.',
+    },
+    {
+      title: 'Spot what is yours',
+      body: 'Anything your project changed carries one color. A chip in the header says how many steps differ from shipped.',
+    },
+    {
+      title: 'Edit, move or replace a node',
+      body: 'Rewrite a node, drag it to reorder, or swap it for an alternative. Your version is saved in your repo and the shipped one is untouched.',
+    },
+    {
+      title: 'Attach your own work',
+      body: 'Add a skill, an instruction, a shell command or a node of your own before or after any node. Your assistant reads it at that point.',
+    },
+    {
+      title: 'Build when you are ready',
+      body: 'Add a step, or start a workflow from a preset. Nothing takes effect until you press Build, and a failed build changes nothing.',
+    },
+  ],
+};
+
+// What the page has not shown yet. The Overview, living specs, review and the
+// pipeline each have a section above, so none of them gets a card here.
 const cards = [
   {
-    eyebrow: 'OVERVIEW',
-    title: 'Runs you can read',
-    // ledger: "the command that proved it" implies re-execution. Nothing re-runs.
-    body: 'A finished run becomes one page: the intent, the decisions, and each check with its result.',
-  },
-  {
-    eyebrow: 'LIVING SPECS',
-    title: 'One spec per capability',
-    // ledger: living specs do not update themselves, and they are opt-in.
-    body: 'Turn it on and each capability keeps one durable spec, updated when a run finishes.',
-  },
-  {
-    eyebrow: 'REVIEW',
-    title: 'Comments that travel',
-    body: 'Comment on a line like a pull request. Refine sends the pending ones to your agent.',
-  },
-  {
-    eyebrow: 'LIVE · RECORD',
     title: 'Watch it run, keep the record',
     body: 'Phases and timing while the agent works, written to one file you can commit.',
+    link: { label: 'Track progress', href: '/docs/results/track-progress/' },
   },
   {
-    eyebrow: 'PIPELINE',
-    title: 'A pipeline you can bend',
-    body: 'Two workflows in the box. Add your own phases, commands and hooks in settings.',
-  },
-  {
-    eyebrow: 'PROVIDERS',
     // ledger: "any agent can drive it" is a never-say. Three of the twelve
     // cannot submit for you.
     title: 'Twelve providers',
     body: 'Terminal CLIs, IDE chat, the Claude Code panel. Not every provider supports every piece.',
+    link: { label: 'Compare providers', href: '/docs/reference/providers/' },
   },
   {
-    eyebrow: 'CONVERGE',
+    title: 'Steering in view',
+    body: 'The standing instruction files your assistant already reads, listed in one view.',
+    link: { label: 'Steering', href: '/docs/customize/steering/' },
+  },
+  {
     title: 'Check the code against the spec',
     body: 'On a finished spec, one button sends Spec Kit’s converge command.',
-    link: { label: 'converge', href: '/docs/steps/converge/' },
+    link: { label: 'Converge', href: '/docs/steps/converge/' },
   },
   {
-    eyebrow: 'GITHUB ISSUES',
     title: 'Tasks to issues',
     body: 'Turn the task list into GitHub issues from the Tasks tab. It asks first.',
-    link: { label: 'the tasks step', href: '/docs/steps/tasks/' },
+    link: { label: 'The tasks step', href: '/docs/steps/tasks/' },
   },
   {
-    eyebrow: 'OPEN QUESTIONS',
     title: 'Answer where you read',
     body: 'A report marks what it still needs to know. Answer on the page.',
-    link: { label: 'fix a bug', href: '/docs/ide/fix-a-bug/' },
-  },
-];
-
-// The same spec files, read from three places. The board and the tracker are
-// their own surfaces, not providers, so the provider count stays at twelve.
-const places = [
-  {
-    id: 'vscode',
-    name: 'VS Code',
-    kind: 'EXTENSION',
-    body: 'The full workspace: sidebar, viewer, review, live runs and the Overview.',
-    link: { label: 'install in VS Code', href: '/docs/install/#in-vs-code' },
-  },
-  {
-    id: 'copilot',
-    name: 'GitHub Copilot app',
-    kind: 'CANVAS',
-    body: 'A live board of every spec beside the chat. A button runs the next step.',
-    link: { label: 'install in the Copilot app', href: '/docs/install/#in-the-github-copilot-app' },
-  },
-  {
-    id: 'claude',
-    name: 'Claude Code',
-    kind: 'MOD',
-    body: 'One line above the prompt and a pane with the steps and tasks, in your terminal.',
-    link: { label: 'install in Claude Code', href: '/docs/install/#in-claude-code' },
+    link: { label: 'Fix a bug', href: '/docs/ide/fix-a-bug/' },
   },
 ];
 
 // The quick start, once per place you can work. The steps, their order and
-// their wording follow /docs/install/, which holds the full path for each.
+// their wording follow that place's own Install page in the docs, which holds
+// the full path. `shot.window` is the caption: what the picture is, then the
+// one sentence about what you get in that place.
 type InstallAction =
   | { kind: 'code'; command: string; prompt?: boolean; analytics?: string }
   | { kind: 'button'; href: string; label: string; analytics: string };
@@ -336,12 +376,12 @@ const installPaths: Array<{
     id: 'vscode',
     hash: 'install-vscode',
     label: 'VS Code',
-    full: { label: 'the full VS Code path, with what you should see at each step', href: '/docs/install/#in-vs-code' },
+    full: { label: 'See the full VS Code path, with what to expect at each step', href: '/docs/ide/install/' },
     shot: {
       src: '/landing/quickstart-vscode.png',
       width: 1300,
       height: 800,
-      window: 'VS Code · the spec viewer',
+      window: 'The spec viewer, in a VS Code tab. The full workspace: sidebar, viewer, review, live runs and the Overview.',
       alt: 'The spec viewer in a VS Code tab: a spec marked Implementing, its documents as tabs, and the Tasks tab at 50% with the first two tasks ticked.',
     },
     steps: [
@@ -359,14 +399,14 @@ const installPaths: Array<{
     hash: 'install-copilot-app',
     label: 'GitHub Copilot app',
     full: {
-      label: 'the full Copilot app path, with what you should see at each step',
-      href: '/docs/install/#in-the-github-copilot-app',
+      label: 'See the full Copilot app path, with what to expect at each step',
+      href: '/docs/copilot-app/install/',
     },
     shot: {
       src: '/landing/quickstart-copilot-app.png',
       width: 1400,
       height: 728,
-      window: 'Copilot app · the spec board',
+      window: 'The spec board, beside the chat. Every spec in the repo, and a button that runs the next step.',
       alt: 'The spec board in the GitHub Copilot app: every spec with its status on the left, and the selected spec on the right with its four steps and a Run implement button.',
     },
     steps: [
@@ -398,14 +438,14 @@ const installPaths: Array<{
     hash: 'install-claude-code',
     label: 'Claude Code',
     full: {
-      label: 'the full Claude Code path, with what you should see at each step',
-      href: '/docs/install/#in-claude-code',
+      label: 'See the full Claude Code path, with what to expect at each step',
+      href: '/docs/claude-code/install/',
     },
     shot: {
       src: '/landing/quickstart-claude-code.png',
       width: 1000,
       height: 942,
-      window: 'Claude Code · /speckit-tracker',
+      window: 'The tracker pane, beside the transcript. One line above the prompt, and the steps and tasks in your terminal.',
       alt: 'The Companion pane in a Claude Code terminal: the four steps with Implement running, the documents the spec has, and its tasks at 3 of 6.',
     },
     steps: [
@@ -436,7 +476,7 @@ const installPaths: Array<{
 // One leaf per section below the hero, in document order. The script measures
 // where each section boundary falls and places its leaf on the stem; a leaf
 // with no section to mark stays hidden.
-const stemLeaves = ['quick start', 'surfaces', 'demo', 'box', 'claim', 'install'];
+const stemLeaves = ['course', 'demo', 'quick start', 'builder', 'box', 'claim', 'install'];
 
 // Entrances stagger at 60ms. The delay is data, not a magic number in the CSS.
 const REVEAL_STAGGER = 60;
@@ -529,7 +569,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   <!-- HERO -->
   <section class="hero">
-    <SiteNav installHref="#quick-start" />
+    <SiteNav installHref="#quick-start" wide />
 
     {/* Bigger points get a softer edge, so the field has depth instead of one
         uniform dot size. The blur follows the size rather than being placed by
@@ -577,31 +617,31 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         </div>
       </div>
 
-      {/* The product, in the first screenful. Three surfaces cycle in one frame
+      {/* The product, in the first screenful. Four parts of it cycle in one frame
           with a caption that changes with them, so someone who never scrolls
           still learns what this is.
 
-          The stills are crops, not whole windows: a full IDE shrunk into this
-          column is unreadable, which is the reason the hero used to be words.
-          Same crossfade the accordion uses. Under reduced motion nothing
-          cycles, surface one shows, and all three buttons still work. */}
+          Only the entry on screen loads and plays its loop. Under reduced
+          motion nothing plays or cycles: the poster shows and every button
+          still works. With no script the first poster shows. */}
       <div class="hero-show" data-hero-show>
         <div class="hero-orbit">
-          {/* Ambient chips. They are real strings from the product, not filler:
-              a visitor reading them picks up the vocabulary before they have
-              clicked anything. Decorative to a screen reader. */}
-          <div class="hero-motes" aria-hidden="true">
-            {
-              motes.map((mote) => (
-                <span
-                  class="mote"
-                  style={`--mx:${mote.x}%;--my:${mote.y}%;--mdx:${mote.dx}px;--mdy:${mote.dy}px;--mdur:${mote.dur}ms;--mdelay:${mote.delay}ms`}
-                >
-                  {mote.text}
-                </span>
-              ))
-            }
-          </div>
+          {/* The chips. One set per still, swapped with it. Decorative to a
+              screen reader: the picture's alt text already says it. */}
+          {
+            surfaces.map((surface, index) => (
+              <div class="hero-motes" data-hero-motes={surface.id} data-active={index === 0 ? '' : undefined} aria-hidden="true">
+                {surface.motes.map((mote) => (
+                  <span
+                    class="mote"
+                    style={`--mx:${mote.x}%;--my:${mote.y}%;--mdx:${mote.dx}px;--mdy:${mote.dy}px;--mdur:${mote.dur}ms;--mdelay:${mote.delay}ms`}
+                  >
+                    {mote.text}
+                  </span>
+                ))}
+              </div>
+            ))
+          }
 
           <div class="hero-stagebox">
             <img
@@ -616,28 +656,46 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
             />
             <div class="hero-stage">
             {
-              surfaces.map((surface, index) => (
-                <img
-                  class="hero-shot"
-                  data-hero-shot={surface.id}
-                  data-active={index === 0 ? '' : undefined}
-                  src={surface.src}
-                  alt={surface.alt}
-                  width="1600"
-                  height="1014"
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  fetchpriority={index === 0 ? 'high' : undefined}
+              surfaces.map((surface, index) =>
+                surface.clip ? (
+                  <video
+                    class="hero-shot"
+                    data-hero-shot={surface.id}
+                    data-active={index === 0 ? '' : undefined}
+                    muted
+                    loop
+                    playsinline
+                    preload="none"
+                    poster={index === 0 ? surface.src : undefined}
+                    data-poster={surface.src}
+                    aria-label={surface.alt}
+                    width="1600"
+                    height="1000"
+                  >
+                    {surface.clip.webm && <source src={surface.clip.webm} type="video/webm" />}
+                    {surface.clip.mp4 && <source src={surface.clip.mp4} type="video/mp4" />}
+                  </video>
+                ) : (
+                  <img
+                    class="hero-shot"
+                    data-hero-shot={surface.id}
+                    data-active={index === 0 ? '' : undefined}
+                    src={surface.src}
+                    alt={surface.alt}
+                    width="1600"
+                    height="1014"
+                    loading={index === 0 ? 'eager' : 'lazy'}
                   />
-                ))
-              }
+                )
+              )
+            }
             </div>
           </div>
         </div>
 
-        {/* The chips are the only naming the hero has now: no fake window title,
-            no caption line under the frame. The one you pick stays lit and its
-            sentence surfaces inside the bloom for a beat as the shot arrives. */}
-        <div class="hero-pips" role="tablist" aria-label="Product surfaces">
+        {/* Each pip names a part of the product. The one you pick stays lit, and its
+            sentence stays under the frame. */}
+        <div class="hero-pips" role="tablist" aria-label="What you get">
           {
             surfaces.map((surface, index) => (
               <button
@@ -661,139 +719,22 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     </div>
   </section>
 
-  <!-- QUICK START -->
-  <section class="section section--quickstart" id="quick-start">
-    <div class="inner stack-16">
-      <p class="eyebrow">QUICK START</p>
-
-      <h2 class="quick-heading">Install it where you work</h2>
-
-      <div class="pills pills--paths" role="tablist" aria-label="Where you work" data-path-tabs>
-        {
-          installPaths.map((path, index) => (
-            <a
-              class="pill"
-              role="tab"
-              id={`tab-${path.hash}`}
-              href={`#${path.hash}`}
-              data-path-tab={path.hash}
-              aria-controls={path.hash}
-              aria-selected={index === 0 ? 'true' : 'false'}
-              data-analytics="install_path_click"
-              data-analytics-path={path.id}
-            >
-              {path.label}
-            </a>
-          ))
-        }
+  <!-- COURSE -->
+  {/* One quiet row under the hero. The chip says it is not made yet, and the
+      form's status line appears under the row only when it has something to
+      say. */}
+  <section class="section section--course" id="course" aria-label="Course">
+    <div class="inner course">
+      <div class="course-say">
+        <p class="course-hook">
+          Want to learn spec-driven development, start to finish? <SoonChip />
+        </p>
+        <p class="course-sub">
+          A course with Spec Kit: take a vague idea to a spec, a plan, tasks and shipped code.
+          <a class="course-link" href="/course/">See the outline</a>
+        </p>
       </div>
-
-      {
-        installPaths.map((path) => (
-          <div class="path" id={path.hash} role="tabpanel" aria-labelledby={`tab-${path.hash}`} data-path-panel>
-            <h3 class="path-name">{path.label}</h3>
-            <div class="path-body">
-            <div class="path-main">
-            <div class="steps" data-steps>
-              <span class="spark" data-spark aria-hidden="true" />
-              {path.steps.map((step, index) => (
-                <div class="step" data-step>
-                  <span class="step-flare" aria-hidden="true" />
-                  <span class="step-num" aria-hidden="true">
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <div class="step-text">
-                    <span class="step-title">
-                      {step.title}
-                      {step.optional && <span class="step-tag">optional</span>}
-                    </span>
-                    <span class="step-sub">{step.sub}</span>
-                  </div>
-                  <div class="step-action step-actions">
-                    {step.actions.map((action) =>
-                      action.kind === 'button' ? (
-                        <Button
-                          href={action.href}
-                          size="md"
-                          data-analytics={action.analytics}
-                          data-analytics-placement="quick-start"
-                        >
-                          {action.label}
-                        </Button>
-                      ) : action.analytics ? (
-                        <CodeLine
-                          command={action.command}
-                          prompt={action.prompt}
-                          data-analytics={action.analytics}
-                          data-analytics-placement="quick-start"
-                        />
-                      ) : (
-                        <CodeLine command={action.command} prompt={action.prompt} />
-                      )
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <a class="watch-link path-full" href={path.full.href}>
-              {path.full.label} →
-            </a>
-            </div>
-            <figure class="path-shot window">
-              <div class="window-bar" aria-hidden="true">
-                <span class="dot" />
-                <span class="dot" />
-                <span class="dot" />
-                <span class="window-label">{path.shot.window}</span>
-              </div>
-              <img
-                src={path.shot.src}
-                alt={path.shot.alt}
-                width={path.shot.width}
-                height={path.shot.height}
-                loading="lazy"
-                decoding="async"
-              />
-            </figure>
-            </div>
-          </div>
-        ))
-      }
-
-      <a class="watch-link" href="/docs/start/your-first-spec/">
-        <svg width="16" height="16" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-          <circle cx="13" cy="13" r="11" stroke="currentColor" stroke-width="1.6"></circle>
-          <path d="M10.5 8.5L18 13L10.5 17.5V8.5Z" fill="currentColor"></path>
-        </svg>
-        <span>watch: your first spec, from Create Spec to the Overview →</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- WHERE IT RUNS -->
-  <section class="section section--surfaces" id="where-it-runs">
-    <div class="inner stack-16">
-      <p class="eyebrow">WHERE IT RUNS</p>
-      <h2 class="surfaces-heading">One set of spec files, three places to follow them</h2>
-      <div class="surfaces">
-        {
-          places.map((surface, index) => (
-            <a
-              class="surface"
-              href={surface.link.href}
-              data-reveal
-              style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
-              data-analytics="surface_click"
-              data-analytics-surface={surface.id}
-            >
-              <span class="surface-kind">{surface.kind}</span>
-              <span class="surface-name">{surface.name}</span>
-              <span class="surface-body">{surface.body}</span>
-              <span class="surface-link">{surface.link.label} →</span>
-            </a>
-          ))
-        }
-      </div>
+      <CourseSignup id="course-landing" placement="landing" layout="strip" />
     </div>
   </section>
 
@@ -841,7 +782,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
               )}
               <p>{tab.body}</p>
               <a class="say-link" href={tab.link.href} tabindex={index === 0 ? 0 : -1}>
-                {tab.link.label} →
+                {tab.link.label}
               </a>
             </div>
           ))
@@ -911,6 +852,143 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     </div>
   </section>
 
+  <!-- QUICK START -->
+  <section class="section section--quickstart" id="quick-start">
+    <div class="inner qs">
+      <div class="pills pills--paths" role="tablist" aria-label="Where you work" data-path-tabs>
+        {
+          installPaths.map((path, index) => (
+            <a
+              class="pill"
+              role="tab"
+              id={`tab-${path.hash}`}
+              href={`#${path.hash}`}
+              data-path-tab={path.hash}
+              aria-controls={path.hash}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              data-analytics="install_path_click"
+              data-analytics-path={path.id}
+            >
+              {path.label}
+            </a>
+          ))
+        }
+      </div>
+
+      <div class="qs-say">
+        <h2>Install it where you work</h2>
+        <p>Three steps wherever you are. They all read the same spec files, so you can use more than one.</p>
+      </div>
+
+      {
+        installPaths.map((path) => (
+          <div class="path" id={path.hash} role="tabpanel" aria-labelledby={`tab-${path.hash}`} data-path-panel>
+            <h3 class="path-name">{path.label}</h3>
+            <div class="qs-sheet">
+              <ol class="qs-steps">
+                {path.steps.map((step) => (
+                  <li class="qs-step">
+                    <p class="qs-step-title">
+                      {step.title}
+                      {step.optional && <span class="qs-optional">optional</span>}
+                    </p>
+                    <p class="qs-step-sub">{step.sub}</p>
+                    <div class="qs-step-actions">
+                      {step.actions.map((action) =>
+                        action.kind === 'button' ? (
+                          <Button
+                            href={action.href}
+                            size="md"
+                            data-analytics={action.analytics}
+                            data-analytics-placement="quick-start"
+                          >
+                            {action.label}
+                          </Button>
+                        ) : action.analytics ? (
+                          <CodeLine
+                            command={action.command}
+                            prompt={action.prompt}
+                            data-analytics={action.analytics}
+                            data-analytics-placement="quick-start"
+                          />
+                        ) : (
+                          <CodeLine command={action.command} prompt={action.prompt} />
+                        )
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <figure class="qs-shot">
+                <img
+                  src={path.shot.src}
+                  alt={path.shot.alt}
+                  width={path.shot.width}
+                  height={path.shot.height}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>{path.shot.window}</figcaption>
+              </figure>
+            </div>
+            <a class="qs-full" href={path.full.href}>
+              {path.full.label}
+            </a>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- PIPELINE BUILDER -->
+  <section class="section section--builder" id="pipeline-builder">
+    <div class="inner pb">
+      <div class="qs-say">
+        <h2>
+          Your pipeline, drawn as a board
+          <SoonChip class="h2-chip" label="beta" />
+        </h2>
+        <p>
+          The Pipeline Builder shows what your assistant does at each Companion step. Change it on
+          the board, then build. It ships in the VS Code extension today, in beta, and it is still
+          changing.
+        </p>
+      </div>
+
+      <div class="qs-sheet pb-sheet" data-reveal>
+        <figure class="qs-shot pb-shot">
+          <img
+            src={builder.shot.src}
+            alt={builder.shot.alt}
+            width={builder.shot.width}
+            height={builder.shot.height}
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>{builder.shot.caption}</figcaption>
+        </figure>
+        <ul class="pb-points" aria-label="What you do in the Pipeline Builder">
+          {
+            builder.points.map((point) => (
+              <li>
+                <p class="pb-point-title">{point.title}</p>
+                <p class="pb-point-body">{point.body}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <p class="pb-note">
+        <span>
+          It opens from the circuit icon at the top of the Specs view, and needs the Companion
+          extension for Spec Kit.
+        </span>
+        <a class="qs-full" href="/docs/customize/pipeline-builder/">Read the Pipeline Builder guide</a>
+      </p>
+    </div>
+  </section>
+
   <!-- WHAT'S IN THE BOX -->
   <section class="section section--cards">
     <div class="spores" aria-hidden="true">
@@ -925,8 +1003,11 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       }
     </div>
 
-    <div class="inner stack-20">
-      <p class="eyebrow">WHAT'S IN THE BOX</p>
+    <div class="inner cards-stack">
+      <div class="qs-say">
+        <h2>Also in the box</h2>
+        <p>The smaller things you get with the VS Code extension.</p>
+      </div>
 
       <div class="cards">
         {
@@ -936,14 +1017,11 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
               data-reveal
               style={`--reveal-delay:${index * REVEAL_STAGGER}ms`}
             >
-              <p class="card-eyebrow">{card.eyebrow}</p>
-              <h2 class="card-title">{card.title}</h2>
+              <h3 class="card-title">{card.title}</h3>
               <p class="card-body">{card.body}</p>
-              {card.link && (
-                <a class="card-link" href={card.link.href}>
-                  {card.link.label} →
-                </a>
-              )}
+              <a class="card-link" href={card.link.href}>
+                {card.link.label}
+              </a>
             </article>
           ))
         }
@@ -968,9 +1046,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         Ceremony sized to the change, not to the template. The Companion pipeline skips the sections
         a typical change never needs.
       </p>
-      <a class="claim-link" href={METHODOLOGY} target="_blank" rel="noreferrer noopener">
-        read the methodology →
-      </a>
+      <a class="claim-link" href={METHODOLOGY}>Read the methodology</a>
     </div>
   </section>
 
@@ -1068,12 +1144,12 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
      other section keeps --page-width. */
   .hero-inner {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr);
     align-items: center;
-    gap: 56px;
-    max-width: 1220px;
+    gap: 48px;
+    max-width: 1560px;
     margin: 0 auto;
-    padding: 56px var(--pad-hero-x) 84px;
+    padding: 40px var(--pad-section-x) 64px;
   }
 
   .hero-copy {
@@ -1091,7 +1167,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   h1 {
     margin: 0 0 var(--space-22);
-    font-size: clamp(34px, 4.6vw, 52px);
+    font-size: clamp(34px, 3.5vw, 52px);
     line-height: var(--lh-display);
     font-weight: var(--fw-black);
     letter-spacing: var(--ls-display);
@@ -1145,13 +1221,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   .hero-orbit {
     position: relative;
     width: 100%;
-    padding: 34px 30px;
+    padding: 18px 0;
   }
 
   .hero-stagebox {
     position: relative;
-    padding: 22px;
-    border-radius: 26px;
+    padding: 10px;
+    border-radius: 18px;
     border: 1px solid var(--border-panel);
     background: linear-gradient(
       180deg,
@@ -1166,6 +1242,12 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     inset: 0;
     z-index: 2;
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 420ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .hero-motes[data-active] {
+    opacity: 1;
   }
 
   .mote {
@@ -1177,14 +1259,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     border-radius: 999px;
     /* Translucent, and lit from behind rather than shadowed: an opaque pill
        with a black drop-shadow punched a dark hole in the light it floats in. */
-    background: rgb(var(--ground-rgb) / 0.62);
+    background: rgb(var(--ground-rgb) / 0.78);
     backdrop-filter: blur(6px);
     box-shadow: 0 4px 14px rgb(var(--ground-rgb) / 0.45);
     color: var(--text-body);
     font-family: var(--font-mono);
     font-size: var(--fs-micro);
     white-space: nowrap;
-    opacity: 0.72;
   }
 
   :global(html[data-motion]) .mote {
@@ -1258,10 +1339,12 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   .hero-stage {
     position: relative;
     display: grid;
-    aspect-ratio: 1836 / 1164;
+    /* The loops' own 16:10, set here so the frame never waits on a file. */
+    aspect-ratio: 16 / 10;
     overflow: hidden;
     border: 1px solid var(--border-panel);
     border-radius: var(--radius-sm);
+    background: #f7f7fb;
     box-shadow: var(--glow-frame);
   }
 
@@ -1329,22 +1412,16 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     outline-offset: 2px;
   }
 
-  /* The benefit line, surfaced for a beat on a change rather than parked under
-     the frame forever. It holds its space so nothing below it moves. */
+  /* The benefit line. It stays under the frame, and holds its space so nothing
+     below it moves when the sentence changes. */
   .hero-flash {
     margin: 0;
-    min-height: 2.6em;
-    max-width: 46ch;
+    min-height: 2lh;
+    max-width: 60ch;
     color: var(--text-body);
     font-size: var(--fs-body);
     line-height: var(--lh-prose);
     text-align: center;
-    opacity: 0;
-    transition: opacity 300ms cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  .hero-flash[data-show] {
-    opacity: 1;
   }
 
   @media (max-width: 980px) {
@@ -1362,7 +1439,11 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       justify-content: center;
     }
 
-    /* The drifting chips need room the narrow layout does not have. */
+  }
+
+  /* The drifting chips need room around the frame that a single column does
+     not have. */
+  @media (max-width: 980px) {
     .hero-motes {
       display: none;
     }
@@ -1372,222 +1453,235 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     }
   }
 
-  /* ----------------------------------------------------------- quick start */
-
-  .section--quickstart .inner {
-    padding-top: 56px;
-    padding-bottom: 56px;
+  /* On a phone the whole crop would shrink past reading, so the frame goes
+     square and shows the left of the picture at a size you can read. */
+  @media (max-width: 600px) {
+    .hero-stage {
+      aspect-ratio: 1 / 1;
+    }
   }
+
+  /* ----------------------------------------------------------- quick start */
 
   .section--quickstart {
     scroll-margin-top: var(--space-24);
   }
 
-  .steps {
-    container-type: inline-size;
-    position: relative;
-    background: var(--panel);
-    border: 1px solid var(--border-panel);
-    border-radius: var(--radius-sm);
+  .section--quickstart .inner {
+    max-width: 1220px;
+    padding-top: 72px;
+    padding-bottom: 72px;
   }
 
-  .step {
-    position: relative;
+  .qs {
     display: flex;
-    align-items: center;
-    gap: var(--space-20);
-    padding: var(--space-22) var(--space-24);
-  }
-
-  .step + .step {
-    border-top: 1px solid var(--rule);
-  }
-
-  .step-num {
-    flex: none;
-    width: var(--step-col);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: var(--fs-ui-sm);
-  }
-
-  .step-text {
-    display: flex;
-    flex: 1 1 auto;
     flex-direction: column;
-    gap: var(--space-4);
-    min-width: 200px;
+    align-items: center;
+    gap: var(--space-26);
   }
 
-  .step-title {
-    font-size: var(--fs-body);
-    font-weight: var(--fw-bold);
-  }
-
-  .step-sub {
-    color: var(--text-muted);
-    font-size: var(--fs-ui-sm);
-  }
-
-  /* The install command is long. The chip keeps its right-hand place and lets
-     the command scroll inside itself rather than pushing the row wide. */
-  .step-action {
-    flex: 0 1 auto;
-    min-width: 0;
-    max-width: 480px;
-  }
-
-  .quick-heading {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-bold);
-  }
-
-  /* The switcher is the first thing in the section, so it sits at the left
-     edge with the eyebrow, not centred like the demo's. */
-  .pills.pills--paths {
-    align-self: flex-start;
-  }
-
-  .pills.pills--paths .pill {
+  .pills--paths .pill {
     text-decoration: none;
+  }
+
+  .qs-say {
+    max-width: 62ch;
     text-align: center;
   }
 
+  .qs-say h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-h2);
+    line-height: 1.15;
+  }
+
+  .qs-say p {
+    margin: var(--space-10) 0 0;
+    color: var(--text-body);
+    font-size: var(--fs-lead);
+    line-height: var(--lh-ui);
+  }
+
   .path {
+    width: 100%;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: var(--space-16);
-    scroll-margin-top: var(--space-24);
   }
 
   .path[hidden] {
     display: none;
   }
 
-  /* The steps, and beside them what you get for following them. */
-  .path-body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-24);
-  }
-
-  .path-main {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-16);
-    min-width: 0;
-  }
-
-  .path-shot {
-    width: 100%;
-    max-width: 620px;
-    margin: 0;
-  }
-
-  .path-shot img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  /* Two columns need more room than the page column has, so this section opens
-     to the hero's width, the same way and for the same reason. */
-  @media (min-width: 1100px) {
-    .section--quickstart .inner {
-      max-width: 1220px;
-      padding-left: var(--pad-hero-x);
-      padding-right: var(--pad-hero-x);
-    }
-
-    .path-body {
-      display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-      align-items: start;
-      gap: var(--space-40);
-    }
-
-    .path-shot {
-      position: sticky;
-      top: var(--space-24);
-      max-width: none;
-    }
-  }
-
-  /* With no script every path is on the page, one after the other, and each
-     needs its name. With the switcher working, the selected pill is the name. */
   .path-name {
-    margin: var(--space-8) 0 0;
+    margin: 0;
     color: var(--text-primary);
-    font-size: var(--fs-lead);
-    font-weight: var(--fw-bold);
+    font-size: var(--fs-h3);
   }
 
   .section--quickstart[data-paths-ready] .path-name {
     display: none;
   }
 
-  .step-tag {
-    display: inline-block;
-    margin-left: var(--space-8);
-    padding: 1px var(--space-8);
+  /* One sheet: the steps on the left, what you end up with on the right. The
+     picture is flush with the sheet, so there is one frame, not two. */
+  .qs-sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    overflow: hidden;
+    background: var(--panel);
     border: 1px solid var(--border-accent);
-    border-radius: var(--radius-pill);
-    color: var(--text-body);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    font-weight: var(--fw-semibold);
-    letter-spacing: var(--ls-eyebrow-sm);
-    text-transform: uppercase;
-    vertical-align: middle;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lift);
   }
 
-  .step-actions {
+  .qs-steps {
+    counter-reset: qs;
     display: flex;
-    flex: 0 0 min(440px, 46%);
     flex-direction: column;
-    align-items: stretch;
+    margin: 0;
+    padding: var(--space-26) 34px;
+    list-style: none;
+  }
+
+  .qs-step {
+    counter-increment: qs;
+    position: relative;
+    padding: 0 0 var(--space-26) 44px;
+  }
+
+  .qs-step:last-child {
+    padding-bottom: 0;
+  }
+
+  /* The number and the line under it: the steps really are a sequence. */
+  .qs-step::before {
+    content: counter(qs);
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--border-accent);
+    border-radius: 50%;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--fs-mono);
+  }
+
+  .qs-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 32px;
+    bottom: 6px;
+    left: 13px;
+    width: 1px;
+    background: var(--rule);
+  }
+
+  .qs-step-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
     gap: var(--space-8);
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+    line-height: 26px;
   }
 
-  .step-actions > :global(*) {
+  .qs-optional {
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    font-weight: var(--fw-medium);
+  }
+
+  .qs-step-sub {
+    max-width: 52ch;
+    margin: var(--space-4) 0 0;
+    color: var(--text-body);
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+  }
+
+  .qs-step-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-8);
+    margin-top: var(--space-10);
+  }
+
+  .qs-step-actions > :global(.code-line) {
+    width: 100%;
     max-width: 100%;
-    min-width: 0;
   }
 
-  .step-actions > :global(.btn) {
-    align-self: flex-end;
+  .qs-shot {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    border-top: 1px solid var(--rule);
+    background: var(--demo-fill);
   }
 
-  /* Beside a picture the steps column is too narrow for a command at the side
-     of its step, so the command goes under the text, on the text's own edge.
-     A phone already stacks them, edge to edge, further down. */
-  @media (min-width: 861px) {
-    @container (max-width: 620px) {
-      .step {
-        flex-wrap: wrap;
-        align-items: flex-start;
-        row-gap: var(--space-12);
-      }
+  .qs-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    flex: 1;
+    object-fit: cover;
+    object-position: top left;
+  }
 
-      .step-num {
-        padding-top: 3px;
-      }
+  .qs-shot figcaption {
+    padding: var(--space-10) var(--space-16);
+    border-top: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+  }
 
-      .step-text {
-        flex: 1 1 0;
-        min-width: 0;
-      }
+  .qs-full {
+    color: var(--accent);
+    font-size: var(--fs-ui);
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
+  }
 
-      .step-actions {
-        flex: 1 1 100%;
-        padding-left: calc(var(--step-col) + var(--space-20));
-      }
+  .qs-full:hover {
+    color: var(--accent-hover);
+  }
 
-      .step-actions > :global(.btn) {
-        align-self: flex-start;
-      }
+  .qs-full:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 1000px) {
+    .qs-sheet {
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    }
+
+    .qs-shot {
+      border-top: 0;
+      border-left: 1px solid var(--rule);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .qs-steps {
+      padding: var(--space-22) var(--space-16);
+    }
+
+    .qs-step {
+      padding-left: 38px;
     }
   }
 
@@ -1737,11 +1831,12 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .say-link {
     display: inline-block;
-    margin-top: var(--space-8);
+    margin-top: var(--space-10);
     color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: var(--fs-ui-sm);
-    text-decoration: none;
+    font-size: var(--fs-ui);
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
   }
 
   .say-link:hover {
@@ -1842,78 +1937,167 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     text-align: center;
   }
 
-  /* -------------------------------------------------------------- surfaces */
+  /* -------------------------------------------------------- pipeline builder */
 
-  .section--surfaces .inner {
-    padding-top: 56px;
-    padding-bottom: 56px;
+  .section--builder .inner {
+    max-width: 1220px;
+    padding-top: 72px;
+    padding-bottom: 72px;
   }
 
-  .surfaces-heading {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: var(--fs-h3);
-    font-weight: var(--fw-bold);
-  }
-
-  .surfaces {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-14);
-  }
-
-  .surface {
+  .pb,
+  .cards-stack {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
-    padding: var(--space-22);
-    background: var(--panel);
-    border: 1px solid var(--border-card);
-    border-radius: var(--radius-sm);
-    text-decoration: none;
-    transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+    align-items: center;
+    gap: var(--space-26);
   }
 
-  .surface:hover {
-    border-color: var(--border-accent);
+  /* The quick start's sheet, with the picture across the top: the board is
+     the point, and it needs the width for its words to be read. The five
+     things you do with it sit in a row under it. */
+  .qs-sheet.pb-sheet {
+    grid-template-columns: minmax(0, 1fr);
   }
 
-  .surface:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+  .qs-shot.pb-shot {
+    border: 0;
   }
 
-  .surface-kind {
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls-eyebrow-sm);
+  .pb-shot img {
+    aspect-ratio: 16 / 9;
   }
 
-  .surface-name {
+  .pb-points {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-22);
+    margin: 0;
+    padding: var(--space-26) 34px;
+    list-style: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  .pb-point-title {
+    margin: 0;
     color: var(--text-primary);
-    font-size: var(--fs-lead);
+    font-size: var(--fs-body);
     font-weight: var(--fw-bold);
+    line-height: 1.3;
   }
 
-  .surface-body {
-    flex: 1;
+  .pb-point-body {
+    margin: var(--space-6) 0 0;
     color: var(--text-body);
     font-size: var(--fs-ui);
     line-height: var(--lh-ui);
   }
 
-  .surface-link {
-    margin-top: var(--space-4);
-    color: var(--accent);
-    font-family: var(--font-mono);
-    font-size: var(--fs-ui-sm);
+  .pb-note {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-10);
+    max-width: 62ch;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-ui);
+    line-height: var(--lh-ui);
+    text-align: center;
   }
 
-  @media (max-width: 980px) {
-    .surfaces {
-      grid-template-columns: minmax(0, 1fr);
+  @media (min-width: 700px) {
+    .pb-points {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+  }
+
+  @media (min-width: 1100px) {
+    .pb-points {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 600px) {
+    .pb-points {
+      padding: var(--space-22) var(--space-16);
+    }
+
+    .pb-shot img {
+      aspect-ratio: 1 / 1;
+    }
+  }
+
+  /* ---------------------------------------------------------------- course */
+
+  .section--course .inner {
+    max-width: 1220px;
+    padding-top: 44px;
+    padding-bottom: 44px;
+  }
+
+  .course {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-18) var(--space-26);
+  }
+
+  .course-say {
+    flex: 1 1 420px;
+    min-width: 0;
+  }
+
+  .course-hook {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-10);
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 26px;
+    font-weight: var(--fw-bold);
+    line-height: 1.2;
+  }
+
+  .course-sub {
+    margin: var(--space-8) 0 0;
+    color: var(--text-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-ui);
+  }
+
+  .course-link {
+    margin-left: var(--space-4);
+    color: var(--accent);
+    font-size: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
+    white-space: nowrap;
+  }
+
+  .course-link:hover {
+    color: var(--accent-hover);
+  }
+
+  .course-link:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 860px) {
+    .course-say {
+      flex-basis: 100%;
+      justify-content: center;
+      text-align: center;
+    }
+  }
+
+  .qs-say h2 :global(.h2-chip) {
+    margin-left: var(--space-8);
+    vertical-align: middle;
   }
 
   /* ----------------------------------------------------------------- cards */
@@ -1939,14 +2123,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     border-radius: var(--radius-sm);
   }
 
-  .card-eyebrow {
-    margin: 0;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls-eyebrow-sm);
-  }
-
   .card-title {
     margin: 0;
     color: var(--text-primary);
@@ -1963,11 +2139,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .card-link {
     align-self: flex-start;
-    margin-top: var(--space-4);
+    margin-top: auto;
+    padding-top: var(--space-4);
     color: var(--accent);
-    font-family: var(--font-mono);
     font-size: var(--fs-ui-sm);
-    text-decoration: none;
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
   }
 
   .card-link:hover {
@@ -2015,10 +2193,11 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .claim-link {
     margin-top: var(--space-4);
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: var(--fs-mono);
-    text-decoration: none;
+    color: var(--accent);
+    font-size: var(--fs-ui);
+    text-decoration: underline;
+    text-decoration-color: var(--border-accent);
+    text-underline-offset: 4px;
   }
 
   .claim-link:hover {
@@ -2642,23 +2821,28 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // --- hero: three surfaces, one glowing centre ----------------------------
-  // Chips drift in a field; the one you pick lights up, the centre flares, and
-  // the shot resolves out of the glow. There is no window title and no standing
-  // caption: the chip names it and its sentence surfaces for a beat.
+  // --- hero: four parts of the product, one frame ----------------------------
+  // The pip you pick lights up, the light behind the frame lifts, and the loop,
+  // its chips and the sentence under it change together. Only the entry on
+  // screen has its video loaded and playing.
   document.querySelectorAll('[data-hero-show]').forEach((root) => {
     const pips = Array.from(root.querySelectorAll('[data-hero-pip]'));
     const shots = Array.from(root.querySelectorAll('[data-hero-shot]'));
+    const motes = Array.from(root.querySelectorAll('[data-hero-motes]'));
+    const stage = root.querySelector('.hero-stage');
     const bloom = root.querySelector('[data-hero-bloom]');
     const flash = root.querySelector('[data-hero-flash]');
     if (pips.length < 2) return;
 
-    const DWELL = 4600;
-    const FLASH_HOLD = 2600;
+    // A loop moves on after it has played twice, a still after this long.
+    const LOOPS = 2;
+    const STILL_DWELL = 14000;
     let index = 0;
     let timer = null;
-    let flashTimer = null;
     let stopped = false;
+    let onScreen = false;
+    let plays = 0;
+    let lastTime = 0;
 
     let flareTimer = null;
     const flare = () => {
@@ -2671,6 +2855,32 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       flareTimer = window.setTimeout(() => bloom.removeAttribute('data-flare'), 620);
     };
 
+    const isVideo = (el) => el instanceof HTMLVideoElement;
+    const poster = (el) => {
+      if (isVideo(el) && !el.poster && el.dataset.poster) el.poster = el.dataset.poster;
+    };
+
+    // Plays the active entry from its start, or arms the still's timer.
+    const run = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = null;
+      const shot = shots[index];
+      shots.forEach((other) => {
+        if (other !== shot && isVideo(other)) other.pause();
+      });
+      if (!onScreen || reduced.matches) return;
+      if (isVideo(shot)) {
+        plays = 0;
+        lastTime = 0;
+        try {
+          shot.currentTime = 0;
+        } catch {}
+        shot.play().catch(() => {});
+      } else if (!stopped) {
+        timer = window.setTimeout(() => show(index + 1), STILL_DWELL);
+      }
+    };
+
     const show = (next) => {
       index = (next + pips.length) % pips.length;
       const pip = pips[index];
@@ -2680,40 +2890,39 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         p.setAttribute('aria-selected', i === index ? 'true' : 'false');
         p.tabIndex = i === index ? 0 : -1;
       });
+      // The poster of the entry on screen and of the next one, so a swap never
+      // fades to an empty frame.
+      poster(shots[index]);
+      poster(shots[(index + 1) % shots.length]);
       shots.forEach((shot) => shot.toggleAttribute('data-active', shot.dataset.heroShot === id));
+      motes.forEach((set) => set.toggleAttribute('data-active', set.dataset.heroMotes === id));
 
       flare();
-
-      if (flash) {
-        flash.textContent = pip.dataset.heroCaption || '';
-        flash.setAttribute('data-show', '');
-        if (flashTimer) window.clearTimeout(flashTimer);
-        // Under reduced motion the sentence is the only thing carrying the
-        // benefit, so it stays put instead of fading out.
-        if (!reduced.matches) {
-          flashTimer = window.setTimeout(() => flash.removeAttribute('data-show'), FLASH_HOLD);
-        }
-      }
+      if (flash) flash.textContent = pip.dataset.heroCaption || '';
+      run();
     };
 
+    // A loop never ends, so a wrap back to the start is what counts a play.
+    shots.forEach((shot, i) => {
+      if (!isVideo(shot)) return;
+      shot.addEventListener('timeupdate', () => {
+        if (i !== index) return;
+        if (shot.currentTime < lastTime - 0.5) {
+          plays += 1;
+          if (plays >= LOOPS && !stopped) show(index + 1);
+        }
+        lastTime = shot.currentTime;
+      });
+    });
+
+    // A click or a hover is a choice. The entry stays, and keeps looping.
     const stop = () => {
       stopped = true;
-      if (timer) window.clearInterval(timer);
-      timer = null;
-    };
-
-    const start = () => {
-      if (stopped || timer || reduced.matches) return;
-      timer = window.setInterval(() => show(index + 1), DWELL);
-    };
-
-    const pause = () => {
-      if (timer) window.clearInterval(timer);
+      if (timer) window.clearTimeout(timer);
       timer = null;
     };
 
     pips.forEach((pip, i) => {
-      // A click is a choice. Honour it and get out of the way for good.
       pip.addEventListener('click', () => {
         stop();
         show(i);
@@ -2728,14 +2937,23 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       });
     });
 
-    // Hover and focus only hold it, so moving away picks the cycle back up.
-    root.addEventListener('mouseenter', pause);
-    root.addEventListener('mouseleave', start);
-    root.addEventListener('focusin', pause);
-    root.addEventListener('focusout', start);
+    if (stage) stage.addEventListener('mouseenter', stop);
+
+    // Nothing loads or plays until the frame is on screen, and it rests when
+    // the frame scrolls away.
+    if (stage && 'IntersectionObserver' in window) {
+      new IntersectionObserver(
+        (entries) => {
+          onScreen = entries[0].isIntersecting;
+          run();
+        },
+        { threshold: 0.25 },
+      ).observe(stage);
+    } else {
+      onScreen = true;
+    }
 
     show(0);
-    start();
   });
 
   // --- quick start: one path at a time ------------------------------------
