@@ -4,9 +4,15 @@ description: One spec taken from specify to implement on the SpecKit Companion b
 ---
 
 import { Steps } from '@astrojs/starlight/components';
+import DocClip from '../../../../components/journey/DocClip.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 
 You press one button per step. The board sends the command to the chat, your agent runs it, and the board moves on by itself. The pictures follow one spec, a profile photo upload.
+
+<DocClip
+  id="board-story"
+  caption="The whole run in 25 seconds. This is a recreation of a run, sped up, not a recording: the board is the real one, and the window and chat around it are a plain stand-in for the Copilot app."
+/>
 
 <Steps>
 

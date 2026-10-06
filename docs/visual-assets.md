@@ -182,6 +182,7 @@ Use it for two things: to verify a change in a real window before asking anyone 
 - **Concept pictures** are diagrams, an SVG with a 2x PNG beside it. Never a video still, and never a caption burned into the picture.
 - **Look at every crop** before using it, and retake one that is clipped, blank, still loading or covered.
 - **A copy is a published filename.** Add new ones; never rename or delete one.
+- **One clip is supplied by hand.** `board-story` (the run on the Copilot app board: `docs/screenshots/board-story.gif` and `content/media/web/board-story.*`) has no composition on `main`. Its source is on the unmerged `spike/video-workflow` branch under `content/media/loops/board-story/`, rebuilt with that folder's `capture/` scripts and `hyperframes render`. No script here regenerates it, and every caption says it is a recreation of a run, sped up.
 
 | Used on | Copy the crop to |
 | --- | --- |

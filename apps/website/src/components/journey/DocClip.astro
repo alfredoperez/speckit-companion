@@ -1,0 +1,134 @@
+---
+/*
+  One clip, in the same mat and caption as DocFigure. `id` is a feature in
+  content/media/manifest.json with a webWebm, a webMp4 and a poster; the files
+  are served from /media, where sync-media.mjs copies them at build.
+
+  The markup is the quiet version: the poster with controls, nothing fetched.
+  The script takes the controls away and plays the clip while it is on screen,
+  unless the visitor asked for reduced motion.
+*/
+import manifest from '../../../../../content/media/manifest.json';
+
+interface Props {
+  id: string;
+  caption: string;
+  alt?: string;
+}
+
+interface Feature {
+  id: string;
+  outputs: { webWebm?: string | null; webMp4?: string | null; poster?: string | null };
+  alt?: Record<string, string>;
+}
+
+const { id, caption, alt: altOverride } = Astro.props;
+
+const feature = (manifest.features as Feature[]).find((entry) => entry.id === id);
+if (!feature) throw new Error(`DocClip: content/media/manifest.json has no feature "${id}".`);
+
+const { webWebm, webMp4, poster } = feature.outputs;
+if (!webWebm || !webMp4 || !poster) {
+  throw new Error(`DocClip: "${id}" needs a webWebm, a webMp4 and a poster in the media manifest.`);
+}
+
+const { sourceDir, publicUrlPrefix } = manifest.site;
+const url = (rel: string) => {
+  if (!rel.startsWith(`${sourceDir}/`)) throw new Error(`DocClip: ${rel} is outside ${sourceDir}/.`);
+  return publicUrlPrefix + rel.slice(sourceDir.length);
+};
+
+const posters = import.meta.glob<{ default: ImageMetadata }>('../../../../../content/media/web/*-poster.png', {
+  eager: true,
+});
+const frame = Object.entries(posters).find(([key]) => key.endsWith(`/${poster.split('/').pop()}`))?.[1].default;
+if (!frame) throw new Error(`DocClip: ${poster} is not on disk.`);
+
+const alt = altOverride ?? feature.alt?.[poster];
+if (!alt) throw new Error(`DocClip: "${id}" has no alt text for its poster in the media manifest. Pass alt=.`);
+---
+
+<figure class="dclip not-content">
+  <div class="dclip__frame">
+    <video
+      class="dclip__video"
+      data-doc-clip
+      muted
+      loop
+      playsinline
+      controls
+      preload="none"
+      poster={url(poster)}
+      width={frame.width}
+      height={frame.height}
+      aria-label={alt}
+    >
+      <source src={url(webWebm)} type="video/webm" />
+      <source src={url(webMp4)} type="video/mp4" />
+    </video>
+  </div>
+  <figcaption class="dclip__caption">{caption}</figcaption>
+</figure>
+
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+  const watch = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const video = entry.target as HTMLVideoElement;
+        if (entry.isIntersecting && !reduced.matches) video.play().catch(() => (video.controls = true));
+        else video.pause();
+      }
+    },
+    { threshold: 0.4 },
+  );
+
+  const start = () => {
+    for (const video of document.querySelectorAll<HTMLVideoElement>('video[data-doc-clip]:not([data-watched])')) {
+      video.dataset.watched = '';
+      video.controls = reduced.matches;
+      watch.observe(video);
+    }
+  };
+
+  reduced.addEventListener('change', () => {
+    for (const video of document.querySelectorAll<HTMLVideoElement>('video[data-doc-clip]')) {
+      video.controls = reduced.matches;
+      if (reduced.matches) video.pause();
+    }
+  });
+
+  start();
+  document.addEventListener('astro:page-load', start);
+</script>
+
+<style>
+  .dclip {
+    margin: var(--space-20) 0 var(--space-24);
+  }
+
+  .dclip__frame {
+    padding: var(--space-6);
+    background: var(--panel);
+    border: 1px solid var(--border-card);
+    border-radius: var(--radius-md);
+  }
+
+  .dclip .dclip__frame video.dclip__video {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    background: none;
+    border: 0;
+    border-radius: calc(var(--radius-md) - var(--space-6));
+  }
+
+  .dclip__caption {
+    margin-top: var(--space-8);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+    color: var(--text-muted);
+  }
+</style>
