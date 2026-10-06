@@ -3,14 +3,14 @@
  * Build the landing page's still images.
  *
  *   npm run clips:stills
- *   npm run clips:stills -- --only hero-steps,hero-sidebar
+ *   npm run clips:stills -- --only panel-read,panel-review
  *
  * Two sets, same rule behind both: **crop to the content, never show a whole
  * IDE window.** A full window shrunk into a 600px column is unreadable, which is
  * how the hero ended up as a wall of words and the feature panels ended up
  * showing nothing you could actually read.
  *
- *   hero-*    the three parts of the product the hero cycles through
+ *   hero-*    the stills the hero shows where it has no loop to play
  *   panel-*   the figure beside each row of the feature accordion
  *
  * Sources are the clip compositions' own captures and renders, so a palette
@@ -42,38 +42,8 @@ const ASPECT = 1836 / 1164;
 
 const STILLS = [
   // ---------------------------------------------------------------- hero
-  // Each one shows a whole part of the product, cut wide enough to see what
-  // it is and tight enough that its main words can be read in the hero.
-  {
-    // The Overview's content column, from the intent down to the fence.
-    id: 'hero-overview',
-    from: 'overview/assets/captures/overview-tall.png',
-    crop: { x: 560, y: 262, w: 1800 },
-    aspect: ASPECT,
-    width: 1600,
-  },
-  {
-    // The viewer mid-implement: one tab per document, Tasks at 50%. A
-    // hand-taken real-window shot, because no clip capture has the tab strip.
-    id: 'hero-steps',
-    fromFile: 'docs/screenshots/live-step-implement.png',
-    crop: { x: 0, y: 0, w: 1566 },
-    aspect: ASPECT,
-    width: 1600,
-  },
-  {
-    // Two real-window shots side by side, with a gap so they read as two
-    // pictures: the side bar with Specs, Bugs and Ideas open beside a bug, and
-    // the same side bar with Steering open. No single shot has all four open.
-    id: 'hero-sidebar',
-    parts: [
-      { fromFile: 'apps/website/public/changelog/bugs-ideas-panes.png', crop: { x: 100, y: 75, w: 1128, h: 1100 } },
-      { fromFile: 'docs/screenshots/live-step-constitution.png', crop: { x: 4, y: 0, w: 590, h: 1100 } },
-    ],
-    gap: 16,
-    aspect: ASPECT,
-    width: 1600,
-  },
+  // The hero plays loops now, supplied by hand, so no hero still is cut here.
+  // An entry with `fromFile` or `parts` would cut one from real-window shots.
 
   // ------------------------------------------------------- accordion panels
   {

@@ -89,19 +89,23 @@ const review = media('review');
 const livingExplained = media('living-specs-explained');
 
 /*
-  The hero stills. Cut by tooling/scripts/build-stills.mjs and named in
-  content/media/manifest.json as each feature's heroStill, so the path and the
-  alt text are read from there and the hero cannot drift from the files.
+  The hero. Four parts of the product cycle in one frame, each as a short
+  silent loop of the real UI.
 
-  Each still shows a whole part of the product: the Overview, the viewer's
-  step tabs, the side bar. The pip names the part and the caption under the
-  frame says in one sentence what the picture shows.
+  A loop is a feature in content/media/manifest.json whose id is the entry's
+  `loop` below: its WebM, MP4 and poster are read from there. An entry whose
+  loop is not in the manifest yet shows its `still` instead (a heroStill, cut
+  by tooling/scripts/build-stills.mjs), so a loop is added by registering it
+  in the manifest and nothing here changes.
 
-  Each still brings its own chips, the pills that drift around the frame.
-  Every chip is a string you can find in that picture or that is true of the
-  run it shows, so the field teaches the vocabulary before anyone clicks.
-  Positions are a percentage of the frame and hand-placed on its edges, clear
-  of the words in the picture.
+  The pip names the part and the caption under the frame says in one sentence
+  what the picture shows. The Talk caption is deliberate: Refine SENDS your
+  pending comments to your assistant, it does not apply them.
+
+  Each entry brings its own chips, the pills that drift around the frame.
+  Every chip is a string you can find in that loop, so the field teaches the
+  vocabulary before anyone clicks. Positions are a percentage of the frame and
+  hand-placed on its edges, clear of the words in the picture.
 */
 type Mote = { text: string; x: number; y: number; dx: number; dy: number; dur: number; delay: number };
 
@@ -111,6 +115,70 @@ function heroStill(id: string) {
   if (!feature || !rel) throw new Error(`content/media/manifest.json has no heroStill for "${id}"`);
   return { src: siteUrl(rel) as string, alt: feature.alt?.[rel] || '' };
 }
+
+function heroLoop(id: string) {
+  if (!features.some((entry) => entry.id === id)) return null;
+  const clip = media(id);
+  return clip.ready ? clip : null;
+}
+
+const heroEntries: Array<{ id: string; label: string; caption: string; loop: string; still?: string; motes: Mote[] }> = [
+  {
+    id: 'talk',
+    label: 'Talk to your specs',
+    caption: 'Comment on a line. Refine sends your pending comments to your assistant.',
+    loop: 'hero-talk',
+    motes: [
+      { text: 'APPLIED', x: 60, y: -5, dx: -8, dy: 10, dur: 10800, delay: 1200 },
+      { text: 'Commenting on line 26', x: 6, y: 96, dx: 11, dy: -9, dur: 9400, delay: 300 },
+      { text: 'PENDING', x: 92, y: 60, dx: -12, dy: -8, dur: 8800, delay: 700 },
+      { text: 'Refine (1)', x: 58, y: 96, dx: 10, dy: -10, dur: 10200, delay: 2000 },
+    ],
+  },
+  {
+    id: 'overview',
+    label: 'The Overview',
+    caption: 'The whole run on one page: what it was for, what it decided, and what traced to a test.',
+    loop: 'hero-overview',
+    motes: [
+      { text: '51m 28s active', x: 72, y: -5, dx: -9, dy: 10, dur: 10400, delay: 900 },
+      { text: '4/4 traced', x: -6, y: 60, dx: 12, dy: -10, dur: 9200, delay: 0 },
+      { text: 'REJECTED', x: 92, y: 44, dx: -11, dy: -9, dur: 9800, delay: 1800 },
+      { text: 'WHY', x: 14, y: 96, dx: 12, dy: -9, dur: 10100, delay: 1400 },
+    ],
+  },
+  {
+    id: 'steps',
+    label: 'Step by step',
+    caption: 'Read the spec, the plan and the tasks one step at a time.',
+    loop: 'hero-steps',
+    motes: [
+      { text: 'Plan', x: 62, y: -5, dx: -8, dy: 10, dur: 10800, delay: 1200 },
+      { text: 'Tasks 50%', x: 91, y: 44, dx: -12, dy: -8, dur: 8800, delay: 700 },
+      { text: 'Specification', x: 8, y: 96, dx: 12, dy: -9, dur: 9400, delay: 300 },
+      { text: 'T003', x: 46, y: 96, dx: -9, dy: -10, dur: 10200, delay: 1600 },
+    ],
+  },
+  {
+    id: 'sidebar',
+    label: 'Everything in the sidebar',
+    caption: 'Specs, bugs, ideas and steering in one side bar, each grouped by where it stands.',
+    loop: 'hero-sidebar',
+    motes: [
+      { text: '2 active specs', x: 5, y: -5, dx: 10, dy: 8, dur: 9600, delay: 500 },
+      { text: '2 bugs to fix', x: 52, y: -6, dx: -9, dy: 9, dur: 10600, delay: 1500 },
+      { text: '5 ideas decided', x: 20, y: 96, dx: 10, dy: -10, dur: 9000, delay: 0 },
+      { text: 'Constitution', x: 62, y: 96, dx: -10, dy: -9, dur: 11000, delay: 1000 },
+    ],
+  },
+];
+
+const surfaces = heroEntries.map((entry) => {
+  const clip = heroLoop(entry.loop);
+  if (clip) return { ...entry, clip, src: clip.poster as string, alt: clip.alt };
+  if (!entry.still) throw new Error(`The hero entry "${entry.id}" has neither a loop in the manifest nor a still`);
+  return { ...entry, clip: null, ...heroStill(entry.still) };
+});
 
 /*
   The focal light a product frame sits in front of. Painted by
@@ -125,45 +193,6 @@ const lightwell = (() => {
     section: siteUrl(f.outputs.lightwellSection),
   };
 })();
-
-const surfaces: Array<{ id: string; label: string; caption: string; src: string; alt: string; motes: Mote[] }> = [
-  {
-    id: 'overview',
-    label: 'The Overview',
-    caption: 'A finished run as one page: its intent, its timing and its approach.',
-    ...heroStill('overview'),
-    motes: [
-      { text: '54m 36s elapsed', x: 78, y: -5, dx: -9, dy: 10, dur: 10400, delay: 900 },
-      { text: '4/4 traced', x: -5, y: 22, dx: 12, dy: -10, dur: 9200, delay: 0 },
-      { text: '3 decisions', x: 90, y: 62, dx: -11, dy: -9, dur: 9800, delay: 1800 },
-      { text: 'sized simple', x: -5, y: 70, dx: 12, dy: -9, dur: 10100, delay: 1400 },
-    ],
-  },
-  {
-    id: 'steps',
-    label: 'Step by step',
-    caption: 'One tab per document. Move through every step of a spec.',
-    ...heroStill('spec-viewer'),
-    motes: [
-      { text: 'IMPLEMENTING', x: -6, y: 66, dx: 12, dy: -9, dur: 9400, delay: 300 },
-      { text: 'Plan ✓', x: 62, y: -5, dx: -8, dy: 10, dur: 10800, delay: 1200 },
-      { text: 'Tasks 50%', x: 91, y: 58, dx: -12, dy: -8, dur: 8800, delay: 700 },
-      { text: 'T002 done', x: 84, y: 95, dx: -10, dy: -10, dur: 10200, delay: 2000 },
-    ],
-  },
-  {
-    id: 'sidebar',
-    label: 'Everything in the sidebar',
-    caption: 'Specs, bugs, ideas and steering in one side bar, each grouped by where it stands.',
-    ...heroStill('live-bugs-ideas-panes'),
-    motes: [
-      { text: '2 active specs', x: 5, y: -5, dx: 10, dy: 8, dur: 9600, delay: 500 },
-      { text: '2 bugs to fix', x: 52, y: -6, dx: -9, dy: 9, dur: 10600, delay: 1500 },
-      { text: '5 ideas decided', x: 20, y: 96, dx: 10, dy: -10, dur: 9000, delay: 0 },
-      { text: 'Constitution', x: 90, y: 58, dx: -12, dy: -8, dur: 11000, delay: 1000 },
-    ],
-  },
-];
 
 /*
   Each tab states its point before its clip plays, because a clip cannot argue
@@ -588,14 +617,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         </div>
       </div>
 
-      {/* The product, in the first screenful. Three parts of it cycle in one frame
+      {/* The product, in the first screenful. Four parts of it cycle in one frame
           with a caption that changes with them, so someone who never scrolls
           still learns what this is.
 
-          The stills are tight crops, not whole windows, and the frame takes
-          most of the hero's width, so the words in the picture can be read.
-          Under reduced motion nothing cycles, the first one shows, and all
-          three buttons still work. */}
+          Only the entry on screen loads and plays its loop. Under reduced
+          motion nothing plays or cycles: the poster shows and every button
+          still works. With no script the first poster shows. */}
       <div class="hero-show" data-hero-show>
         <div class="hero-orbit">
           {/* The chips. One set per still, swapped with it. Decorative to a
@@ -628,20 +656,39 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
             />
             <div class="hero-stage">
             {
-              surfaces.map((surface, index) => (
-                <img
-                  class="hero-shot"
-                  data-hero-shot={surface.id}
-                  data-active={index === 0 ? '' : undefined}
-                  src={surface.src}
-                  alt={surface.alt}
-                  width="1600"
-                  height="1014"
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  fetchpriority={index === 0 ? 'high' : undefined}
+              surfaces.map((surface, index) =>
+                surface.clip ? (
+                  <video
+                    class="hero-shot"
+                    data-hero-shot={surface.id}
+                    data-active={index === 0 ? '' : undefined}
+                    muted
+                    loop
+                    playsinline
+                    preload="none"
+                    poster={index === 0 ? surface.src : undefined}
+                    data-poster={surface.src}
+                    aria-label={surface.alt}
+                    width="1600"
+                    height="1000"
+                  >
+                    {surface.clip.webm && <source src={surface.clip.webm} type="video/webm" />}
+                    {surface.clip.mp4 && <source src={surface.clip.mp4} type="video/mp4" />}
+                  </video>
+                ) : (
+                  <img
+                    class="hero-shot"
+                    data-hero-shot={surface.id}
+                    data-active={index === 0 ? '' : undefined}
+                    src={surface.src}
+                    alt={surface.alt}
+                    width="1600"
+                    height="1014"
+                    loading={index === 0 ? 'eager' : 'lazy'}
                   />
-                ))
-              }
+                )
+              )
+            }
             </div>
           </div>
         </div>
@@ -1292,10 +1339,12 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   .hero-stage {
     position: relative;
     display: grid;
-    aspect-ratio: 1836 / 1164;
+    /* The loops' own 16:10, set here so the frame never waits on a file. */
+    aspect-ratio: 16 / 10;
     overflow: hidden;
     border: 1px solid var(--border-panel);
     border-radius: var(--radius-sm);
+    background: #f7f7fb;
     box-shadow: var(--glow-frame);
   }
 
@@ -2772,21 +2821,28 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // --- hero: three parts of the product, one frame ---------------------------
-  // The pip you pick lights up, the light behind the frame lifts, and the shot,
-  // its chips and the sentence under it change together.
+  // --- hero: four parts of the product, one frame ----------------------------
+  // The pip you pick lights up, the light behind the frame lifts, and the loop,
+  // its chips and the sentence under it change together. Only the entry on
+  // screen has its video loaded and playing.
   document.querySelectorAll('[data-hero-show]').forEach((root) => {
     const pips = Array.from(root.querySelectorAll('[data-hero-pip]'));
     const shots = Array.from(root.querySelectorAll('[data-hero-shot]'));
     const motes = Array.from(root.querySelectorAll('[data-hero-motes]'));
+    const stage = root.querySelector('.hero-stage');
     const bloom = root.querySelector('[data-hero-bloom]');
     const flash = root.querySelector('[data-hero-flash]');
     if (pips.length < 2) return;
 
-    const DWELL = 4600;
+    // A loop moves on after it has played twice, a still after this long.
+    const LOOPS = 2;
+    const STILL_DWELL = 14000;
     let index = 0;
     let timer = null;
     let stopped = false;
+    let onScreen = false;
+    let plays = 0;
+    let lastTime = 0;
 
     let flareTimer = null;
     const flare = () => {
@@ -2799,6 +2855,32 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       flareTimer = window.setTimeout(() => bloom.removeAttribute('data-flare'), 620);
     };
 
+    const isVideo = (el) => el instanceof HTMLVideoElement;
+    const poster = (el) => {
+      if (isVideo(el) && !el.poster && el.dataset.poster) el.poster = el.dataset.poster;
+    };
+
+    // Plays the active entry from its start, or arms the still's timer.
+    const run = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = null;
+      const shot = shots[index];
+      shots.forEach((other) => {
+        if (other !== shot && isVideo(other)) other.pause();
+      });
+      if (!onScreen || reduced.matches) return;
+      if (isVideo(shot)) {
+        plays = 0;
+        lastTime = 0;
+        try {
+          shot.currentTime = 0;
+        } catch {}
+        shot.play().catch(() => {});
+      } else if (!stopped) {
+        timer = window.setTimeout(() => show(index + 1), STILL_DWELL);
+      }
+    };
+
     const show = (next) => {
       index = (next + pips.length) % pips.length;
       const pip = pips[index];
@@ -2808,34 +2890,39 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         p.setAttribute('aria-selected', i === index ? 'true' : 'false');
         p.tabIndex = i === index ? 0 : -1;
       });
+      // The poster of the entry on screen and of the next one, so a swap never
+      // fades to an empty frame.
+      poster(shots[index]);
+      poster(shots[(index + 1) % shots.length]);
       shots.forEach((shot) => shot.toggleAttribute('data-active', shot.dataset.heroShot === id));
       motes.forEach((set) => set.toggleAttribute('data-active', set.dataset.heroMotes === id));
 
       flare();
-
-      if (flash) {
-        flash.textContent = pip.dataset.heroCaption || '';
-      }
+      if (flash) flash.textContent = pip.dataset.heroCaption || '';
+      run();
     };
 
+    // A loop never ends, so a wrap back to the start is what counts a play.
+    shots.forEach((shot, i) => {
+      if (!isVideo(shot)) return;
+      shot.addEventListener('timeupdate', () => {
+        if (i !== index) return;
+        if (shot.currentTime < lastTime - 0.5) {
+          plays += 1;
+          if (plays >= LOOPS && !stopped) show(index + 1);
+        }
+        lastTime = shot.currentTime;
+      });
+    });
+
+    // A click or a hover is a choice. The entry stays, and keeps looping.
     const stop = () => {
       stopped = true;
-      if (timer) window.clearInterval(timer);
-      timer = null;
-    };
-
-    const start = () => {
-      if (stopped || timer || reduced.matches) return;
-      timer = window.setInterval(() => show(index + 1), DWELL);
-    };
-
-    const pause = () => {
-      if (timer) window.clearInterval(timer);
+      if (timer) window.clearTimeout(timer);
       timer = null;
     };
 
     pips.forEach((pip, i) => {
-      // A click is a choice. Honour it and get out of the way for good.
       pip.addEventListener('click', () => {
         stop();
         show(i);
@@ -2850,14 +2937,23 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       });
     });
 
-    // Hover and focus only hold it, so moving away picks the cycle back up.
-    root.addEventListener('mouseenter', pause);
-    root.addEventListener('mouseleave', start);
-    root.addEventListener('focusin', pause);
-    root.addEventListener('focusout', start);
+    if (stage) stage.addEventListener('mouseenter', stop);
+
+    // Nothing loads or plays until the frame is on screen, and it rests when
+    // the frame scrolls away.
+    if (stage && 'IntersectionObserver' in window) {
+      new IntersectionObserver(
+        (entries) => {
+          onScreen = entries[0].isIntersecting;
+          run();
+        },
+        { threshold: 0.25 },
+      ).observe(stage);
+    } else {
+      onScreen = true;
+    }
 
     show(0);
-    start();
   });
 
   // --- quick start: one path at a time ------------------------------------
