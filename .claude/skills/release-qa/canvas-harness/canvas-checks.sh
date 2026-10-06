@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # canvas-checks.sh <workspace-dir> <results-dir>
-# Runs the four headless canvas checks against the real Copilot runtime. The agent writes specs into the workspace, so pass a COPY of a sandbox.
+# Runs the headless canvas checks against the real Copilot runtime. The agent writes specs into the workspace, so pass a COPY of a sandbox.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
