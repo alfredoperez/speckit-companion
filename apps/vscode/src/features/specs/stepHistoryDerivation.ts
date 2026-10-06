@@ -243,7 +243,7 @@ function groupStepsInOrder(transitions: HistoryEntry[]): RawStep[] {
  * pair) and the inter-task gap (no complete→start dead time).
  *
  * Handles three entry shapes in one pass:
- *   - finish-only `complete` (the model)  → delta row: prevEnd → this finish
+ *   - finish-only `complete` (the model)  → delta row: previousEnd → this finish
  *   - legacy `start`+`complete` pair       → its real recorded span: start → complete
  *   - legacy single boundary marker        → start → the next marker (old behavior)
  * so migrated specs and fixtures still render their real spans.
@@ -255,7 +255,7 @@ function buildSubsteps(
 ): SubstepEntry[] {
     const subs = stepTxs.filter(t => rowName(t) !== null);
     const out: SubstepEntry[] = [];
-    let prevEnd = stepStart;
+    let previousEnd = stepStart;
     for (let i = 0; i < subs.length; i++) {
         const s = subs[i];
         const name = rowName(s) as string;
@@ -264,14 +264,14 @@ function buildSubsteps(
             // Finish-only (the model): a standalone finish. Its duration is the gap
             // from the previous finish (or the step start) to this finish.
             const completedAt = s.at ?? fallbackEnd;
-            out.push({ name, startedAt: prevEnd, completedAt });
-            prevEnd = completedAt ?? prevEnd;   // advance to the effective end, not just s.at
+            out.push({ name, startedAt: previousEnd, completedAt });
+            previousEnd = completedAt ?? previousEnd;   // advance to the effective end, not just s.at
             continue;
         }
         if (next && rowName(next) === name && next.kind === 'complete') {
             // Legacy start+complete pair → render its real recorded span.
             out.push({ name, startedAt: s.at, completedAt: next.at });
-            prevEnd = next.at;
+            previousEnd = next.at;
             i++; // consume the paired complete
             continue;
         }
@@ -279,7 +279,7 @@ function buildSubsteps(
         // timestamp, or the step's end if it's the last.
         const completedAt = next ? next.at : fallbackEnd;
         out.push({ name, startedAt: s.at, completedAt });
-        prevEnd = completedAt ?? prevEnd;
+        previousEnd = completedAt ?? previousEnd;
     }
     return out;
 }
