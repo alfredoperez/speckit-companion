@@ -59,6 +59,8 @@ npm run test:coverage   # coverage report
 
 `npm run test:all` runs the jest suite and the spec-kit extension's stdlib-unittest suite together, which is what CI runs. It needs `python3` on your PATH; without it, run `npm test` for a change that stays inside `apps/vscode/src/` or `apps/vscode/webview/`.
 
+CI runs each suite only where it can say something. A `changes` job reads the diff once, and the three gates — `test`, `capture-suite`, `visual-gate` — each either run or report a one-line pass, so a docs-only change does not wait on a browser. All three still report, because a required check that never reports blocks the merge. When the diff cannot be worked out at all, every job runs.
+
 - **Style**: BDD — `describe()` / `it()` blocks describe behaviour, not implementation. Read a few existing test files in `apps/vscode/src/**/*.test.ts` before adding new ones.
 - **VS Code mock**: extension-side tests use `apps/vscode/tests/__mocks__/vscode.ts` (mapped via `jest.config.js#moduleNameMapper`). When you need a VS Code API that isn't mocked yet, add it there rather than stubbing inline.
 - **Config**: Jest runs through `ts-jest` against `tsconfig.test.json`.
