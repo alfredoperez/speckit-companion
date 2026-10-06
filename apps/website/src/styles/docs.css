@@ -203,7 +203,7 @@ body {
   /* One measure. Sentences, tables, figures and code fences share the column,
      so every block on the page ends at the same right edge. --measure-prose is
      kept as a name because the journey components size themselves from it. */
-  --sl-content-width: 44rem;
+  --sl-content-width: 48rem;
   --measure-prose: 100%;
 
   /* Horizontal room around the panel. */
@@ -487,20 +487,80 @@ main > .content-panel:last-child {
   font-weight: var(--fw-black);
 }
 
-/* The page between the rails.
+/* One centred shell.
 
-   Starlight sizes the content pane as the column plus half of whatever the
-   viewport has spare, and the contents rail as the other half. On a wide
-   screen the column stays put while both keep growing, which opens dead space
-   between the sidebar and the first word and strands the rail at the far edge.
+   Starlight pins the sidebar to the viewport's left edge and sizes the content
+   pane and the contents rail from whatever the viewport has spare. On a wide
+   screen that strands the sidebar at one edge and the rail at the other, with
+   the text floating between them.
 
-   Here the column and the rail are one fixed-width pair, and the pair is
-   centred in the space right of the sidebar. The spare room splits evenly on
-   both sides instead of collecting on one. */
+   Here the header, the sidebar, the text and the rail are one group with a
+   maximum width, centred, with the page ground outside it. The sidebar and the
+   header are fixed, so nothing can centre them with a margin: each one is
+   placed from --docs-shell-start, the distance from the viewport's edge to the
+   shell's first column. Below the maximum width that is just the gutter. */
+:root,
+:root[data-theme='light'] {
+  --docs-shell-max: 94rem;
+  --docs-shell-start: calc(max(0px, (100vw - var(--docs-shell-max)) / 2) + var(--sl-nav-pad-x));
+}
+
+@media (min-width: 50rem) {
+  :root[data-has-sidebar] {
+    --sl-content-inline-start: calc(var(--docs-shell-start) + var(--sl-sidebar-width));
+  }
+
+  .page > .header {
+    padding-inline: var(--docs-shell-start);
+  }
+
+  /* The pane starts on the logo's line, and so do the group labels inside it:
+     the pane has no padding on that side and the labels have none either. A
+     page row keeps its own, which is what indents it under its label. */
+  .sidebar-pane {
+    inset-inline-start: var(--docs-shell-start);
+  }
+
+  .sidebar-content {
+    padding-inline-start: 0;
+  }
+
+  .sidebar-content sl-sidebar-state-persist .top-level > li > details > summary {
+    padding-inline-start: 0;
+  }
+
+  /* The pane clips whatever leaves it, and a row now touches its edge. */
+  .sidebar-content sl-sidebar-state-persist :is(a, summary):focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* Starlight rules off the links from a theme picker this site does not have,
+     which left a stray line as the header's last item. */
+  .docs-header .social-icons::after {
+    content: none;
+  }
+
+  /* The search box starts where the text column starts: one sidebar in from
+     the logo, plus the column's own padding. */
+  .docs-header > .header {
+    grid-template-columns:
+      minmax(calc(var(--sl-sidebar-width) + var(--sl-content-pad-x) - var(--sl-nav-gap)), auto)
+      1fr
+      auto;
+  }
+}
+
+/* With a contents rail: the text starts straight after the sidebar, the rail
+   sits straight after the text's area and ends on the header's last item, and
+   a hairline separates each pair. */
 @media (min-width: 72rem) {
-  .main-frame > div {
-    max-width: calc(var(--sl-content-width) + 2 * var(--sl-content-pad-x) + var(--docs-toc-width));
-    margin-inline: auto;
+  :root,
+  :root[data-theme='light'] {
+    --sl-content-pad-x: 2rem;
+  }
+
+  .main-frame {
+    padding-inline-end: var(--docs-shell-start);
   }
 
   :root[data-has-sidebar] .main-pane,
@@ -517,35 +577,16 @@ main > .content-panel:last-child {
 
   .right-sidebar {
     width: var(--docs-toc-width);
-    border-inline-start: 0;
+    border-inline-start: 1px solid var(--rule);
   }
 
   .right-sidebar-panel {
-    padding: var(--space-24) 0 var(--space-24) var(--space-8);
+    padding: var(--space-24) 0 var(--space-24) var(--space-16);
   }
 
   .right-sidebar-panel .sl-container {
     width: auto;
     max-width: none;
-  }
-
-  /* The search box starts where the text column starts. Starlight works that
-     edge out from its own pane widths, which no longer apply. */
-  .docs-header > .header {
-    --docs-column-start: calc(
-      var(--sl-sidebar-width) + var(--sl-content-pad-x) +
-        max(
-          0px,
-          (
-              100vw - var(--sl-sidebar-width) - var(--sl-content-width) - 2 * var(--sl-content-pad-x) -
-                var(--docs-toc-width)
-            ) / 2
-        )
-    );
-    grid-template-columns:
-      minmax(calc(var(--docs-column-start) - var(--sl-nav-pad-x) - var(--sl-nav-gap)), auto)
-      1fr
-      auto;
   }
 
   /* Every page starts its column at the same left edge, with or without a
