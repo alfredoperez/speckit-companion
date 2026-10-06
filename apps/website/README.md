@@ -113,7 +113,9 @@ The funnel this feeds is landing view to install click to getting-started view. 
 | --- | --- | --- |
 | `install_click_vscode` | Landing hero Install for VS Code; landing quick-start Open in VS Code; landing footer CTA; the Marketplace button on the install guide | `placement`: `hero`, `quick-start`, `footer`, `install` |
 | `install_click_speckit_copy` | The copy button on the `specify extension add companion` row, on the landing quick start and on the install guide | `placement`: `quick-start`, `install` |
-| `demo_tab_click` | Each of the four demo tabs on the landing page | `tab`: `understand`, `customize`, `living`, `review` |
+| `demo_tab_click` | Each of the six demo tabs on the landing page | `tab`: `understand`, `customize`, `living`, `review`, `bugs`, `ideas` |
+| `install_path_click` | The three choices in the landing quick start | `path`: `vscode`, `copilot`, `claude` |
+| `surface_click` | The three cards in the landing page's Where it runs strip | `surface`: `vscode`, `copilot`, `claude` |
 | `waitlist_submit` | Submit on either soon page's waitlist form, fired from the handler | `list`: `workflow-builder`, `course` |
 
 The `code --install-extension` fallback on the install guide is deliberately untagged. It is a copy, not a click through to the Marketplace, and giving it `install_click_vscode` would make it indistinguishable from the Marketplace button one line above it.

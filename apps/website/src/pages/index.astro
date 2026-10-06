@@ -288,21 +288,126 @@ const places = [
     name: 'VS Code',
     kind: 'EXTENSION',
     body: 'The full workspace: sidebar, viewer, review, live runs and the Overview.',
-    link: { label: 'install the extension', href: '/docs/install/' },
+    link: { label: 'install in VS Code', href: '/docs/install/#in-vs-code' },
   },
   {
     id: 'copilot',
     name: 'GitHub Copilot app',
     kind: 'CANVAS',
     body: 'A live board of every spec beside the chat. A button runs the next step.',
-    link: { label: 'set up the board', href: '/docs/copilot-app/install/' },
+    link: { label: 'install in the Copilot app', href: '/docs/install/#in-the-github-copilot-app' },
   },
   {
     id: 'claude',
     name: 'Claude Code',
     kind: 'MOD',
     body: 'One line above the prompt and a pane with the steps and tasks, in your terminal.',
-    link: { label: 'install the mod', href: '/docs/claude-code/install/' },
+    link: { label: 'install in Claude Code', href: '/docs/install/#in-claude-code' },
+  },
+];
+
+// The quick start, once per place you can work. The steps, their order and
+// their wording follow /docs/install/, which holds the full path for each.
+type InstallAction =
+  | { kind: 'code'; command: string; prompt?: boolean; analytics?: string }
+  | { kind: 'button'; href: string; label: string; analytics: string };
+
+type InstallStep = { title: string; optional?: boolean; sub: string; actions: InstallAction[] };
+
+const SPEC_KIT_SUB =
+  'GitHub’s toolkit for spec-driven development. The stock PyPI `specify-cli` has no `extension` command, so use this build.';
+
+const companionStep: InstallStep = {
+  title: 'Add the Companion extension for Spec Kit',
+  optional: true,
+  sub: 'Recommended. It records each run and adds the Companion pipeline. The same command updates it later.',
+  actions: [{ kind: 'code', command: INSTALL_COMMAND, analytics: 'install_click_speckit_copy' }],
+};
+
+const installPaths: Array<{
+  id: string;
+  hash: string;
+  label: string;
+  full: { label: string; href: string };
+  steps: InstallStep[];
+}> = [
+  {
+    id: 'vscode',
+    hash: 'install-vscode',
+    label: 'VS Code',
+    full: { label: 'the full VS Code path, with what you should see at each step', href: '/docs/install/#in-vs-code' },
+    steps: [
+      { title: 'Get Spec Kit', sub: SPEC_KIT_SUB, actions: [{ kind: 'code', command: SOURCE_CLI }] },
+      companionStep,
+      {
+        title: 'Install the VS Code extension',
+        sub: 'The workspace: viewer, review, live runs, overview. Then choose your assistant in the picker it shows.',
+        actions: [{ kind: 'button', href: OPEN_IN_VSCODE, label: 'Open in VS Code', analytics: 'install_click_vscode' }],
+      },
+    ],
+  },
+  {
+    id: 'copilot',
+    hash: 'install-copilot-app',
+    label: 'GitHub Copilot app',
+    full: {
+      label: 'the full Copilot app path, with what you should see at each step',
+      href: '/docs/install/#in-the-github-copilot-app',
+    },
+    steps: [
+      {
+        title: 'Get Spec Kit',
+        sub: `${SPEC_KIT_SUB} Then set the project up for Copilot, from its root.`,
+        actions: [
+          { kind: 'code', command: SOURCE_CLI },
+          { kind: 'code', command: 'specify init --here --integration copilot' },
+        ],
+      },
+      companionStep,
+      {
+        title: 'Add the board',
+        sub: 'From a checkout of the SpecKit Companion repository. Swap <project> for your project, then commit to your default branch.',
+        actions: [
+          { kind: 'code', command: 'cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion' },
+        ],
+      },
+      {
+        title: 'Accept the repository content and start a new session',
+        sub: 'Choose Review repository content, then Accept for new sessions. Only a new session gets the board. Then ask for it.',
+        actions: [{ kind: 'code', command: 'Open the SpecKit Companion canvas.', prompt: false }],
+      },
+    ],
+  },
+  {
+    id: 'claude',
+    hash: 'install-claude-code',
+    label: 'Claude Code',
+    full: {
+      label: 'the full Claude Code path, with what you should see at each step',
+      href: '/docs/install/#in-claude-code',
+    },
+    steps: [
+      {
+        title: 'Get Spec Kit',
+        sub: `${SPEC_KIT_SUB} Then set the project up for Claude Code, from its root.`,
+        actions: [
+          { kind: 'code', command: SOURCE_CLI },
+          { kind: 'code', command: 'specify init --here --integration claude' },
+        ],
+      },
+      companionStep,
+      {
+        title: 'Add the mod',
+        sub: 'Needs Claude Code 2.1.287 or later. In a session that is already open, run /reload-plugins, then /speckit-tracker.',
+        actions: [
+          {
+            kind: 'code',
+            command: 'claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json',
+          },
+          { kind: 'code', command: 'claude plugin install speckit-companion@speckit-companion' },
+        ],
+      },
+    ],
   },
 ];
 
@@ -539,54 +644,79 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     <div class="inner stack-16">
       <p class="eyebrow">QUICK START</p>
 
-      <div class="steps" data-steps>
-        <span class="spark" data-spark aria-hidden="true"></span>
+      <h2 class="quick-heading">Install it where you work</h2>
 
-        <div class="step" data-step>
-          <span class="step-flare" aria-hidden="true"></span>
-          <span class="step-num" aria-hidden="true">01</span>
-          <div class="step-text">
-            <span class="step-title">Install the VS Code extension</span>
-            <span class="step-sub">
-              The workspace: viewer, review, live runs, overview. One click from the Marketplace.
-            </span>
-          </div>
-          <Button
-            class="step-action"
-            href={OPEN_IN_VSCODE}
-            size="md"
-            data-analytics="install_click_vscode"
-            data-analytics-placement="quick-start"
-          >
-            Open in VS Code
-          </Button>
-        </div>
-
-        <div class="step" data-step>
-          <span class="step-flare" aria-hidden="true"></span>
-          <span class="step-num" aria-hidden="true">02</span>
-          <div class="step-text">
-            <span class="step-title">Get an extension-capable Spec Kit CLI</span>
-            <span class="step-sub">The stock PyPI `specify-cli` has no `extension` subsystem.</span>
-          </div>
-          <CodeLine class="step-action" command={SOURCE_CLI} />
-        </div>
-
-        <div class="step" data-step>
-          <span class="step-flare" aria-hidden="true"></span>
-          <span class="step-num" aria-hidden="true">03</span>
-          <div class="step-text">
-            <span class="step-title">Add the Companion to Spec Kit</span>
-            <span class="step-sub">One command. The same command updates it later.</span>
-          </div>
-          <CodeLine
-            class="step-action"
-            command={INSTALL_COMMAND}
-            data-analytics="install_click_speckit_copy"
-            data-analytics-placement="quick-start"
-          />
-        </div>
+      <div class="pills pills--paths" role="tablist" aria-label="Where you work" data-path-tabs>
+        {
+          installPaths.map((path, index) => (
+            <a
+              class="pill"
+              role="tab"
+              id={`tab-${path.hash}`}
+              href={`#${path.hash}`}
+              data-path-tab={path.hash}
+              aria-controls={path.hash}
+              aria-selected={index === 0 ? 'true' : 'false'}
+              data-analytics="install_path_click"
+              data-analytics-path={path.id}
+            >
+              {path.label}
+            </a>
+          ))
+        }
       </div>
+
+      {
+        installPaths.map((path) => (
+          <div class="path" id={path.hash} role="tabpanel" aria-labelledby={`tab-${path.hash}`} data-path-panel>
+            <h3 class="path-name">{path.label}</h3>
+            <div class="steps" data-steps>
+              <span class="spark" data-spark aria-hidden="true" />
+              {path.steps.map((step, index) => (
+                <div class="step" data-step>
+                  <span class="step-flare" aria-hidden="true" />
+                  <span class="step-num" aria-hidden="true">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div class="step-text">
+                    <span class="step-title">
+                      {step.title}
+                      {step.optional && <span class="step-tag">optional</span>}
+                    </span>
+                    <span class="step-sub">{step.sub}</span>
+                  </div>
+                  <div class="step-action step-actions">
+                    {step.actions.map((action) =>
+                      action.kind === 'button' ? (
+                        <Button
+                          href={action.href}
+                          size="md"
+                          data-analytics={action.analytics}
+                          data-analytics-placement="quick-start"
+                        >
+                          {action.label}
+                        </Button>
+                      ) : action.analytics ? (
+                        <CodeLine
+                          command={action.command}
+                          prompt={action.prompt}
+                          data-analytics={action.analytics}
+                          data-analytics-placement="quick-start"
+                        />
+                      ) : (
+                        <CodeLine command={action.command} prompt={action.prompt} />
+                      )
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <a class="watch-link path-full" href={path.full.href}>
+              {path.full.label} →
+            </a>
+          </div>
+        ))
+      }
 
       <a class="watch-link" href="/docs/start/your-first-spec/">
         <svg width="16" height="16" viewBox="0 0 26 26" fill="none" aria-hidden="true">
@@ -814,9 +944,9 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         data-analytics="install_click_vscode"
         data-analytics-placement="footer"
       >
-        Install in two steps
+        Install where you work
       </Button>
-      <p class="cta-caption">jumps to quick start · then watch your first spec land</p>
+      <p class="cta-caption">jumps to quick start · pick VS Code, the Copilot app or Claude Code</p>
     </div>
     <SiteFooter flush />
   </section>
@@ -1262,6 +1392,80 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     flex: 0 1 auto;
     min-width: 0;
     max-width: 480px;
+  }
+
+  .quick-heading {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--fs-h3);
+    font-weight: var(--fw-bold);
+  }
+
+  /* The switcher is the first thing in the section, so it sits at the left
+     edge with the eyebrow, not centred like the demo's. */
+  .pills.pills--paths {
+    align-self: flex-start;
+  }
+
+  .pills.pills--paths .pill {
+    text-decoration: none;
+    text-align: center;
+  }
+
+  .path {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    scroll-margin-top: var(--space-24);
+  }
+
+  .path[hidden] {
+    display: none;
+  }
+
+  /* With no script every path is on the page, one after the other, and each
+     needs its name. With the switcher working, the selected pill is the name. */
+  .path-name {
+    margin: var(--space-8) 0 0;
+    color: var(--text-primary);
+    font-size: var(--fs-lead);
+    font-weight: var(--fw-bold);
+  }
+
+  .section--quickstart[data-paths-ready] .path-name {
+    display: none;
+  }
+
+  .step-tag {
+    display: inline-block;
+    margin-left: var(--space-8);
+    padding: 1px var(--space-8);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-pill);
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    font-weight: var(--fw-semibold);
+    letter-spacing: var(--ls-eyebrow-sm);
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  .step-actions {
+    display: flex;
+    flex: 0 0 min(440px, 46%);
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-8);
+  }
+
+  .step-actions > :global(*) {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .step-actions > :global(.btn) {
+    align-self: flex-end;
   }
 
   .watch-link {
@@ -2259,6 +2463,24 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       justify-content: flex-start;
     }
 
+    .step-actions {
+      flex: 1 1 100%;
+    }
+
+    .step-actions > :global(.btn) {
+      align-self: flex-start;
+    }
+
+    .pills.pills--paths {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-self: stretch;
+      align-items: center;
+    }
+
+    .pills.pills--paths .pill {
+      padding: var(--space-9) var(--space-6);
+    }
+
     /* Four pills do not fit on one phone line, and a wrapped 999px capsule
        reads as a mistake. Two columns in a squared-off group instead. */
     .pills {
@@ -2392,6 +2614,67 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     show(0);
     start();
   });
+
+  // --- quick start: one path at a time ------------------------------------
+  // The pills are links to the three paths, which are all on the page. Here
+  // they become tabs: one path shows, and the address keeps its name so the
+  // link can be shared. `#quick-start` and no hash both mean the first path.
+  (() => {
+    const section = document.getElementById('quick-start');
+    const tabs = section ? Array.from(section.querySelectorAll('[data-path-tab]')) : [];
+    const panels = section ? Array.from(section.querySelectorAll('[data-path-panel]')) : [];
+    if (!section || !tabs.length) return;
+
+    const known = (hash) => tabs.some((tab) => tab.dataset.pathTab === hash);
+
+    const select = (hash) => {
+      tabs.forEach((tab) => {
+        const on = tab.dataset.pathTab === hash;
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        tab.tabIndex = on ? 0 : -1;
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.id !== hash;
+      });
+    };
+
+    const fromAddress = (scroll) => {
+      const hash = window.location.hash.slice(1);
+      if (!known(hash)) return false;
+      select(hash);
+      if (scroll) section.scrollIntoView();
+      return true;
+    };
+
+    section.setAttribute('data-paths-ready', '');
+    if (!fromAddress(true)) select(tabs[0].dataset.pathTab);
+    window.addEventListener('hashchange', () => fromAddress(true));
+
+    const choose = (tab) => {
+      select(tab.dataset.pathTab);
+      window.history.replaceState(null, '', `#${tab.dataset.pathTab}`);
+    };
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', (event) => {
+        event.preventDefault();
+        choose(tab);
+      });
+      tab.addEventListener('keydown', (event) => {
+        if (event.key === ' ') {
+          event.preventDefault();
+          choose(tab);
+          return;
+        }
+        const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        event.preventDefault();
+        const next = tabs[(index + step + tabs.length) % tabs.length];
+        choose(next);
+        next.focus();
+      });
+    });
+  })();
 
   // --- demo tabs -----------------------------------------------------------
   document.querySelectorAll('[data-tabs]').forEach((root) => {
@@ -2555,7 +2838,9 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
     // The handoff. One particle leaves the mascot's line of flight, lands on
     // row 01, and row 02 lights 80ms behind it.
-    const steps = document.querySelector('[data-steps]');
+    const steps =
+      document.querySelector('[data-path-panel]:not([hidden]) [data-steps]') ||
+      document.querySelector('[data-steps]');
     const spark = steps ? steps.querySelector('[data-spark]') : null;
     const stepRows = steps ? Array.from(steps.querySelectorAll('[data-step]')) : [];
 
