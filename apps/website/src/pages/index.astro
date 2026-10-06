@@ -678,12 +678,16 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       say. */}
   <section class="section section--course" id="course" aria-label="Course">
     <div class="inner course">
-      <p class="course-say">
-        <SoonChip />
-        <span>A course on spec-driven development with Spec Kit</span>
-      </p>
+      <div class="course-say">
+        <p class="course-hook">
+          Want to learn spec-driven development, start to finish? <SoonChip />
+        </p>
+        <p class="course-sub">
+          A course with Spec Kit: take a vague idea to a spec, a plan, tasks and shipped code.
+          <a class="course-link" href="/course/">See the outline</a>
+        </p>
+      </div>
       <CourseSignup id="course-landing" placement="landing" layout="strip" />
-      <a class="course-link" href="/course/">See the outline</a>
     </div>
   </section>
 
@@ -1979,31 +1983,46 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .section--course .inner {
     max-width: 1220px;
-    padding-top: var(--space-26);
-    padding-bottom: var(--space-26);
+    padding-top: 44px;
+    padding-bottom: 44px;
   }
 
   .course {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    gap: var(--space-10) var(--space-18);
+    justify-content: space-between;
+    gap: var(--space-18) var(--space-26);
   }
 
   .course-say {
+    flex: 1 1 420px;
+    min-width: 0;
+  }
+
+  .course-hook {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-10);
     margin: 0;
     color: var(--text-primary);
-    font-size: var(--fs-lead);
+    font-size: 26px;
     font-weight: var(--fw-bold);
+    line-height: 1.2;
+  }
+
+  .course-sub {
+    margin: var(--space-8) 0 0;
+    color: var(--text-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-ui);
   }
 
   .course-link {
+    margin-left: var(--space-4);
     color: var(--accent);
-    font-size: var(--fs-ui);
+    font-size: inherit;
     text-decoration: underline;
     text-decoration-color: var(--border-accent);
     text-underline-offset: 4px;
