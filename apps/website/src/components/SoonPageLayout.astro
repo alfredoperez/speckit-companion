@@ -368,13 +368,13 @@ const fieldId = `${waitlistId}-email`;
     even when the address has nowhere to go. It carries the list name and never
     the address — the count is the whole point of it.
   */
-  document.querySelectorAll('[data-waitlist]').forEach((form) => {
+  document.querySelectorAll<HTMLFormElement>('[data-waitlist]').forEach((form) => {
     const status = form.querySelector('[data-waitlist-status]');
-    const input = form.querySelector('input[type="email"]');
+    const input = form.querySelector<HTMLInputElement>('input[type="email"]');
     const list = form.dataset.waitlist || '';
     const survey = form.dataset.survey;
 
-    const say = (message) => {
+    const say = (message: string) => {
       if (status) status.textContent = message;
     };
 

@@ -97,7 +97,7 @@ With the [Companion Spec Kit extension](https://speckit-companion.dev/docs/insta
 - **The mod only reads.** It never writes a spec file or the run record, and never sends a prompt. You run the `/speckit-*` commands yourself. The one command it runs is your editor's, when you press `o`.
 - **Where it draws.** The Claude Code terminal and the Code tab of the Claude Desktop app draw the band and the pane. The VS Code extension's chat panel and `claude -p` draw nothing, so there `/speckit-tracker` answers with text: the followed spec, its band line, and the recent specs.
 - **Where it looks for specs.** In `specs/` and `.specify/specs/`, or in `speckit.specDirectories` from `.vscode/settings.json` when you set it.
-- **Tested on Claude Code 2.1.287.** The mods API can change between releases.
+- **Tested on Claude Code 2.1.291.** The mods API can change between releases.
 
 ## The other places SpecKit Companion runs
 

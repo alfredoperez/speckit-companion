@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 - **A finished task never reads as in progress.** The chip shows only on an open task while the run is still implementing. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: spec-viewer -->
 - **A line action reaches the line you clicked.** Comments, edits and ticked boxes use the line's place in the file, so Refine names the right section. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: spec-viewer -->
 
+- **The Copilot board unlocks the next step.** A step the agent wrote the document for but never closed in the run record is closed when the turn ends. ([#881](https://github.com/alfredoperez/speckit-companion/pull/881)) <!-- area: copilot-app -->
+
 ## [0.36.0] - 2026-10-06
 
 Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.

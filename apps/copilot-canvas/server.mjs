@@ -157,10 +157,10 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     }
 
     /** Write a settled step to the record, trying again for a couple of seconds while another writer holds its lock. */
-    function writeRecord(spec, run, endedAt, attempt = 0) {
+    function writeRecord(spec, run, endedAt, closing, attempt = 0) {
         let result = false;
         try {
-            result = recordStep(state.root, spec, run.step, run.startedAt, endedAt);
+            result = recordStep(state.root, spec, run.step, run.startedAt, endedAt, { closing });
         } catch (error) {
             log(`[speckit-canvas] run record not written: ${error.message}`);
         }
@@ -168,7 +168,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         if (attempt >= LOCK_RETRIES || state.closed) return log(`[speckit-canvas] run record not written: ${spec.id} is locked by another writer`);
         const timer = setTimeout(() => {
             state.retries.delete(timer);
-            if (writeRecord(spec, run, endedAt, attempt + 1) === true) rescan();
+            if (writeRecord(spec, run, endedAt, closing, attempt + 1) === true) rescan();
         }, LOCK_RETRY_MS).unref();
         state.retries.add(timer);
     }
@@ -183,7 +183,10 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         if (state.pendingSpecify && carries(state.pendingSpecify.prompt)) state.pendingSpecify.started = true;
     }
 
-    /** The chat turn ended: started runs stop running, and one that did its step in a project with no context writer is recorded. */
+    /**
+     * The chat turn ended: started runs stop running. One that did its step is recorded where there is no context writer;
+     * where there is one, the board only closes a document step the recorder left open, or the next step would never unlock.
+     */
     function settle(at = new Date(now())) {
         state.busy = false;
         // A host that never reports a turn starting gives no way to pair, so there every run settles.
@@ -195,8 +198,10 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
             if (!over(run)) continue;
             state.runs.delete(id);
             const spec = state.snapshot.specs.find(s => s.id === id);
-            if (!run.owned || writer() || !spec || !didStep(run, spec)) continue;
-            writeRecord(spec, run, at.toISOString());
+            if (!spec || !didStep(run, spec)) continue;
+            const closing = Boolean(writer());
+            if (closing ? run.step === 'implement' : !run.owned) continue;
+            writeRecord(spec, run, at.toISOString(), closing);
         }
         if (state.pendingSpecify && over(state.pendingSpecify)) state.pendingSpecify = null;
         rescan();

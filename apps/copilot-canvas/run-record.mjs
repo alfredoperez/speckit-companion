@@ -4,7 +4,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { chmodSync, mkdirSync, readFileSync, realpathSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { hostname, tmpdir } from 'node:os';
 import { basename, dirname, join, resolve, sep } from 'node:path';
-import { PIPELINE_STEPS, parseSpecContext, statusFromSteps, statusRank } from './spec-rules.mjs';
+import { PIPELINE_STEPS, deriveStepBadges, parseSpecContext, statusFromSteps, statusRank } from './spec-rules.mjs';
 
 const FILE = '.spec-context.json';
 const FINISHED = new Set(['completed', 'archived']);
@@ -114,6 +114,12 @@ function readRecord(target) {
     }
 }
 
+const stepLevel = e => e && e.substep == null && e.task == null;
+const entry = (step, kind, at) => ({ step, substep: null, kind, by: 'extension', at });
+// A record moves only forward: never out of a finished or unknown status, never to a status or step it is already at or past.
+const mayAdvance = (existing, step, status) => !FINISHED.has(existing.status) && statusRank(existing.status) >= 0 && statusRank(existing.status) < statusRank(status)
+    && PIPELINE_STEPS.indexOf(existing.currentStep) <= PIPELINE_STEPS.indexOf(step);
+
 // The record with the step appended, or null when it must be left alone: unreadable, closed, mid-step, or already at or past this step.
 function advanced(record, title, step, startedAt, endedAt) {
     if (record.unreadable) return null;
@@ -122,18 +128,32 @@ function advanced(record, title, step, startedAt, endedAt) {
     const status = statusFromSteps({ [step]: 'completed' });
     const history = Array.isArray(existing?.history) ? existing.history : [];
     if (existing) {
-        if (FINISHED.has(existing.status) || statusRank(existing.status) < 0 || statusRank(existing.status) >= statusRank(status)) return null;
-        if (PIPELINE_STEPS.indexOf(existing.currentStep) > PIPELINE_STEPS.indexOf(step)) return null;
+        if (!mayAdvance(existing, step, status)) return null;
         // An open step would be closed by this one's start and so gain a time nobody measured.
-        if (history.filter(e => e && e.substep == null && e.task == null).at(-1)?.kind === 'start') return null;
+        if (history.filter(stepLevel).at(-1)?.kind === 'start') return null;
     }
-    const entry = (kind, at) => ({ step, substep: null, kind, by: 'extension', at });
     const base = existing ?? { workflow: 'speckit', specName: title, selectedAt: startedAt };
-    return { ...base, currentStep: step, status, history: [...history, entry('start', startedAt), entry('complete', endedAt)] };
+    return { ...base, currentStep: step, status, history: [...history, entry(step, 'start', startedAt), entry(step, 'complete', endedAt)] };
 }
 
-/** Append a step's start and finish to the spec's record, forward only and under the writers' lock; false when it must not be written, BUSY when a writer holds the lock. */
-export function recordStep(root, { id, title }, step, startedAt, endedAt) {
+// The record with the step it left open closed, or null when it must be left alone: unreadable, missing, not open on this step, or open on another.
+function closed(record, step, startedAt, endedAt) {
+    const existing = record.unreadable ? null : parseSpecContext(record.text);
+    const status = statusFromSteps({ [step]: 'completed' });
+    if (!existing || !mayAdvance(existing, step, status) || deriveStepBadges(existing)[step] !== 'in-progress') return null;
+    const history = Array.isArray(existing.history) ? existing.history : [];
+    const last = history.filter(stepLevel).at(-1);
+    if (last?.kind === 'start' && last.step !== step) return null;
+    // A start from before this send belongs to another run, so this one brings its own and the step reads as untimed.
+    const mine = last?.kind === 'start' && Date.parse(last.at) >= Date.parse(startedAt);
+    return { ...existing, currentStep: step, status, history: [...history, ...(mine ? [] : [entry(step, 'start', startedAt)]), entry(step, 'complete', endedAt)] };
+}
+
+/**
+ * Append a step's start and finish to the spec's record, forward only and under the writers' lock; false when it must not be written, BUSY when a writer holds the lock.
+ * With `closing`, for a project whose recorder owns the record: only finish a step the record still shows open.
+ */
+export function recordStep(root, { id, title }, step, startedAt, endedAt, { closing = false } = {}) {
     const dir = join(root, id);
     try {
         if (!realpathSync(dir).startsWith(realpathSync(root) + sep)) return false;
@@ -144,7 +164,8 @@ export function recordStep(root, { id, title }, step, startedAt, endedAt) {
     const token = acquireLock(target);
     if (token === false) return BUSY;
     try {
-        const next = advanced(readRecord(target), title, step, startedAt, endedAt);
+        const record = readRecord(target);
+        const next = closing ? closed(record, step, startedAt, endedAt) : advanced(record, title, step, startedAt, endedAt);
         if (!next) return false;
         const temp = join(dir, `${FILE}.${process.pid}.tmp`);
         writeFileSync(temp, `${JSON.stringify(next, null, 2)}\n`);
