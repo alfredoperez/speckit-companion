@@ -9,8 +9,12 @@ Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.
 ### Highlights
 
 #### Follow a Spec Kit run from inside Claude Code
-A new Claude Code mod pins your spec ==above the prompt== and ticks off steps and tasks in a side pane. Switch specs with `/speckit-tracker`, and install it with `claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json`, then `claude plugin install speckit-companion@speckit-companion`.
-<!-- area: assistants; pr: 832 -->
+A new Claude Code mod pins your spec ==above the prompt== and ticks off steps and tasks beside the transcript. Press Enter on a step to read its document, or `o` to open it in your editor.
+<!-- area: assistants; pr: 832, 852, 866; media: mod-run, mod-document -->
+
+#### The Copilot app board works with any Spec Kit project
+The board reads each step from your files, so it follows a stock Spec Kit run ==without Companion installed==. Its buttons send the command your project registers, and each step shows as running until the chat turn ends.
+<!-- area: copilot-app; pr: 854, 869; media: copilot-board, copilot-next-step -->
 
 #### A bug reads as a story, and a decided idea as a decision
 A bug opens on a Story tab: ==where it stands==, then what broke, what changed and how it was verified. A decided idea shows its verdict, the rationale, a scorecard and a closing section that fits the verdict.
@@ -49,7 +53,6 @@ A spec whose build is done has a ==**Converge** button== in the viewer footer an
 - **The moss mascot is the new logo.** The ==small moss character== replaces the seedling in the activity bar and the double chevron on the Copilot app board. ([#831](https://github.com/alfredoperez/speckit-companion/pull/831)) <!-- area: other -->
 
 ### Fixed
-- **The Copilot board follows a stock run.** Each step reads as done ==once its document is written==, so the next step unlocks without Companion installed. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
 - **Stock runs get no Companion-only instructions.** The board sends ==the command alone== where Companion's script is missing, so nothing tells the agent to hold a document back. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
 - **The board sends the command your project registers.** A project whose commands are skills gets `/speckit-plan`, and the card and **Show prompt** show ==that spelling==. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
 - **A sent step shows as running.** It stays ==Running== until the chat turn ends, and a stock run's Overview times only the steps the board watched. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->

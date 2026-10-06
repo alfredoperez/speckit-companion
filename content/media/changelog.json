@@ -20,7 +20,12 @@
       "file": "apps/website/public/changelog/bugs-ideas-panes.png",
       "alt": "A VS Code window with the SpecKit side bar showing Specs, Bugs and Ideas panes. Bugs are grouped as To fix, Verified and Closed, ideas as Assessing and Decided, and the bug selected in the Verified group is open in the viewer on its Story.",
       "caption": "Bugs and Ideas sit under Specs, and a click opens one in the viewer.",
-      "highlight": { "x": 104, "y": 440, "w": 592, "h": 790 }
+      "highlight": {
+        "x": 104,
+        "y": 440,
+        "w": 592,
+        "h": 790
+      }
     },
     "new-bug": {
       "file": "apps/website/public/changelog/new-bug.png",
@@ -31,13 +36,23 @@
       "file": "apps/website/public/changelog/answer-question.png",
       "alt": "A bug's Assessment tab at Open Questions. The question carries a Needs an answer label and an Answer link, and the box under it holds a typed reply with Cancel and Send answer.",
       "caption": "Answer opens a box under the question; Send answer hands it to your assistant.",
-      "highlight": { "x": 180, "y": 830, "w": 1400, "h": 450 }
+      "highlight": {
+        "x": 180,
+        "y": 830,
+        "w": 1400,
+        "h": 450
+      }
     },
     "converge-button": {
       "file": "apps/website/public/changelog/converge-button.png",
       "alt": "The Overview of a completed spec, with the footer reading Run complete, then Converge, Archive and Reactivate.",
       "caption": "A spec whose build is done has Converge in the footer.",
-      "highlight": { "x": 1128, "y": 868, "w": 200, "h": 88 }
+      "highlight": {
+        "x": 1128,
+        "y": 868,
+        "w": 200,
+        "h": 88
+      }
     },
     "converge-sent": {
       "file": "apps/website/public/changelog/converge-sent.png",
@@ -48,12 +63,37 @@
       "file": "apps/website/public/changelog/create-issues-menu.png",
       "alt": "The Tasks tab with Other actions open in the footer on Analyze and Create GitHub issues, the second with a line saying it needs a GitHub remote and the GitHub MCP server and creates real issues.",
       "caption": "Create GitHub issues is under Other actions on the Tasks tab.",
-      "highlight": { "x": 996, "y": 676, "w": 472, "h": 164 }
+      "highlight": {
+        "x": 996,
+        "y": 676,
+        "w": 472,
+        "h": 164
+      }
     },
     "create-issues-confirm": {
       "file": "apps/website/public/changelog/create-issues-confirm.png",
       "alt": "A dialog asking Create a GitHub issue for every task in _02_demo-tasked, saying issues are created in the repository's GitHub remote and cannot be undone from here, with Cancel and Create Issues.",
       "caption": "Companion asks first, since the issues are real."
+    },
+    "mod-run": {
+      "file": "apps/website/public/changelog/mod-run.png",
+      "alt": "The SpecKit Companion pane in Claude Code during implement: three steps ticked with their times, Implement running, the documents, and a task bar at 3 of 6.",
+      "caption": "The pane beside the transcript: steps, documents and tasks for the spec you are working on."
+    },
+    "mod-document": {
+      "file": "apps/website/public/changelog/mod-document.png",
+      "alt": "A step's document open inside the pane in Claude Code, with its path at the top and keys to go back or open it in an editor.",
+      "caption": "Press Enter on a step to read its document, or o to open it in your editor."
+    },
+    "copilot-board": {
+      "file": "apps/website/public/changelog/copilot-board.png",
+      "alt": "The spec board in the GitHub Copilot app: every spec with its status on the left, the selected spec's four steps and its next-step button on the right.",
+      "caption": "The board beside the chat: every spec, and one button for the next step."
+    },
+    "copilot-next-step": {
+      "file": "apps/website/public/changelog/copilot-next-step.png",
+      "alt": "A planned spec on the board with Next: Tasks and a Run tasks button, and the command the button sends shown under it.",
+      "caption": "The next-step card shows the command it sends, in the spelling your project registers."
     }
   },
   "vscode@0.35.0": {
@@ -61,7 +101,12 @@
       "file": "apps/website/public/changelog/vscode-0.35.0-move-to-phase.png",
       "alt": "A node panel in the Pipeline Builder with Move to phase… open, listing gather, author and classify, each marked Joins the end of it.",
       "caption": "Move to phase… lists the phases the node is not in.",
-      "highlight": { "x": 10, "y": 535, "w": 455, "h": 390 }
+      "highlight": {
+        "x": 10,
+        "y": 535,
+        "w": 455,
+        "h": 390
+      }
     },
     "side-panel": {
       "file": "docs/screenshots/generated/builder-side-panel.png",
@@ -72,19 +117,34 @@
       "file": "docs/screenshots/generated/builder-move-hook.png",
       "alt": "The implement step in the Pipeline Builder, with an npm test command hook being dragged into the after slot of Mark the spec complete, a green line marking where it will land.",
       "caption": "Drop a hook where it should run; the green line shows where it lands.",
-      "highlight": { "x": 125, "y": 600, "w": 1045, "h": 165 }
+      "highlight": {
+        "x": 125,
+        "y": 600,
+        "w": 1045,
+        "h": 165
+      }
     },
     "run-overview": {
       "file": "docs/screenshots/generated/overview.png",
       "alt": "The Overview of a completed spec, with the run overview row reading Specify 5m 40s, Plan 7m 36s, Tasks 3m 25s and Implement 34m 45s, and 51m 28s active.",
       "caption": "Each step is timed to its own finish, and the total is active time.",
-      "highlight": { "x": 620, "y": 505, "w": 1625, "h": 155 }
+      "highlight": {
+        "x": 620,
+        "y": 505,
+        "w": 1625,
+        "h": 155
+      }
     },
     "removed-doc": {
       "file": "docs/screenshots/generated/viewer-removed-doc.png",
       "alt": "The spec viewer showing the Specification under a notice that reads Plan was moved or deleted, so Specification is showing.",
       "caption": "A removed document is named, not skipped over in silence.",
-      "highlight": { "x": 450, "y": 190, "w": 1965, "h": 110 }
+      "highlight": {
+        "x": 450,
+        "y": 190,
+        "w": 1965,
+        "h": 110
+      }
     }
   },
   "vscode@0.34.0": {
@@ -92,19 +152,34 @@
       "file": "apps/website/public/changelog/vscode-0.34.0-copilot-board.png",
       "alt": "The SpecKit Companion board in the GitHub Copilot app: the list of specs on the left, and Persist Todos open on the right with its four finished steps and a This spec is finished card.",
       "caption": "Every spec with its pipeline and the next thing to do.",
-      "highlight": { "x": 755, "y": 310, "w": 1625, "h": 510 }
+      "highlight": {
+        "x": 755,
+        "y": 310,
+        "w": 1625,
+        "h": 510
+      }
     },
     "copilot-tasks": {
       "file": "apps/website/public/canvas/tasks.png",
       "alt": "The Copilot app board with a spec in Implementing, its Tasks tab open at 3 of 6, showing Phase 1 Setup with a checked task and the files it touched.",
       "caption": "Task progress updates live as the agent works.",
-      "highlight": { "x": 755, "y": 850, "w": 1580, "h": 625 }
+      "highlight": {
+        "x": 755,
+        "y": 850,
+        "w": 1580,
+        "h": 625
+      }
     },
     "copilot-new-spec": {
       "file": "apps/website/public/canvas/new-spec.png",
       "alt": "The Copilot app board's New spec form, with Companion, Spec Kit and Auto workflow choices above a box to describe the feature and a Specify button.",
       "caption": "New spec asks for a workflow, the same way VS Code does.",
-      "highlight": { "x": 15, "y": 160, "w": 2390, "h": 270 }
+      "highlight": {
+        "x": 15,
+        "y": 160,
+        "w": 2390,
+        "h": 270
+      }
     }
   },
   "vscode@0.33.0": {
