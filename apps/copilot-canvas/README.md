@@ -1,50 +1,113 @@
 # SpecKit Companion spec board for the GitHub Copilot app
 
-A [canvas extension](https://docs.github.com/en/copilot/how-tos/github-copilot-app/working-with-canvas-extensions) for the GitHub Copilot app. It opens a live board of every spec in your workspace, next to the chat.
+A live board of every spec in your repo, next to the chat in the GitHub Copilot app. It is for people who run [Spec Kit](https://github.com/github/spec-kit) with Copilot: you see where each spec stands, read its documents, and run the next step from a button. It works with stock Spec Kit and with [SpecKit Companion](https://speckit-companion.dev). You do not need VS Code.
 
-![The spec board in dark mode](./assets/preview.png)
+![The spec board in dark mode: the list of specs on the left, each with a status and a four-step bar, and one spec open on the right with its pipeline, its next-step card and its Overview.](./assets/preview.png)
 
-- **Board.** Every spec folder under `specs/` (or your `speckit.specDirectories`), most recently active first. Each row shows its status, a four-step rail (specify → plan → tasks → implement), and task progress. Filter by Active, Done or All, or search by name or number.
-- **Spec detail.** The pipeline rail, the next step with a button that runs it, then the same tabs as the VS Code viewer: an Overview dossier (intent, timing per step, expectations, what was verified, decisions, coverage), and the spec, plan, tasks, research, data model and checklists rendered through the viewer's own markdown pipeline and stylesheet. An Activity tab lists the run history.
-- **Live.** The board watches the spec folders. When the agent writes `plan.md` or ticks a task, the board updates without a refresh. It also watches for a spec folder that is not there yet, so the first spec of a project shows up as soon as the agent creates `specs/`.
-- **Run from the board.** Buttons send the same line the VS Code sidebar dispatches, such as `/speckit.companion.plan specs/042-export-csv`, into the chat. When the Companion commands aren't installed, or the spec is recorded as the Spec Kit workflow, the board sends the stock `/speckit.*` commands instead. The board spells a command the way the project registers it: a skill folder such as `.github/skills/speckit-plan/` (also under `.agents/skills/` and `.claude/skills/`) makes it `/speckit-plan`, a prompt or agent file such as `.github/prompts/speckit.plan.prompt.md` makes it `/speckit.plan`, and a skill wins when both exist. Only when the project has neither does the message add a sentence pointing the agent at the command's body. A step the board sent shows as running until the chat turn that took its message ends; a turn that was already running when you pressed the button does not end it. If the session never reports a turn, the step stops showing as running once its written document has sat unchanged for two minutes, and after two hours in any case. **New spec** asks which workflow to use, like the VS Code create-spec dialog: **Companion** (the default when installed) sends `/speckit.companion.specify`, **Spec Kit** sends `/speckit.specify`, and **Auto** sends `/speckit.companion.auto` and runs every step without pausing. Companion and Auto are disabled in a project where the companion extension is not installed. There, New spec and a spec's next-step card carry one line saying so, with **Install it**: it shows the install command with a Copy button, and **Ask Copilot to install it** sends the agent one line asking it to run that command and commit the skill files it generates. The line can be dismissed for the session.
-- **The run records itself, and the chat stays short.** Where the Companion context writer is in the project (`.specify/extensions/companion/scripts/write-context.py`), New spec and the plan, tasks and implement buttons come with the same lifecycle preamble VS Code sends (it is bundled from the extension's own source), so the run seeds `.spec-context.json` with the workflow and a specify start, and a stock Spec Kit run also closes specify itself. The board writes that preamble to a file in the project, `.speckit-companion/prompts/<step>-<spec folder>.md` (`specify-<timestamp>.md` for a new spec), and the chat message is the command line plus one sentence: "Before you start, read and follow the run instructions in `<that file>`." A Companion command's file is a few lines, because the command records its own steps; a stock Spec Kit command's file holds the full instructions, because nothing else records that run. The sent note's Show prompt and Copy give the short message and the file's path.
-- **A stock project gets no lifecycle instructions.** Without the context writer the message is the command and nothing else: no instruction file, no record for the agent to seed, nothing that could hold a step back. The board reads each step from the files: a written spec file means Specify is done, a written `plan.md` Plan, a written `tasks.md` Tasks, and ticked tasks Implement. Written means not empty, not the template Spec Kit copies in at the start of a step, and for `tasks.md` at least one task. A record that stopped behind the files is read the same way, and a step it left open stays open only while no document says otherwise. Where Companion's recorder is installed the record leads instead: a written document only fills in a step the record has no entry for, and never one past a step that is still open. For a step sent from the board, the board writes the step's start (the send) and finish (the end of that chat turn) to `.spec-context.json` itself, under the same lock the other writers take, forward only, and only when the document was written or changed after the send. The Overview shows a time only for those steps and says what the time measures; a step typed into the chat, a re-run of a step the record is already past, or a turn that ended without its document, has none.
-- **Agent actions.** The agent can drive the board too: `list_specs`, `get_spec`, `focus_spec`, `run_step`, `refresh`. Ask "what specs are still open?" or "show me the export spec" and the board follows.
-
-The board never writes a spec document. Where the Companion context writer is installed it never writes `.spec-context.json` either; the SpecKit commands it sends do that. Besides the stock-project record above, the one thing it writes is its own run instructions under `.speckit-companion/prompts/`. It adds a `.speckit-companion/.gitignore` holding `*` when there is none, so they stay out of your commits, and leaves an existing one alone. It replaces a spec's older file for the same step, and refuses to write when `.speckit-companion` or `prompts` is a symlink that leads outside the project.
+**[Docs](https://speckit-companion.dev/docs/copilot-app/install/)** · **[A run, step by step](https://speckit-companion.dev/docs/copilot-app/a-run-step-by-step)** · **[speckit-companion.dev](https://speckit-companion.dev)**
 
 ## Install
 
-**In this repo** it already works. `.github/extensions/speckit-companion/extension.mjs` loads this folder, and the Copilot app picks up project extensions from `.github/extensions/`.
-
-**In another project**, copy this folder to either place:
+The board is a [canvas extension](https://docs.github.com/en/copilot/how-tos/github-copilot-app/working-with-canvas-extensions). Copy this folder into your user folder and it shows up in every new session:
 
 ```bash
-# for one project, shared with the team
-cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion
-# for every project on your machine
-cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion
+git clone https://github.com/alfredoperez/speckit-companion
+cp -R speckit-companion/apps/copilot-canvas ~/.copilot/extensions/speckit-companion
 ```
 
-The Copilot app runs each session in a fresh git worktree cut from your default branch. So a project copy only shows up once it's merged, and until then the canvas is missing from the session. While you're trying the board from a branch, install it for your user instead. A one-line loader keeps it pointed at your checkout:
+Then open your project in the Copilot app, start a **new** session, and ask: **Open the SpecKit Companion canvas**. It is also in the session's **+** menu, under **Canvas** → **SpecKit Companion**.
+
+### Share it with your team
+
+Copy the folder into the project and commit it:
 
 ```bash
-mkdir -p ~/.copilot/extensions/speckit-companion
-echo "import '$PWD/apps/copilot-canvas/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
+cp -R speckit-companion/apps/copilot-canvas <project>/.github/extensions/speckit-companion
 ```
 
-Then open the project in the Copilot app, start a session, and ask for the **SpecKit Companion** canvas. It also appears in the session's **+** menu under **Canvas**.
+A project copy is code, so the app keeps it off until you accept it. Since Copilot app 1.1.26:
 
-**A project copy has to be accepted first (Copilot app 1.1.26 and later).** The app treats `.github/extensions/` as code that can run on your machine and keeps it off until you accept it. Choose **Review repository content** on the notice the app shows, or in the project's settings under **Repository trust**, then **Accept for new sessions**. Only sessions started after that load the board; the one that was open when you accepted never does, and there the agent opens an empty `speckit-companion.md` in the editor instead. The app accepts the exact files, so after any change under `.github/extensions/` (an updated board included) the project shows **Update available** and new sessions lose the board until you accept again. An unaccepted project turns every extension off in its sessions, the user-folder copy included.
+1. Merge the copy to your default branch. The app runs each session in a fresh worktree cut from that branch.
+2. Choose **Review repository content** on the notice the app shows, or in the project's settings under **Repository trust**. Then choose **Accept for new sessions**.
+3. Start a new session and open the canvas.
 
-The run buttons need the Companion commands in the project (`specify extension add companion …`, see the [spec-kit extension README](../speckit-extension/README.md)). Without them the buttons send the stock plan, tasks and implement commands (`/speckit-plan` or `/speckit.plan`, as the project registers them), and the board offers the install command.
+A session that was open when you accepted never gets the board. There the agent opens an empty `speckit-companion.md` in the editor: start another session. The app accepts the exact files, so after any change under `.github/extensions/` the project shows **Update available**, and new sessions lose the board until you accept again. A project with unaccepted content turns every extension off in its sessions, the user-folder copy included.
+
+## What you get
+
+### Every spec, and where it stands
+
+The list shows every spec folder under `specs/`, or under your `speckit.specDirectories`, most recently active first. Each row has its status, a four-step bar (specify, plan, tasks, implement) and its task count. Filter by Active, Done or All, or search by name or number.
+
+![The SpecKit Companion board open on a project with five specs. The list on the left gives each spec a status and a four-step bar, and Demo, Tasked is open on the right with its pipeline and a Run implement button.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-copilot-board.png)
+
+### A spec's documents, rendered
+
+Open a spec for its pipeline, the next step, and one tab per document: Overview, Spec, Plan, Tasks, research, data model and checklists. The Overview shows what the run recorded: the intent, the time each step took, what was verified, the decisions and the coverage. An Activity tab lists the run history. The documents look as they do in the VS Code viewer.
+
+### The next step is a button
+
+The card under the pipeline names the next step and runs it. The button sends one command into the chat, and your agent runs the step from there. **New spec** asks which workflow to use: **Companion**, **Spec Kit**, or **Auto**, which runs every step without pausing. Companion and Auto need the Companion Spec Kit extension in the project.
+
+![The same spec after tasks. The status reads Ready to Implement, three steps are done, the card reads Next: Implement with a Run implement button, and the Tasks tab reads 0/6 with Phase 1's tasks unticked.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-copilot-walk-tasked.png)
+
+### It updates while the agent works
+
+The board watches the spec folders. When the agent writes `plan.md` or ticks a task, the board changes without a refresh. A step you sent shows as **Running** until the chat turn ends. The first spec of a project shows up as soon as the agent creates it.
+
+![The same spec during implement. The status reads Implementing, Implement is running in the pipeline, the card reads Implement is running with a Resume button, and the Tasks tab reads 3/6 with T001 and T002 ticked and the files each one touched.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-copilot-walk-implementing.png)
+
+### A short message in the chat
+
+After a button is pressed, a note at the foot of the board names the command it sent. **Show prompt** shows the whole message and **Copy** copies it. Where Companion is installed the message is the command plus one sentence that points the agent at its run instructions, which the board writes to a file under `.speckit-companion/prompts/`. That folder is ignored by git.
+
+![The board after Run tasks was pressed. A note reads Sent /speckit.tasks to the chat, with Hide prompt and Copy beside it, and under it the short message that was sent and the path of its run instructions file with Copy path.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-copilot-sent-prompt.png)
+
+### Ask the agent
+
+The agent can drive the board too. Ask "which specs are still open?" or "show me the export spec" and the board follows.
+
+## Works with stock Spec Kit
+
+You do not need SpecKit Companion in the project. Without it:
+
+- **The board reads each step from the files.** A written spec means Specify is done, a written `plan.md` Plan, a written `tasks.md` Tasks, and ticked tasks show how far Implement is. An empty file, or the template Spec Kit copies in when a step starts, does not count.
+- **The buttons send the stock commands**, spelled the way your project registers them. A project whose commands are skills, such as `.github/skills/speckit-plan/`, gets `/speckit-plan`. One whose commands are prompt files, such as `.github/prompts/speckit.plan.prompt.md`, gets `/speckit.plan`.
+- **The message is the command and nothing else.**
+- **Steps you send from the board are timed.** The board notes when it sent the step and when that chat turn ended, and the Overview shows a time for those steps only.
+- **The board offers to install Companion.** One line on New spec and on the next-step card says it is missing. **Install it** shows the command with a Copy button, and **Ask Copilot to install it** asks the agent to run it. You can dismiss the line for the session.
+
+![The next-step card in a project without Companion. A line says SpecKit Companion is not installed in this project, so the standard Spec Kit commands run, with Install it opened to show the specify extension add command, a Copy button and Ask Copilot to install it.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-copilot-install-hint.png)
+
+With the Companion Spec Kit extension in the project (`specify extension add companion …`, see the [spec-kit extension README](../speckit-extension/README.md)), the buttons send the `/speckit.companion.*` commands and every step is recorded: times, decisions and what was verified. A spec keeps the workflow it was started with, so a run never switches halfway.
+
+## What the board writes
+
+The board never writes a spec document. It writes two things:
+
+- Its own run instructions under `.speckit-companion/prompts/`, with a `.gitignore` beside them so they stay out of your commits.
+- In a stock project, the start and finish of each step it sent, in the spec's `.spec-context.json`. Where Companion is installed the board does not write that file. The commands it sends do.
 
 ## Good to know
 
-- **Opening the board starts nothing.** An agent that is only asked to open a canvas has been seen to go looking for work, so the canvas says "if you were only asked to open it, stop" in three places the agent reads: a rule appended to the session's system message, the canvas description, and the status of the open result. The rule leaves `/speckit` commands alone, so New spec still runs. If your agent still wanders, ask "Only open it, then wait for me."
-- **Copilot worktrees have no `node_modules`.** Each session runs in a fresh worktree, so an implement step that runs tests installs the project's dependencies first. Expect that on every canvas run.
-- **Companion's skills must be real, committed files.** The worktree is cut from committed `main`, so a `--dev` install, whose skills are symlinks into `.specify/extensions/companion/.specify-dev/`, leaves the agent without `/speckit.companion.*`. If the commands don't resolve in a session, check that `.github/skills/speckit-companion-*/SKILL.md` are real files in the commit. The e2e sandbox script checks this for you.
+- **Opening the board starts nothing.** The canvas tells the agent to stop after opening it. If your agent still goes looking for work, ask "Only open it, then wait for me."
+- **Copilot worktrees have no `node_modules`.** Each session runs in a fresh worktree, so an implement step that runs tests installs the project's dependencies first.
+- **Companion's commands must be committed files.** The worktree is cut from your committed default branch. If `/speckit.companion.*` does not resolve in a session, check that `.github/skills/speckit-companion-*/SKILL.md` are real files in the commit, not symlinks from a `--dev` install.
+- **In this repo it already works.** `.github/extensions/speckit-companion/extension.mjs` loads this folder.
+- **Trying it from a branch?** A project copy only shows up once it is merged, so point your user folder at your checkout:
+
+  ```bash
+  mkdir -p ~/.copilot/extensions/speckit-companion
+  echo "import '$PWD/apps/copilot-canvas/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
+  ```
+
+## The other places SpecKit Companion runs
+
+- **VS Code**: the [SpecKit Companion extension](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion) has the sidebar, the spec viewer with review comments, and the Overview.
+- **Claude Code**: the [SpecKit Companion mod](https://speckit-companion.dev/docs/claude-code/install/) shows the run in a band above the prompt and a pane beside the transcript.
+- **Spec Kit**: the Companion Spec Kit extension records each run. All three surfaces read that record.
+
+Docs: [install](https://speckit-companion.dev/docs/copilot-app/install/), [navigate the board](https://speckit-companion.dev/docs/copilot-app/navigate-the-board), [run the steps](https://speckit-companion.dev/docs/copilot-app/run-the-steps). Changes to the board are listed in the [changelog](https://speckit-companion.dev/changelog/). MIT licensed.
 
 ## Develop
 

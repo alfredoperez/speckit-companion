@@ -1,43 +1,10 @@
 # SpecKit Companion for Claude Code
 
-A [Claude Code mod](https://code.claude.com/docs/en/plugins/mods/overview) that shows where your Spec Kit run stands without leaving the prompt. It reads the same `.spec-context.json` run record as the VS Code viewer and the GitHub Copilot app board, so all three show the same steps, times and task counts.
+Follow a [Spec Kit](https://github.com/github/spec-kit) run without leaving Claude Code. This [mod](https://code.claude.com/docs/en/plugins/mods/overview) adds a band above the prompt that says where the run stands, and a pane beside the transcript with the steps, their times, the documents and the tasks ticking off. It works with stock Spec Kit and with [SpecKit Companion](https://speckit-companion.dev), and it only reads.
 
-Tested on Claude Code 2.1.287, the first version with mods on by default. The mods API can change between releases.
+![A Claude Code terminal with the mod's pane beside the transcript on its Run tab: Specify, Plan and Tasks ticked with their times, Implement running, the documents, and three of six tasks ticked. The band above the prompt names the spec and reads Plan done, Tasks 3/6, Implement running.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-mod-window.png)
 
-## What it shows
-
-- **A band above the prompt** with the followed spec and where its run stands, such as `042-export-csv · Plan done · Tasks 7/12 · Implement running`. A finished spec reads `Completed · Tasks 12/12 · 38m active`.
-- **A pane beside the transcript** with three tabs. Press `1`, `2` or `3` to switch, and the spec's title and status stay at the top of each.
-  - **Run** has the four steps (specify, plan, tasks, implement) with the time each one took, the total active time, and the task list by phase with the task in flight marked. A step shows a time only when the record measured it from its own start to its own finish, and the waits between steps count toward nothing. When a small change is specified, planned and tasked in one pass, Plan and Tasks read `with Specify`, because their time is inside that step.
-  - **Overview** has what the run record says about the change: the intent, the approach, the size and workflow, what is out of scope, the decisions with the reason for each, what was verified and how each check came out, the open concerns, and how many requirements are covered by tests. A part the record does not have is left out. A check that failed says `failed` in red.
-  - **Specs** lists the most recent specs so you can pick the one to follow.
-- **`/speckit-tracker`** to choose the spec the band and pane follow. Bare `/speckit-tracker` opens the pane on its Specs tab. `/speckit-tracker 42` or `/speckit-tracker export-csv` follows that spec, and `/speckit-tracker auto` goes back to following the most recently active one. Your pick is remembered for the project. `/spec` is a shorter name for the same command.
-
-Everything updates while the agent works: after each tool call, and every few seconds for changes made outside the session.
-
-The colours come from your Claude Code theme: a finished step is green, the running step, the next step in the band and the tab in view use the warning colour, a failed check is red, and times and secondary facts are dim. Each section heading is in capitals with a colour of its own, a bar of block characters shows the ticked tasks out of the total (green once all are ticked), and the foot of the pane lists the keys: `1` Run, `2` Overview, `3` Specs, `↵` Read, `o` Editor, `b` Back, `Esc` Prompt.
-
-### Open a step's document
-
-On the Run tab each step is a control, and every step and document that has a file ends in a dim `↵ read`. Move to it with Tab or the arrow keys and press Enter to read that step's file inside the pane, rendered as markdown: Specify opens the spec, Plan opens `plan.md`, and Tasks and Implement open `tasks.md`. When the record has a summary of what each finished task did, Implement lists those first. The first line names the file, as a link to it where your terminal opens file links, and `b` goes back to the step you came from. The document refreshes as the agent writes it. A step whose file does not exist yet says `not written yet` and cannot be opened, and a very long file shows its first 60,000 characters with a line saying how much was left out.
-
-### Open a file in your editor
-
-Press `o` to open a file in your editor: the document you are reading, or on the Run tab the step or document the focus is on. The mod runs the first of these that works: `$VISUAL` or `$EDITOR` when it names an editor with a window of its own (`code`, `cursor`, `zed`, `subl` and the like, never `vim`), `cursor` or `code` when the terminal is that editor's own, `code`, then the system's `open` or `xdg-open`. When none of them works the file's full path is copied to the clipboard and a toast says so.
-
-### Without a run record
-
-A stock Spec Kit project has no `.spec-context.json`, because the Companion Spec Kit extension is what writes it. The pane then works from the files in the spec folder alone:
-
-- **A timeline from the files.** Each step says when its document was last written, such as `✓ Plan  written 7:18 PM · 4m after the spec`, and a file from another day carries its date. Implement reads `3 of 10 tasks · last change 2m ago` while tasks are being ticked. A line under the steps says these are file times, not measured ones, and a step the record did measure never shows a file time.
-- **What is happening now.** While a step is being written the line under the title reads `Writing the plan` or `Implementing: T004 next`, from which files exist and how lately each changed. Once the turn ends it reads as the band does, `Plan written · Tasks next`, or `Implement stopped at 9 of 10 · T010 left` when tasks remain. The band: `001-clear-completed · Plan written 4m ago · Tasks next`.
-- **Documents.** One line per file in the spec folder with what it holds: the spec's stories, requirements, success criteria and open questions, the files the plan names, the tasks by phase and how many can run in parallel, the decisions in the research, and how much of each checklist is checked. Press a line to read that file, including the ones in `checklists/` and `contracts/`. A count the file does not give is left out.
-- **An Overview from the spec.** The feature's description, its user stories with their priority, the open questions, the first five requirements, the success criteria and the plan's summary.
-- **The next command.** The last line of the Run tab names it, such as `Next: /speckit-tasks`, or the `/speckit-companion-*` command with the spec folder when the project has the Companion skills.
-
-A run that has a record shows the Documents block and the next command too, and its Overview adds the user stories and open questions from the spec.
-
-The mod only reads. It never writes a spec file or the run record, and never sends a prompt: you run the `/speckit-*` commands yourself. The one command it runs is your editor's, when you press `o`.
+**[Docs](https://speckit-companion.dev/docs/claude-code/install/)** · **[A run, step by step](https://speckit-companion.dev/docs/claude-code/a-run-step-by-step)** · **[speckit-companion.dev](https://speckit-companion.dev)**
 
 ## Install
 
@@ -46,15 +13,100 @@ claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.
 claude plugin install speckit-companion@speckit-companion
 ```
 
-Run `/reload-plugins` in a session that is already open. To check it loaded, run `/plugin`: the line under the tabs names `speckit-companion` among the active mods.
+You need Claude Code 2.1.287 or later, the first version with mods on by default. Check with `claude --version`.
 
-The pane sits beside the transcript in a terminal at least 144 columns wide, and opens there by itself: at the start when the project has a spec, or as soon as the first one appears. It opens once, so a pane you closed stays closed until you run `/speckit-tracker`. In a narrower terminal it waits until you run `/speckit-tracker`, then sits above the prompt.
+In a session that is already open, run `/reload-plugins`. To check it loaded, run `/plugin`: the line under the tabs names `speckit-companion` among the active mods. To update later, run `claude plugin update speckit-companion@speckit-companion`.
 
-## Where it draws
+The pane opens by itself in a terminal at least 144 columns wide: at the start when the project has a spec, or as soon as the first one appears. It opens once, so a pane you closed stays closed until you run `/speckit-tracker`. In a narrower terminal, run `/speckit-tracker` and the pane sits above the prompt.
 
-The Claude Code terminal and the Code tab of the Claude Desktop app draw the band and the pane. The VS Code extension's chat panel and `claude -p` draw nothing, so there `/speckit-tracker` answers with text: the followed spec, its band line, and the recent specs.
+## What it shows
 
-The spec folders are read from `specs/` and `.specify/specs/`, or from `speckit.specDirectories` in `.vscode/settings.json` when you set it.
+Both the band and the pane follow one spec at a time. They update while the agent works: after each tool call, and every few seconds for changes made outside the session.
+
+### The band
+
+One line above the prompt: the spec you are following, a bar of ticked tasks, and where the run stands. A finished spec reads `Completed · Tasks 12/12 · 38m active`.
+
+![The band, one line: a yellow dot, 041-profile-photo-upload, a bar half filled, Plan done, Tasks 3/6, and Implement running in yellow.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-mod-band.png)
+
+### The pane
+
+Three tabs. Press `1`, `2` or `3` to switch. The spec's title and status stay at the top of each.
+
+| Tab | What it shows |
+| --- | --- |
+| **Run** | The four steps (specify, plan, tasks, implement) with the time each one took, the spec's documents, and the task list by phase with a bar of ticked tasks |
+| **Overview** | What the run recorded about the change: the intent, the approach, the decisions and why, what was verified, and any concerns |
+| **Specs** | The recent specs, to pick the one to follow |
+
+![The pane on its Run tab for Profile photo upload, Implementing. Specify, Plan and Tasks are ticked with their times, Implement reads running, six documents are listed with a read hint on each, the task bar reads 3/6, and tasks T001 to T003 are ticked under Phase 1. The foot lists the keys.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-mod-run.png)
+
+A step shows a time only when the run record measured it, and the waits between steps count toward nothing. When a small change is specified, planned and tasked in one pass, Plan and Tasks read `with Specify`.
+
+The colours come from your Claude Code theme. A finished step is green, the running step is the warning colour, a failed check is red, and times are dim. Each section has a heading in capitals.
+
+### Keys
+
+The foot of the pane lists them.
+
+| Key | What it does |
+| --- | --- |
+| `1` `2` `3` | Switch to Run, Overview or Specs |
+| Tab or the arrow keys | Move between steps and documents |
+| `↵` | Read the step or document you are on, inside the pane |
+| `o` | Open that file in your editor |
+| `b` | Go back from a document |
+| `Esc` | Give the keyboard back to the prompt |
+
+### Read a step's document
+
+On the Run tab, every step and document that has a file ends in `↵ read`. Move to it and press Enter to read it in the pane, rendered as markdown. Specify opens the spec, Plan opens `plan.md`, and Tasks and Implement open `tasks.md`. Press `b` to go back. The document refreshes as the agent writes it. A step whose file does not exist yet says `not written yet`.
+
+![The pane showing specs/_02_demo-tasked/plan.md after Enter on Plan. Under the path are b: Back and o: Open in editor, then the plan's title, its Approach and its list of files.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-mod-document.png)
+
+### Open a file in your editor
+
+Press `o` on a step or a document, or while you are reading one. The file opens in the editor named by `$VISUAL` or `$EDITOR` when that editor has a window of its own (`code`, `cursor`, `zed`, `subl` and the like, never `vim`), else in Cursor or VS Code, else in your system's default app. When none can be started, the file's path is copied to the clipboard and a toast says so.
+
+### Switch specs with `/speckit-tracker`
+
+| You type | What happens |
+| --- | --- |
+| `/speckit-tracker` | The pane opens on its Specs tab |
+| `/speckit-tracker 42` or `/speckit-tracker export-csv` | The band and the pane follow that spec |
+| `/speckit-tracker auto` | They go back to following the most recently active spec |
+
+Your pick is remembered for the project. `/spec` is a shorter name for the same command.
+
+## Works with stock Spec Kit
+
+A stock Spec Kit project has no run record, because the Companion Spec Kit extension is what writes it. The mod then works from the files in the spec folder:
+
+- **Each step says when its document was written**, such as `✓ Plan  written 7:18 PM · 4m after the spec`. Implement reads `3 of 10 tasks · last change 2m ago` while tasks are being ticked. A line under the steps says these are file times, not measured ones.
+- **The line under the title says what is happening now**, such as `Writing the plan` or `Implementing: T004 next`. Once the turn ends it reads `Plan written · Tasks next`.
+- **Documents** lists each file in the spec folder with what it holds: stories, requirements and open questions in the spec, tasks by phase, decisions in the research, and how much of each checklist is checked.
+- **The Overview comes from the spec**: the description, the user stories, the open questions, the first requirements, the success criteria and the plan's summary.
+- **The last line names the next command**, such as `Next: /speckit-tasks`.
+
+![The pane on its Run tab in a stock Spec Kit project. The line under the title reads Implementing: T004 next. Specify, Plan and Tasks each read written 10:15 AM, Implement reads 3 of 6 tasks, last change just now, and the last line reads Next: /speckit-implement.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-mod-run-files.png)
+
+With the [Companion Spec Kit extension](https://speckit-companion.dev/docs/install) in the project, each step shows the time it took, and the Overview tab adds the run's intent, decisions and checks.
+
+## Good to know
+
+- **The mod only reads.** It never writes a spec file or the run record, and never sends a prompt. You run the `/speckit-*` commands yourself. The one command it runs is your editor's, when you press `o`.
+- **Where it draws.** The Claude Code terminal and the Code tab of the Claude Desktop app draw the band and the pane. The VS Code extension's chat panel and `claude -p` draw nothing, so there `/speckit-tracker` answers with text: the followed spec, its band line, and the recent specs.
+- **Where it looks for specs.** In `specs/` and `.specify/specs/`, or in `speckit.specDirectories` from `.vscode/settings.json` when you set it.
+- **Tested on Claude Code 2.1.287.** The mods API can change between releases.
+
+## The other places SpecKit Companion runs
+
+The mod reads the same run record as the other two surfaces, so all three show the same steps, times and task counts.
+
+- **VS Code**: the [SpecKit Companion extension](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion) has the sidebar, the spec viewer with review comments, and the Overview.
+- **GitHub Copilot app**: the [spec board](https://speckit-companion.dev/docs/copilot-app/install/) lists every spec next to the chat and runs the next step from a button.
+
+Docs: [install](https://speckit-companion.dev/docs/claude-code/install/), [what it shows](https://speckit-companion.dev/docs/claude-code/what-it-shows), [switch specs](https://speckit-companion.dev/docs/claude-code/switch-specs). Changes are in the [changelog](./CHANGELOG.md). MIT licensed.
 
 ## Develop
 

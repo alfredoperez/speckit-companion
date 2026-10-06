@@ -5,15 +5,9 @@
 ![GitHub Release](https://img.shields.io/github/v/release/alfredoperez/speckit-companion?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-### [speckit-companion.dev](https://speckit-companion.dev)
+**[speckit-companion.dev](https://speckit-companion.dev)** · **[Docs](https://speckit-companion.dev/docs/)** · **[Install](https://speckit-companion.dev/docs/install)** · **[Your first spec](https://speckit-companion.dev/docs/start/your-first-spec/)** · **[Changelog](https://speckit-companion.dev/changelog/)**
 
-**[See it running](https://speckit-companion.dev)** · **[Docs](https://speckit-companion.dev/docs/)** · **[Getting started](https://speckit-companion.dev/docs/start/your-first-spec/)** · **[Changelog](https://speckit-companion.dev/changelog/)**
-
-**What's new in 0.35.0:** move a node to another phase and drag hooks between steps in the Pipeline Builder, which now also works in a narrow side panel. Step times show the work and not the wait, links between spec documents open in the viewer, and commands wait until the terminal is ready instead of losing their first letter. Spec Kit's converge step and its bug reports now show up too. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
-
-The site shows each feature as a short clip of the real thing — the Overview a finished run leaves behind, inline review, living specs — rather than describing it.
-
-**One workspace for the whole life of a spec, not just the review.** SpecKit Companion is a spec workspace inside VS Code for developers running AI agents through spec-driven development. See where every feature stands at a glance, read specs as real documents, review and correct them the way you review pull requests, watch runs move live, keep a record of what the AI actually did, and keep living specs that stay true after the code ships. Its own pipeline writes specs **60 to 68% leaner with the same correctness** ([the measured numbers](https://speckit-companion.dev/docs/reference/configuration#workflow-choice)) — and a vague requirement still dies here before it becomes 200 lines of wrong implementation.
+SpecKit Companion is a VS Code extension for developers who build with an AI assistant and [Spec Kit](https://github.com/github/spec-kit). It shows every spec in your project, renders each one as a page you can read and comment on, follows a run while it happens, and keeps a record of what the AI did and why. Your specs stay plain markdown in your repo.
 
 <!-- The hero is the Overview GIF (built from content/media/feature-clips/overview): frame
      zero is a representative still by design, so it reads even paused. The composed C1
@@ -21,104 +15,128 @@ The site shows each feature as a short clip of the real thing — the Overview a
      here); the retired illustrated hero stays on disk at docs/screenshots/hero.jpg. -->
 ![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
-<!-- Walkthrough video link pulled pending Alfredo's review of the video itself. The plan is per-section GIFs (content/media/feature-clips) instead of one long walkthrough; the file itself stays at docs/media/walkthrough.mp4. -->
+**What's new in 0.35.0:** move a node to another phase and drag hooks between steps in the Pipeline Builder, which now also works in a narrow side panel. Step times show the work and not the wait, links between spec documents open in the viewer, and commands wait until the terminal is ready instead of losing their first letter. Spec Kit's converge step and its bug reports now show up too. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
 
-## Features
+## Install
 
-### Visual Spec Viewer
+Search for **SpecKit Companion** in the Extensions view, or run:
 
-Specs render as rich, structured pages, not walls of markdown: requirements as labeled rows, acceptance scenarios as clean Given/When/Then sentences, tasks grouped under their phases, and mermaid diagrams inline with zoom. A quiet footer advances the spec one click at a time, and it never advances ahead of a running step. The markdown stays in your repo, never on a server.
+```bash
+code --install-extension alfredoperez.speckit-companion
+```
+
+Open a folder, click the SpecKit icon in the activity bar, and pick your AI assistant when it asks. That is enough to read, review and run specs. It is on Open VSX too.
+
+### Install the Spec Kit extension
+
+This second half is optional. It records each run (step times, decisions, checks) and brings the leaner Companion pipeline, the Resume button and living specs. Add it from your project root:
+
+```bash
+specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
+```
+
+That command needs a Spec Kit CLI that has extensions. The full walkthrough, with what to do when a step fails, is on the [install page](https://speckit-companion.dev/docs/install).
+
+## What you get
+
+### Specs you can read
+
+A spec opens as a page, not a wall of markdown. Requirements are labeled rows, acceptance scenarios read as Given, When, Then, tasks sit under their phases, and mermaid diagrams render inline with zoom. A footer offers the next step, and never moves ahead of a step that is still running.
 
 ![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](docs/screenshots/generated/spec-viewer.gif)
 
-### Inline Review Comments
+### Review comments on any line
 
-Comment on specific lines of a spec, exactly like a pull request review. Comments persist the moment you add them, survive closing the tab, and are committable, so a half-finished review picks up next session or on another machine. Click **Refine** and the pending comments are dispatched to your AI for an in-place edit of the source.
+Comment on a line of a spec the way you review a pull request. A comment is saved the moment you add it and can be committed, so a review picks up next session or on another machine. Click **Refine** and your pending comments go to your assistant, which edits the spec in place.
 
 ![Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates](docs/screenshots/generated/inline-comments.gif)
 
-### Watch a run in flight
+### A run you can watch
 
-A run is not a black box you check on afterwards. The pipeline rail unlocks phase by phase, one button always offers the next step, tasks tick over live while implement runs, and the actions stay locked until the step settles — then the Overview shows exactly how long each phase took.
+The pipeline rail unlocks step by step, one button always offers the next step, and tasks tick over while implement runs. The actions stay locked until the step settles.
 
 <!-- Rendered from content/media/feature-clips/run-in-flight (see its STORYBOARD.md); frame zero
      is the specified-state rail at rest, so it reads even paused. -->
 ![A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing](docs/screenshots/generated/run-in-flight.gif)
 
-### Overview: the run's story
+### An Overview of what the run did
 
-A spec with recorded activity opens on its Overview: why the spec exists, its constraints, the decisions made (with rejected alternatives), what was verified, and a requirement-to-test traceability table. It is the dossier a future session, a reviewer, or a teammate reads instead of re-asking you.
+A spec with a recorded run opens on its Overview: why the spec exists, how long each step took, the decisions made and what each one rejected, what was verified, and which requirement is covered by which test. A reviewer or a later session reads it and does not have to ask you. It needs the Companion Spec Kit extension, which writes the record.
 
-<!-- The animated Overview tour (overview.gif) moved to the top of this README as the hero;
+<!-- The animated Overview tour (overview.gif) is the hero at the top of this README;
      this section keeps the annotated still (A6 story + the capture script's callout pass). -->
 ![The completed Overview dossier with its honest per-phase timing called out: run status, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the coverage table](docs/screenshots/generated/overview-annotated.png)
 
-### A sidebar that scales
+### A sidebar for every spec
 
-Specs grouped by lifecycle with live status per document, the assistant each spec was last sent to, resume-where-you-left-off on hover, filter and sort, multi-select bulk actions, and views for living capability specs and AI steering documents. A workspace with hundreds of finished specs opens to a short, readable list.
+Specs are grouped by where they stand, with live status on each document and the assistant each spec was last sent to. Hover a spec to resume it. Filter, sort, or select several at once. A workspace with hundreds of finished specs still opens to a short list.
 
 ![The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath](docs/screenshots/generated/specs-sidebar.gif)
 
-### Pick a pipeline once, run it end to end
+### Bugs and ideas beside your specs
 
-Choose stock Spec Kit or the leaner **SpecKit Companion** workflow in a single setting, and every step of the run dispatches that choice. The Companion pipeline writes specs roughly 60 to 68% smaller, produces zero throwaway side files, and right-sizes itself: a small change skips the ceremony, a large one keeps the full specify, plan, tasks, implement flow. In our benchmark, correctness was a tie; the difference is ceremony, not outcomes. Details and the measured numbers: [Workflow choice](https://speckit-companion.dev/docs/reference/configuration#workflow-choice).
+Spec Kit's bug flow and its idea assessment each get a pane under Specs. Bugs are grouped as To fix, To test, Verified and Closed. Ideas are grouped as Assessing and Decided, with the verdict on each row. Press **+** on a pane to open **New Bug** or **New Idea**, describe it, and send it to your assistant. A pane offers to install its Spec Kit extension when it is missing.
+
+![The SpecKit side bar with three panes: Specs with its Active and Completed groups, Bugs grouped as To fix, Verified and Closed with a severity and outcome on each row, and Ideas grouped as Assessing and Decided with the verdict beside each idea.](docs/screenshots/live-bugs-ideas-panes.png)
+
+A bug opens on its **Story**: one sentence saying where it stands, then what was wrong, what changed and how it was verified. The button at the foot of the page is the next step: **Fix bug**, then **Test fix**.
+
+![A bug open on its Story tab, badge Verified. The page starts with Fixed and verified, one line of facts, then the first timeline step, What was wrong, dated from the assessment.](docs/screenshots/live-bug-story.png)
+
+A decided idea opens on its **Decision**: the verdict, the reason for it, and a scorecard. From a go decision you can create the spec.
+
+![An idea open on its Decision stage, badge Go, with all five stages checked in the rail. The page starts with Go and the first sentence of the rationale, and the Scorecard begins below with Problem validity rated strong.](docs/screenshots/live-idea-decision.png)
+
+When a report has an open question, click **Answer**, type your reply and send it. Your assistant runs the report's command again with your answer, and the report comes back settled.
+
+![A bug's Assessment tab scrolled to Open Questions. The question carries a Needs an answer label and an Answer link, and the answer box under it is open with a reply typed in and a Send answer button.](docs/screenshots/live-report-answer.png)
+
+Guides: [Fix a bug](https://speckit-companion.dev/docs/ide/fix-a-bug) and [Assess an idea](https://speckit-companion.dev/docs/ide/assess-an-idea).
+
+### After the tasks: GitHub issues and Converge
+
+On the Tasks tab, **Other actions** has **Create GitHub issues**: one issue per task, sent as Spec Kit's `/speckit.taskstoissues`. Companion asks first, because the issues are real. It needs a GitHub remote and the GitHub MCP server.
+
+![The Tasks tab with the footer reading Next: Implement, then Regenerate, Other actions and Implement. Other actions is open on Analyze and Create GitHub issues.](docs/screenshots/live-tasks-create-issues.png)
+
+A spec whose build is done has a **Converge** button in the footer and in its sidebar menu. It sends Spec Kit's `/speckit.converge`, which checks the code against the spec and adds any work still missing to the task list.
+
+![The Overview of a completed spec with the footer reading Run complete, then Converge, Archive and Reactivate, and no forward button.](docs/screenshots/live-converge-footer.png)
+
+### Stock Spec Kit or the leaner Companion pipeline
+
+Choose the workflow once in `speckit.defaultWorkflow`, and every step of a run sends that choice. The Companion pipeline writes specs about 60 to 68% smaller, leaves no throwaway side files, and sizes itself to the change: a small one skips the ceremony, a large one keeps the full specify, plan, tasks, implement flow. In our benchmark correctness was a tie. The numbers are under [Workflow choice](https://speckit-companion.dev/docs/reference/configuration#workflow-choice).
 
 <!-- Numbers quoted from the website's Configuration reference (workflow-choice section); change them there
      first, then regenerate this image (C2 in ReadmeCapture.stories.tsx). -->
 ![The benchmark in four tiles: 60 to 68% smaller specs, zero throwaway side files, ceremony right-sized to the change, and a 5.0 out of 5 correctness tie](docs/screenshots/generated/pipeline-stats.png)
 
-### Living specs: one per capability, wherever you keep them
+### Living specs
 
-Feature specs describe one change and then go quiet. **Living specs** are durable: one per capability (checkout, auth, billing), loaded into the AI's context when a feature touches that area, and folded back up to date when the feature ships. Keep them together in a central `capabilities/` folder, or colocated, each spec right next to the feature it covers, with one reversible command to move between the two. Either way the sidebar shows per-capability test coverage and flags drift the moment the code moves on, the viewer shows each requirement as a card coloured by its state, and one sync pass updates every affected spec from your current changes. Reviewing one is a pass, not a chore: approve every adopted requirement in one press with five seconds to undo, remove one the same way, see at a glance which requirements this branch added, and read what each requirement leans on and what leans on it. Open any source file and the status bar says how many living specs describe it, one click away from the exact requirement, or reach any requirement from the command palette with **SpecKit: Open Living Spec**. Opt-in, append-only, and never a failed run. [Living specs](./apps/speckit-extension/docs/living-specs.md)
+A feature spec describes one change and then goes quiet. A **living spec** describes one capability, such as checkout or billing, and stays current. Your assistant reads it when a feature touches that area, and it is updated when the feature ships. Keep living specs in one folder or next to the code they describe.
+
+The sidebar shows test coverage for each capability and flags drift when the code moves on. The viewer shows each requirement as a card you can approve or remove, and the status bar says how many living specs describe the file you have open. Living specs are opt-in. Guide: [Living specs](https://speckit-companion.dev/docs/results/living-specs).
 
 <!-- This composition (Storybook story C3 in ReadmeCapture.stories.tsx, captured by
      tooling/scripts/capture-docs-images.mjs) is also the storyboard seed for the future Living
      Specs GIF: sidebar row → click → viewer opens → drift → Update. -->
 ![The Living Specs pair: the sidebar's Living Specs view with per-capability coverage counts and drift flags, beside the viewer open on the photo-storage capability with its LIVING badge, covered globs, purpose, and WHEN/THEN requirement rows](docs/screenshots/generated/living-specs-pair.png)
 
-### Also in the box
+### A pipeline you can see and change
 
-- **Bring your own SDD process.** Custom phases, custom commands, custom output files; the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
-- **Bugs and ideas beside your specs.** Spec Kit's bug flow and idea assessment each get a pane in the sidebar: bugs grouped by To fix, To test, Verified and Closed, ideas by Assessing and Decided with the verdict. Start one with the + on its pane, and move it along with the button at the bottom of its page: Fix bug, Test fix, the next assessment stage, or Create spec from this idea. A pane offers to install its Spec Kit extension when it is missing. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
-- **Know which assistant has which spec.** A spec you run from Companion shows the assistant's name on its sidebar row and in the viewer header, and Show Terminal brings its terminal to the front while that terminal is open. It cannot jump to a chat panel or tell you an assistant is waiting for an answer. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
-- **Offline-first and careful by default.** Fonts and icons ship in the `.vsix`, destructive actions need confirmation or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer)
+The **Pipeline Builder** draws the Companion pipeline your project runs: each step as a column, its phases, the nodes in them, and the hooks attached. Open it from the circuit icon at the top of the Specs sidebar.
 
-<!-- Rendered from content/media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
-     and value on screen is real: change the contributed configuration in package.json
-     and this composition is stale. -->
-![Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches](docs/screenshots/generated/make-it-yours.gif)
+![The Pipeline Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark.](docs/screenshots/generated/builder-board.png)
 
-<!-- Cross-promo banner (C5 in ReadmeCapture.stories.tsx, captured by
-     tooling/scripts/capture-docs-images.mjs). The whole image is a link to the engine
-     extension's install guide; the extension README carries the mirror banner
-     (C6) pointing back at this extension. -->
-[![Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run](docs/screenshots/generated/banner-install-engine.png)](https://speckit-companion.dev/docs/install)
+From the board you can:
 
-### See the pipeline your project runs
+- **Attach your own work** before or after any phase: a skill, an instruction, a shell command or a node of your own.
+- **Rearrange nodes** by dragging, or move one to another phase.
+- **Rewrite a node** in your own words. An upgrade never overwrites your copy.
+- **Add a step** of your own, with its own `/speckit.companion.<name>` command.
+- **Keep several workflows** and switch between them, starting from what you run today or from one Companion ships.
 
-The Companion pipeline is assembled: steps hold **phases**, phases hold **nodes**, and a project can rearrange them, attach its own work at any boundary, reshape a document template, or change where the size verdict routes — all from `.specify/companion.yml`.
-
-Open it from the **circuit** icon at the top of the Specs sidebar, or from the palette. The steps are columns in run order, with `auto` in the tail of the row because it runs the others rather than taking a turn among them. Inside each step: its phases, the nodes in them, and the hooks attached, one line each under the words `before` and `after`, grouped under the mark of whoever registered them — yours, or an installed extension's. Full guide: [Pipeline builder](https://speckit-companion.dev/docs/customize/pipeline-builder).
-
-**One colour means yours.** Hooks, nodes you rewrote and template sections you replaced all carry the same mark, and nothing else does, so what your project changed is answerable at a glance. Click a node to read its instructions right there, with what it writes, what it needs, and whether it can be moved.
-
-**Several ways of working.** A workflow is a whole named configuration in `.specify/companion/workflows/`. Switch between them from the header and everything swaps at once — node order, hooks, templates, routing — so a one-line fix and a client deliverable can run different pipelines out of the same repository. Nodes and fragments are shared across all of them. Two entries are always there: **As shipped** is Companion with nothing changed, the thing to compare against, and **This project** is whatever your own `companion.yml` says. While the shipped one is in force your configuration is parked rather than deleted — the board draws your hooks where they would attach, dashed and struck through and labelled `parked`, and one click puts them back.
-
-**Start from something.** A new workflow offers what to begin with as cards: what you run today, or one of two whole configurations Companion ships. **Classic spec-kit** puts the stock document shapes back — prioritized P1/P2/P3 user stories, the full Technical Context block. **Brownfield** is for changing a system that already exists: the spec says only what changes, the task list is attacked before it runs, and a person opens the thing before it counts as done. Whichever you pick is copied in and yours to change from there.
-
-**Add a step of your own.** **Add step** in the header gives the run a turn it did not have, and the `+` in the gap between two lanes puts one in that place — a review pass after implement, an audit you launch when you want it. Say where it goes and what it writes; the panel writes a step that already runs and opens the one node there is to edit. It gets its own `/speckit.companion.<name>` command and everything a shipped step has.
-
-**Every phase says what it can do.** One `+` on each phase rule opens the lot: add a hook, add a node, rename the phase, split it, merge it into its neighbour. Nothing waits for a hover, and a row that cannot run here is shown greyed with the reason, so a control you never needed still teaches you it exists.
-
-**Every write says what it did.** A line at the foot of the panel names the change, offers **Undo** where there is one, and reminds you that a change is not in the pipeline until Build writes it. Build and Preview answer in the header too, rather than taking the editor to say they worked.
-
-**Rearrange it.** Drag a node onto another to move it — within its phase, or into a different one — or use **Move up** and **Move down**, which sit on the row of its panel that says it can move. A node free to move shows a grip; one held in place by something that reads it says `held` and names what is holding it, so nothing looks draggable and then refuses. The new order is saved to `companion.yml` with the rest of the file untouched.
-
-**Attach your own work.** Every phase carries a `+` holding **Add hook**, which asks where it runs and what it is — a **skill** you already have, an **instruction**, a shell **command**, or one of your own nodes. Reach for the skill first: a skill you have written already holds the instructions, so the pipeline points at it instead of keeping a copy that drifts.
-
-**Rewrite a node in your own words.** Click a node, press **Edit**, and save: that write is what copies it to `.specify/companion/nodes/<step>/<node>.md`, so making it yours and doing the thing you came to do are one action. Build, and your version is what your assistant reads; the node is marked `yours` until **Use the shipped node** hands it back, with an undo in the status line. Nothing under `apps/speckit-extension/` is touched, so an upgrade never overwrites your copy — and never silently reverts it either.
-
-Build from the same panel, or from the palette:
+Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder). It needs the Companion Spec Kit extension.
 
 | Command | What it does |
 |---|---|
@@ -126,37 +144,65 @@ Build from the same panel, or from the palette:
 | **Preview Pipeline Build** | Show what a build would change, writing nothing |
 | **Build Pipeline from companion.yml** | Apply the configuration |
 
-When `companion.yml` is newer than the commands built from it, the panel's header says so — otherwise the file says one thing while your assistant reads another, and nothing about a run looks wrong. Requires the [spec-kit extension](https://speckit-companion.dev/docs/install), which holds the pipeline sources.
+### Also in the box
 
-## No lock-in, no server
+- **Your own process.** Custom phases, custom commands and custom output files, and the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
+- **Which assistant has which spec.** A spec you run from Companion shows the assistant's name on its sidebar row and in the viewer header, and **Show Terminal** brings its terminal to the front while that terminal is open. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
+- **Multi-root workspaces.** Companion picks the folder that holds your Spec Kit files, or the one you name in `speckit.projectFolder`. [Configuration](https://speckit-companion.dev/docs/reference/configuration)
+- **Works offline, careful by default.** Fonts and icons ship with the extension, destructive actions ask first or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer)
 
-Everything lives in plain files in your repo: the spec markdown plus a `.spec-context.json` per spec. The viewer and your terminal are two front-ends over the same files, so a step driven from either surface shows up in the other, and there is no extension-owned database to migrate away from. The extension dispatches command text to the AI you configure and reads what lands on disk; your prompts and specs never pass through anyone's server. How the pieces fit: [Getting started](https://speckit-companion.dev/docs/start/your-first-spec).
-
-## Install
-
-Install **SpecKit Companion** from the VS Code Marketplace, then add the [companion Spec Kit extension](https://speckit-companion.dev/docs/install) for the lean Companion pipeline, live progress capture, and the Resume button. Full walkthrough, both halves in order: [speckit-companion.dev/docs/install](https://speckit-companion.dev/docs/install).
+<!-- Rendered from content/media/feature-clips/make-it-yours (see its STORYBOARD.md). Every key
+     and value on screen is real: change the contributed configuration in package.json
+     and this composition is stale. -->
+![Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches](docs/screenshots/generated/make-it-yours.gif)
 
 ## Works with your AI
 
-Dispatches to Claude Code, Oh My Pi, GitHub Copilot, Gemini, Codex, and more, in a terminal or in your editor's chat panel. Full compatibility matrix: [Supported AI providers](https://speckit-companion.dev/docs/reference/providers).
+Companion sends each step to the assistant you choose in `speckit.aiProvider`: Claude Code, Oh My Pi, Gemini CLI, GitHub Copilot CLI, Codex CLI, Qwen Code, OpenCode, Wibey or Antigravity in a terminal, or the chat panel of your editor (Copilot, Cursor, Windsurf, the Claude Code panel). What each one supports: [Supported AI providers](https://speckit-companion.dev/docs/reference/providers).
 
-In the GitHub Copilot app, the [spec board canvas](https://speckit-companion.dev/docs/copilot-app/install/) shows every spec's pipeline and tasks live next to the chat, and runs the next step from a button.
+It works with stock Spec Kit. Without the Companion Spec Kit extension a spec still renders, comments still work and each step runs the stock `/speckit.*` commands. A run just has less recorded about it.
 
-In the Claude Code terminal, the [SpecKit Companion mod](https://speckit-companion.dev/docs/claude-code/install/) shows where the run stands above the prompt and in a pane beside the transcript, with `/spec` to switch specs.
+## Outside VS Code
+
+The same specs and the same run record show up in two other places. Neither needs the VS Code extension.
+
+### In the GitHub Copilot app
+
+The spec board opens as a canvas next to the chat. It lists every spec with its pipeline and tasks, updates as the agent writes, and runs the next step from a button. [Install the board](https://speckit-companion.dev/docs/copilot-app/install/)
+
+![The SpecKit Companion board open on a project with five specs. The list on the left gives each spec a status and a four-step bar, and Demo, Tasked is open on the right with its pipeline and a Run implement button.](docs/screenshots/live-copilot-board.png)
+
+### In Claude Code
+
+The SpecKit Companion mod shows where the run stands in a band above the prompt and a pane beside the transcript, with `/speckit-tracker` to switch specs. [Install the mod](https://speckit-companion.dev/docs/claude-code/install/)
+
+```bash
+claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json
+claude plugin install speckit-companion@speckit-companion
+```
+
+![A Claude Code terminal with the mod's pane beside the transcript on its Run tab: Specify, Plan and Tasks ticked with their times, Implement running, the documents, and three of six tasks ticked. The band above the prompt names the spec and reads Plan done, Tasks 3/6, Implement running.](docs/screenshots/live-mod-window.png)
+
+<!-- Cross-promo banner (C5 in ReadmeCapture.stories.tsx, captured by
+     tooling/scripts/capture-docs-images.mjs). The whole image is a link to the engine
+     extension's install guide; the extension README carries the mirror banner
+     (C6) pointing back at this extension. -->
+[![Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run](docs/screenshots/generated/banner-install-engine.png)](https://speckit-companion.dev/docs/install)
+
+## No lock-in, no server
+
+Everything lives in plain files in your repo: the spec markdown, and a `.spec-context.json` run record beside each spec. The viewer and your terminal read the same files, so a step you run in one shows up in the other. The extension sends command text to the assistant you chose and reads what lands on disk. Your prompts and specs never pass through a server of ours.
 
 ## Docs
 
-- [Getting started](./docs/getting-started.md): platform support, sample specs, and running the extension from source (install story: [speckit-companion.dev/docs/install](https://speckit-companion.dev/docs/install))
-- [Spec viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer): reading, reviewing, creating, safety affordances
-- [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar): every view, icon, and action
-- [Pipeline builder](https://speckit-companion.dev/docs/customize/pipeline-builder): reading the board, attaching hooks, editing a node, reshaping a document, adding a step, and building
-- [Configuration](https://speckit-companion.dev/docs/reference/configuration): all settings, custom workflows, custom commands
-- [Supported AI providers](https://speckit-companion.dev/docs/reference/providers): the compatibility matrix and dispatch styles
-- [Living specs](./apps/speckit-extension/docs/living-specs.md): durable capability specs, drift, sync, adoption
-- [Telemetry](./docs/telemetry.md): exactly what is and isn't collected, and both off switches
-- [How it works](https://speckit-companion.dev/docs): terms, what each half gives you, and where to start
-- [Architecture](./docs/architecture.md): module structure, extension/webview boundaries
-- [Contributing](CONTRIBUTING.md) · [Changelog](./CHANGELOG.md)
+The docs live at [speckit-companion.dev/docs](https://speckit-companion.dev/docs/).
+
+- **Start**: [Install](https://speckit-companion.dev/docs/install), [Your first spec](https://speckit-companion.dev/docs/start/your-first-spec/) and [Spec-driven development](https://speckit-companion.dev/docs/start/spec-driven-development/)
+- **In your IDE**: [the sidebar](https://speckit-companion.dev/docs/navigate/the-sidebar), [inside the viewer](https://speckit-companion.dev/docs/navigate/inside-the-viewer), [each step](https://speckit-companion.dev/docs/steps/specify), [the Overview](https://speckit-companion.dev/docs/results/the-overview), [living specs](https://speckit-companion.dev/docs/results/living-specs) and the [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder)
+- **In the Copilot app**: [install the board](https://speckit-companion.dev/docs/copilot-app/install/) and [run the steps](https://speckit-companion.dev/docs/copilot-app/run-the-steps)
+- **In Claude Code**: [install the mod](https://speckit-companion.dev/docs/claude-code/install/) and [what it shows](https://speckit-companion.dev/docs/claude-code/what-it-shows)
+- **Reference**: [configuration](https://speckit-companion.dev/docs/reference/configuration), [commands](https://speckit-companion.dev/docs/reference/commands), [AI providers](https://speckit-companion.dev/docs/reference/providers) and [telemetry](https://speckit-companion.dev/docs/reference/telemetry)
+- **In this repo**: [Getting started from source](./docs/getting-started.md), [Architecture](./docs/architecture.md), [Contributing](CONTRIBUTING.md) and the [Changelog](./CHANGELOG.md)
 
 ## Telemetry
 
@@ -172,4 +218,4 @@ This project started from the amazing work at https://github.com/notdp/kiro-for-
 
 ## License
 
-MIT License
+[MIT](./LICENSE)
