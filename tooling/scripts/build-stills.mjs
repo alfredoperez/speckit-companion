@@ -3,14 +3,14 @@
  * Build the landing page's still images.
  *
  *   npm run clips:stills
- *   npm run clips:stills -- --only hero-decisions,hero-bug
+ *   npm run clips:stills -- --only hero-steps,hero-sidebar
  *
  * Two sets, same rule behind both: **crop to the content, never show a whole
  * IDE window.** A full window shrunk into a 600px column is unreadable, which is
  * how the hero ended up as a wall of words and the feature panels ended up
  * showing nothing you could actually read.
  *
- *   hero-*    the three benefits the hero cycles through
+ *   hero-*    the three parts of the product the hero cycles through
  *   panel-*   the figure beside each row of the feature accordion
  *
  * Sources are the clip compositions' own captures and renders, so a palette
@@ -42,31 +42,35 @@ const ASPECT = 1836 / 1164;
 
 const STILLS = [
   // ---------------------------------------------------------------- hero
-  // Each one is cut tight around ONE thing a stranger can read in two
-  // seconds, so the words in the picture stay legible in the hero's column.
+  // Each one shows a whole part of the product, cut wide enough to see what
+  // it is and tight enough that its main words can be read in the hero.
   {
-    // The Decisions region alone: three choices, each with its why and what it
-    // rejected.
-    id: 'hero-decisions',
+    // The Overview's content column, from the intent down to the fence.
+    id: 'hero-overview',
     from: 'overview/assets/captures/overview-tall.png',
-    crop: { x: 620, y: 2940, w: 1640 },
+    crop: { x: 560, y: 262, w: 1800 },
     aspect: ASPECT,
     width: 1600,
   },
   {
-    // Two comments under the requirement they annotate, one open on Refine.
-    id: 'hero-review',
-    from: 'review/assets/captures/cm-open.png',
-    crop: { x: 430, y: 180, w: 1400 },
+    // The viewer mid-implement: one tab per document, Tasks at 50%. A
+    // hand-taken real-window shot, because no clip capture has the tab strip.
+    id: 'hero-steps',
+    fromFile: 'docs/screenshots/live-step-implement.png',
+    crop: { x: 0, y: 0, w: 1566 },
     aspect: ASPECT,
     width: 1600,
   },
   {
-    // A hand-taken real-window shot, not a clip capture: the bug page has no
-    // composition of its own.
-    id: 'hero-bug',
-    fromFile: 'docs/screenshots/live-bug-story.png',
-    crop: { x: 0, y: 70, w: 1700 },
+    // Two real-window shots side by side, with a gap so they read as two
+    // pictures: the side bar with Specs, Bugs and Ideas open beside a bug, and
+    // the same side bar with Steering open. No single shot has all four open.
+    id: 'hero-sidebar',
+    parts: [
+      { fromFile: 'apps/website/public/changelog/bugs-ideas-panes.png', crop: { x: 100, y: 75, w: 1128, h: 1100 } },
+      { fromFile: 'docs/screenshots/live-step-constitution.png', crop: { x: 4, y: 0, w: 590, h: 1100 } },
+    ],
+    gap: 16,
     aspect: ASPECT,
     width: 1600,
   },
@@ -139,6 +143,10 @@ function newestRender(id) {
 }
 
 function sourceFor(still) {
+  if (still.parts) {
+    const paths = still.parts.map((part) => path.join(ROOT, part.fromFile));
+    return paths.every((p) => fs.existsSync(p)) ? paths : null;
+  }
   if (still.fromFile) {
     const p = path.join(ROOT, still.fromFile);
     return fs.existsSync(p) ? p : null;
@@ -160,7 +168,7 @@ const missing = wanted.filter((s) => !sourceFor(s));
 if (missing.length) {
   console.error('build-stills: sources are missing.\n');
   for (const s of missing) {
-    console.error(`  ${s.id.padEnd(20)} ${s.fromFile || s.from || `${s.fromRender} (no render yet)`}`);
+    console.error(`  ${s.id.padEnd(20)} ${s.parts?.map((part) => part.fromFile).join(' + ') || s.fromFile || s.from || `${s.fromRender} (no render yet)`}`);
   }
   console.error(
     '\n  Captures:  npm run clips:capture -- --clips overview,living-specs,review' +
@@ -175,6 +183,30 @@ fs.mkdirSync(OUT, { recursive: true });
 for (const still of wanted) {
   const src = sourceFor(still);
   const dest = path.join(OUT, `${still.id}.png`);
+
+  if (still.parts) {
+    // Each part is scaled to the still's height; the last one takes whatever
+    // width is left, and the ground between them is the page's own.
+    const outW = still.width;
+    const outH = Math.round(outW / still.aspect / 2) * 2;
+    const gap = still.gap ?? 0;
+    const args = ['-y', '-v', 'error'];
+    for (const p of src) args.push('-i', p);
+    let used = 0;
+    const chains = still.parts.map((part, i) => {
+      const { x, y, w, h } = part.crop;
+      const last = i === still.parts.length - 1;
+      const partW = last ? outW - used : Math.round((w * outH) / h / 2) * 2;
+      used += partW + gap;
+      return `[${i}:v]crop=${w}:${h}:${x}:${y},scale=${partW}:${outH}:flags=lanczos${last ? '' : `,pad=${partW + gap}:${outH}:0:0:color=0x0a0912`}[p${i}]`;
+    });
+    const stack = `${still.parts.map((_, i) => `[p${i}]`).join('')}hstack=inputs=${still.parts.length}`;
+    args.push('-filter_complex', `${chains.join(';')};${stack}`, ...PNG, dest);
+    await run('ffmpeg', args);
+    const kb = (fs.statSync(dest).size / 1024).toFixed(0);
+    console.log(`${still.id.padEnd(20)} ${src.map((p) => path.basename(p)).join(' + ')}  ->  ${outW}x${outH}  ${kb} KB`);
+    continue;
+  }
   const { x, y, w } = still.crop;
   const h = Math.round(w / still.aspect / 2) * 2;
   const outW = still.width;

@@ -93,12 +93,18 @@ const livingExplained = media('living-specs-explained');
   content/media/manifest.json as each feature's heroStill, so the path and the
   alt text are read from there and the hero cannot drift from the files.
 
-  Each still shows ONE benefit, cropped tight enough that its own words are
-  readable in the hero's column. The pip names the benefit in plain words and
-  the caption under the frame says it as a sentence. Each caption is a cleared
-  claim: the Review one says the note is sent rather than applied, because
-  Refine dispatches a request and never reads the file back.
+  Each still shows a whole part of the product: the Overview, the viewer's
+  step tabs, the side bar. The pip names the part and the caption under the
+  frame says in one sentence what the picture shows.
+
+  Each still brings its own chips, the pills that drift around the frame.
+  Every chip is a string you can find in that picture or that is true of the
+  run it shows, so the field teaches the vocabulary before anyone clicks.
+  Positions are a percentage of the frame and hand-placed on its edges, clear
+  of the words in the picture.
 */
+type Mote = { text: string; x: number; y: number; dx: number; dy: number; dur: number; delay: number };
+
 function heroStill(id: string) {
   const feature = features.find((entry) => entry.id === id);
   const rel = feature?.outputs.heroStill;
@@ -120,24 +126,42 @@ const lightwell = (() => {
   };
 })();
 
-const surfaces = [
+const surfaces: Array<{ id: string; label: string; caption: string; src: string; alt: string; motes: Mote[] }> = [
   {
-    id: 'decisions',
-    label: 'Decisions, with reasons',
-    caption: 'What a run decided, why, and what it rejected. Kept on one page.',
+    id: 'overview',
+    label: 'The Overview',
+    caption: 'A finished run as one page: its intent, its timing and its approach.',
     ...heroStill('overview'),
+    motes: [
+      { text: '54m 36s elapsed', x: 78, y: -5, dx: -9, dy: 10, dur: 10400, delay: 900 },
+      { text: '4/4 traced', x: -5, y: 22, dx: 12, dy: -10, dur: 9200, delay: 0 },
+      { text: '3 decisions', x: 90, y: 62, dx: -11, dy: -9, dur: 9800, delay: 1800 },
+      { text: 'sized simple', x: -5, y: 70, dx: 12, dy: -9, dur: 10100, delay: 1400 },
+    ],
   },
   {
-    id: 'review',
-    label: 'Review in the margin',
-    caption: 'Comment on the line. Refine sends the note to your agent.',
-    ...heroStill('review'),
+    id: 'steps',
+    label: 'Step by step',
+    caption: 'One tab per document. Move through every step of a spec.',
+    ...heroStill('spec-viewer'),
+    motes: [
+      { text: 'IMPLEMENTING', x: -6, y: 66, dx: 12, dy: -9, dur: 9400, delay: 300 },
+      { text: 'Plan ✓', x: 62, y: -5, dx: -8, dy: 10, dur: 10800, delay: 1200 },
+      { text: 'Tasks 50%', x: 91, y: 58, dx: -12, dy: -8, dur: 8800, delay: 700 },
+      { text: 'T002 done', x: 84, y: 95, dx: -10, dy: -10, dur: 10200, delay: 2000 },
+    ],
   },
   {
-    id: 'bug',
-    label: 'A bug, start to finish',
-    caption: 'A bug reads as one page: what was wrong, what changed, how it was verified.',
-    ...heroStill('live-bug-story'),
+    id: 'sidebar',
+    label: 'Everything in the sidebar',
+    caption: 'Specs, bugs, ideas and steering in one side bar, each grouped by where it stands.',
+    ...heroStill('live-bugs-ideas-panes'),
+    motes: [
+      { text: '2 active specs', x: 5, y: -5, dx: 10, dy: 8, dur: 9600, delay: 500 },
+      { text: '2 bugs to fix', x: 52, y: -6, dx: -9, dy: 9, dur: 10600, delay: 1500 },
+      { text: '5 ideas decided', x: 20, y: 96, dx: 10, dy: -10, dur: 9000, delay: 0 },
+      { text: 'Constitution', x: 90, y: 58, dx: -12, dy: -8, dur: 11000, delay: 1000 },
+    ],
   },
 ];
 
@@ -564,7 +588,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         </div>
       </div>
 
-      {/* The product, in the first screenful. Three benefits cycle in one frame
+      {/* The product, in the first screenful. Three parts of it cycle in one frame
           with a caption that changes with them, so someone who never scrolls
           still learns what this is.
 
@@ -574,6 +598,23 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           three buttons still work. */}
       <div class="hero-show" data-hero-show>
         <div class="hero-orbit">
+          {/* The chips. One set per still, swapped with it. Decorative to a
+              screen reader: the picture's alt text already says it. */}
+          {
+            surfaces.map((surface, index) => (
+              <div class="hero-motes" data-hero-motes={surface.id} data-active={index === 0 ? '' : undefined} aria-hidden="true">
+                {surface.motes.map((mote) => (
+                  <span
+                    class="mote"
+                    style={`--mx:${mote.x}%;--my:${mote.y}%;--mdx:${mote.dx}px;--mdy:${mote.dy}px;--mdur:${mote.dur}ms;--mdelay:${mote.delay}ms`}
+                  >
+                    {mote.text}
+                  </span>
+                ))}
+              </div>
+            ))
+          }
+
           <div class="hero-stagebox">
             <img
               class="lightwell lightwell--hero"
@@ -605,7 +646,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           </div>
         </div>
 
-        {/* Each pip names a benefit. The one you pick stays lit, and its
+        {/* Each pip names a part of the product. The one you pick stays lit, and its
             sentence stays under the frame. */}
         <div class="hero-pips" role="tablist" aria-label="What you get">
           {
@@ -1128,6 +1169,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   .hero-orbit {
     position: relative;
     width: 100%;
+    padding: 18px 0;
   }
 
   .hero-stagebox {
@@ -1141,6 +1183,41 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       var(--panel) 42%,
       var(--ground) 100%
     );
+  }
+
+  .hero-motes {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 420ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .hero-motes[data-active] {
+    opacity: 1;
+  }
+
+  .mote {
+    position: absolute;
+    left: var(--mx);
+    top: var(--my);
+    padding: 6px 11px;
+    border: 1px solid var(--border-panel);
+    border-radius: 999px;
+    /* Translucent, and lit from behind rather than shadowed: an opaque pill
+       with a black drop-shadow punched a dark hole in the light it floats in. */
+    background: rgb(var(--ground-rgb) / 0.78);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 14px rgb(var(--ground-rgb) / 0.45);
+    color: var(--text-body);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
+    white-space: nowrap;
+  }
+
+  :global(html[data-motion]) .mote {
+    animation: mote-drift var(--mdur, 9000ms) var(--mdelay, 0ms) ease-in-out infinite alternate;
   }
 
   @keyframes mote-drift {
@@ -1285,7 +1362,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
      below it moves when the sentence changes. */
   .hero-flash {
     margin: 0;
-    min-height: 2.6em;
+    min-height: 2lh;
     max-width: 60ch;
     color: var(--text-body);
     font-size: var(--fs-body);
@@ -1308,6 +1385,18 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       justify-content: center;
     }
 
+  }
+
+  /* The drifting chips need room around the frame that a single column does
+     not have. */
+  @media (max-width: 980px) {
+    .hero-motes {
+      display: none;
+    }
+
+    .hero-orbit {
+      padding: 0;
+    }
   }
 
   /* On a phone the whole crop would shrink past reading, so the frame goes
@@ -2619,12 +2708,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // --- hero: three benefits, one frame --------------------------------------
-  // The pip you pick lights up, the light behind the frame lifts, and the shot
-  // and the sentence under it change together.
+  // --- hero: three parts of the product, one frame ---------------------------
+  // The pip you pick lights up, the light behind the frame lifts, and the shot,
+  // its chips and the sentence under it change together.
   document.querySelectorAll('[data-hero-show]').forEach((root) => {
     const pips = Array.from(root.querySelectorAll('[data-hero-pip]'));
     const shots = Array.from(root.querySelectorAll('[data-hero-shot]'));
+    const motes = Array.from(root.querySelectorAll('[data-hero-motes]'));
     const bloom = root.querySelector('[data-hero-bloom]');
     const flash = root.querySelector('[data-hero-flash]');
     if (pips.length < 2) return;
@@ -2655,6 +2745,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         p.tabIndex = i === index ? 0 : -1;
       });
       shots.forEach((shot) => shot.toggleAttribute('data-active', shot.dataset.heroShot === id));
+      motes.forEach((set) => set.toggleAttribute('data-active', set.dataset.heroMotes === id));
 
       flare();
 

@@ -112,7 +112,7 @@
         "extraStills": [
           "docs/screenshots/generated/overview-annotated.png"
         ],
-        "heroStill": "content/media/web/hero-decisions.png",
+        "heroStill": "content/media/web/hero-overview.png",
         "panelStill": "content/media/web/panel-read.png"
       },
       "unnormalized": [],
@@ -122,7 +122,7 @@
         "content/media/web/overview-x16x9.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
         "docs/screenshots/generated/overview.png": "The completed Overview page for the Teamboard fixture run",
         "docs/screenshots/generated/overview-annotated.png": "The completed Overview dossier with its honest per-phase timing called out: run status, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the coverage table",
-        "content/media/web/hero-decisions.png": "The Decisions part of a finished run's Overview: three numbered choices, each with why it was made and the alternative it rejected.",
+        "content/media/web/hero-overview.png": "The Overview of a finished run: the intent it answers to, the four steps with the time each took, the approach, the living specs it used, how it was sized, and the start of the expectations.",
         "content/media/web/panel-read.png": "The Overview's content column: the intent the run answers to, each phase with the time it took, the approach, the corner of the codebase it changed, how it was sized, and the expectations fence."
       },
       "referencedBy": {
@@ -215,12 +215,14 @@
         "xCrop": "content/media/web/spec-viewer-x16x9.png",
         "readmeGif": "docs/screenshots/generated/spec-viewer.gif",
         "docsStill": "docs/screenshots/generated/spec-viewer.png",
-        "extraStills": []
+        "extraStills": [],
+        "heroStill": "content/media/web/hero-steps.png"
       },
       "unnormalized": [
         "content/media/feature-clips/spec-viewer/renders/spec-viewer_2026-08-25_18-27-47.mp4"
       ],
       "alt": {
+        "content/media/web/hero-steps.png": "The spec viewer in a VS Code tab, on a spec marked Implementing. Its documents are tabs: Overview, Specification, Requirements, Plan, Data Model, Research and Tasks, which is at 50%. The task list below has its first tasks ticked.",
         "docs/screenshots/generated/spec-viewer.gif": "A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation",
         "docs/screenshots/generated/spec-viewer.png": "A spec rendered as a structured page in the VS Code extension: requirements as labeled rows, the pipeline rail, and on-page navigation",
         "content/media/web/spec-viewer-poster.png": "A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation",
@@ -475,7 +477,6 @@
         "readmeGif": null,
         "docsStill": null,
         "extraStills": [],
-        "heroStill": "content/media/web/hero-review.png",
         "panelStill": "content/media/web/panel-review.png"
       },
       "unnormalized": [
@@ -484,7 +485,6 @@
       "alt": {
         "content/media/web/review-poster.png": "Correcting a spec before it becomes code: a comment pins under the line it annotates, the card opens to say exactly what has to change, Refine hands the pending comments to your AI, the note stays on the card as history, and the side bar opens on the same spec sitting with every other one, grouped by lifecycle, with the steering material beneath",
         "content/media/web/review-x16x9.png": "Correcting a spec before it becomes code: a comment pins under the line it annotates, the card opens to say exactly what has to change, Refine hands the pending comments to your AI, the note stays on the card as history, and the side bar opens on the same spec sitting with every other one, grouped by lifecycle, with the steering material beneath",
-        "content/media/web/hero-review.png": "Two review comments pinned under a requirement, both pending, the second one open with its note and its Refine, Edit and Delete actions.",
         "content/media/web/panel-review.png": "A review comment open under the requirement it annotates, its whole note visible with Refine, Edit and Delete, among the other requirements on the page."
       },
       "referencedBy": {},
@@ -1235,10 +1235,12 @@
         "xCrop": null,
         "readmeGif": null,
         "docsStill": "docs/screenshots/live-bugs-ideas-panes.png",
-        "extraStills": []
+        "extraStills": [],
+        "heroStill": "content/media/web/hero-sidebar.png"
       },
       "unnormalized": [],
       "alt": {
+        "content/media/web/hero-sidebar.png": "Two pictures of the SpecKit side bar. On the left, Specs, Bugs and Ideas are open, each grouped by where it stands, beside a bug page. On the right, the same side bar with Steering open on Companion, Claude Code and the constitution.",
         "docs/screenshots/live-bugs-ideas-panes.png": "The SpecKit side bar with three panes: Specs with its Active and Completed groups, Bugs grouped as To fix, Verified and Closed with a severity and outcome on each row, and Ideas grouped as Assessing and Decided with the verdict beside each idea."
       },
       "referencedBy": {
@@ -1264,13 +1266,11 @@
         "xCrop": null,
         "readmeGif": null,
         "docsStill": "docs/screenshots/live-bug-story.png",
-        "extraStills": [],
-        "heroStill": "content/media/web/hero-bug.png"
+        "extraStills": []
       },
       "unnormalized": [],
       "alt": {
-        "docs/screenshots/live-bug-story.png": "A bug open on its Story tab, badge Verified. The page starts with Fixed and verified, one line of facts, then the first timeline step, What was wrong, dated from the assessment.",
-        "content/media/web/hero-bug.png": "A bug page: the badge Verified, the tabs Story, Assessment, Fix and Test all ticked, the line Fixed and verified, then What was wrong with the root cause."
+        "docs/screenshots/live-bug-story.png": "A bug open on its Story tab, badge Verified. The page starts with Fixed and verified, one line of facts, then the first timeline step, What was wrong, dated from the assessment."
       },
       "referencedBy": {
         "docs/screenshots/live-bug-story.png": [
