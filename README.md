@@ -170,7 +170,9 @@ The same specs and the same run record show up in two other places. Neither need
 
 The spec board opens as a canvas next to the chat. It lists every spec with its pipeline and tasks, updates as the agent writes, and runs the next step from a button. [Install the board](https://speckit-companion.dev/docs/copilot-app/install/)
 
-![The SpecKit Companion board open on a project with five specs. The list on the left gives each spec a status and a four-step bar, and Demo, Tasked is open on the right with its pipeline and a Run implement button.](docs/screenshots/live-copilot-board.png)
+![A recreation of a run on the SpecKit Companion board, sped up: a finished spec's Overview, New spec with one line typed, Run plan pressed and the command landing in the chat, the step rail moving through Plan, Tasks and Implement, the tasks ticking from 0/6 to 6/6, and the new spec's Overview with a time per step.](docs/screenshots/board-story.gif)
+
+A recreation of a run, sped up. The board is the real one, and the window around it is a stand-in for the Copilot app.
 
 ### In Claude Code
 
