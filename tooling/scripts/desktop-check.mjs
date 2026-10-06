@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Drives a real VS Code window with this extension and a throwaway project (or an existing one, --sandbox), and saves a screenshot per step.
-// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>]
+// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet]
 // --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
+// --sheet also writes every picture of the run onto one reduced sheet (_sheet.png), the file to look at first.
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -21,6 +22,7 @@ const THEME = arg('theme', 'light');
 const ONLY = arg('only', '').split(',').filter(Boolean);
 const SANDBOX = arg('sandbox') ? resolve(arg('sandbox')) : undefined;
 const SHOTS = arg('shots') ? resolve(arg('shots')) : undefined;
+const SHEET = process.argv.includes('--sheet');
 // A crop is read in a docs column about 650px wide, so the capture window is kept small enough for its text to survive that.
 const SHOT_WINDOW = { width: 1240, height: 800 };
 const CHECK_WINDOW = { width: 1680, height: 1050 };
@@ -867,6 +869,16 @@ try {
     writeFileSync(join(OUT, `results.${THEME}.json`), JSON.stringify(results, null, 2));
     await app.close().catch(() => undefined);
     rmSync(root, { recursive: true, force: true });
+}
+
+if (SHEET) {
+    for (const dir of [OUT, SHOTS].filter(Boolean)) {
+        try {
+            execFileSync(process.execPath, [join(HERE, 'shots-sheet.mjs'), dir], { stdio: 'inherit' });
+        } catch {
+            console.error(`No sheet for ${dir}`);
+        }
+    }
 }
 
 const failed = results.filter(result => !result.ok);

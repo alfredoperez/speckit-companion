@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(sleep:*), Bash(jq:*), Bash(tooling/scripts/merge-pr.sh:*), Bash(tooling/scripts/new-worktree.sh:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
 description: Ship an ALREADY-BUILT ticket — code review → PR → merge → learnings → install-local. Skips the build (you built it in SpecKit Companion). The tail of /fix-tickets, no rebuild.
 argument-hint: "<issue # e.g. 292>  (optional — defaults to the current branch's NNN-slug)  [--review-merge]"
 ---
@@ -68,16 +68,13 @@ gh pr create --title "<title>" --body "<body>" --base main
 Capture the PR number/URL.
 
 ### 3. Merge + cleanup — main loop
-```bash
-gh pr checks <PR> --watch || true
-gh pr checks <PR>                     # every check must now read pass; pending or fail means no merge
-```
-Merge only when every check has finished and passed. Never merge with a check still pending.
-
 **Review-gate:** if `--review-merge` was passed, do **not** merge — post the PR link + a one-line summary, record "merged: NO — awaiting your review," and stop. Otherwise:
 ```bash
-gh pr merge <PR> --squash --delete-branch
+tooling/scripts/merge-pr.sh <PR>      # merges once every check has passed: queued on GitHub when the repo allows auto-merge, otherwise it waits here
+gh pr checks <PR> --watch || true     # one wait, to report the outcome
 ```
+Exit 3 means the pull request changes what a person sees and the owner has not looked: record "merged: NO — awaiting your review", show them the change in a note with screenshots, and re-run with `--seen` only after they approve. Never merge around the script with `gh pr merge`.
+
 If checks fail and can't be auto-addressed, leave the PR open, record "merged: NO — checks failing," report.
 
 ### 4. Capture learnings + tick the box — distill subagent + main loop
