@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
-- **Call paths in the plan, checked.** Attach the `call-paths` node and your plan shows ==which functions a change reaches==, each file and line checked. ([#873](https://github.com/alfredoperez/speckit-companion/pull/873)) <!-- area: pipeline -->
+- **Call paths in the plan, checked.** Attach the `call-paths` node and your plan shows ==which functions a change reaches==, each file and line checked. ([#875](https://github.com/alfredoperez/speckit-companion/pull/875)) <!-- area: pipeline -->
 
 ## [0.24.0] - 2026-10-03
 
