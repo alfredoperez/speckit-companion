@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Change where a decision routes.** The board's decision block opens one row per answer, so a verdict ==skips the steps you choose==. ([#887](https://github.com/alfredoperez/speckit-companion/pull/887)) <!-- area: pipeline-builder -->
-- **Living specs reach the Workflow Builder.** A header chip turns them on or off, picks where specs live, and lists ==the capabilities you registered==. ([#887](https://github.com/alfredoperez/speckit-companion/pull/887)) <!-- area: pipeline-builder -->
+- **Change where a decision routes.** The board's decision block opens one row per answer, so a verdict ==skips the steps you choose==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
+- **Living specs reach the Workflow Builder.** A header chip turns them on or off, picks where specs live, and lists ==the capabilities you registered==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
 
 ### Changed
 
