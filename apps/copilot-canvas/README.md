@@ -2,7 +2,9 @@
 
 A live board of every spec in your repo, next to the chat in the GitHub Copilot app. It is for people who run [Spec Kit](https://github.com/github/spec-kit) with Copilot: you see where each spec stands, read its documents, and run the next step from a button. It works with stock Spec Kit and with [SpecKit Companion](https://speckit-companion.dev). You do not need VS Code.
 
-![The spec board in dark mode: the list of specs on the left, each with a status and a four-step bar, and one spec open on the right with its pipeline, its next-step card and its Overview.](./assets/preview.png)
+![A recreation of a run on the SpecKit Companion board, sped up: a finished spec's Overview, New spec with one line typed, Run plan pressed and the command landing in the chat, the step rail moving through Plan, Tasks and Implement, the tasks ticking from 0/6 to 6/6, and the new spec's Overview with a time per step.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/board-story.gif)
+
+One spec from **New spec** to done. This is a recreation of a run, sped up, not a recording: the board is the real one, and the window and chat around it are a plain stand-in for the Copilot app.
 
 **[Docs](https://speckit-companion.dev/docs/copilot-app/install/)** · **[A run, step by step](https://speckit-companion.dev/docs/copilot-app/a-run-step-by-step)** · **[speckit-companion.dev](https://speckit-companion.dev)**
 
@@ -44,6 +46,8 @@ The list shows every spec folder under `specs/`, or under your `speckit.specDire
 ### A spec's documents, rendered
 
 Open a spec for its pipeline, the next step, and one tab per document: Overview, Spec, Plan, Tasks, research, data model and checklists. The Overview shows what the run recorded: the intent, the time each step took, what was verified, the decisions and the coverage. An Activity tab lists the run history. The documents look as they do in the VS Code viewer.
+
+![The spec board in dark mode: the list of specs on the left, each with a status and a four-step bar, and one spec open on the right with its pipeline, its next-step card and its Overview.](./assets/preview.png)
 
 ### The next step is a button
 
