@@ -1,30 +1,45 @@
 ---
 title: Install the board in the Copilot app
-description: Copy the SpecKit Companion canvas into your project or your user folder, then open it beside the chat in the GitHub Copilot app.
+description: Copy the SpecKit Companion canvas into your project or your user folder, accept it, then open it beside the chat in the GitHub Copilot app.
 ---
 
+import { Steps } from '@astrojs/starlight/components';
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 
 If you work in the GitHub Copilot app, SpecKit Companion opens as a canvas beside your chat. It shows every spec in the repo, where each one is in the pipeline, and a button for the next step. You do not need the VS Code extension for it.
 
-## Set it up
+This page is the board's own steps. The project needs Spec Kit first, and the Companion extension for Spec Kit is optional but recommended. [Install where you work](/docs/install#in-the-github-copilot-app) has the whole path in order.
 
-Copy the `apps/copilot-canvas` folder from the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project or your user folder.
+<Steps>
 
-```bash
-# shared with your team
-cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion
-# every project on your machine
-cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion
-```
+1. **Add the board**
 
-A project copy is code the app will not run until you accept it. Since version 1.1.26 of the Copilot app:
+   Copy the `apps/copilot-canvas` folder from a checkout of the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project. Swap `<project>` for your project's path:
 
-1. Commit the copy and open the project in the Copilot app.
-2. Choose **Review repository content** on the notice the app shows (it is also in the project's settings under **Repository trust**), check that it lists `speckit-companion`, and choose **Accept for new sessions**.
-3. Start a **new** session and ask: **Open the SpecKit Companion canvas**. It is also in the session's **+** menu under **Canvas**.
+   <Actions>
+     <CodeLine command="cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion" />
+     <p>Or into your user folder, for every project on your machine. This is the quick way to try it out:</p>
+     <CodeLine command="cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion" />
+     <p>If the <code>extensions</code> folder does not exist yet, create it first with <code>mkdir -p</code>.</p>
+   </Actions>
 
-The session that was already open when you accepted never gets the board. If the agent opens an empty `speckit-companion.md` in the editor instead, you are in one of those: start another session.
+   Commit a project copy and get it onto your default branch. The Copilot app runs each session in a fresh copy of that branch.
+
+2. **Accept the repository content and start a new session**
+
+   Open the project in the Copilot app. Since version 1.1.26 the app will not run code from a project until you accept it:
+
+   - Choose **Review repository content** on the notice the app shows. It is also in the project's settings under **Repository trust**.
+   - Check that it lists `speckit-companion`, and choose **Accept for new sessions**.
+   - Start a **new** session. The session that was open when you accepted never gets the board.
+
+3. **Open the board**
+
+   Ask: **Open the SpecKit Companion canvas.** It is also in the session's **+** menu under **Canvas**, as **SpecKit Companion**.
+
+</Steps>
 
 <DocFigure
   src="live-copilot-board.png"
@@ -32,16 +47,19 @@ The session that was already open when you accepted never gets the board. If the
   caption="The board once it opens: every spec in the repo on the left, the selected one on the right."
 />
 
+## When it shows up
+
 | Where you copied it | When it shows up |
 | --- | --- |
 | Your user folder | In every new session, with nothing to accept. Not in a project that ships extensions you have not accepted, because the app turns every extension off there |
-| The project | In sessions started after you accept the repository content, and only once the copy is on your default branch, because the Copilot app runs each session in a fresh worktree cut from that branch |
+| The project | In sessions started after you accept the repository content, and only once the copy is on your default branch |
 
 The app accepts the exact files under `.github/extensions/`. When any of them changes, such as after you update the board, the project's **Repository trust** shows **Update available** and new sessions lose the board until you accept again.
 
-Use the user folder while you try it out.
+If the agent opens an empty `speckit-companion.md` in the editor instead of the board, you are in a session from before you accepted. Start another one. [If something did not work](/docs/install#if-something-did-not-work) has the rest.
 
 ## Related
 
+- [Install where you work](/docs/install#in-the-github-copilot-app) is the full path, from Spec Kit to a first spec.
 - [Navigate the board](/docs/copilot-app/navigate-the-board) covers what each part of the board shows.
 - [Run the steps](/docs/copilot-app/run-the-steps) covers which commands the buttons send.

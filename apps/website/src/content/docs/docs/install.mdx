@@ -1,15 +1,19 @@
 ---
-title: Install
-description: Both halves, in order, with the one prerequisite that quietly breaks the second install if you skip it.
+title: Install where you work
+description: Pick VS Code, the GitHub Copilot app or Claude Code, and follow that path from Spec Kit to a first spec. Each path says what is required and what is optional.
 ---
 
+import { Steps } from '@astrojs/starlight/components';
 import Button from '../../../components/Button.astro';
 import CodeLine from '../../../components/CodeLine.astro';
 import Actions from '../../../components/journey/Actions.astro';
 import DocFigure from '../../../components/journey/DocFigure.astro';
+import PathChooser from '../../../components/journey/PathChooser.astro';
 import YouSee from '../../../components/journey/YouSee.astro';
 
 export const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
+
+export const OPEN_IN_VSCODE = 'vscode:extension/alfredoperez.speckit-companion';
 
 {/* The full --from URL form, verbatim. The short catalog form does not work,
     because the extension is not listed in the Spec Kit catalog. */}
@@ -17,90 +21,338 @@ export const COMPANION_COMMAND = 'specify extension add companion --from https:/
 
 export const SOURCE_CLI = 'uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force';
 
-SpecKit Companion comes in two halves: the VS Code extension from the Marketplace, and the Companion Spec Kit extension from the `specify` command. Install them in this order, with a folder open as your workspace. The second half needs Spec Kit 0.9.5 or newer.
+export const PATHS = [
+  {
+    kind: 'EXTENSION',
+    name: 'In VS Code (or Cursor, Windsurf…)',
+    body: 'The full workspace: sidebar, viewer, review comments and the Overview.',
+    href: '#in-vs-code',
+  },
+  {
+    kind: 'CANVAS',
+    name: 'In the GitHub Copilot app',
+    body: 'A board of every spec beside the chat. A button runs the next step.',
+    href: '#in-the-github-copilot-app',
+  },
+  {
+    kind: 'MOD',
+    name: 'In Claude Code',
+    body: 'A line above the prompt and a pane with the steps and tasks, in your terminal.',
+    href: '#in-claude-code',
+  },
+];
 
-## The VS Code extension
+Pick the place you work. Each path below is complete on its own and takes you from nothing to a first spec.
 
-<Actions>
-  <Button href={MARKETPLACE} external size="md" data-analytics="install_click_vscode" data-analytics-placement="install">Get it on the Marketplace</Button>
-  <p>Or from a terminal:</p>
-  <CodeLine command="code --install-extension alfredoperez.speckit-companion" />
-</Actions>
+<PathChooser choices={PATHS} />
 
-This is the half you look at. It works on its own, and it is on Open VSX too.
+You can use more than one. They all read the same spec files in your project, so a spec started in one shows up in the others.
 
-<YouSee>
+Every path has the same shape: Spec Kit itself, then the Companion extension for Spec Kit, which is optional but recommended, then the one thing your tool needs.
 
-A SpecKit icon in the activity bar with two views, **Specs** and **Steering**. Two is correct. Living Specs arrives with the second half.
+## In VS Code
 
-</YouSee>
+<Steps>
 
-## A Spec Kit CLI that has extensions
+1. <span id="vscode-spec-kit"></span>**Get Spec Kit**
 
-<Actions>
-  <CodeLine command={SOURCE_CLI} />
-</Actions>
+   Spec Kit is GitHub's toolkit for spec-driven development. Its `specify` command sets a project up with the `/speckit` commands your assistant runs.
 
-The stock PyPI `specify-cli` has no `extension` command, so the next install would fail. This installs the GitHub build instead. It changes your global `uv` tools.
+   <Actions>
+     <CodeLine command={SOURCE_CLI} />
+   </Actions>
 
-<YouSee>
+   This installs the GitHub build. The stock PyPI `specify-cli` has no `extension` command, so step 2 would fail with it. The command changes your global `uv` tools.
 
-`specify extension --help` lists `add` and `list`.
+   Then set the project up, from its root. Swap `claude` for your assistant, such as `copilot`, `gemini` or `codex`:
 
-</YouSee>
+   <Actions>
+     <CodeLine command="specify init --here --integration claude" />
+   </Actions>
 
-## The Companion Spec Kit extension
+   You can skip that second command. In step 3 the Specs view offers **Initialize Workspace**, which runs it for the assistant you chose.
 
-<Actions>
-  <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="install" />
-</Actions>
+   <YouSee label="You should see">
 
-Run it from your project root and copy it whole. The short catalog form does not work. This half writes the run record, a `.spec-context.json` file next to each spec. Without it a spec still renders, but nothing records what the run did.
+   `specify extension --help` lists `add` and `list`, and the project has a `.specify` folder.
 
-<YouSee>
+   </YouSee>
 
-A one-time **untrusted source** prompt, because the archive comes from a URL and not the catalog. Accept it.
+2. <span id="vscode-companion"></span>**Add the Companion extension for Spec Kit** (optional, recommended)
 
-</YouSee>
+   This is the engine half. It records each run, adds the Companion pipeline and Auto, and brings living specs. It needs Spec Kit 0.9.5 or newer.
 
-## Check that it took
+   <Actions>
+     <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="install" />
+   </Actions>
 
-<Actions>
-  <CodeLine command="specify extension list" />
-</Actions>
+   Run it from your project root and copy it whole. The short catalog form does not work.
 
-<YouSee label="All three should be true">
+   **Without it** the sidebar and the viewer still work with stock Spec Kit. You lose the run record, so the Overview has no step times, decisions or checks to show. You also lose the `/speckit.companion.*` commands, Auto and the Living Specs view.
 
-`companion` is in the list.
+   <YouSee label="You should see">
 
-Your assistant offers `/speckit.companion.*` commands next to the stock `/speckit.*` ones.
+   A one-time **untrusted source** prompt, because the archive comes from a URL and not the catalog. Accept it. Then `specify extension list` has `companion` in it.
 
-A **Living Specs** view has joined the sidebar.
+   </YouSee>
 
-</YouSee>
+3. <span id="vscode-extension"></span>**Install the VS Code extension and choose your assistant**
 
-<DocFigure src="live-install-extension-list.png" caption="The list shows SpecKit Companion enabled, with its commands and hooks." />
+   <Actions>
+     <Button href={MARKETPLACE} external size="md" data-analytics="install_click_vscode" data-analytics-placement="install">Get it on the Marketplace</Button>
+     <p>Or <a href={OPEN_IN_VSCODE}>open it in VS Code</a>. It is on Open VSX too, for Cursor, Windsurf and other editors. From a terminal:</p>
+     <CodeLine command="code --install-extension alfredoperez.speckit-companion" />
+   </Actions>
+
+   The first time it starts, a picker asks which AI assistant runs your steps. Pick the one you use. [Choose an AI provider](/docs/ide/choose-a-provider) covers the picker and how to change it later.
+
+   <YouSee label="You should see">
+
+   A SpecKit icon in the activity bar with the **Specs** and **Steering** views. With the Companion extension from step 2, a **Living Specs** view too.
+
+   </YouSee>
+
+   <DocFigure src="sidebar-triptych.png" caption="The sidebar's three views. Living Specs is the one the Companion extension adds." />
+
+4. <span id="vscode-check"></span>**Check that it took**
+
+   Click `+` in the Specs view, describe a small change and press **Create Spec**.
+
+   <YouSee label="You should see">
+
+   A new spec under **Active** in the Specs view, and the spec open in the viewer when your assistant finishes. With the Companion extension, your assistant also offers `/speckit.companion.*` commands next to the stock `/speckit.*` ones.
+
+   </YouSee>
+
+   [Your first spec](/docs/start/your-first-spec) walks through it with pictures.
+
+</Steps>
+
+## In the GitHub Copilot app
+
+You do not need the VS Code extension for this path.
+
+<Steps>
+
+1. <span id="copilot-spec-kit"></span>**Get Spec Kit**
+
+   Spec Kit is GitHub's toolkit for spec-driven development. Its `specify` command sets a project up with the `/speckit` commands your agent runs.
+
+   <Actions>
+     <CodeLine command={SOURCE_CLI} />
+   </Actions>
+
+   This installs the GitHub build. The stock PyPI `specify-cli` has no `extension` command, so step 2 would fail with it. The command changes your global `uv` tools.
+
+   Then set the project up for Copilot, from its root:
+
+   <Actions>
+     <CodeLine command="specify init --here --integration copilot" />
+   </Actions>
+
+   <YouSee label="You should see">
+
+   A `.specify` folder in the project, and the `/speckit` commands under `.github/`.
+
+   </YouSee>
+
+2. <span id="copilot-companion"></span>**Add the Companion extension for Spec Kit** (optional, recommended)
+
+   This is the engine half. It records each run, adds the Companion pipeline and Auto, and brings living specs. It needs Spec Kit 0.9.5 or newer.
+
+   <Actions>
+     <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="install" />
+   </Actions>
+
+   Run it from your project root and copy it whole.
+
+   **Without it** the board still works. Its buttons send the stock Spec Kit commands, and **Companion** and **Auto** are disabled when you start a spec. The board reads each step from the files, and shows a time only for a step you sent from the board.
+
+   <YouSee label="You should see">
+
+   A one-time **untrusted source** prompt. Accept it. Then `specify extension list` has `companion` in it.
+
+   </YouSee>
+
+3. <span id="copilot-board"></span>**Add the board**
+
+   Copy the `apps/copilot-canvas` folder from a checkout of the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project. Swap `<project>` for your project's path:
+
+   <Actions>
+     <CodeLine command="cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion" />
+     <p>Or into your user folder, for every project on your machine. This is the quick way to try it out:</p>
+     <CodeLine command="cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion" />
+     <p>If the <code>extensions</code> folder does not exist yet, create it first with <code>mkdir -p</code>.</p>
+   </Actions>
+
+   Then commit what steps 1 and 2 added, and the board if you copied it into the project. Get the commit onto your default branch. The Copilot app runs each session in a fresh copy of that branch, so anything uncommitted is missing there.
+
+   <YouSee label="You should see">
+
+   A `speckit-companion` folder with an `extension.mjs` file in it, at the place you copied to.
+
+   </YouSee>
+
+4. <span id="copilot-accept"></span>**Accept the repository content and start a new session**
+
+   Open the project in the Copilot app. Since version 1.1.26 the app will not run code from a project until you accept it:
+
+   - Choose **Review repository content** on the notice the app shows. It is also in the project's settings under **Repository trust**.
+   - Check that it lists `speckit-companion`, and choose **Accept for new sessions**.
+   - Start a **new** session. The session that was open when you accepted never gets the board.
+
+   Then ask: **Open the SpecKit Companion canvas.** It is also in the session's **+** menu under **Canvas**, as **SpecKit Companion**.
+
+   A user-folder copy has nothing to accept, unless the project ships other extensions you have not accepted. The app turns every extension off there.
+
+   <YouSee label="You should see">
+
+   The board beside the chat, with every spec in the repo on the left.
+
+   </YouSee>
+
+   <DocFigure
+     src="live-copilot-board.png"
+     alt="The SpecKit Companion board open on a project with five specs. The list on the left gives each spec a status and a four-step bar, and Demo, Tasked is open on the right with its pipeline and a Run implement button."
+     caption="The board once it opens: every spec in the repo on the left, the selected one on the right."
+   />
+
+5. <span id="copilot-check"></span>**Check that it took**
+
+   Press **New spec**, choose **Companion**, describe a small change and submit. On stock Spec Kit, choose **Spec Kit**.
+
+   <YouSee label="You should see">
+
+   The command land in the chat. When the agent finishes, the spec is on the board as **Specified**, and its card offers **Run plan**.
+
+   </YouSee>
+
+   [A run, step by step](/docs/copilot-app/a-run-step-by-step) follows one spec from there to implement.
+
+</Steps>
+
+## In Claude Code
+
+You do not need the VS Code extension for this path. The mod draws in the Claude Code terminal and in the Code tab of the Claude Desktop app.
+
+<Steps>
+
+1. <span id="claude-spec-kit"></span>**Get Spec Kit**
+
+   Spec Kit is GitHub's toolkit for spec-driven development. Its `specify` command sets a project up with the `/speckit` commands Claude Code runs.
+
+   <Actions>
+     <CodeLine command={SOURCE_CLI} />
+   </Actions>
+
+   This installs the GitHub build. The stock PyPI `specify-cli` has no `extension` command, so step 2 would fail with it. The command changes your global `uv` tools.
+
+   Then set the project up for Claude Code, from its root:
+
+   <Actions>
+     <CodeLine command="specify init --here --integration claude" />
+   </Actions>
+
+   <YouSee label="You should see">
+
+   A `.specify` folder in the project, and `/speckit-specify` among the commands Claude Code offers.
+
+   </YouSee>
+
+2. <span id="claude-companion"></span>**Add the Companion extension for Spec Kit** (optional, recommended)
+
+   This is the engine half. It records each run, adds the Companion pipeline and Auto, and brings living specs. It needs Spec Kit 0.9.5 or newer.
+
+   <Actions>
+     <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="install" />
+   </Actions>
+
+   Run it from your project root and copy it whole.
+
+   **Without it** the mod still follows your run, from the files alone. Each step says when its document was last written, where a recorded run shows how long the step took. The Overview tab shows what the spec says, not what the run decided and checked.
+
+   <YouSee label="You should see">
+
+   A one-time **untrusted source** prompt. Accept it. Then Claude Code offers `/speckit-companion-specify` next to `/speckit-specify`.
+
+   </YouSee>
+
+3. <span id="claude-mod"></span>**Add the mod**
+
+   You need Claude Code 2.1.287 or later. Check with `claude --version`.
+
+   <Actions>
+     <CodeLine command="claude plugin marketplace add https://speckit-companion.dev/plugins/marketplace.json" />
+     <CodeLine command="claude plugin install speckit-companion@speckit-companion" />
+     <p>In a session that is already open, load it with:</p>
+     <CodeLine command="/reload-plugins" prompt={false} />
+     <p>Then open the pane and pick the spec to follow:</p>
+     <CodeLine command="/speckit-tracker" prompt={false} />
+   </Actions>
+
+   <YouSee label="You should see">
+
+   Run `/plugin`. The line under the tabs lists `speckit-companion` among the active mods. `/speckit-tracker` opens the pane on its Specs tab.
+
+   </YouSee>
+
+4. <span id="claude-check"></span>**Check that it took**
+
+   Type `/speckit-companion-specify` and a small change you want. On stock Spec Kit, type `/speckit-specify`.
+
+   <YouSee label="You should see">
+
+   A line above the prompt naming the spec. In the pane, Specify is ticked when the turn ends, and the last line names the next command.
+
+   </YouSee>
+
+   <DocFigure
+     src="live-mod-run.png"
+     alt="The mod's pane during an implement run: Specify, Plan and Tasks ticked with their times, Implement running, the documents, and three of six tasks ticked."
+     caption="The pane a few steps later: each step with its time, the documents and the tasks."
+   />
+
+   [A run, step by step](/docs/claude-code/a-run-step-by-step) follows one spec from specify to implement.
+
+</Steps>
 
 ## Update later
 
-Run the Companion Spec Kit extension command again. The URL always serves the newest build, and `--force` refreshes in place. To silence the install prompts, set `speckit.companion.installPrompt` to `false`.
+| Piece | How to update it |
+| --- | --- |
+| Spec Kit CLI | Run the `uv tool install` command again. `--force` replaces the build you have. |
+| Companion extension for Spec Kit | Run its `specify extension add` command again. The URL always serves the newest build, and `--force` refreshes in place. |
+| VS Code extension | Your editor updates it like any other extension. |
+| Copilot board | Copy the folder again and commit it. A project copy then shows **Update available** under **Repository trust**, and new sessions lose the board until you accept again. |
+| Claude Code mod | Run `claude plugin update speckit-companion@speckit-companion`, then `/reload-plugins` in an open session. |
+
+To silence the VS Code extension's install prompts, set `speckit.companion.installPrompt` to `false`.
 
 ## If something did not work
 
 | What you see | What to do |
 | --- | --- |
-| `No such command 'extension'` | You have the stock PyPI build. Install the GitHub build of the CLI, then add the extension again. |
-| Stuck on an old build | Run `specify extension remove companion`, then add it again. |
-| No `/speckit.companion.*` commands | Run `specify extension list` from the repo root, not your home directory. Then reload the window so your assistant re-reads its commands. |
-| No Living Specs view | The install went somewhere other than this workspace. Run it again from this project's root. |
+| `No such command 'extension'` | You have the stock PyPI build. [Install the GitHub build](#vscode-spec-kit) of the CLI, then add the extension again. |
+| Stuck on an old build of the Companion extension | Run `specify extension remove companion`, then add it again. |
+| No `/speckit.companion.*` commands | Run `specify extension list` from the repo root, not your home directory. Then reload the window, or start a new session, so your assistant re-reads its commands. |
+| VS Code: no Living Specs view | The install went somewhere other than this workspace. Run it again from this project's root. |
+| Copilot app: the board does not open | [Accept the repository content](#copilot-accept), then start a new session. If the agent opens an empty `speckit-companion.md` in the editor, you are in a session from before you accepted. |
+| Copilot app: the board is missing from a project copy | Commit the copy and get it onto your default branch. Each session starts from that branch. |
+| Copilot app: the buttons send stock commands though Companion is installed | Commit the files the Companion install added. A session cannot see uncommitted commands. |
+| Claude Code: nothing shows | Run `/reload-plugins`. Then widen the terminal, or run `/speckit-tracker` to open the pane in a narrow one. |
 
-## Working outside VS Code
+## What each piece is
 
-| Where you work | What to install |
-| --- | --- |
-| GitHub Copilot app | Skip the VS Code extension. Add the Companion Spec Kit extension so the board can run the `/speckit.companion.*` commands, then follow [Install the board in the Copilot app](/docs/copilot-app/install). |
-| Claude Code terminal | Add the mod in [Install the Claude Code mod](/docs/claude-code/install). It keeps the run in view above the prompt. |
+| Piece | What it does | Where it installs | Do you need it? |
+| --- | --- | --- | --- |
+| Spec Kit CLI (`specify`) | Sets a project up with the `/speckit` commands, and installs extensions | Your machine, as a `uv` tool. `specify init` writes a `.specify` folder and the commands into the project | Required on every path |
+| Companion extension for Spec Kit | Records each run, adds the Companion pipeline and Auto, and brings living specs | The project, under `.specify/extensions/companion`, plus commands for your assistant | Optional, recommended on every path |
+| VS Code extension | The sidebar, the spec viewer, review comments and the Overview | Your editor | Required for [VS Code](#in-vs-code) only |
+| Copilot board | A board of every spec beside the chat, with a button for the next step | The project, under `.github/extensions/speckit-companion`, or your user folder, under `~/.copilot/extensions/speckit-companion` | Required for the [Copilot app](#in-the-github-copilot-app) only |
+| Claude Code mod | A line above the prompt and a pane with the steps and tasks | Claude Code, as a plugin for your user | Required for [Claude Code](#in-claude-code) only |
 
 ## Related
 
-[Your first spec](/docs/start/your-first-spec) creates a spec and runs its first step.
+- [Your first spec](/docs/start/your-first-spec) creates a spec in VS Code and runs its first step.
+- [Navigate the board](/docs/copilot-app/navigate-the-board) covers what each part of the Copilot board shows.
+- [What the mod shows](/docs/claude-code/what-it-shows) covers the band and the pane in Claude Code.

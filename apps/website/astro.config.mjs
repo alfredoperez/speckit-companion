@@ -160,7 +160,7 @@ export default defineConfig({
           items: [
             { label: 'Introduction', slug: 'docs' },
             { label: 'What is spec-driven development?', slug: 'docs/start/spec-driven-development' },
-            { label: 'Install', slug: 'docs/install' },
+            { label: 'Install where you work', slug: 'docs/install' },
           ],
         },
         {
