@@ -48,7 +48,7 @@ if (!match) {
 }
 const image = match[1].default;
 
-const described = (manifest.features as Array<{ alt?: Record<string, string> }>)
+const described = (manifest.features as Array<{ alt?: Record<string, string | undefined> }>)
   .flatMap((feature) => Object.entries(feature.alt ?? {}))
   .find(([path]) => path.split('/').pop() === src)?.[1];
 const alt = altOverride ?? described;

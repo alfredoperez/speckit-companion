@@ -40,8 +40,16 @@ const SOURCE_CLI =
 type Feature = {
   id: string;
   status: string;
-  outputs: Record<string, string | null>;
-  alt?: Record<string, string>;
+  outputs: {
+    poster?: string | null;
+    panelStill?: string | null;
+    webWebm?: string | null;
+    webMp4?: string | null;
+    heroStill?: string | null;
+    lightwellHero?: string | null;
+    lightwellSection?: string | null;
+  };
+  alt?: Record<string, string | undefined>;
 };
 
 const features = manifest.features as Feature[];
@@ -2825,10 +2833,10 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   // The pip you pick lights up, the light behind the frame lifts, and the loop,
   // its chips and the sentence under it change together. Only the entry on
   // screen has its video loaded and playing.
-  document.querySelectorAll('[data-hero-show]').forEach((root) => {
-    const pips = Array.from(root.querySelectorAll('[data-hero-pip]'));
-    const shots = Array.from(root.querySelectorAll('[data-hero-shot]'));
-    const motes = Array.from(root.querySelectorAll('[data-hero-motes]'));
+  document.querySelectorAll<HTMLElement>('[data-hero-show]').forEach((root) => {
+    const pips = Array.from(root.querySelectorAll<HTMLElement>('[data-hero-pip]'));
+    const shots = Array.from(root.querySelectorAll<HTMLElement>('[data-hero-shot]'));
+    const motes = Array.from(root.querySelectorAll<HTMLElement>('[data-hero-motes]'));
     const stage = root.querySelector('.hero-stage');
     const bloom = root.querySelector('[data-hero-bloom]');
     const flash = root.querySelector('[data-hero-flash]');
@@ -2838,13 +2846,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     const LOOPS = 2;
     const STILL_DWELL = 14000;
     let index = 0;
-    let timer = null;
+    let timer: number | null = null;
     let stopped = false;
     let onScreen = false;
     let plays = 0;
     let lastTime = 0;
 
-    let flareTimer = null;
+    let flareTimer: number | null = null;
     const flare = () => {
       if (!bloom || reduced.matches) return;
       // The light lifts as the new surface arrives and settles back. Holding it
@@ -2855,8 +2863,8 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       flareTimer = window.setTimeout(() => bloom.removeAttribute('data-flare'), 620);
     };
 
-    const isVideo = (el) => el instanceof HTMLVideoElement;
-    const poster = (el) => {
+    const isVideo = (el: Element): el is HTMLVideoElement => el instanceof HTMLVideoElement;
+    const poster = (el: HTMLElement) => {
       if (isVideo(el) && !el.poster && el.dataset.poster) el.poster = el.dataset.poster;
     };
 
@@ -2881,7 +2889,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       }
     };
 
-    const show = (next) => {
+    const show = (next: number) => {
       index = (next + pips.length) % pips.length;
       const pip = pips[index];
       const id = pip.dataset.heroPip;
@@ -2927,7 +2935,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         stop();
         show(i);
       });
-      pip.addEventListener('keydown', (event) => {
+      pip.addEventListener('keydown', (event: KeyboardEvent) => {
         const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
         if (!step) return;
         event.preventDefault();
@@ -2962,13 +2970,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   // link can be shared. `#quick-start` and no hash both mean the first path.
   (() => {
     const section = document.getElementById('quick-start');
-    const tabs = section ? Array.from(section.querySelectorAll('[data-path-tab]')) : [];
-    const panels = section ? Array.from(section.querySelectorAll('[data-path-panel]')) : [];
+    const tabs = section ? Array.from(section.querySelectorAll<HTMLElement>('[data-path-tab]')) : [];
+    const panels = section ? Array.from(section.querySelectorAll<HTMLElement>('[data-path-panel]')) : [];
     if (!section || !tabs.length) return;
 
-    const known = (hash) => tabs.some((tab) => tab.dataset.pathTab === hash);
+    const known = (hash: string) => tabs.some((tab) => tab.dataset.pathTab === hash);
 
-    const select = (hash) => {
+    const select = (hash: string | undefined) => {
       tabs.forEach((tab) => {
         const on = tab.dataset.pathTab === hash;
         tab.setAttribute('aria-selected', on ? 'true' : 'false');
@@ -2979,7 +2987,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       });
     };
 
-    const fromAddress = (scroll) => {
+    const fromAddress = (scroll: boolean) => {
       const hash = window.location.hash.slice(1);
       if (!known(hash)) return false;
       select(hash);
@@ -2991,7 +2999,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     if (!fromAddress(true)) select(tabs[0].dataset.pathTab);
     window.addEventListener('hashchange', () => fromAddress(true));
 
-    const choose = (tab) => {
+    const choose = (tab: HTMLElement) => {
       select(tab.dataset.pathTab);
       window.history.replaceState(null, '', `#${tab.dataset.pathTab}`);
     };
@@ -3001,7 +3009,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
         event.preventDefault();
         choose(tab);
       });
-      tab.addEventListener('keydown', (event) => {
+      tab.addEventListener('keydown', (event: KeyboardEvent) => {
         if (event.key === ' ') {
           event.preventDefault();
           choose(tab);
@@ -3018,10 +3026,10 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
   })();
 
   // --- demo tabs -----------------------------------------------------------
-  document.querySelectorAll('[data-tabs]').forEach((root) => {
-    const tabs = Array.from(root.querySelectorAll('[data-tab]'));
-    const panels = Array.from(root.querySelectorAll('[data-panel]'));
-    const says = Array.from(root.querySelectorAll('[data-say]'));
+  document.querySelectorAll<HTMLElement>('[data-tabs]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll<HTMLElement>('[data-tab]'));
+    const panels = Array.from(root.querySelectorAll<HTMLElement>('[data-panel]'));
+    const says = Array.from(root.querySelectorAll<HTMLElement>('[data-say]'));
     const label = root.querySelector('[data-window-label]');
     if (!tabs.length) return;
 
@@ -3030,13 +3038,13 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
     // preload="none" means the element may never have fetched anything, and
     // raising preload alone does not start one: it needs an explicit load().
-    const warmOne = (video) => {
+    const warmOne = (video: HTMLVideoElement | null) => {
       if (!video) return;
       if (video.preload !== 'auto') video.preload = 'auto';
       if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) video.load();
     };
 
-    const select = (id) => {
+    const select = (id: string | undefined) => {
       current = id;
 
       tabs.forEach((tab) => {
@@ -3078,7 +3086,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
     tabs.forEach((tab, index) => {
       tab.addEventListener('click', () => select(tab.dataset.tab));
-      tab.addEventListener('keydown', (event) => {
+      tab.addEventListener('keydown', (event: KeyboardEvent) => {
         const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
         if (!step) return;
         event.preventDefault();
@@ -3124,10 +3132,10 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     // requestAnimationFrame, so a fast flick coalesces into one frame of work
     // no matter how many things are listening. Same for resize: one debounced
     // listener, one list of things to re-measure.
-    const scrollReaders = [];
+    const scrollReaders: Array<() => void> = [];
     let scrollQueued = false;
 
-    const onScroll = (read) => {
+    const onScroll = (read: () => void) => {
       scrollReaders.push(read);
       if (scrollReaders.length > 1) return;
       window.addEventListener(
@@ -3144,10 +3152,10 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       );
     };
 
-    const resizeReaders = [];
+    const resizeReaders: Array<() => void> = [];
     let resizeTimer = 0;
 
-    const onResize = (measure) => {
+    const onResize = (measure: () => void) => {
       resizeReaders.push(measure);
       if (resizeReaders.length > 1) return;
       window.addEventListener('resize', () => {
@@ -3241,7 +3249,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     // The one number on the page counts up once, on first entry. The markup
     // already carries the final digits, so this only rewrites them.
     const claim = document.querySelector('[data-claim]');
-    const figures = claim ? Array.from(claim.querySelectorAll('[data-count-to]')) : [];
+    const figures = claim ? Array.from(claim.querySelectorAll<HTMLElement>('[data-count-to]')) : [];
 
     if (claim && figures.length) {
       const targets = figures.map((el) => Number(el.dataset.countTo));
@@ -3250,7 +3258,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           if (!entries.some((entry) => entry.isIntersecting)) return;
           counter.disconnect();
           const started = performance.now();
-          const tick = (now) => {
+          const tick = (now: number) => {
             const progress = Math.min(1, (now - started) / 300);
             figures.forEach((el, index) => {
               el.textContent = String(Math.round(targets[index] * progress));
@@ -3268,9 +3276,9 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     // normalised by the most that can ever be visible, so a section taller
     // than the viewport still reaches full strength.
     const cta = document.querySelector('[data-cta]');
-    const ctaGlow = cta ? cta.querySelector('.cta-glow') : null;
+    const ctaGlow = cta ? cta.querySelector<HTMLElement>('.cta-glow') : null;
 
-    if (ctaGlow) {
+    if (cta && ctaGlow) {
       const swell = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -3289,9 +3297,9 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     // its section passes, so the page acts out a run completing phase by
     // phase. It is the only scroll-linked move here and the only one allowed
     // past 300ms.
-    const stem = document.querySelector('[data-stem]');
+    const stem = document.querySelector<HTMLElement>('[data-stem]');
     const vine = stem ? stem.querySelector('[data-stem-vine]') : null;
-    const leaves = stem ? Array.from(stem.querySelectorAll('[data-stem-leaf]')) : [];
+    const leaves = stem ? Array.from(stem.querySelectorAll<HTMLElement>('[data-stem-leaf]')) : [];
     // Where the browser can drive the animation off the scroller itself, it
     // does, and nothing at all runs on the scroll event.
     const scrollTimeline =
@@ -3302,7 +3310,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     const wide = window.matchMedia('(min-width: 861px)');
 
     if (stem && vine && leaves.length) {
-      let marks = [];
+      let marks: Array<{ leaf: HTMLElement; at: number }> = [];
 
       const scrollSpan = () => document.documentElement.scrollHeight - window.innerHeight;
 
