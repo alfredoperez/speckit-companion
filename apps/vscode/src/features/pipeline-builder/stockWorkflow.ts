@@ -212,7 +212,6 @@ export function readStockWorkflow(workspaceRoot: string): StockWorkflowView {
         steps,
         presets: presets(workspaceRoot),
         registry: registry !== null,
-        buildBlocked: 'Build writes Companion\'s command files, and this project '
-            + 'runs stock Spec Kit. Nothing here is built.',
+        buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
     };
 }

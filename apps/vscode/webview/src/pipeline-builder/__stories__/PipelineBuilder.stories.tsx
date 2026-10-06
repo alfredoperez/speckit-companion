@@ -639,8 +639,7 @@ function stock(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
         steps: STOCK_STEPS,
         presets: [],
         registry: true,
-        buildBlocked: 'Build writes Companion\'s command files, and this project runs '
-            + 'stock Spec Kit. Nothing here is built.',
+        buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
         ...over,
     };
 }
