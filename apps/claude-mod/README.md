@@ -99,6 +99,13 @@ With the [Companion Spec Kit extension](https://speckit-companion.dev/docs/insta
 - **Where it looks for specs.** In `specs/` and `.specify/specs/`, or in `speckit.specDirectories` from `.vscode/settings.json` when you set it.
 - **Tested on Claude Code 2.1.291.** The mods API can change between releases.
 
+## What it reads, runs and sends
+
+- **Reads:** the spec files and the run record in your project, and the `VISUAL`, `EDITOR`, `TERM_PROGRAM` and `CURSOR_TRACE_ID` environment variables, only to pick your editor. It does not read the conversation.
+- **Runs:** one program, your editor, and only when you press `o`. It tries `$VISUAL` or `$EDITOR` when that editor has a window of its own, then `cursor` or `code`, then the system opener (`open` or `xdg-open`), each with the file's path as its only argument. When none works, the path goes to your clipboard.
+- **Sends:** nothing. The mod makes no network request and has no telemetry.
+- **Hooks:** `session.start` to find the specs, `tool.call` and `turn.complete` to look at the files again after the agent writes, and `ui.focus` to remember which row you are on in its own pane. It passes every call through unchanged.
+
 ## The other places SpecKit Companion runs
 
 The mod reads the same run record as the other two surfaces, so all three show the same steps, times and task counts.
