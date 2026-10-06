@@ -97,10 +97,12 @@ export function parseInline(text: string): string {
         // Strikethrough
         .replace(/~~(.+?)~~/g, '<del>$1</del>')
         // Images
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) =>
-            inAttribute(alt) || inAttribute(target)
-                ? match
-                : `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, '&quot;')}">`)
+        // Stashed like a code span, so the link pass below cannot match across the tag just built.
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => {
+            if (inAttribute(alt) || inAttribute(target)) return match;
+            codeSpans.push(`<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, '&quot;')}">`);
+            return `\x00CODE${codeSpans.length - 1}\x00`;
+        })
         // Links
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, target) =>
             inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text}</a>`)

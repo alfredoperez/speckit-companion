@@ -62,7 +62,11 @@ function parseInline(text) {
       codeSpans.push(`<code>${code}</code>`);
     }
     return `\0CODE${codeSpans.length - 1}\0`;
-  }).replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/___(.+?)___/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>").replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => inAttribute(alt) || inAttribute(target) ? match : `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, "&quot;")}">`).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text2, target) => inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text2}</a>`).replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
+  }).replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/___(.+?)___/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>").replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => {
+    if (inAttribute(alt) || inAttribute(target)) return match;
+    codeSpans.push(`<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, "&quot;")}">`);
+    return `\0CODE${codeSpans.length - 1}\0`;
+  }).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text2, target) => inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text2}</a>`).replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
   result = result.replace(/<strong>Given<\/strong>/g, '<span class="scenario-keyword scenario-given">Given</span>').replace(/<strong>When<\/strong>/g, '<span class="scenario-keyword scenario-when">When</span>').replace(/<strong>Then<\/strong>/g, '<span class="scenario-keyword scenario-then">Then</span>');
   return result;
 }
@@ -925,6 +929,11 @@ function renderTable(rows) {
   html += "</table>\n";
   return html;
 }
+var FENCE_LANGUAGE = /^[a-z0-9][a-z0-9_+#.-]{0,31}$/;
+function fenceLanguage(info) {
+  const word = info.trim().split(/\s+/, 1)[0].toLowerCase();
+  return FENCE_LANGUAGE.test(word) ? word : "";
+}
 function renderMarkdown(markdown) {
   markdown = markdown.replace(/\r\n?/g, "\n");
   const source = markdown;
@@ -990,7 +999,7 @@ function renderMarkdown(markdown) {
       }
       if (!inCodeBlock) {
         inCodeBlock = true;
-        codeBlockLang = trimmedLine.slice(3).trim();
+        codeBlockLang = fenceLanguage(trimmedLine.slice(3));
         codeContent = [];
       } else {
         inCodeBlock = false;
@@ -1004,8 +1013,8 @@ function renderMarkdown(markdown) {
           html += `<pre class="tree-structure"><code>${body}</code></pre>
 `;
         } else {
-          const langClass = codeBlockLang ? ` class="language-${escapeHtml(codeBlockLang)}"` : "";
-          const dataLang = codeBlockLang ? ` data-language="${escapeHtml(codeBlockLang)}"` : "";
+          const langClass = ` class="language-${codeBlockLang}"`;
+          const dataLang = ` data-language="${codeBlockLang}"`;
           html += `<pre class="code-block"${dataLang}><code${langClass}>${escapeHtml(codeText)}</code></pre>
 `;
         }
