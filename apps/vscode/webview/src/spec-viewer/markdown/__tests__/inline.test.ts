@@ -8,6 +8,7 @@
  *  - Multiple file extensions are recognised
  */
 
+import { parseFragment } from 'parse5';
 import { parseInline } from '../inline';
 
 describe('parseInline', () => {
@@ -314,5 +315,36 @@ describe('parseInline: a code span inside a link target or image alt', () => {
 
     it('still links plain targets', () => {
         expect(parseInline('[docs](https://example.com)')).toContain('<a href="https://example.com"');
+    });
+});
+
+describe('parseInline: an image next to a link', () => {
+    type Node = { nodeName: string; attrs?: { name: string; value: string }[]; childNodes?: Node[] };
+
+    const elements = (source: string): Node[] => {
+        const found: Node[] = [];
+        const walk = (node: Node): void => {
+            if (node.attrs) found.push(node);
+            (node.childNodes ?? []).forEach(walk);
+        };
+        walk(parseFragment(parseInline(source)) as unknown as Node);
+        return found;
+    };
+    const names = (node: Node): string[] => (node.attrs ?? []).map((a) => a.name).sort();
+
+    it.each([
+        ['a link written across an image', '![[t](u)](x onmouseover=alert y=)'],
+        ['an image written as a link target', '[t](![a](b onmouseover=alert c=))'],
+    ])('adds no attribute for %s', (_name, source) => {
+        for (const node of elements(source)) {
+            expect(names(node)).toEqual(node.nodeName === 'img' ? ['alt', 'src'] : ['href', 'target']);
+        }
+    });
+
+    it('keeps an image that is the text of a link', () => {
+        const [link, image] = elements('[![build](badge.svg)](https://example.com)');
+
+        expect(link.attrs).toEqual([{ name: 'href', value: 'https://example.com' }, { name: 'target', value: '_blank' }]);
+        expect(image.attrs).toEqual([{ name: 'src', value: 'badge.svg' }, { name: 'alt', value: 'build' }]);
     });
 });

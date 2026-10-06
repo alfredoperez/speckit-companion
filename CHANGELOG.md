@@ -32,6 +32,9 @@ A spec whose build is done has a ==**Converge** button== in the viewer footer an
 **Other actions** on the Tasks tab gains **Create GitHub issues**: ==one issue per task==, sent as Spec Kit's `/speckit.taskstoissues`. Companion asks first since the issues are real, and it needs a GitHub remote and the GitHub MCP server.
 <!-- area: spec-viewer; pr: 844; media: create-issues-menu, create-issues-confirm -->
 
+### Security
+- **A crafted spec cannot inject markup attributes.** A link written across an image stays ==inert==, and a code fence keeps only its language name. ([#874](https://github.com/alfredoperez/speckit-companion/pull/874)) <!-- area: spec-viewer -->
+
 ### Added
 - **The Copilot board helps you install Companion.** In a project without Companion, **Install it** shows the command to copy and **Ask Copilot to install it** ==runs it for you==. ([#854](https://github.com/alfredoperez/speckit-companion/pull/854)) <!-- area: copilot-app -->
 - **Read a step's document inside Claude Code.** Press a step to read its spec, plan or tasks, a new ==Overview tab== sums up the run, and `/speckit-tracker` joins `/spec`. ([#852](https://github.com/alfredoperez/speckit-companion/pull/852)) <!-- area: assistants -->
