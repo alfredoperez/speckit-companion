@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - **The Pipeline Builder is renamed Workflow Builder.** The board that draws your Companion pipeline has a ==new name== in the command, the tab and the docs. ([#883](https://github.com/alfredoperez/speckit-companion/pull/883)) <!-- area: pipeline-builder -->
+### Fixed
+
+- **The Copilot board unlocks the next step.** A step the agent wrote the document for but never closed in the run record is closed when the turn ends. ([#881](https://github.com/alfredoperez/speckit-companion/pull/881)) <!-- area: copilot-app -->
 
 ## [0.36.0] - 2026-10-06
 
