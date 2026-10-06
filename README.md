@@ -124,9 +124,9 @@ The sidebar shows test coverage for each capability and flags drift when the cod
 
 ### A pipeline you can see and change
 
-The **Pipeline Builder** draws the Companion pipeline your project runs: each step as a column, its phases, the nodes in them, and the hooks attached. Open it from the circuit icon at the top of the Specs sidebar.
+The **Workflow Builder** draws the Companion pipeline your project runs: each step as a column, its phases, the nodes in them, and the hooks attached. Open it from the circuit icon at the top of the Specs sidebar.
 
-![The Pipeline Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark.](docs/screenshots/generated/builder-board.png)
+![The Workflow Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark.](docs/screenshots/generated/builder-board.png)
 
 From the board you can:
 
@@ -136,17 +136,17 @@ From the board you can:
 - **Add a step** of your own, with its own `/speckit.companion.<name>` command.
 - **Keep several workflows** and switch between them, starting from what you run today or from one Companion ships.
 
-Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder). It needs the Companion Spec Kit extension.
+Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder). It needs the Companion Spec Kit extension.
 
 | Command | What it does |
 |---|---|
-| **Open Pipeline Builder** | Draw the pipeline your configuration resolves to |
+| **Open Workflow Builder** | Draw the pipeline your configuration resolves to |
 | **Preview Pipeline Build** | Show what a build would change, writing nothing |
 | **Build Pipeline from companion.yml** | Apply the configuration |
 
 ### Also in the box
 
-- **Your own process.** Custom phases, custom commands and custom output files, and the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
+- **Your own process.** Custom phases, custom commands and custom output files, written in VS Code settings rather than on the Workflow Builder board, and the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
 - **Which assistant has which spec.** A spec you run from Companion shows the assistant's name on its sidebar row and in the viewer header, and **Show Terminal** brings its terminal to the front while that terminal is open. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
 - **Multi-root workspaces.** Companion picks the folder that holds your Spec Kit files, or the one you name in `speckit.projectFolder`. [Configuration](https://speckit-companion.dev/docs/reference/configuration)
 - **Works offline, careful by default.** Fonts and icons ship with the extension, destructive actions ask first or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer)
@@ -200,7 +200,7 @@ Everything lives in plain files in your repo: the spec markdown, and a `.spec-co
 The docs live at [speckit-companion.dev/docs](https://speckit-companion.dev/docs/).
 
 - **Start**: [Install](https://speckit-companion.dev/docs/install), [Your first spec](https://speckit-companion.dev/docs/start/your-first-spec/) and [Spec-driven development](https://speckit-companion.dev/docs/start/spec-driven-development/)
-- **In your IDE**: [the sidebar](https://speckit-companion.dev/docs/navigate/the-sidebar), [inside the viewer](https://speckit-companion.dev/docs/navigate/inside-the-viewer), [each step](https://speckit-companion.dev/docs/steps/specify), [the Overview](https://speckit-companion.dev/docs/results/the-overview), [living specs](https://speckit-companion.dev/docs/results/living-specs) and the [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder)
+- **In your IDE**: [the sidebar](https://speckit-companion.dev/docs/navigate/the-sidebar), [inside the viewer](https://speckit-companion.dev/docs/navigate/inside-the-viewer), [each step](https://speckit-companion.dev/docs/steps/specify), [the Overview](https://speckit-companion.dev/docs/results/the-overview), [living specs](https://speckit-companion.dev/docs/results/living-specs) and the [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder)
 - **In the Copilot app**: [install the board](https://speckit-companion.dev/docs/copilot-app/install/) and [run the steps](https://speckit-companion.dev/docs/copilot-app/run-the-steps)
 - **In Claude Code**: [install the mod](https://speckit-companion.dev/docs/claude-code/install/) and [what it shows](https://speckit-companion.dev/docs/claude-code/what-it-shows)
 - **Reference**: [configuration](https://speckit-companion.dev/docs/reference/configuration), [commands](https://speckit-companion.dev/docs/reference/commands), [AI providers](https://speckit-companion.dev/docs/reference/providers) and [telemetry](https://speckit-companion.dev/docs/reference/telemetry)

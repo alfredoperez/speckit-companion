@@ -170,7 +170,7 @@ Nothing is written until every command has assembled, so a build that cannot fin
 
 Steps are grouped into named **phases** (gather, author, check, wrap-up). A phase is where a hook can attach without naming a single node; it is not a separate dispatch, so the command your assistant receives is still one command.
 
-If you use the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion), its [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder) draws all of this and runs the build for you.
+If you use the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion), its [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder) draws all of this and runs the build for you.
 
 ## Fast path: a small change skips the ceremony
 
@@ -311,7 +311,7 @@ Each lifecycle hook appends one entry to the canonical `history[]` and advances 
 
 ## Docs & links
 
-- [**speckit-companion.dev/docs**](https://speckit-companion.dev/docs/): the guides, from install to each step, living specs and the Pipeline Builder.
+- [**speckit-companion.dev/docs**](https://speckit-companion.dev/docs/): the guides, from install to each step, living specs and the Workflow Builder.
 - [**SpecKit Companion for VS Code**](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion): the sidebar, viewer and Overview this feeds.
 - [**The Copilot app board**](https://speckit-companion.dev/docs/copilot-app/install/) and [**the Claude Code mod**](https://speckit-companion.dev/docs/claude-code/install/): the same record outside VS Code.
 - [docs/install.md](./docs/install.md): install (release / dev / fallback) + verification.

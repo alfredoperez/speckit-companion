@@ -384,7 +384,7 @@ const steeringRows: SidebarRow[] = [
 export function specsPane(expandProfilePhoto: boolean, fill = true): SidebarPane {
     const rows = specsRows(expandProfilePhoto);
     // The title bar contributes.menus["view/title"] builds for speckit.views.explorer,
-    // in navigation order: Refresh, Filter, Sort, Collapse-or-Expand, Pipeline Builder
+    // in navigation order: Refresh, Filter, Sort, Collapse-or-Expand, Workflow Builder
     // (only with the spec-kit extension installed), New Spec. Collapse All and Expand
     // All are one slot that flips on speckit.specs.allCollapsed, so read it off the
     // rows rather than hard-coding it — a frame must never offer Expand All over an

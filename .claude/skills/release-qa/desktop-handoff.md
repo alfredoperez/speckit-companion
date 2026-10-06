@@ -22,8 +22,8 @@ Write PASS, FAIL or BLOCKED and one line of what you saw for each. For a FAIL, g
 1. Open `Demo — Links`, Specification tab. In the Links section click, in order: Approach (Plan opens at the Approach heading), Tasks (Tasks opens), Far heading (the page scrolls down to "Far heading"), Other spec (the `Demo — Planned` spec opens in the SpecKit viewer, not as raw markdown), Source file (App.tsx opens in the editor, beside the viewer, not in a new split each time), Web link (the site opens in the browser; then come back to VS Code).
 2. Open `Demo — Empty record`. The editor tab title names the document (for example `... - Specification`), not Overview, and the pane shows that document.
 
-**C. Pipeline Builder.** {{SANDBOX}} window.
-1. Open the Pipeline Builder. Open a step's phase menu, close it; click Add step, look, Cancel.
+**C. Workflow Builder.** {{SANDBOX}} window.
+1. Open the Workflow Builder. Open a step's phase menu, close it; click Add step, look, Cancel.
 2. Drag the divider so the builder is about 330px wide. Steps stack in one column, scroll vertically, step heads stay pinned, nothing clipped.
 3. At that width, click a free node (for example "Create the feature branch"). The Order row shows Move up, Move down and Move to phase…. Click Move to phase…: the list sits fully inside the panel, shows every phase the node is not in, and scrolls if long. Pick a phase the node is allowed to join: the node moves and the status line reads "<node> moved to <phase> in <step>". If a phase is refused, the status line says why; try another. Do not save or build.
 

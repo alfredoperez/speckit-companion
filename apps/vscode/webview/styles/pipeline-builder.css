@@ -1,5 +1,5 @@
 /**
- * Pipeline builder.
+ * Workflow Builder.
  *
  * Rides the shared host-derived tokens (`tokens.css`) rather than the viewer's
  * owned palette, so this panel tracks the user's VS Code theme like every other

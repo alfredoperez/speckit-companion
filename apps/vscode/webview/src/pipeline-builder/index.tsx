@@ -1,5 +1,5 @@
 /**
- * The pipeline builder webview.
+ * The Workflow Builder webview.
  *
  * Draws the run left to right — the pipeline is a sequence and the layout says
  * so — with `auto` out of the row because it runs the others rather than taking

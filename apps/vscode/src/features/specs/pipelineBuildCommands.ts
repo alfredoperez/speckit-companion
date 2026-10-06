@@ -121,7 +121,7 @@ export function registerPipelineBuildCommands(
         const script = resolveBuildScript(workspaceRoot, context.extensionPath);
         if (!script) {
             void vscode.window.showWarningMessage(
-                'The pipeline builder is not available — install the companion spec-kit extension.',
+                'The Workflow Builder is not available — install the companion spec-kit extension.',
             );
             return null;
         }

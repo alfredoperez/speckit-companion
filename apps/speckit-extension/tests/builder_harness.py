@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A scratch project, driven the way the pipeline builder drives one.
+"""A scratch project, driven the way the Workflow Builder drives one.
 
 The builder's write paths are a CLI, so a test can be the panel: write through
 `config_write.py`, build, and read the built command bodies back. Shared by the

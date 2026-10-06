@@ -118,5 +118,5 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Pipeline Builder visual gate (layout only)
+      - name: Workflow Builder visual gate (layout only)
         run: npm run test:visual:ci

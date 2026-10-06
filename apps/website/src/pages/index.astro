@@ -278,8 +278,8 @@ const tabs = [
 ];
 
 /*
-  The Pipeline Builder, as it ships in the VS Code extension today. Every point
-  is a row of the Pipeline Builder or Hooks docs page. Two phrasings are
+  The Workflow Builder, as it ships in the VS Code extension today. Every point
+  is a row of the Workflow Builder or Hooks docs page. Two phrasings are
   deliberate: a hook is something your assistant reads at that point, not an
   engine that runs it, and nothing changes until you press Build.
 */
@@ -288,8 +288,8 @@ const builder = {
     src: '/changelog/vscode-0.33.0-pipeline-builder.png',
     width: 3120,
     height: 1960,
-    alt: 'The Pipeline Builder: specify, plan, tasks and implement as four columns, each with its phases and nodes. Two steps are marked changed, and hooks from companion.yml sit before and after the nodes they are attached to.',
-    caption: 'The Pipeline Builder, in a VS Code tab',
+    alt: 'The Workflow Builder: specify, plan, tasks and implement as four columns, each with its phases and nodes. Two steps are marked changed, and hooks from companion.yml sit before and after the nodes they are attached to.',
+    caption: 'The Workflow Builder, in a VS Code tab',
   },
   points: [
     {
@@ -948,7 +948,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     </div>
   </section>
 
-  <!-- PIPELINE BUILDER -->
+  <!-- WORKFLOW BUILDER -->
   <section class="section section--builder" id="pipeline-builder">
     <div class="inner pb">
       <div class="qs-say">
@@ -957,7 +957,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           <SoonChip class="h2-chip" label="beta" />
         </h2>
         <p>
-          The Pipeline Builder shows what your assistant does at each Companion step. Change it on
+          The Workflow Builder shows what your assistant does at each Companion step. Change it on
           the board, then build. It ships in the VS Code extension today, in beta, and it is still
           changing.
         </p>
@@ -975,7 +975,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           />
           <figcaption>{builder.shot.caption}</figcaption>
         </figure>
-        <ul class="pb-points" aria-label="What you do in the Pipeline Builder">
+        <ul class="pb-points" aria-label="What you do in the Workflow Builder">
           {
             builder.points.map((point) => (
               <li>
@@ -992,7 +992,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           It opens from the circuit icon at the top of the Specs view, and needs the Companion
           extension for Spec Kit.
         </span>
-        <a class="qs-full" href="/docs/customize/pipeline-builder/">Read the Pipeline Builder guide</a>
+        <a class="qs-full" href="/docs/customize/workflow-builder/">Read the Workflow Builder guide</a>
       </p>
     </div>
   </section>
@@ -1945,7 +1945,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     text-align: center;
   }
 
-  /* -------------------------------------------------------- pipeline builder */
+  /* -------------------------------------------------------- workflow builder */
 
   .section--builder .inner {
     max-width: 1220px;

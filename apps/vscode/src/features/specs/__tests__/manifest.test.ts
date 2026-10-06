@@ -212,7 +212,7 @@ describe('sidebar contributions', () => {
             expect(specsTitleActions()[0].id).toBe('speckit.refresh');
         });
 
-        it('shows the pipeline builder only where its extension is installed', () => {
+        it('shows the Workflow Builder only where its extension is installed', () => {
             const entry = viewTitle.find(
                 e => e.command === 'speckit.companion.openPipelineBuilder')!;
             expect(entry.when).toContain('speckit.companion.installed');

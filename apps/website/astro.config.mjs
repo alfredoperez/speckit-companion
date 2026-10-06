@@ -11,7 +11,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 //
 // getting-started   became Your first spec; its command table is Commands.
 // pick-a-pipeline   the two workflows are explained with the method itself.
-// the two Pipeline Builder pages (anatomy and guide) are one page now.
+// the two Workflow Builder pages (anatomy and guide) are one page now.
 // customize         custom commands stayed with Your own workflow; hooks got
 //                   their own page, which that one links to first.
 //
@@ -23,7 +23,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 //                             lands on Install, the first of them.
 //
 // /workflow-builder was a page for a builder that was not built. It shipped
-// as the Pipeline Builder, so the address lands on its docs page.
+// as the Pipeline Builder and was renamed Workflow Builder, so that address and
+// the docs page's old slug both land on its docs page.
 const MOVED = {
   '/docs/start/getting-started': '/docs/start/your-first-spec',
   '/docs/anatomy/the-sidebar': '/docs/navigate/the-sidebar',
@@ -31,8 +32,9 @@ const MOVED = {
   '/docs/anatomy/anatomy-of-the-spec-viewer': '/docs/navigate/inside-the-viewer',
   '/docs/anatomy/anatomy-of-the-overview': '/docs/results/the-overview',
   '/docs/guides/reading-the-overview': '/docs/results/the-overview',
-  '/docs/anatomy/anatomy-of-the-pipeline-builder': '/docs/customize/pipeline-builder',
-  '/docs/guides/pipeline-builder': '/docs/customize/pipeline-builder',
+  '/docs/anatomy/anatomy-of-the-pipeline-builder': '/docs/customize/workflow-builder',
+  '/docs/guides/pipeline-builder': '/docs/customize/workflow-builder',
+  '/docs/customize/pipeline-builder': '/docs/customize/workflow-builder',
   '/docs/guides/customize': '/docs/customize/your-own-workflow',
   '/docs/guides/steering': '/docs/customize/steering',
   '/docs/guides/review-and-refine': '/docs/steps/review-with-comments',
@@ -47,7 +49,7 @@ const MOVED = {
   '/docs/processes/assess-an-idea': '/docs/ide/assess-an-idea',
   '/docs/processes/copilot-app': '/docs/copilot-app/install',
   '/docs/processes/claude-code': '/docs/claude-code/install',
-  '/workflow-builder': '/docs/customize/pipeline-builder',
+  '/workflow-builder': '/docs/customize/workflow-builder',
 };
 
 // The adapter turns each redirect into a Vercel route that matches the path
@@ -229,7 +231,7 @@ export default defineConfig({
         {
           label: 'Customize',
           items: [
-            { label: 'Pipeline Builder', slug: 'docs/customize/pipeline-builder' },
+            { label: 'Workflow Builder', slug: 'docs/customize/workflow-builder' },
             { label: 'Hooks', slug: 'docs/customize/hooks' },
             { label: 'Your own workflow', slug: 'docs/customize/your-own-workflow' },
             { label: 'Steering', slug: 'docs/customize/steering' },

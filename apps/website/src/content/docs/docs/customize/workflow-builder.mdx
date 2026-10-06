@@ -1,17 +1,17 @@
 ---
-title: Pipeline Builder
+title: Workflow Builder
 description: 'A board of what your assistant does at each Companion step. What every mark means, and how to edit a node, reshape a document, add a step and build.'
 ---
 
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 
-The Pipeline Builder draws your Companion workflow as a board. Each step is a lane, and each lane is built from **nodes**, small blocks of instruction your assistant reads. You change them on the board, then build.
+The Workflow Builder draws the Companion pipeline your project runs as a board. Each step is a lane, and each lane is built from **nodes**, small blocks of instruction your assistant reads. You change them on the board, then build.
 
-Open it from the circuit icon at the top of the Specs view, or run **SpecKit Companion: Open Pipeline Builder**. It needs the Companion Spec Kit extension.
+Open it from the circuit icon at the top of the Specs view, or run **SpecKit Companion: Open Workflow Builder**. It needs the Companion Spec Kit extension.
 
 <DocFigure
   src="builder-board.png"
-  alt="The Pipeline Builder, showing four steps as columns with their phases, nodes and attached hooks."
+  alt="The Workflow Builder, showing four steps as columns with their phases, nodes and attached hooks."
   caption="The run reads left to right, in the order it happens. Four steps ship, and a project can add more."
 />
 
@@ -185,4 +185,4 @@ If the panel cannot draw, it offers repairs as buttons, narrowest first. **Open 
 ## Related
 
 - [Hooks](/docs/customize/hooks) attaches your own work to a node, a phase or a step.
-- [Your own workflow](/docs/customize/your-own-workflow) covers the same file by hand, and workflows written in settings.
+- [Your own workflow](/docs/customize/your-own-workflow) covers the same file by hand, and the custom workflows you write in VS Code settings, which this board does not edit.

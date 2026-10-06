@@ -41,7 +41,7 @@ Each change to the extension is one PR-sized change:
 python3 -m unittest discover -s apps/speckit-extension/tests -p "test_*.py"
 ```
 
-That is what CI runs, and it is all deterministic — no network, no model. `test_builder_flow.py` drives every change the pipeline builder can make through `config_write.py`, builds, and reads the built command bodies back; `test_customised_quality.py` then holds that customised build to the same quality eval and instruction budget as the shipped commands.
+That is what CI runs, and it is all deterministic — no network, no model. `test_builder_flow.py` drives every change the Workflow Builder can make through `config_write.py`, builds, and reads the built command bodies back; `test_customised_quality.py` then holds that customised build to the same quality eval and instruction budget as the shipped commands.
 
 One test is opt-in, because it runs a real model and takes a few minutes:
 

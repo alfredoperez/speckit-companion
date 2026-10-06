@@ -5,7 +5,7 @@
  * waiting until what is on screen is what the story means.
  *
  * Extracted from capture-docs-images.mjs when a second consumer arrived (the
- * Pipeline Builder's visual tests). Both need exactly the same four things and
+ * Workflow Builder's visual tests). Both need exactly the same four things and
  * getting any of them subtly different — a shorter settle, a missed error
  * screen — would mean the images and the tests disagree about what the UI
  * looks like, which is the one thing neither can afford.

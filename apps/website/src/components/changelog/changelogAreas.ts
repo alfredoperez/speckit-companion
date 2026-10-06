@@ -17,7 +17,7 @@ export const AREAS: Area[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'sidebar', label: 'Sidebar' },
   { id: 'create-spec', label: 'Create spec' },
-  { id: 'pipeline-builder', label: 'Pipeline Builder' },
+  { id: 'pipeline-builder', label: 'Workflow Builder' },
   { id: 'pipeline', label: 'Companion pipeline' },
   { id: 'copilot-app', label: 'Copilot app' },
   { id: 'living-specs', label: 'Living specs' },
@@ -45,7 +45,7 @@ export function areaRank(id: string): number {
 /** First match wins, so the narrow, unambiguous areas come first. */
 const KEYWORDS: [string, RegExp][] = [
   ['copilot-app', /copilot (app|board|canvas)/],
-  ['pipeline-builder', /pipeline builder|\bbuilder\b|\bnodes?\b|\bphases? (can|are)\b|\blanes?\b|\bthe board\b|companion\.yml|recipe|saved workflows/],
+  ['pipeline-builder', /pipeline builder|workflow builder|\bbuilder\b|\bnodes?\b|\bphases? (can|are)\b|\blanes?\b|\bthe board\b|companion\.yml|recipe|saved workflows/],
   ['living-specs', /living.spec|capabilit|requirement|adopt|\bdrift|fold(s|ed)? back|coverage/],
   ['overview', /\boverview\b|run log|dossier|what was checked|decisions/],
   ['create-spec', /create (new )?spec|new spec|workflow picker|create-spec/],

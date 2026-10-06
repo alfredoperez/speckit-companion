@@ -647,7 +647,7 @@
       },
       {
         "command": "speckit.companion.openPipelineBuilder",
-        "title": "Open Pipeline Builder",
+        "title": "Open Workflow Builder",
         "category": "SpecKit Companion",
         "icon": "$(circuit-board)"
       }
