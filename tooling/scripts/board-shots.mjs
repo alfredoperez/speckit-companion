@@ -1,5 +1,6 @@
 // Takes the Copilot app board's pictures into the shots library: light theme, twice the pixel density, headless.
-// usage: node tooling/scripts/board-shots.mjs [--out <dir>]
+// usage: node tooling/scripts/board-shots.mjs [--out <dir>] [--record <dir>]
+// --record also films the recording below, saving its frames and one JSON of facts under <dir>/<name>/.
 import { mkdtempSync, mkdirSync, cpSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -7,11 +8,14 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { createSpecServer } from '../../apps/copilot-canvas/server.mjs';
 import { RUN_FOLDER, RUN_STATES, writeTeamboardRun } from './lib/teamboard-run.mjs';
+import { SCROLL_PX_PER_FRAME, recordDir, startRecording } from './lib/recording.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const at = process.argv.indexOf('--out');
 const OUT = resolve(REPO, at > -1 ? process.argv[at + 1] : '.shots');
 mkdirSync(OUT, { recursive: true });
+const RECORD = recordDir();
+if (RECORD) mkdirSync(RECORD, { recursive: true });
 const TEAMBOARD = join(REPO, 'apps/vscode/webview/src/spec-viewer/__fixtures__/teamboard/041-profile-photo-upload');
 const root = join(mkdtempSync(join(tmpdir(), 'canvas-page-')), 'teamboard'); mkdirSync(root);
 mkdirSync(join(root, 'specs'));
@@ -88,6 +92,34 @@ await shot(sp, 'board-install-hint', {x:360,y:57,width:820,height:470});
 await sp.click('#new-spec-toggle');
 await sp.waitForTimeout(300);
 await shot(sp, 'board-stock-new-spec');
+if (RECORD) {
+    const rp = await browser.newPage(opts);
+    await rp.goto(board.url);
+    await rp.waitForSelector('.spec-card');
+    await rp.waitForFunction(() => document.body.classList.contains('vscode-light'));
+    await rp.click('[data-filter="all"]');
+    await rp.click(`.spec-card[data-id="specs/${RUN_FOLDER}"]`);
+    await rp.waitForSelector('.next');
+    await rp.click('.tab:has-text("Tasks")');
+    await rp.waitForTimeout(600);
+    const recording = startRecording(RECORD, 'board-tasks-read', {
+        surface: 'The GitHub Copilot app board on a headless Chrome page, light theme',
+        what: 'The task list of a run on the Copilot board, scrolled slowly from the first phase to the last. Under every task is the line the assistant wrote when it finished it and the files that task touched, so the whole of what the run did reads as one list without leaving the board.',
+        grab: file => rp.screenshot({ path: file }),
+    });
+    await recording.hold();
+    for (let frames = 0; frames < 900; frames++) {
+        const left = await rp.$eval('#detail', (detail, by) => {
+            detail.scrollBy({ top: by, behavior: 'instant' });
+            return Math.round(detail.scrollHeight - detail.clientHeight - detail.scrollTop);
+        }, SCROLL_PX_PER_FRAME);
+        await recording.frame();
+        if (left <= 0) break;
+    }
+    await recording.hold();
+    await recording.close();
+}
+
 await browser.close(); await board.close(); await stock.close();
 console.log(`Board pictures written to ${OUT}`);
 process.exit(0);

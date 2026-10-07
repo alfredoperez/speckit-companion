@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Drives a real VS Code window with this extension and a throwaway project (or an existing one, --sandbox), and saves a screenshot per step.
-// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet]
+// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet] [--record <dir>]
 // --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
 // --sheet also writes every picture of the run onto one reduced sheet (_sheet.png), the file to look at first.
+// --record also runs the recording steps, each saving its frames and one JSON of facts under <dir>/<name>/.
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -10,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeTeamboardRun } from './lib/teamboard-run.mjs';
+import { SCROLL_PX_PER_FRAME, recordDir, startRecording } from './lib/recording.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const arg = (name, fallback) => {
@@ -22,7 +24,10 @@ const THEME = arg('theme', 'light');
 const ONLY = arg('only', '').split(',').filter(Boolean);
 const SANDBOX = arg('sandbox') ? resolve(arg('sandbox')) : undefined;
 const SHOTS = arg('shots') ? resolve(arg('shots')) : undefined;
+const RECORD = recordDir();
 const SHEET = process.argv.includes('--sheet');
+// A still and a piece of footage want the same window: small enough to read, drawn at twice the pixel density.
+const FILM_WINDOW = Boolean(SHOTS || RECORD);
 // A crop is read in a docs column about 650px wide, so the capture window is kept small enough for its text to survive that.
 const SHOT_WINDOW = { width: 1240, height: 800 };
 const CHECK_WINDOW = { width: 1680, height: 1050 };
@@ -157,7 +162,7 @@ function buildProject({ provider = 'claude' } = {}) {
         'speckit.views.steering.visible': false,
         'speckit.views.settings.visible': false,
         // A walked run would raise a step-complete toast over the crop.
-        ...(SHOTS ? { 'speckit.notifications.stepComplete': false } : {}),
+        ...(FILM_WINDOW ? { 'speckit.notifications.stepComplete': false } : {}),
     }, null, 2));
     return { root, project, user, bin };
 }
@@ -179,7 +184,7 @@ async function launch({ root, project, user, bin }) {
             '--skip-release-notes',
             '--disable-updates',
             '--window-size=1680,1050',
-            ...(SHOTS ? ['--force-device-scale-factor=2'] : []),
+            ...(FILM_WINDOW ? ['--force-device-scale-factor=2'] : []),
         ],
         // In a sandbox, keep `specify` off the extension's PATH so opening the folder cannot reinstall presets into it.
         ...(SANDBOX ? { env: { ...process.env, PATH: `${bin}:/usr/bin:/bin:/usr/sbin:/sbin` } } : {}),
@@ -187,7 +192,7 @@ async function launch({ root, project, user, bin }) {
     });
     page = await app.firstWindow();
     await page.waitForSelector('.monaco-workbench', { timeout: 60000 });
-    if (SHOTS) await resize(SHOT_WINDOW);
+    if (FILM_WINDOW) await resize(SHOT_WINDOW);
 }
 
 async function resize({ width, height }) {
@@ -199,6 +204,15 @@ async function resize({ width, height }) {
     await page.waitForTimeout(500);
 }
 
+/** The install prompt sits over the top of a spec's Overview; dismissing it is remembered for the rest of the run. */
+async function dismissInstallBanner() {
+    const dismiss = webview().locator('#install-banner [data-action="dismissInstallBanner"]');
+    if (await dismiss.first().isVisible().catch(() => false)) {
+        await dismiss.first().click();
+        await webview().locator('#install-banner').waitFor({ state: 'detached', timeout: 5000 });
+    }
+}
+
 /**
  * Under --shots, saves <dir>/<name>.png at device scale factor 2; without the flag it does nothing.
  * target: 'window', 'editor', 'sidebar', 'panel', a locator, or a list of locators whose boxes are joined.
@@ -206,12 +220,7 @@ async function resize({ width, height }) {
  */
 async function capture(name, { target = 'window', padding = 0, ratio, anchor = 'top', keepPointer = false } = {}) {
     if (!SHOTS) return;
-    // The install prompt sits over the top of a spec's Overview; dismissing it is remembered for the rest of the run.
-    const dismiss = webview().locator('#install-banner [data-action="dismissInstallBanner"]');
-    if (await dismiss.first().isVisible().catch(() => false)) {
-        await dismiss.first().click();
-        await webview().locator('#install-banner').waitFor({ state: 'detached', timeout: 5000 });
-    }
+    await dismissInstallBanner();
     if (!keepPointer) await page.mouse.move(2, 2);
     await page.waitForTimeout(400);
     const path = join(SHOTS, `${name}.png`);
@@ -280,7 +289,7 @@ async function terminalText(pattern) {
     const rows = page.locator('.xterm-rows').last();
     await rows.waitFor({ timeout: 15000 });
     // The capture window wraps a long command across rows, so it is read at the check's own width.
-    if (SHOTS) await resize(CHECK_WINDOW);
+    if (FILM_WINDOW) await resize(CHECK_WINDOW);
     try {
         for (let tries = 0; tries < 40; tries++) {
             const text = (await rows.innerText()).replace(/\s+/g, ' ');
@@ -289,7 +298,7 @@ async function terminalText(pattern) {
         }
         throw new Error(`the terminal never showed ${pattern}`);
     } finally {
-        if (SHOTS) await resize(SHOT_WINDOW);
+        if (FILM_WINDOW) await resize(SHOT_WINDOW);
     }
 }
 
@@ -357,10 +366,43 @@ async function scrollTo(locator, block = 'start', lower = 0) {
     }, [block, lower]);
 }
 
-/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. `shots: true` marks a capture-only step, which runs under --shots alone. */
-async function step(name, what, run, { needs, shots } = {}) {
+/** Records the whole window while `body` drives it, as <record dir>/<name>/. The frames bracket the move with a still at each end, so a cut has somewhere to land. */
+async function film(name, what, body) {
+    const recording = startRecording(RECORD, name, {
+        surface: `A real VS Code window running the extension, ${THEME === 'dark' ? 'Dark Modern' : 'Quiet Light'} theme`,
+        what,
+        grab: file => page.screenshot({ path: file }),
+    });
+    await dismissInstallBanner();
+    await page.mouse.move(2, 2);
+    await recording.hold();
+    await body(recording);
+    await recording.hold();
+    const facts = await recording.close();
+    return `${facts.frames} frames at ${facts.fps} fps, ${facts.width}x${facts.height}`;
+}
+
+/** Scrolls the page the locator sits on to its end, one frame per step, at the recorded scroll speed. */
+async function recordScroll(recording, inside, { most = 900 } = {}) {
+    for (let frames = 0; frames < most; frames++) {
+        const left = await inside.first().evaluate((element, by) => {
+            let scroller = element.parentElement;
+            while (scroller && !(scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY))) scroller = scroller.parentElement;
+            scroller ??= document.scrollingElement;
+            scroller.scrollBy({ top: by, behavior: 'instant' });
+            return Math.round(scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop);
+        }, SCROLL_PX_PER_FRAME);
+        await recording.frame();
+        if (left <= 0) return;
+    }
+    throw new Error(`the page under "${recording.name}" never reached its end`);
+}
+
+/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. `shots: true` marks a capture-only step, which runs under --shots alone; `record: true` a recording step, which runs under --record alone. */
+async function step(name, what, run, { needs, shots, record } = {}) {
     if (ONLY.length && !ONLY.includes(name)) return;
     if (shots && !SHOTS) return;
+    if (record && !RECORD) return;
     if (SANDBOX && needs === 'fixtures') {
         results.push({ name, what, ok: true, skipped: true, note: 'skipped: needs the built-in project' });
         console.log(`skip ${name}: ${what} (skipped: needs the built-in project)`);
@@ -388,6 +430,7 @@ async function expectText(locator, pattern) {
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
+if (RECORD) mkdirSync(RECORD, { recursive: true });
 
 // The first-start picker only opens with no provider set, so it gets a window of its own.
 if (SHOTS && !SANDBOX && (!ONLY.length || ONLY.includes('provider-picker'))) {
@@ -687,6 +730,15 @@ try {
         return why.replace(/\s+/g, ' ');
     }, { needs: 'fixtures' });
 
+    await step('film-living-spec', 'A capability\'s page read top to bottom, from its counts down to the requirement in drift', async () => {
+        await openLivingSpec('Photo Storage', /7\/9 covered/);
+        await sidebarWidth(LIVING_SIDEBAR);
+        await webview().locator('.living-req-card').first().waitFor({ timeout: 15000 });
+        return film('living-spec-read', 'A living spec for photo storage, scrolled slowly from the top of the page to the end. It opens on the counts and the paths the capability covers, then walks every requirement with its scenario and the tests behind it, and passes the one marked Drifted, where the code changed after the spec did.', async (recording) => {
+            await recordScroll(recording, webview().locator('#markdown-content'));
+        });
+    }, { needs: 'fixtures', record: true });
+
     if (!SANDBOX) {
         await clear();
         await setPanes(['Living Specs'], false);
@@ -723,7 +775,20 @@ try {
         }, { needs: 'fixtures', shots: true });
     }
 
-    await step('shot-review-comments', 'A spec with one pending and one applied comment shows both cards and Refine (1) in the footer', async () => {
+    await step('film-tasks-ticking', 'A run ticking along: the Tasks tab repaints as the assistant ticks one task after another', async () => {
+        await openWalk('tasked', 'Tasks');
+        const tasks = join(walkFolder, 'tasks.md');
+        const phase = webview().locator('.phase-header').first();
+        await phase.waitFor({ timeout: 15000 });
+        return film('tasks-ticking', 'The Tasks tab of a run that is under way. Nothing is ticked when it opens; then three tasks are finished one at a time, and each checkbox fills in while the count beside the title climbs from none of six to three of six, with nobody touching the window.', async (recording) => {
+            for (const id of ['T001', 'T002', 'T003']) {
+                writeFileSync(tasks, readFileSync(tasks, 'utf8').replace(`- [ ] **${id}**`, `- [x] **${id}**`));
+                await recording.hold(1.6);
+            }
+        });
+    }, { needs: 'fixtures', record: true });
+
+    await step('shot-review-comments','A spec with one pending and one applied comment shows both cards and Refine (1) in the footer', async () => {
         const at = new Date(Date.now() - 60000).toISOString();
         const comment = (id, line, blockText, text, status) => ({ id, doc: 'spec', anchor: { heading: 'Why this exists', blockText, line }, comment: text, status, createdAt: at });
         await openWalk('specified', 'Specification', { comments: [
