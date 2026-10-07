@@ -321,16 +321,16 @@
                 if (y < transcriptTop) continue;
                 const age = t - line.from;
                 if (line.kind === 'echo') {
-                    draw(y, rowHtml(textCells([['❯ ', 'color:#9d97bd'], [line.text.slice(0, width - 4)]], 0), width - 1, { from: 0, css: '' }), 'tp-echo');
+                    draw(y, rowHtml(textCells([['❯ ', 'color:var(--tp-dim)'], [line.text.slice(0, width - 4)]], 0), width - 1, { from: 0, css: '' }), 'tp-echo');
                 } else if (line.kind === 'spinner') {
                     const glyph = SPINNER[Math.floor(age * 9) % SPINNER.length];
                     const span = line.to - line.from;
                     const time = line.clock ? ` (${clock(line.clock[0] + (line.clock[1] - line.clock[0]) * clamp(age / span))} · esc to interrupt)` : '';
-                    draw(y, rowHtml([{ ch: glyph, col: 0, w: 1, css: 'color:#d77757' }, ...textCells([[line.text + '…', 'color:#d77757'], [time, 'color:#9d97bd']], 2)], width), 'tp-line');
+                    draw(y, rowHtml([{ ch: glyph, col: 0, w: 1, css: 'color:var(--tp-accent)' }, ...textCells([[line.text + '…', 'color:var(--tp-accent)'], [time, 'color:var(--tp-dim)']], 2)], width), 'tp-line');
                 } else {
                     const glyph = line.glyph ?? '⏺';
-                    const css = { ok: 'color:#8cc570', dim: 'color:#9d97bd', accent: 'color:#a78bfa' }[line.tone] ?? '';
-                    const html = rowHtml([{ ch: glyph, col: line.indent ?? 0, w: 1, css: line.glyphCss ?? 'color:#8cc570' }, ...textCells([[line.text.slice(0, width - 4), css]], (line.indent ?? 0) + 2)], width);
+                    const css = { ok: 'color:var(--tp-green)', dim: 'color:var(--tp-dim)', accent: 'color:var(--tp-accent)' }[line.tone] ?? '';
+                    const html = rowHtml([{ ch: glyph, col: line.indent ?? 0, w: 1, css: line.glyphCss ?? 'color:var(--tp-green)' }, ...textCells([[line.text.slice(0, width - 4), css]], (line.indent ?? 0) + 2)], width);
                     draw(y, `<div style="opacity:${easeOut(clamp(age / 0.15)).toFixed(3)}">${html}</div>`, 'tp-line');
                 }
             }

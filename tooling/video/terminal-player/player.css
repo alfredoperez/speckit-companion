@@ -1,6 +1,6 @@
-/* The video terminal player's own chrome: the site look of tooling/scripts/lib/terminal/ansi.mjs, sized by --tp-size and --tp-row. */
+/* The video terminal player's own chrome: a look of tooling/scripts/lib/terminal/ansi.mjs, set as --tp-* and sized by --tp-size and --tp-row. */
 .tp { display: inline-block; color: var(--tp-foreground); font: var(--tp-size) / var(--tp-row) "JetBrains Mono", monospace; font-variant-ligatures: none; }
-.tp-win { display: inline-block; overflow: hidden; background: var(--tp-background); border: 1px solid var(--tp-border); border-radius: 14px; box-shadow: 0 30px 70px rgb(0 0 0 / 0.55), 0 0 50px rgb(139 92 246 / 0.12); }
+.tp-win { display: inline-block; overflow: hidden; background: var(--tp-background); border: 1px solid var(--tp-border); border-radius: var(--tp-radius, 14px); box-shadow: 0 30px 70px rgb(0 0 0 / 0.55), 0 0 50px var(--tp-glow, transparent); }
 .tp-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; background: var(--tp-ground); border-bottom: 1px solid var(--tp-rule); }
 .tp-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--tp-dot); }
 .tp-bar b { position: absolute; left: 0; right: 0; text-align: center; font: 500 13px/40px "JetBrains Mono", monospace; color: var(--tp-label); }

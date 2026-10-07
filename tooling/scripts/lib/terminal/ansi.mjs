@@ -9,11 +9,21 @@ const hex = value => [1, 3, 5].map(at => parseInt(value.slice(at, at + 2), 16));
 const PANE_GREY = [0x26, 0x26, 0x26];
 // `plain` is what the check has always drawn. `site` is for pictures on the site and in the docs: the ground, panel, border and
 // text colours of apps/website/src/styles/tokens.css, with the pane one step lighter than the panel so it reads as a card.
+// `claude` is for videos and pictures that should read as Claude Code itself, read off the reference drawing: a warm near-black
+// ground, a terracotta edge and accent, grey window dots, and no coloured glow behind the window.
 export const LOOKS = {
     plain: { background: [0x1a, 0x1b, 0x1e], foreground: [0xd8, 0xd8, 0xd8], size: 14, row: 18 },
     site: {
         background: hex('#0d0b1a'), foreground: hex('#edeaf6'), size: 15, row: 21,
         ground: hex('#0a0913'), card: hex('#15122a'), border: hex('#2a2545'), rule: hex('#1d1930'), dot: hex('#3a3357'), label: hex('#6f6994'),
+        accent: hex('#a78bfa'), dim: hex('#9d97bd'), green: hex('#7cc98a'),
+        radius: 14, tint: [0.97, 0.93, 1.14], glow: 'rgb(139 92 246 / 0.12)',
+    },
+    claude: {
+        background: hex('#1a1a17'), foreground: hex('#fafaf8'), size: 16, row: 27,
+        ground: hex('#141411'), card: hex('#2a2a27'), border: hex('#cc785c'), rule: hex('#211f1c'), dot: hex('#5c5c57'), label: hex('#84847f'),
+        accent: hex('#de886a'), dim: hex('#84847f'), green: hex('#8aae76'),
+        radius: 14, tint: [1.05, 0.99, 0.94],
     },
 };
 const LEVELS = [0, 95, 135, 175, 215, 255];
@@ -148,16 +158,16 @@ export function contrast(a, b) {
 }
 
 const MIN_CONTRAST = 4.5;
-// A terminal's greys are neutral; on the site's violet ground they take its hue so they do not read as a different material.
-const tint = rgb => (Math.max(...rgb) - Math.min(...rgb) <= 8 ? [rgb[0] * 0.97, rgb[1] * 0.93, Math.min(255, rgb[2] * 1.14)].map(Math.round) : rgb);
+// A terminal's greys are neutral; on a tinted ground they take its hue so they do not read as a different material.
+const tint = (rgb, by) => (by && Math.max(...rgb) - Math.min(...rgb) <= 8 ? rgb.map((v, i) => Math.round(Math.min(255, v * by[i]))) : rgb);
 
 /** A cell's colours in a look: the pane's grey becomes the card, greys take the look's hue, and words keep a readable contrast. */
 function cellColours(cell, look, under) {
     let fg = cell.fg ?? look.foreground;
     let bg = cell.bg ?? under;
     if (look.card) {
-        if (cell.bg) bg = same(cell.bg, PANE_GREY) ? look.card : tint(cell.bg);
-        if (cell.fg) fg = tint(cell.fg);
+        if (cell.bg) bg = same(cell.bg, PANE_GREY) ? look.card : tint(cell.bg, look.tint);
+        if (cell.fg) fg = tint(cell.fg, look.tint);
     }
     if (cell.inverse) [fg, bg] = [bg, fg];
     if (cell.dim) fg = mix(fg, bg, 0.45);
@@ -193,6 +203,7 @@ const RULES = { '│': 'v', '─': 'h', '╌': 'd' };
 export function gridHtml(grid, { from = 0, to, rowFrom = 0, rowTo = grid.length, look: name = 'plain', frame = 'window', title = '', pane = null } = {}) {
     const look = LOOKS[name] ?? LOOKS.plain;
     const site = Boolean(look.card);
+    const glow = look.glow ? `,0 0 50px ${look.glow}` : '';
     const last = to ?? Math.max(1, ...grid.map(cells => (cells.length ? cells.at(-1).col + cells.at(-1).w : 0)));
     const ground = site && frame === 'card' ? look.card : look.background;
     const carded = site && frame === 'window' && pane;
@@ -261,7 +272,7 @@ html,body{margin:0;background:${css(look.background)}}
 #screen{display:inline-block;padding:10px 12px;background:${css(look.background)};color:${css(look.foreground)};font:${look.size}px/${h}px ${mono.replace('"JetBrains Mono",', '')};font-variant-ligatures:none}`, `<div id="screen">${rows.join('')}</div>`);
     }
     const type = `color:${css(look.foreground)};font:${look.size}px/${h}px ${mono};font-variant-ligatures:none`;
-    const edge = `border:1px solid ${css(look.border)};border-radius:14px`;
+    const edge = `border:1px solid ${css(look.border)};border-radius:${look.radius ?? 14}px`;
     if (frame === 'card') {
         const padding = rows.length === 1 ? '13px 20px' : '22px 26px';
         return page(`
@@ -275,7 +286,7 @@ html,body{margin:0;background:transparent}
     return page(`
 html,body{margin:0;background:transparent}
 #screen{display:inline-block;padding:44px 64px 84px}
-.win{display:inline-block;overflow:hidden;background:${css(look.background)};${edge};box-shadow:0 30px 70px rgb(0 0 0 / 0.55),0 0 50px rgb(139 92 246 / 0.12);${type}}
+.win{display:inline-block;overflow:hidden;background:${css(look.background)};${edge};box-shadow:0 30px 70px rgb(0 0 0 / 0.55)${glow};${type}}
 .bar{position:relative;display:flex;align-items:center;gap:8px;height:40px;padding:0 16px;background:${css(look.ground)};border-bottom:1px solid ${css(look.rule)}}
 .bar i{width:11px;height:11px;border-radius:50%;background:${css(look.dot)}}
 .bar b{position:absolute;left:0;right:0;text-align:center;font:500 12.5px/40px ${mono};color:${css(look.label)}}
