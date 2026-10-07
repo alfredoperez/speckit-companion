@@ -27,6 +27,11 @@ import {
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { getProjectRoot } from '../../core/projectRoot';
 import { nodeFile, readableNode } from './readableNode';
+import { projectKind } from './projectKind';
+import { stockRefusal } from './stockGuard';
+import { setHookEnabled } from './stockHooks';
+import { formatStockCommands, readStockWorkflow, stockFileToOpen } from './stockWorkflow';
+import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
     readPipelineGraph,
@@ -55,6 +60,9 @@ const BUILD_COMMAND = 'speckit.companion.buildPipeline';
 /** Mirrors `PROJECT_NODES_REL` in `_command_parts.py` — a project's own nodes. */
 const PROJECT_NODES_REL = path.join('.specify', 'companion', 'nodes');
 
+/** Stock Spec Kit's own extension registry — the one file this board edits there. */
+const EXTENSIONS_REL = path.join('.specify', 'extensions.yml');
+
 /** Mirrors `WORKFLOWS_REL` / `SHIPPED_WORKFLOW` in build-pipeline.py. */
 const WORKFLOWS_REL = path.join('.specify', 'companion', 'workflows');
 const SHIPPED_WORKFLOW = 'shipped';
@@ -78,6 +86,10 @@ Omit<HookDraft, 'when' | 'anchor' | 'editIndex'> {
     return type === 'command' ? { type, run: value } : { type, text: value };
 }
 
+function read(file: string): string | null {
+    try { return fs.readFileSync(file, 'utf8'); } catch { return null; }
+}
+
 function nonce(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let out = '';
@@ -92,6 +104,9 @@ export class PipelineBuilderPanel {
 
     /** The way back from the last write, while the status line still offers it. */
     private pendingUndo: { token: string; run: () => Promise<void> } | null = null;
+
+    /** Which installed stock workflow the board is drawing. */
+    private drawing: string | undefined;
 
     private constructor(
         private readonly panel: vscode.WebviewPanel,
@@ -123,6 +138,12 @@ export class PipelineBuilderPanel {
             '.specify/companion/workflows/**/*.yml',
             '.specify/companion/fragments/**/*.md',
             '.specify/templates/**/*.md',
+            // The stock board's own inputs, and the directory whose arrival
+            // turns a stock project into a Companion one.
+            '.specify/extensions.yml',
+            '.specify/workflows/**/*.yml',
+            '.specify/presets/**/preset.yml',
+            '.specify/extensions/companion/**',
         ]) {
             const watcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(workspaceRoot, pattern),
@@ -520,6 +541,68 @@ export class PipelineBuilderPanel {
         },
 
         /**
+         * Switch one of stock Spec Kit's extension hooks on or off.
+         *
+         * The only edit this board makes on a stock project, because it is the
+         * only switch stock Spec Kit itself offers in a file it owns.
+         */
+        setStockHook: async message => {
+            const file = path.join(this.workspaceRoot, EXTENSIONS_REL);
+            const text = read(file);
+            if (text === null) {
+                this.say('This project has no .specify/extensions.yml to change.');
+                return;
+            }
+            const result = setHookEnabled(text, message);
+            if ('error' in result) { this.say(result.error); return; }
+            fs.writeFileSync(file, result.text, 'utf8');
+            await this.send();
+            this.sayStatus({
+                tone: 'done',
+                text: `${message.step} ${message.when} hook is `
+                    + `${message.enabled ? 'on' : 'off'}`,
+                detail: 'Saved to .specify/extensions.yml',
+            });
+        },
+
+        /**
+         * Open one of the stock files the board drew, in an editor.
+         *
+         * A template is the project's to edit, and an editor is where that is
+         * done — the panel reads nothing back and writes nothing here.
+         */
+        openStockFile: async message => {
+            const file = stockFileToOpen(this.workspaceRoot, message.path, this.drawing);
+            if (!file) {
+                this.say('That file is not one this board drew.');
+                return;
+            }
+            await vscode.window.showTextDocument(vscode.Uri.file(file));
+        },
+
+        /**
+         * Draw another installed workflow.
+         *
+         * Which workflow a run takes is Spec Kit's to decide when the run
+         * starts, and its registry records no active one — so this changes
+         * which one the board is reading, and no file.
+         */
+        selectStockWorkflow: async message => {
+            const known = readStockWorkflow(this.workspaceRoot)
+                .workflows.some(choice => choice.id === message.id);
+            if (!known) {
+                this.say(`${message.id} is not installed in this project.`);
+                return;
+            }
+            this.drawing = message.id;
+            await this.send();
+        },
+
+        runStockCommand: async () => {
+            await vscode.commands.executeCommand('speckit.constitution');
+        },
+
+        /**
          * Change where one verdict routes.
          *
          * Taken back the way a node removal is: the routing as it stands is
@@ -865,10 +948,24 @@ export class PipelineBuilderPanel {
         }
     }
 
-    private readonly route = createDispatcher(this.handlers, {
+    private readonly dispatch = createDispatcher(this.handlers, {
         onUnhandled: message => this.outputChannel.appendLine(
             `[PipelineBuilder] ignored message: ${(message as { type: string }).type}`),
     });
+
+    /**
+     * Every message passes the project kind first.
+     *
+     * One gate rather than a check in each writer: a stock project must not
+     * gain a `companion.yml`, a `.specify/companion/` directory or a build, and
+     * the way to make that impossible is to refuse before a handler runs.
+     */
+    private readonly route = async (message: BuilderToExtensionMessage): Promise<void> => {
+        const refusal = stockRefusal(projectKind(this.workspaceRoot), message.type);
+        if (refusal) { this.say(refusal); return; }
+        await this.dispatch(message);
+    };
+
 
     /**
      * Run the build, and say here what it did.
@@ -893,6 +990,18 @@ export class PipelineBuilderPanel {
     }
 
     private async send(): Promise<void> {
+        // A stock project is drawn from its own files. The graph script would
+        // otherwise fall back to the copy bundled here and draw Companion's
+        // pipeline over a project that cannot run a single node of it.
+        if (projectKind(this.workspaceRoot) === 'stock') {
+            // The spelling a host registers is the editor's to know, so every
+            // command the board draws is named the way a run of it is typed.
+            const view = formatStockCommands(
+                readStockWorkflow(this.workspaceRoot, this.drawing),
+                formatCommandForProvider);
+            await this.post({ type: 'stock', view });
+            return;
+        }
         const script = resolveGraphScript(this.workspaceRoot, this.context.extensionPath);
         const graph: PipelineGraphResult = script
             ? await readPipelineGraph(script, this.workspaceRoot)

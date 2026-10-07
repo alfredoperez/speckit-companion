@@ -688,7 +688,7 @@
         },
         {
           "command": "speckit.companion.openPipelineBuilder",
-          "when": "view == speckit.views.explorer && speckit.companion.installed",
+          "when": "view == speckit.views.explorer",
           "group": "navigation@8"
         },
         {
@@ -1617,6 +1617,9 @@
     "shots:sheet": "node tooling/scripts/shots-sheet.mjs",
     "shots:board": "npm run canvas:build && node tooling/scripts/board-shots.mjs",
     "shots:place": "node tooling/scripts/place-shots.mjs",
+    "record": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-living-spec,film-tasks-ticking",
+    "record:terminal": "node tooling/scripts/terminal-check.mjs --record .record",
+    "record:board": "npm run canvas:build && node tooling/scripts/board-shots.mjs --record .record",
     "clips:capture": "node tooling/scripts/capture-docs-images.mjs",
     "clips:new": "node tooling/scripts/new-clip.mjs",
     "clips:stills": "node tooling/scripts/build-stills.mjs",

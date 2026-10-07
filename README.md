@@ -138,7 +138,9 @@ From the board you can:
 - **Turn living specs on or off** and choose where the specs live, with the capabilities you registered listed beside them.
 - **Keep several workflows** and switch between them, starting from what you run today or from one Companion ships.
 
-Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder). It needs the Companion Spec Kit extension.
+Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder).
+
+On a project that runs stock Spec Kit, the board draws that project's own workflow from its files and changes what Spec Kit itself owns: an extension hook's switch, the document templates it writes from, and the constitution, which it hands to `/speckit.constitution`.
 
 | Command | What it does |
 |---|---|

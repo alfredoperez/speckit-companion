@@ -218,6 +218,37 @@ The install prompt on a spec's Overview is dismissed by the script before a crop
 
 It needs VS Code installed (`VSCODE_BIN` overrides the path) and opens a visible window while it runs.
 
+### Recordings for a video
+
+A still is one command; moving footage used to be a person opening the app, clicking to the right state and scrolling at the right speed, again when the scroll came out too fast. `--record <dir>` puts footage on the same footing: all three capture scripts take it, and each recording it makes is a numbered sequence of PNG frames plus one `recording.json` of facts about them, under `<dir>/<name>/`.
+
+```
+npm run record                  the extension in a real VS Code window
+npm run record:terminal         the Claude Code mod in a real terminal
+npm run record:board            the Copilot app board, headless
+```
+
+All three write into `.record/` (gitignored, like `.shots/`). **Frames are the whole output.** No video file, no storyboard, no timing curve, no transitions, no zoom path: those belong to the video tool that reads these frames, and deciding them here would decide them for every clip in advance.
+
+`recording.json` is facts, never treatment — the name, the surface, the frame rate, the frame size, the number of frames, and one plain sentence saying what is on screen and what a viewer should notice. That sentence is prose a person would say out loud, so it survives being read aloud in a script; a shot instruction ("push in on the drift badge") does not belong in it.
+
+**A recording is deliberate.** A still costs a file and a recording costs a few hundred, so a step opts in the way a capture-only step does: `{ record: true }` beside `{ shots: true }`, and such a step runs under `--record` alone. Today three steps carry it, and they are the two things worth watching: a long document going past, and a run moving on its own.
+
+| Recording | Script | What it films |
+| --- | --- | --- |
+| `living-spec-read` | `desktop-check.mjs` | A capability's living spec scrolled from its counts and covered paths, through every requirement and scenario, down past the one marked Drifted |
+| `tasks-ticking` | `desktop-check.mjs` | The Tasks tab of a run under way, repainting on its own as three tasks are finished one at a time |
+| `mod-tick-task` | `terminal-check.mjs` | The mod's pane and the band above the prompt counting each task as it is ticked from outside the terminal |
+| `board-tasks-read` | `board-shots.mjs` | A run's whole task list on the Copilot board, scrolled from the first phase to the last |
+
+A dialog opening is not on that list and should not join it: it is one state arriving, which a still already says better.
+
+**Scroll speed lives in one place.** A scroll that reads well on screen is too fast on film, so a recorded scroll moves `SCROLL_PX_PER_FRAME` pixels per frame — `tooling/scripts/lib/recording.mjs`, 16 px at 12 fps, about 190 pixels a second — and no step picks its own. Change the constant and every recorded scroll changes with it. `FPS` and `HOLD_SECONDS` (the still each recording opens and closes on, so a cut has somewhere to land) are in the same file.
+
+Adding one is a step with `{ record: true }` that calls `film(name, what, body)`: the helper opens the recording, dismisses anything floating over the surface, holds, runs your body, holds again and writes the JSON. Inside the body, `recording.frame()` takes one frame, `recording.hold(seconds)` holds the picture, and `recordScroll(recording, locator)` runs a page to its end at the shared speed. The terminal's `film` is the same shape but keeps each screen as text and draws them all once the recording closes, so a frame there costs one `tmux` read rather than a browser screenshot.
+
+Frames are big: the window recordings are 2480x1600, the terminal's 3420x1840, and a recording runs from roughly 60 to 220 frames, so a folder is tens of megabytes. That is why nothing under `.record/` is committed and why the set is kept small.
+
 ## The terminal check
 
 `npm run check:terminal` does for the Claude Code mod what the real-window check does for the extension. It builds a throwaway Spec Kit project with a recipe from the sibling `speckit-sandboxes` repo, starts the real `claude` CLI on it inside a detached 200 by 50 `tmux` session with `--plugin-dir apps/claude-mod`, sends keys, and reads the screen back. Each step saves the screen under `.terminal-check/<recipe>-<mode>/` as `<step>.txt` and `<step>.png`, plus `<step>.band.png` (the band line alone) and `<step>.pane.png` (the pane alone). The pictures are drawn from the terminal's own colour codes, so they show what the mod draws. `results.json` holds every step and every prompt the run met, and the exit code is non-zero when a step fails.
