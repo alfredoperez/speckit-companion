@@ -15,6 +15,7 @@ import { Canvas } from '../Canvas';
 import { DecisionForm } from '../DecisionForm';
 import { Header } from '../Header';
 import { LivingSpecsPanel } from '../LivingSpecsPanel';
+import { StockBoard } from '../StockBoard';
 import type {
     PipelineGraph,
     PipelineLivingSpecs,
@@ -23,6 +24,10 @@ import type {
     PipelinePhase,
     PipelineRepair,
     PipelineStep,
+    StockHookRow,
+    StockStepRow,
+    StockTemplate,
+    StockWorkflowView,
 } from '../../../../src/protocol/pipeline';
 
 // ── Fixtures ────────────────────────────────────────────
@@ -754,4 +759,181 @@ export const LivingSpecsWithAStaleBlock: Story = {
         warnings: ['.specify/companion.yml still has a livingSpecs block; '
             + 'living-specs.yml is the registry and the old block is ignored — delete it'],
     }),
+};
+
+// ── 9. A project without the Companion extension ────────
+
+const STOCK_ACTIONS = {
+    onSetHook: noop, onOpenFile: noop, onSelectWorkflow: noop, onRunCommand: noop,
+};
+
+/**
+ * Every spelling in these fixtures is dashed, as Claude Code registers the
+ * family, because that is what the panel's formatter would hand the board on
+ * such a host. One host per fixture: two spellings in one view is the defect
+ * these stories exist to show.
+ */
+const STOCK_STEPS: StockStepRow[] = [
+    {
+        id: 'specify', command: 'speckit-specify', kind: 'command',
+        label: 'Write the spec', writes: ['spec.md'], hooks: [],
+    },
+    {
+        id: 'review-spec', command: '', kind: 'gate',
+        label: 'Review the generated spec before planning.', writes: [], hooks: [],
+    },
+    {
+        id: 'plan', command: 'speckit-plan', kind: 'command',
+        label: 'Plan the work', writes: ['plan.md', 'research.md', 'data-model.md'], hooks: [],
+    },
+    {
+        id: 'tasks', command: 'speckit-tasks', kind: 'command',
+        label: 'Break it into tasks', writes: ['tasks.md'], hooks: [],
+    },
+    {
+        id: 'implement', command: 'speckit-implement', kind: 'command',
+        label: 'Implement the tasks', writes: [], hooks: [],
+    },
+];
+
+/** The six templates a `specify init` leaves in a project. */
+const STOCK_TEMPLATES: StockTemplate[] = [
+    {
+        file: 'constitution-template.md', path: '.specify/templates/constitution-template.md',
+        label: 'Constitution',
+        note: 'The principles written into memory/constitution.md by',
+        command: 'speckit-constitution',
+    },
+    {
+        file: 'spec-template.md', path: '.specify/templates/spec-template.md', label: 'Spec',
+        note: 'The shape of spec.md, filled in by', command: 'speckit-specify',
+    },
+    {
+        file: 'plan-template.md', path: '.specify/templates/plan-template.md', label: 'Plan',
+        note: 'The shape of plan.md, filled in by', command: 'speckit-plan',
+    },
+    {
+        file: 'tasks-template.md', path: '.specify/templates/tasks-template.md', label: 'Tasks',
+        note: 'The shape of tasks.md, filled in by', command: 'speckit-tasks',
+    },
+    {
+        file: 'checklist-template.md', path: '.specify/templates/checklist-template.md',
+        label: 'Checklist',
+        note: 'The shape of a checklist under checklists/, written by',
+        command: 'speckit-checklist',
+    },
+    {
+        file: 'agent-file-template.md', path: '.specify/templates/agent-file-template.md',
+        label: 'Agent context',
+        note: 'The context file a plan writes for your assistant', command: '',
+    },
+];
+
+function stock(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
+    return {
+        source: 'workflow',
+        workflow: {
+            id: 'speckit',
+            name: 'Full SDD Cycle',
+            description: 'Runs specify → plan → tasks → implement with review gates',
+        },
+        workflows: [{
+            id: 'speckit', name: 'Full SDD Cycle',
+            description: 'Runs specify → plan → tasks → implement with review gates',
+            path: '.specify/workflows/speckit/workflow.yml', drawn: true,
+        }],
+        steps: STOCK_STEPS,
+        templates: STOCK_TEMPLATES,
+        constitution: { command: 'speckit-constitution', written: true },
+        presets: [],
+        registry: { path: '.specify/extensions.yml' },
+        buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
+        ...over,
+    };
+}
+
+function stockHook(
+    step: string, when: 'before' | 'after', index: number,
+    description: string, over: Partial<StockHookRow> = {},
+): StockHookRow {
+    return {
+        when, step, index, extension: 'git', command: 'speckit.git.commit',
+        description, enabled: true, optional: false, conditional: false, ...over,
+    };
+}
+
+export const StockProject: Story = {
+    name: '30 · A stock Spec Kit project (Claude Code spelling)',
+    render: () => <StockBoard view={stock()} status={null} {...STOCK_ACTIONS} />,
+};
+
+export const StockWithHooks: Story = {
+    name: '31 · Stock, with extension hooks (Claude Code spelling)',
+    render: () => {
+        const steps = STOCK_STEPS.map(step => {
+            if (step.id === 'specify') {
+                return {
+                    ...step,
+                    hooks: [
+                        stockHook('specify', 'before', 0,
+                            'Create feature branch before specification',
+                            { command: 'speckit.git.feature' }),
+                        stockHook('specify', 'after', 0,
+                            'Auto-commit after specification', { optional: true }),
+                    ],
+                };
+            }
+            if (step.id === 'implement') {
+                return {
+                    ...step,
+                    hooks: [
+                        stockHook('implement', 'before', 0,
+                            'Commit outstanding changes before implementation',
+                            { optional: true }),
+                        stockHook('implement', 'after', 0,
+                            'Open a pull request when the branch is clean',
+                            { enabled: false, conditional: true, extension: 'github' }),
+                    ],
+                };
+            }
+            return step;
+        });
+        return <StockBoard view={stock({ steps })} status={null} {...STOCK_ACTIONS} />;
+    },
+};
+
+export const StockWithPreset: Story = {
+    name: '32 · Stock, a preset and two workflows (Claude Code spelling)',
+    render: () => (
+        <StockBoard
+            view={stock({
+                source: 'commands',
+                workflow: null,
+                workflows: [
+                    {
+                        id: 'speckit', name: 'Full SDD Cycle',
+                        description: 'specify → plan → tasks → implement with review gates',
+                        path: '.specify/workflows/speckit/workflow.yml', drawn: false,
+                    },
+                    {
+                        id: 'quick-fix', name: 'Quick fix',
+                        description: 'spec and implement, no planning',
+                        path: '.specify/workflows/quick-fix/workflow.yml', drawn: true,
+                    },
+                ],
+                constitution: { command: 'speckit-constitution', written: false },
+                presets: [{
+                    id: 'companion-standard',
+                    name: 'Companion Standard',
+                    description: 'Stock spec-kit pipeline, unchanged, with Companion timing '
+                        + 'capture baked into every command.',
+                }],
+            })}
+            status={{
+                tone: 'done',
+                text: 'specify before hook is off',
+                detail: 'Saved to .specify/extensions.yml',
+            }}
+            {...STOCK_ACTIONS} />
+    ),
 };

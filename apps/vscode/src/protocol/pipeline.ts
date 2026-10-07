@@ -37,6 +37,93 @@ export interface StockHook {
     conditional: boolean;
 }
 
+/**
+ * A project running stock Spec Kit, drawn by the same panel.
+ *
+ * None of the Companion graph applies there: there are no nodes, no phases and
+ * no `companion.yml`, so the board is read from the project's own stock files
+ * and the only thing it can change is what stock Spec Kit itself offers.
+ */
+export interface StockStepRow {
+    id: string;
+    /** The command it dispatches. Empty for a gate, which waits for a person. */
+    command: string;
+    label: string;
+    kind: 'command' | 'gate';
+    /** The documents a run of it writes. */
+    writes: string[];
+    hooks: StockHookRow[];
+}
+
+/** One entry in `.specify/extensions.yml`, with the one switch stock Spec Kit owns. */
+export interface StockHookRow {
+    when: HookWhen;
+    /** The lifecycle step it attaches to, which is half of its address. */
+    step: string;
+    /** Its place among that key's entries — the other half. */
+    index: number;
+    extension: string;
+    command: string;
+    description: string;
+    enabled: boolean;
+    optional: boolean;
+    conditional: boolean;
+}
+
+/** One template under `.specify/templates/`, and the step that fills it. */
+export interface StockTemplate {
+    /** Its file name, which is how Spec Kit refers to it. */
+    file: string;
+    /** Workspace-relative, so opening it names a path the panel can check. */
+    path: string;
+    label: string;
+    /**
+     * What the step uses it for, naming no command.
+     *
+     * A spelling belongs in `command`, where the panel can put the one this
+     * project registers; written into the prose it was a second spelling on a
+     * board that already showed the right one.
+     */
+    note: string;
+    /** The command that fills it, in this project's spelling. Empty for none. */
+    command: string;
+}
+
+/** One workflow installed under `.specify/workflows/`. */
+export interface StockWorkflowChoice {
+    id: string;
+    name: string;
+    description: string;
+    path: string;
+    /** Whether this is the one the board is drawing. */
+    drawn: boolean;
+}
+
+export interface StockWorkflowView {
+    /** Whether the steps came from a workflow file or from the installed commands. */
+    source: 'workflow' | 'commands';
+    /** The workflow the steps were read from, when one is installed. */
+    workflow: { id: string; name: string; description: string } | null;
+    /** Every installed workflow, so the board can draw another one. */
+    workflows: StockWorkflowChoice[];
+    steps: StockStepRow[];
+    /** The document shapes this project writes from, each opening in an editor. */
+    templates: StockTemplate[];
+    /**
+     * The constitution, which a command owns rather than a file.
+     *
+     * `command` is the spelling this project registers, so the row names what
+     * the run will actually name.
+     */
+    constitution: { command: string; written: boolean } | null;
+    /** Presets applied under `.specify/presets/`, which override command bodies. */
+    presets: Array<{ id: string; name: string; description: string }>;
+    /** The extension registry, when this project has one. */
+    registry: { path: string } | null;
+    /** Why Build does nothing here, said once. */
+    buildBlocked: string;
+}
+
 export interface PipelineHook {
     when: HookWhen;
     type: HookType;
@@ -641,10 +728,32 @@ export type BuilderToExtensionMessage =
         layout?: LivingSpecsLayout;
     }
     /** The first-run line is read once; this is the person saying so. */
-    | { type: 'dismissFirstRun' };
+    | { type: 'dismissFirstRun' }
+    /** Switch one `.specify/extensions.yml` hook on or off. Stock projects only. */
+    | {
+        type: 'setStockHook';
+        step: string;
+        when: HookWhen;
+        index: number;
+        enabled: boolean;
+    }
+    /**
+     * Open one of the files the stock board drew from, in an editor.
+     *
+     * A workspace-relative path under `.specify/`, which the panel checks
+     * before opening: this is the board saying which of the paths it was given
+     * was clicked, not a free choice of file.
+     */
+    | { type: 'openStockFile'; path: string }
+    /** Draw another installed workflow. Reads a second file; writes nothing. */
+    | { type: 'selectStockWorkflow'; id: string }
+    /** Run a stock Spec Kit command that owns what a row is about. */
+    | { type: 'runStockCommand'; command: 'constitution' };
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }
+    /** This project runs stock Spec Kit, so the board draws that instead. */
+    | { type: 'stock'; view: StockWorkflowView }
     | { type: 'busy'; busy: boolean }
     /** A node's instructions, with the frontmatter and shared-part fences taken out. */
     | {

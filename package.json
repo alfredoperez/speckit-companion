@@ -688,7 +688,7 @@
         },
         {
           "command": "speckit.companion.openPipelineBuilder",
-          "when": "view == speckit.views.explorer && speckit.companion.installed",
+          "when": "view == speckit.views.explorer",
           "group": "navigation@8"
         },
         {

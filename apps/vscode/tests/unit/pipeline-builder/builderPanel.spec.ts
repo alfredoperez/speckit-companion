@@ -74,6 +74,10 @@ beforeEach(() => {
     jest.clearAllMocks();
     workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-ws-'));
     extensionPath = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-ext-'));
+    // A project with the Companion spec-kit extension installed, which is what
+    // every handler below is about. Without it the panel draws the stock board.
+    fs.mkdirSync(path.join(workspace, '.specify', 'extensions', 'companion'),
+        { recursive: true });
 
     graph.resolveConfigWriteScript.mockReturnValue(WRITE_SCRIPT);
     graph.resolveConfigRepairScript.mockReturnValue(REPAIR_SCRIPT);
@@ -1112,5 +1116,197 @@ describe('the page the panel serves', () => {
         panel = openPanel();
         const second = /nonce-([A-Za-z0-9]{32})/.exec(panel.webview.html)![1];
         expect(second).not.toBe(first);
+    });
+});
+
+describe('a project that runs stock Spec Kit', () => {
+    /** The same project with the Companion extension taken out of it. */
+    function goStock(): Panel {
+        panel.__fireDispose();
+        fs.rmSync(path.join(workspace, '.specify', 'extensions', 'companion'),
+            { recursive: true, force: true });
+        fs.mkdirSync(path.join(workspace, '.specify', 'workflows', 'speckit'),
+            { recursive: true });
+        fs.writeFileSync(
+            path.join(workspace, '.specify', 'workflows', 'speckit', 'workflow.yml'),
+            [
+                'workflow:', '  id: "speckit"', '  name: "Full SDD Cycle"',
+                'steps:', '  - id: specify', '    command: speckit.specify', '',
+            ].join('\n'),
+            'utf8');
+        return openPanel();
+    }
+
+    beforeEach(() => { panel = goStock(); });
+
+    it('draws the stock workflow instead of the Companion graph', async () => {
+        await panel.__receive({ type: 'ready' });
+        expect(panel.__lastPosted('graph')).toBeUndefined();
+        expect(panel.__lastPosted('stock').view.workflow.name).toBe('Full SDD Cycle');
+        expect(graph.readPipelineGraph).not.toHaveBeenCalled();
+    });
+
+    it('writes no configuration, whatever the board asks for', async () => {
+        const asks = [
+            { type: 'reorderNodes', command: 'specify', order: ['draft-spec'] },
+            { type: 'setPhases', command: 'specify', phases: [] },
+            { type: 'addHook', command: 'specify', anchor: 'draft-spec', when: 'before',
+                hookType: 'prompt', value: 'do a thing' },
+            { type: 'selectWorkflow', name: 'shipped' },
+            { type: 'newWorkflow', from: '', name: 'mine' },
+            { type: 'newStep', name: 'review', label: 'Review', after: '', writes: '' },
+            { type: 'replaceStep', command: 'specify' },
+            { type: 'saveNode', command: 'specify', nodeId: 'draft-spec', body: 'ours' },
+            { type: 'repair', repairId: 'reset-all' },
+        ];
+
+        for (const ask of asks) {
+            await panel.__receive(ask);
+            expect(panel.__lastPosted('notice').text).toContain('stock Spec Kit');
+        }
+
+        for (const write of [
+            graph.writeNodeOrder, graph.writePhases, graph.writeHook, graph.writeWorkflow,
+            graph.createWorkflow, graph.createStep, graph.applyRepair,
+        ]) {
+            expect(write).not.toHaveBeenCalled();
+        }
+        expect(fs.existsSync(path.join(workspace, '.specify', 'companion.yml'))).toBe(false);
+        expect(fs.existsSync(path.join(workspace, '.specify', 'companion'))).toBe(false);
+    });
+
+    it('refuses to build or preview, and says there is nothing to build', async () => {
+        await panel.__receive({ type: 'build' });
+        expect(panel.__lastPosted('notice').text).toContain('nothing to build');
+        await panel.__receive({ type: 'preview' });
+        expect(panel.__lastPosted('notice').text).toContain('nothing to build');
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalled();
+    });
+
+    it('switches one extension hook off, and changes nothing else', async () => {
+        const registry = path.join(workspace, '.specify', 'extensions.yml');
+        fs.writeFileSync(registry, [
+            'hooks:', '  before_specify:', '  - extension: git',
+            '    command: speckit.git.feature', '    enabled: true', '',
+        ].join('\n'), 'utf8');
+
+        await panel.__receive({
+            type: 'setStockHook', step: 'specify', when: 'before', index: 0, enabled: false,
+        });
+
+        expect(fs.readFileSync(registry, 'utf8')).toContain('enabled: false');
+        expect(panel.__lastPosted('status').status.text).toContain('specify before hook is off');
+        expect(panel.__lastPosted('stock').view.steps[0].hooks[0].enabled).toBe(false);
+    });
+});
+
+describe('what the stock board can change', () => {
+    function stockProject(): Panel {
+        panel.__fireDispose();
+        fs.rmSync(path.join(workspace, '.specify', 'extensions', 'companion'),
+            { recursive: true, force: true });
+        const write = (rel: string, body: string) => {
+            const file = path.join(workspace, rel);
+            fs.mkdirSync(path.dirname(file), { recursive: true });
+            fs.writeFileSync(file, body, 'utf8');
+        };
+        write('.specify/workflows/speckit/workflow.yml', [
+            'workflow:', '  id: "speckit"', '  name: "Full SDD Cycle"',
+            'steps:', '  - id: specify', '    command: speckit.specify', '',
+        ].join('\n'));
+        write('.specify/workflows/quick/workflow.yml', [
+            'workflow:', '  id: "quick"', '  name: "Quick fix"',
+            'steps:', '  - id: implement', '    command: speckit.implement', '',
+        ].join('\n'));
+        write('.specify/templates/spec-template.md', '# Spec\n');
+        return openPanel();
+    }
+
+    beforeEach(() => { panel = stockProject(); });
+
+    it('opens a template without reading anything back or writing to it', async () => {
+        const template = path.join('.specify', 'templates', 'spec-template.md');
+        const before = fs.readFileSync(path.join(workspace, template), 'utf8');
+
+        await panel.__receive({ type: 'openStockFile', path: template });
+
+        expect(vscode.window.showTextDocument).toHaveBeenCalledWith(
+            expect.objectContaining({ fsPath: path.join(workspace, template) }));
+        expect(fs.readFileSync(path.join(workspace, template), 'utf8')).toBe(before);
+        expect(panel.__lastPosted('notice')).toBeUndefined();
+    });
+
+    it('refuses to open a path the board never drew', async () => {
+        fs.writeFileSync(path.join(workspace, 'secrets.env'), 'TOKEN=1', 'utf8');
+
+        for (const asked of ['secrets.env', path.join('.specify', 'companion.yml'),
+            path.join('.specify', 'templates', '..', '..', 'secrets.env')]) {
+            await panel.__receive({ type: 'openStockFile', path: asked });
+            expect(panel.__lastPosted('notice').text).toContain('not one this board drew');
+        }
+        expect(vscode.window.showTextDocument).not.toHaveBeenCalled();
+    });
+
+    it('draws another installed workflow, and writes nothing to do it', async () => {
+        await panel.__receive({ type: 'selectStockWorkflow', id: 'quick' });
+
+        const view = panel.__lastPosted('stock').view;
+        expect(view.workflow.id).toBe('quick');
+        expect(view.steps.map((step: { id: string }) => step.id)).toEqual(['implement']);
+        expect(view.workflows.find((w: { id: string }) => w.id === 'quick').drawn).toBe(true);
+        expect(fs.existsSync(path.join(workspace, '.specify', 'companion.yml'))).toBe(false);
+    });
+
+    it('refuses a workflow that is not installed', async () => {
+        await panel.__receive({ type: 'selectStockWorkflow', id: 'invented' });
+        expect(panel.__lastPosted('notice').text).toContain('not installed');
+    });
+
+    it('hands the constitution to the command that owns it', async () => {
+        await panel.__receive({ type: 'runStockCommand', command: 'constitution' });
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.constitution');
+    });
+
+    it('names the templates it can open, each with the step that fills it', async () => {
+        await panel.__receive({ type: 'ready' });
+
+        const view = panel.__lastPosted('stock').view;
+        expect(view.templates).toHaveLength(1);
+        expect(view.templates[0].path)
+            .toBe(path.join('.specify', 'templates', 'spec-template.md'));
+        // Dashed, because the mocked host is the one that registers dashes.
+        expect(view.templates[0].command).toBe('speckit-specify');
+        expect(view.templates[0].note).not.toContain('speckit');
+    });
+
+    /**
+     * A board showing two spellings cannot say which one a host answers to, and
+     * the dotted one resolves to nothing where dashes are registered.
+     */
+    it.each([
+        ['dash', 'speckit-specify', 'speckit-constitution'],
+        ['dot', 'speckit.specify', 'speckit.constitution'],
+    ])('spells every command the way a %s host registers it', async (
+        format, specify, constitution,
+    ) => {
+        const configured = vscode.workspace.getConfiguration as jest.Mock;
+        const before = configured.getMockImplementation();
+        configured.mockReturnValue({
+            get: (key: string, fallback: unknown) => (
+                key === 'commandFormat' ? format : fallback),
+            inspect: () => undefined,
+        });
+        try {
+            await panel.__receive({ type: 'ready' });
+
+            const view = panel.__lastPosted('stock').view;
+            expect(view.templates[0].command).toBe(specify);
+            expect(view.constitution.command).toBe(constitution);
+            expect(JSON.stringify(view.steps)).not.toContain(
+                format === 'dash' ? 'speckit.' : 'speckit-');
+        } finally {
+            configured.mockReset();
+            if (before) { configured.mockImplementation(before); }
+        }
     });
 });
