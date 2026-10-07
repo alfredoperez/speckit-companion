@@ -22,6 +22,7 @@ import {
     PipelineGraphResult,
     PipelineStatus,
     isGraphError,
+    routeReads,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { getProjectRoot } from '../../core/projectRoot';
@@ -41,7 +42,10 @@ import {
     resolveConfigRepairScript,
     applyRepair,
     resolveGraphScript,
+    restoreDecision,
+    writeDecision,
     writeHook,
+    writeLivingSpecs,
     moveHook,
     removeHook,
     writeNodeOrder,
@@ -598,6 +602,75 @@ export class PipelineBuilderPanel {
             await vscode.commands.executeCommand('speckit.constitution');
         },
 
+        /**
+         * Change where one verdict routes.
+         *
+         * Taken back the way a node removal is: the routing as it stands is
+         * read before the write, and the undo writes that back. Which half of
+         * a verdict a project had changed is not recoverable from the file
+         * afterwards — an override and a declaration read identically once the
+         * override is there — so it has to be held.
+         */
+        setDecision: async message => {
+            const before = await this.verdictShape(
+                message.command, message.node, message.verdict);
+            const token = `decision:${message.command}:${message.node}:${message.verdict}`;
+            const ok = await this.write(
+                script => writeDecision(
+                    script, this.workspaceRoot, message.command, message.node,
+                    message.verdict, message.folds, message.warns),
+                'Changing where a verdict routes',
+                {
+                    tone: 'done',
+                    text: `${message.node} = ${message.verdict} ${routeReads(
+                        message.folds, message.warns)}`,
+                    detail: 'Build to apply',
+                    undo: before ? { token } : undefined,
+                });
+            if (ok && before) { this.offerUndo(token, () => this.putVerdictBack(message, before)); }
+        },
+
+        restoreDecision: async message => {
+            const before = await this.verdictShape(
+                message.command, message.node, message.verdict);
+            const token = `decision:${message.command}:${message.node}:${message.verdict}`;
+            const ok = await this.write(
+                script => restoreDecision(script, this.workspaceRoot, message.command,
+                    message.node, message.verdict),
+                'Giving a verdict back',
+                {
+                    tone: 'done',
+                    text: `${message.node} = ${message.verdict} routes the way Companion ships it`,
+                    detail: 'Build to apply',
+                    undo: before ? { token } : undefined,
+                });
+            if (ok && before) { this.offerUndo(token, () => this.putVerdictBack(message, before)); }
+        },
+
+        /**
+         * Turn living specs on or off, or choose where the specs live.
+         *
+         * The one write that does not go into `companion.yml` or a workflow
+         * file: the script sends it to whichever file the living-specs resolver
+         * reads, so the setting lands where it will be read from.
+         */
+        setLivingSpecs: async message => {
+            await this.write(
+                script => writeLivingSpecs(script, this.workspaceRoot, {
+                    enabled: message.enabled, layout: message.layout,
+                }),
+                'Changing living specs',
+                {
+                    tone: 'done',
+                    text: message.layout
+                        ? `Living specs are kept ${message.layout}`
+                        : `Living specs are ${message.enabled ? 'on' : 'off'}`,
+                    detail: message.enabled === false
+                        ? 'Nothing was deleted — the registry stays'
+                        : 'Build to apply',
+                });
+        },
+
         /** Read once. The panel does not say it again in this workspace. */
         dismissFirstRun: async () => {
             await this.context.workspaceState?.update(FIRST_RUN_SEEN, true);
@@ -717,6 +790,45 @@ export class PipelineBuilderPanel {
             order: step.phases.flatMap(p => p.nodes.map(n => n.id)),
             phases: step.phases.map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id) })),
         };
+    }
+
+    /**
+     * One verdict's routing as it stands, and whether this project owns it.
+     *
+     * `changed` is what tells an undo which write to make: putting back a
+     * routing the project had changed means writing it again, and putting back
+     * one it had not means removing the override entirely.
+     */
+    private async verdictShape(command: string, node: string, verdict: string): Promise<
+        { folds: string[]; warns: string; changed: boolean } | null
+    > {
+        const script = resolveGraphScript(this.workspaceRoot, this.context.extensionPath);
+        if (!script) { return null; }
+        const graph = await readPipelineGraph(script, this.workspaceRoot);
+        if (isGraphError(graph)) { return null; }
+        const step = graph.steps.find(s => s.name === command);
+        const found = step?.decisions.find(d => d.node === node)
+            ?.verdicts.find(v => v.name === verdict);
+        if (!step || !found) { return null; }
+        return {
+            folds: found.folds,
+            warns: found.warns,
+            changed: step.changes.decisions.includes(`${node}.${verdict}`),
+        };
+    }
+
+    /** Write one verdict's routing back as it was — or take the override away again. */
+    private async putVerdictBack(
+        at: { command: string; node: string; verdict: string },
+        before: { folds: string[]; warns: string; changed: boolean },
+    ): Promise<void> {
+        await this.write(
+            script => (before.changed
+                ? writeDecision(script, this.workspaceRoot, at.command, at.node,
+                    at.verdict, before.folds, before.warns)
+                : restoreDecision(script, this.workspaceRoot, at.command, at.node,
+                    at.verdict)),
+            'Putting the routing back');
     }
 
     /** Send one node's instructions — what it says, and what an edit starts from. */

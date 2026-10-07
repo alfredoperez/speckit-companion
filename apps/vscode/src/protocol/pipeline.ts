@@ -205,6 +205,65 @@ export interface PipelineDecision {
     verdicts: PipelineVerdict[];
 }
 
+/**
+ * Where this project keeps its living specs.
+ *
+ * `central` is one `capabilities/` tree; `colocated` puts each spec beside the
+ * code it describes. Mirrors `load_living_specs_block` in companion_config.py.
+ */
+export type LivingSpecsLayout = 'central' | 'colocated';
+
+/** One capability the registry holds. Read here, written by adoption. */
+export interface LivingCapability {
+    name: string;
+    match: string[];
+    exclude: string[];
+    /** The spec file it resolves to. */
+    spec: string;
+    /** Retired on purpose: its spec was emptied rather than lost. */
+    retire: boolean;
+}
+
+/**
+ * The living-specs half of what a Companion run reads.
+ *
+ * Two of these are a choice — whether living specs run, and where the specs
+ * live. The rest is a registry that adoption and the capability commands own,
+ * so it travels as facts to show: a second writer for a file that already has
+ * one is how two tools come to disagree about what a project has adopted.
+ */
+export interface PipelineLivingSpecs {
+    enabled: boolean;
+    layout: LivingSpecsLayout;
+    /**
+     * Which file answered. `registry` is `living-specs.yml`, `legacy` is the
+     * old `livingSpecs:` block in `companion.yml`, `none` is neither — so the
+     * panel can say where a setting goes instead of implying companion.yml.
+     */
+    origin: 'registry' | 'legacy' | 'none';
+    /** That file, relative to the project. Empty when there is none yet. */
+    path: string;
+    capabilities: LivingCapability[];
+    /** Globs drift never flags. Read-only here. */
+    exempt: string[];
+    /** Authored guidance, by the step it guides. Read-only here. */
+    rules: Record<string, string[]>;
+    warnings: string[];
+}
+
+/**
+ * What a verdict does, in one clause.
+ *
+ * Both sides say this: the board draws it under the step, and the status line
+ * says it after a write. Written twice it drifted — the panel said "skips plan"
+ * where the status line said "folds plan", which is the configuration's word
+ * for it and not a word anyone reading the board had met.
+ */
+export function routeReads(folds: string[], warns: string): string {
+    if (folds.length) { return `skips ${folds.join(', ')}`; }
+    return warns ? 'warns, then runs everything' : 'runs everything';
+}
+
 /** How a step differs from the pipeline as shipped. */
 export interface PipelineChanges {
     added: string[];
@@ -368,6 +427,15 @@ export interface PipelineGraph {
     steps: PipelineStep[];
     workflows: PipelineWorkflows;
     choices: PipelineChoices;
+    /**
+     * The living-specs settings, and where they came from.
+     *
+     * Optional because the emitter is the project's installed spec-kit
+     * extension, versioned separately from this one: a graph from an older
+     * install arrives without it, and a reader that assumed otherwise would
+     * crash on exactly the version skew this repository has been bitten by.
+     */
+    livingSpecs?: PipelineLivingSpecs;
     /** Whether the project has a companion.yml at all. */
     configured: boolean;
     /** Whether anything differs from the shipped pipeline. */
@@ -625,6 +693,39 @@ export type BuilderToExtensionMessage =
         phase?: string;
         order: string[];
         phases: Array<{ name: string; nodes: string[] }>;
+    }
+    /**
+     * Change where one verdict routes.
+     *
+     * The decision itself is declared with the node that makes it; what a
+     * project owns is this — which steps a verdict skips, and what it says
+     * before continuing. Both halves travel together, because an override is
+     * folded over the declaration key by key and half of one is half true.
+     */
+    | {
+        type: 'setDecision';
+        command: string;
+        /** The node whose verdict this is. */
+        node: string;
+        verdict: string;
+        /** Steps the verdict skips. Empty runs everything. */
+        folds: string[];
+        /** The notice it prints first. Empty prints none. */
+        warns: string;
+    }
+    /** Give one verdict back to the routing Companion declares for it. */
+    | { type: 'restoreDecision'; command: string; node: string; verdict: string }
+    /**
+     * Turn living specs on or off, or choose where the specs live.
+     *
+     * Only these two. The capability list, the exempt globs and the authored
+     * rules are a registry adoption writes, and a second writer for that file
+     * is how two tools come to disagree about what a project has adopted.
+     */
+    | {
+        type: 'setLivingSpecs';
+        enabled?: boolean;
+        layout?: LivingSpecsLayout;
     }
     /** The first-run line is read once; this is the person saying so. */
     | { type: 'dismissFirstRun' }

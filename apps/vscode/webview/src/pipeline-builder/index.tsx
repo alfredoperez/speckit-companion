@@ -34,6 +34,8 @@ import {
     AttachForm, NewStepForm, NewWorkflowForm, Attachment, boundaryOf,
 } from './AttachForm';
 import { TemplateForm } from './TemplateForm';
+import { DecisionForm } from './DecisionForm';
+import { LivingSpecsPanel } from './LivingSpecsPanel';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
 const vscode = acquireVsCodeApi();
@@ -56,6 +58,9 @@ type Side =
     | { kind: 'new-workflow' }
     | { kind: 'new-step'; after?: string }
     | { kind: 'template'; command: string }
+    /** Where one node's verdicts route. `node` is the node that decides. */
+    | { kind: 'decision'; command: string; node: string }
+    | { kind: 'living' }
     | null;
 
 /**
@@ -312,6 +317,7 @@ function App() {
                     setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
                 }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
+                onOpenLivingSpecs={() => { setNotice(null); setSide({ kind: 'living' }); }}
             />
             {line && (
                 <StatusLine status={line}
@@ -361,6 +367,10 @@ function App() {
                         });
                     }}
                     onRefuse={reason => { setStatus(null); setNotice(reason); }}
+                    onOpenDecision={(command, node) => {
+                        setNotice(null);
+                        setSide({ kind: 'decision', command, node });
+                    }}
                 />
 
                 {attachStep && attaching && (
@@ -428,6 +438,42 @@ function App() {
                                 },
                             });
                         } : undefined}
+                    />
+                )}
+
+                {side?.kind === 'decision' && (() => {
+                    const step = graph.steps.find(s => s.name === side.command);
+                    const decision = step?.decisions.find(d => d.node === side.node);
+                    if (!step || !decision) { return null; }
+                    return (
+                        <DecisionForm
+                            step={step}
+                            decision={decision}
+                            // Every step that takes a turn in the run, minus the
+                            // one that decides: a verdict cannot skip the step
+                            // it was reached in.
+                            skippable={graph.steps
+                                .filter(s => s.inSequence && s.name !== step.name)
+                                .map(s => s.name)}
+                            changed={step.changes.decisions}
+                            onCancel={() => setSide(null)}
+                            onSave={(verdict, folds, warns) => send({
+                                type: 'setDecision', command: side.command,
+                                node: side.node, verdict, folds, warns,
+                            })}
+                            onRestore={verdict => send({
+                                type: 'restoreDecision', command: side.command,
+                                node: side.node, verdict,
+                            })}
+                        />
+                    );
+                })()}
+
+                {side?.kind === 'living' && graph.livingSpecs && (
+                    <LivingSpecsPanel
+                        living={graph.livingSpecs}
+                        onCancel={() => setSide(null)}
+                        onSet={change => send({ type: 'setLivingSpecs', ...change })}
                     />
                 )}
 

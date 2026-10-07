@@ -134,6 +134,8 @@ From the board you can:
 - **Rearrange nodes** by dragging, or move one to another phase.
 - **Rewrite a node** in your own words. An upgrade never overwrites your copy.
 - **Add a step** of your own, with its own `/speckit.companion.<name>` command.
+- **Change where a decision routes**: pick which steps each answer to "how big is this change?" skips, and what it warns first.
+- **Turn living specs on or off** and choose where the specs live, with the capabilities you registered listed beside them.
 - **Keep several workflows** and switch between them, starting from what you run today or from one Companion ships.
 
 Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder).

@@ -699,6 +699,219 @@ def new_workflow(project_root: str, name: str, seed_from: str = "") -> str:
     return path
 
 
+# --------------------------------------------------------------------------- #
+# Where a verdict routes
+# --------------------------------------------------------------------------- #
+#: A key this file can carry bare. Anything else is quoted, which `_find_key`
+#: and the reader both strip — so quoting is safe and bare is only prettier.
+_BARE_KEY = re.compile(r"[A-Za-z0-9_.-]+")
+
+
+def _key(name: str) -> str:
+    """A mapping key, bare when the format can carry it bare."""
+    text = str(name)
+    return text if _BARE_KEY.fullmatch(text) else _quote(text)
+
+
+def _render_verdict(folds: list, warns: str, indent: int) -> list:
+    """One verdict's routing — both halves, every time.
+
+    Written whole rather than patched. The reader folds an override over the
+    declared verdict key by key, so writing only `folds` leaves `warns` reading
+    from the declaration — a routing change that is half the project's and half
+    Companion's, and true in neither telling.
+    """
+    return [
+        f"{' ' * indent}folds: [{', '.join(folds)}]",
+        f"{' ' * indent}warns: {_quote(warns)}",
+    ]
+
+
+def _nested(indent: int, keys: tuple, body: list) -> list:
+    """The missing nesting, each level one deeper, with `body` inside the last."""
+    out = [f"{' ' * (indent + depth * len(INDENT))}{_key(key)}:"
+           for depth, key in enumerate(keys)]
+    return out + _indented(body, indent + len(keys) * len(INDENT))
+
+
+def _decision_walk(lines: list, command: str, node: str, verdict: str):
+    """Walk to `commands.<command>.decisions.<node>.<verdict>`.
+
+    Returns `(at, indent, end)` for the deepest key that exists, and the keys
+    still to be created — so one writer both creates the nesting and replaces an
+    override already there, the way `add_hook` does for an anchor.
+    """
+    found = _command_block(lines, command)
+    if found is None:
+        return None
+    at, end, indent = found[0], found[1], found[2] - len(INDENT)
+    for depth, key in enumerate(("decisions", node, verdict)):
+        step = next(
+            (_indent_of(lines[i]) for i in range(at + 1, end) if not _is_blank(lines[i])),
+            indent + len(INDENT),
+        )
+        hit = _find_key(lines, key, at + 1, end, step)
+        if hit is None:
+            return at, step, end, ("decisions", node, verdict)[depth:]
+        _open_block(lines, hit)
+        at, indent = hit, step
+        end = _block_end(lines, hit, step, end)
+    return at, indent, end, ()
+
+
+def set_decision(text: str, command: str, node: str, verdict: str,
+                 folds: list, warns: str) -> str:
+    """Return `text` with one verdict's routing written for this project.
+
+    The declaration lives with the node that makes the decision; `companion.yml`
+    carries only what this project changed about it. So this writes one verdict's
+    entry and leaves every other verdict — and every other decision — alone.
+    """
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+    body = _render_verdict(folds, warns, 0)
+
+    commands_at = _find_key(lines, "commands", 0, len(lines), 0)
+    if commands_at is None:
+        block = ["commands:", f"{INDENT}{_key(command)}:"] + _nested(
+            len(INDENT) * 2, ("decisions", node, verdict), body)
+        whole = lines + ([""] if lines and lines[-1].strip() else []) + block
+        return "\n".join(whole) + ("\n" if trailing_newline else "")
+
+    walked = _decision_walk(lines, command, node, verdict)
+    if walked is None:
+        _open_block(lines, commands_at)
+        commands_end = _block_end(lines, commands_at, 0, len(lines))
+        cmd_indent = next(
+            (_indent_of(lines[i]) for i in range(commands_at + 1, commands_end)
+             if not _is_blank(lines[i])),
+            len(INDENT),
+        )
+        block = ([f"{' ' * cmd_indent}{_key(command)}:"]
+                 + _nested(cmd_indent * 2, ("decisions", node, verdict), body))
+        out = lines[:commands_end] + block + lines[commands_end:]
+        return "\n".join(out) + ("\n" if trailing_newline else "")
+
+    at, indent, end, missing = walked
+    if missing:
+        block = _nested(indent, missing, body)
+        out = lines[:at + 1] + block + lines[at + 1:]
+        return "\n".join(out) + ("\n" if trailing_newline else "")
+
+    # The verdict is already there, so its routing is replaced. `_content_end`,
+    # not `_block_end`: a note written under the override is not part of it.
+    stop = _content_end(lines, at, end)
+    out = lines[:at + 1] + _indented(body, indent + len(INDENT)) + lines[stop:]
+    return "\n".join(out) + ("\n" if trailing_newline else "")
+
+
+def remove_decision(text: str, command: str, node: str, verdict: str) -> str:
+    """Return `text` with one verdict's override taken out, back to the declared routing.
+
+    An absent override IS the shipped routing, so removal is how a verdict is
+    restored. The keys that held it go too when nothing is left under them — a
+    `decisions:` pointing at nothing reads as a decision this project changed.
+    """
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+    walked = _decision_walk(lines, command, node, verdict)
+    if walked is None or walked[3]:
+        raise ConfigWriteError(
+            f"{command}: '{node}' has no changed routing for '{verdict}' to put back")
+
+    at, indent, end, _missing = walked
+    out = lines[:at] + lines[_content_end(lines, at, end):]
+
+    # Upwards, so an emptied verdict does not leave its node, and an emptied
+    # node does not leave `decisions:`. Each level is re-walked rather than
+    # remembered: the removal below it moved every line number.
+    for depth in (1, 0):
+        keys = ("decisions", node)[:depth + 1]
+        found = _command_block(out, command)
+        if found is None:
+            break
+        spot, stop, indent_at = found[0], found[1], found[2] - len(INDENT)
+        for key in keys:
+            step = next(
+                (_indent_of(out[i]) for i in range(spot + 1, stop)
+                 if not _is_blank(out[i])), indent_at + len(INDENT))
+            hit = _find_key(out, key, spot + 1, stop, step)
+            if hit is None:
+                spot = None
+                break
+            spot, indent_at = hit, step
+            stop = _block_end(out, hit, step, stop)
+        if spot is None:
+            break
+        if any(not _is_blank(out[i]) for i in range(spot + 1, stop)):
+            break
+        out = out[:spot] + out[_content_end(out, spot, stop):]
+
+    # And the two keys above, when the routing was the only thing in them. A
+    # `commands:` holding one name holding nothing is a customisation the panel
+    # reports and nobody made.
+    found = _command_block(out, command)
+    if found and not any(not _is_blank(out[i]) for i in range(found[0] + 1, found[1])):
+        out = out[:found[0]] + out[_content_end(out, found[0], found[1]):]
+        commands_at = _find_key(out, "commands", 0, len(out), 0)
+        end = _block_end(out, commands_at, 0, len(out)) if commands_at is not None else 0
+        if commands_at is not None and not any(
+                not _is_blank(out[i]) for i in range(commands_at + 1, end)):
+            out = out[:commands_at] + out[_content_end(out, commands_at, end):]
+    return "\n".join(out) + ("\n" if trailing_newline and out else "")
+
+
+def declared_decisions(command: str) -> list:
+    """The decisions this step declares, as shipped — what an override can address."""
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import decision_routes
+
+    import _command_parts as cp
+
+    return decision_routes.decisions_for(
+        command, os.path.join(cp.EXT, cp.NODES_DIR))
+
+
+def check_decision(project_root: str, command: str, node: str, verdict: str,
+                   folds: list) -> None:
+    """Refuse a routing change the build would ignore or could not honour.
+
+    Both failures are otherwise silent. An override keyed to a verdict the step
+    does not declare is never read — the resolver folds overrides over the
+    declaration, so an entry with nothing to fold over simply sits in the file.
+    And a verdict folding a step that does not exist stops the build, long after
+    the click that wrote it.
+    """
+    declared = declared_decisions(command)
+    if not declared:
+        raise ConfigWriteError(f"{command} makes no decision, so there is no routing to change")
+    decision = next((d for d in declared if d["node"] == node), None)
+    if decision is None:
+        raise ConfigWriteError(
+            f"{command}: '{node}' decides nothing — "
+            f"{', '.join(d['node'] for d in declared)} does")
+    names = [v["name"] for v in decision["verdicts"]]
+    if verdict not in names:
+        raise ConfigWriteError(
+            f"{node} has no verdict '{verdict}' — it can answer {', '.join(names)}")
+
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import _command_parts as cp
+
+    known = set(cp.decomposed_commands()) | set(RUN_ORDER)
+    unknown = [s for s in folds if s not in known]
+    if unknown:
+        raise ConfigWriteError(
+            f"{node}.{verdict} would skip {', '.join(unknown)}, which is not a step")
+    if node in folds or command in folds:
+        raise ConfigWriteError(
+            f"{node}.{verdict} cannot skip {command} — it is the step that decides")
+
+
 def _render_phases(phases: list, indent: str) -> list:
     """A `phases:` block. One node per line, so a regroup reads as a diff."""
     out = [f"{indent}phases:"]
@@ -1140,6 +1353,103 @@ def check_order(command: str, nodes: list) -> None:
             )
 
 
+# --------------------------------------------------------------------------- #
+# Living specs — the two settings that are a choice, not a registry
+# --------------------------------------------------------------------------- #
+#: What `layout` may be. Mirrors `load_living_specs_block` in companion_config.py.
+LAYOUTS = ("central", "colocated")
+
+
+def living_specs_target(project_root: str) -> tuple:
+    """`(path, nested)` for the file living specs are configured in.
+
+    There are two shapes and the resolver already decides between them: the
+    registry at the project root, flat, which wins outright; and the legacy
+    `livingSpecs:` block inside `.specify/companion.yml`. Writing to whichever
+    one is NOT in force is a setting the project never reads — reported as
+    saved, changing nothing. A project with neither gets the registry, because
+    that is the shape everything else writes.
+    """
+    import sys
+
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import companion_config as cc
+
+    _living, meta = cc.resolve_living_specs(project_root)
+    if meta["errors"]:
+        raise ConfigWriteError(
+            f"{meta['path']} could not be read, so it was not changed: "
+            + "; ".join(meta["errors"]))
+    if meta["origin"] == "legacy":
+        return os.path.join(project_root, cc.LEGACY_CONFIG_REL), True
+    return os.path.join(project_root, cc.LIVING_SPECS_REL), False
+
+
+def set_living_specs(text: str, nested: bool, enabled=None, layout=None) -> str:
+    """Return `text` with `enabled` and/or `layout` set, leaving the rest alone.
+
+    `nested` writes under a `livingSpecs:` key, which is the legacy shape; flat
+    is the registry's own. Only the key being changed is touched — the
+    capability list, the exempt globs and the authored rules are a registry the
+    panel reads and does not own, and a rewrite of the block would reformat all
+    three to set one boolean.
+    """
+    if layout is not None and layout not in LAYOUTS:
+        raise ConfigWriteError(
+            f"living specs are kept {' or '.join(LAYOUTS)}, not '{layout}'")
+    out = text
+    for key, value in (("enabled", enabled), ("layout", layout)):
+        if value is None:
+            continue
+        written = "true" if value is True else "false" if value is False else str(value)
+        out = _set_scalar(out, ("livingSpecs", key) if nested else (key,), written)
+    return out
+
+
+def _set_scalar(text: str, keys: tuple, value: str) -> str:
+    """Return `text` with `keys` set to `value`, creating the nesting it needs.
+
+    One scalar, found by walking the same way every writer here walks and
+    replacing one line. Everything around it — comments, blank lines, the keys
+    this does not name — comes through byte-identical.
+    """
+    lines = text.splitlines()
+    trailing_newline = text.endswith("\n") or not text
+    at, indent, end = -1, -len(INDENT), len(lines)
+    for depth, key in enumerate(keys):
+        step = next(
+            (_indent_of(lines[i]) for i in range(at + 1, end) if not _is_blank(lines[i])),
+            indent + len(INDENT),
+        ) if at >= 0 else 0
+        hit = _find_key(lines, key, at + 1, end, step)
+        last = depth == len(keys) - 1
+        if hit is None:
+            block = ([f"{' ' * (step + d * len(INDENT))}{_key(k)}:"
+                      for d, k in enumerate(keys[depth:-1])]
+                     + [f"{' ' * (step + (len(keys) - 1 - depth) * len(INDENT))}"
+                        f"{_key(keys[-1])}: {value}"])
+            # After what is there, not before it. Inserted at the top, a setting
+            # the panel added landed above the file's own header comment — and
+            # above `enabled:`, which is the key it belongs beside.
+            place = _content_end(lines, at, end)
+            out = lines[:place] + block + lines[place:]
+            return "\n".join(out) + ("\n" if trailing_newline or not text else "")
+        if last:
+            out = lines[:hit] + [f"{' ' * step}{_key(key)}: {value}"] + lines[hit + 1:]
+            return "\n".join(out) + ("\n" if trailing_newline else "")
+        _open_block(lines, hit)
+        at, indent = hit, step
+        end = _block_end(lines, hit, step, end)
+    return text
+
+
+def write_living_specs(project_root: str, enabled=None, layout=None) -> str:
+    """Apply `set_living_specs` to whichever file the resolver reads. Returns its path."""
+    path, nested = living_specs_target(project_root)
+    save_config(path, set_living_specs(read_config(path), nested, enabled, layout))
+    return path
+
+
 def config_path(project_root: str) -> str:
     """The file an edit belongs in.
 
@@ -1209,6 +1519,18 @@ def main() -> int:
                     help="the step a new step runs behind; omit to launch it by hand")
     ap.add_argument("--writes", default="",
                     help="the file a new step produces; omit for a step that writes none")
+    ap.add_argument("--decision", nargs=2, metavar=("NODE", "VERDICT"),
+                    help="the verdict whose routing to change, under --command")
+    ap.add_argument("--folds", default="",
+                    help="comma-separated steps the verdict skips; empty skips none")
+    ap.add_argument("--warns", default="",
+                    help="the notice the verdict prints; empty prints none")
+    ap.add_argument("--restore-decision", action="store_true",
+                    help="drop this project's routing for --decision, back to the declared one")
+    ap.add_argument("--living-enabled", choices=("true", "false"),
+                    help="turn living specs on or off")
+    ap.add_argument("--living-layout", choices=LAYOUTS,
+                    help="where this project keeps its living specs")
     args = ap.parse_args()
 
     project = os.path.abspath(args.project)
@@ -1229,6 +1551,24 @@ def main() -> int:
             print(f"[config] created {os.path.relpath(made, project)}")
             return 0
 
+        # Living specs are their own registry at the project root, not part of
+        # the workflow a `workflow:` key selects — so this never consults
+        # `config_path`, which would send the setting into a workflow file the
+        # resolver does not read.
+        if args.living_enabled is not None or args.living_layout is not None:
+            where = write_living_specs(
+                project,
+                None if args.living_enabled is None else args.living_enabled == "true",
+                args.living_layout)
+            said = []
+            if args.living_enabled is not None:
+                said.append("living specs "
+                            + ("on" if args.living_enabled == "true" else "off"))
+            if args.living_layout:
+                said.append(f"kept {args.living_layout}")
+            print(f"[config] {', '.join(said)} in {os.path.relpath(where, project)}")
+            return 0
+
         # The selection lives in companion.yml; everything else lives in
         # whichever file that selection points at.
         path = (selection_path if (args.workflow is not None or args.new_workflow)
@@ -1245,6 +1585,26 @@ def main() -> int:
             print("[config] now running "
                   + (f"'{args.workflow}'" if args.workflow.strip()
                      else "this project's own companion.yml"))
+            return 0
+
+        if args.decision:
+            if not args.command:
+                raise ConfigWriteError("a routing change needs --command")
+            node, verdict = args.decision
+            if args.restore_decision:
+                save_config(path, remove_decision(
+                    read_config(path), args.command, node, verdict))
+                print(f"[config] {args.command}: {node} = {verdict} "
+                      f"routes the way Companion ships it again")
+                return 0
+            folds = [f.strip() for f in args.folds.split(",") if f.strip()]
+            check_decision(project, args.command, node, verdict, folds)
+            save_config(path, set_decision(
+                read_config(path), args.command, node, verdict, folds, args.warns))
+            print(f"[config] {args.command}: {node} = {verdict} → "
+                  + (f"skips {', '.join(folds)}" if folds
+                     else "warns, then runs everything" if args.warns
+                     else "runs everything"))
             return 0
 
         if args.move_from:
