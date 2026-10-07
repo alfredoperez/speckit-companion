@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // Puts one spec through every state of a Spec Kit run by writing its files, and saves the real Claude Code screen at each state as a cell grid for the video terminal player. No model turn runs.
-// usage: node tooling/video/terminal-player/capture-run.mjs [--fixture clear-completed] [--out <dir>] [--cols 120] [--rows 38] [--recipe claude-mod] [--mod <plugin-dir>]
+// usage: node tooling/video/terminal-player/capture-run.mjs [--fixture clear-completed] [--out <dir>] [--cols 120] [--rows 38] [--recipe claude-mod] [--mod <plugin-dir>] [--look claude|site]
 import { execFile } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { gridJson, gridText, parseAnsi, rowText } from '../../scripts/lib/terminal/ansi.mjs';
+import { LOOKS, gridJson, gridText, parseAnsi, rowText } from '../../scripts/lib/terminal/ansi.mjs';
 import { dialog, focusedControl, paneHasKeyboard, paneRows, paneText, promptBox } from '../../scripts/lib/terminal/screen.mjs';
 import { outsideEnv, sleep, startSession } from '../../scripts/lib/terminal/tmux.mjs';
 
@@ -24,7 +24,9 @@ const COLS = Number(arg('cols', 120));
 const ROWS = Number(arg('rows', 38));
 const OUT = resolve(arg('out', join(REPO, '.terminal-check', `video-${FIXTURE}`)));
 const MOD = resolve(arg('mod', join(REPO, 'apps', 'claude-mod')));
+const LOOK = arg('look', 'claude');
 const SPEC = `001-${FIXTURE}`;
+if (!Object.hasOwn(LOOKS, LOOK)) throw new Error(`Unknown --look "${LOOK}". Use ${Object.keys(LOOKS).join(' or ')}.`);
 const SHOWN_PATH = '~/dev/todo-app';
 
 const { stdout } = await run('bash', ['-c', '. .claude/sandboxes-env.sh && echo "$SANDBOXES_REPO"'], { cwd: REPO });
@@ -105,7 +107,7 @@ async function save(name, grid) {
     scrub(grid);
     const pane = paneRows(grid);
     const prompt = promptBox(grid);
-    const data = gridJson(grid, { look: 'site', cols: COLS, pane: pane && { col: pane.col, top: pane.top, bottom: pane.bottom } });
+    const data = gridJson(grid, { look: LOOK, cols: COLS, pane: pane && { col: pane.col, top: pane.top, bottom: pane.bottom } });
     data.prompt = prompt && { row: prompt.row };
     // The band is the last row left of the pane that names the spec.
     data.band = grid.findLastIndex(cells => rowText(cells, 0, pane?.col ?? Infinity).includes(SPEC));

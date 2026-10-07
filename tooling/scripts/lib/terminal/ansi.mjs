@@ -22,7 +22,7 @@ export const LOOKS = {
     claude: {
         background: hex('#1a1a17'), foreground: hex('#fafaf8'), size: 16, row: 27,
         ground: hex('#141411'), card: hex('#2a2a27'), border: hex('#cc785c'), rule: hex('#211f1c'), dot: hex('#5c5c57'), label: hex('#84847f'),
-        accent: hex('#de886a'), dim: hex('#84847f'), green: hex('#8aae76'),
+        accent: hex('#de886a'), dim: hex('#84847f'), green: hex('#879b7a'),
         radius: 14, tint: [1.05, 0.99, 0.94],
     },
 };
@@ -190,6 +190,43 @@ function cellCss(cell, look, under) {
     const lines = [cell.underline && 'underline', cell.strike && 'line-through'].filter(Boolean);
     if (lines.length) rules.push(`text-decoration:${lines.join(' ')}`);
     return rules.join(';');
+}
+
+// A look holds more than colour; these keys are the rest of it, and only the colours become a `--tp-*` variable.
+const NOT_A_COLOUR = new Set(['size', 'row', 'radius', 'tint', 'glow']);
+
+/** A look's colours as CSS values, plus the chrome the player cannot read off a cell: the corner radius and the glow behind the window. */
+export function lookCss(look) {
+    const colours = Object.entries(look).filter(([key, value]) => Array.isArray(value) && !NOT_A_COLOUR.has(key)).map(([key, value]) => [key, css(value)]);
+    if (look.radius) colours.push(['radius', `${look.radius}px`]);
+    if (look.glow) colours.push(['glow', look.glow]);
+    return Object.fromEntries(colours);
+}
+
+/**
+ * The grid as plain data for a player to draw: one array of cells per row, each cell [character, column, width, style index],
+ * with the colours already resolved in a look. `pane` ({ col, top, bottom }) marks the cells that sit on the pane's card.
+ */
+export function gridJson(grid, { look: name = 'claude', pane = null, cols = null } = {}) {
+    const look = LOOKS[name] ?? LOOKS.plain;
+    const styles = [];
+    const index = new Map();
+    const styleOf = (cell, under) => {
+        const key = cellCss(cell, look, under);
+        if (!index.has(key)) index.set(key, styles.push(key) - 1);
+        return index.get(key);
+    };
+    const rows = grid.map((cells, row) => {
+        const under = col => (look.card && pane && row >= pane.top && row < pane.bottom && col > pane.col ? look.card : look.background);
+        const out = cells.filter(cell => cell.ch !== ' ' || cell.bg || cell.inverse || cell.underline).map(cell => [cell.ch, cell.col, cell.w, styleOf(cell, under(cell.col))]);
+        const end = cells.length ? cells.at(-1).col + cells.at(-1).w : 0;
+        const tail = cells.tail && cells.tail.bg ? styleOf({ ...cells.tail, col: end }, under(end)) : -1;
+        return tail >= 0 ? { cells: out, tail: [end, tail] } : { cells: out };
+    });
+    return {
+        look: name, cols: cols ?? Math.max(1, ...grid.map(cells => (cells.length ? cells.at(-1).col + cells.at(-1).w : 0))), rows: grid.length, size: look.size, rowHeight: look.row,
+        colours: lookCss(look), pane, styles, grid: rows,
+    };
 }
 
 // Rules are painted, not typed: a font's box-drawing glyphs leave gaps between rows.
