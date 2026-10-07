@@ -36,8 +36,11 @@ capabilities:
 | `name` | The capability id, and its folder name when the location is derived. |
 | `match` | Globs whose files belong to it, minus the capability's own `exclude` globs. |
 | `spec` | Where the spec lives. Optional. |
+| `layout` | `central` or `colocated`, which is the layout adoption uses for a capability you do not place yourself. Defaults to `central`. |
 
 An older `livingSpecs:` block in `.specify/companion.yml` is still read. If both exist, `living-specs.yml` wins.
+
+The [Workflow Builder](/docs/customize/workflow-builder#living-specs) edits `enabled` and `layout` from its **Living specs** chip, and lists the capabilities, the exempt globs and the rules read-only. It writes into whichever of the two files is in force, so the setting lands where it is read from.
 
 ## Where the spec lives
 

@@ -132,6 +132,39 @@ This one is for [Agent Teams Lite](https://github.com/Gentleman-Programming/agen
 
 A spec keeps the workflow it was created with. With none chosen, `speckit.defaultWorkflow` applies. A step whose file is missing shows as not started.
 
+## The pipeline's own files
+
+The settings above are VS Code's. What the Companion pipeline runs lives in files in your repository, and the [Workflow Builder](/docs/customize/workflow-builder) edits them rather than asking you to.
+
+| File | Holds | Builder writes |
+|---|---|---|
+| `.specify/companion.yml` | Node order, phases, hooks, document sections, and `commands.<step>.decisions` for where a verdict routes | Yes |
+| `.specify/companion/workflows/<name>.yml` | A named configuration you switch to. While one is in force, every edit goes here instead | Yes |
+| `.specify/companion/nodes/<step>/<node>.md` | A node you rewrote, or a step you added | Yes |
+| `.specify/companion/fragments/<name>.md` | A document section you wrote | No, you write it |
+| `living-specs.yml` | `enabled`, `layout`, `capabilities`, `exempt` and `rules` for [living specs](/docs/results/living-specs) | `enabled` and `layout` only |
+
+### Where a verdict routes
+
+`specify` ends by judging how big the change is, and each answer sends the run a different way. Your configuration carries only what you changed about that.
+
+```yaml
+commands:
+  specify:
+    decisions:
+      classify-size:
+        simple:
+          folds: [plan]
+          warns: ""
+```
+
+| Key | What it does |
+|---|---|
+| `folds` | The steps that answer skips. `[]` runs everything. |
+| `warns` | A line printed before the run continues. `""` prints nothing. |
+
+The answers a node can give are declared with the node, so an entry for one it cannot give is never read. The builder refuses to write one.
+
 ## Related
 
 [Providers](/docs/reference/providers) lists what each assistant reads and how it is reached.

@@ -939,6 +939,118 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-verdict { font-family: var(--font-mono); color: var(--text-body); }
 .pb-verdict-arrow { padding: 0 var(--space-1); color: var(--text-muted); }
 
+/* Quiet, and on its own line: the block reports where the run goes, and the way
+   to disagree with it is one step further in rather than the first thing read. */
+.pb-decision-edit {
+    margin-top: var(--space-2);
+    padding: 0;
+    font: inherit;
+    font-size: var(--text-xs);
+    color: var(--text-label);
+    background: none;
+    border: 0;
+    border-bottom: 1px dashed var(--border-hover);
+    cursor: pointer;
+}
+
+.pb-decision-edit:hover { color: var(--text-primary); border-bottom-color: var(--accent); }
+
+
+/* ---- Where a verdict routes, in the side column ---- */
+
+.pb-verdict-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+}
+
+.pb-verdict-row:last-of-type { border-bottom: 0; }
+
+.pb-verdict-head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+}
+
+/* The sentence the board draws, repeated here as it will read once saved. */
+.pb-verdict-route { color: var(--text-body); }
+
+.pb-verdict-skips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+/* One per step, so they sit along a line rather than stacking a full-width row
+   each — four steps stacked made the pane scroll for one answer. */
+.pb-choice--inline {
+    align-items: center;
+    padding: var(--space-1) var(--space-2);
+}
+
+.pb-choice--inline input { margin-top: 0; }
+
+.pb-choice--inline .pb-choice-label { font-family: var(--font-mono); }
+
+
+/* ---- Living specs: two settings, and a registry to read ---- */
+
+.pb-living-toggle,
+.pb-living-caps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.pb-living-cap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    min-width: 0;
+}
+
+.pb-living-cap-name {
+    font-size: var(--text-sm);
+    color: var(--text-body);
+}
+
+.pb-living-cap-spec,
+.pb-living-cap-match,
+.pb-living-note {
+    font-size: var(--text-xs);
+    /* Metadata: a path and a glob say where, not what. */
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+}
+
+.pb-living-note { margin: 0; }
+
+/* Prose, not metadata: an authored rule and an empty state are sentences
+   someone reads, and the metadata greys are below WCAG AA on dark. */
+.pb-living-rule,
+.pb-living-empty {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-body);
+    overflow-wrap: anywhere;
+}
+
+/* The registry's own word for a capability nobody retired by hand. */
+.pb-living-tag {
+    align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--review-ink);
+}
+
 /* ============================================
    Inspector — a node, read here
    ============================================ */

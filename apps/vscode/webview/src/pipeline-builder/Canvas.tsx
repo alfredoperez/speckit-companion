@@ -34,6 +34,7 @@ import {
     PipelinePhase,
     PipelineStep,
     StockHook,
+    routeReads,
 } from '../../../src/protocol/pipeline';
 
 type NodeAction = (command: string, nodeId: string) => void;
@@ -80,6 +81,8 @@ interface Props {
     onMoveHook?: (command: string, from: HookAddress, to: HookMove) => void;
     /** Say why a drag was not taken, where every other refusal is said. */
     onRefuse?: (reason: string) => void;
+    /** Open where a decision's verdicts route, so they can be changed. */
+    onOpenDecision?: (command: string, node: string) => void;
 }
 
 /**
@@ -1039,7 +1042,13 @@ function Phase({ phase, actions, controls }: {
 
 // ── The decision ────────────────────────────────────────
 
-function Decisions({ decisions }: { decisions: PipelineDecision[] }) {
+function Decisions({ step, decisions, changed, onOpen }: {
+    step: string;
+    decisions: PipelineDecision[];
+    /** `node.verdict` for each verdict this project has changed. */
+    changed: string[];
+    onOpen?: Props['onOpenDecision'];
+}) {
     if (decisions.length === 0) { return null; }
     return (
         <div class="pb-decisions">
@@ -1051,14 +1060,21 @@ function Decisions({ decisions }: { decisions: PipelineDecision[] }) {
                             <li key={verdict.name}>
                                 <span class="pb-verdict">{verdict.name}</span>
                                 <span class="pb-verdict-arrow" aria-hidden="true">→</span>
-                                {verdict.folds.length
-                                    ? `skips ${verdict.folds.join(', ')}`
-                                    : verdict.warns
-                                        ? 'warns, then runs everything'
-                                        : 'runs everything'}
+                                {routeReads(verdict.folds, verdict.warns)}
+                                {changed.includes(`${decision.node}.${verdict.name}`)
+                                    && <span class="pb-yours">yours</span>}
                             </li>
                         ))}
                     </ul>
+                    {/* The routing was drawn and could only be read. The
+                        override that changes it has shipped the whole time. */}
+                    {onOpen && (
+                        <button class="pb-decision-edit" type="button"
+                            title={`Change where ${decision.node}'s verdicts route`}
+                            onClick={() => onOpen(step, decision.node)}>
+                            Change the routing
+                        </button>
+                    )}
                 </div>
             ))}
         </div>
@@ -1119,7 +1135,8 @@ export function hooksAt(step: PipelineStep, anchor: string, boundary: 'node' | '
 }
 
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
-    onAddNode, onOpenFrame, onRemoveNode, onOpenTemplate, onMoveHook, onRefuse }: {
+    onAddNode, onOpenFrame, onRemoveNode, onOpenTemplate, onMoveHook, onRefuse,
+    onOpenDecision }: {
     step: PipelineStep;
     index: number;
     actions: Omit<NodeActions,
@@ -1134,6 +1151,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     onOpenFrame: Props['onOpenFrame'];
     onRemoveNode: Props['onRemoveNode'];
     onOpenTemplate: Props['onOpenTemplate'];
+    onOpenDecision: Props['onOpenDecision'];
 }) {
     const [showChanges, setShowChanges] = useState(false);
     const grouping = () => step.phases.map(p => ({
@@ -1350,7 +1368,8 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                 {step.phases.length === 0 && (
                     <FirstPhase step={step} onAddNode={onAddNode} />
                 )}
-                <Decisions decisions={step.decisions} />
+                <Decisions step={step.name} decisions={step.decisions}
+                    changed={step.changes.decisions} onOpen={onOpenDecision} />
             </div>
         </section>
     );
@@ -1378,7 +1397,8 @@ function LaneSeam({ after, onNewStep }: { after: string; onNewStep: Props['onNew
 export function Canvas(
     { graph, onOpenNode, onReorder, onAddHook,
         onEditHook, onSetPhases, onAddNode, onOpenFrame, onRemoveNode,
-        onOpenTemplate, onNewStep, selected, onMoveHook, onRefuse }: Props,
+        onOpenTemplate, onNewStep, selected, onMoveHook, onRefuse,
+        onOpenDecision }: Props,
 ) {
     const actions = { onOpenNode, selected, yours: hookHome(graph.workflows.active) };
     const sequence = graph.steps.filter(step => step.inSequence);
@@ -1403,7 +1423,8 @@ export function Canvas(
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
                         onRemoveNode={onRemoveNode}
                         onOpenTemplate={onOpenTemplate}
-                        onMoveHook={onMoveHook} onRefuse={onRefuse} />,
+                        onMoveHook={onMoveHook} onRefuse={onRefuse}
+                        onOpenDecision={onOpenDecision} />,
                 ])}
                 {/* The tail of the row: everything that does not take a turn in
                     the run, and the invitation to add something that does. This
