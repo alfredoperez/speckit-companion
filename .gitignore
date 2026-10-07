@@ -121,3 +121,6 @@ assets/mascot/explore/
 .desktop-check/
 .terminal-check/
 .shots/
+
+# Recorded frames from `npm run record` and its siblings
+.record/

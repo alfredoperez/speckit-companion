@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Drives a real Claude Code session in tmux with the SpecKit Companion mod and a throwaway Spec Kit project, and saves the screen as text and as a picture per step.
-// usage: node tooling/scripts/terminal-check.mjs [--mode replay|run] [--recipe claude-mod-stock|claude-mod] [--look plain|site] [--out <dir>] [--only <step,step>] [--shots <dir>] [--keep]
+// usage: node tooling/scripts/terminal-check.mjs [--mode replay|run] [--recipe claude-mod-stock|claude-mod] [--look plain|site] [--out <dir>] [--only <step,step>] [--shots <dir>] [--keep] [--record <dir>]
 // --shots also copies every picture into the shots library as mod-<step>.png, mod-<step>-pane.png and mod-<step>-band.png (mod-stock-* for the stock recipe).
+// --record also runs the recording steps, each saving its frames and one JSON of facts under <dir>/<name>/.
 import { execFile, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
@@ -13,6 +14,7 @@ import { LOOKS, gridHtml, gridText, parseAnsi } from './lib/terminal/ansi.mjs';
 import { bandRow, dialog, focusedControl, isWorking, paneHasKeyboard, paneRows, paneText, promptBox } from './lib/terminal/screen.mjs';
 import { outsideEnv, sleep, startSession } from './lib/terminal/tmux.mjs';
 import { RUN_FOLDER, writeTeamboardRun } from './lib/teamboard-run.mjs';
+import { recordDir, startRecording } from './lib/recording.mjs';
 
 const run = promisify(execFile);
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -27,6 +29,7 @@ const OUT = resolve(arg('out', join(REPO, '.terminal-check', `${RECIPE}-${MODE}`
 const ONLY = arg('only', '').split(',').filter(Boolean);
 const KEEP = process.argv.includes('--keep');
 const SHOTS = arg('shots') ? resolve(arg('shots')) : undefined;
+const RECORD = recordDir();
 // How the pictures are drawn; what a step reads off the screen is the same in every look.
 const LOOK = arg('look', 'plain');
 const WINDOW_TITLE = 'claude — speckit-tracker';
@@ -274,9 +277,28 @@ async function turnEnds(name) {
     }
 }
 
-/** `needs` marks a step that holds only with a run record ('record') or only without one ('files'). */
-async function step(name, what, body, { needs } = {}) {
+/** Records the terminal while `body` runs, as <record dir>/<name>/. Each frame costs one tmux read: the screens are kept as text and drawn once the recording is closed. */
+async function film(name, what, body) {
+    const queue = [];
+    const recording = startRecording(RECORD, name, {
+        surface: `A real Claude Code session with the mod, in a ${COLS} by ${ROWS} terminal`,
+        what,
+        grab: async (file) => void queue.push([file, parseAnsi(await session.capture())]),
+        flush: async () => {
+            for (const [file, grid] of queue) await render(gridHtml(grid, { to: COLS, look: LOOK, title: WINDOW_TITLE, pane: paneRows(grid) }), file);
+        },
+    });
+    await recording.hold();
+    await body(recording);
+    await recording.hold();
+    const facts = await recording.close();
+    return `${facts.frames} frames at ${facts.fps} fps, ${facts.width}x${facts.height}`;
+}
+
+/** `needs` marks a step that holds only with a run record ('record') or only without one ('files'). `record: true` marks a recording step, which runs under --record alone. */
+async function step(name, what, body, { needs, record } = {}) {
     if (ONLY.length && !ONLY.includes(name)) return;
+    if (record && !RECORD) return;
     const recorded = RECIPES[RECIPE].companion;
     if (needs && (needs === 'record') !== recorded) {
         const note = `skipped: needs a project ${needs === 'record' ? 'with' : 'without'} a run record`;
@@ -454,6 +476,16 @@ async function replaySteps(project, root) {
         const text = await bandShows(/(Tasks|Implement) 1\/4.*/, 'the band did not count the ticked task', 5000);
         return `${count} after ${((Date.now() - started) / 1000).toFixed(1)}s; band: ${text}`;
     });
+    await step('film-tick-task', 'A run ticking along: the pane and the band count each task as it is ticked from outside', async () => {
+        const file = join(project, 'specs', '_02_demo-tasked', 'tasks.md');
+        return film('mod-tick-task', 'A Claude Code session with the tracker pane open beside the transcript, on a spec whose first task is already done. Two more tasks are finished outside the terminal, and the pane ticks each one and raises its phase count while the band above the prompt counts along with it, so a run can be followed without asking where it is.', async (recording) => {
+            for (const id of ['T002', 'T003']) {
+                writeFileSync(file, readFileSync(file, 'utf8').replace(`- [ ] **${id}**`, `- [x] **${id}**`));
+                await recording.hold(6);
+            }
+        });
+    }, { record: true });
+
     // One spec walked through a run, a step at a time. Each step's pane is the picture for that step in the docs.
     const walk = async (state, what, check) => step(`walk-${state}`, what, async () => {
         const companion = RECIPES[RECIPE].companion;
@@ -566,6 +598,7 @@ async function runSteps(project) {
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
+if (RECORD) mkdirSync(RECORD, { recursive: true });
 console.log(`Building a ${RECIPE} project...`);
 const { root, project } = await buildProject();
 const cleanUp = () => {
