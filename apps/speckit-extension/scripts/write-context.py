@@ -184,6 +184,14 @@ def update_context(
 
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)
+    # `branch` is frozen at the first write, which lands before the feature branch exists; a step start records where the work moved to.
+    # Asked of the spec's own folder, never the fallback repo: a spec outside git has no working branch to record.
+    checked_out = _git_branch(feature_dir) if kind == "start" else None
+    if checked_out and checked_out != "HEAD":
+        if checked_out == ctx.get("branch"):
+            ctx.pop("workingBranch", None)
+        else:
+            ctx["workingBranch"] = checked_out
 
     ctx["currentStep"] = step
     # A start carries the step forward and leaves status alone. `--status` used to
@@ -297,6 +305,13 @@ def journal_advance(feature_dir: Path, step: str, by: str) -> Path | None:
     return target
 
 
+UNVERIFIED_NOTE = "finished, unverified"
+
+
+def _has_entries(value) -> bool:
+    return isinstance(value, list) and bool(value)
+
+
 def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     """Promote a finished spec to the terminal `completed` status.
 
@@ -357,6 +372,14 @@ def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     ctx["status"] = "completed"
     # Nothing is in flight in a finished spec; the task steps leave the last finished id here.
     ctx["currentTask"] = None
+    if not _has_entries(ctx.get("verified")) and not ctx.get("concerns"):
+        # Added to the record this function is about to publish, so the status and its caveat land in one write.
+        ctx["concerns"] = [{"note": UNVERIFIED_NOTE, "step": "implement"}]
+        print(
+            f"[companion] Warning: {target} completed with nothing verified and no "
+            f'concern explaining why; recorded "{UNVERIFIED_NOTE}".',
+            file=sys.stderr,
+        )
     commit_log(ctx, log)
     atomic_write(target, ctx)
     _gc_events_log(feature_dir)

@@ -41,9 +41,11 @@ With the Companion workflow, specify also judges how big the change is. There is
 
 | Verdict | The bar | What specify does |
 | --- | --- | --- |
-| Simple | Up to 5 files and 10 tasks | Writes a short plan and the task list in the same pass. The next step is implement. |
-| Normal | Over that bar | Writes only the spec. You continue with plan, then tasks. |
+| Simple | Up to 5 files and 10 tasks, and easy to undo and easy to check | Writes a short plan and the task list in the same pass. The next step is implement. |
+| Normal | Over that bar, or inside it but hard to undo or hard to check | Writes only the spec. You continue with plan, then tasks. |
 | Oversized | Over it by a wide margin, across several parts of the code | Same as normal: only the spec, then the full run. The verdict is recorded. |
+
+A change can be small and still risky: a migration, stored data being deleted, a contract other code depends on. Specify sizes those as normal whatever their file count and says so as it runs, so a risky change never skips plan and tasks.
 
 The verdict shows on [the Overview](/docs/results/the-overview) as a line such as `Sized simple: 6 files, 8 tasks projected`.
 

@@ -87,6 +87,7 @@ import {
   resolveWorkflow,
 } from "../workflows";
 import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
+import { resolveSpecBranch } from "../specs/specBranch";
 
 /** How long Approve all and Remove stay undoable. */
 const LIVING_UNDO_MS = 5000;
@@ -1125,7 +1126,7 @@ export class SpecViewerProvider {
         derived.createdDate,
         derived.lastUpdatedDate,
         resolveSpecDisplayName(featureCtx?.specName, specDirectory),
-        featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
+        resolveSpecBranch(featureCtx) ?? null,
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
         derived.stepHistoryByTab,
@@ -1484,7 +1485,7 @@ export class SpecViewerProvider {
       createdDate: derived.createdDate,
       lastUpdatedDate: derived.lastUpdatedDate,
       specContextName: resolveSpecDisplayName(featureCtx?.specName, specDirectory),
-      branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
+      branch: resolveSpecBranch(featureCtx) ?? null,
       assistantName: resolveSpecAssistant(featureCtx),
       hasTerminal: getSpecTerminal(specDirectory) !== undefined,
       currentStep: featureCtx?.currentStep ?? resolvedType ?? null,

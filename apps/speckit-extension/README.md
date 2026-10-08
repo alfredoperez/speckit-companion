@@ -174,7 +174,7 @@ If you use the [VS Code extension](https://marketplace.visualstudio.com/items?it
 
 ## Fast path: a small change skips the ceremony
 
-Not every change deserves four documents. After specify, the change is sized `small`, `normal`, or `oversized` against a fixed bar (about five files or ten tasks). A small change takes a folded path: one lean specify pass that carries the plan inline, then straight to implement. An oversized one gets a visible warning and then the full pipeline. Nothing is ever skipped silently, and an ambiguous size always runs every phase.
+Not every change deserves four documents. After specify, the change is sized `small`, `normal`, or `oversized` against a fixed bar (about five files or ten tasks). A change that is hard to undo or hard to check is never small, whatever its size. A small change takes a folded path: one lean specify pass that carries the plan inline, then straight to implement. An oversized one gets a visible warning and then the full pipeline. Nothing is ever skipped silently, and an ambiguous size always runs every phase.
 
 ```mermaid
 flowchart LR
