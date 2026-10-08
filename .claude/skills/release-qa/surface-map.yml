@@ -16,22 +16,24 @@ checks:
   # run: Bash drives it, no eyes needed. Timed with `timing.py`, surface `terminal`.
   terminal-run: { kind: run, recipe: "Terminal run", what: "`/speckit.companion.auto` on one small spec through the terminal CLI, then check-capture" }
 
-  # desktop: needs eyes. `recipe` names the section of SKILL.md that says how (`## Recipe: ...`, then `### ...`).
+  # scripted: `tooling/scripts/desktop-check.mjs` drives a real VS Code window with a stand-in assistant; no eyes needed. `steps` are the step names that decide the check; `grade-scripted.py` reads them from `.desktop-check/results.<theme>.json`. `themes: both` also needs each step in the dark run.
+  themes: { kind: scripted, run: "npm run check:desktop", steps: [sidebar-panes, narrow-panel-spec, narrow-panel-tasks, nav-n7], themes: both, what: "the sidebar, the viewer on Spec and Tasks at a narrow width, and the rail hold their layout in Quiet Light and in Dark Modern; colour and contrast are judged by looking at the `.dark.png` pictures" }
+  nav-matrix: { kind: scripted, run: "npm run check:desktop", steps: [nav-n1, nav-n2, nav-n3, nav-n4, nav-n5, nav-n6, nav-n7, nav-n8, nav-n9, nav-n10, nav-n11, nav-n12, nav-n13, nav-n14, nav-n15, nav-links, nav-empty-record], what: "sidebar and viewer navigation, rows N1 to N15, the Links section and the empty-record tab title" }
+  narrow-panel: { kind: scripted, run: "npm run check:desktop", steps: [narrow-panel-spec, narrow-panel-tasks], what: "the viewer in a narrow column: header, rail and footer buttons neither clip nor overflow on Spec and on Tasks" }
+  popups: { kind: scripted, run: "npm run check:desktop", steps: [create-issues-confirm, create-issues-cancel, popup-provider-changed], what: "the messages the scripted flows raise appear once and their buttons act; a message the diff touches that no step raises gets one desktop check of its own (grep the changed files for `showInformationMessage|showWarningMessage|showErrorMessage`)" }
+  provider-dispatch: { kind: scripted, run: "npm run check:desktop", steps: [provider-dispatch, bug-next-step, converge-sends], what: "a footer button, Fix bug and Converge each reach the terminal with their command; the first-start provider picker is captured by `npm run shots`" }
+  builder: { kind: scripted, run: "npm run check:desktop", steps: [builder-phase-menu, builder-add-step, builder-narrow, builder-move-to-phase], what: "a phase menu opens, Add step opens its form, the builder holds one column at a narrow width, Move to phase moves a node" }
+  process-panes: { kind: scripted, run: "npm run check:desktop", steps: [sidebar-panes, bug-story, bug-report-tab, idea-decision, idea-assessing, new-bug], what: "the Bugs and Ideas panes list their groups, a bug opens on its Story and its raw report, ideas open decided or assessing, New Bug opens the create screen; the install row in a project without the extensions rides on the stock-workspace check" }
+
+  # desktop: needs eyes, so it is on the Claude Desktop handoff or looked at by Claude Code. `recipe` names the section of SKILL.md that says how (`## Recipe: ...`, then `### ...`).
   first-open: { kind: desktop, recipe: "Clean profile and workspace variants › First open", what: "the packaged .vsix in a fresh profile with workspace trust on: Restricted Mode first, then Trust" }
   vscode-run: { kind: desktop, recipe: "VS Code pass › Full run, timed", what: "one small spec through VS Code's own buttons (specify, plan, tasks, implement), timed" }
   stock-workspace: { kind: desktop, recipe: "Clean profile and workspace variants › Stock workspace", what: "a workspace with spec-kit and no Companion: read every popup and use its main button once" }
   multi-root: { kind: desktop, recipe: "Clean profile and workspace variants › Multi-root", what: "the sandbox plus the stock workspace in one window: sidebar, viewer and New Spec target the right root" }
-  themes: { kind: desktop, recipe: "VS Code pass › Theme pass", what: "dark and light: sidebar expanded, viewer on Spec and Tasks, Overview" }
-  nav-matrix: { kind: desktop, recipe: "VS Code pass › Navigation matrix", what: "sidebar and viewer navigation, rows N1 to N15" }
-  narrow-panel: { kind: desktop, recipe: "VS Code pass › Narrow panel", what: "viewer split into a narrow column: header, rail and footer buttons neither clip nor overflow" }
-  popups: { kind: desktop, recipe: "VS Code pass › Popups", what: "each notification the diff touches (grep the changed files for `showInformationMessage|showWarningMessage|showErrorMessage`) appears once, reads plainly, and its buttons work" }
-  provider-dispatch: { kind: desktop, recipe: "VS Code pass › Provider dispatch", what: "provider picker lists the configured providers; one dispatch reaches the terminal (terminal-run or vscode-run already counts as the dispatch)" }
   canvas-open: { kind: desktop, recipe: "Copilot canvas pass › Bare open", what: "open the canvas three times without editing anything: the board checks pass on the first open, the board renders on the next two, and the sandbox `git status --short` never changes" }
   mod-terminal: { kind: desktop, recipe: "Claude Code mod pass", what: "start `claude --plugin-dir ./apps/claude-mod` in a project with specs in a terminal at least 144 columns wide: the band names the latest spec, the pane opens beside the transcript, `/spec` lists specs and switching one updates both, and checking a task in its tasks.md ticks the band within a few seconds" }
   canvas-new-spec: { kind: desktop, recipe: "Copilot canvas pass › Full run", what: "New spec once per workflow (stock Spec Kit and Companion); the chat receives the matching command each time, in the spelling the project registers, plus one sentence naming the run-instructions file" }
   site-pages: { kind: desktop, recipe: "Website pages", what: "serve with `npm run preview` in apps/website and look at each changed page in a browser" }
-  builder: { kind: desktop, recipe: "VS Code pass › Workflow Builder", what: "phase menu opens, Add step adds a step, the builder holds at a narrow width" }
-  process-panes: { kind: desktop, recipe: "VS Code pass › Bugs and Ideas panes", what: "the Bugs and Ideas panes list their groups, a report opens read-only, and a pane with no extension shows its install row" }
 
 # Runs on every release whatever the diff says.
 baseline: [vscode-run, terminal-run, first-open, stock-workspace, multi-root, themes]
@@ -89,6 +91,10 @@ surfaces:
   - name: media
     paths: ["content/**", "assets/**"]
     checks: [clips-check, docs-build]
+
+  - name: QA harness
+    paths: ["tooling/scripts/desktop-check.mjs", "tooling/scripts/lib/**"]
+    checks: [nav-matrix, themes, narrow-panel, popups, provider-dispatch, builder, process-panes]
 
 # Changed paths that need no QA (not shipped, or covered by the baseline).
 ignore: [".claude/**", ".serena/**", "specs/**", "package-lock.json"]

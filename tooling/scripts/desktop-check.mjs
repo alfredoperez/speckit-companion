@@ -4,9 +4,10 @@
 // --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
 // --sheet also writes every picture of the run onto one reduced sheet (_sheet.png), the file to look at first.
 // --record also runs the recording steps, each saving its frames and one JSON of facts under <dir>/<name>/.
+// A run keeps one theme; its results land in <out>/results.<theme>.json beside the other theme's, so light and dark can be read together.
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -110,6 +111,47 @@ function addLivingSpecs(project, fixtures) {
     git('commit', '-m', 'Change the upload limit and the avatar by hand');
 }
 
+/** The demo specs the navigation checks walk: the four pinned ones, then the four the release-qa sandbox derives from them. Added only when those checks start, so every earlier step and picture sees the project it always did. */
+function addDemoSpecs(project) {
+    const specs = join(project, 'specs');
+    for (const spec of ['_00_demo-specified', '_01_demo-planned', '_02_demo-tasked', '_03_demo-living']) {
+        cpSync(join(EXTENSION, 'specs', spec), join(specs, spec), { recursive: true });
+    }
+    const rename = (folder, name, change = () => undefined) => {
+        const file = join(specs, folder, '.spec-context.json');
+        const context = JSON.parse(readFileSync(file, 'utf8'));
+        context.specName = name;
+        change(context);
+        writeFileSync(file, JSON.stringify(context, null, 2));
+        const spec = join(specs, folder, 'spec.md');
+        writeFileSync(spec, readFileSync(spec, 'utf8').replace(/^# .*$/m, `# ${name}`));
+    };
+    cpSync(join(specs, '_02_demo-tasked'), join(specs, '_04_demo-related-docs'), { recursive: true });
+    mkdirSync(join(specs, '_04_demo-related-docs', 'checklists'), { recursive: true });
+    writeFileSync(join(specs, '_04_demo-related-docs', 'research.md'), '# Research\n\nDecision: keep storage in localStorage.\n');
+    writeFileSync(join(specs, '_04_demo-related-docs', 'data-model.md'), '# Data model\n\n- Todo: id, title, done\n');
+    writeFileSync(join(specs, '_04_demo-related-docs', 'checklists', 'requirements.md'), '# Requirements checklist\n\n- [x] CHK001 Every story has a test\n');
+    rename('_04_demo-related-docs', 'Demo related docs');
+    cpSync(join(specs, '_03_demo-living'), join(specs, '_05_demo-archived'), { recursive: true });
+    rename('_05_demo-archived', 'Demo archived', context => { context.status = 'archived'; });
+    cpSync(join(specs, '_01_demo-planned'), join(specs, '_06_empty-record'), { recursive: true });
+    rename('_06_empty-record', 'Demo — Empty record', context => { context.history = []; delete context.stepHistory; });
+    cpSync(join(specs, '_02_demo-tasked'), join(specs, '_07_links-demo'), { recursive: true });
+    rename('_07_links-demo', 'Demo — Links');
+    const links = join(specs, '_07_links-demo', 'spec.md');
+    const [title, ...rest] = readFileSync(links, 'utf8').split('\n');
+    writeFileSync(links, [
+        title, '', '## Links', '',
+        '- [Approach](plan.md#approach)', '- [Tasks](tasks.md)', '- [Far heading](#far-heading)',
+        '- [Other spec](../_01_demo-planned/spec.md)', '- [Source file](../../src/App.tsx)', '- [Web link](https://speckit-companion.dev)', '',
+        ...rest, '', '## Notes', '',
+        ...Array.from({ length: 60 }, (_, i) => `Note line ${i + 1}: padding so the next heading starts off screen.`),
+        '', '## Far heading', '', 'The Far heading link lands here.', '',
+    ].join('\n'));
+    mkdirSync(join(project, 'src'), { recursive: true });
+    writeFileSync(join(project, 'src', 'App.tsx'), 'export function App() { return null; }\n');
+}
+
 function buildProject({ provider = 'claude' } = {}) {
     const root = mkdtempSync(join(tmpdir(), 'speckit-desktop-'));
     const project = SANDBOX ?? join(root, 'project');
@@ -158,6 +200,9 @@ function buildProject({ provider = 'claude' } = {}) {
         'terminal.integrated.env.linux': { ZDOTDIR: zdotdir },
         // The DOM renderer keeps the terminal's text readable from the page.
         'terminal.integrated.gpuAcceleration': 'off',
+        // A step closes its terminal while the stand-in may still be printing; asking first would block every later step.
+        'terminal.integrated.confirmOnKill': 'never',
+        'terminal.integrated.confirmOnExit': 'never',
         ...(provider ? { 'speckit.aiProvider': provider } : {}),
         'speckit.views.steering.visible': false,
         'speckit.views.settings.visible': false,
@@ -398,9 +443,10 @@ async function recordScroll(recording, inside, { most = 900 } = {}) {
     throw new Error(`the page under "${recording.name}" never reached its end`);
 }
 
-/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. `shots: true` marks a capture-only step, which runs under --shots alone; `record: true` a recording step, which runs under --record alone. */
-async function step(name, what, run, { needs, shots, record } = {}) {
+/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. `shots: true` marks a capture-only step, which runs under --shots alone; `record: true` a recording step, which runs under --record alone; `check: true` a release QA step, left out of a --shots or --record run. */
+async function step(name, what, run, { needs, shots, record, check } = {}) {
     if (ONLY.length && !ONLY.includes(name)) return;
+    if (check && FILM_WINDOW) return;
     if (shots && !SHOTS) return;
     if (record && !RECORD) return;
     if (SANDBOX && needs === 'fixtures') {
@@ -427,8 +473,11 @@ async function expectText(locator, pattern) {
     return text;
 }
 
-rmSync(OUT, { recursive: true, force: true });
+// Only this theme's pictures and results go; the other theme's stay beside them.
 mkdirSync(OUT, { recursive: true });
+for (const file of readdirSync(OUT)) {
+    if (file.endsWith(`.${THEME}.png`) || file === `results.${THEME}.json` || file === '_sheet.png') rmSync(join(OUT, file), { force: true });
+}
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 if (RECORD) mkdirSync(RECORD, { recursive: true });
 
@@ -456,6 +505,13 @@ const { root } = built;
 try {
     await launch(built);
     await page.locator('.activitybar a.action-label[aria-label^="SpecKit"]').first().click();
+    const sidebar = (await page.locator('.part.sidebar').boundingBox())?.width ?? 300;
+    /** Drags the side bar out until the editor column is about this wide. */
+    const editorWidth = async (width) => {
+        const window = await page.evaluate(() => innerWidth);
+        const activity = (await page.locator('.part.activitybar').boundingBox())?.width ?? 48;
+        await sidebarWidth(window - activity - width);
+    };
 
     await step('sidebar-panes', 'Specs, Bugs and Ideas each have a pane with rows', async () => {
         await row('Specs', 'Demo');
@@ -888,6 +944,499 @@ try {
         }
     }, { shots: true });
 
+    /** A sidebar row by its depth: 1 a group, 2 a spec, 3 a document, 4 a related document. */
+    const rowAt = async (level, text) => {
+        const item = pane('Specs').locator(`.monaco-list-row[aria-level="${level}"]`, { hasText: text }).first();
+        await item.waitFor({ timeout: 15000 });
+        return item;
+    };
+    /** Expands a sidebar row when it is closed. */
+    const expand = async (item) => {
+        if ((await item.getAttribute('aria-expanded')) === 'false') await item.locator('.monaco-tl-twistie').click();
+        await page.waitForTimeout(300);
+    };
+    /** Names are shown in Title Case, so comparisons ignore case. */
+    const says = (text, name) => text.toLowerCase().includes(name.toLowerCase());
+    /** Opens a demo spec from the Specs pane, on the document named, or on whatever it lands on. */
+    const openSpec = async (name, tab) => {
+        await (await rowAt(2, name)).click();
+        await webview().locator('.step-tab').first().waitFor({ timeout: 15000 });
+        if (tab) {
+            await webview().locator('.step-tab', { has: webview().locator(`.step-label:text-is("${tab}")`) }).first().click();
+            await webview().locator('.step-tab[aria-current="page"]', { hasText: tab }).waitFor({ timeout: 15000 });
+        }
+    };
+    /** The rail entry the viewer is on, without its check mark. */
+    const current = async () => (await webview().locator('[aria-current="page"]').first().innerText()).replace(/\s+/g, ' ').replace(/^[✓✔]\s*/, '').trim();
+    /** No editor, the Specs pane alone with every row closed and Active open, so a row is found by its own spec and never under another. */
+    const freshSpecs = async () => {
+        await clear();
+        await setPanes(['Bugs', 'Ideas'], false);
+        for (let tries = 0; tries < 12; tries++) {
+            const open = pane('Specs').locator('.monaco-list-row[aria-level="2"][aria-expanded="true"]');
+            if (!(await open.count())) break;
+            await open.first().locator('.monaco-tl-twistie').click();
+            await page.waitForTimeout(200);
+        }
+        await expand(await rowAt(1, 'Active'));
+    };
+    /** The spec's name as the viewer header shows it. */
+    const headerName = async () => (await webview().locator('.spec-header-title').first().innerText()).replace(/\s+/g, ' ').trim();
+    /** How many editor tabs are open. */
+    const tabCount = () => page.locator('.editor-group-container .tab').count();
+    /** The specs the Specs pane lists under a group, by expanding it and reading the rows down to the next group. */
+    const specsUnder = async (group) => {
+        const header = await row('Specs', group);
+        if ((await header.getAttribute('aria-expanded')) === 'false') await header.click();
+        await page.waitForTimeout(400);
+        return pane('Specs').locator('.monaco-list-row').evaluateAll((rows, name) => {
+            const names = [];
+            let inside = false;
+            for (const row of rows) {
+                const level = row.getAttribute('aria-level');
+                const label = row.querySelector('.label-name')?.textContent?.trim() ?? '';
+                if (level === '1') { inside = label.startsWith(name); continue; }
+                if (inside && level === '2') names.push(label);
+            }
+            return names;
+        }, group);
+    };
+    /** The header, the rail and the footer fit the column: nothing cut off by a box that cannot scroll, nothing past the window's edge, no sideways page scroll. A strip that scrolls sideways on purpose is reported, not failed. */
+    const noOverflow = () => webview().locator('body').evaluate(body => {
+        const wide = [];
+        const scrolls = [];
+        for (const selector of ['.spec-header', '.doc-rail', 'footer.actions']) {
+            const element = body.querySelector(selector);
+            if (!element) { wide.push(`${selector} is not on the page`); continue; }
+            const box = element.getBoundingClientRect();
+            const scrollable = /auto|scroll/.test(getComputedStyle(element).overflowX);
+            if (box.right > innerWidth + 1) wide.push(`${selector} past the window edge`);
+            if (element.scrollWidth > element.clientWidth + 1) (scrollable ? scrolls : wide).push(selector);
+            if (scrollable) continue;
+            for (const button of element.querySelectorAll('button')) {
+                const own = button.getBoundingClientRect();
+                if (!own.width || !own.height) continue;
+                if (own.right > box.right + 1 || own.left < box.left - 1) wide.push(`${selector} button "${button.textContent.trim().slice(0, 20)}"`);
+            }
+        }
+        if (document.documentElement.scrollWidth > innerWidth + 1) wide.push('the page scrolls sideways');
+        if (innerWidth > 520) wide.push('the viewer was never narrowed');
+        return { wide, scrolls, width: innerWidth };
+    });
+
+    if (!SANDBOX && !FILM_WINDOW) {
+        addDemoSpecs(built.project);
+        await page.waitForTimeout(2500);
+    }
+
+    await step('narrow-panel-spec', 'A narrow viewer on Specification keeps its header, rail and footer inside the column', async () => {
+        await clear();
+        await setPanes(['Bugs', 'Ideas'], false);
+        await editorWidth(440);
+        await openSpec('Demo — Tasked', 'Specification');
+        await page.waitForTimeout(600);
+        const { wide, scrolls, width } = await noOverflow();
+        if (wide.length) throw new Error(`overflows at ${width}px: ${wide.join(', ')}`);
+        return `${width}px column${scrolls.length ? `, ${scrolls.join(' and ')} scrolls sideways` : ''}`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('narrow-panel-tasks', 'A narrow viewer on Tasks keeps its header, rail and footer inside the column', async () => {
+        try {
+            await editorWidth(440);
+            await openSpec('Demo — Tasked', 'Tasks');
+            await page.waitForTimeout(600);
+            const { wide, scrolls, width } = await noOverflow();
+            if (wide.length) throw new Error(`overflows at ${width}px: ${wide.join(', ')}`);
+            return `${width}px column${scrolls.length ? `, ${scrolls.join(' and ')} scrolls sideways` : ''}`;
+        } finally {
+            await sidebarWidth(sidebar);
+        }
+    }, { needs: 'fixtures', check: true });
+
+    await step('builder-phase-menu', 'A phase menu of the Workflow Builder opens and closes', async () => {
+        await clear();
+        await command('Open Workflow Builder');
+        await webview().locator('.pb-step').first().waitFor({ timeout: 20000 });
+        await webview().locator('button.pb-phase-add[aria-haspopup="menu"]').first().click();
+        const items = webview().locator('[role="menu"] [role="menuitem"]');
+        await items.first().waitFor({ timeout: 5000 });
+        const count = await items.count();
+        await page.keyboard.press('Escape');
+        await webview().locator('[role="menu"]').first().waitFor({ state: 'detached', timeout: 5000 });
+        return `${count} entries`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('builder-add-step', 'Add step opens the new-step form, and Cancel leaves the board as it was', async () => {
+        const before = await webview().locator('.pb-step').count();
+        await webview().locator('.builder-action--add').click();
+        const cancel = webview().locator('.pb-side-head ~ * button, .builder--inspecting button', { hasText: /^Cancel$/ }).first();
+        await cancel.waitFor({ timeout: 5000 });
+        await cancel.click();
+        await page.waitForTimeout(400);
+        const after = await webview().locator('.pb-step').count();
+        if (after !== before) throw new Error(`${before} steps before, ${after} after Cancel`);
+        return `${before} steps, form opened and cancelled`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('builder-narrow', 'At about 330px the builder stacks in one column with its step heads pinned', async () => {
+        await editorWidth(330);
+        await page.waitForTimeout(600);
+        const facts = await webview().locator('.builder').evaluate(root => ({
+            width: root.getBoundingClientRect().width,
+            body: getComputedStyle(root.querySelector('.builder-body')).flexDirection,
+            head: getComputedStyle(root.querySelector('.pb-step-head')).position,
+            sideways: document.documentElement.scrollWidth > innerWidth + 1,
+        }));
+        if (facts.body !== 'column') throw new Error(`the body is a ${facts.body} row at ${Math.round(facts.width)}px`);
+        if (facts.head !== 'sticky') throw new Error(`step heads are ${facts.head}, not sticky`);
+        if (facts.sideways) throw new Error('the board scrolls sideways');
+        return `${Math.round(facts.width)}px, one column, heads sticky`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('builder-move-to-phase', 'Move to phase… moves a free node and the status line says so', async () => {
+        try {
+            const nodes = webview().locator('.pb-node');
+            const count = await nodes.count();
+            for (let i = 0; i < count; i++) {
+                await nodes.nth(i).click();
+                const move = webview().locator('button.pb-order-move[aria-haspopup="menu"]').first();
+                if (!(await move.isVisible().catch(() => false))) continue;
+                await move.click();
+                const menu = webview().locator('[role="menu"]').first();
+                await menu.waitFor({ timeout: 5000 });
+                const fits = await menu.evaluate(element => {
+                    const box = element.getBoundingClientRect();
+                    return box.left >= -1 && box.right <= innerWidth + 1 && box.top >= -1 && box.bottom <= innerHeight + 1;
+                });
+                if (!fits) throw new Error('the phase list spills outside the panel');
+                const options = menu.locator('[role="menuitem"]');
+                const total = await options.count();
+                for (let pick = 0; pick < total; pick++) {
+                    const phase = (await options.nth(pick).innerText()).split('\n')[0].trim();
+                    await options.nth(pick).click();
+                    const said = webview().locator('.builder-status-text', { hasText: `moved to ${phase} in ` });
+                    if (await said.first().waitFor({ timeout: 4000 }).then(() => true, () => false)) return (await said.first().innerText()).trim();
+                    await move.click();
+                    await menu.waitFor({ timeout: 5000 });
+                }
+                throw new Error('every phase refused the node');
+            }
+            throw new Error('no free node with Move to phase… on the board');
+        } finally {
+            await sidebarWidth(sidebar);
+            await clear();
+        }
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-links', 'The Links section opens the plan, the tasks, a far heading, another spec and a source file', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Links', 'Specification');
+        const link = (text) => webview().locator('#markdown-content a', { hasText: text }).first();
+        await link('Approach').click();
+        await webview().locator('.step-tab[aria-current="page"]', { hasText: 'Plan' }).waitFor({ timeout: 15000 });
+        await webview().locator('#markdown-content :is(h2, h3)', { hasText: 'Approach' }).first().waitFor({ timeout: 15000 });
+        await webview().locator('.step-tab', { hasText: 'Specification' }).first().click();
+        await link('Tasks').click();
+        await webview().locator('.step-tab[aria-current="page"]', { hasText: 'Tasks' }).waitFor({ timeout: 15000 });
+        await webview().locator('.step-tab', { hasText: 'Specification' }).first().click();
+        await link('Far heading').waitFor({ timeout: 15000 });
+        await link('Far heading').click();
+        await page.waitForTimeout(800);
+        const far = await webview().locator('#markdown-content :is(h2, h3)', { hasText: 'Far heading' }).first().evaluate(heading => {
+            const top = heading.getBoundingClientRect().top;
+            return top >= 0 && top < innerHeight;
+        });
+        if (!far) throw new Error('Far heading did not scroll into view');
+        const href = await link('Web link').getAttribute('href');
+        if (!/^https:\/\/speckit-companion\.dev/.test(href ?? '')) throw new Error(`the web link points at ${href}`);
+        await link('Other spec').click();
+        await page.waitForTimeout(1500);
+        const other = await headerName();
+        if (!/Demo — Planned/.test(other)) throw new Error(`Other spec opened "${other}"`);
+        await page.locator('.tab', { hasText: '_07_links-demo' }).first().click();
+        await link('Source file').click();
+        await page.locator('.tab', { hasText: 'App.tsx' }).first().waitFor({ timeout: 15000 });
+        const groups = await page.locator('.editor-group-container').count();
+        await page.locator('.tab', { hasText: '_07_links-demo' }).first().click();
+        await link('Source file').click();
+        await page.waitForTimeout(800);
+        if ((await page.locator('.editor-group-container').count()) !== groups) throw new Error('a second click on Source file opened another split');
+        if ((await page.locator('.tab', { hasText: 'App.tsx' }).count()) !== 1) throw new Error('App.tsx opened twice');
+        return `plan, tasks, far heading, Demo — Planned, App.tsx beside the viewer in ${groups} groups`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-empty-record', 'A spec with no recorded activity titles its tab with the document it shows', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Empty record');
+        await page.waitForTimeout(800);
+        const title = (await page.locator('.tab.active .label-name').first().innerText()).trim();
+        if (/Overview$/.test(title)) throw new Error(`the tab reads "${title}"`);
+        if (!/ - Specification$/.test(title)) throw new Error(`the tab reads "${title}"`);
+        return title;
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n1', 'Active, Completed and Archived each hold the specs they should', async () => {
+        await freshSpecs();
+        const active = await specsUnder('Active');
+        const completed = await specsUnder('Completed');
+        const archived = await specsUnder('Archived');
+        const has = (list, name) => list.some(label => says(label, name));
+        const expect = (list, name, where) => { if (!has(list, name)) throw new Error(`${name} is not under ${where}`); };
+        expect(archived, 'Demo archived', 'Archived');
+        expect(completed, 'Demo — Living Specs', 'Completed');
+        for (const name of ['Demo — Specified', 'Demo — Planned', 'Demo — Tasked', 'Demo related docs']) expect(active, name, 'Active');
+        if (has(active, 'Demo archived') || has(completed, 'Demo archived')) throw new Error('Demo archived is listed outside Archived');
+        return `${active.length} active, ${completed.length} completed, ${archived.length} archived`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n2', 'Each spec name opens that spec, on its Overview when it has a run record', async () => {
+        const landed = [];
+        for (const name of ['Demo — Specified', 'Demo — Planned', 'Demo — Tasked', 'Demo — Living Specs', 'Demo related docs', 'Demo archived']) {
+            await freshSpecs();
+            await openSpec(name);
+            const shown = await headerName();
+            if (!says(shown, name)) throw new Error(`clicking ${name} opened "${shown}"`);
+            const on = await current();
+            if (on !== 'Overview') throw new Error(`${name} landed on ${on}, not its Overview`);
+            landed.push(name);
+        }
+        await clear();
+        await openSpec('Demo — Empty record');
+        const on = await current();
+        if (on === 'Overview') throw new Error('the empty record landed on an Overview it cannot show');
+        return `${landed.length} on Overview, the empty record on ${on}`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n3', 'Spec, Plan and Tasks under one spec switch the same viewer tab', async () => {
+        await freshSpecs();
+        await expand(await rowAt(2, 'Demo — Tasked'));
+        for (const doc of ['Specification', 'Plan', 'Tasks']) {
+            await (await rowAt(3, doc)).click();
+            await webview().locator('.step-tab[aria-current="page"]', { hasText: doc }).waitFor({ timeout: 15000 });
+            if ((await tabCount()) !== 1) throw new Error(`${await tabCount()} tabs after clicking ${doc}`);
+        }
+        return 'one tab, three documents';
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n4', 'Related docs open inside their spec and the rail highlights them under their step', async () => {
+        await freshSpecs();
+        await expand(await rowAt(2, 'Demo related docs'));
+        await expand(await rowAt(3, 'Specification'));
+        await expand(await rowAt(3, 'Plan'));
+        const opened = [];
+        for (const doc of ['Research', 'Data Model', 'Requirements']) {
+            await (await rowAt(4, doc)).click();
+            await webview().locator('[aria-current="page"]', { hasText: doc }).first().waitFor({ timeout: 15000 });
+            if (!says(await headerName(), 'Demo related docs')) throw new Error(`${doc} opened outside its spec`);
+            if ((await tabCount()) !== 1) throw new Error(`${await tabCount()} tabs after ${doc}`);
+            opened.push(doc);
+        }
+        return opened.join(', ');
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n5', 'Two specs make two tabs, and a spec name lands on its Overview', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Planned', 'Plan');
+        await openSpec('Demo — Tasked', 'Tasks');
+        if ((await tabCount()) !== 2) throw new Error(`${await tabCount()} tabs for two specs`);
+        await (await row('Specs', 'Demo — Planned')).click();
+        await page.waitForTimeout(800);
+        const name = await headerName();
+        const on = await current();
+        if (!says(name, 'Demo — Planned') || on !== 'Overview') throw new Error(`landed on ${name} / ${on}`);
+        return `2 tabs, Demo — Planned on Overview`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n6', 'Rapid switching ends on the last spec clicked with its own content', async () => {
+        await freshSpecs();
+        for (const name of ['Demo — Specified', 'Demo — Planned', 'Demo — Tasked', 'Demo related docs']) {
+            await (await row('Specs', name)).click();
+            await page.waitForTimeout(400);
+        }
+        await page.waitForTimeout(2000);
+        const name = await headerName();
+        if (!says(name, 'Demo related docs')) throw new Error(`the focused tab shows "${name}"`);
+        const tab = (await page.locator('.tab.active .label-name').first().innerText()).trim();
+        if (!tab.includes('_04_demo-related-docs')) throw new Error(`the focused tab is "${tab}"`);
+        // Only this spec has a Research document, so its rail proves the page under the header is its own.
+        await webview().locator('.doc-rail', { hasText: 'Research' }).first().waitFor({ timeout: 5000 });
+        return `${name}, rail lists Research`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n7', 'Clicking every rail entry changes only the document', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Tasked');
+        const badge = () => webview().locator('.spec-header-badges').first().innerText();
+        const footer = async () => (await webview().locator('footer.actions').first().innerText()).match(/(Next|Step)[^\n]*/)?.[0] ?? '';
+        const before = [await badge(), await footer()];
+        if (!before[1]) throw new Error('the footer names no step');
+        const entries = await webview().locator('.step-tab:not([disabled]) .step-label').allInnerTexts();
+        for (const entry of entries) {
+            await webview().locator('.step-tab', { has: webview().locator(`.step-label:text-is("${entry.trim()}")`) }).first().click();
+            await webview().locator('.step-tab[aria-current="page"]', { hasText: entry.trim() }).waitFor({ timeout: 15000 });
+        }
+        await webview().locator('.rail-overview').first().click();
+        await page.waitForTimeout(600);
+        const after = [await badge(), await footer()];
+        if (before[0] !== after[0]) throw new Error(`the badge changed from "${before[0]}" to "${after[0]}"`);
+        if (before[1] !== after[1]) throw new Error(`the footer step changed from "${before[1]}" to "${after[1]}"`);
+        return `${entries.length} entries, badge "${before[0].trim()}" and "${before[1]}" unchanged`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n8', 'A missing plan is a disabled rail entry that opens nothing', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Specified');
+        const plan = webview().locator('.step-tab', { has: webview().locator('.step-label:text-is("Plan")') }).first();
+        await plan.waitFor({ timeout: 15000 });
+        if (!(await plan.isDisabled())) throw new Error('the Plan entry is enabled with no plan.md');
+        const tooltip = await plan.getAttribute('title');
+        if (!tooltip) throw new Error('the disabled Plan entry has no tooltip');
+        const before = await current();
+        await plan.click({ force: true });
+        await page.waitForTimeout(600);
+        if ((await current()) !== before) throw new Error('clicking the disabled Plan entry changed the document');
+        if ((await tabCount()) !== 1) throw new Error('clicking the disabled Plan entry opened a tab');
+        return `disabled, tooltip "${tooltip ?? ''}"`;
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n9', 'A change on disk re-renders the open document in place', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Planned', 'Plan');
+        appendFileSync(join(built.project, 'specs', '_01_demo-planned', 'plan.md'), '\n- extra line\n');
+        await webview().locator('#markdown-content', { hasText: 'extra line' }).waitFor({ timeout: 15000 });
+        if ((await current()) !== 'Plan' || (await tabCount()) !== 1) throw new Error('the viewer left the Plan or opened a tab');
+        return 'extra line shown on Plan, one tab';
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n10', 'A new document shows up in the rail and the sidebar without a refresh', async () => {
+        await freshSpecs();
+        await expand(await rowAt(2, 'Demo — Planned'));
+        await openSpec('Demo — Planned', 'Specification');
+        cpSync(join(built.project, 'specs', '_02_demo-tasked', 'tasks.md'), join(built.project, 'specs', '_01_demo-planned', 'tasks.md'));
+        await webview().locator('.step-tab:not([disabled])', { has: webview().locator('.step-label:text-is("Tasks")') }).first().waitFor({ timeout: 15000 });
+        await pane('Specs').locator('.monaco-list-row[aria-level="3"]', { hasText: 'Tasks' }).first().waitFor({ timeout: 15000 });
+        return 'Tasks in the rail and under the spec';
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n11', 'A deleted document says it is gone', async () => {
+        await freshSpecs();
+        await expand(await rowAt(2, 'Demo related docs'));
+        await expand(await rowAt(3, 'Plan'));
+        await (await rowAt(4, 'Research')).click();
+        await webview().locator('[aria-current="page"]', { hasText: 'Research' }).first().waitFor({ timeout: 15000 });
+        rmSync(join(built.project, 'specs', '_04_demo-related-docs', 'research.md'));
+        const banner = await expectText(webview().locator('#removed-doc-banner'), /moved or deleted/);
+        const body = await webview().locator('#markdown-content').innerText();
+        if (/keep storage in localStorage/.test(body)) throw new Error('the deleted research is still shown');
+        return banner.replace(/\s+/g, ' ');
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n12', 'A renamed spec folder closes its tab and reopens from the new row', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Tasked', 'Tasks');
+        renameSync(join(built.project, 'specs', '_02_demo-tasked'), join(built.project, 'specs', '_02_demo-renamed'));
+        await page.locator('.tab', { hasText: /moved/ }).first().waitFor({ timeout: 15000 });
+        await page.waitForTimeout(1500);
+        await (await rowAt(2, 'Demo — Tasked')).click();
+        await page.locator('.tab', { hasText: '_02_demo-renamed' }).first().waitFor({ timeout: 15000 });
+        await page.waitForTimeout(800);
+        const name = await headerName();
+        if (!says(name, 'Demo — Tasked')) throw new Error(`the renamed spec opened as "${name}"`);
+        if (await webview().locator('.empty-state:visible').count()) throw new Error('the renamed spec opened on a stale panel');
+        return 'old tab marked moved, renamed spec opened';
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n13', 'A spec marked completed moves to Completed and its open tab follows', async () => {
+        await freshSpecs();
+        await openSpec('Demo related docs');
+        const file = join(built.project, 'specs', '_04_demo-related-docs', '.spec-context.json');
+        writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, 'utf8')), status: 'completed' }, null, 2));
+        const moved = async () => (await specsUnder('Completed')).some(label => says(label, 'Demo related docs'));
+        for (let tries = 0; tries < 30 && !(await moved()); tries++) await page.waitForTimeout(500);
+        if (!(await moved())) throw new Error('Demo related docs did not move to Completed');
+        await expectText(webview().locator('.spec-header-badges'), /Completed/i);
+        await (await rowAt(2, 'Demo related docs')).click();
+        await page.waitForTimeout(600);
+        if (!says(await headerName(), 'Demo related docs') || (await tabCount()) !== 1) throw new Error('clicking the moved spec did not reuse its tab');
+        return 'under Completed, badge Completed, same tab';
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n14', 'A closed viewer reopens on the document clicked', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Planned', 'Plan');
+        await clear();
+        await expand(await rowAt(2, 'Demo — Planned'));
+        await (await rowAt(3, 'Plan')).click();
+        await webview().locator('.step-tab[aria-current="page"]', { hasText: 'Plan' }).waitFor({ timeout: 15000 });
+        return 'reopened on Plan';
+    }, { needs: 'fixtures', check: true });
+
+    await step('nav-n15', 'After a sort and a filter the clicked spec still opens', async () => {
+        await freshSpecs();
+        const sortBy = async (mode) => {
+            await pane('Specs').locator('.pane-header').hover();
+            await pane('Specs').locator('.pane-header a.action-label[aria-label^="Sort"]').click();
+            await page.locator('.quick-input-list .monaco-list-row', { hasText: mode }).first().click();
+            await page.waitForTimeout(600);
+        };
+        try {
+        await sortBy('Name');
+        await openSpec('Demo — Planned');
+        if (!says(await headerName(), 'Demo — Planned')) throw new Error('the spec did not open after sorting');
+        await clear();
+        await pane('Specs').locator('.pane-header').hover();
+        await pane('Specs').locator('.pane-header a.action-label[aria-label^="Filter"]').click();
+        await page.locator('.quick-input-widget input').fill('planned');
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(600);
+        const rows = await pane('Specs').locator('.monaco-list-row[aria-level="2"] .label-name').allInnerTexts();
+        await openSpec('Demo — Planned');
+        if (!says(await headerName(), 'Demo — Planned')) throw new Error('the spec did not open after filtering');
+        return `sorted by name, filtered to ${rows.length} row(s), opened both times`;
+        } finally {
+            await page.keyboard.press('Escape');
+            await command('Clear Filter').catch(() => undefined);
+            await sortBy('Number').catch(() => undefined);
+        }
+    }, { needs: 'fixtures', check: true });
+
+    await step('provider-dispatch', 'The footer\'s forward button sends its command to the assistant', async () => {
+        await freshSpecs();
+        await openSpec('Demo — Specified');
+        await expectText(webview().locator('footer.actions'), /Next: Plan/);
+        await webview().locator('footer.actions button', { hasText: /^Plan$/ }).click();
+        // The sent line scrolls off once the prompt it carries is printed, so the command is read wherever it shows, in whichever terminal took it.
+        let text = '';
+        for (let tries = 0; tries < 40; tries++) {
+            text = (await page.locator('.xterm-rows').allInnerTexts()).join(' ').replace(/\s+/g, ' ');
+            const sent = text.match(/\/speckit[-.](companion[-.])?plan\b/)?.[0];
+            if (sent) return `${sent} reached the terminal`;
+            await page.waitForTimeout(500);
+        }
+        throw new Error(`no plan command in the terminal, which ends "${text.slice(-120)}"`);
+    }, { needs: 'fixtures', check: true });
+
+    await step('popup-provider-changed', 'Changing the provider asks once to reload the window', async () => {
+        await clear();
+        const settings = join(built.user, 'User', 'settings.json');
+        const before = readFileSync(settings, 'utf8');
+        try {
+            writeFileSync(settings, JSON.stringify({ ...JSON.parse(before), 'speckit.aiProvider': 'copilot' }, null, 2));
+            const toast = page.locator('.notifications-toasts .notification-list-item', { hasText: 'AI provider changed' });
+            await toast.first().waitFor({ timeout: 15000 });
+            await page.waitForTimeout(800);
+            if ((await toast.count()) !== 1) throw new Error(`${await toast.count()} reload prompts`);
+            const buttons = await toast.first().locator('.monaco-button').allInnerTexts();
+            if (!buttons.some(label => /Reload Now/.test(label))) throw new Error(`buttons: ${buttons.join(', ')}`);
+            await toast.first().locator('.codicon-notifications-clear').click();
+            return `once, with ${buttons.map(label => label.trim()).join(', ')}`;
+        } finally {
+            writeFileSync(settings, before);
+            await page.waitForTimeout(1500);
+            await command('Notifications: Clear All Notifications').catch(() => undefined);
+        }
+    }, { needs: 'fixtures', check: true });
+
     await step('specs-pane', 'The sidebar shows the Specs pane', async () => {
         await clear();
         await pane('Specs').waitFor({ timeout: 15000 });
@@ -932,7 +1481,7 @@ try {
     }
 } finally {
     writeFileSync(join(OUT, `results.${THEME}.json`), JSON.stringify(results, null, 2));
-    await app.close().catch(() => undefined);
+    await app?.close().catch(() => undefined);
     rmSync(root, { recursive: true, force: true });
 }
 

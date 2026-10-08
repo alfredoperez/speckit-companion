@@ -20,7 +20,7 @@ Run `/fix-tickets` with the batch's issue numbers, so it does not stop to confir
 
 ## 3. QA
 
-Once the batch is merged, run `/release-qa` on the fresh `main`: the automated gates, the terminal run, the headless canvas checks, then `qa-stage.sh` until it prints READY. Hand the user the click-only Claude Desktop handoff path to paste, and turn Desktop's reply into the QA report. A FAIL with an obvious fix goes back to step 2; one that needs a call becomes a step 4 question.
+Once the batch is merged, run `/release-qa` on the fresh `main`: the automated gates, the terminal run, the scripted real-window checks (viewer, navigation, builder, themes, graded by `grade-scripted.py`), the headless canvas checks, then `qa-stage.sh` until it prints READY. Hand the user the short click-only Claude Desktop handoff path to paste (first open, stock and two roots, the timed run, the GitHub Copilot app), and turn Desktop's reply into the QA report. A FAIL with an obvious fix goes back to step 2; one that needs a call becomes a step 4 question.
 
 ## 4. Decide (stop)
 
@@ -32,7 +32,7 @@ Answers that change code go back through step 2 under the same rules. Answers th
 
 ## 6. Final check
 
-Run `/release-qa recheck` on the final `main`: the gates again, and the desktop checks only if UI changed since step 3. Every check ends PASS, or as a named exception the report carries.
+Run `/release-qa recheck` on the final `main`: the gates again, the scripted checks again, and the desktop handoff only if UI changed since step 3. Every check ends PASS, or as a named exception the report carries.
 
 ## 7. Report (stop)
 

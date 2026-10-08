@@ -1,0 +1,736 @@
+{
+  "workflow": "companion",
+  "specName": "Scripted desktop QA",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T11:42:31.630Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:43:05.452Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:44:31.148Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:44:44.433Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:44:44.723Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-08T11:44:44.939Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T11:45:00.912Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:48:00.839Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:48:56.058Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:48:56.155Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:54:09.972Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:54:10.261Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T11:54:22.903Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:55:47.618Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:55:48.068Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T11:55:48.176Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T11:56:09.450Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T12:05:08.315Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T12:05:10.455Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T12:05:12.601Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T12:05:14.723Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.114Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.216Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.307Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.399Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.487Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.673Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.764Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.859Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:38.950Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:39.043Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:39.136Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:39.229Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:39.320Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:39.411Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:39.503Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:39.600Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:44:39.695Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:46:21.825Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:48:32.812Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:48:32.834Z"
+    },
+    {
+      "step": "implement",
+      "substep": "execute",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T13:48:47.741Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "all 23 tasks closed; light 52 of 52, dark 5 of 5, seven scripted checks PASS",
+  "coverage": {
+    "FR-001": {
+      "title": "First-open step with workspace trust on",
+      "tasks": [
+        "T001",
+        "T003",
+        "T005"
+      ]
+    },
+    "FR-002": {
+      "title": "Stock-workspace step reads every popup",
+      "tasks": [
+        "T002",
+        "T006"
+      ]
+    },
+    "FR-003": {
+      "title": "Multi-root step: specs per root, New Spec targets the chosen root",
+      "tasks": [
+        "T001",
+        "T007"
+      ]
+    },
+    "FR-004": {
+      "title": "Navigation matrix rows N1 to N15",
+      "tasks": [
+        "T002",
+        "T010",
+        "T011",
+        "T012"
+      ]
+    },
+    "FR-005": {
+      "title": "Narrow-panel step",
+      "tasks": [
+        "T008"
+      ]
+    },
+    "FR-006": {
+      "title": "Builder step",
+      "tasks": [
+        "T009"
+      ]
+    },
+    "FR-007": {
+      "title": "Provider picker in check mode and one dispatch reaches the terminal",
+      "tasks": [
+        "T003",
+        "T013"
+      ]
+    },
+    "FR-008": {
+      "title": "Each message in those flows appears once and its buttons act",
+      "tasks": [
+        "T006",
+        "T013"
+      ]
+    },
+    "FR-009": {
+      "title": "Every new step passes under dark as well as light",
+      "tasks": [
+        "T004",
+        "T014"
+      ]
+    },
+    "FR-010": {
+      "title": "Own-window steps launch and close their window and work under --only",
+      "tasks": [
+        "T003"
+      ]
+    },
+    "FR-011": {
+      "title": "Surface map scripted kind and release QA fills from results",
+      "tasks": [
+        "T015",
+        "T016",
+        "T017",
+        "T018"
+      ],
+      "tests": [
+        ".claude/skills/release-qa/test_grade_scripted.py"
+      ]
+    },
+    "FR-012": {
+      "title": "Handoff holds three parts, Claude Code answers terminal questions, under thirty minutes",
+      "tasks": [
+        "T019",
+        "T021"
+      ]
+    },
+    "FR-013": {
+      "title": "Staging script keeps printing READY",
+      "tasks": [
+        "T020"
+      ]
+    },
+    "FR-014": {
+      "title": "Visual-assets doc describes the new coverage",
+      "tasks": [
+        "T022"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "Finding what makes Claude Desktop stall in verification",
+    "The timed vscode-run with a real assistant stays on the handoff",
+    "canvas-open and the board stock run in the real Copilot app stay on the handoff"
+  ],
+  "context": [
+    "area: tooling/scripts/desktop-check.mjs (Playwright real-window check, stand-in assistant, --theme, --only, own-window pattern in provider-picker)",
+    "area: .claude/skills/release-qa (SKILL.md Step 2 and recipes, surface-map.yml kinds, desktop-handoff.md template, qa-stage.sh)",
+    "area: docs/visual-assets.md (check:desktop paragraph)",
+    "constraint: no root CHANGELOG entry, internal tooling",
+    "constraint: stall investigation needs a live desktop session, out of scope"
+  ],
+  "intent": "Move every release-qa desktop check that needs no real assistant or Copilot app into the scripted real-window check, and cut the Claude Desktop handoff to what still needs eyes",
+  "decisions": [
+    {
+      "decision": "One inWindow(options, body) helper; windows run one after another",
+      "why": "app and page are module globals that launch() reassigns; the provider-picker block already proves launch, step, close works",
+      "rejected": "A second BrowserWindow kept alive beside the main one"
+    },
+    {
+      "decision": "The stock project is the throwaway project with .specify/extensions/companion and presets/companion-standard removed",
+      "why": "Same two gates the vscode-qa-stock recipe uses, no dependency on the sandboxes checkout",
+      "rejected": "Calling the sandboxes recipe from the script"
+    },
+    {
+      "decision": "Derive _04 to _07 demo fixtures in buildProject the way the vscode-qa recipe does",
+      "why": "The matrix and the old handoff part B name them; the baseline fixtures in specs/ stay pinned",
+      "rejected": "Committing six more demo folders to specs/"
+    },
+    {
+      "decision": "Wipe only the current theme files at start-up",
+      "why": "The themes check needs results.light.json and results.dark.json side by side",
+      "rejected": "A --theme both flag that launches twice"
+    },
+    {
+      "decision": "A scripted check kind with run, steps and themes, graded by grade-scripted.py from results.<theme>.json",
+      "why": "The canvas harness pattern: one PASS/FAIL line per check from a JSON the report reads; a skipped step never counts as PASS",
+      "rejected": "One auto check per moved check, each launching VS Code"
+    },
+    {
+      "decision": "Handoff keeps three parts: the timed run, the Copilot app canvas, the board on a stock project; terminal questions are reported, not failed",
+      "why": "Those are the checks that need a real assistant or the real app; a stuck question is what stalled every pass",
+      "rejected": "Keeping parts A to D on the handoff as a fallback"
+    },
+    {
+      "decision": "One window per run; first open, the stock workspace and two roots stay on the handoff",
+      "why": "The owner chose it: each extra window steals focus for a minute and those checks found nothing last release",
+      "rejected": "Four extra windows covering all nine moved checks"
+    },
+    {
+      "decision": "Navigation fixtures are added when the navigation steps start, and those steps skip --shots and --record",
+      "why": "Every earlier step and docs picture sees the project it always did",
+      "rejected": "Building the eight demo specs into the project up front, which changed the sidebar in the docs pictures and pushed rows below the fold"
+    },
+    {
+      "decision": "The grader parses the scripted lines with a regex, not a YAML library",
+      "why": "The map uses one inline shape per check and the skill has no dependency to install",
+      "rejected": "PyYAML"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Nine moved checks become steps in desktop-check.mjs, graded into release QA by a scripted kind and a small grader; the handoff drops to three parts",
+      "key_finding": "The script already types, drags, reads the terminal and runs per theme; only the own-window pattern, the stock and two-roots projects, and the grader are new"
+    },
+    "tasks": {
+      "summary": "23 tasks: US1 is the script in four waves (foundations, own windows, main window, two runs); US2 the surface map, grader with tests and Step 2; US3 the handoff, staging and command docs; Polish the doc and validation"
+    },
+    "implement": {
+      "summary": "25 release QA steps in the real-window check, seven checks graded from its results, handoff cut from six parts to four"
+    }
+  },
+  "approach": "Generalise the provider-picker own-window block, add a stock project and a two-roots workspace built from the throwaway project, derive the _04 to _07 fixtures, and add one step per moved check. Add a scripted kind to surface-map.yml, a grader that reads results.<theme>.json, rewrite release-qa Step 2 and cut the handoff to three parts.",
+  "currentTask": "T023",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "launch() takes trust and workspace; trust keeps the flag off and the setting on with no startup prompt",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "buildProject() takes companion:false, showCwd; addDemoSpecs derives _04 to _07 like the vscode-qa recipe",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "inWindow() helper; provider-picker runs in check mode; OWN_WINDOW gates the main launch",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "start-up wipe removes only this theme's files; results written after the main window closes",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Dropped by the owner: first open stays on the handoff",
+      "files": [
+        ".claude/skills/release-qa/desktop-handoff.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Dropped by the owner: the stock workspace stays on the handoff",
+      "files": [
+        ".claude/skills/release-qa/desktop-handoff.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Dropped by the owner: two roots stays on the handoff",
+      "files": [
+        ".claude/skills/release-qa/desktop-handoff.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "narrow-panel-spec and narrow-panel-tasks at about 430px; a rail that scrolls by design is noted, not failed",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Four builder steps: phase menu, Add step form and Cancel, one column at 330px, Move to phase with its status line",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "nav-links and nav-empty-record",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "nav-n1 to nav-n8, rows found by depth so a document never matches a spec name",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "nav-n9 to nav-n15; fixtures added only when the navigation steps start",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "provider-dispatch reads the plan command from the terminal; popup-provider-changed sees Reload Now once",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Light 52 of 52; dark 5 of 5 for the steps the themes check names; terminal kill prompt turned off in the profile",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Nine grader tests: pass, fail, three ways to block, both themes, unknown id",
+      "files": [
+        ".claude/skills/release-qa/test_grade_scripted.py"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Seven checks marked scripted with their steps; QA harness surface added",
+      "files": [
+        ".claude/skills/release-qa/surface-map.yml"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "grade-scripted.py prints one PASS, FAIL or BLOCKED line per scripted check",
+      "files": [
+        ".claude/skills/release-qa/grade-scripted.py"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Step 2 runs the real-window check and the grader before staging; moved recipes point at their steps",
+      "files": [
+        ".claude/skills/release-qa/SKILL.md"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Handoff cut to four parts; terminal questions are reported, not failed",
+      "files": [
+        ".claude/skills/release-qa/desktop-handoff.md"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "qa-stage.sh left unchanged: the four parts still need what it stages",
+      "files": [
+        ".claude/skills/release-qa/qa-stage.sh"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "release-loop and release-qa commands name the scripted checks and the short handoff",
+      "files": [
+        ".claude/commands/release-loop.md",
+        ".claude/commands/release-qa.md"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "visual-assets.md describes the release QA steps, the fixtures and the per-theme results",
+      "files": [
+        "docs/visual-assets.md"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "compile, jest, grader tests and the grade over both results files all exit 0; handoff reads four parts with no typing",
+      "files": [
+        "tooling/scripts/desktop-check.mjs",
+        ".claude/skills/release-qa/grade-scripted.py"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check and bundle",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.0,
+      "result": "> speckit-companion@0.36.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "unit tests",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.9,
+      "result": "Snapshots:   0 total · Time:        71.054 s, estimated 74 s · Ran all test suites."
+    },
+    {
+      "what": "grader tests",
+      "command": "python3 -m unittest discover -s .claude/skills/release-qa -p test_grade_scripted.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "---------------------------------------------------------------------- · Ran 9 tests in 0.006s · OK"
+    },
+    {
+      "what": "scripted checks graded from the light and dark runs",
+      "command": "python3 .claude/skills/release-qa/grade-scripted.py --map .claude/skills/release-qa/surface-map.yml --results .desktop-check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "provider-dispatch PASS: 3 steps ok (light) · builder PASS: 4 steps ok (light) · process-panes PASS: 6 steps ok (light)"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Task finishes T005 to T022 were journaled in one burst after the work, so their timestamps record the write, not the work",
+      "step": "implement"
+    },
+    {
+      "note": "npm run shots and npm run record were not re-run; the new steps are gated out of both and the fixture set those runs see is unchanged",
+      "step": "implement"
+    },
+    {
+      "note": "What makes Claude Desktop stall in verification is not investigated; it needs a live desktop session",
+      "step": "implement"
+    },
+    {
+      "note": "The board stock run in the real Copilot app has no check id and no handoff part; it was only ever seen headless",
+      "step": "implement"
+    }
+  ]
+}
