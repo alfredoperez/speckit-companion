@@ -18,7 +18,10 @@ export function setupFileRefClickHandler(): void {
         if (!el) return;
         const filename = el.dataset.filename;
         if (filename) {
-            vscode.postMessage({ type: 'openFile', filename });
+            const line = Number(el.dataset.line);
+            vscode.postMessage(Number.isInteger(line) && line > 0
+                ? { type: 'openFile', filename, line }
+                : { type: 'openFile', filename });
         }
     });
 }

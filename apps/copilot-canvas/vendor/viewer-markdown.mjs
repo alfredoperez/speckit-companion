@@ -33,6 +33,7 @@ var KNOWN_EXTENSIONS = /* @__PURE__ */ new Set([
   ".ico",
   ".vsix"
 ]);
+var MAX_LINE = 9999999;
 var SAFE_URL = /^(?:https?:|mailto:|#|\/|\.{0,2}\/|[^:]*$)/i;
 function safeUrl(target) {
   const url = target.trim();
@@ -48,7 +49,10 @@ var inAttribute = (value) => value.includes("\0CODE");
 function parseInline(text) {
   if (!text) return "";
   const codeSpans = [];
-  let result = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/`([^`]+)`/g, (_match, code) => {
+  let result = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/`([^`]+)`/g, (_match, raw) => {
+    const lineMatch = raw.match(/^(.+?):(\d+)(?:-(\d+))?$/);
+    const code = lineMatch ? lineMatch[1] : raw;
+    const lineNo = lineMatch ? Number(lineMatch[2]) : NaN;
     const lastSlash = Math.max(code.lastIndexOf("/"), code.lastIndexOf("\\"));
     const basename = lastSlash >= 0 ? code.slice(lastSlash + 1) : code;
     const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
@@ -57,9 +61,11 @@ function parseInline(text) {
       const hasDir = code.includes("/");
       const inAttr = code.replace(/"/g, "&quot;");
       const titleAttr = hasDir ? ` title="${inAttr}"` : "";
-      codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${titleAttr}><code>${basename}</code></button>`);
+      const lineAttr = Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE ? ` data-line="${lineNo}"` : "";
+      const label = lineAttr ? raw.slice(code.length - basename.length) : basename;
+      codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`);
     } else {
-      codeSpans.push(`<code>${code}</code>`);
+      codeSpans.push(`<code>${raw}</code>`);
     }
     return `\0CODE${codeSpans.length - 1}\0`;
   }).replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/___(.+?)___/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>").replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => {
@@ -69,6 +75,68 @@ function parseInline(text) {
   }).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text2, target) => inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text2}</a>`).replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
   result = result.replace(/<strong>Given<\/strong>/g, '<span class="scenario-keyword scenario-given">Given</span>').replace(/<strong>When<\/strong>/g, '<span class="scenario-keyword scenario-when">When</span>').replace(/<strong>Then<\/strong>/g, '<span class="scenario-keyword scenario-then">Then</span>');
   return result;
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/fenceInfo.ts
+var FENCE_LANGUAGE = /^[a-z0-9][a-z0-9_+#.-]{0,31}$/;
+var OPTION = /([^\s=]+)(?:=("[^"]*"|'[^']*'|\S*))?/g;
+var isFenceLine = (line) => line.trim().startsWith("```");
+function fenceLanguage(word) {
+  const name = word.toLowerCase();
+  return FENCE_LANGUAGE.test(name) ? name : "";
+}
+function parseFenceInfo(info) {
+  const text = info.trim();
+  const first = text.split(/\s+/, 1)[0];
+  const hasLanguage = !first.includes("=");
+  const language = hasLanguage ? fenceLanguage(first) : "";
+  const rest = hasLanguage ? text.slice(first.length) : text;
+  const options = /* @__PURE__ */ new Map();
+  let title = "";
+  for (const [, key, raw] of rest.matchAll(OPTION)) {
+    const value = raw === void 0 ? true : raw.replace(/^(["'])(.*)\1$/, "$2");
+    if (key === "title" && typeof value === "string") title = value;
+    else options.set(key, value);
+  }
+  return { language, title, options };
+}
+function fencedRanges(markdown) {
+  const ranges = [];
+  let offset = 0;
+  let start = -1;
+  for (const line of markdown.split("\n")) {
+    if (isFenceLine(line)) {
+      if (start < 0) start = offset;
+      else {
+        ranges.push([start, offset + line.length]);
+        start = -1;
+      }
+    }
+    offset += line.length + 1;
+  }
+  if (start >= 0) ranges.push([start, offset]);
+  return ranges;
+}
+function mapOutsideFences(markdown, fn) {
+  const lines = markdown.split("\n");
+  if (!lines.some(isFenceLine)) return fn(markdown);
+  const segments = [];
+  let inFence = false;
+  for (const line of lines) {
+    const marker = isFenceLine(line);
+    const fenced = inFence || marker;
+    const last = segments[segments.length - 1];
+    if (last && last.fenced === fenced) last.lines.push(line);
+    else segments.push({ fenced, lines: [line] });
+    if (marker) inFence = !inFence;
+  }
+  return segments.map((segment, index) => {
+    const text = segment.lines.join("\n");
+    if (segment.fenced) return text;
+    if (index === 0) return fn(text);
+    const out = fn("\n" + text);
+    return out.startsWith("\n") ? out.slice(1) : out;
+  }).join("\n");
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/preprocessors.ts
@@ -125,7 +193,7 @@ function getPriorityLabel(priority) {
   };
   return labels[priority.toUpperCase()] || priority;
 }
-function preprocessUserStories(markdown) {
+function preprocessUserStoriesRun(markdown) {
   const storyPattern = /^(###)\s*User Story\s*(\d+)\s*[-–]\s*([^(]+)\s*\(Priority:\s*(P\d)\)/gm;
   return markdown.replace(storyPattern, (_, _hashes, num, title, priority) => {
     const priorityClass = priority.toLowerCase();
@@ -134,7 +202,7 @@ function preprocessUserStories(markdown) {
     return `<div class="user-story-header"><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">\xB7</span><span class="story-priority priority-${priorityClass}"><span class="priority-dot ${priorityClass}"></span>${priorityLabel}</span></div><h3 class="user-story-title">${parseInline(title.trim())}</h3></div>`;
   });
 }
-function preprocessTaskPhases(markdown) {
+function preprocessTaskPhasesRun(markdown) {
   const phasePattern = /^##\s+Phase\s+(\d+)\s*:\s*(.+)$/gm;
   return markdown.replace(phasePattern, (_full, num, rest) => {
     let title = String(rest);
@@ -361,20 +429,33 @@ function stripTaskFormatLegend(markdown) {
   return markdown.replace(/^##[ \t]+Format:.*(?:\n(?!#{1,6}[ \t]).*)*\n?/m, "");
 }
 function preprocessHtmlComments(markdown) {
-  return markdown.replace(/<!--([\s\S]*?)-->/g, (match, content) => {
-    const trimmed = content.trim();
-    if (!trimmed) return "";
-    if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
-    return `
+  const fenced = fencedRanges(markdown);
+  const comment = /<!--([\s\S]*?)-->/g;
+  let out = "";
+  let from = 0;
+  for (let found = comment.exec(markdown); found; found = comment.exec(markdown)) {
+    if (fenced.some(([start, end]) => found.index >= start && found.index < end)) {
+      comment.lastIndex = found.index + 4;
+      continue;
+    }
+    out += markdown.slice(from, found.index) + commentBlock(found[0], found[1]);
+    from = found.index + found[0].length;
+  }
+  return out + markdown.slice(from);
+}
+function commentBlock(match, content) {
+  const trimmed = content.trim();
+  if (!trimmed) return "";
+  if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
+  return `
 <details class="template-instructions"><summary>Template Instructions</summary>
 
 ${trimmed}
 
 </details>
 `;
-  });
 }
-function preprocessCallouts(markdown) {
+function preprocessCalloutsRun(markdown) {
   const patterns = [
     { regex: /(?:^|\n)\s*(?:[\u{1F300}-\u{1F9FF}]\s*)?\*\*Purpose:?\*\*:?\s*([^\n]+(?:\n(?!\n|\*\*|#|-).*)*)/giu, type: "purpose", label: "Purpose" },
     { regex: /(?:^|\n)\s*(?:[\u{1F300}-\u{1F9FF}]\s*)?\*\*CRITICAL:?\*\*:?\s*([^\n]+(?:\n(?!\n|\*\*|#|-).*)*)/giu, type: "critical", label: "Critical" },
@@ -409,6 +490,15 @@ function preprocessCallouts(markdown) {
     });
   }
   return markdown;
+}
+function preprocessUserStories(markdown) {
+  return mapOutsideFences(markdown, preprocessUserStoriesRun);
+}
+function preprocessTaskPhases(markdown) {
+  return mapOutsideFences(markdown, preprocessTaskPhasesRun);
+}
+function preprocessCallouts(markdown) {
+  return mapOutsideFences(markdown, preprocessCalloutsRun);
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/scenarios.ts
@@ -858,6 +948,18 @@ function mapToSourceLines(source, processed) {
   return map;
 }
 
+// apps/vscode/webview/src/spec-viewer/markdown/blockFences.ts
+var renderers = /* @__PURE__ */ new Map();
+function renderBlockFence(name, body, info) {
+  const render = renderers.get(name);
+  if (!render) return null;
+  try {
+    return render(body, info) || null;
+  } catch {
+    return null;
+  }
+}
+
 // apps/vscode/webview/src/spec-viewer/markdown/renderer.ts
 var currentTaskId = null;
 var hasSpecContext = false;
@@ -960,11 +1062,6 @@ function renderTable(rows) {
   html += "</table>\n";
   return html;
 }
-var FENCE_LANGUAGE = /^[a-z0-9][a-z0-9_+#.-]{0,31}$/;
-function fenceLanguage(info) {
-  const word = info.trim().split(/\s+/, 1)[0].toLowerCase();
-  return FENCE_LANGUAGE.test(word) ? word : "";
-}
 function renderMarkdown(markdown) {
   markdown = markdown.replace(/\r\n?/g, "\n");
   const source = markdown;
@@ -995,6 +1092,7 @@ function renderMarkdown(markdown) {
   const sourceLineOf = mapToSourceLines(source, markdown);
   let inCodeBlock = false;
   let codeBlockLang = "";
+  let codeBlockInfo = parseFenceInfo("");
   let codeContent = [];
   let inList = false;
   let listType = "ul";
@@ -1031,12 +1129,17 @@ function renderMarkdown(markdown) {
       }
       if (!inCodeBlock) {
         inCodeBlock = true;
-        codeBlockLang = fenceLanguage(trimmedLine.slice(3));
+        codeBlockInfo = parseFenceInfo(trimmedLine.slice(3));
+        codeBlockLang = codeBlockInfo.language;
         codeContent = [];
       } else {
         inCodeBlock = false;
         const codeText = codeContent.join("\n");
-        if (codeBlockLang === "mermaid") {
+        const block = renderBlockFence(codeBlockLang, codeText, codeBlockInfo);
+        if (block) {
+          html += `${block}
+`;
+        } else if (codeBlockLang === "mermaid") {
           const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
           html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>
 `;

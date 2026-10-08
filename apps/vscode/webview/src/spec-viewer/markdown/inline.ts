@@ -15,6 +15,8 @@ const KNOWN_EXTENSIONS = new Set<string>([
     '.vsix',
 ]);
 
+const MAX_LINE = 9999999;
+
 const SAFE_URL = /^(?:https?:|mailto:|#|\/|\.{0,2}\/|[^:]*$)/i;
 
 /**
@@ -66,7 +68,10 @@ export function parseInline(text: string): string {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         // Stash inline code
-        .replace(/`([^`]+)`/g, (_match, code) => {
+        .replace(/`([^`]+)`/g, (_match, raw) => {
+            const lineMatch = raw.match(/^(.+?):(\d+)(?:-(\d+))?$/);
+            const code: string = lineMatch ? lineMatch[1] : raw;
+            const lineNo = lineMatch ? Number(lineMatch[2]) : NaN;
             const lastSlash = Math.max(code.lastIndexOf('/'), code.lastIndexOf('\\'));
             const basename = lastSlash >= 0 ? code.slice(lastSlash + 1) : code;
             const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
@@ -78,9 +83,11 @@ export function parseInline(text: string): string {
                 // followed become markup of its own.
                 const inAttr = code.replace(/"/g, '&quot;');
                 const titleAttr = hasDir ? ` title="${inAttr}"` : '';
-                codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${titleAttr}><code>${basename}</code></button>`);
+                const lineAttr = Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE ? ` data-line="${lineNo}"` : '';
+                const label = lineAttr ? raw.slice(code.length - basename.length) : basename;
+                codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`);
             } else {
-                codeSpans.push(`<code>${code}</code>`);
+                codeSpans.push(`<code>${raw}</code>`);
             }
             return `\x00CODE${codeSpans.length - 1}\x00`;
         })

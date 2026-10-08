@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { preprocessTaskPhases, preprocessRequirements, preprocessEntities, preprocessChecklist, preprocessTechnicalContext, preprocessConstitution, preprocessDecisions } from '../preprocessors';
+import { preprocessCallouts, preprocessHtmlComments, preprocessUserStories, preprocessTaskPhases, preprocessRequirements, preprocessEntities, preprocessChecklist, preprocessTechnicalContext, preprocessConstitution, preprocessDecisions } from '../preprocessors';
 import { renderMarkdown, setTaskSummaries } from '../renderer';
 
 describe('preprocessTaskPhases', () => {
@@ -348,5 +348,81 @@ describe('inline-comment affordance on components', () => {
 
         expect(html).toContain('class="line component-line"');
         expect(html).toContain('class="entity-row"');
+    });
+});
+
+describe('preprocessors leave fenced text alone', () => {
+    const fenced = (body: string): string => '```md\n' + body + '\n```';
+
+    it.each([
+        ['a callout', '**Note:** keep this', preprocessCallouts],
+        ['a phase heading', '## Phase 1: Setup', preprocessTaskPhases],
+        ['a user story heading', '### User Story 1 - Sign in (Priority: P1)', preprocessUserStories],
+        ['an html comment', '<!-- keep this -->', preprocessHtmlComments],
+    ])('does not rewrite %s inside a fence', (_name, body, pass) => {
+        const src = fenced(body);
+
+        expect(pass(src)).toBe(src);
+    });
+
+    it.each([
+        ['a callout', '**Note:** change this', preprocessCallouts],
+        ['a phase heading', '## Phase 1: Setup', preprocessTaskPhases],
+        ['a user story heading', '### User Story 1 - Sign in (Priority: P1)', preprocessUserStories],
+        ['an html comment', '<!-- change this -->', preprocessHtmlComments],
+    ])('still rewrites %s outside a fence', (_name, body, pass) => {
+        const src = body + '\n\n' + fenced('x') + '\n\n' + body;
+        const out = pass(src);
+
+        expect(out).not.toBe(src);
+        expect(out).toContain(fenced('x'));
+        expect(out.split(fenced('x')).every((part) => !part.includes(body))).toBe(true);
+    });
+
+    it('handles a comment that wraps a fence as one comment, not as two halves', () => {
+        const src = 'before\n<!--\nExample:\n```bash\nspecify init\n```\n-->\nafter';
+        const out = preprocessHtmlComments(src);
+
+        expect(out).toContain('<details class="template-instructions">');
+        expect(out).not.toContain('-->');
+        expect(out).toContain('```bash\nspecify init\n```');
+    });
+
+    it('still converts a real comment after a fence that holds a lone comment opener', () => {
+        const src = '```md\n<!-- an opener with no end\n```\n\n<!-- real instructions -->\nafter';
+        const out = preprocessHtmlComments(src);
+
+        expect(out).toContain('```md\n<!-- an opener with no end\n```');
+        expect(out).toContain('<details class="template-instructions">');
+        expect(out).toContain('real instructions');
+        expect(out).not.toContain('<!-- real instructions -->');
+    });
+
+    it('leaves a comment alone when it opens inside a fence', () => {
+        const src = '```md\n<!--\nkeep\n-->\n```';
+
+        expect(preprocessHtmlComments(src)).toBe(src);
+    });
+
+    it('gives a document without a fence the same output as before', () => {
+        const src = '**Note:** a\n\n## Phase 2: Core\n';
+
+        expect(preprocessCallouts(src)).toContain('callout-note');
+        expect(preprocessTaskPhases(src)).toContain('phase-header');
+    });
+
+    it('stops a callout at the fence that follows it', () => {
+        const out = preprocessCallouts('**Note:** first line\n```js\n**Warning:** inside\n```');
+
+        expect(out).toContain('```js\n**Warning:** inside\n```');
+        expect(out).not.toContain('callout-warning');
+    });
+
+    it('keeps the rendered text of a fenced note as written', () => {
+        const html = renderMarkdown('```md\n**Note:** literal\n## Phase 1: X\n```\n');
+
+        expect(html).toContain('**Note:** literal');
+        expect(html).not.toContain('class="callout');
+        expect(html).not.toContain('phase-header');
     });
 });

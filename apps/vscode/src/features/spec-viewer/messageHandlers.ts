@@ -236,7 +236,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     undoLivingAction: (msg, dir, deps) => handleLivingUndo(dir, msg.token, deps),
     reportAction: (msg, dir, deps) => handleReportAction(dir, msg.id, deps),
     reportAnswer: (msg, dir, deps) => handleReportAnswer(dir, msg, deps),
-    openFile: (msg, dir, deps) => handleOpenFile(dir, msg.filename, deps),
+    openFile: (msg, dir, deps) => handleOpenFile(dir, msg.filename, deps, validLine(msg.line)),
     openLivingSpec: (msg, _dir, deps) =>
       handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps, msg.requirement),
     webviewError: async (msg, _dir, deps) => {
@@ -788,6 +788,15 @@ async function handleToggleCheckbox(
   }
 }
 
+function validLine(line: unknown): number | undefined {
+  return typeof line === "number" && Number.isInteger(line) && line > 0 ? line : undefined;
+}
+
+function isInsideRoot(root: string, candidate: string): boolean {
+  const rel = path.relative(root, candidate);
+  return rel !== ".." && !rel.startsWith(".." + path.sep) && !path.isAbsolute(rel);
+}
+
 /**
  * Handle open file request from a file reference click
  */
@@ -795,6 +804,7 @@ async function handleOpenFile(
   specDirectory: string,
   filename: string,
   deps: MessageHandlerDependencies,
+  line?: number,
 ): Promise<void> {
   const basename = path.basename(filename);
   if (path.isAbsolute(filename)) {
@@ -807,7 +817,27 @@ async function handleOpenFile(
       await vscode.commands.executeCommand("speckit.viewSpecDocument", filename);
       return;
     }
-    await showFileBeside(vscode.Uri.file(filename), specDirectory, deps);
+    await showFileBeside(vscode.Uri.file(filename), specDirectory, deps, line);
+    return;
+  }
+  if (/[\\/]/.test(filename)) {
+    const roots = [getProjectRoot(), specDirectory].filter((r): r is string => !!r);
+    for (const root of roots) {
+      const candidate = path.resolve(root, filename);
+      if (isInsideRoot(root, candidate) && fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        await showFileBeside(vscode.Uri.file(candidate), specDirectory, deps, line);
+        return;
+      }
+    }
+    const suffix = filename.split(/[\\/]/).filter((part) => part && part !== ".").join("/");
+    if (suffix && !/[*?[\]{}!]/.test(suffix) && !suffix.split("/").includes("..")) {
+      const [match] = await vscode.workspace.findFiles(`**/${suffix}`, "**/node_modules/**", 1);
+      if (match) {
+        await showFileBeside(match, specDirectory, deps, line);
+        return;
+      }
+    }
+    vscode.window.showWarningMessage(`File not found in project: ${basename}`);
     return;
   }
   const results = await vscode.workspace.findFiles(`**/${basename}`, null, 1);
@@ -817,7 +847,7 @@ async function handleOpenFile(
     );
     return;
   }
-  await showFileBeside(results[0], specDirectory, deps);
+  await showFileBeside(results[0], specDirectory, deps, line);
 }
 
 function workspaceFolderOf(filePath: string): vscode.WorkspaceFolder | undefined {
@@ -837,12 +867,18 @@ async function showFileBeside(
   uri: vscode.Uri,
   specDirectory: string,
   deps: MessageHandlerDependencies,
+  line?: number,
 ): Promise<void> {
   try {
     const doc = await vscode.workspace.openTextDocument(uri);
-    await vscode.window.showTextDocument(doc, {
+    const editor = await vscode.window.showTextDocument(doc, {
       viewColumn: besideViewerColumn(specDirectory, deps),
     });
+    if (line && editor) {
+      const pos = new vscode.Position(line - 1, 0);
+      editor.selection = new vscode.Selection(pos, pos);
+      editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+    }
     deps.outputChannel.appendLine(`[SpecViewer] Opened file ref: ${uri.fsPath}`);
   } catch (error) {
     deps.outputChannel.appendLine(

@@ -348,3 +348,50 @@ describe('parseInline: an image next to a link', () => {
         expect(image.attrs).toEqual([{ name: 'src', value: 'badge.svg' }, { name: 'alt', value: 'build' }]);
     });
 });
+
+describe('parseInline: a file reference with a line', () => {
+    const chip = (md: string): Element => {
+        const frag = parseFragment(parseInline(md)) as any;
+        return frag.childNodes.find((n: any) => n.nodeName === 'button');
+    };
+    const attr = (el: any, name: string): string | undefined =>
+        el.attrs.find((a: any) => a.name === name)?.value;
+
+    it('keeps the path clean and sets the line for path:line', () => {
+        const el = chip('`src/a/util.ts:42`');
+        expect(attr(el, 'data-filename')).toBe('src/a/util.ts');
+        expect(attr(el, 'data-line')).toBe('42');
+        expect(attr(el, 'title')).toBe('src/a/util.ts');
+    });
+
+    it('keeps the line in the label, so a reader still sees where it points', () => {
+        const label = (code: string) => {
+            const el: any = chip('`' + code + '`');
+            return el.childNodes[0].childNodes[0].value;
+        };
+        expect(label('src/a/util.ts:42')).toBe('util.ts:42');
+        expect(label('util.ts:10-20')).toBe('util.ts:10-20');
+        expect(label('src/a/util.ts')).toBe('util.ts');
+    });
+
+    it('uses the first number of path:from-to', () => {
+        const el = chip('`util.ts:10-20`');
+        expect(attr(el, 'data-filename')).toBe('util.ts');
+        expect(attr(el, 'data-line')).toBe('10');
+    });
+
+    it('uses the start when the range ends before it', () => {
+        expect(attr(chip('`util.ts:20-10`'), 'data-line')).toBe('20');
+    });
+
+    it.each(['util.ts:0', 'util.ts:abc', 'util.ts:99999999999'])('sets no line for %s', (code) => {
+        const el = chip('`' + code + '`');
+        expect(el ? attr(el, 'data-line') : undefined).toBeUndefined();
+        expect(parseInline('`' + code + '`')).not.toContain('data-line');
+    });
+
+    it('leaves an unknown extension as plain code', () => {
+        const result = parseInline('`thing.xyz:12`');
+        expect(result).toBe('<code>thing.xyz:12</code>');
+    });
+});

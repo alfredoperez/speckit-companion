@@ -612,6 +612,7 @@ export type ViewerToExtensionMessage =
     | {
           type: 'openFile';
           filename: string;
+          line?: number;
       }
     // Living-specs chip click — open the capability in the Living Specs viewer
     | {
