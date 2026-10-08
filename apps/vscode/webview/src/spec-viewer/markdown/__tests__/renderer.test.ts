@@ -9,6 +9,7 @@
  *  - Documents without frontmatter are returned unchanged.
  */
 
+import { BLOCK_FENCES, registerBlockRenderer } from '../blockFences';
 import { parseFragment } from 'parse5';
 import { renderMarkdown } from '../renderer';
 import { stripFrontmatter, stripTaskFormatLegend } from '../preprocessors';
@@ -348,5 +349,62 @@ describe('renderMarkdown: a fenced code block', () => {
     it('renders an unnamed or text fence as a plain block', () => {
         expect(renderMarkdown('```\nplain\n```\n')).toContain('<pre class="tree-structure"><code>plain</code></pre>');
         expect(renderMarkdown('```Text\nplain\n```\n')).toContain('<pre class="tree-structure"><code>plain</code></pre>');
+    });
+});
+
+describe('renderMarkdown: a block fence', () => {
+    const plain = (name: string): string => `<pre class="code-block" data-language="${name}"><code class="language-${name}">a --&gt; b</code></pre>\n`;
+    const src = (name: string, info = ''): string => '```' + name + info + '\na --> b\n```\n';
+
+    afterEach(() => {
+        for (const name of BLOCK_FENCES) registerBlockRenderer(name, undefined);
+    });
+
+    it.each(BLOCK_FENCES)('renders %s as the plain code block when no renderer is registered', (name) => {
+        expect(renderMarkdown(src(name))).toBe(plain(name));
+    });
+
+    it('keeps the title and options out of the markup', () => {
+        const html = renderMarkdown(src('calls', ' title="x" onmouseover="alert(1)"'));
+
+        expect(html).toBe(plain('calls'));
+    });
+
+    it('hands the body and the parsed info to a registered renderer', () => {
+        const seen: unknown[] = [];
+        registerBlockRenderer('states', (body, info) => {
+            seen.push(body, info.title, info.options.get('dense'));
+            return '<div class="states-block"></div>';
+        });
+
+        const html = renderMarkdown(src('states', ' title="Flow" dense'));
+
+        expect(html).toBe('<div class="states-block"></div>\n');
+        expect(seen).toEqual(['a --> b', 'Flow', true]);
+    });
+
+    it('asks the registry before the tree check', () => {
+        registerBlockRenderer('screen', () => '<div class="screen-block"></div>');
+        const tree = '```screen\nsrc/\n├── a.ts\n└── b.ts\n```\n';
+
+        expect(renderMarkdown(tree)).toBe('<div class="screen-block"></div>\n');
+    });
+
+    it('falls back to the plain block when the renderer throws', () => {
+        registerBlockRenderer('calls', () => { throw new Error('boom'); });
+
+        expect(renderMarkdown(src('calls'))).toBe(plain('calls'));
+    });
+
+    it('falls back to the plain block when the renderer returns nothing', () => {
+        registerBlockRenderer('calls', () => '');
+
+        expect(renderMarkdown(src('calls'))).toBe(plain('calls'));
+    });
+
+    it('does not register a name that is not a block fence', () => {
+        registerBlockRenderer('code', () => '<div class="x"></div>');
+
+        expect(renderMarkdown(src('code'))).not.toContain('class="x"');
     });
 });

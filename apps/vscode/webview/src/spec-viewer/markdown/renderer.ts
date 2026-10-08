@@ -29,6 +29,8 @@ import {
 } from './livingComponents';
 import { markClarifications, rememberClarifications } from './clarifications';
 import { mapToSourceLines } from './sourceLines';
+import { parseFenceInfo, type FenceInfo } from './fenceInfo';
+import { renderBlockFence } from './blockFences';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -229,14 +231,6 @@ function renderTable(rows: string[]): string {
 /**
  * Parse and render markdown content to HTML
  */
-const FENCE_LANGUAGE = /^[a-z0-9][a-z0-9_+#.-]{0,31}$/;
-
-/** A fence's info string is someone else's text and lands in two attributes, so only a plain language name survives. */
-function fenceLanguage(info: string): string {
-    const word = info.trim().split(/\s+/, 1)[0].toLowerCase();
-    return FENCE_LANGUAGE.test(word) ? word : '';
-}
-
 export function renderMarkdown(markdown: string): string {
     // Normalize line endings (CRLF / lone CR → LF) before anything else. The
     // block-level regexes below are $-anchored and JS '.' does not match '\r',
@@ -284,6 +278,7 @@ export function renderMarkdown(markdown: string): string {
     const sourceLineOf = mapToSourceLines(source, markdown);
     let inCodeBlock = false;
     let codeBlockLang = '';
+    let codeBlockInfo: FenceInfo = parseFenceInfo('');
     let codeContent: string[] = [];
     let inList = false;
     let listType: 'ul' | 'ol' = 'ul';
@@ -328,14 +323,17 @@ export function renderMarkdown(markdown: string): string {
             }
             if (!inCodeBlock) {
                 inCodeBlock = true;
-                codeBlockLang = fenceLanguage(trimmedLine.slice(3));
+                codeBlockInfo = parseFenceInfo(trimmedLine.slice(3));
+                codeBlockLang = codeBlockInfo.language;
                 codeContent = [];
             } else {
                 inCodeBlock = false;
                 const codeText = codeContent.join('\n');
 
-                // Handle mermaid diagrams
-                if (codeBlockLang === 'mermaid') {
+                const block = renderBlockFence(codeBlockLang, codeText, codeBlockInfo);
+                if (block) {
+                    html += `${block}\n`;
+                } else if (codeBlockLang === 'mermaid') {
                     const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
                     html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>\n`;
                 } else if (isTreeStructure(codeText) || codeBlockLang === 'text' || codeBlockLang === 'plaintext' || codeBlockLang === '') {

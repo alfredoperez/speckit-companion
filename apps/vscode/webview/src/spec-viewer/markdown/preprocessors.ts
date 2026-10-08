@@ -4,6 +4,7 @@
  */
 
 import { parseInline } from './inline';
+import { mapOutsideFences } from './fenceInfo';
 
 /**
  * Preprocess spec metadata (Feature Branch, Created, Status, Input) into a compact header.
@@ -92,7 +93,7 @@ function getPriorityLabel(priority: string): string {
 /**
  * Preprocess user story headings into styled cards with metadata line
  */
-export function preprocessUserStories(markdown: string): string {
+function preprocessUserStoriesRun(markdown: string): string {
     // Pattern: ### User Story N - Title (Priority: PN)
     const storyPattern = /^(###)\s*User Story\s*(\d+)\s*[-–]\s*([^(]+)\s*\(Priority:\s*(P\d)\)/gm;
 
@@ -111,7 +112,7 @@ export function preprocessUserStories(markdown: string): string {
  * Preprocess tasks.md "## Phase N: …" headings into styled phase headers, lifting
  * any MVP marker (🎯 MVP) and priority tag (P1..P5) out of the title into chips.
  */
-export function preprocessTaskPhases(markdown: string): string {
+function preprocessTaskPhasesRun(markdown: string): string {
     const phasePattern = /^##\s+Phase\s+(\d+)\s*:\s*(.+)$/gm;
 
     return markdown.replace(phasePattern, (_full, num, rest) => {
@@ -368,7 +369,7 @@ export function stripTaskFormatLegend(markdown: string): string {
  * Preprocess HTML comments into collapsible "Template Instructions" blocks
  * Empty comments are removed entirely.
  */
-export function preprocessHtmlComments(markdown: string): string {
+function preprocessHtmlCommentsRun(markdown: string): string {
     return markdown.replace(/<!--([\s\S]*?)-->/g, (match, content) => {
         const trimmed = content.trim();
         if (!trimmed) return '';
@@ -385,7 +386,7 @@ export function preprocessHtmlComments(markdown: string): string {
 /**
  * Preprocess markdown to convert special patterns into callout blocks
  */
-export function preprocessCallouts(markdown: string): string {
+function preprocessCalloutsRun(markdown: string): string {
     // Define callout patterns - each captures the keyword and content
     // Patterns handle:
     // - **Keyword:** and **Keyword**: formats (colon inside or outside bold)
@@ -435,4 +436,20 @@ export function preprocessCallouts(markdown: string): string {
     }
 
     return markdown;
+}
+
+export function preprocessUserStories(markdown: string): string {
+    return mapOutsideFences(markdown, preprocessUserStoriesRun);
+}
+
+export function preprocessTaskPhases(markdown: string): string {
+    return mapOutsideFences(markdown, preprocessTaskPhasesRun);
+}
+
+export function preprocessHtmlComments(markdown: string): string {
+    return mapOutsideFences(markdown, preprocessHtmlCommentsRun);
+}
+
+export function preprocessCallouts(markdown: string): string {
+    return mapOutsideFences(markdown, preprocessCalloutsRun);
 }
