@@ -4,7 +4,7 @@
  */
 
 import { parseInline } from './inline';
-import { mapOutsideFences } from './fenceInfo';
+import { fencedRanges, mapOutsideFences } from './fenceInfo';
 
 /**
  * Preprocess spec metadata (Feature Branch, Created, Status, Input) into a compact header.
@@ -369,18 +369,33 @@ export function stripTaskFormatLegend(markdown: string): string {
  * Preprocess HTML comments into collapsible "Template Instructions" blocks
  * Empty comments are removed entirely.
  */
-function preprocessHtmlCommentsRun(markdown: string): string {
-    return markdown.replace(/<!--([\s\S]*?)-->/g, (match, content) => {
-        const trimmed = content.trim();
-        if (!trimmed) return '';
-        // A living-spec marker (`touches:`, `reviewed:`, …) is machine metadata,
-        // not authoring scaffolding. Left to the rule below it would
-        // become a "Template Instructions" disclosure printing its own source,
-        // and the requirement pass — which runs after this one — would never
-        // see it. It passes through untouched and is dropped there.
-        if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
-        return `\n<details class="template-instructions"><summary>Template Instructions</summary>\n\n${trimmed}\n\n</details>\n`;
-    });
+export function preprocessHtmlComments(markdown: string): string {
+    const fenced = fencedRanges(markdown);
+    const comment = /<!--([\s\S]*?)-->/g;
+    let out = '';
+    let from = 0;
+    for (let found = comment.exec(markdown); found; found = comment.exec(markdown)) {
+        // An opener inside a fence is skipped without consuming what follows it, so the next real comment still matches.
+        if (fenced.some(([start, end]) => found!.index >= start && found!.index < end)) {
+            comment.lastIndex = found.index + 4;
+            continue;
+        }
+        out += markdown.slice(from, found.index) + commentBlock(found[0], found[1]);
+        from = found.index + found[0].length;
+    }
+    return out + markdown.slice(from);
+}
+
+function commentBlock(match: string, content: string): string {
+    const trimmed = content.trim();
+    if (!trimmed) return '';
+    // A living-spec marker (`touches:`, `reviewed:`, …) is machine metadata,
+    // not authoring scaffolding. Left to the rule below it would
+    // become a "Template Instructions" disclosure printing its own source,
+    // and the requirement pass — which runs after this one — would never
+    // see it. It passes through untouched and is dropped there.
+    if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
+    return `\n<details class="template-instructions"><summary>Template Instructions</summary>\n\n${trimmed}\n\n</details>\n`;
 }
 
 /**
@@ -444,10 +459,6 @@ export function preprocessUserStories(markdown: string): string {
 
 export function preprocessTaskPhases(markdown: string): string {
     return mapOutsideFences(markdown, preprocessTaskPhasesRun);
-}
-
-export function preprocessHtmlComments(markdown: string): string {
-    return mapOutsideFences(markdown, preprocessHtmlCommentsRun);
 }
 
 export function preprocessCallouts(markdown: string): string {

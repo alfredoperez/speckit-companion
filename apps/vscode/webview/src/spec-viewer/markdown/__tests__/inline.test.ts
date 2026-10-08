@@ -364,6 +364,16 @@ describe('parseInline: a file reference with a line', () => {
         expect(attr(el, 'title')).toBe('src/a/util.ts');
     });
 
+    it('keeps the line in the label, so a reader still sees where it points', () => {
+        const label = (code: string) => {
+            const el: any = chip('`' + code + '`');
+            return el.childNodes[0].childNodes[0].value;
+        };
+        expect(label('src/a/util.ts:42')).toBe('util.ts:42');
+        expect(label('util.ts:10-20')).toBe('util.ts:10-20');
+        expect(label('src/a/util.ts')).toBe('util.ts');
+    });
+
     it('uses the first number of path:from-to', () => {
         const el = chip('`util.ts:10-20`');
         expect(attr(el, 'data-filename')).toBe('util.ts');

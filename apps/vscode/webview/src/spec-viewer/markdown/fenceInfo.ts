@@ -31,6 +31,22 @@ export function parseFenceInfo(info: string): FenceInfo {
     return { language, title, options };
 }
 
+/** Character ranges of the fenced lines, markers included, by the same rule the renderer's loop uses. */
+export function fencedRanges(markdown: string): Array<[number, number]> {
+    const ranges: Array<[number, number]> = [];
+    let offset = 0;
+    let start = -1;
+    for (const line of markdown.split('\n')) {
+        if (isFenceLine(line)) {
+            if (start < 0) start = offset;
+            else { ranges.push([start, offset + line.length]); start = -1; }
+        }
+        offset += line.length + 1;
+    }
+    if (start >= 0) ranges.push([start, offset]);
+    return ranges;
+}
+
 /** Runs `fn` over the text between fences only; a fence is what the renderer's own loop treats as one. */
 export function mapOutsideFences(markdown: string, fn: (run: string) => string): string {
     const lines = markdown.split('\n');

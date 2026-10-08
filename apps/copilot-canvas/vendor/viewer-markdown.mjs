@@ -62,7 +62,8 @@ function parseInline(text) {
       const inAttr = code.replace(/"/g, "&quot;");
       const titleAttr = hasDir ? ` title="${inAttr}"` : "";
       const lineAttr = Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE ? ` data-line="${lineNo}"` : "";
-      codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${basename}</code></button>`);
+      const label = lineAttr ? raw.slice(code.length - basename.length) : basename;
+      codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`);
     } else {
       codeSpans.push(`<code>${raw}</code>`);
     }
@@ -98,6 +99,23 @@ function parseFenceInfo(info) {
     else options.set(key, value);
   }
   return { language, title, options };
+}
+function fencedRanges(markdown) {
+  const ranges = [];
+  let offset = 0;
+  let start = -1;
+  for (const line of markdown.split("\n")) {
+    if (isFenceLine(line)) {
+      if (start < 0) start = offset;
+      else {
+        ranges.push([start, offset + line.length]);
+        start = -1;
+      }
+    }
+    offset += line.length + 1;
+  }
+  if (start >= 0) ranges.push([start, offset]);
+  return ranges;
 }
 function mapOutsideFences(markdown, fn) {
   const lines = markdown.split("\n");
@@ -410,19 +428,32 @@ function stripFrontmatter(markdown) {
 function stripTaskFormatLegend(markdown) {
   return markdown.replace(/^##[ \t]+Format:.*(?:\n(?!#{1,6}[ \t]).*)*\n?/m, "");
 }
-function preprocessHtmlCommentsRun(markdown) {
-  return markdown.replace(/<!--([\s\S]*?)-->/g, (match, content) => {
-    const trimmed = content.trim();
-    if (!trimmed) return "";
-    if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
-    return `
+function preprocessHtmlComments(markdown) {
+  const fenced = fencedRanges(markdown);
+  const comment = /<!--([\s\S]*?)-->/g;
+  let out = "";
+  let from = 0;
+  for (let found = comment.exec(markdown); found; found = comment.exec(markdown)) {
+    if (fenced.some(([start, end]) => found.index >= start && found.index < end)) {
+      comment.lastIndex = found.index + 4;
+      continue;
+    }
+    out += markdown.slice(from, found.index) + commentBlock(found[0], found[1]);
+    from = found.index + found[0].length;
+  }
+  return out + markdown.slice(from);
+}
+function commentBlock(match, content) {
+  const trimmed = content.trim();
+  if (!trimmed) return "";
+  if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
+  return `
 <details class="template-instructions"><summary>Template Instructions</summary>
 
 ${trimmed}
 
 </details>
 `;
-  });
 }
 function preprocessCalloutsRun(markdown) {
   const patterns = [
@@ -465,9 +496,6 @@ function preprocessUserStories(markdown) {
 }
 function preprocessTaskPhases(markdown) {
   return mapOutsideFences(markdown, preprocessTaskPhasesRun);
-}
-function preprocessHtmlComments(markdown) {
-  return mapOutsideFences(markdown, preprocessHtmlCommentsRun);
 }
 function preprocessCallouts(markdown) {
   return mapOutsideFences(markdown, preprocessCalloutsRun);

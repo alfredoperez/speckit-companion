@@ -379,6 +379,31 @@ describe('preprocessors leave fenced text alone', () => {
         expect(out.split(fenced('x')).every((part) => !part.includes(body))).toBe(true);
     });
 
+    it('handles a comment that wraps a fence as one comment, not as two halves', () => {
+        const src = 'before\n<!--\nExample:\n```bash\nspecify init\n```\n-->\nafter';
+        const out = preprocessHtmlComments(src);
+
+        expect(out).toContain('<details class="template-instructions">');
+        expect(out).not.toContain('-->');
+        expect(out).toContain('```bash\nspecify init\n```');
+    });
+
+    it('still converts a real comment after a fence that holds a lone comment opener', () => {
+        const src = '```md\n<!-- an opener with no end\n```\n\n<!-- real instructions -->\nafter';
+        const out = preprocessHtmlComments(src);
+
+        expect(out).toContain('```md\n<!-- an opener with no end\n```');
+        expect(out).toContain('<details class="template-instructions">');
+        expect(out).toContain('real instructions');
+        expect(out).not.toContain('<!-- real instructions -->');
+    });
+
+    it('leaves a comment alone when it opens inside a fence', () => {
+        const src = '```md\n<!--\nkeep\n-->\n```';
+
+        expect(preprocessHtmlComments(src)).toBe(src);
+    });
+
     it('gives a document without a fence the same output as before', () => {
         const src = '**Note:** a\n\n## Phase 2: Core\n';
 

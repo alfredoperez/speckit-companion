@@ -84,7 +84,8 @@ export function parseInline(text: string): string {
                 const inAttr = code.replace(/"/g, '&quot;');
                 const titleAttr = hasDir ? ` title="${inAttr}"` : '';
                 const lineAttr = Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE ? ` data-line="${lineNo}"` : '';
-                codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${basename}</code></button>`);
+                const label = lineAttr ? raw.slice(code.length - basename.length) : basename;
+                codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`);
             } else {
                 codeSpans.push(`<code>${raw}</code>`);
             }

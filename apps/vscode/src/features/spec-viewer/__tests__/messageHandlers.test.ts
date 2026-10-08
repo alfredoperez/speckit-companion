@@ -1031,16 +1031,44 @@ describe('messageHandlers - openFile with a folder path and a line', () => {
         expect(vscode.workspace.findFiles).not.toHaveBeenCalled();
     });
 
-    it('does not open a same-named file elsewhere when the folder path is missing', async () => {
+    it('looks for the whole folder path, never the bare name, when it is not under the root', async () => {
         write('src/b/util.ts');
-        (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([vscode.Uri.file(path.join(root, 'src/b/util.ts'))]);
         const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
 
         await handler({ type: 'openFile', filename: 'src/a/util.ts' } as any);
 
+        expect(vscode.workspace.findFiles).toHaveBeenCalledTimes(1);
+        expect((vscode.workspace.findFiles as jest.Mock).mock.calls[0][0]).toBe('**/src/a/util.ts');
         expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
-        expect(vscode.workspace.findFiles).not.toHaveBeenCalled();
         expect(vscode.window.showWarningMessage).toHaveBeenCalledWith('File not found in project: util.ts');
+    });
+
+    it('opens a path written from inside a sub-package by its folder suffix', async () => {
+        const target = write('apps/web/src/App.tsx');
+        (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([vscode.Uri.file(target)]);
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'src/App.tsx', line: 4 } as any);
+
+        expect((vscode.workspace.findFiles as jest.Mock).mock.calls[0][0]).toBe('**/src/App.tsx');
+        expect(opened()).toEqual([target]);
+    });
+
+    it('searches the sub-package fallback without node_modules', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'src/a/util.ts' } as any);
+
+        expect((vscode.workspace.findFiles as jest.Mock).mock.calls[0][1]).toBe('**/node_modules/**');
+    });
+
+    it.each(['./', '.\\', 'src/*/util.ts', 'src/{a,b}/util.ts', 'src/a/../../x.ts'])('does not turn %s into a search pattern', async (filename) => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename } as any);
+
+        expect(vscode.workspace.findFiles).not.toHaveBeenCalled();
+        expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
     });
 
     it.each(['..', '../x', '../../etc/passwd'])('rejects %s', async (filename) => {

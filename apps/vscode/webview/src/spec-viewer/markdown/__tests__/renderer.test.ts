@@ -14,6 +14,16 @@ import { parseFragment } from 'parse5';
 import { renderMarkdown } from '../renderer';
 import { stripFrontmatter, stripTaskFormatLegend } from '../preprocessors';
 
+describe('renderMarkdown: a comment that wraps a code fence', () => {
+    it('shows no stray comment marker and keeps the code inside the instructions', () => {
+        const html = renderMarkdown('# T\n\n<!--\nRun this:\n```bash\nspecify init\n```\n-->\n\nafter');
+
+        expect(html).not.toContain('--&gt;');
+        expect(html).not.toContain('-->');
+        expect(html).toContain('after');
+    });
+});
+
 describe('renderMarkdown — CRLF normalization (issue #158)', () => {
     it('renders a CRLF heading as <h1>, not a literal "#" paragraph', () => {
         // Arrange — Windows / git autocrlf checkout: every line ends with \r\n

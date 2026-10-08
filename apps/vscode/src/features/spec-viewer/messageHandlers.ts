@@ -829,6 +829,14 @@ async function handleOpenFile(
         return;
       }
     }
+    const suffix = filename.split(/[\\/]/).filter((part) => part && part !== ".").join("/");
+    if (suffix && !/[*?[\]{}!]/.test(suffix) && !suffix.split("/").includes("..")) {
+      const [match] = await vscode.workspace.findFiles(`**/${suffix}`, "**/node_modules/**", 1);
+      if (match) {
+        await showFileBeside(match, specDirectory, deps, line);
+        return;
+      }
+    }
     vscode.window.showWarningMessage(`File not found in project: ${basename}`);
     return;
   }
