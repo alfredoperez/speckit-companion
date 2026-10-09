@@ -2649,6 +2649,171 @@ pre.code-block code.hljs {
   }
 }
 
+/* apps/vscode/webview/styles/spec-viewer/_states.css */
+#markdown-content .states-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  margin: var(--space-3) 0 var(--space-4);
+  overflow: hidden;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+}
+#markdown-content .states-top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-inset);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+#markdown-content .states-badge {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-2);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+#markdown-content .states-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+#markdown-content .states-legend {
+  margin-left: auto;
+  flex: none;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+#markdown-content .states-legend-new {
+  color: var(--success);
+}
+#markdown-content .states-hint {
+  padding: var(--space-2) var(--space-3) 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+#markdown-content .states-stage {
+  position: relative;
+  width: 100%;
+  container-type: inline-size;
+  --u: calc(100cqw / var(--w));
+  margin: var(--space-2) auto var(--space-3);
+}
+#markdown-content .states-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+#markdown-content .states-arrow {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.5;
+}
+#markdown-content .states-arrow--proposed {
+  stroke: var(--success);
+  stroke-dasharray: 5 4;
+}
+#markdown-content .states-tip {
+  fill: var(--text-muted);
+}
+#markdown-content .states-tip--proposed {
+  fill: var(--success);
+}
+#markdown-content .states-label {
+  fill: var(--text-secondary);
+  font-size: 12px;
+  stroke: var(--bg-secondary);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+#markdown-content .states-state {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 calc(10 * var(--u));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: calc(13 * var(--u));
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+#markdown-content .states-state:hover {
+  border-color: var(--text-secondary);
+}
+#markdown-content .states-state:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#markdown-content .states-state--proposed {
+  border: 1.5px dashed var(--success);
+}
+#markdown-content .states-name {
+  white-space: nowrap;
+}
+#markdown-content .states-tag {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(6 * var(--u));
+  font-size: calc(10 * var(--u));
+  line-height: 1;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+#markdown-content .states-state.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+#markdown-content .states-caption {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
+  color: var(--text-body);
+  min-height: 1.5em;
+}
+#markdown-content .states-list {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  list-style: none;
+}
+#markdown-content .states-note {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
+  color: var(--text-body);
+}
+#markdown-content .states-card > .line-content {
+  display: none;
+}
+
 /* apps/vscode/webview/styles/spec-viewer/_tables.css */
 #markdown-content table {
   width: 100%;

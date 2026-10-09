@@ -393,6 +393,11 @@ button { font: inherit; color: inherit; }
 .viewer-scope .dossier { grid-column: 1 / -1; }
 .viewer-scope .line-add-btn,
 .viewer-scope .calls-strike { display: none; }
+.viewer-scope .states-state { pointer-events: none; }
+.viewer-scope .states-hint,
+.viewer-scope .states-caption { display: none; }
+.viewer-scope #markdown-content .states-list { position: static; width: auto; height: auto; margin: 0; padding: 8px 12px; overflow: visible; clip: auto; white-space: normal; border-top: 1px solid var(--border, currentColor); font-size: 13px; }
+.viewer-scope .states-list-name { font-weight: 600; }
 .viewer-scope #markdown-content input[type="checkbox"] { pointer-events: none; }
 .viewer-scope .dossier { width: 100%; }
 

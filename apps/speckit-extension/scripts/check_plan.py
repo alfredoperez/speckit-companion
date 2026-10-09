@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check the call paths, screens and code blocks a plan writes against the code they cite.
+"""Check the call paths, screens, code blocks and state blocks a plan writes against the code they cite.
 
 The `call-paths` node asks the plan step for fenced ```calls <title>``` blocks in
 `plan.md`: one line per function on the path, a column-0 mark (`+` new, `~`
@@ -22,6 +22,11 @@ of what a person sees, one part per line (`title:`, `row:`, `text:`, `chip:`, `b
 `(changed)` and a numbered dot `(1)` as a suffix, then one `1: Bold lead. Rest.` note
 under the fence for each dot. The grammar is documented in docs/screens.md. Nothing is
 read from the code for a screen, so it only holds the block to its grammar and budget.
+
+A `states <title>` fence is checked on its own terms: every state reachable from the
+start, every dead end marked `(final)`, every state on the grid, every arrow naming a
+state that exists, a `shows` naming a screen block of the same plan, and the block inside
+its budget. Its grammar is in docs/states.md.
 
 A plan with none of these blocks prints nothing. Always exits 0, so it never fails the
 step it runs in; `--strict` exits 1 on any error, for a caller that wants a gate.
@@ -53,6 +58,10 @@ MAX_SKETCH_LINES = 12
 MAX_PINS = 3
 OTHER_BLOCKS = frozenset({"calls", "code", "states", "screen", "mermaid"})
 MAX_DIGITS = 7
+MAX_STATE_BLOCKS = 2
+MAX_STATES = 8
+MAX_COLUMNS = 4
+MAX_ROWS = 3
 
 _FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 _LOCATION = re.compile(r"^(?P<name>.*?)\s+@\s+(?P<path>\S+?)(?::(?P<line>\d+))?$")
@@ -110,13 +119,13 @@ def _after_blanks(lines: list, i: int) -> int:
     return i
 
 
-def find_blocks(text: str) -> list:
-    """Every `calls` fence as {title, start, rows: [(lineno, text)], closed, notes}."""
+def find_blocks(text: str, kind: str = "calls") -> list:
+    """Every `kind` fence as {title, start, rows: [(lineno, text)], closed, notes}."""
     lines = _lines(text)
     blocks = []
     for info, start, body, closed, end in _fences(lines):
         words = info.split(None, 1)
-        if not words or words[0] != "calls":
+        if not words or words[0] != kind:
             continue
         notes = 0
         j = _after_blanks(lines, end)
@@ -289,6 +298,139 @@ def parse_part(row: str):
 def _symbol(name: str) -> str | None:
     found = _IDENT.findall(name.split("(", 1)[0])
     return found[-1] if found else None
+
+
+_STATE_TRAILER = re.compile(r"\s*(\((?:start|final|proposed)\)|shows\s+[\w.-]+)\s*$")
+_ARROW = re.compile(r"^(?P<from>.+?)\s*->\s*(?P<to>[^:]+?)\s*(?::\s*(?P<label>.*))?$")
+
+
+def _state_line(row: str, names: set):
+    """(name, flags) for one state line, or an error string."""
+    name, colon, rest = row.partition(":")
+    name, rest = name.strip(), rest.strip()
+    if not colon or not name:
+        return "a state line is `name: one sentence`"
+    if name in names:
+        return f"the state `{name}` is written twice"
+    flags, shows = set(), None
+    while True:
+        m = _STATE_TRAILER.search(rest)
+        if not m:
+            break
+        word = m.group(1).split()
+        flags.add(word[0].strip("()"))
+        if word[0] == "shows":
+            shows = word[1]
+        rest = rest[:m.start()].strip()
+    if not rest:
+        return f"the state `{name}` has no sentence"
+    return name, flags, shows
+
+
+def _grid_cells(row: str) -> list:
+    if "|" in row:
+        return [c.strip() for c in re.sub(r"^\||\|$", "", row.strip()).split("|")]
+    return row.split()
+
+
+def check_states(block: dict, label: str, findings: list, screens: set) -> int:
+    """Check one `states` block. Returns its state count."""
+    start_line = block["start"]
+
+    def add(level, rule, lineno, message):
+        findings.append(Finding(level, rule, f"{label}:{lineno}", message))
+
+    if not block["closed"]:
+        add("ERROR", "malformed", start_line, "the `states` block is never closed")
+    if not block["title"]:
+        add("WARNING", "no-title", start_line, "name the lifecycle after `states`")
+    if block["notes"] > MAX_NOTE_LINES:
+        add("WARNING", "long-note", start_line,
+            f"{block['notes']} `note:` lines under the block, the budget is {MAX_NOTE_LINES}")
+    if not block["rows"]:
+        add("ERROR", "malformed", start_line, "the `states` block is empty")
+        return 0
+
+    states: dict = {}
+    arrows, grid_rows, in_grid = [], [], False
+    for lineno, row in block["rows"]:
+        text = row.strip()
+        if re.fullmatch(r"grid:", text, re.I):
+            if in_grid:
+                add("ERROR", "malformed", lineno, "a second `grid:`")
+            in_grid = True
+        elif in_grid:
+            grid_rows.append((lineno, text))
+        elif re.match(r"^[^:]*->", text):
+            m = _ARROW.match(text)
+            if not m:
+                add("ERROR", "malformed", lineno, "an arrow is `from -> to: label`")
+                continue
+            to = re.sub(r"\s*\(proposed\)\s*$", "", m.group("to"))
+            arrows.append((lineno, m.group("from").strip(), to.strip()))
+        else:
+            parsed = _state_line(text, set(states))
+            if isinstance(parsed, str):
+                add("ERROR", "malformed", lineno, parsed)
+            else:
+                states[parsed[0]] = {"flags": parsed[1], "shows": parsed[2], "line": lineno}
+
+    if len(states) > MAX_STATES:
+        add("ERROR", "over-budget", start_line,
+            f"{len(states)} states, the viewer draws {MAX_STATES} at most and shows more as plain code")
+    for lineno, a, b in arrows:
+        for name in (a, b):
+            if name not in states:
+                add("ERROR", "unknown-state", lineno, f"the arrow names `{name}`, which is not a listed state")
+
+    placed: set = set()
+    columns = 0
+    for lineno, row in grid_rows:
+        cells = _grid_cells(row)
+        columns = max(columns, len(cells))
+        for cell in cells:
+            if cell in (".", ""):
+                continue
+            if cell not in states:
+                add("ERROR", "unknown-state", lineno, f"the grid names `{cell}`, which is not a listed state")
+            elif cell in placed:
+                add("ERROR", "malformed", lineno, f"the grid places `{cell}` twice")
+            placed.add(cell)
+    if states and not grid_rows:
+        add("ERROR", "not-in-grid", start_line, "no `grid:` section places the states")
+    elif grid_rows:
+        for name, info in states.items():
+            if name not in placed:
+                add("ERROR", "not-in-grid", info["line"], f"`{name}` is missing from the grid")
+    if len(grid_rows) > MAX_ROWS or columns > MAX_COLUMNS:
+        add("ERROR", "over-budget", start_line,
+            f"a grid of {columns} by {len(grid_rows)}, the viewer draws {MAX_COLUMNS} by {MAX_ROWS} at most")
+
+    for name, info in states.items():
+        if info["shows"] and info["shows"] not in screens:
+            add("ERROR", "unknown-screen", info["line"],
+                f"state {name} shows screen {info['shows']}, which no screen block defines")
+
+    starts = [n for n, i in states.items() if "start" in i["flags"]]
+    if len(starts) > 1:
+        add("ERROR", "malformed", states[starts[1]]["line"], "more than one `(start)` state")
+    first = (starts or list(states))[:1]
+    reached = set(first)
+    queue = list(first)
+    while queue:
+        here = queue.pop()
+        for _lineno, a, b in arrows:
+            if a == here and b in states and b not in reached:
+                reached.add(b)
+                queue.append(b)
+    for name, info in states.items():
+        if name not in reached:
+            add("ERROR", "unreachable", info["line"], f"`{name}` cannot be reached from the start state")
+    leaving = {a for _lineno, a, _b in arrows}
+    for name, info in states.items():
+        if name not in leaving and "final" not in info["flags"]:
+            add("ERROR", "dead-end", info["line"], f"`{name}` has no way out and is not marked `(final)`")
+    return len(states)
 
 
 def check_screens(screens: list, add, size: str | None, seen: set) -> int:
@@ -491,6 +633,16 @@ def check_text(text: str, label: str, root: Path, size: str | None = None, calls
     screens = find_screens(text) if calls else []
     parts = check_screens(screens, add, size, set())
 
+    state_blocks = find_blocks(text, "states") if calls else []
+    if size == "simple" and state_blocks:
+        add("WARNING", "simple-size", state_blocks[0]["start"],
+            "this spec is sized `simple`, which writes no state block")
+    if len(state_blocks) > MAX_STATE_BLOCKS:
+        add("WARNING", "too-many-blocks", state_blocks[MAX_STATE_BLOCKS]["start"],
+            f"{len(state_blocks)} state blocks, the budget is {MAX_STATE_BLOCKS}")
+    screen_names = {b["name"] for b in screens if b["name"]}
+    states_total = sum(check_states(b, label, findings, screen_names) for b in state_blocks)
+
     code = find_code_blocks(text)
     for block in code:
         _check_code(block, root, cache, add)
@@ -503,6 +655,8 @@ def check_text(text: str, label: str, root: Path, size: str | None = None, calls
         "screens": len(screens),
         "parts": parts,
         "code_blocks": len(code),
+        "state_blocks": len(state_blocks),
+        "states": states_total,
         "errors": errors,
         "warnings": len(findings) - errors,
         "findings": [f.to_dict() for f in findings],
@@ -520,9 +674,9 @@ def _size(feature_dir: Path) -> str | None:
 
 def _merge(reports: list) -> dict:
     out = {"plan": ", ".join(r["plan"] for r in reports), "blocks": 0, "lines": 0,
-           "screens": 0, "parts": 0, "code_blocks": 0, "errors": 0, "warnings": 0, "findings": [], "declared": []}
+           "screens": 0, "parts": 0, "code_blocks": 0, "state_blocks": 0, "states": 0, "errors": 0, "warnings": 0, "findings": [], "declared": []}
     for r in reports:
-        for key in ("blocks", "lines", "screens", "parts", "code_blocks", "errors", "warnings"):
+        for key in ("blocks", "lines", "screens", "parts", "code_blocks", "state_blocks", "states", "errors", "warnings"):
             out[key] += r[key]
         out["findings"] += r["findings"]
         out["declared"] += r["declared"]
@@ -539,10 +693,14 @@ def render_human(report: dict) -> str:
                    f"{report['parts']} parts"]
     if report["code_blocks"]:
         counts.append(f"{report['code_blocks']} code block{'' if report['code_blocks'] == 1 else 's'}")
+    if report["state_blocks"]:
+        counts.append(f"{report['state_blocks']} state block{'' if report['state_blocks'] == 1 else 's'}"
+                      f" ({report['states']} states)")
     head = f"[plan-check] {report['plan']}: {', '.join(counts)}"
     if not report["findings"]:
         what = ("Every cited file and line checks out" if report["blocks"] or report["code_blocks"]
-                else "Every screen holds to its grammar")
+                else "Every screen holds to its grammar" if not report["state_blocks"]
+                else "Every block holds to its grammar")
         return f"{head}. {what}."
     rows = [f"  {f['level']:<7} {f['where']}  {f['message']} ({f['rule']})"
             for f in report["findings"]]
@@ -593,7 +751,7 @@ def main(argv=None) -> int:
 
     if args.as_json:
         print(json.dumps(report, indent=2))
-    elif report["blocks"] or report["screens"] or report["code_blocks"]:
+    elif report["blocks"] or report["screens"] or report["code_blocks"] or report["state_blocks"]:
         print(render_human(report))
     return 1 if (args.strict and report["errors"]) else 0
 

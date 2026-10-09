@@ -207,7 +207,7 @@ SKETCH = code("ts sketch src/new.ts hl=1,2-3", "export function add(a, b) {", " 
 class AFenceThatIsNotACodeBlock(Repo):
     def test_is_ignored(self):
         for info in ("ts", "ts title", "bash npm test", "ts sketchy src/a.ts", "ts src/a.ts:12",
-                     "mermaid sketch a.mmd", "states sketch a",
+                     "mermaid sketch a.mmd",
                      "sketch src/a.ts", ""):
             report = self.check(code(info, "anything", pins=("pin 9:",)))
             self.assertEqual((info, report["code_blocks"], report["findings"]), (info, 0, []))
@@ -367,6 +367,101 @@ class CodeBlockWarnings(Repo):
         self.assertEqual(self.run_main(code("ts sketch src/a.ts", *["let a;"] * 13), "--strict")[0], 0)
 
 
+def states(*rows: str, title: str = "A review") -> str:
+    return "\n".join([f"```states {title}".rstrip(), *rows, "```"]) + "\n"
+
+
+LIFECYCLE = states(
+    "Draft: Edited. (start)",
+    "Sent: Waiting.",
+    "Held: Parked. (proposed)",
+    "Done: Merged. (final)",
+    "Draft -> Sent: submit",
+    "Sent -> Held: park (proposed)",
+    "Held -> Sent: resume (proposed)",
+    "Sent -> Done: approve",
+    "grid:",
+    "Draft | Sent | Done",
+    ".     | Held | .",
+)
+
+
+class StateBlocks(Repo):
+    def test_a_good_lifecycle_passes_clean(self):
+        report = self.check(LIFECYCLE)
+        self.assertEqual((report["state_blocks"], report["states"], report["findings"]), (1, 4, []))
+
+    def test_a_plan_with_only_states_is_reported(self):
+        code, out = self.run_main(LIFECYCLE)
+        self.assertEqual(code, 0)
+        self.assertIn("1 state block (4 states)", out)
+
+    def test_an_unreachable_state(self):
+        text = states("A: One. (start)", "B: Two. (final)", "C: Three. (final)", "A -> B: go", "grid:", "A | B | C")
+        self.assertEqual(self.rules(text), [("ERROR", "unreachable")])
+
+    def test_a_dead_end_not_marked_final(self):
+        text = states("A: One. (start)", "B: Two.", "A -> B: go", "grid:", "A | B")
+        self.assertEqual(self.rules(text), [("ERROR", "dead-end")])
+
+    def test_a_state_missing_from_the_grid(self):
+        text = states("A: One. (start)", "B: Two. (final)", "A -> B: go", "grid:", "A | .")
+        self.assertEqual(self.rules(text), [("ERROR", "not-in-grid")])
+
+    def test_no_grid_at_all(self):
+        text = states("A: One. (start) (final)")
+        self.assertIn(("ERROR", "not-in-grid"), self.rules(text))
+
+    def test_an_arrow_naming_an_unknown_state(self):
+        text = states("A: One. (start)", "B: Two. (final)", "A -> B: go", "A -> Z: lost", "grid:", "A | B")
+        self.assertEqual(self.rules(text), [("ERROR", "unknown-state")])
+
+    def test_a_grid_naming_an_unknown_state(self):
+        text = states("A: One. (start) (final)", "grid:", "A | Q")
+        self.assertIn(("ERROR", "unknown-state"), self.rules(text))
+
+    def test_more_than_eight_states(self):
+        names = "ABCDEFGHI"
+        rows = [f"{n}: One." + (" (start)" if n == "A" else "") for n in names]
+        rows += [f"{a} -> {b}: go" for a, b in zip(names, names[1:])]
+        rows += ["grid:", "A B C D", "E F G H", "I"]
+        self.assertIn(("ERROR", "over-budget"), self.rules(states(*rows)))
+
+    def test_a_grid_past_four_by_three(self):
+        rows = ["A: One. (start)", "B: Two.", "C: Three.", "D: Four.", "E: Five. (final)",
+                "A -> B: go", "B -> C: go", "C -> D: go", "D -> E: go", "grid:", "A B C D E"]
+        self.assertIn(("ERROR", "over-budget"), self.rules(states(*rows)))
+
+    def test_a_state_with_no_sentence_and_a_repeated_name(self):
+        text = states("A:", "B: Two. (start)", "B: Again.", "grid:", "B")
+        self.assertEqual([r for r in self.rules(text) if r[1] == "malformed"], [("ERROR", "malformed")] * 2)
+
+    def test_an_unclosed_or_empty_block(self):
+        self.assertIn(("ERROR", "malformed"), self.rules("```states The run\nA: One.\n"))
+        self.assertIn(("ERROR", "malformed"), self.rules("```states The run\n```\n"))
+
+    def test_the_screen_a_state_shows_is_not_part_of_the_sentence(self):
+        text = states("A: One. shows login-form (start)", "B: Two. (final)", "A -> B: go", "grid:", "A | B")
+        self.assertEqual(self.rules(text + screen("title: Login", head="login-form The login form", notes=())), [])
+        self.assertEqual(self.rules(text), [("ERROR", "unknown-screen")])
+        self.assertIn("state A shows screen login-form, which no screen block defines",
+                      self.check(text)["findings"][0]["message"])
+
+    def test_more_than_two_blocks_and_a_block_with_no_title_warn(self):
+        self.assertIn(("WARNING", "too-many-blocks"), self.rules(LIFECYCLE * 3))
+        self.assertIn(("WARNING", "no-title"), self.rules(LIFECYCLE.replace("A review", "")))
+
+    def test_a_block_in_a_simple_spec_warns(self):
+        self.assertIn(("WARNING", "simple-size"), self.rules(LIFECYCLE, size="simple"))
+
+    def test_strict_exits_1_on_a_state_error(self):
+        bad = states("A: One. (start)", "grid:", "A")
+        self.assertEqual((self.run_main(bad)[0], self.run_main(bad, "--strict")[0]), (0, 1))
+
+    def test_a_states_fence_inside_another_fence_is_not_read(self):
+        self.assertEqual(self.check("````markdown\n" + LIFECYCLE + "````\n")["state_blocks"], 0)
+
+
 class TheProjectCopyIsTheShippedNode(unittest.TestCase):
     def test_this_repos_node_file_matches_the_shipped_part(self):
         repo = EXT.parents[1]
@@ -517,6 +612,17 @@ class TheScreensNodeIsMirrored(unittest.TestCase):
 
     def test_the_part_records_the_check_with_verify_run(self):
         shipped = (EXT / "presets" / "_parts" / "screens.md").read_text(encoding="utf-8")
+        self.assertIn("--verify-run", shipped)
+        self.assertIn("check_plan.py", shipped)
+
+    def test_this_repos_states_node_file_matches_the_shipped_part(self):
+        repo = EXT.parents[1]
+        shipped = (EXT / "presets" / "_parts" / "states.md").read_text(encoding="utf-8")
+        mine = (repo / ".specify" / "companion" / "nodes" / "states.md").read_text(encoding="utf-8")
+        self.assertEqual(mine, shipped)
+
+    def test_the_states_part_records_its_check_with_a_verify_run(self):
+        shipped = (EXT / "presets" / "_parts" / "states.md").read_text(encoding="utf-8")
         self.assertIn("--verify-run", shipped)
         self.assertIn("check_plan.py", shipped)
 

@@ -34,6 +34,7 @@ import { isBlockFence, PIN_LINE, registerBlockRenderer, renderBlockFence, type B
 import { renderCallsCard } from './callsCard';
 import { NOTE_LINE, indexScreens, renderScreenBlock } from './screenCard';
 import { isCodeCardInfo, renderCodeCard } from './codeCard';
+import { renderStatesCard } from './statesCard';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -173,6 +174,7 @@ function wrapWithLineActions(content: string, lineNum: number, lastLineNum: numb
 registerBlockRenderer('calls', renderCallsCard);
 registerBlockRenderer('screen', renderScreenBlock);
 registerBlockRenderer('code', renderCodeCard);
+registerBlockRenderer('states', renderStatesCard);
 
 /**
  * Wrap a preprocessed component div as a commentable line — the component sits as

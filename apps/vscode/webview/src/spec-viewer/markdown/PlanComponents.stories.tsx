@@ -122,6 +122,52 @@ export const ScreenMalformed: Story = {
     },
 };
 
+const STATES_MD = [
+    '## States',
+    '',
+    '```states A review\'s lifecycle',
+    'Draft: Edited, not sent yet. (start)',
+    'Sent: Waiting on a reviewer.',
+    'Held: Parked until someone picks it up. (proposed)',
+    'Done: Merged and closed. (final)',
+    'Draft -> Sent: submit',
+    'Sent -> Held: park (proposed)',
+    'Held -> Sent: resume (proposed)',
+    'Sent -> Done: approve',
+    'grid:',
+    'Draft | Sent | Done',
+    '.     | Held | .',
+    '```',
+    'note: only the parked state is new.',
+].join('\n');
+
+export const StatesLight: Story = {
+    args: { md: STATES_MD },
+    globals: { vscodeTheme: 'vivid-light' },
+};
+
+export const StatesDark: Story = {
+    args: { md: STATES_MD },
+    globals: { vscodeTheme: 'monokai-black' },
+};
+
+export const StatesFallback: Story = {
+    args: {
+        md: [
+            '## States',
+            '',
+            'An arrow names a state that is not listed, so this stays a plain code block.',
+            '',
+            '```states A block that does not parse',
+            'Draft: Edited. (start)',
+            'Draft -> Gone: submit',
+            'grid:',
+            'Draft',
+            '```',
+        ].join('\n'),
+    },
+};
+
 const CODE_PINS = [
     '## Code',
     '',
