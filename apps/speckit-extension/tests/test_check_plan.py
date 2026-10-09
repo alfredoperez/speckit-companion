@@ -427,6 +427,16 @@ class StateBlocks(Repo):
         rows += ["grid:", "A B C D", "E F G H", "I"]
         self.assertIn(("ERROR", "over-budget"), self.rules(states(*rows)))
 
+    def test_more_than_ten_arrows_is_a_warning_not_an_error(self):
+        base = ["A: One. (start)", "B: Two.", "C: Three. (final)"]
+        arrows = [f"{a} -> {b}: go" for a, b in [("A", "B"), ("B", "A")] * 5] + ["B -> C: done"]
+        report = self.check(states(*base, *arrows, "grid:", "A | B | C"))
+        self.assertIn(("WARNING", "over-budget"), [(f["level"], f["rule"]) for f in report["findings"]])
+        self.assertEqual(report["errors"], 0)
+        self.assertIn("11 arrows, at most 10", report["findings"][0]["message"])
+        ten = self.check(states(*base, *arrows[1:], "grid:", "A | B | C"))
+        self.assertEqual(ten["findings"], [])
+
     def test_a_grid_past_four_by_three(self):
         rows = ["A: One. (start)", "B: Two.", "C: Three.", "D: Four.", "E: Five. (final)",
                 "A -> B: go", "B -> C: go", "C -> D: go", "D -> E: go", "grid:", "A B C D E"]

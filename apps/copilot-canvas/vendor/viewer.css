@@ -2817,6 +2817,29 @@ pre.code-block code.hljs {
   padding: var(--space-3);
   border-top: 1px solid var(--border);
 }
+#markdown-content .states-edge {
+  transition: opacity var(--transition-fast);
+}
+#markdown-content .states-svg--dense .states-edge {
+  opacity: 0.35;
+}
+#markdown-content .states-svg--dense .states-edge[data-out=true] {
+  opacity: 1;
+}
+#markdown-content .states-moves {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text-body);
+}
+#markdown-content .states-card > .states-moves {
+  padding: 0 var(--space-3) var(--space-2);
+}
+#markdown-content .states-move {
+  display: block;
+}
+#markdown-content .states-move--proposed {
+  color: var(--success);
+}
 
 /* apps/vscode/webview/styles/spec-viewer/_tables.css */
 #markdown-content table {

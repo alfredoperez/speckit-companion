@@ -19,7 +19,7 @@ Draft | Sent | Done
 ```
 note: <one plain line, if needed>
 
-A state is `name: one sentence`, then any of `(start)`, `(final)`, `(proposed)`, or a last `shows <screen-name>` that points at a `screen` block of the plan. An arrow is `from -> to: label`, with `(proposed)` for one the change adds. Every state sits on the grid once, `.` is an empty cell, and cells split on `|`. **Every state is reachable from the start, and every one with no way out is `(final)`.**
+A state is `name: one sentence`, then any of `(start)`, `(final)`, `(proposed)`, or a last `shows <screen-name>` that points at a `screen` block of the plan. An arrow is `from -> to: label`, with `(proposed)` for one the change adds. Every state sits on the grid once, `.` is an empty cell, and cells split on `|`. **Every state is reachable from the start, and every one with no way out is `(final)`.** At most 10 arrows: draw the lifecycle's shape and what the change adds or alters, not every legal move, and say a move that applies from every state (like "mark done") once in the `note:` line.
 
 Then run this, fix what it reports once, and record the result:
 

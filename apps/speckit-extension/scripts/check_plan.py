@@ -60,6 +60,7 @@ OTHER_BLOCKS = frozenset({"calls", "code", "states", "screen", "mermaid"})
 MAX_DIGITS = 7
 MAX_STATE_BLOCKS = 2
 MAX_STATES = 8
+MAX_ARROWS = 10
 MAX_COLUMNS = 4
 MAX_ROWS = 3
 
@@ -378,6 +379,8 @@ def check_states(block: dict, label: str, findings: list, screens: set) -> int:
     if len(states) > MAX_STATES:
         add("ERROR", "over-budget", start_line,
             f"{len(states)} states, the viewer draws {MAX_STATES} at most and shows more as plain code")
+    if len(arrows) > MAX_ARROWS:
+        add("WARNING", "over-budget", start_line, f"over budget: {len(arrows)} arrows, at most {MAX_ARROWS}")
     for lineno, a, b in arrows:
         for name in (a, b):
             if name not in states:

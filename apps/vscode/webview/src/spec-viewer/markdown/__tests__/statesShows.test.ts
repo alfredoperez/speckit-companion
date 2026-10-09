@@ -46,7 +46,7 @@ describe('a state that shows a screen', () => {
         expect(row()?.querySelector('.screen-frame')).not.toBeNull();
         expect(row()?.textContent).toContain('Approve');
         expect(row()?.querySelector('.screen-dot')).not.toBeNull();
-        expect(row()?.previousElementSibling?.classList.contains('states-caption')).toBe(true);
+        expect(row()?.previousElementSibling?.classList.contains('states-moves')).toBe(true);
     });
 
     it('leaves out the screen header and the notes list', () => {

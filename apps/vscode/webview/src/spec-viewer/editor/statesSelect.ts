@@ -16,13 +16,25 @@ export function selectState(button: HTMLElement): void {
     const strong = document.createElement('strong');
     strong.textContent = name;
     caption.replaceChildren(strong, `: ${sentence}`);
+    card.querySelectorAll('.states-edge').forEach((edge) => {
+        if ((edge as HTMLElement).dataset.from === index) edge.setAttribute('data-out', 'true');
+        else edge.removeAttribute('data-out');
+    });
+    card.querySelector(':scope > .states-moves')?.remove();
     card.querySelector('.states-shown')?.remove();
+    const moves = item?.querySelector('.states-moves');
+    let after: Element = caption;
+    if (moves) {
+        const copy = moves.cloneNode(true) as HTMLElement;
+        caption.after(copy);
+        after = copy;
+    }
     const frame = card.querySelector(`.states-screens > [data-state="${index}"]`);
     if (!frame) return;
     const row = document.createElement('div');
     row.className = 'states-shown';
     row.append(...Array.from(frame.cloneNode(true).childNodes));
-    caption.after(row);
+    after.after(row);
 }
 
 export function setupStatesSelect(): void {

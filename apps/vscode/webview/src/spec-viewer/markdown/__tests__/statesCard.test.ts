@@ -235,7 +235,7 @@ const LONG = 'A: one. (start)\nAVeryLongStateNameThatKeepsGoing: two. (final)\nA
 describe('box geometry', () => {
     it.each([['the 5-state block', DATES], ['a block with one long name', LONG]])('fits every name and tag inside its box in %s', (_label, body) => {
         const html = renderMarkdown(plan(body));
-        const viewBox = html.match(/<svg class="states-svg" viewBox="0 0 ([\d.]+) ([\d.]+)"/)!;
+        const viewBox = html.match(/<svg class="states-svg[^"]*" viewBox="-?[\d.]+ -?[\d.]+ ([\d.]+) ([\d.]+)"/)!;
         const [width, height] = [Number(viewBox[1]), Number(viewBox[2])];
         const buttons = byClass(html, 'states-state');
         const widths = buttons.map((b) => Number(attrs(b).style.match(/width:([\d.]+)%/)![1]) / 100 * width);

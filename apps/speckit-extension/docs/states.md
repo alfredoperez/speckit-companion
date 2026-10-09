@@ -54,17 +54,19 @@ note: only the parked state is new.
 | `grid:` | Rows of state names after it. Cells split on `\|`, or on spaces when every name is one word. `.` is an empty cell. |
 | `note:` | One optional line straight after the block |
 
-The budget is 2 blocks a plan, 8 states a block, a grid of 4 columns by 3 rows and one `note:` line. A change sized `simple` writes none.
+The budget is 2 blocks a plan, 8 states a block, 10 arrows a block, a grid of 4 columns by 3 rows and one `note:` line. Show the lifecycle's shape and what the change adds or alters, not every legal move: a move that applies from every state (like "mark done") goes once in the `note:` line. A change sized `simple` writes none.
 
 ## What the viewer draws
 
-Rounded boxes on the grid, arrows with their labels (two arrows between the same pair run on opposite sides, each label on its own arrow's outer side), a small `start` or `final` tag under those states, and a dashed green outline for what is proposed. Each state is a button with a hover and a focus ring. The start state is picked first, and clicking another shows `Name: sentence` in the caption under the diagram. The accent colour marks the picked state and nothing else, and arrows stay neutral. The header carries `4 states`, and `1 proposed` when there is one.
+Rounded boxes on the grid, arrows with their labels (two arrows between the same pair run on opposite sides, each label on its own arrow's outer side), a small `start` or `final` tag under those states, and a dashed green outline for what is proposed. Each state is a button with a hover and a focus ring. The start state is picked first, and clicking another shows `Name: sentence` in the caption under the diagram. The accent colour marks the picked state and nothing else, and arrows stay neutral. Under the caption, the picked state lists its way out, one `→ Target: label` line per arrow, with a proposed move in green; a state with no way out lists nothing. An arrow that would cross another box bends around it in one curve, and the picture always grows to hold its labels, so nothing is clipped.
+
+A dense block, more than 8 arrows, draws the arrows without labels, since the transitions list carries them. The picked state's arrows stay at full strength and the rest fade. A sparse block keeps its labels and every arrow at full strength. The header carries `4 states`, and `1 proposed` when there is one.
 
 The pick is local to the page: it is not saved, and a redraw puts it back on the start state.
 
 A block that does not parse, or goes over the budget, stays the plain code block it is in any other reader. A comment on the block is a comment on the whole block.
 
-The Copilot board has no click, so there the diagram is static and every state's sentence is listed under it.
+The Copilot board has no click, so there the diagram is static and every state's sentence is listed under it, followed by its transitions.
 
 ## The check
 
@@ -82,6 +84,7 @@ It is the same check that reads call paths, and it reads `states` blocks too.
 | ERROR | An arrow or a grid cell naming a state that is not listed |
 | ERROR | A state that `shows` a screen name no `screen` block of the plan defines |
 | ERROR | Over the viewer's limit: more than 8 states, or a grid past 4 by 3 |
+| WARNING | More than 10 arrows in a block. The viewer copes, but the diagram stops being a summary |
 | ERROR | A line it cannot parse: a state with no sentence, a repeated name, a second `grid:`, more than one `(start)`, an empty or unclosed block |
 | WARNING | More than 2 blocks, more than one `note:` line, or a block with no title |
 | WARNING | A block in a spec sized `simple` |
