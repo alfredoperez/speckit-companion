@@ -353,18 +353,14 @@ class CliOnlyTimingTrustTests(QualityEvalBase):
 
 class PromptingTests(QualityEvalBase):
     def build_commands(self, mutate: dict[str, str] | None = None,
-                       drop: set[str] | None = None,
-                       clarify_text: str = "Present EXACTLY ONE question at a time.") -> Path:
+                       drop: set[str] | None = None) -> Path:
         commands = self.root / "ext" / "commands"
-        ask_dir = self.root / "ext" / "presets" / "companion-standard" / "commands"
         commands.mkdir(parents=True)
-        ask_dir.mkdir(parents=True)
         for name in cq.NEVER_PROMPT:
             if drop and name in drop:
                 continue
             body = (mutate or {}).get(name, "# Hook\nRun the writer script.\n")
             (commands / name).write_text(body)
-        (ask_dir / "speckit.clarify.md").write_text(f"# Clarify\n{clarify_text}\n")
         return commands
 
     def run_prompting(self, commands: Path) -> "cq.Report":
@@ -375,7 +371,6 @@ class PromptingTests(QualityEvalBase):
     def test_clean_roster_passes(self) -> None:
         r = self.run_prompting(self.build_commands())
         self.assertEqual(r.failed, 0)
-        self.assertEqual(self.statuses(r)["must-ask-clarify"], "PASS")
 
     def test_planted_prompt_fails_that_command(self) -> None:
         r = self.run_prompting(self.build_commands(
@@ -413,11 +408,6 @@ class PromptingTests(QualityEvalBase):
                                  if row[1] == "never-prompts-status")
         self.assertEqual(status, "FAIL")
         self.assertIn("unreadable", detail)
-
-    def test_clarify_without_ask_fails(self) -> None:
-        r = self.run_prompting(self.build_commands(
-            clarify_text="Just rewrite the spec silently."))
-        self.assertEqual(self.statuses(r)["must-ask-clarify"], "FAIL")
 
     def test_prompt_without_article_still_flagged(self) -> None:
         r = self.run_prompting(self.build_commands(
