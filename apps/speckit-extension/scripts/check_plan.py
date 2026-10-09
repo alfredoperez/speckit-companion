@@ -711,6 +711,35 @@ def render_human(report: dict) -> str:
     return "\n".join([head, *rows, tail])
 
 
+def _check_files(files: list, root: Path, feature_dir: Path | None) -> dict:
+    size = _size(feature_dir) if feature_dir else None
+    reports = []
+    for path in files:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        reports.append(check_text(text, path.name, root, size))
+    if feature_dir:
+        try:
+            tasks = check_text((feature_dir / CODE_FILE).read_text(encoding="utf-8", errors="replace"),
+                               CODE_FILE, root, calls=False)
+        except OSError:
+            tasks = None
+        if tasks and tasks["code_blocks"]:
+            reports.append(tasks)
+    return _merge(reports)
+
+
+def check_feature(feature_dir: Path, root: Path | None = None) -> dict:
+    files = [feature_dir / "plan.md", *(feature_dir / side for side in SIDE_FILES)]
+    return _check_files(files, root or _repo_root_for(feature_dir), feature_dir)
+
+
+def has_blocks(report: dict) -> bool:
+    return bool(report["blocks"] or report["screens"] or report["code_blocks"] or report["state_blocks"])
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Check a plan's call paths and screens (read-only)")
     ap.add_argument("--feature-dir", default=None, help="the spec whose plan.md to check")
@@ -734,27 +763,11 @@ def main(argv=None) -> int:
         files = [feature_dir / "plan.md", *(feature_dir / side for side in SIDE_FILES)]
         root = Path(args.root) if args.root else _repo_root_for(feature_dir)
 
-    size = _size(feature_dir) if feature_dir else None
-    reports = []
-    for path in files:
-        try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue
-        reports.append(check_text(text, path.name, root, size))
-    if feature_dir:
-        try:
-            tasks = check_text((feature_dir / CODE_FILE).read_text(encoding="utf-8", errors="replace"),
-                               CODE_FILE, root, calls=False)
-        except OSError:
-            tasks = None
-        if tasks and tasks["code_blocks"]:
-            reports.append(tasks)
-    report = _merge(reports)
+    report = _check_files(files, root, feature_dir)
 
     if args.as_json:
         print(json.dumps(report, indent=2))
-    elif report["blocks"] or report["screens"] or report["code_blocks"] or report["state_blocks"]:
+    elif has_blocks(report):
         print(render_human(report))
     return 1 if (args.strict and report["errors"]) else 0
 

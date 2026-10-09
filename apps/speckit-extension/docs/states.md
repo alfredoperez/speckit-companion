@@ -91,4 +91,4 @@ It is the same check that reads call paths, and it reads `states` blocks too.
 
 Over-budget is an error here because the viewer draws nothing past it, and the block would only show as code.
 
-The node has the assistant run the check, fix what it reports once, and record the result with `write-context.py --verify-run`. Like the call-path check it always exits 0, and `--strict` exits 1 on any error.
+The node has the assistant run the check and fix what it reports once; the result is recorded when the plan step closes, as a `plan blocks check out` verification with its exit code, and a later close replaces it. Like the call-path check it always exits 0, and `--strict` exits 1 on any error.

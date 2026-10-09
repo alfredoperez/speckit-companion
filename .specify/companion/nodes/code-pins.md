@@ -16,8 +16,8 @@ pin 2: <one plain line on why this line matters>
 ```
 pin 41: <one plain line>
 
-Then run the check, fix what it reports once, and record the result:
+Then run this and fix what it reports once:
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "plan blocks check out::python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory> --strict"
+python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory>
 ```

@@ -329,6 +329,41 @@ def append_verification_runs(feature_dir: Path, specs: list[str]) -> tuple[Path 
     return target, skipped
 
 
+PLAN_CHECK_WHAT = "plan blocks check out"
+
+
+def record_plan_check(feature_dir: Path) -> Path | None:
+    """Run check_plan in-process and record it as a derived verification; None when the plan has no checked block."""
+    import time
+
+    import check_plan
+
+    started = time.monotonic()
+    report = check_plan.check_feature(feature_dir)
+    if not check_plan.has_blocks(report):
+        return None
+    root = _repo_root_for(feature_dir)
+    try:
+        shown = feature_dir.resolve().relative_to(root.resolve()).as_posix()
+    except ValueError:
+        shown = str(feature_dir)
+    errors = report["errors"]
+    tail = [ln for ln in check_plan.render_human(report).strip().splitlines() if ln.strip()][-3:]
+    entry = {
+        "what": PLAN_CHECK_WHAT,
+        "command": f"python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir {shown} --strict",
+        "source": "derived",
+        "exitCode": 1 if errors else 0,
+        "durationSeconds": round(time.monotonic() - started, 1),
+        "result": " · ".join(tail),
+    }
+    if errors:
+        entry["warnings"] = ["exited 1"]
+        print(f"[companion] Plan blocks: {errors} error(s). Run check_plan.py --feature-dir {shown} to see them.",
+              file=sys.stderr)
+    return append_capture_entries(feature_dir, "verified", "what", [json.dumps(entry)], replace=True)
+
+
 def _entry_identity(item, identity_key: str) -> str | None:
     """The de-dup key for a stored entry: dicts key on identity_key, bare strings on themselves."""
     if isinstance(item, dict):

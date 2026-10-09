@@ -620,9 +620,9 @@ class TheScreensNodeIsMirrored(unittest.TestCase):
         mine = (repo / ".specify" / "companion" / "nodes" / "screens.md").read_text(encoding="utf-8")
         self.assertEqual(mine, shipped)
 
-    def test_the_part_records_the_check_with_verify_run(self):
+    def test_the_part_runs_the_check_and_leaves_recording_to_the_recorder(self):
         shipped = (EXT / "presets" / "_parts" / "screens.md").read_text(encoding="utf-8")
-        self.assertIn("--verify-run", shipped)
+        self.assertNotIn("--verify-run", shipped)
         self.assertIn("check_plan.py", shipped)
 
     def test_this_repos_states_node_file_matches_the_shipped_part(self):
@@ -631,9 +631,9 @@ class TheScreensNodeIsMirrored(unittest.TestCase):
         mine = (repo / ".specify" / "companion" / "nodes" / "states.md").read_text(encoding="utf-8")
         self.assertEqual(mine, shipped)
 
-    def test_the_states_part_records_its_check_with_a_verify_run(self):
+    def test_the_states_part_runs_the_check_and_leaves_recording_to_the_recorder(self):
         shipped = (EXT / "presets" / "_parts" / "states.md").read_text(encoding="utf-8")
-        self.assertIn("--verify-run", shipped)
+        self.assertNotIn("--verify-run", shipped)
         self.assertIn("check_plan.py", shipped)
 
 

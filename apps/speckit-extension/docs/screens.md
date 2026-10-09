@@ -91,4 +91,4 @@ It reads `plan.md` (and `screens.md` beside it, if a project moved the section t
 
 It reads no code, so it proves the block will draw, not that the screen is right.
 
-**It always exits 0**, because a check never fails the step it runs in. The node runs it through `write-context.py --verify-run`, which records the exit code and duration in the run record, with `--strict` so an error shows as a failed check. Fix what it reports once and record anything left as a concern. `--json` prints the same findings, and `--plan <file>` checks one file.
+**It always exits 0**, because a check never fails the step it runs in. The result is recorded when the plan step closes, as a `plan blocks check out` verification with its exit code, and a later close replaces it. Fix what it reports once and record anything left as a concern. `--json` prints the same findings, and `--plan <file>` checks one file.

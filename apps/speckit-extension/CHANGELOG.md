@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Living specs travel with the pipeline graph.** The graph carries whether they run, where specs live and ==which capabilities are registered==, so a panel can draw them. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
 
 ### Changed
-- **The call-paths check is kept.** The plan step records where the check ended up, so the result ==survives implement== moving the lines. ([#904](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: pipeline -->
+- **The plan step records its check.** Closing the plan step records its block check with an exit code, so ==the result is always kept==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: pipeline -->
 - **Stock commands follow your spec-kit.** The stock `/speckit.*` commands wrap the spec-kit installed in your project, so they ==carry its own text==. ([#901](https://github.com/alfredoperez/speckit-companion/pull/901)) <!-- area: pipeline -->
 
 ### Fixed

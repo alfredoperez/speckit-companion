@@ -83,4 +83,4 @@ It proves a citation is the file's own lines today. Line numbers go stale once i
 
 `--json` prints the same findings with a `code_blocks` count, for a bench or a script. `--plan <file>` checks one file, and `--root <dir>` says where cited paths resolve from.
 
-**It always exits 0**, because a check never fails the step it runs in. To make it a gate, run it with `--strict`, which exits 1 on any error. The node does: it has the assistant fix what the check reports once, then records the strict run on the spec with `write-context.py --verify-run`, so a failing check shows on the spec instead of stopping the step. Warnings never change the exit code.
+**It always exits 0**, because a check never fails the step it runs in. To make it a gate, run it with `--strict`, which exits 1 on any error. The node has the assistant fix what the check reports once. The result is recorded when the plan step closes, as a `plan blocks check out` verification with its exit code, and a later close replaces it, so a failing check shows on the spec instead of stopping the step. Warnings never change the exit code.

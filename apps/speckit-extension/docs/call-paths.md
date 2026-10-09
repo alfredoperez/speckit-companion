@@ -75,7 +75,7 @@ It reads `plan.md` (and `call-paths.md` beside it, if a project moved the sectio
 | WARNING | Over budget: more than 3 blocks, more than 12 lines, more than one `note:` line, or a block with no title |
 | WARNING | A block in a spec sized `simple` |
 
-It proves the files and lines are real. It cannot prove that one function calls another, and line numbers go stale once implement edits the files, so it belongs to the plan step. The node records where the check ended up in the run record, as a `plan blocks check out` verification with its exit code, so the result is still there after implement has moved the lines.
+It proves the files and lines are real. It cannot prove that one function calls another, and line numbers go stale once implement edits the files, so it belongs to the plan step. The result is recorded when the plan step closes, as a `plan blocks check out` verification with its exit code, and a later close replaces it, so it is still there after implement has moved the lines.
 
 `--json` prints the same findings plus every declared path, for a bench or a script. `--plan <file>` checks one file, and `--root <dir>` says where cited paths resolve from.
 
