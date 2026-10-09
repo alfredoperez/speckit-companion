@@ -2648,6 +2648,14 @@ pre.code-block code.hljs {
     margin-left: var(--space-3);
   }
 }
+#markdown-content .code-pin strong,
+#markdown-content .code-pin em,
+#markdown-content .code-pin code {
+  color: inherit;
+}
+#markdown-content .code-pin code {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
 
 /* apps/vscode/webview/styles/spec-viewer/_states.css */
 #markdown-content .states-card {

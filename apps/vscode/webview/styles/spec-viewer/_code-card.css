@@ -183,3 +183,13 @@
   #markdown-content .code-head { flex-wrap: wrap; }
   #markdown-content .code-pin { margin-left: var(--space-3); }
 }
+
+#markdown-content .code-pin strong,
+#markdown-content .code-pin em,
+#markdown-content .code-pin code {
+  color: inherit;
+}
+
+#markdown-content .code-pin code {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
