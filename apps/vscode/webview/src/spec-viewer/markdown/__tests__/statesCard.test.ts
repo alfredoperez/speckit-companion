@@ -1,6 +1,6 @@
 import { parseFragment } from 'parse5';
 import { registerBlockRenderer } from '../blockFences';
-import { parseStates, renderStatesCard } from '../statesCard';
+import { BOX_PAD_X, CELL_H, CHAR_W, parseStates, renderStatesCard } from '../statesCard';
 import { renderMarkdown } from '../renderer';
 
 type Node = { nodeName: string; value?: string; attrs?: { name: string; value: string }[]; childNodes?: Node[] };
@@ -222,6 +222,48 @@ describe('renderStatesCard', () => {
         const noted = renderMarkdown(plan(BODY, 'x', 'note: only the review lifecycle.'));
 
         expect(text(byClass(noted, 'states-note')[0])).toBe('only the review lifecycle.');
+    });
+});
+
+const DATES = [
+    'NoDate: No due date set. (start)', 'Upcoming: Due later.', 'DueToday: Due today.', 'Overdue: Past due. (proposed)', 'Done: Finished. (final)',
+    'NoDate -> Upcoming: set date', 'Upcoming -> DueToday: day arrives', 'DueToday -> Overdue: day passes', 'Overdue -> Done: mark done',
+    'grid:', 'NoDate | Upcoming | DueToday | Overdue', '. | . | Done | .',
+].join('\n');
+const LONG = 'A: one. (start)\nAVeryLongStateNameThatKeepsGoing: two. (final)\nA -> AVeryLongStateNameThatKeepsGoing: go\ngrid:\nA | AVeryLongStateNameThatKeepsGoing';
+
+describe('box geometry', () => {
+    it.each([['the 5-state block', DATES], ['a block with one long name', LONG]])('fits every name and tag inside its box in %s', (_label, body) => {
+        const html = renderMarkdown(plan(body));
+        const viewBox = html.match(/<svg class="states-svg" viewBox="0 0 ([\d.]+) ([\d.]+)"/)!;
+        const [width, height] = [Number(viewBox[1]), Number(viewBox[2])];
+        const buttons = byClass(html, 'states-state');
+        const widths = buttons.map((b) => Number(attrs(b).style.match(/width:([\d.]+)%/)![1]) / 100 * width);
+
+        expect(new Set(widths.map((w) => Math.round(w))).size).toBe(1);
+        buttons.forEach((b, i) => {
+            const name = text(b.childNodes![0]);
+            expect(name.length * CHAR_W + 20).toBeLessThanOrEqual(widths[i]);
+            const tag = b.childNodes!.slice(1).map(text).join('');
+            expect(tag.length * 6 + 20).toBeLessThanOrEqual(widths[i]);
+            const boxH = Number(attrs(b).style.match(/height:([\d.]+)%/)![1]) / 100 * height;
+            expect(boxH).toBeCloseTo(CELL_H, 0);
+            expect(13 * 1.2 + 12).toBeLessThanOrEqual(boxH);
+            expect(BOX_PAD_X).toBeGreaterThanOrEqual(10);
+        });
+    });
+
+    it('truncates a name past the widest box and keeps the full name in a title', () => {
+        const html = renderMarkdown(plan(LONG));
+        const long = byClass(html, 'states-state')[1];
+
+        expect(text(long)).toContain('…');
+        expect(attrs(long).title).toBe('AVeryLongStateNameThatKeepsGoing');
+        expect(attrs(byClass(html, 'states-state')[0]).title).toBeUndefined();
+    });
+
+    it('scales the text with the box through one unit', () => {
+        expect(attrs(byClass(renderMarkdown(plan(DATES)), 'states-stage')[0]).style).toMatch(/--w:\d+/);
     });
 });
 

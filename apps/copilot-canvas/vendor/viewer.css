@@ -2209,6 +2209,9 @@ pre.code-block code.hljs {
   background: var(--bg-secondary);
   margin: var(--space-3) 0 var(--space-4);
   overflow: hidden;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
 }
 #markdown-content .states-top {
   display: flex;
@@ -2233,15 +2236,14 @@ pre.code-block code.hljs {
 }
 #markdown-content .states-title {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   color: var(--text-primary);
   font-weight: 600;
 }
 #markdown-content .states-legend {
   margin-left: auto;
   flex: none;
+  white-space: nowrap;
   color: var(--text-secondary);
 }
 #markdown-content .states-legend-new {
@@ -2255,6 +2257,8 @@ pre.code-block code.hljs {
 #markdown-content .states-stage {
   position: relative;
   width: 100%;
+  container-type: inline-size;
+  --u: calc(100cqw / var(--w));
   margin: var(--space-2) auto var(--space-3);
 }
 #markdown-content .states-svg {
@@ -2283,7 +2287,8 @@ pre.code-block code.hljs {
   fill: var(--text-secondary);
   font-size: 12px;
   stroke: var(--bg-secondary);
-  stroke-width: 4px;
+  stroke-width: 5px;
+  stroke-linejoin: round;
   paint-order: stroke;
 }
 #markdown-content .states-state {
@@ -2293,14 +2298,13 @@ pre.code-block code.hljs {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  padding: 0 var(--space-2);
+  padding: 0 calc(10 * var(--u));
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--bg-elevated);
   color: var(--text-primary);
   font: inherit;
-  font-size: 13px;
+  font-size: calc(13 * var(--u));
   font-weight: 500;
   line-height: 1.2;
   text-align: center;
@@ -2317,12 +2321,18 @@ pre.code-block code.hljs {
 #markdown-content .states-state--proposed {
   border: 1.5px dashed var(--success);
 }
+#markdown-content .states-name {
+  white-space: nowrap;
+}
 #markdown-content .states-tag {
-  font-size: var(--text-xs);
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(6 * var(--u));
+  font-size: calc(10 * var(--u));
+  line-height: 1;
   font-weight: 400;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 #markdown-content .states-state.is-selected {
   border-color: var(--accent);

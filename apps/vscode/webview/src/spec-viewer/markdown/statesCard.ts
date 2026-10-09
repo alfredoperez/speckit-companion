@@ -117,8 +117,12 @@ export function parseStates(body: string): StatesResult {
     return { ok: true, states, arrows, grid, start: starts[0] ?? 0 };
 }
 
-const CELL_W = 128;
-const CELL_H = 54;
+export const CHAR_W = 7.6;
+export const BOX_PAD_X = 14;
+export const MIN_BOX_W = 120;
+export const MAX_BOX_W = 200;
+export const CELL_H = 52;
+const MAX_CHARS = Math.floor((MAX_BOX_W - BOX_PAD_X * 2) / CHAR_W);
 const GAP_X = 104;
 const GAP_Y = 64;
 const PAD_X = 24;
@@ -127,13 +131,22 @@ const LANE = 10;
 
 interface Point { x: number; y: number }
 
-function layout(grid: number[][]): { width: number; height: number; centres: Map<number, Point> } {
+export function shortName(name: string): string {
+    return name.length > MAX_CHARS ? `${name.slice(0, MAX_CHARS - 1)}…` : name;
+}
+
+function boxWidth(states: StateItem[]): number {
+    const chars = Math.max(...states.map((s) => shortName(s.name).length));
+    return Math.min(MAX_BOX_W, Math.max(MIN_BOX_W, Math.ceil(chars * CHAR_W + BOX_PAD_X * 2)));
+}
+
+function layout(grid: number[][], cellW: number): { width: number; height: number; centres: Map<number, Point> } {
     const columns = grid[0].length;
-    const width = PAD_X * 2 + columns * CELL_W + (columns - 1) * GAP_X;
+    const width = PAD_X * 2 + columns * cellW + (columns - 1) * GAP_X;
     const height = PAD_Y * 2 + grid.length * CELL_H + (grid.length - 1) * GAP_Y;
     const centres = new Map<number, Point>();
     grid.forEach((row, r) => row.forEach((at, c) => {
-        if (at >= 0) centres.set(at, { x: PAD_X + c * (CELL_W + GAP_X) + CELL_W / 2, y: PAD_Y + r * (CELL_H + GAP_Y) + CELL_H / 2 });
+        if (at >= 0) centres.set(at, { x: PAD_X + c * (cellW + GAP_X) + cellW / 2, y: PAD_Y + r * (CELL_H + GAP_Y) + CELL_H / 2 });
     }));
     return { width, height, centres };
 }
@@ -141,14 +154,14 @@ function layout(grid: number[][]): { width: number; height: number; centres: Map
 const round = (n: number): number => Math.round(n * 10) / 10;
 
 /** Where a ray from a box's centre toward `to` leaves the box. */
-function edge(from: Point, to: Point): Point {
+function edge(from: Point, to: Point, cellW: number): Point {
     const dx = to.x - from.x;
     const dy = to.y - from.y;
-    const scale = Math.min(dx ? CELL_W / 2 / Math.abs(dx) : Infinity, dy ? CELL_H / 2 / Math.abs(dy) : Infinity);
+    const scale = Math.min(dx ? cellW / 2 / Math.abs(dx) : Infinity, dy ? CELL_H / 2 / Math.abs(dy) : Infinity);
     return { x: from.x + dx * scale, y: from.y + dy * scale };
 }
 
-function renderArrow(arrow: StateArrow, centres: Map<number, Point>, paired: boolean): string {
+function renderArrow(arrow: StateArrow, centres: Map<number, Point>, paired: boolean, cellW: number): string {
     const a = centres.get(arrow.from) as Point;
     const b = centres.get(arrow.to) as Point;
     const cls = `states-arrow${arrow.proposed ? ' states-arrow--proposed' : ''}`;
@@ -168,12 +181,13 @@ function renderArrow(arrow: StateArrow, centres: Map<number, Point>, paired: boo
     const shift = paired ? LANE : 0;
     const ox = ux * shift;
     const oy = uy * shift;
-    const p = edge({ x: a.x + ox, y: a.y + oy }, { x: b.x + ox, y: b.y + oy });
-    const q = edge({ x: b.x + ox, y: b.y + oy }, { x: a.x + ox, y: a.y + oy });
-    const reach = shift + 9;
+    const p = edge({ x: a.x + ox, y: a.y + oy }, { x: b.x + ox, y: b.y + oy }, cellW);
+    const q = edge({ x: b.x + ox, y: b.y + oy }, { x: a.x + ox, y: a.y + oy }, cellW);
+    const upright = Math.abs(ux) > 0.7;
+    const reach = paired ? shift + (upright ? 6 : 8) : 0;
     const lx = (p.x + q.x) / 2 + ux * reach;
     const ly = (p.y + q.y) / 2 + uy * reach;
-    const anchor = ux > 0.35 ? 'start' : ux < -0.35 ? 'end' : 'middle';
+    const anchor = paired && upright ? (ux > 0 ? 'start' : 'end') : 'middle';
     const label = arrow.label
         ? `<text class="states-label" x="${round(lx)}" y="${round(ly)}" text-anchor="${anchor}" dominant-baseline="central">${escapeHtml(arrow.label)}</text>`
         : '';
@@ -181,10 +195,11 @@ function renderArrow(arrow: StateArrow, centres: Map<number, Point>, paired: boo
 }
 
 function renderDiagram(parsed: ParsedStates): string {
-    const { width, height, centres } = layout(parsed.grid);
+    const cellW = boxWidth(parsed.states);
+    const { width, height, centres } = layout(parsed.grid, cellW);
     const pairs = new Set(parsed.arrows.map((arrow) => `${arrow.from}>${arrow.to}`));
     const arrows = parsed.arrows.map((arrow) =>
-        renderArrow(arrow, centres, arrow.from !== arrow.to && pairs.has(`${arrow.to}>${arrow.from}`))).join('');
+        renderArrow(arrow, centres, arrow.from !== arrow.to && pairs.has(`${arrow.to}>${arrow.from}`), cellW)).join('');
     const head = (id: string, cls: string): string =>
         `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="${cls}" d="M 0 0 L 10 5 L 0 10 z"/></marker>`;
     const defs = `<defs>${head('states-head', 'states-tip')}${head('states-head-proposed', 'states-tip states-tip--proposed')}</defs>`;
@@ -193,13 +208,15 @@ function renderDiagram(parsed: ParsedStates): string {
     const buttons = parsed.states.map((state, i) => {
         const tag = [i === parsed.start ? 'start' : '', state.final ? 'final' : ''].filter(Boolean).join(' · ');
         const tagHtml = tag ? `<span class="states-tag">${tag}</span>` : '';
+        const shown = shortName(state.name);
+        const titleAttr = shown === state.name ? '' : ` title="${escapeHtml(state.name).replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"`;
         const at = centres.get(i) as Point;
-        const cls = ['states-state', i === parsed.start ? 'is-selected' : '', state.proposed ? 'states-state--proposed' : '', state.final ? 'states-state--final' : '']
+        const cls = ['states-state', i === parsed.start ? 'is-selected' : '', state.proposed ? 'states-state--proposed' : '']
             .filter(Boolean).join(' ');
-        const style = `left:${percent(at.x - CELL_W / 2, width)}%;top:${percent(at.y - CELL_H / 2, height)}%;width:${percent(CELL_W, width)}%;height:${percent(CELL_H, height)}%`;
-        return `<button type="button" class="${cls}" data-state="${i}" aria-pressed="${i === parsed.start}" style="${style}"><span class="states-name">${escapeHtml(state.name)}</span>${tagHtml}</button>`;
+        const style = `left:${percent(at.x - cellW / 2, width)}%;top:${percent(at.y - CELL_H / 2, height)}%;width:${percent(cellW, width)}%;height:${percent(CELL_H, height)}%`;
+        return `<button type="button" class="${cls}" data-state="${i}" aria-pressed="${i === parsed.start}"${titleAttr} style="${style}"><span class="states-name">${escapeHtml(shown)}</span>${tagHtml}</button>`;
     }).join('');
-    return `<div class="states-stage" style="max-width:${width}px;aspect-ratio:${width} / ${height}">${svg}${buttons}</div>`;
+    return `<div class="states-stage" style="--w:${width};max-width:${width}px;aspect-ratio:${width} / ${height}">${svg}${buttons}</div>`;
 }
 
 export function renderStatesCard(body: string, info: FenceInfo, context: BlockContext): string {

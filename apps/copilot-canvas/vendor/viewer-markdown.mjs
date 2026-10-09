@@ -1139,31 +1139,42 @@ function parseStates(body) {
   if (starts.length > 1) return { ok: false, error: "more than one start state" };
   return { ok: true, states, arrows, grid, start: starts[0] ?? 0 };
 }
-var CELL_W = 128;
-var CELL_H = 54;
+var CHAR_W = 7.6;
+var BOX_PAD_X = 14;
+var MIN_BOX_W = 120;
+var MAX_BOX_W = 200;
+var CELL_H = 52;
+var MAX_CHARS = Math.floor((MAX_BOX_W - BOX_PAD_X * 2) / CHAR_W);
 var GAP_X = 104;
 var GAP_Y = 64;
 var PAD_X = 24;
 var PAD_Y = 36;
 var LANE = 10;
-function layout(grid) {
+function shortName(name) {
+  return name.length > MAX_CHARS ? `${name.slice(0, MAX_CHARS - 1)}\u2026` : name;
+}
+function boxWidth(states) {
+  const chars = Math.max(...states.map((s) => shortName(s.name).length));
+  return Math.min(MAX_BOX_W, Math.max(MIN_BOX_W, Math.ceil(chars * CHAR_W + BOX_PAD_X * 2)));
+}
+function layout(grid, cellW) {
   const columns = grid[0].length;
-  const width = PAD_X * 2 + columns * CELL_W + (columns - 1) * GAP_X;
+  const width = PAD_X * 2 + columns * cellW + (columns - 1) * GAP_X;
   const height = PAD_Y * 2 + grid.length * CELL_H + (grid.length - 1) * GAP_Y;
   const centres = /* @__PURE__ */ new Map();
   grid.forEach((row, r) => row.forEach((at, c) => {
-    if (at >= 0) centres.set(at, { x: PAD_X + c * (CELL_W + GAP_X) + CELL_W / 2, y: PAD_Y + r * (CELL_H + GAP_Y) + CELL_H / 2 });
+    if (at >= 0) centres.set(at, { x: PAD_X + c * (cellW + GAP_X) + cellW / 2, y: PAD_Y + r * (CELL_H + GAP_Y) + CELL_H / 2 });
   }));
   return { width, height, centres };
 }
 var round = (n) => Math.round(n * 10) / 10;
-function edge(from, to) {
+function edge(from, to, cellW) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  const scale = Math.min(dx ? CELL_W / 2 / Math.abs(dx) : Infinity, dy ? CELL_H / 2 / Math.abs(dy) : Infinity);
+  const scale = Math.min(dx ? cellW / 2 / Math.abs(dx) : Infinity, dy ? CELL_H / 2 / Math.abs(dy) : Infinity);
   return { x: from.x + dx * scale, y: from.y + dy * scale };
 }
-function renderArrow(arrow, centres, paired) {
+function renderArrow(arrow, centres, paired, cellW) {
   const a = centres.get(arrow.from);
   const b = centres.get(arrow.to);
   const cls = `states-arrow${arrow.proposed ? " states-arrow--proposed" : ""}`;
@@ -1183,19 +1194,21 @@ function renderArrow(arrow, centres, paired) {
   const shift = paired ? LANE : 0;
   const ox = ux * shift;
   const oy = uy * shift;
-  const p = edge({ x: a.x + ox, y: a.y + oy }, { x: b.x + ox, y: b.y + oy });
-  const q = edge({ x: b.x + ox, y: b.y + oy }, { x: a.x + ox, y: a.y + oy });
-  const reach = shift + 9;
+  const p = edge({ x: a.x + ox, y: a.y + oy }, { x: b.x + ox, y: b.y + oy }, cellW);
+  const q = edge({ x: b.x + ox, y: b.y + oy }, { x: a.x + ox, y: a.y + oy }, cellW);
+  const upright = Math.abs(ux) > 0.7;
+  const reach = paired ? shift + (upright ? 6 : 8) : 0;
   const lx = (p.x + q.x) / 2 + ux * reach;
   const ly = (p.y + q.y) / 2 + uy * reach;
-  const anchor = ux > 0.35 ? "start" : ux < -0.35 ? "end" : "middle";
+  const anchor = paired && upright ? ux > 0 ? "start" : "end" : "middle";
   const label = arrow.label ? `<text class="states-label" x="${round(lx)}" y="${round(ly)}" text-anchor="${anchor}" dominant-baseline="central">${escapeHtml(arrow.label)}</text>` : "";
   return `<g><path class="${cls}" d="M ${round(p.x)} ${round(p.y)} L ${round(q.x)} ${round(q.y)}" marker-end="url(#${marker})"/>${label}</g>`;
 }
 function renderDiagram(parsed) {
-  const { width, height, centres } = layout(parsed.grid);
+  const cellW = boxWidth(parsed.states);
+  const { width, height, centres } = layout(parsed.grid, cellW);
   const pairs = new Set(parsed.arrows.map((arrow) => `${arrow.from}>${arrow.to}`));
-  const arrows = parsed.arrows.map((arrow) => renderArrow(arrow, centres, arrow.from !== arrow.to && pairs.has(`${arrow.to}>${arrow.from}`))).join("");
+  const arrows = parsed.arrows.map((arrow) => renderArrow(arrow, centres, arrow.from !== arrow.to && pairs.has(`${arrow.to}>${arrow.from}`), cellW)).join("");
   const head = (id, cls) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="${cls}" d="M 0 0 L 10 5 L 0 10 z"/></marker>`;
   const defs = `<defs>${head("states-head", "states-tip")}${head("states-head-proposed", "states-tip states-tip--proposed")}</defs>`;
   const svg = `<svg class="states-svg" viewBox="0 0 ${width} ${height}" role="presentation" focusable="false">${defs}${arrows}</svg>`;
@@ -1203,12 +1216,14 @@ function renderDiagram(parsed) {
   const buttons = parsed.states.map((state, i) => {
     const tag = [i === parsed.start ? "start" : "", state.final ? "final" : ""].filter(Boolean).join(" \xB7 ");
     const tagHtml = tag ? `<span class="states-tag">${tag}</span>` : "";
+    const shown = shortName(state.name);
+    const titleAttr = shown === state.name ? "" : ` title="${escapeHtml(state.name).replace(/"/g, "&quot;").replace(/'/g, "&#39;")}"`;
     const at = centres.get(i);
-    const cls = ["states-state", i === parsed.start ? "is-selected" : "", state.proposed ? "states-state--proposed" : "", state.final ? "states-state--final" : ""].filter(Boolean).join(" ");
-    const style = `left:${percent(at.x - CELL_W / 2, width)}%;top:${percent(at.y - CELL_H / 2, height)}%;width:${percent(CELL_W, width)}%;height:${percent(CELL_H, height)}%`;
-    return `<button type="button" class="${cls}" data-state="${i}" aria-pressed="${i === parsed.start}" style="${style}"><span class="states-name">${escapeHtml(state.name)}</span>${tagHtml}</button>`;
+    const cls = ["states-state", i === parsed.start ? "is-selected" : "", state.proposed ? "states-state--proposed" : ""].filter(Boolean).join(" ");
+    const style = `left:${percent(at.x - cellW / 2, width)}%;top:${percent(at.y - CELL_H / 2, height)}%;width:${percent(cellW, width)}%;height:${percent(CELL_H, height)}%`;
+    return `<button type="button" class="${cls}" data-state="${i}" aria-pressed="${i === parsed.start}"${titleAttr} style="${style}"><span class="states-name">${escapeHtml(shown)}</span>${tagHtml}</button>`;
   }).join("");
-  return `<div class="states-stage" style="max-width:${width}px;aspect-ratio:${width} / ${height}">${svg}${buttons}</div>`;
+  return `<div class="states-stage" style="--w:${width};max-width:${width}px;aspect-ratio:${width} / ${height}">${svg}${buttons}</div>`;
 }
 function renderStatesCard(body, info, context) {
   const parsed = parseStates(body);
