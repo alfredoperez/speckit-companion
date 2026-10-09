@@ -264,6 +264,23 @@ describe('renderCodeCard: untrusted text', () => {
         expect(text(byClass(html, 'code-pin-text')[0])).toBe(HOSTILE);
     });
 
+    it('draws inline code in a pin and keeps typed markup as text', () => {
+        const html = renderMarkdown(fence('ts sketch a.ts', ['a'], ['pin 1: `read` keeps <b>x</b>']));
+        const note = byClass(html, 'code-pin-text')[0];
+
+        expect(all(tree(html)).some((n) => n.nodeName === 'b')).toBe(false);
+        expect(text(note)).toBe('read keeps <b>x</b>');
+        expect(all(note).filter((n) => n.nodeName === 'code' || classOf(n).includes('file-ref')).length).toBeGreaterThan(0);
+    });
+
+    it('tags the kind after the path', () => {
+        const html = renderMarkdown(fence('ts sketch a.ts'));
+        const head = byClass(html, 'code-head')[0];
+
+        expect((head.childNodes ?? []).filter((n) => n.attrs).map((n) => classOf(n)[0])).toEqual(['code-badge', 'code-file', 'code-kind']);
+        expect(classOf(byClass(html, 'code-kind')[0])).toContain('code-kind--sketch');
+    });
+
     it('prints a hostile sketch path as text', () => {
         const html = renderMarkdown(fence('ts sketch <b>x</b>.ts', ['a']));
 

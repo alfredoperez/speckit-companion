@@ -55,6 +55,10 @@ pin 41: this is the sum that drifts, and the line the sketch replaces.
 | `pin N: text` | A note under line N. Pins go straight after the fence, one a line, and a blank line before the first is fine. The first line that is not a pin ends them. |
 | Numbers | `hl` and `pin` use the numbers the card shows, so a citation of lines 40-42 pins with `pin 41:` |
 
+A pin may use inline markdown such as `code` and **bold**; any other markup typed in a pin shows as text.
+
+The viewer draws the block as a card. A small tag after the file path says `sketch` (green, new code) or the cited lines (neutral). A cited path opens the file, a sketch path is plain text. The code is syntax coloured like any other fence, a long line scrolls the code sideways while pin notes wrap in place, and each pin sits under the code column of its line.
+
 The budget is 12 lines a sketch and 3 pins a block, sketch or citation. A code fence that names no file this way is left alone.
 
 ## The check

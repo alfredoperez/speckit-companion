@@ -1,6 +1,6 @@
 import type { BlockContext, BlockPin } from './blockFences';
 import type { FenceInfo } from './fenceInfo';
-import { escapeHtml, fileRefHtml } from './inline';
+import { escapeHtml, fileRefHtml, parseInline } from './inline';
 
 export interface CodeInfo {
     kind: 'sketch' | 'cite';
@@ -86,12 +86,12 @@ function renderFile(info: CodeInfo): string {
 }
 
 function renderKind(info: CodeInfo): string {
-    if (info.to === null) return 'sketch';
-    return info.to === info.from ? `line ${info.from}` : `lines ${info.from}-${info.to}`;
+    const label = info.to === null ? 'sketch' : info.to === info.from ? `line ${info.from}` : `lines ${info.from}-${info.to}`;
+    return `<span class="code-kind code-kind--${info.kind}">${label}</span>`;
 }
 
 function renderPin(pin: BlockPin, context: BlockContext): string {
-    const row = `<div class="code-pin" role="note"><span class="code-pin-text">${escapeHtml(pin.text)}</span><span class="line-content" hidden>${escapeHtml(pin.source)}</span></div>`;
+    const row = `<div class="code-pin" role="note"><span class="code-pin-text">${parseInline(pin.text)}</span><span class="line-content" hidden>${escapeHtml(pin.source)}</span></div>`;
     return context.wrapLine(row, pin.sourceLine);
 }
 
@@ -108,7 +108,7 @@ export function renderCodeCard(body: string, fence: FenceInfo, context: BlockCon
     const parsed = parseCode(body, info, context);
     if (!parsed.ok) return '';
     const language = fence.language ? ` data-language="${fence.language}"` : '';
-    const head = `<div class="code-head"><span class="code-badge">code</span>${renderFile(info)}<span class="code-kind">${renderKind(info)}</span></div>`;
+    const head = `<div class="code-head"><span class="code-badge">code</span>${renderFile(info)}${renderKind(info)}</div>`;
     const lines = parsed.lines.map((line) => renderLine(line, context)).join('');
     return `<div class="code-card code-card--${info.kind}"${language}>${head}<div class="code-lines">${lines}</div></div>`;
 }
