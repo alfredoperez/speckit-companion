@@ -70,6 +70,8 @@ RUNTIME_SCRIPTS = frozenset({
     "doctor_drift.py",
     "doctor_bleed.py",
     "doctor_chat.py",
+    # Called by the attachable `call-paths` part, which no shipped command carries.
+    "check_plan.py",
 })
 
 BUILD_ONLY = frozenset({
@@ -159,6 +161,9 @@ def shipped_command_bodies() -> list[str]:
         for entry in sorted(os.listdir(workflows)):
             if entry.endswith((".yml", ".yaml", ".md")):
                 paths.append(os.path.join(workflows, entry))
+    # A part is body text too: fenced into a command, or attached by a project's hook.
+    parts = os.path.join(EXT_ROOT, "presets", "_parts")
+    paths += [os.path.join(parts, f) for f in sorted(os.listdir(parts)) if f.endswith(".md")]
     return paths
 
 
@@ -167,6 +172,18 @@ def direct_refs() -> set[str]:
     found: set[str] = set()
     for path in shipped_command_bodies():
         found.update(INSTALLED_SCRIPT_REF.findall(_read(path)))
+    return found
+
+
+def part_refs() -> set[str]:
+    """Scripts named by a shipped part under `presets/_parts/`."""
+    parts = os.path.join(EXT_ROOT, "presets", "_parts")
+    found: set[str] = set()
+    if not os.path.isdir(parts):
+        return found
+    for entry in sorted(os.listdir(parts)):
+        if entry.endswith(".md"):
+            found.update(INSTALLED_SCRIPT_REF.findall(_read(os.path.join(parts, entry))))
     return found
 
 
@@ -216,10 +233,15 @@ VSIX_ROOTS = frozenset({
 
 
 def vsix_closure() -> set[str]:
-    """VSIX_ROOTS plus every sibling `sibling_deps` reaches, to a fixed point."""
+    """VSIX_ROOTS plus every sibling `sibling_deps` reaches, to a fixed point.
+
+    `presets/_parts/` ships in the .vsix, so a script a part names is an entry
+    point too: a project that builds off the bundled extension gets the part and
+    would otherwise run a script the archive does not carry.
+    """
     existing = _script_files()
     closure: set[str] = set()
-    pending = list(VSIX_ROOTS)
+    pending = list(VSIX_ROOTS | part_refs())
     while pending:
         script = pending.pop()
         if script in closure:

@@ -66,6 +66,34 @@ commands:
 
 Add `background: true` to start a hook without waiting for it. Use it for independent work like tests or notifications, never for anything that writes the run record.
 
+## Example: call paths in the plan
+
+The extension ships a node you can attach to the plan step. It adds a short tree of the functions a change reaches, each with its file and line, so you see how far the change spreads before any code is written.
+
+```yaml
+commands:
+  plan:
+    hooks:
+      after:
+        plan-doc:
+          - { type: node, ref: call-paths }
+```
+
+**Build** from the Pipeline Builder and the node is in your plan command. Without a build, copy the node file from the reference below to `.specify/companion/nodes/call-paths.md`, where your assistant looks for it. The plan gains a block like this one, which reads as plain code everywhere:
+
+````markdown
+```calls A stock run's finished step lands in the record
+  session.idle @ apps/copilot-canvas/extension.mjs:153
+~   settle() @ apps/copilot-canvas/server.mjs:187
++     writeRecord() @ apps/copilot-canvas/server.mjs:160
++       recordStep() **new** @ apps/copilot-canvas/run-record.mjs
+```
+````
+
+`+` is new, `~` is changed, `-` is removed, and no mark means the function is on the path and stays as it is. The node then runs a check that opens every cited file. A missing file or a line past the end of one is an error, and your assistant fixes what the check reports once.
+
+It is short on purpose: at most 3 blocks of 12 lines, names and locations only, and nothing at all for a change sized `simple`. The [call paths reference](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/call-paths.md) has the full grammar, the check's rules and how to make it a gate.
+
 ## What actually runs
 
 Nothing executes `companion.yml`. Your assistant reads it at run time, because instructions for doing so are appended to each command. A hook is a strong convention, not an enforced step. If something must never be skipped, put it in CI.

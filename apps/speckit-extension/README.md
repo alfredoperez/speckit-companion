@@ -172,6 +172,21 @@ Steps are grouped into named **phases** (gather, author, check, wrap-up). A phas
 
 If you use the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion), its [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder) draws all of this and runs the build for you.
 
+### A node you can attach: call paths in the plan
+
+One hook line makes the plan show which functions a change reaches, as a short tree with a file and line on every row, and a check opens each cited file before the plan is handed on:
+
+```yaml
+commands:
+  plan:
+    hooks:
+      after:
+        plan-doc:
+          - { type: node, ref: call-paths }
+```
+
+It is off unless you add it. [docs/call-paths.md](./docs/call-paths.md) has the grammar and the check's rules.
+
 ## Fast path: a small change skips the ceremony
 
 Not every change deserves four documents. After specify, the change is sized `small`, `normal`, or `oversized` against a fixed bar (about five files or ten tasks). A change that is hard to undo or hard to check is never small, whatever its size. A small change takes a folded path: one lean specify pass that carries the plan inline, then straight to implement. An oversized one gets a visible warning and then the full pipeline. Nothing is ever skipped silently, and an ambiguous size always runs every phase.
@@ -319,6 +334,7 @@ Each lifecycle hook appends one entry to the canonical `history[]` and advances 
 - [docs/living-specs.md](./docs/living-specs.md): the living specs reference.
 - [docs/how-it-works.md](./docs/how-it-works.md): the hook → script → `.spec-context.json` chain and canonical schema.
 - [docs/node-model.md](./docs/node-model.md): how Companion commands are composed from nodes and the `.specify/companion.yml` hook model.
+- [docs/call-paths.md](./docs/call-paths.md): the attachable `call-paths` node, its block grammar and the check that verifies it.
 - [docs/publishing.md](./docs/publishing.md): how this extension is released (separate from the VS Code extension).
 - [CHANGELOG.md](./CHANGELOG.md): version history (independent of the VS Code extension).
 
