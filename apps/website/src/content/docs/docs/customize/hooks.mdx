@@ -94,6 +94,20 @@ commands:
 
 It is short on purpose: at most 3 blocks of 12 lines, names and locations only, and nothing at all for a change sized `simple`. The [call paths reference](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/call-paths.md) has the full grammar, the check's rules and how to make it a gate.
 
+The same way, `ref: screens` adds a rough wireframe when a change alters what a person sees:
+
+````markdown
+```screen settings The settings page
+title: Settings
+row:
+  field: Display name (changed) (1)
+  button: Save (new)
+```
+1: The name is editable. It was read only before.
+````
+
+Each part sits on its own line, two spaces in to nest it inside a `row:`. The spec viewer draws it as a card, with `(new)` and `(changed)` parts edged in green and amber and each numbered dot lighting its note. At most 2 screens of 14 parts and 5 dots, and anything that breaks the grammar stays plain code. The [screens reference](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/screens.md) has the full grammar and the check.
+
 ## What actually runs
 
 Nothing executes `companion.yml`. Your assistant reads it at run time, because instructions for doing so are appended to each command. A hook is a strong convention, not an enforced step. If something must never be skipped, put it in CI.

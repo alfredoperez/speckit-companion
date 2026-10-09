@@ -9,6 +9,8 @@ export interface BlockContext {
     note: string | null;
     /** The text after the language word, as written. */
     rawTitle: string;
+    /** The numbered lines (`1: …`) straight after the closing fence of a `screen`, else none. */
+    numberedNotes?: string[];
     wrapLine: (html: string, lineNum: number) => string;
 }
 

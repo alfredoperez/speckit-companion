@@ -2253,6 +2253,238 @@ pre.code-block code.hljs {
   color: var(--text-body);
 }
 
+/* apps/vscode/webview/styles/spec-viewer/_screen.css */
+#markdown-content .screen-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  margin: var(--space-3) 0 var(--space-4);
+}
+#markdown-content .screen-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-inset);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+#markdown-content .screen-badge {
+  flex: none;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-2);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+#markdown-content .screen-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+#markdown-content .screen-count {
+  margin-left: auto;
+  flex: none;
+  color: var(--text-secondary);
+}
+#markdown-content .screen-count-new {
+  color: var(--success);
+}
+#markdown-content .screen-count-changed {
+  color: var(--warning);
+}
+#markdown-content .screen-body {
+  padding: var(--space-3);
+}
+#markdown-content .screen-frame {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+}
+#markdown-content .screen-part {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-body);
+}
+#markdown-content .screen-part--row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+#markdown-content .screen-part--title .screen-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+#markdown-content .screen-part--text .screen-text {
+  overflow-wrap: anywhere;
+}
+#markdown-content .screen-part--chip,
+#markdown-content .screen-part--button,
+#markdown-content .screen-part--field,
+#markdown-content .screen-part--list {
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--space-2);
+}
+#markdown-content .screen-part--chip {
+  border-radius: 999px;
+  padding: 0 var(--space-2);
+  color: var(--text-secondary);
+}
+#markdown-content .screen-part--button {
+  color: var(--text-primary);
+}
+#markdown-content .screen-part--field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 140px;
+  background: none;
+  border-style: solid;
+}
+#markdown-content .screen-label {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+#markdown-content .screen-input {
+  display: block;
+  height: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+#markdown-content .screen-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#markdown-content .screen-items li {
+  padding: 2px 0;
+  border-bottom: 1px solid var(--border);
+}
+#markdown-content .screen-items li:last-child {
+  border-bottom: 0;
+}
+#markdown-content .screen-part--new {
+  border: 2px solid var(--success);
+}
+#markdown-content .screen-part--changed {
+  border: 2px solid var(--warning);
+}
+#markdown-content .screen-part--row.screen-part--new,
+#markdown-content .screen-part--row.screen-part--changed,
+#markdown-content .screen-part--title.screen-part--new,
+#markdown-content .screen-part--title.screen-part--changed,
+#markdown-content .screen-part--text.screen-part--new,
+#markdown-content .screen-part--text.screen-part--changed {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+#markdown-content .screen-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+#markdown-content .screen-dot,
+#markdown-content .screen-note-n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--text-secondary);
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1;
+}
+#markdown-content .screen-dot {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  z-index: 1;
+  cursor: pointer;
+}
+#markdown-content .screen-dot:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#markdown-content .screen-notes {
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+#markdown-content .screen-note {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-body);
+}
+#markdown-content .screen-note:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+#markdown-content .screen-note strong {
+  color: var(--text-primary);
+}
+#markdown-content .screen-dot:is(:hover, :focus-visible),
+#markdown-content .screen-card:has(.screen-note[data-n="1"]:is(:hover, :focus-within)) .screen-dot[data-n="1"],
+#markdown-content .screen-card:has(.screen-note[data-n="2"]:is(:hover, :focus-within)) .screen-dot[data-n="2"],
+#markdown-content .screen-card:has(.screen-note[data-n="3"]:is(:hover, :focus-within)) .screen-dot[data-n="3"],
+#markdown-content .screen-card:has(.screen-note[data-n="4"]:is(:hover, :focus-within)) .screen-dot[data-n="4"],
+#markdown-content .screen-card:has(.screen-note[data-n="5"]:is(:hover, :focus-within)) .screen-dot[data-n="5"],
+#markdown-content .screen-note:is(:hover, :focus-within) .screen-note-n,
+#markdown-content .screen-card:has(.screen-dot[data-n="1"]:is(:hover, :focus-visible)) .screen-note[data-n="1"] .screen-note-n,
+#markdown-content .screen-card:has(.screen-dot[data-n="2"]:is(:hover, :focus-visible)) .screen-note[data-n="2"] .screen-note-n,
+#markdown-content .screen-card:has(.screen-dot[data-n="3"]:is(:hover, :focus-visible)) .screen-note[data-n="3"] .screen-note-n,
+#markdown-content .screen-card:has(.screen-dot[data-n="4"]:is(:hover, :focus-visible)) .screen-note[data-n="4"] .screen-note-n,
+#markdown-content .screen-card:has(.screen-dot[data-n="5"]:is(:hover, :focus-visible)) .screen-note[data-n="5"] .screen-note-n {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-color: var(--text-primary);
+}
+#markdown-content .screen-note:is(:hover, :focus-within),
+#markdown-content .screen-card:has(.screen-dot[data-n="1"]:is(:hover, :focus-visible)) .screen-note[data-n="1"],
+#markdown-content .screen-card:has(.screen-dot[data-n="2"]:is(:hover, :focus-visible)) .screen-note[data-n="2"],
+#markdown-content .screen-card:has(.screen-dot[data-n="3"]:is(:hover, :focus-visible)) .screen-note[data-n="3"],
+#markdown-content .screen-card:has(.screen-dot[data-n="4"]:is(:hover, :focus-visible)) .screen-note[data-n="4"],
+#markdown-content .screen-card:has(.screen-dot[data-n="5"]:is(:hover, :focus-visible)) .screen-note[data-n="5"] {
+  background: var(--bg-inset);
+}
+
 /* apps/vscode/webview/styles/spec-viewer/_tables.css */
 #markdown-content table {
   width: 100%;
