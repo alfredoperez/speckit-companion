@@ -17,7 +17,7 @@ function openCallsFence(lines: string[], idx: number): number {
         open = open < 0 ? i : -1;
     }
     if (open < 0 || lines[idx].trim().startsWith('```')) return -1;
-    return /^calls(\s|$)/.test(lines[open].trim().slice(3).trim()) ? open : -1;
+    return /^calls(\s|$)/i.test(lines[open].trim().slice(3).trim()) ? open : -1;
 }
 
 /**

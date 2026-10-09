@@ -1034,7 +1034,7 @@ function renderLocation(row) {
   return `<span class="calls-where">${chip ?? escapeHtml(label)}</span>`;
 }
 function renderRow(row) {
-  const strike = row.mark === " " ? "" : `<button type="button" class="calls-strike" data-line="${row.sourceLine}" aria-label="${STRIKE_LABEL}">strike</button>`;
+  const strike = row.mark === " " ? "" : `<button type="button" class="calls-strike" data-line="${row.sourceLine}" aria-label="${STRIKE_LABEL}: ${escapeHtml(row.name)}">strike</button>`;
   const pill = row.isNew ? '<span class="calls-new">new file</span>' : "";
   const mark = row.mark === "-" ? "\u2212" : row.mark.trim();
   return `<div class="calls-row calls-row--${TINT[row.mark]}"><span class="calls-mark">${mark}</span><span class="calls-tree">${row.guide}</span><span class="calls-name">${escapeHtml(row.name)}</span>${pill}${renderLocation(row)}${strike}<span class="line-content" hidden>${escapeHtml(row.source)}</span></div>`;

@@ -154,7 +154,8 @@ describe('renderCallsCard: the card', () => {
         const strikes = byClass(card(), 'calls-strike');
 
         expect(strikes).toHaveLength(4);
-        expect(attrs(strikes[0])).toMatchObject({ 'aria-label': 'Strike this call from the plan', type: 'button' });
+        expect(attrs(strikes[0]).type).toBe('button');
+        expect(attrs(strikes[0])['aria-label']).toMatch(/^Strike this call from the plan: \S/);
     });
 
     it('moves the note into the card and does not print it again', () => {

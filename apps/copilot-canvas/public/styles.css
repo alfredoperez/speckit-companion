@@ -391,7 +391,8 @@ button { font: inherit; color: inherit; }
 .viewer-scope .content-area { padding: 0; overflow: visible; grid-template-columns: minmax(0, 1fr); }
 .viewer-scope #markdown-content { max-width: none; margin: 0; }
 .viewer-scope .dossier { grid-column: 1 / -1; }
-.viewer-scope .line-add-btn { display: none; }
+.viewer-scope .line-add-btn,
+.viewer-scope .calls-strike { display: none; }
 .viewer-scope #markdown-content input[type="checkbox"] { pointer-events: none; }
 .viewer-scope .dossier { width: 100%; }
 
