@@ -97,7 +97,7 @@ speckit-extension/**
 # out would silently downgrade the crash-safety guarantee rather than fail loudly
 # — which is exactly the kind of quiet regression it exists to prevent.
 !apps/speckit-extension/scripts/companion_config.py
-# The pipeline builder runs these against the extension's own node sources, so a
+# the Workflow Builder runs these against the extension's own node sources, so a
 # project consuming the extension can build and draw its pipeline without a
 # separate install. Leaving them out ships a panel that can only say it is
 # unavailable — the "contributed but unreachable" failure this repo keeps fixing.

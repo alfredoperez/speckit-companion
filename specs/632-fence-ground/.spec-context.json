@@ -1,0 +1,541 @@
+{
+  "workflow": "companion",
+  "specName": "The ground all four stand on",
+  "branch": "feat/plan-blocks-ground",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T18:49:24.253Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-08T18:50:16.717Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T18:50:21.548Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:51:18.721Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:51:18.826Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:51:19.201Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T18:51:39.987Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:51:40.649Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:51:40.789Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T18:51:46.898Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:52:50.609Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:52:50.800Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:35.357Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:35.486Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:35.612Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:35.735Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:35.851Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:35.984Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:41.143Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:41.252Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:41.357Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:41.465Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:53:41.570Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:54:08.420Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:54:08.791Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:56:11.045Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T18:56:11.129Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Parse fence info",
+      "tasks": [
+        "T001",
+        "T002",
+        "T013"
+      ],
+      "tests": [
+        "fenceInfo.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Strict language only in attributes",
+      "tasks": [
+        "T001",
+        "T002",
+        "T011",
+        "T013"
+      ]
+    },
+    "FR-003": {
+      "title": "Registry",
+      "tasks": [
+        "T011",
+        "T012"
+      ]
+    },
+    "FR-004": {
+      "title": "Registry before tree check",
+      "tasks": [
+        "T011",
+        "T013"
+      ]
+    },
+    "FR-005": {
+      "title": "Fallback to plain block",
+      "tasks": [
+        "T011",
+        "T012"
+      ],
+      "tests": [
+        "renderer.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "Preprocessors skip fences",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "preprocessors.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Same fence rule as renderer",
+      "tasks": [
+        "T001",
+        "T002"
+      ]
+    },
+    "FR-008": {
+      "title": "Line mapping unchanged",
+      "tasks": [
+        "T009",
+        "T010"
+      ]
+    },
+    "FR-009": {
+      "title": "path:line chips",
+      "tasks": [
+        "T003",
+        "T005"
+      ],
+      "tests": [
+        "inline.test.ts"
+      ]
+    },
+    "FR-010": {
+      "title": "openFile line",
+      "tasks": [
+        "T006",
+        "T008"
+      ]
+    },
+    "FR-011": {
+      "title": "Folder paths resolve to project",
+      "tasks": [
+        "T004",
+        "T007"
+      ]
+    },
+    "FR-012": {
+      "title": "Outside project refused",
+      "tasks": [
+        "T004",
+        "T007"
+      ],
+      "tests": [
+        "messageHandlers.test.ts"
+      ]
+    },
+    "FR-013": {
+      "title": "Bare name lookup kept",
+      "tasks": [
+        "T004",
+        "T007"
+      ]
+    },
+    "FR-014": {
+      "title": "Reveal line",
+      "tasks": [
+        "T004",
+        "T007"
+      ]
+    },
+    "FR-015": {
+      "title": "Vendor rebuilt",
+      "tasks": [
+        "T014"
+      ]
+    },
+    "FR-016": {
+      "title": "Changelog line",
+      "tasks": [
+        "T015"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 16,
+    "projectedTasks": 14,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "no block is drawn",
+    "no version bump",
+    "no real VS Code window"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/spec-viewer/markdown",
+    "area: apps/vscode/src/features/spec-viewer/messageHandlers.ts",
+    "constraint: renderer recognises only triple-backtick fences",
+    "constraint: nothing under apps/speckit-extension"
+  ],
+  "intent": "Lay the fence parser, block registry, fence-safe preprocessors and project-confined file-at-line open",
+  "decisions": [
+    {
+      "decision": "Preprocessors skip only triple-backtick fences",
+      "why": "Matches the renderer loop so the two agree",
+      "rejected": "Reusing the living loop that also takes tildes"
+    },
+    {
+      "decision": "Split into outside runs and rerun each pass per run",
+      "why": "Keeps multi-line regexes and fence-free output byte-identical",
+      "rejected": "Placeholder masking"
+    },
+    {
+      "decision": "Confine with path.relative and the exact checklist rule, not isPathWithinRoot",
+      "why": "isPathWithinRoot refuses ..config.yml",
+      "rejected": "Reusing isPathWithinRoot"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Parser + registry + fence-safe passes + project-confined file-at-line open",
+      "key_finding": "Only the four named passes are made fence-safe; spec docs drop the line"
+    },
+    "tasks": {
+      "summary": "16 tasks in 6 phases, tests first in each story"
+    },
+    "implement": {
+      "summary": "Fence parser, empty block registry, fence-safe passes, project-confined file-at-line open"
+    }
+  },
+  "approach": "Add fenceInfo.ts (parser + fence-region helper) and blockFences.ts (empty registry), dispatch before the tree check, wrap four preprocessors, add path:line chips, and rewrite handleOpenFile to confine and reveal.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Fence info and fence-region tests",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/__tests__/fenceInfo.test.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "parseFenceInfo and mapOutsideFences",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/fenceInfo.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Inline tests for path:line chips",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/__tests__/inline.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Host tests for confinement, folder paths and line reveal",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/messageHandlers.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Chip strips :N/:N-M and sets validated data-line",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/inline.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Optional line on openFile message",
+      "files": [
+        "apps/vscode/src/protocol/viewer.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "handleOpenFile confines folder paths and reveals the line",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Click handler posts line from data-line",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/actions.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Fenced-text preprocessor tests",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/__tests__/preprocessors.test.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Four passes skip fenced regions",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/preprocessors.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Block fence renderer tests",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/__tests__/renderer.test.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Block fence registry",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/blockFences.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Renderer parses info and dispatches registry",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/renderer.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Canvas vendor rebuilt",
+      "files": [
+        "apps/copilot-canvas/vendor"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Changelog Fixed line",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "tsc clean, full suite passes",
+      "files": [
+        "apps/vscode"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npx tsc -p ./ --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 9.0,
+      "result": "no output"
+    },
+    {
+      "what": "unit suite",
+      "command": "npx jest apps/vscode/webview apps/vscode/src/features/spec-viewer apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 7.2,
+      "result": "Snapshots:   0 total · Time:        6.352 s, estimated 24 s · Ran all test suites matching /apps\\/vscode\\/webview|apps\\/vscode\\/src\\/features\\/spec-viewer|apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i."
+    },
+    {
+      "what": "canvas build",
+      "command": "npm run canvas:build",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.2,
+      "result": "> speckit-companion@0.36.0 canvas:build · > node apps/copilot-canvas/build.mjs · built vendor/viewer-markdown.mjs, vendor/preamble.mjs, vendor/step-history.mjs and vendor/viewer.css"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Spec documents opened via speckit.viewSpecDocument drop the line; requirements, entities, checklist and decisions passes still rewrite fenced text",
+      "step": "implement"
+    }
+  ]
+}

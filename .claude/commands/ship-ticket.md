@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(sleep:*), Bash(jq:*), Bash(tooling/scripts/merge-pr.sh:*), Bash(tooling/scripts/new-worktree.sh:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
 description: Ship an ALREADY-BUILT ticket — code review → PR → merge → learnings → install-local. Skips the build (you built it in SpecKit Companion). The tail of /fix-tickets, no rebuild.
 argument-hint: "<issue # e.g. 292>  (optional — defaults to the current branch's NNN-slug)  [--review-merge]"
 ---
@@ -15,7 +15,7 @@ Use `/fix-tickets` when you want the loop to build the fix too. Use **`/ship-tic
 - **Never rebuild.** The branch already has the work; this command only reviews/ships it.
 - **Never merge red or pending checks.** Leave the PR open and report.
 - **Auto-merge on** unless `--review-merge` is passed (then pause for a thumbs-up before `gh pr merge`).
-- **`/code-review` is the review gate** — high effort, findings applied; re-run it on any fix that itself changes real logic (the fix commit is the least-reviewed code).
+- **`/code-review` is the review gate** — high effort, **one pass**, findings applied; re-run it on any fix that itself changes real logic (the fix commit is the least-reviewed code). `/codex:review` joins it only for the webview renderer, the run-record writer, or a publish command.
 - **Heavy steps run in subagents** (review, distilling learnings); the main loop only does git/gh/decisions.
 
 ## Inputs
@@ -42,14 +42,14 @@ git status --porcelain                        # work should be committed; a clea
 - If there are **uncommitted** changes that are the real work, commit them first (real change + `specs/<NNN>/` spec folder); do **not** commit `.specify/` regenerated artifacts (`git checkout origin/main -- .specify/<file>` for any swept in).
 
 ### 0b. Verify it actually builds — subagent
-- `npm run compile && npm test`. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check_shape_parity.py`. If capture/timing changed, run the capture eval.
+- **Read the run the build already recorded before running anything.** The implement step records each check with `--verify-run`, so `specs/<NNN>-<slug>/.spec-context.json` already holds the compile and test entries under `verified`, each with its `exitCode`. If they are there, green, and newer than the last source file written (compare against the modified time of `.spec-context.json`), that is the verification — say so and move on. Run `npm run compile && npm test` yourself only when the record is missing, red, or stale. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check_shape_parity.py`. If capture/timing changed, run the capture eval.
 - Confirm the spec is in a shippable state: `specs/<NNN>-<slug>/` committed, tasks checked, `.spec-context.json` `specName` real (not a `[FEATURE NAME]` placeholder).
 - If anything is red, **stop and report** — don't ship a broken branch.
 
-### 1. Code review — subagent (`/code-review` + `/codex:review`)
-Run `/code-review` on the branch diff vs `main` at **high** effort, apply findings (`--fix`). Tell the subagent to **read `.claude/review-checklist.md` first** (and honor the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes. Commit fixes; re-run `npm test` if code changed. Record each finding (you'll distill in step 4).
+### 1. Code review — subagent (`/code-review`, and `/codex:review` where it earns its place)
+Run `/code-review` on the branch diff vs `main` at **high** effort — **one pass** — and apply findings (`--fix`). Tell the subagent to **read `.claude/review-checklist.md` first** (and honor the `CLAUDE.md` conventions it points to) and check the diff against those known bug classes. Commit fixes; re-run `npm test` if code changed. Record each finding (you'll distill in step 4).
 
-**Run Codex side by side.** Launch `/codex:review --base main --scope branch` on the same diff, in parallel with `/code-review`, before applying anything. Two reviewers over one diff, then reconcile: a finding either reviewer raises gets addressed, and where they disagree the tie-breaker is a test, not an argument.
+**Codex joins only where a second reviewer has paid for itself.** Launch `/codex:review --base main --scope branch` on the same diff, in parallel and before applying anything, when the diff touches the webview renderer, the writer of the run record, or a publish command. Everywhere else `/code-review` alone is the gate. When both run, reconcile: a finding either reviewer raises gets addressed, and where they disagree the tie-breaker is a test, not an argument.
 
 **Log who found what.** Append one row per finding to `~/dev/GitHub/obsidian-vault/Projects/speckit companion/Review Ledger.md` — date, branch or PR, the finding in a line, found by `code-review` / `codex` / `both`, severity, and whether it changed code. This is the only record of whether the second reviewer earns its place, so it gets written on every run, including the runs where Codex found nothing.
 
@@ -68,16 +68,13 @@ gh pr create --title "<title>" --body "<body>" --base main
 Capture the PR number/URL.
 
 ### 3. Merge + cleanup — main loop
-```bash
-gh pr checks <PR> --watch || true
-gh pr checks <PR>                     # every check must now read pass; pending or fail means no merge
-```
-Merge only when every check has finished and passed. Never merge with a check still pending.
-
 **Review-gate:** if `--review-merge` was passed, do **not** merge — post the PR link + a one-line summary, record "merged: NO — awaiting your review," and stop. Otherwise:
 ```bash
-gh pr merge <PR> --squash --delete-branch
+tooling/scripts/merge-pr.sh <PR>      # merges once every check has passed: queued on GitHub when the repo allows auto-merge, otherwise it waits here
+gh pr checks <PR> --watch || true     # one wait, to report the outcome
 ```
+Exit 3 means the pull request changes what a person sees and the owner has not looked: record "merged: NO — awaiting your review", show them the change in a note with screenshots, and re-run with `--seen` only after they approve. Never merge around the script with `gh pr merge`.
+
 If checks fail and can't be auto-addressed, leave the PR open, record "merged: NO — checks failing," report.
 
 ### 4. Capture learnings + tick the box — distill subagent + main loop

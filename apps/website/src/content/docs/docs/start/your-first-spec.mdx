@@ -23,7 +23,7 @@ SpecKit Companion comes in two halves. The VS Code extension is the part you loo
   <Button href={MARKETPLACE} external size="md" data-analytics="install_click_vscode" data-analytics-placement="first-spec">Get it on the Marketplace</Button>
   <p>Then, from your project root:</p>
   <CodeLine command={COMPANION_COMMAND} data-analytics="install_click_speckit_copy" data-analytics-placement="first-spec" />
-  <p>If <code>specify extension</code> is missing, your Spec Kit CLI is the PyPI build. <a href="/docs/install">Install</a> has the one-line fix.</p>
+  <p>If <code>specify extension</code> is missing, your Spec Kit CLI is the PyPI build. <a href="/docs/ide/install#vscode-spec-kit">Install</a> has the one-line fix.</p>
 </Actions>
 
 <YouSee>
@@ -66,7 +66,7 @@ A new spec under **Active** in the Specs view, with the workflow you picked reco
 
 Create Spec sends the specify command to your assistant, in its terminal or its chat. SpecKit Companion never reads the chat. It watches the files the step writes.
 
-With SpecKit Companion, specify also sizes the change. A small one, up to 5 files and 10 tasks, gets its plan and task list in the same pass. Anything bigger stops after the spec.
+With SpecKit Companion, specify also sizes the change. A small one, up to 5 files and 10 tasks, gets its plan and task list in the same pass. Anything bigger, or anything hard to undo or hard to check, stops after the spec.
 
 <YouSee>
 
@@ -156,7 +156,7 @@ The SpecKit icon opens four views.
 - **Specs** groups your specs as **Active**, **Completed** and **Archived**, each with a count. Expand a spec to see each document and whether it exists yet. A **Bugs** group appears once Spec Kit's bug extension has written a report.
 - **Living Specs** lists the lasting spec for each capability, with a coverage count and a drift warning. It appears with the Companion Spec Kit extension.
 - **Steering** gathers the standing files your assistant reads, plus Spec Kit's constitution, scripts and templates.
-- **Settings & Feedback** holds the Pipeline Builder, settings and feedback links. It stays hidden until you turn on `speckit.views.settings.visible`.
+- **Settings & Feedback** holds the Workflow Builder, settings and feedback links. It stays hidden until you turn on `speckit.views.settings.visible`.
 
 <DocFigure src="sidebar-triptych.png" caption="Specs tracks your work, Steering lists the standing files, and Living Specs lists the specs that outlive any one change." />
 

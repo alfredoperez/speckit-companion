@@ -97,7 +97,14 @@ With the [Companion Spec Kit extension](https://speckit-companion.dev/docs/insta
 - **The mod only reads.** It never writes a spec file or the run record, and never sends a prompt. You run the `/speckit-*` commands yourself. The one command it runs is your editor's, when you press `o`.
 - **Where it draws.** The Claude Code terminal and the Code tab of the Claude Desktop app draw the band and the pane. The VS Code extension's chat panel and `claude -p` draw nothing, so there `/speckit-tracker` answers with text: the followed spec, its band line, and the recent specs.
 - **Where it looks for specs.** In `specs/` and `.specify/specs/`, or in `speckit.specDirectories` from `.vscode/settings.json` when you set it.
-- **Tested on Claude Code 2.1.287.** The mods API can change between releases.
+- **Tested on Claude Code 2.1.291.** The mods API can change between releases.
+
+## What it reads, runs and sends
+
+- **Reads:** the spec files and the run record in your project, and the `VISUAL`, `EDITOR`, `TERM_PROGRAM` and `CURSOR_TRACE_ID` environment variables, only to pick your editor. It does not read the conversation.
+- **Runs:** one program, your editor, and only when you press `o`. It tries `$VISUAL` or `$EDITOR` when that editor has a window of its own, then `cursor` or `code`, then the system opener (`open` or `xdg-open`), each with the file's path as its only argument. When none works, the path goes to your clipboard.
+- **Sends:** nothing. The mod makes no network request and has no telemetry.
+- **Hooks:** `session.start` to find the specs, `tool.call` and `turn.complete` to look at the files again after the agent writes, and `ui.focus` to remember which row you are on in its own pane. It passes every call through unchanged.
 
 ## The other places SpecKit Companion runs
 

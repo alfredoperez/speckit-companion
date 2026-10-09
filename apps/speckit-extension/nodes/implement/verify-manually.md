@@ -39,7 +39,7 @@ Rules for writing it:
 Then **stop and ask the person to run it.** Do not mark the spec complete on your own reading of the code. When they report back, record what they found:
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --concerns "<what failed the click-through, or 'verified by hand'>"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --concern "<what failed the click-through, or 'verified by hand'>"
 ```
 
 Anything that failed is work in this spec, not a follow-up: it is a requirement that was reported done and is not.

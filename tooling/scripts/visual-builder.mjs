@@ -1,7 +1,7 @@
 /**
  * visual-builder.mjs
  * ─────────────────────────────────────────────────────────────────────────
- * The Pipeline Builder panel, checked in a real browser.
+ * The Workflow Builder panel, checked in a real browser.
  *
  * WHY THIS EXISTS
  * Every other test of this panel runs in jsdom, which has no layout engine: it

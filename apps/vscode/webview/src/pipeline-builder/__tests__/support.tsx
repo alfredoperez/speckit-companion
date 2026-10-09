@@ -11,7 +11,9 @@
  */
 import { render } from 'preact';
 import { Canvas } from '../Canvas';
-import type { PipelineGraph, PipelineNode, PipelineStep } from '../../../../src/protocol/pipeline';
+import type {
+    PipelineGraph, PipelineLivingSpecs, PipelineNode, PipelineStep,
+} from '../../../../src/protocol/pipeline';
 
 export function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
     return {
@@ -72,6 +74,23 @@ export function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
 }
 
 
+/** A living-specs block shaped the way `pipeline-graph.py` emits one. */
+export function livingSpecs(
+    overrides: Partial<PipelineLivingSpecs> = {},
+): PipelineLivingSpecs {
+    return {
+        enabled: false,
+        layout: 'central',
+        origin: 'none',
+        path: '',
+        capabilities: [],
+        exempt: ['**/*.config.*', '**/*.test.*', '**/__tests__/**', '**/migrations/**'],
+        rules: { spec: [], plan: [] },
+        warnings: [],
+        ...overrides,
+    };
+}
+
 /** Preact batches state updates, so a click's re-render lands on the next tick. */
 export const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
@@ -96,6 +115,7 @@ export function canvas(g: PipelineGraph = graph(), selected?: { command: string;
     const frames: string[] = [];
     const replacedSteps: string[] = [];
     const templates: string[] = [];
+    const decisions: Calls = [];
     let newSteps = 0;
     /** The step each request named to run behind, or `undefined` for the tail. */
     const newStepAfter: Array<string | undefined> = [];
@@ -108,12 +128,13 @@ export function canvas(g: PipelineGraph = graph(), selected?: { command: string;
             onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}
             onOpenFrame={c => frames.push(c)}
             onOpenTemplate={c => templates.push(c)}
+            onOpenDecision={(c, n) => decisions.push([c, n])}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
             onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
     );
     return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes,
-        removedNodes, movedNodes,
+        removedNodes, movedNodes, decisions,
         frames, replacedSteps, templates, newStepAfter, newSteps: () => newSteps };
 }
 

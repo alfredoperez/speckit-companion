@@ -9,6 +9,17 @@ export interface ExtractedBlock {
     heading: string | null;
 }
 
+/** Index of the opening line of the `calls` fence that holds line `idx` strictly inside it, or -1. */
+function openCallsFence(lines: string[], idx: number): number {
+    let open = -1;
+    for (let i = 0; i < idx; i++) {
+        if (!lines[i].trim().startsWith('```')) continue;
+        open = open < 0 ? i : -1;
+    }
+    if (open < 0 || lines[idx].trim().startsWith('```')) return -1;
+    return /^calls(\s|$)/i.test(lines[open].trim().slice(3).trim()) ? open : -1;
+}
+
 /**
  * Walk the source markdown to find the block (paragraph or list item) that
  * contains the clicked line, plus the nearest preceding heading. The result
@@ -33,6 +44,11 @@ export function extractBlock(lines: string[], lineNum: number): ExtractedBlock |
         }
         return null;
     };
+
+    const callsFence = openCallsFence(lines, idx);
+    if (callsFence >= 0) {
+        return { startLine: lineNum, endLine: lineNum, text: lines[idx], heading: findHeading(callsFence) };
+    }
 
     if (isHeading(lines[idx]) || isHr(lines[idx]) || isBlank(lines[idx])) {
         return {

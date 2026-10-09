@@ -208,7 +208,7 @@ def derive_closure() -> set[str]:
 VSIX_ROOT = "apps/speckit-extension/scripts/"
 
 # Entry points the VS Code extension calls directly out of the .vsix: the
-# context writer (stock-mode prompt preamble) and the pipeline builder group.
+# context writer (stock-mode prompt preamble) and the Workflow Builder group.
 # Each of their siblings has to survive `.vscodeignore` or the feature it
 # starts cannot run.
 VSIX_ROOTS = frozenset({

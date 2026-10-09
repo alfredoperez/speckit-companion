@@ -4,6 +4,7 @@
  */
 
 import { parseInline } from './inline';
+import { fencedRanges, mapOutsideFences } from './fenceInfo';
 
 /**
  * Preprocess spec metadata (Feature Branch, Created, Status, Input) into a compact header.
@@ -92,7 +93,7 @@ function getPriorityLabel(priority: string): string {
 /**
  * Preprocess user story headings into styled cards with metadata line
  */
-export function preprocessUserStories(markdown: string): string {
+function preprocessUserStoriesRun(markdown: string): string {
     // Pattern: ### User Story N - Title (Priority: PN)
     const storyPattern = /^(###)\s*User Story\s*(\d+)\s*[-–]\s*([^(]+)\s*\(Priority:\s*(P\d)\)/gm;
 
@@ -111,7 +112,7 @@ export function preprocessUserStories(markdown: string): string {
  * Preprocess tasks.md "## Phase N: …" headings into styled phase headers, lifting
  * any MVP marker (🎯 MVP) and priority tag (P1..P5) out of the title into chips.
  */
-export function preprocessTaskPhases(markdown: string): string {
+function preprocessTaskPhasesRun(markdown: string): string {
     const phasePattern = /^##\s+Phase\s+(\d+)\s*:\s*(.+)$/gm;
 
     return markdown.replace(phasePattern, (_full, num, rest) => {
@@ -369,23 +370,38 @@ export function stripTaskFormatLegend(markdown: string): string {
  * Empty comments are removed entirely.
  */
 export function preprocessHtmlComments(markdown: string): string {
-    return markdown.replace(/<!--([\s\S]*?)-->/g, (match, content) => {
-        const trimmed = content.trim();
-        if (!trimmed) return '';
-        // A living-spec marker (`touches:`, `reviewed:`, …) is machine metadata,
-        // not authoring scaffolding. Left to the rule below it would
-        // become a "Template Instructions" disclosure printing its own source,
-        // and the requirement pass — which runs after this one — would never
-        // see it. It passes through untouched and is dropped there.
-        if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
-        return `\n<details class="template-instructions"><summary>Template Instructions</summary>\n\n${trimmed}\n\n</details>\n`;
-    });
+    const fenced = fencedRanges(markdown);
+    const comment = /<!--([\s\S]*?)-->/g;
+    let out = '';
+    let from = 0;
+    for (let found = comment.exec(markdown); found; found = comment.exec(markdown)) {
+        // An opener inside a fence is skipped without consuming what follows it, so the next real comment still matches.
+        if (fenced.some(([start, end]) => found!.index >= start && found!.index < end)) {
+            comment.lastIndex = found.index + 4;
+            continue;
+        }
+        out += markdown.slice(from, found.index) + commentBlock(found[0], found[1]);
+        from = found.index + found[0].length;
+    }
+    return out + markdown.slice(from);
+}
+
+function commentBlock(match: string, content: string): string {
+    const trimmed = content.trim();
+    if (!trimmed) return '';
+    // A living-spec marker (`touches:`, `reviewed:`, …) is machine metadata,
+    // not authoring scaffolding. Left to the rule below it would
+    // become a "Template Instructions" disclosure printing its own source,
+    // and the requirement pass — which runs after this one — would never
+    // see it. It passes through untouched and is dropped there.
+    if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
+    return `\n<details class="template-instructions"><summary>Template Instructions</summary>\n\n${trimmed}\n\n</details>\n`;
 }
 
 /**
  * Preprocess markdown to convert special patterns into callout blocks
  */
-export function preprocessCallouts(markdown: string): string {
+function preprocessCalloutsRun(markdown: string): string {
     // Define callout patterns - each captures the keyword and content
     // Patterns handle:
     // - **Keyword:** and **Keyword**: formats (colon inside or outside bold)
@@ -435,4 +451,16 @@ export function preprocessCallouts(markdown: string): string {
     }
 
     return markdown;
+}
+
+export function preprocessUserStories(markdown: string): string {
+    return mapOutsideFences(markdown, preprocessUserStoriesRun);
+}
+
+export function preprocessTaskPhases(markdown: string): string {
+    return mapOutsideFences(markdown, preprocessTaskPhasesRun);
+}
+
+export function preprocessCallouts(markdown: string): string {
+    return mapOutsideFences(markdown, preprocessCalloutsRun);
 }

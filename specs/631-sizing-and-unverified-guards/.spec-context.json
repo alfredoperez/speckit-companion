@@ -1,0 +1,546 @@
+{
+  "workflow": "companion",
+  "specName": "Sizing and unverified guards",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T15:12:53.626Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:12:53.950Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:13:28.250Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-08T15:13:28.630Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T15:13:28.814Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:17:14.638Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:17:14.736Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:17:14.829Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:18:59.892Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:19:00.204Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T15:19:00.273Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:19:00.390Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:19:00.705Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:19:00.816Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-08T15:19:00.882Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:19:17.040Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:19:17.135Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:19:17.230Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:22:17.706Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:22:17.816Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:23:17.811Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:23:17.913Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:23:18.011Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:23:18.110Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:23:18.207Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:23:38.050Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:23:38.152Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:28:42.236Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:28:42.257Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:28:42.344Z"
+    },
+    {
+      "step": "implement",
+      "substep": "execute",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-08T15:31:26.304Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "13 of 13 tasks closed; 4353 unit tests and 1590 extension tests pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Sizing never returns simple for a hard to undo or hard to check change",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003"
+      ]
+    },
+    "FR-002": {
+      "title": "One reason line",
+      "tasks": [
+        "T002"
+      ]
+    },
+    "FR-003": {
+      "title": "The shared size definition carries the question",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/scripts/build.py --check"
+      ]
+    },
+    "FR-004": {
+      "title": "Completion records finished, unverified and warns",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_context.py::MarkCompleteTests"
+      ]
+    },
+    "FR-005": {
+      "title": "Completion never refuses and leaves an explained record unchanged",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_context.py::MarkCompleteTests"
+      ]
+    },
+    "FR-006": {
+      "title": "The row tooltip shows the branch",
+      "tasks": [
+        "T006",
+        "T007",
+        "T008",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/specBranch.test.ts",
+        "apps/vscode/src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Docs and both changelogs",
+      "tasks": [
+        "T011",
+        "T012"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 10,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "Pull request on the spec row",
+    "A needs-input state",
+    "The two website search ideas"
+  ],
+  "context": [
+    "area: apps/speckit-extension/presets/_parts/sizing.md and nodes/specify/classify-size.md (the shared size definition, assembled into the specify and classify commands by build.py)",
+    "area: apps/speckit-extension/scripts/write-context.py mark_spec_complete (the only writer of completed) and tests/test_context.py",
+    "area: apps/vscode/src/features/specs/specExplorerProvider.ts (spec row tooltip) and its test",
+    "constraint: warn, never refuse",
+    "constraint: speckit-extension changes go under its own Unreleased, no version bump"
+  ],
+  "intent": "Risky small changes take the full path, a spec that finishes unverified says so, and a spec row names its branch",
+  "decisions": [
+    {
+      "decision": "The sizing question rides on existing lines: a continuation of the small bullet, one condition in the verdict fence, one fenced line under the guardrail bullet",
+      "why": "The specify command is at its 69-directive ceiling and CI enforces it",
+      "rejected": "A new bullet or a new node"
+    },
+    {
+      "decision": "One reason line, never two: the guardrail line for a change over the bar, the new line for a risky change inside it",
+      "why": "The old line said 5 files / 10 tasks for a three-file migration, which was false",
+      "rejected": "Printing both"
+    },
+    {
+      "decision": "The concern is added to the in-memory record before the single completion write",
+      "why": "The capture helper does its own read and write, so it would be overwritten or cause a second publish",
+      "rejected": "append_capture_entries after the write; --concern on the same CLI call"
+    },
+    {
+      "decision": "One resolveSpecBranch for the sidebar and both viewer reads, working branch first",
+      "why": "The viewer already prefers the working branch; a second derivation would disagree",
+      "rejected": "Reading branch only in the sidebar"
+    },
+    {
+      "decision": "The VS Code Mark Completed button, failed checks and per-task concerns are left as they are",
+      "why": "Each is its own behaviour with its own readers; widening is a design call nobody asked for",
+      "rejected": "Mirroring the guard in the TypeScript writer"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Three small changes in the files that already own each behaviour; one new resolver module",
+      "key_finding": "specify has zero directive headroom, so the rule must add no bullet"
+    },
+    "tasks": {
+      "summary": "13 tasks: three stories with disjoint files, then docs, changelogs and validation"
+    },
+    "implement": {
+      "summary": "Risky small changes take the full path, unverified completions say so, and the sidebar hover names the branch"
+    }
+  },
+  "approach": "Add the hard-to-undo question to the shared sizing part and the specify verdict rule without adding a directive, have mark_spec_complete add a finished, unverified concern and warn before its single write, and show the branch in the row tooltip through one resolver the viewer also uses.",
+  "currentTask": "T013",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "small bullet: also easy to undo and easy to check, as a continuation line",
+      "files": [
+        "apps/speckit-extension/presets/_parts/sizing.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "riskyToShip in the verdict fence; the reason line under the guardrail bullet; one line or the other",
+      "files": [
+        "apps/speckit-extension/nodes/specify/classify-size.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "rebuilt; build.py --check clean; specify still at 69 directives",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.specify.md",
+        "apps/speckit-extension/commands/speckit.companion.classify.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Seven cases, three failing before the change",
+      "files": [
+        "apps/speckit-extension/tests/test_context.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Concern added to the in-memory record before the single write; warning on stderr; 1590 tests pass",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "resolver cases: working branch first, fallback, blank and non-text skipped",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/specBranch.test.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "tooltip names the branch after the assistant; none for blank or non-text",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "resolveSpecBranch beside the assistant resolver",
+      "files": [
+        "apps/vscode/src/features/specs/specBranch.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Branch line between Assistant and the running line",
+      "files": [
+        "apps/vscode/src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "both viewer reads go through the resolver",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "sizing table and sentence, commands doc, sidebar hover row",
+      "files": [
+        "apps/website/src/content/docs/docs/steps/specify.mdx",
+        "apps/website/src/content/docs/docs/start/your-first-spec.mdx",
+        "apps/speckit-extension/docs/commands.md",
+        "apps/website/src/content/docs/docs/navigate/the-sidebar.mdx"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "two speckit-extension entries and one root entry under Unreleased",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "type-check, 4353 unit tests, 1590 extension tests, shape parity, budget and emissions all exit 0",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npx tsc -p ./ --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.3,
+      "result": "no output"
+    },
+    {
+      "what": "unit tests",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 76.8,
+      "result": "Snapshots:   0 total · Time:        76.228 s · Ran all test suites.",
+      "warnings": [
+        "exited 1"
+      ]
+    },
+    {
+      "what": "speckit extension tests",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 68.9,
+      "result": "---------------------------------------------------------------------- · Ran 1590 tests in 68.652s · OK (skipped=8)"
+    },
+    {
+      "what": "command shape parity",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.living-drift.md                  4       0      4     506 · speckit.companion.living-coverage.md               3       0      3     327 · speckit.companion.living-show.md                   3       0      3     399"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 23 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "unit tests after the changelog fix",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 69.6,
+      "result": "Snapshots:   0 total · Time:        69.076 s, estimated 79 s · Ran all test suites."
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The first unit test run failed on the changelog voice check (two sentences in one bullet); fixed and rerun green. The record keeps both runs.",
+      "step": "implement"
+    },
+    {
+      "note": "The VS Code Mark Completed button writes completed in TypeScript and adds no concern; left as is on purpose",
+      "step": "implement"
+    },
+    {
+      "note": "The doctor still reports an unverified run as a problem even when the new concern is present; the two do not agree on what counts as explained",
+      "step": "implement"
+    },
+    {
+      "note": "Not checked in a real window: the tooltip line. Real-window checks run pre-release.",
+      "step": "implement"
+    }
+  ]
+}

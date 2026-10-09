@@ -23,7 +23,7 @@ import LogoMark from './LogoMark.astro';
 const { siteTitle, siteTitleHref } = Astro.locals.starlightRoute;
 ---
 
-<a class="docs-site-title" href={siteTitleHref}>
+<a class="docs-site-title" href={siteTitleHref} data-astro-reload>
   <LogoMark size={24} />
   <span translate="no">{siteTitle}</span>
 </a>

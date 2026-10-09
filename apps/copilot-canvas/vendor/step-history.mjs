@@ -83,26 +83,26 @@ function groupStepsInOrder(transitions) {
 function buildSubsteps(stepTxs, fallbackEnd, stepStart) {
   const subs = stepTxs.filter((t) => rowName(t) !== null);
   const out = [];
-  let prevEnd = stepStart;
+  let previousEnd = stepStart;
   for (let i = 0; i < subs.length; i++) {
     const s = subs[i];
     const name = rowName(s);
     const next = subs[i + 1];
     if (s.kind === "complete") {
       const completedAt2 = s.at ?? fallbackEnd;
-      out.push({ name, startedAt: prevEnd, completedAt: completedAt2 });
-      prevEnd = completedAt2 ?? prevEnd;
+      out.push({ name, startedAt: previousEnd, completedAt: completedAt2 });
+      previousEnd = completedAt2 ?? previousEnd;
       continue;
     }
     if (next && rowName(next) === name && next.kind === "complete") {
       out.push({ name, startedAt: s.at, completedAt: next.at });
-      prevEnd = next.at;
+      previousEnd = next.at;
       i++;
       continue;
     }
     const completedAt = next ? next.at : fallbackEnd;
     out.push({ name, startedAt: s.at, completedAt });
-    prevEnd = completedAt ?? prevEnd;
+    previousEnd = completedAt ?? previousEnd;
   }
   return out;
 }

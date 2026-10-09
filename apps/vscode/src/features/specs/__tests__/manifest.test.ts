@@ -212,10 +212,12 @@ describe('sidebar contributions', () => {
             expect(specsTitleActions()[0].id).toBe('speckit.refresh');
         });
 
-        it('shows the pipeline builder only where its extension is installed', () => {
+        // It draws a stock Spec Kit project's own workflow too, so the icon is
+        // offered wherever the Specs view is and the panel decides what to show.
+        it('offers the Workflow Builder on every project', () => {
             const entry = viewTitle.find(
                 e => e.command === 'speckit.companion.openPipelineBuilder')!;
-            expect(entry.when).toContain('speckit.companion.installed');
+            expect(entry.when).toBe('view == speckit.views.explorer');
         });
 
         it('places New Spec last', () => {

@@ -11,7 +11,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 //
 // getting-started   became Your first spec; its command table is Commands.
 // pick-a-pipeline   the two workflows are explained with the method itself.
-// the two Pipeline Builder pages (anatomy and guide) are one page now.
+// the two Workflow Builder pages (anatomy and guide) are one page now.
 // customize         custom commands stayed with Your own workflow; hooks got
 //                   their own page, which that one links to first.
 //
@@ -21,6 +21,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 // fix-a-bug, assess-an-idea   moved in with the IDE pages.
 // copilot-app, claude-code    each split into three pages; the old address
 //                             lands on Install, the first of them.
+//
+// /workflow-builder was a page for a builder that was not built. It shipped
+// as the Pipeline Builder and was renamed Workflow Builder, so that address and
+// the docs page's old slug both land on its docs page.
 const MOVED = {
   '/docs/start/getting-started': '/docs/start/your-first-spec',
   '/docs/anatomy/the-sidebar': '/docs/navigate/the-sidebar',
@@ -28,8 +32,9 @@ const MOVED = {
   '/docs/anatomy/anatomy-of-the-spec-viewer': '/docs/navigate/inside-the-viewer',
   '/docs/anatomy/anatomy-of-the-overview': '/docs/results/the-overview',
   '/docs/guides/reading-the-overview': '/docs/results/the-overview',
-  '/docs/anatomy/anatomy-of-the-pipeline-builder': '/docs/customize/pipeline-builder',
-  '/docs/guides/pipeline-builder': '/docs/customize/pipeline-builder',
+  '/docs/anatomy/anatomy-of-the-pipeline-builder': '/docs/customize/workflow-builder',
+  '/docs/guides/pipeline-builder': '/docs/customize/workflow-builder',
+  '/docs/customize/pipeline-builder': '/docs/customize/workflow-builder',
   '/docs/guides/customize': '/docs/customize/your-own-workflow',
   '/docs/guides/steering': '/docs/customize/steering',
   '/docs/guides/review-and-refine': '/docs/steps/review-with-comments',
@@ -44,6 +49,7 @@ const MOVED = {
   '/docs/processes/assess-an-idea': '/docs/ide/assess-an-idea',
   '/docs/processes/copilot-app': '/docs/copilot-app/install',
   '/docs/processes/claude-code': '/docs/claude-code/install',
+  '/workflow-builder': '/docs/customize/workflow-builder',
 };
 
 // The adapter turns each redirect into a Vercel route that matches the path
@@ -51,6 +57,7 @@ const MOVED = {
 // the 404 page, and published READMEs link with the slash. A second route for
 // the slash form is a route collision in Astro, so the slash form is covered by
 // a static page at that address which forwards to the same place.
+/** @param {string} to */
 const forward = (to) =>
   `<!doctype html><meta charset="utf-8"><title>Moved</title><link rel="canonical" href="https://speckit-companion.dev${to}"><meta http-equiv="refresh" content="0;url=${to}"><meta name="robots" content="noindex"><a href="${to}">This page moved to ${to}</a>`;
 
@@ -148,8 +155,10 @@ export default defineConfig({
       // navigate/, steps/, results/ and ide/, which kept their addresses when
       // the sidebar was regrouped.
       //
-      // Introduction and Install are /docs/ and /docs/install: the first is the
-      // section root, and the second is linked from two published READMEs.
+      // Introduction and Install where you work are /docs/ and /docs/install:
+      // the first is the section root, and the second is linked from published
+      // READMEs. It is a launchpad: three cards, each opening the Install page
+      // that leads its own group below and holds that tool's full path.
       //
       // Configuration sits with the IDE pages and keeps its /docs/reference/
       // address. Telemetry is a page without a sidebar entry: Configuration
@@ -166,6 +175,7 @@ export default defineConfig({
         {
           label: 'In your IDE',
           items: [
+            { label: 'Install', slug: 'docs/ide/install' },
             { label: 'Choose an AI provider', slug: 'docs/ide/choose-a-provider' },
             { label: 'Configuration', slug: 'docs/reference/configuration' },
             { label: 'Your first spec', slug: 'docs/start/your-first-spec' },
@@ -221,7 +231,7 @@ export default defineConfig({
         {
           label: 'Customize',
           items: [
-            { label: 'Pipeline Builder', slug: 'docs/customize/pipeline-builder' },
+            { label: 'Workflow Builder', slug: 'docs/customize/workflow-builder' },
             { label: 'Hooks', slug: 'docs/customize/hooks' },
             { label: 'Your own workflow', slug: 'docs/customize/your-own-workflow' },
             { label: 'Steering', slug: 'docs/customize/steering' },

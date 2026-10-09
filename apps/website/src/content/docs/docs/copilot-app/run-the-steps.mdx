@@ -17,7 +17,7 @@ Each button on the board sends one command into the chat, and your agent runs th
 
 | The project and the spec | The buttons send |
 | --- | --- |
-| The [Companion Spec Kit extension](/docs/install) is installed | `/speckit.companion.*` |
+| The [Companion Spec Kit extension](/docs/copilot-app/install#copilot-companion) is installed | `/speckit.companion.*` |
 | It is not installed | The stock plan, tasks and implement commands |
 | The spec was started with the Spec Kit workflow | The stock commands, even where Companion is installed |
 
@@ -45,7 +45,7 @@ While the agent works on a step the board sent, that step shows as **Running**. 
 
 In a stock project the board reads each step from the files: a written spec file means Specify is done, a written `plan.md` means Plan is done, a written `tasks.md` means Tasks is done, and ticked tasks show how far Implement is. An empty file, or the template Spec Kit copies in when a step starts, does not count. The next step's button is there as soon as the previous step's document is written. The board reads the files the same way when a run record has fallen behind them.
 
-Where Companion is installed its run record leads, so a step that is still running is never shown as done because a file appeared early.
+Where Companion is installed its run record leads, so a step that is still running is never shown as done because a file appeared early. The agent closes each step in the record as it finishes. If it writes the document for a Specify, Plan or Tasks step you sent from the board and ends its turn without closing the step, the board closes it in the record, so the next step's button is there.
 
 For a step you send from the board in a stock project, the board notes when it sent the step and when that chat turn ended, if the step's document was written during it. The Overview shows a time for those steps only, and says so. A step you type into the chat yourself has no time, and neither does a second run of a step the spec is already past.
 

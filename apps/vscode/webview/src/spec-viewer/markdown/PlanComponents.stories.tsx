@@ -38,3 +38,42 @@ export const ConstitutionCheck: Story = {
         ].join('\n'),
     },
 };
+
+export const CallPaths: Story = {
+    args: {
+        md: [
+            '## Call paths',
+            '',
+            '```calls A finished step lands in the record',
+            '  session.idle @ apps/copilot-canvas/extension.mjs:153',
+            '~   settle() @ apps/copilot-canvas/server.mjs:187',
+            '      reviewRuns() @ apps/copilot-canvas/server.mjs:117',
+            '~     didStep() @ apps/copilot-canvas/server.mjs:114',
+            '+     writeRecord() @ apps/copilot-canvas/server.mjs:160',
+            '+       recordStep() **new** @ apps/copilot-canvas/run-record.mjs',
+            '```',
+            'note: only a run the board sent, in a project with no context writer, is written.',
+            '',
+            '```calls Retired settle path',
+            '  session.idle @ apps/copilot-canvas/extension.mjs:153',
+            '~   settle() @ apps/copilot-canvas/server.mjs:187',
+            '-     legacySettle() @ apps/copilot-canvas/server.mjs:96',
+            '```',
+        ].join('\n'),
+    },
+};
+
+export const CallPathsMalformed: Story = {
+    args: {
+        md: [
+            '## Call paths',
+            '',
+            'This block breaks the grammar (the second line has an odd indent), so it stays a plain code block.',
+            '',
+            '```calls A block that does not parse',
+            '  session.idle @ apps/copilot-canvas/extension.mjs:153',
+            '~  settle() @ apps/copilot-canvas/server.mjs:187',
+            '```',
+        ].join('\n'),
+    },
+};

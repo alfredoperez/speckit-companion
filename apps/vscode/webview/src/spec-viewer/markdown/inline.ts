@@ -15,6 +15,8 @@ const KNOWN_EXTENSIONS = new Set<string>([
     '.vsix',
 ]);
 
+const MAX_LINE = 9999999;
+
 const SAFE_URL = /^(?:https?:|mailto:|#|\/|\.{0,2}\/|[^:]*$)/i;
 
 /**
@@ -48,6 +50,23 @@ export function escapeHtmlInScenario(text: string): string {
         .replace(/>/g, '&gt;');
 }
 
+const basenameOf = (code: string): string => code.slice(Math.max(code.lastIndexOf('/'), code.lastIndexOf('\\')) + 1);
+
+const isLineNumber = (lineNo: number): boolean => Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE;
+
+/** The clickable file chip, or null when the path is not a file the viewer opens. `code` and `label` arrive with `&`, `<` and `>` already escaped. */
+export function fileRefHtml(code: string, lineNo: number, label: string): string | null {
+    const basename = basenameOf(code);
+    const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
+    const ext = extMatch ? extMatch[0].toLowerCase() : '';
+    if (!ext || !KNOWN_EXTENSIONS.has(ext)) return null;
+    // A quote inside a code span would close the attribute it lands in and let whatever followed become markup of its own.
+    const inAttr = code.replace(/"/g, '&quot;');
+    const titleAttr = code.includes('/') ? ` title="${inAttr}"` : '';
+    const lineAttr = isLineNumber(lineNo) ? ` data-line="${lineNo}"` : '';
+    return `<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`;
+}
+
 /**
  * Parse inline markdown elements
  */
@@ -66,22 +85,12 @@ export function parseInline(text: string): string {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         // Stash inline code
-        .replace(/`([^`]+)`/g, (_match, code) => {
-            const lastSlash = Math.max(code.lastIndexOf('/'), code.lastIndexOf('\\'));
-            const basename = lastSlash >= 0 ? code.slice(lastSlash + 1) : code;
-            const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
-            const ext = extMatch ? extMatch[0].toLowerCase() : '';
-            if (ext && KNOWN_EXTENSIONS.has(ext)) {
-                const hasDir = code.includes('/');
-                // `&`, `<` and `>` were escaped above, but a quote inside a code
-                // span would close the attribute it lands in and let whatever
-                // followed become markup of its own.
-                const inAttr = code.replace(/"/g, '&quot;');
-                const titleAttr = hasDir ? ` title="${inAttr}"` : '';
-                codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${titleAttr}><code>${basename}</code></button>`);
-            } else {
-                codeSpans.push(`<code>${code}</code>`);
-            }
+        .replace(/`([^`]+)`/g, (_match, raw) => {
+            const lineMatch = raw.match(/^(.+?):(\d+)(?:-(\d+))?$/);
+            const code: string = lineMatch ? lineMatch[1] : raw;
+            const lineNo = lineMatch ? Number(lineMatch[2]) : NaN;
+            const label = isLineNumber(lineNo) ? raw.slice(code.length - basenameOf(code).length) : basenameOf(code);
+            codeSpans.push(fileRefHtml(code, lineNo, label) ?? `<code>${raw}</code>`);
             return `\x00CODE${codeSpans.length - 1}\x00`;
         })
         // Bold + Italic
@@ -97,10 +106,12 @@ export function parseInline(text: string): string {
         // Strikethrough
         .replace(/~~(.+?)~~/g, '<del>$1</del>')
         // Images
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) =>
-            inAttribute(alt) || inAttribute(target)
-                ? match
-                : `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, '&quot;')}">`)
+        // Stashed like a code span, so the link pass below cannot match across the tag just built.
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => {
+            if (inAttribute(alt) || inAttribute(target)) return match;
+            codeSpans.push(`<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, '&quot;')}">`);
+            return `\x00CODE${codeSpans.length - 1}\x00`;
+        })
         // Links
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, target) =>
             inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text}</a>`)

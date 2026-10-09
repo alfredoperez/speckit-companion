@@ -25,6 +25,8 @@ export { isReadOnly } from './readOnly';
 
 export { restoreComments } from './restoreComments';
 
+export { setupCallsStrike } from './callsStrike';
+
 export {
     detectLineType,
     getContextActions

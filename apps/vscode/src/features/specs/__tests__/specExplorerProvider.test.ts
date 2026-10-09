@@ -843,6 +843,18 @@ describe('SpecExplorerProvider', () => {
             expect(row.tooltip).toContain('Assistant: Gemini CLI');
         });
 
+        it('names the branch in the tooltip, after the assistant', async () => {
+            const row = await getSpecRow({ workflow: 'default', status: 'specifying', assistant: 'claude', branch: 'main', workingBranch: 'feat/photos' });
+            const lines = String(row.tooltip).split('\n');
+            expect(lines).toContain('Branch: feat/photos');
+            expect(lines.indexOf('Branch: feat/photos')).toBe(lines.indexOf('Assistant: Claude Code') + 1);
+        });
+
+        it.each([undefined, '', '   ', 42])('shows no branch line for the recorded branch %p', async value => {
+            const row = await getSpecRow({ workflow: 'default', status: 'specifying', branch: value });
+            expect(String(row.tooltip)).not.toContain('Branch:');
+        });
+
         it('shows the assistant alone when the spec has no history', async () => {
             const row = await getSpecRow({ workflow: 'default', status: 'specifying', assistant: 'claude' });
             expect(row.description).toBe('Claude Code');

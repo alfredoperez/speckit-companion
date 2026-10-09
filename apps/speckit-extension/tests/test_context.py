@@ -1029,6 +1029,15 @@ class MarkCompleteTests(unittest.TestCase):
         self.assertEqual(ctx["currentStep"], "implement")
         self.assertEqual(ctx["history"][-1]["step"], "implement")
 
+    def test_leaves_no_task_in_flight(self) -> None:
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
+        wc.sync_tasks(self.fd, self.fd / "tasks.md", "implemented", "extension")
+        self.assertEqual(_ctx(self.fd)["currentTask"], "T002")
+        wc.mark_spec_complete(self.fd, "ai")
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        self.assertIsNone(ctx["currentTask"])
+
     def test_history_is_untouched(self) -> None:
         self._implemented_spec()
         before = list(_ctx(self.fd)["history"])
@@ -1157,6 +1166,127 @@ class MarkCompleteTests(unittest.TestCase):
             any(e["step"] == "implement" and e["kind"] == "complete" and not e.get("task") for e in ctx["history"]),
             "step must not close while T002 is neither checked nor journaled",
         )
+
+    def _set(self, **fields) -> None:
+        target = self.fd / ".spec-context.json"
+        ctx = json.loads(target.read_text())
+        ctx.update(fields)
+        target.write_text(json.dumps(ctx))
+
+    def _complete(self):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            result = wc.mark_spec_complete(self.fd, "ai")
+        return result, err.getvalue()
+
+    UNVERIFIED = {"note": "finished, unverified", "step": "implement"}
+
+    def test_unverified_and_unexplained_completes_with_one_concern_and_a_warning(self) -> None:
+        self._implemented_spec()
+        result, err = self._complete()
+        self.assertIsNotNone(result)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["status"], "completed")
+        self.assertEqual(ctx["concerns"], [self.UNVERIFIED])
+        self.assertIn("[companion] Warning:", err)
+        self.assertIn("finished, unverified", err)
+
+    def test_a_verified_spec_gains_no_concern_and_no_warning(self) -> None:
+        self._implemented_spec()
+        self._set(verified=[{"what": "unit tests", "exitCode": 0}])
+        result, err = self._complete()
+        self.assertIsNotNone(result)
+        self.assertNotIn("concerns", _ctx(self.fd))
+        self.assertNotIn("Warning", err)
+
+    def test_an_explained_spec_keeps_its_concerns_as_they_were(self) -> None:
+        self._implemented_spec()
+        self._set(concerns=[{"note": "no test runner in this sandbox", "step": "implement"}])
+        result, err = self._complete()
+        self.assertIsNotNone(result)
+        self.assertEqual(_ctx(self.fd)["concerns"], [{"note": "no test runner in this sandbox", "step": "implement"}])
+        self.assertNotIn("Warning", err)
+
+    def test_a_non_list_verified_counts_as_nothing_verified(self) -> None:
+        self._implemented_spec()
+        self._set(verified="yes")
+        result, err = self._complete()
+        self.assertIsNotNone(result)
+        self.assertEqual(_ctx(self.fd)["concerns"], [self.UNVERIFIED])
+        self.assertIn("Warning", err)
+
+    def test_an_explanation_written_in_another_shape_is_kept_not_replaced(self) -> None:
+        for name, shape in (("text", "no test runner in this sandbox"), ("object", {"note": "no test runner"})):
+            with self.subTest(shape=shape):
+                self.fd = Path(self._tmp.name) / "specs" / f"_zzz-{name}"
+                self.fd.mkdir(parents=True)
+                self._implemented_spec()
+                self._set(concerns=shape)
+                result, err = self._complete()
+                self.assertIsNotNone(result)
+                self.assertEqual(_ctx(self.fd)["concerns"], shape)
+                self.assertNotIn("Warning", err)
+
+    def test_the_all_tasks_checked_path_gets_the_concern_too(self) -> None:
+        self._implementing_all_tasks_done()
+        result, err = self._complete()
+        self.assertIsNotNone(result)
+        self.assertEqual(_ctx(self.fd)["concerns"], [self.UNVERIFIED])
+        self.assertIn("Warning", err)
+
+    def test_a_second_completion_adds_nothing_and_warns_about_nothing_new(self) -> None:
+        self._implemented_spec()
+        self._complete()
+        before = _ctx(self.fd)
+        result, err = self._complete()
+        self.assertIsNone(result)
+        self.assertEqual(_ctx(self.fd), before)
+        self.assertNotIn("finished, unverified", err)
+
+    def test_a_refused_spec_gains_no_concern(self) -> None:
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        result, err = self._complete()
+        self.assertIsNone(result)
+        self.assertNotIn("concerns", _ctx(self.fd))
+        self.assertNotIn("finished, unverified", err)
+
+    def _write_on(self, branch, step="plan", status="planning", kind="start"):
+        real = wc._git_branch
+        wc._git_branch = lambda root: branch
+        try:
+            return wc.update_context(self.fd, step, status, "extension", kind)
+        finally:
+            wc._git_branch = real
+
+    def test_a_step_started_on_another_branch_records_the_working_branch(self) -> None:
+        self._write_on("main", "specify", "specifying")
+        self.assertNotIn("workingBranch", _ctx(self.fd))
+        self.assertIsNotNone(self._write_on("631-feature"))
+        ctx = _ctx(self.fd)
+        self.assertEqual((ctx["branch"], ctx["workingBranch"]), ("main", "631-feature"))
+
+    def test_a_start_back_on_the_recorded_branch_clears_the_working_branch(self) -> None:
+        self._write_on("main", "specify", "specifying")
+        self._write_on("631-feature")
+        self.assertIsNotNone(self._write_on("main", "tasks", "tasking"))
+        self.assertNotIn("workingBranch", _ctx(self.fd))
+
+    def test_an_unknown_or_detached_checkout_leaves_the_working_branch_alone(self) -> None:
+        self._write_on("main", "specify", "specifying")
+        self._write_on("631-feature")
+        for unknown, step, status in ((None, "tasks", "tasking"), ("HEAD", "implement", "implementing")):
+            self.assertIsNotNone(self._write_on(unknown, step, status))
+            self.assertEqual(_ctx(self.fd)["workingBranch"], "631-feature")
+
+    def test_only_a_step_start_records_the_working_branch(self) -> None:
+        self._write_on("main", "specify", "specifying")
+        self.assertIsNotNone(self._write_on("631-feature", "specify", "specified", kind="complete"))
+        self.assertNotIn("workingBranch", _ctx(self.fd))
+
+    def test_a_spec_folder_outside_git_records_no_working_branch(self) -> None:
+        wc.update_context(self.fd, "specify", "specifying", "extension", "start")
+        wc.update_context(self.fd, "plan", "planning", "extension", "start")
+        self.assertNotIn("workingBranch", _ctx(self.fd))
 
     def test_cli_mark_complete_dispatch(self) -> None:
         # The argparse wiring + main() dispatch branch end-to-end.

@@ -29,7 +29,9 @@ git -C ~/dev/GitHub/speckit-companion.worktrees/bench-main checkout -q --detach 
 (cd ~/dev/GitHub/speckit-companion.worktrees/bench-main && npm run compile)
 ```
 
-Then prove the wave's text is what the cell will get: pick one line the wave changed and grep for it in `~/dev/GitHub/speckit-companion.worktrees/bench-main/apps/speckit-extension/commands/`. If it is not there, the branch was not rebuilt (`build.py`) or not pushed. Stop and fix that first.
+Then prove the wave's text is what the cell will get: pick one line the wave changed and grep for it in `~/dev/GitHub/speckit-companion.worktrees/bench-main/apps/speckit-extension/commands/`.
+
+**A node has to be in the step's `_order.yml` to reach the arm.** The Companion arms dispatch `/speckit-companion-<step>`, whose body is assembled from `nodes/<step>/_order.yml`. A part added to a preset's own `commands/` is inert for them: that body lands as the stock `/speckit-<step>` skill, which only the stock arm runs. Attaching a node for a bench means a file in `nodes/<step>/` and its name in that step's `_order.yml`; the grep above is what proves it. If it is not there, the branch was not rebuilt (`build.py`) or not pushed. Stop and fix that first.
 
 ### 2. Gates, in this checkout, on the wave branch
 

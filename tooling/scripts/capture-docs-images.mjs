@@ -47,7 +47,7 @@
  * when it is done. Exits nonzero if any story fails to render or any
  * annotation target is missing.
  *
- * The browser and Storybook plumbing is shared with the Pipeline Builder's
+ * The browser and Storybook plumbing is shared with the Workflow Builder's
  * visual tests — see tooling/scripts/lib/storybook-browser.mjs.
  *
  * DO NOT HAND-EDIT THE OUTPUT
@@ -152,7 +152,7 @@ const STORIES = [
         story: 'scenes-readme-composites--c-6-banner-install-vscode',
         out: 'banner-install-vscode.png',
     },
-    // ── The pipeline builder guide (the site's guides/pipeline-builder) ──
+    // ── The Workflow Builder guide (the site's customize/workflow-builder) ──
     // One shot per gesture the guide teaches. Re-shoot just these with
     // `node tooling/scripts/capture-docs-images.mjs --only builder-`.
     //

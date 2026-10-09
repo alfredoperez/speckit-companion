@@ -995,6 +995,146 @@ describe('messageHandlers - openFile', () => {
     });
 });
 
+describe('messageHandlers - openFile with a folder path and a line', () => {
+    let root: string;
+    const opened = () => (vscode.workspace.openTextDocument as jest.Mock).mock.calls.map(c => c[0].fsPath);
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'open-file-dir-'));
+        (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(root), name: 'ws', index: 0 }];
+        (vscode.workspace.openTextDocument as jest.Mock).mockResolvedValue({});
+        (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([]);
+        (vscode.window.showTextDocument as jest.Mock).mockResolvedValue({ selection: undefined, revealRange: jest.fn() });
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = undefined;
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    const write = (rel: string) => {
+        const file = path.join(root, rel);
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, '');
+        return file;
+    };
+
+    it('opens a relative path inside the project root', async () => {
+        const target = write('src/a/util.ts');
+        write('src/b/util.ts');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'src/a/util.ts' } as any);
+
+        expect(opened()).toEqual([target]);
+        expect(vscode.workspace.findFiles).not.toHaveBeenCalled();
+    });
+
+    it('looks for the whole folder path, never the bare name, when it is not under the root', async () => {
+        write('src/b/util.ts');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'src/a/util.ts' } as any);
+
+        expect(vscode.workspace.findFiles).toHaveBeenCalledTimes(1);
+        expect((vscode.workspace.findFiles as jest.Mock).mock.calls[0][0]).toBe('**/src/a/util.ts');
+        expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith('File not found in project: util.ts');
+    });
+
+    it('opens a path written from inside a sub-package by its folder suffix', async () => {
+        const target = write('apps/web/src/App.tsx');
+        (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([vscode.Uri.file(target)]);
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'src/App.tsx', line: 4 } as any);
+
+        expect((vscode.workspace.findFiles as jest.Mock).mock.calls[0][0]).toBe('**/src/App.tsx');
+        expect(opened()).toEqual([target]);
+    });
+
+    it('searches the sub-package fallback without node_modules', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'src/a/util.ts' } as any);
+
+        expect((vscode.workspace.findFiles as jest.Mock).mock.calls[0][1]).toBe('**/node_modules/**');
+    });
+
+    it.each(['./', '.\\', 'src/*/util.ts', 'src/{a,b}/util.ts', 'src/a/../../x.ts'])('does not turn %s into a search pattern', async (filename) => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename } as any);
+
+        expect(vscode.workspace.findFiles).not.toHaveBeenCalled();
+        expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
+    });
+
+    it.each(['..', '../x', '../../etc/passwd'])('rejects %s', async (filename) => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename } as any);
+
+        expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
+    });
+
+    it('rejects an absolute path outside the root', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: path.join(os.tmpdir(), 'elsewhere.ts') } as any);
+
+        expect(vscode.workspace.openTextDocument).not.toHaveBeenCalled();
+    });
+
+    it('allows a file named ..config.yml inside the root', async () => {
+        const target = write('conf/..config.yml');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'conf/..config.yml' } as any);
+
+        expect(opened()).toEqual([target]);
+    });
+
+    it('puts the cursor on the line and reveals it', async () => {
+        const target = write('src/a/util.ts');
+        const revealRange = jest.fn();
+        const editor: any = { selection: undefined, revealRange };
+        (vscode.window.showTextDocument as jest.Mock).mockResolvedValue(editor);
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'src/a/util.ts', line: 7 } as any);
+
+        expect(opened()).toEqual([target]);
+        expect(editor.selection.start.line).toBe(6);
+        expect(revealRange).toHaveBeenCalledTimes(1);
+        expect(revealRange.mock.calls[0][1]).toBe(vscode.TextEditorRevealType.InCenter);
+    });
+
+    it('reveals the line for a bare name found by search', async () => {
+        const found = vscode.Uri.file(path.join(root, 'x.ts'));
+        (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([found]);
+        const revealRange = jest.fn();
+        (vscode.window.showTextDocument as jest.Mock).mockResolvedValue({ selection: undefined, revealRange });
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'x.ts', line: 3 } as any);
+
+        expect(revealRange).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores a line that is not a positive integer', async () => {
+        (vscode.workspace.findFiles as jest.Mock).mockResolvedValue([vscode.Uri.file(write('x.ts'))]);
+        const revealRange = jest.fn();
+        (vscode.window.showTextDocument as jest.Mock).mockResolvedValue({ selection: undefined, revealRange });
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openFile', filename: 'x.ts', line: -2 } as any);
+
+        expect(revealRange).not.toHaveBeenCalled();
+    });
+});
+
 describe('messageHandlers - persisted review comments', () => {
     beforeEach(() => {
         jest.clearAllMocks();

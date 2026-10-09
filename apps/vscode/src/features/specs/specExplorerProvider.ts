@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { resolveSpecAssistant } from './specAssistant';
+import { resolveSpecBranch } from './specBranch';
 import { getSpecTerminal } from './specTerminals';
 import { BaseTreeDataProvider } from '../../core/providers';
 import {
@@ -738,6 +739,10 @@ class SpecItem extends vscode.TreeItem {
             }
             if (assistant) {
                 tooltipLines.push(`Assistant: ${assistant}`);
+            }
+            const branch = resolveSpecBranch(specContext);
+            if (branch) {
+                tooltipLines.push(`Branch: ${branch}`);
             }
             if (isActive) {
                 tooltipLines.push('A workflow step is running now');

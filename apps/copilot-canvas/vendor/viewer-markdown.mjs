@@ -33,6 +33,7 @@ var KNOWN_EXTENSIONS = /* @__PURE__ */ new Set([
   ".ico",
   ".vsix"
 ]);
+var MAX_LINE = 9999999;
 var SAFE_URL = /^(?:https?:|mailto:|#|\/|\.{0,2}\/|[^:]*$)/i;
 function safeUrl(target) {
   const url = target.trim();
@@ -44,27 +45,98 @@ function escapeHtml(text) {
 function escapeHtmlInScenario(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+var basenameOf = (code) => code.slice(Math.max(code.lastIndexOf("/"), code.lastIndexOf("\\")) + 1);
+var isLineNumber = (lineNo) => Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE;
+function fileRefHtml(code, lineNo, label) {
+  const basename = basenameOf(code);
+  const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
+  const ext = extMatch ? extMatch[0].toLowerCase() : "";
+  if (!ext || !KNOWN_EXTENSIONS.has(ext)) return null;
+  const inAttr = code.replace(/"/g, "&quot;");
+  const titleAttr = code.includes("/") ? ` title="${inAttr}"` : "";
+  const lineAttr = isLineNumber(lineNo) ? ` data-line="${lineNo}"` : "";
+  return `<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`;
+}
 var inAttribute = (value) => value.includes("\0CODE");
 function parseInline(text) {
   if (!text) return "";
   const codeSpans = [];
-  let result = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/`([^`]+)`/g, (_match, code) => {
-    const lastSlash = Math.max(code.lastIndexOf("/"), code.lastIndexOf("\\"));
-    const basename = lastSlash >= 0 ? code.slice(lastSlash + 1) : code;
-    const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
-    const ext = extMatch ? extMatch[0].toLowerCase() : "";
-    if (ext && KNOWN_EXTENSIONS.has(ext)) {
-      const hasDir = code.includes("/");
-      const inAttr = code.replace(/"/g, "&quot;");
-      const titleAttr = hasDir ? ` title="${inAttr}"` : "";
-      codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${titleAttr}><code>${basename}</code></button>`);
-    } else {
-      codeSpans.push(`<code>${code}</code>`);
-    }
+  let result = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/`([^`]+)`/g, (_match, raw) => {
+    const lineMatch = raw.match(/^(.+?):(\d+)(?:-(\d+))?$/);
+    const code = lineMatch ? lineMatch[1] : raw;
+    const lineNo = lineMatch ? Number(lineMatch[2]) : NaN;
+    const label = isLineNumber(lineNo) ? raw.slice(code.length - basenameOf(code).length) : basenameOf(code);
+    codeSpans.push(fileRefHtml(code, lineNo, label) ?? `<code>${raw}</code>`);
     return `\0CODE${codeSpans.length - 1}\0`;
-  }).replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/___(.+?)___/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>").replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => inAttribute(alt) || inAttribute(target) ? match : `<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, "&quot;")}">`).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text2, target) => inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text2}</a>`).replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
+  }).replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/___(.+?)___/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>").replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => {
+    if (inAttribute(alt) || inAttribute(target)) return match;
+    codeSpans.push(`<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, "&quot;")}">`);
+    return `\0CODE${codeSpans.length - 1}\0`;
+  }).replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text2, target) => inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text2}</a>`).replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
   result = result.replace(/<strong>Given<\/strong>/g, '<span class="scenario-keyword scenario-given">Given</span>').replace(/<strong>When<\/strong>/g, '<span class="scenario-keyword scenario-when">When</span>').replace(/<strong>Then<\/strong>/g, '<span class="scenario-keyword scenario-then">Then</span>');
   return result;
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/fenceInfo.ts
+var FENCE_LANGUAGE = /^[a-z0-9][a-z0-9_+#.-]{0,31}$/;
+var OPTION = /([^\s=]+)(?:=("[^"]*"|'[^']*'|\S*))?/g;
+var isFenceLine = (line) => line.trim().startsWith("```");
+function fenceLanguage(word) {
+  const name = word.toLowerCase();
+  return FENCE_LANGUAGE.test(name) ? name : "";
+}
+function parseFenceInfo(info) {
+  const text = info.trim();
+  const first = text.split(/\s+/, 1)[0];
+  const hasLanguage = !first.includes("=");
+  const language = hasLanguage ? fenceLanguage(first) : "";
+  const rest = hasLanguage ? text.slice(first.length) : text;
+  const options = /* @__PURE__ */ new Map();
+  let title = "";
+  for (const [, key, raw] of rest.matchAll(OPTION)) {
+    const value = raw === void 0 ? true : raw.replace(/^(["'])(.*)\1$/, "$2");
+    if (key === "title" && typeof value === "string") title = value;
+    else options.set(key, value);
+  }
+  return { language, title, options };
+}
+function fencedRanges(markdown) {
+  const ranges = [];
+  let offset = 0;
+  let start = -1;
+  for (const line of markdown.split("\n")) {
+    if (isFenceLine(line)) {
+      if (start < 0) start = offset;
+      else {
+        ranges.push([start, offset + line.length]);
+        start = -1;
+      }
+    }
+    offset += line.length + 1;
+  }
+  if (start >= 0) ranges.push([start, offset]);
+  return ranges;
+}
+function mapOutsideFences(markdown, fn) {
+  const lines = markdown.split("\n");
+  if (!lines.some(isFenceLine)) return fn(markdown);
+  const segments = [];
+  let inFence = false;
+  for (const line of lines) {
+    const marker = isFenceLine(line);
+    const fenced = inFence || marker;
+    const last = segments[segments.length - 1];
+    if (last && last.fenced === fenced) last.lines.push(line);
+    else segments.push({ fenced, lines: [line] });
+    if (marker) inFence = !inFence;
+  }
+  return segments.map((segment, index) => {
+    const text = segment.lines.join("\n");
+    if (segment.fenced) return text;
+    if (index === 0) return fn(text);
+    const out = fn("\n" + text);
+    return out.startsWith("\n") ? out.slice(1) : out;
+  }).join("\n");
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/preprocessors.ts
@@ -121,7 +193,7 @@ function getPriorityLabel(priority) {
   };
   return labels[priority.toUpperCase()] || priority;
 }
-function preprocessUserStories(markdown) {
+function preprocessUserStoriesRun(markdown) {
   const storyPattern = /^(###)\s*User Story\s*(\d+)\s*[-–]\s*([^(]+)\s*\(Priority:\s*(P\d)\)/gm;
   return markdown.replace(storyPattern, (_, _hashes, num, title, priority) => {
     const priorityClass = priority.toLowerCase();
@@ -130,7 +202,7 @@ function preprocessUserStories(markdown) {
     return `<div class="user-story-header"><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">\xB7</span><span class="story-priority priority-${priorityClass}"><span class="priority-dot ${priorityClass}"></span>${priorityLabel}</span></div><h3 class="user-story-title">${parseInline(title.trim())}</h3></div>`;
   });
 }
-function preprocessTaskPhases(markdown) {
+function preprocessTaskPhasesRun(markdown) {
   const phasePattern = /^##\s+Phase\s+(\d+)\s*:\s*(.+)$/gm;
   return markdown.replace(phasePattern, (_full, num, rest) => {
     let title = String(rest);
@@ -357,20 +429,33 @@ function stripTaskFormatLegend(markdown) {
   return markdown.replace(/^##[ \t]+Format:.*(?:\n(?!#{1,6}[ \t]).*)*\n?/m, "");
 }
 function preprocessHtmlComments(markdown) {
-  return markdown.replace(/<!--([\s\S]*?)-->/g, (match, content) => {
-    const trimmed = content.trim();
-    if (!trimmed) return "";
-    if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
-    return `
+  const fenced = fencedRanges(markdown);
+  const comment = /<!--([\s\S]*?)-->/g;
+  let out = "";
+  let from = 0;
+  for (let found = comment.exec(markdown); found; found = comment.exec(markdown)) {
+    if (fenced.some(([start, end]) => found.index >= start && found.index < end)) {
+      comment.lastIndex = found.index + 4;
+      continue;
+    }
+    out += markdown.slice(from, found.index) + commentBlock(found[0], found[1]);
+    from = found.index + found[0].length;
+  }
+  return out + markdown.slice(from);
+}
+function commentBlock(match, content) {
+  const trimmed = content.trim();
+  if (!trimmed) return "";
+  if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
+  return `
 <details class="template-instructions"><summary>Template Instructions</summary>
 
 ${trimmed}
 
 </details>
 `;
-  });
 }
-function preprocessCallouts(markdown) {
+function preprocessCalloutsRun(markdown) {
   const patterns = [
     { regex: /(?:^|\n)\s*(?:[\u{1F300}-\u{1F9FF}]\s*)?\*\*Purpose:?\*\*:?\s*([^\n]+(?:\n(?!\n|\*\*|#|-).*)*)/giu, type: "purpose", label: "Purpose" },
     { regex: /(?:^|\n)\s*(?:[\u{1F300}-\u{1F9FF}]\s*)?\*\*CRITICAL:?\*\*:?\s*([^\n]+(?:\n(?!\n|\*\*|#|-).*)*)/giu, type: "critical", label: "Critical" },
@@ -405,6 +490,15 @@ function preprocessCallouts(markdown) {
     });
   }
   return markdown;
+}
+function preprocessUserStories(markdown) {
+  return mapOutsideFences(markdown, preprocessUserStoriesRun);
+}
+function preprocessTaskPhases(markdown) {
+  return mapOutsideFences(markdown, preprocessTaskPhasesRun);
+}
+function preprocessCallouts(markdown) {
+  return mapOutsideFences(markdown, preprocessCalloutsRun);
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/scenarios.ts
@@ -823,6 +917,141 @@ function writtenQuestion(index) {
   return asked.length === marked ? asked[index] : void 0;
 }
 
+// apps/vscode/webview/src/spec-viewer/markdown/sourceLines.ts
+function mapToSourceLines(source, processed) {
+  const processedLines = processed.split("\n");
+  if (source === processed) return processedLines.map((_, i) => i + 1);
+  const sourceLines = source.split("\n");
+  const map = new Array(processedLines.length).fill(0);
+  let cursor = 0;
+  for (let i = 0; i < processedLines.length; i++) {
+    const line = processedLines[i];
+    if (!line.trim()) continue;
+    const found = sourceLines.indexOf(line, cursor);
+    if (found === -1) continue;
+    map[i] = found + 1;
+    cursor = found + 1;
+  }
+  let prevIndex = -1;
+  let prevSource = 0;
+  for (let i = 0; i <= processedLines.length; i++) {
+    const atEnd = i === processedLines.length;
+    if (!atEnd && map[i] === 0) continue;
+    const nextSource = atEnd ? sourceLines.length + 1 : map[i];
+    const floor = Math.min(prevSource + 1, Math.max(nextSource - 1, 1));
+    for (let j = prevIndex + 1; j < i; j++) {
+      map[j] = Math.max(floor, nextSource - (i - j));
+    }
+    prevIndex = i;
+    prevSource = nextSource;
+  }
+  return map;
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/blockFences.ts
+var BLOCK_FENCES = ["calls", "states", "screen"];
+var renderers = /* @__PURE__ */ new Map();
+function isBlockFence(name) {
+  return BLOCK_FENCES.includes(name);
+}
+function registerBlockRenderer(name, renderer) {
+  if (!isBlockFence(name)) return;
+  if (renderer) renderers.set(name, renderer);
+  else renderers.delete(name);
+}
+function renderBlockFence(name, body, info, context) {
+  const render = renderers.get(name);
+  if (!render) return null;
+  try {
+    return render(body, info, context) || null;
+  } catch {
+    return null;
+  }
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/callsCard.ts
+var STRIKE_LABEL = "Strike this call from the plan";
+var LOCATION = /^(.*?)\s+@\s+(\S+?)(?::(\d+))?$/;
+var NEW_FILE = /\s*\*\*new\*\*\s*$/;
+var MARKS = "+~- ";
+function parseRow(row, sourceLine) {
+  if (row.includes("	")) return "a tab in the line";
+  if (row.length < 2 || !MARKS.includes(row[0]) || row[1] !== " ") return "column 0 must be a mark followed by a space";
+  const rest = row.slice(2);
+  const indent = rest.length - rest.trimStart().length;
+  if (indent % 2) return "an odd indent";
+  const found = rest.trim().match(LOCATION);
+  if (!found) return "no location after the name";
+  const [, rawName, path, line] = found;
+  const isNew = NEW_FILE.test(rawName);
+  const name = rawName.replace(NEW_FILE, "").trim();
+  const mark = row[0];
+  if (!name) return "no name before the location";
+  if (isNew && mark !== "+") return "a new file must be a + line";
+  if (isNew && line) return "a new file has no line";
+  if (path.startsWith("/") || path.split("/").includes("..")) return "a path outside the repo";
+  return { mark, depth: indent / 2, name, path, line: line ? Number(line) : null, isNew, sourceLine, source: row.trim() };
+}
+function guides(rows) {
+  const hasLaterSibling = (index) => {
+    const depth = rows[index].depth;
+    for (let j = index + 1; j < rows.length && rows[j].depth >= depth; j++) {
+      if (rows[j].depth === depth) return true;
+    }
+    return false;
+  };
+  const open = [];
+  return rows.map((row, index) => {
+    if (row.depth === 0) return "";
+    const later = hasLaterSibling(index);
+    const prefix = open.slice(1, row.depth).map((on) => on ? "\u2502  " : "   ").join("");
+    open[row.depth] = later;
+    return prefix + (later ? "\u251C\u2500 " : "\u2514\u2500 ");
+  });
+}
+function parseCalls(body, firstLine) {
+  const rows = [];
+  const lines = body.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const text = lines[i].replace(/ +$/, "");
+    if (!text.trim()) continue;
+    const row = parseRow(text, firstLine + i);
+    if (typeof row === "string") return { ok: false, error: row };
+    const expected = rows.length === 0 ? 0 : Math.min(row.depth, rows[rows.length - 1].depth + 1);
+    if (rows.length === 0 && row.depth !== 0) return { ok: false, error: "the entry point is not indented" };
+    if (rows.length > 0 && row.depth === 0) return { ok: false, error: "a second entry point" };
+    if (row.depth !== expected) return { ok: false, error: "a skipped level" };
+    rows.push(row);
+  }
+  if (rows.length === 0) return { ok: false, error: "an empty block" };
+  const tree = guides(rows);
+  return { ok: true, rows: rows.map((row, index) => ({ ...row, guide: tree[index] })) };
+}
+var TINT = { "+": "add", "~": "chg", "-": "del", " ": "same" };
+function renderLocation(row) {
+  const label = row.line === null ? row.path : `${row.path}:${row.line}`;
+  const chip = row.isNew ? null : fileRefHtml(escapeHtml(row.path), row.line ?? NaN, escapeHtml(label));
+  return `<span class="calls-where">${chip ?? escapeHtml(label)}</span>`;
+}
+function renderRow(row) {
+  const strike = row.mark === " " ? "" : `<button type="button" class="calls-strike" data-line="${row.sourceLine}" aria-label="${STRIKE_LABEL}: ${escapeHtml(row.name)}">strike</button>`;
+  const pill = row.isNew ? '<span class="calls-new">new file</span>' : "";
+  const mark = row.mark === "-" ? "\u2212" : row.mark.trim();
+  return `<div class="calls-row calls-row--${TINT[row.mark]}"><span class="calls-mark">${mark}</span><span class="calls-tree">${row.guide}</span><span class="calls-name">${escapeHtml(row.name)}</span>${pill}${renderLocation(row)}${strike}<span class="line-content" hidden>${escapeHtml(row.source)}</span></div>`;
+}
+function renderCallsCard(body, info, context) {
+  const parsed = parseCalls(body, context.firstLine);
+  if (!parsed.ok) return "";
+  const { rows } = parsed;
+  const count = (mark) => rows.filter((row) => row.mark === mark).length;
+  const title = info.title || context.rawTitle;
+  const titleHtml = title ? `<span class="calls-title">${escapeHtml(title)}</span>` : "";
+  const counts = `<span class="calls-counts"><span class="calls-add">+${count("+")}</span> <span class="calls-del">\u2212${count("-")}</span> <span class="calls-chg">~${count("~")}</span> \xB7 1 entrypoint</span>`;
+  const lines = rows.map((row) => context.wrapLine(renderRow(row), row.sourceLine)).join("");
+  const note = context.note ? `<div class="calls-note">${escapeHtml(context.note)}</div>` : "";
+  return `<div class="calls-card"><div class="calls-head"><span class="calls-badge">calls</span>${titleHtml}${counts}</div><div class="calls-rows">${lines}</div>${note}</div>`;
+}
+
 // apps/vscode/webview/src/spec-viewer/markdown/renderer.ts
 var currentTaskId = null;
 var hasSpecContext = false;
@@ -885,6 +1114,7 @@ function wrapWithLineActions(content, lineNum, lastLineNum = lineNum) {
         <div class="line-comment-slot"></div>
     </div>`;
 }
+registerBlockRenderer("calls", renderCallsCard);
 function wrapComponentLine(componentHtml, lineNum) {
   return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">${COMMENT_ICON_SVG2}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
 }
@@ -952,9 +1182,15 @@ function renderMarkdown(markdown) {
   let html = "";
   const slugCounts = /* @__PURE__ */ new Map();
   const lines = markdown.split("\n");
+  const sourceLineOf = mapToSourceLines(source, markdown);
   let inCodeBlock = false;
   let codeBlockLang = "";
+  let codeBlockInfo = parseFenceInfo("");
   let codeContent = [];
+  let codeFirstLine = 0;
+  let codeRawTitle = "";
+  let consumedNoteAt = -1;
+  let inTemplateNote = false;
   let inList = false;
   let listType = "ul";
   let listItemCount = 0;
@@ -979,7 +1215,12 @@ function renderMarkdown(markdown) {
   let paragraph = null;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const sourceLineNum = i + 1;
+    const sourceLineNum = sourceLineOf[i];
+    if (i === consumedNoteAt) continue;
+    if (!inCodeBlock) {
+      if (line.startsWith('<details class="template-instructions">')) inTemplateNote = true;
+      else if (line.startsWith("</details>")) inTemplateNote = false;
+    }
     const trimmedLine = line.trim();
     if (trimmedLine.startsWith("```")) {
       if (inList && !inCodeBlock) {
@@ -990,12 +1231,29 @@ function renderMarkdown(markdown) {
       }
       if (!inCodeBlock) {
         inCodeBlock = true;
-        codeBlockLang = trimmedLine.slice(3).trim();
+        codeBlockInfo = parseFenceInfo(trimmedLine.slice(3));
+        codeBlockLang = codeBlockInfo.language;
         codeContent = [];
+        codeFirstLine = sourceLineOf[i + 1] ?? sourceLineNum + 1;
+        codeRawTitle = trimmedLine.slice(3).trim().split(/\s+/).slice(1).join(" ");
       } else {
         inCodeBlock = false;
         const codeText = codeContent.join("\n");
-        if (codeBlockLang === "mermaid") {
+        let noteAt = i + 1;
+        while (noteAt < lines.length && !lines[noteAt].trim()) noteAt++;
+        const noteText = /^note:/i.test(lines[noteAt] ?? "") ? lines[noteAt].replace(/^note:\s*/i, "").trim() : "";
+        const note = noteText || null;
+        const block = inTemplateNote ? null : renderBlockFence(codeBlockLang, codeText, codeBlockInfo, {
+          firstLine: codeFirstLine,
+          note,
+          rawTitle: codeRawTitle,
+          wrapLine: wrapComponentLine
+        });
+        if (block) {
+          html += `${block}
+`;
+          if (note !== null) consumedNoteAt = noteAt;
+        } else if (codeBlockLang === "mermaid") {
           const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
           html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>
 `;
@@ -1004,8 +1262,8 @@ function renderMarkdown(markdown) {
           html += `<pre class="tree-structure"><code>${body}</code></pre>
 `;
         } else {
-          const langClass = codeBlockLang ? ` class="language-${escapeHtml(codeBlockLang)}"` : "";
-          const dataLang = codeBlockLang ? ` data-language="${escapeHtml(codeBlockLang)}"` : "";
+          const langClass = ` class="language-${codeBlockLang}"`;
+          const dataLang = ` data-language="${codeBlockLang}"`;
           html += `<pre class="code-block"${dataLang}><code${langClass}>${escapeHtml(codeText)}</code></pre>
 `;
         }
@@ -1112,7 +1370,7 @@ function renderMarkdown(markdown) {
         const taskId = taskIdExtract ? taskIdExtract[1] : null;
         const classes = ["task-item", "line"];
         if (checked) classes.push("checked");
-        if (taskId && taskId === currentTaskId) classes.push("in-progress");
+        if (taskId && taskId === currentTaskId && !checked) classes.push("in-progress");
         const classAttr = `class="${classes.join(" ")}"`;
         const dataTaskAttr = taskId ? ` data-task-id="${taskId}"` : "";
         let body = taskId ? taskText.replace(/^\s*(?:<strong>\s*)?T\d+(?:\s*<\/strong>)?\s*/i, "") : taskText;
@@ -1186,13 +1444,14 @@ function renderMarkdown(markdown) {
       html += line + "\n";
       continue;
     }
-    if (paragraph && paragraph.htmlEnd === html.length && paragraph.lastLine === sourceLineNum - 1 && continuesParagraph(paragraph.lines[paragraph.lines.length - 1], line)) {
+    if (paragraph && paragraph.htmlEnd === html.length && paragraph.lastIndex === i - 1 && continuesParagraph(paragraph.lines[paragraph.lines.length - 1], line)) {
       html = html.slice(0, paragraph.htmlStart);
       paragraph.lines.push(line.trimStart());
     } else {
-      paragraph = { lines: [line], firstLine: sourceLineNum, lastLine: sourceLineNum, htmlStart: html.length, htmlEnd: 0 };
+      paragraph = { lines: [line], firstLine: sourceLineNum, lastLine: sourceLineNum, lastIndex: i, htmlStart: html.length, htmlEnd: 0 };
     }
     paragraph.lastLine = sourceLineNum;
+    paragraph.lastIndex = i;
     html += wrapWithLineActions(`<p>${parseInline(paragraph.lines.join(" "))}</p>`, paragraph.firstLine, paragraph.lastLine);
     paragraph.htmlEnd = html.length;
   }

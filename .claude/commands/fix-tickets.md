@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
+allowed-tools: Bash(git:*), Bash(gh:*), Bash(npm:*), Bash(node:*), Bash(python3:*), Bash(code:*), Bash(specify:*), Bash(date:*), Bash(sleep:*), Bash(jq:*), Bash(tooling/scripts/merge-pr.sh:*), Bash(tooling/scripts/new-worktree.sh:*), Agent, AskUserQuestion, Read, Write, Edit, Skill, TaskCreate, TaskUpdate
 description: Autonomously fix one or more speckit-companion GitHub issues with /speckit-companion-auto — fresh main, auto (fix + reviews + PR), merge, learnings — then one install-local and a run report. Self-hosting build loop.
 argument-hint: "<issue numbers e.g. '237 238 241'> | 'open' (all open issues) | <path to backlog .md> | --light [free-text tasks]"
 ---
@@ -13,7 +13,7 @@ A **self-hosting build loop** for `speckit-companion`, and step 2 of `/release-l
 For each ticket, in strict sequence:
 
 1. **Fresh `main`** — pull, and if the pull changed `apps/speckit-extension/`, refresh the installed companion commands so this ticket runs on the previous ticket's merge.
-2. **Auto** — confirm the bug still reproduces, then run `/speckit-companion-auto`. Its project hooks (`.specify/companion.yml`, after implement's `handoff`) do the self-review, `/code-review` + `/codex:review` in parallel (max two rounds), the commit, and the PR.
+2. **Auto** — confirm the bug still reproduces, then run `/speckit-companion-auto`. Its project hooks (`.specify/companion.yml`, after implement's `handoff`) do the self-review, one `/code-review` pass (`/codex:review` beside it only for the webview renderer, the run-record writer or a publish command), the commit, and the PR.
 3. **Merge** — squash-merge once every CI check has finished and passed.
 4. **Learnings** — log the review findings to the Review Ledger, route each kept lesson to where it fires, tick the ticket in the live queue.
 5. **Next ticket.**
@@ -23,8 +23,9 @@ After all tickets: one closing `/install-local`, then one **run report** (markdo
 ## Locked defaults
 
 - **Merge:** auto-merge, no per-ticket stop. You review via the final report; `/release-qa` covers the batch afterwards.
-- **Auto runs in the main loop, not a subagent.** Its review hook dispatches `/code-review` and `/codex:review` as two subagents; inside a subagent that nesting fails and the hook falls back to `/code-review` alone, silently dropping Codex. Keep the main context lean another way: after each ticket, re-derive state from `git`/`gh` and the ticket's result line, not from the transcript.
+- **Auto runs in the main loop, not a subagent.** Its review hook dispatches the reviewers as subagents; inside a subagent that nesting fails and the hook falls back to `/code-review` inline. Keep the main context lean another way: after each ticket, re-derive state from `git`/`gh` and the ticket's result line, not from the transcript.
 - **The auto hooks are the review gate.** Don't add a second `/code-review` pass on top — that's what the old loop did, and it reviewed every ticket twice.
+- **One review pass, two at most.** `/code-review` runs once. `/codex:review` joins it only where a second reviewer has paid for itself: the webview renderer, the writer of the run record, or a publish command. A second round happens only when a fix itself changed real logic, and then it reviews only that fix.
 - **Sequential only.** Never parallelize — each ticket must run on the previous ticket's merged commands. (`--light` lifts this. See [Light mode](#light-mode---light).)
 - **The loop compounds.** Every ticket reads `.claude/review-checklist.md` (+ the `CLAUDE.md` conventions it points to) before fixing, and routes any new high-signal learning to where it fires (review check → checklist; authoring convention → `CLAUDE.md`; loop-mechanics → this file; gap → an issue). Convention/architecture promotions are *proposed* in the report, never auto-applied.
 - **Queue gating honored.** `🔒 Gated` tickets are skipped; `⏸️ Review-gated` tickets pause before merge.
@@ -53,7 +54,7 @@ Only for **mechanical** changes whose cause and fix are already settled: a wrong
 | Fix | `/speckit-companion-auto`, writes `specs/NNN-*/` | **direct fix**, no spec folder |
 | Execution | strictly sequential | **parallel worktree subagents** |
 | `install-local` | **once, at the end** (commands refreshed per ticket) | **once, at the end** |
-| Code review | auto's hooks: `/code-review` + `/codex:review` in parallel, max two rounds, findings logged to the Review Ledger | `/code-review` high + `/codex:review` per branch (L2) |
+| Code review | auto's hooks: one `/code-review` pass, `/codex:review` only for the three places that earn it, findings logged to the Review Ledger | `/code-review` high per branch (L2), same three-place rule for Codex |
 | Learnings | distill per ticket | **one distill** for the batch |
 | Report | markdown run report in the vault | **chat summary** |
 
@@ -86,7 +87,7 @@ Four things collide if you're not careful. Note that the first two are precisely
 1. **Spec numbering race.** Specify picks the next `NNN-` by scanning `specs/`. Two agents starting together both choose the same number. — *Cannot happen in light mode: no spec pipeline.*
 2. **A fresh worktree has no companion commands.** `.specify/extensions/companion/` is **gitignored** (it's the `--dev` install), so a new worktree checks out tracked files only and `/speckit.companion.*` does not exist there. An agent running the pipeline in a worktree fails — or silently falls back, which is worse. — *Cannot happen in light mode: no pipeline. If you ever need it, the worktree must run `specify extension add ./apps/speckit-extension --dev --force` first.*
 3. **`install-local` is a global singleton.** One VS Code extension host, one `~/.vscode/extensions`. It cannot be parallelized — run it **once, after all merges**.
-4. **A fresh worktree has no `node_modules` — run `npm ci` FIRST or every test run lies.** `node_modules/` is gitignored, so a new worktree checks out source only. Worse than an obvious "command not found": jest's `moduleNameMapper` is pinned to `rootDir`, so ~10 suites fail on *module resolution* and read like real regressions. Two of four agents hit this on the first light run and one nearly reported it as a broken build. **`npm ci` in the worktree before you trust any `npm test` / `npm run compile` output** — and if a test suite fails on `Cannot find module`, that is this, not your change.
+4. **A fresh worktree has no `node_modules` — make it with `tooling/scripts/new-worktree.sh <name> <branch>`, which links them, or run `npm ci` FIRST, or every test run lies.** `node_modules/` is gitignored, so a new worktree checks out source only. Worse than an obvious "command not found": jest's `moduleNameMapper` is pinned to `rootDir`, so ~10 suites fail on *module resolution* and read like real regressions. Two of four agents hit this on the first light run and one nearly reported it as a broken build. **`npm ci` in the worktree before you trust any `npm test` / `npm run compile` output** — and if a test suite fails on `Cannot find module`, that is this, not your change.
 
 **Disjointness gate.** Before fanning out, name the files each task will touch. **If two tasks touch the same file, do not run them in parallel** — run those two sequentially (or fold them into one PR). Parallel PRs on the same file just move the conflict to merge time.
 
@@ -113,7 +114,7 @@ Dispatch all disjoint tasks **in a single message** so they run concurrently. Ea
 If a subagent returns `escalate` — the task was bigger than it looked — **do not merge it**. Leave the branch, report it, and re-run it through the full loop.
 
 ### L2. Review — one subagent per branch
-`/code-review` at **high** effort on each branch's diff vs `main`, with `/codex:review --base main --scope branch` in parallel, apply findings, commit, re-run tests, log each finding to the Review Ledger. Max two rounds, like the full loop; this step is not lightened.
+`/code-review` at **high** effort on each branch's diff vs `main` — **one pass**. Run `/codex:review --base main --scope branch` beside it only when that branch's diff touches the webview renderer, the writer of the run record, or a publish command; elsewhere one reviewer is the gate. Apply findings, commit, re-run the suite only if the fixes changed code, and log each finding to the Review Ledger. A second round happens only for a fix that changed real logic, and reviews only that fix; this step is not lightened, it is just not repeated for its own sake.
 
 ### L3. PR — main loop
 Open a PR per branch (`/create-pr` conventions). Since there's no issue, **the PR body must carry the why** — what was broken, how you know, how to verify. No `Closes #N`. (The review already happened in L2; if an L2 fix changed real logic, re-run `/code-review` on it before opening the PR.)
@@ -158,12 +159,12 @@ The installed companion commands (`.specify/extensions/companion/`, `.claude/ski
 - **Read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to).
 - **Verify the bug reproduces on current `main`.** Backlog tickets go stale — they're frequently already fixed, duplicates, or already-correct paths (~3 of 8 in one batch). If it's already fixed, STOP this ticket, close the issue as resolved/dup with the evidence, and move on. Deliver only the genuinely-missing part.
 - Run `/speckit-companion-auto` with the issue as the feature description. Include `Issue #N: <title>` and the body, and say the PR body must carry `Closes #N`.
-- Auto runs specify → plan → tasks → implement unattended and ends at `completed`. Implement's hooks in `.specify/companion.yml` then self-review, run `/code-review` + `/codex:review` in parallel (max two rounds; anything still open goes into the PR body as a gap), commit, and open the PR via `/create-pr`. It does not merge.
+- Auto runs specify → plan → tasks → implement unattended and ends at `completed`. Implement's hooks in `.specify/companion.yml` then self-review, run `/code-review` once (with `/codex:review` beside it only for the webview renderer, the run-record writer or a publish command; anything still open goes into the PR body as a gap), commit, and open the PR via `/create-pr`. It does not merge.
 - **Keep the review findings.** As auto's reviews return, note each finding: what it was, who found it (`code-review` / `codex` / `both`), severity, and whether it changed code. Steps 4a and 4b need them; the transcript won't be re-read.
 - **Check what auto left behind before merging:**
   - `specs/<NNN>-<slug>/` is `completed`, all tasks checked, `specName` is the real name (not `[FEATURE NAME]`). **NEVER revert a Companion-built spec from `completed` back to `implemented`.**
   - The PR does not carry regenerated `.specify/` artifacts (`feature.json`, registry files). **One exception:** if the PR adds or renames a command in `extension.yml`, `.specify/extensions/.registry` MUST stay in the diff — CI's `check-command-emissions.py` gate requires it.
-  - `npm run compile && npm test` is green. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check_shape_parity.py`. If capture/timing changed, run the capture eval.
+  - The suites are green — **read that, don't re-run it.** Implement records every check it ran with `--verify-run`, so the answer is already in `specs/<NNN>-<slug>/.spec-context.json` under `verified`: find the compile and test entries and look at `exitCode`. Re-run `npm run compile && npm test` yourself only when there is no such entry, when one exited non-zero, or when a source file was written after the record was — compare the newest changed file against the modified time of `.spec-context.json`. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check_shape_parity.py`. If capture/timing changed, run the capture eval.
   - Push any fixes to the PR branch.
 - **Log the subagents — observe, never force.** Run `python3 .claude/scripts/subagent-tally.py specs/<NNN>-<slug>`. It reads this session's transcript and prints, per step, the subagents auto actually dispatched next to what that step's rule expects (plan: one reader per recorded `area:`, at most 4, plus 2 design-doc writers, nothing on a simple run; implement: one per story phase with 5+ files, up to 4 per Foundational wave of 4+ tasks, plus 2 reviewers per round). Copy the output into the ticket's result line as is. Do not re-run a step to get the expected number, and do not dispatch workers auto skipped: a gap between expected and actual is a finding for the report, not something to fix mid-ticket.
 - If auto can't produce a passing fix, or ends without a PR, record the ticket as "needs attention," get back to a clean `main`, and continue.
@@ -171,18 +172,14 @@ The installed companion commands (`.specify/extensions/companion/`, `.claude/ski
 Then write one result line for the ticket (PR, spec dir, summary, findings, subagent tally) and work from that, not the transcript, for the rest of the run.
 
 #### 3. Merge + cleanup — main loop
-```bash
-gh pr checks <PR> --watch || true     # let CI finish
-gh pr checks <PR>                     # every check must now read pass; pending or fail means no merge
-```
-Merge only when every check has finished and passed. Never merge with a check still pending.
-
 **Review-gate check.** If this ticket is **review-gated** (the `⏸️ Review-gated` group, or `--review-merge`), do **not** merge. Post the PR link and a one-line summary, record it as "merged: NO — awaiting your review," and move to the next ticket.
 
 Otherwise:
 ```bash
-gh pr merge <PR> --squash --delete-branch
+tooling/scripts/merge-pr.sh <PR>      # merges once every check has passed: queued on GitHub when the repo allows auto-merge, otherwise it waits here
 ```
+When it queues the merge it returns at once: move to the next ticket and read the outcome with `gh pr view <PR> --json state` before the final report. Exit 3 means the pull request changes what a person sees and the owner has not looked: record "merged: NO — awaiting your review" and re-run with `--seen` only after they approve. Never merge around the script with `gh pr merge`.
+
 If checks fail and can't be fixed on the branch, leave the PR open, record "merged: NO — checks failing," continue.
 
 #### 4. Learnings + tick the box — main loop

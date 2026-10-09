@@ -9,8 +9,20 @@
  *  - Documents without frontmatter are returned unchanged.
  */
 
+import { BLOCK_FENCES, registerBlockRenderer } from '../blockFences';
+import { parseFragment } from 'parse5';
 import { renderMarkdown } from '../renderer';
 import { stripFrontmatter, stripTaskFormatLegend } from '../preprocessors';
+
+describe('renderMarkdown: a comment that wraps a code fence', () => {
+    it('shows no stray comment marker and keeps the code inside the instructions', () => {
+        const html = renderMarkdown('# T\n\n<!--\nRun this:\n```bash\nspecify init\n```\n-->\n\nafter');
+
+        expect(html).not.toContain('--&gt;');
+        expect(html).not.toContain('-->');
+        expect(html).toContain('after');
+    });
+});
 
 describe('renderMarkdown — CRLF normalization (issue #158)', () => {
     it('renders a CRLF heading as <h1>, not a literal "#" paragraph', () => {
@@ -281,5 +293,128 @@ describe('renderMarkdown: a hard-wrapped paragraph', () => {
 
     it('joins a continuation that only mentions a colon mid-line', () => {
         expect(renderMarkdown('The first half\nof a sentence: with a colon.')).toContain('data-line-end="2"');
+    });
+});
+
+describe('renderMarkdown: a fenced code block', () => {
+    type Node = { nodeName: string; attrs?: { name: string; value: string }[]; childNodes?: Node[] };
+
+    const elements = (source: string): Node[] => {
+        const found: Node[] = [];
+        const walk = (node: Node): void => {
+            if (node.attrs) found.push(node);
+            (node.childNodes ?? []).forEach(walk);
+        };
+        walk(parseFragment(renderMarkdown(source)) as unknown as Node);
+        return found;
+    };
+    const fence = (info: string): Node[] => elements('```' + info + '\nconst a = 1;\n```\n');
+    const attrs = (node: Node): Record<string, string> =>
+        Object.fromEntries((node.attrs ?? []).map((a) => [a.name, a.value]));
+
+    it.each([
+        ['ts', 'ts'],
+        ['c++', 'c++'],
+        ['c#', 'c#'],
+        ['objective-c', 'objective-c'],
+        ['TypeScript', 'typescript'],
+    ])('marks a %s block with its language', (info, language) => {
+        const [pre, code] = fence(info);
+
+        expect(attrs(pre)).toEqual({ class: 'code-block', 'data-language': language });
+        expect(attrs(code)).toEqual({ class: `language-${language}` });
+    });
+
+    it.each([
+        ['a title', 'js title="x"'],
+        ['line numbers', 'js {1,3-4}'],
+    ])('keeps only the language when %s follows it', (_name, info) => {
+        const [pre, code] = fence(info);
+
+        expect(attrs(pre)).toEqual({ class: 'code-block', 'data-language': 'js' });
+        expect(attrs(code)).toEqual({ class: 'language-js' });
+    });
+
+    it.each([
+        ['a double quote', 'js" onmouseover="alert(1)'],
+        ['a single quote', "js' onmouseover='alert(1)"],
+        ['a closing bracket', 'js><img src=x onerror=alert(1)>'],
+        ['an event handler after a space', 'js onmouseover=alert(1) class=sr-only'],
+        ['an over-long name', 'a'.repeat(33)],
+    ])('adds no attribute, class or element for an info string with %s', (_name, info) => {
+        const found = fence(info);
+
+        expect(found.map((node) => node.nodeName)).toEqual(['pre', 'code']);
+        for (const node of found) {
+            expect(Object.keys(attrs(node)).filter((name) => name !== 'class' && name !== 'data-language')).toEqual([]);
+            expect(attrs(node).class ?? '').toMatch(/^(code-block|tree-structure|language-js|)$/);
+            expect(attrs(node)['data-language'] ?? 'js').toBe('js');
+        }
+    });
+
+    it('still draws a mermaid fence as a diagram when words follow the language', () => {
+        expect(renderMarkdown('```mermaid title="flow"\ngraph TD;\n```\n')).toContain('<pre class="mermaid"');
+    });
+
+    it('renders an unnamed or text fence as a plain block', () => {
+        expect(renderMarkdown('```\nplain\n```\n')).toContain('<pre class="tree-structure"><code>plain</code></pre>');
+        expect(renderMarkdown('```Text\nplain\n```\n')).toContain('<pre class="tree-structure"><code>plain</code></pre>');
+    });
+});
+
+describe('renderMarkdown: a block fence', () => {
+    const plain = (name: string): string => `<pre class="code-block" data-language="${name}"><code class="language-${name}">a --&gt; b</code></pre>\n`;
+    const src = (name: string, info = ''): string => '```' + name + info + '\na --> b\n```\n';
+
+    afterEach(() => {
+        for (const name of BLOCK_FENCES) registerBlockRenderer(name, undefined);
+    });
+
+    it.each(BLOCK_FENCES)('renders %s as the plain code block when no renderer is registered', (name) => {
+        expect(renderMarkdown(src(name))).toBe(plain(name));
+    });
+
+    it('keeps the title and options out of the markup', () => {
+        const html = renderMarkdown(src('calls', ' title="x" onmouseover="alert(1)"'));
+
+        expect(html).toBe(plain('calls'));
+    });
+
+    it('hands the body and the parsed info to a registered renderer', () => {
+        const seen: unknown[] = [];
+        registerBlockRenderer('states', (body, info) => {
+            seen.push(body, info.title, info.options.get('dense'));
+            return '<div class="states-block"></div>';
+        });
+
+        const html = renderMarkdown(src('states', ' title="Flow" dense'));
+
+        expect(html).toBe('<div class="states-block"></div>\n');
+        expect(seen).toEqual(['a --> b', 'Flow', true]);
+    });
+
+    it('asks the registry before the tree check', () => {
+        registerBlockRenderer('screen', () => '<div class="screen-block"></div>');
+        const tree = '```screen\nsrc/\n├── a.ts\n└── b.ts\n```\n';
+
+        expect(renderMarkdown(tree)).toBe('<div class="screen-block"></div>\n');
+    });
+
+    it('falls back to the plain block when the renderer throws', () => {
+        registerBlockRenderer('calls', () => { throw new Error('boom'); });
+
+        expect(renderMarkdown(src('calls'))).toBe(plain('calls'));
+    });
+
+    it('falls back to the plain block when the renderer returns nothing', () => {
+        registerBlockRenderer('calls', () => '');
+
+        expect(renderMarkdown(src('calls'))).toBe(plain('calls'));
+    });
+
+    it('does not register a name that is not a block fence', () => {
+        registerBlockRenderer('code', () => '<div class="x"></div>');
+
+        expect(renderMarkdown(src('code'))).not.toContain('class="x"');
     });
 });

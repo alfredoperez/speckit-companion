@@ -34,7 +34,11 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
   ClientRouter turns a docs-to-docs click into a swap of the page body instead of
   a new document, so the header and sidebar stop flashing. Only docs pages carry
-  it: a link to the landing page or the changelog is still a full load.
+  it, and the router does not know that: asked for the landing page or the
+  changelog it downloads the whole page, finds nothing to swap, and only then
+  starts the real load. The first listener in the script below marks every link
+  that leaves /docs/ as a plain navigation before the router sees the click, so
+  leaving the docs starts at once.
 
   Starlight keeps the sidebar's scroll position and open groups in
   sessionStorage, from a script that holds on to the first page's elements. After
@@ -77,6 +81,16 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         sessionStorage.setItem(KEY, JSON.stringify(read()));
       } catch {}
     };
+
+    addEventListener(
+      'click',
+      (event) => {
+        const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
+        if (!link || link.origin !== location.origin) return;
+        if (!/^\/docs(\/|$)/.test(link.pathname)) link.dataset.astroReload = '';
+      },
+      true,
+    );
 
     let before;
 

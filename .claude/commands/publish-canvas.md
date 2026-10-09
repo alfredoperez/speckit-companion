@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(node:*), Bash(cp *), Bash(rm *), Bash(mkdir *), Bash(sed *), Read, Edit, Write, AskUserQuestion
+allowed-tools: Bash(git *), Bash(gh *), Bash(npm *), Bash(node:*), Bash(cp *), Bash(rm *), Bash(mkdir *), Bash(sed *), Bash(pipx *), Read, Edit, Write, AskUserQuestion
 description: Release the GitHub Copilot app canvas (apps/copilot-canvas) by validating it and opening or updating its pull request on github/awesome-copilot
 ---
 
@@ -52,7 +52,9 @@ Release the **GitHub Copilot app canvas** (`apps/copilot-canvas/`). It reaches u
 6. **Validate with their validator, then regenerate their README**:
    ```bash
    cd "$AC" && npm ci && npm run plugin:validate && npm start
+   pipx run codespell extensions/speckit-companion plugins/speckit-companion
    ```
+   The last line is their spelling check, read from their `.codespellrc`; their CI fails the pull request on it, and it reads a short variable name in the bundled code as a typo. With no `pipx`, install `codespell` into a throwaway virtual environment and run that.
    Every error is fixed in `apps/copilot-canvas/` here, amended into the step 3 commit and synced again, never patched in the checkout. Their CI fails a pull request whose generated README is stale, so the files `npm start` changes go in the commit. Commit everything in the checkout as one commit.
 7. **Show and wait.** Write the pull request text and show the user all of it: the title, the body, the base (`github/awesome-copilot` `main`), the head branch, and `git -C "$AC" diff --stat origin/main`. The title is `Add SpecKit Companion canvas extension` the first time and `Update SpecKit Companion canvas extension to v<X.Y.Z>` after. The body is plain prose: what the board does in two sentences, the two folders it adds or changes, that `npm run plugin:validate` and `npm start` ran clean, a link to the source folder in this repo, and on an update what changed since the listed version. Then stop until the user answers with an explicit go. A go from earlier in the conversation, or one given to `/publish-all` for the release as a whole, does not count.
 8. **Send**, only after the go:

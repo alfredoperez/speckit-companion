@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git *), Bash(gh *), Bash(claude *), Bash(npm run:*), Bash(node:*), Read, Edit, AskUserQuestion
+allowed-tools: Bash(git *), Bash(gh *), Bash(claude *), Bash(npm run:*), Bash(node:*), Bash(tooling/scripts/sync-mod-mirror.sh:*), Read, Edit, AskUserQuestion
 description: Release the Claude Code mod (apps/claude-mod) through this repo's plugin marketplace, and prepare the Anthropic directory submission for the user to send
 ---
 
@@ -41,7 +41,8 @@ Release the **Claude Code mod** (`apps/claude-mod/`, plugin `speckit-companion`)
    claude plugin install speckit-companion@speckit-companion
    ```
    People who already have it run `claude plugin update speckit-companion@speckit-companion`, since auto-update is off by default for a third-party marketplace.
-10. **Directory submission.** Anthropic's directory is optional and only the user can submit to it, at https://claude.ai/directory/manage. Never open the portal or submit. Print the text for them to paste: the plugin name and display name, the description from `plugin.json`, the repository URL and the `apps/claude-mod` path inside it, the version and its tag, the homepage, the license, and one line saying the plugin is a mod that draws only in Claude Code (the terminal and the Desktop app's Code tab) and only reads. Say that the portal runs checks the CLI does not, so a clean local validation is not a guarantee.
+10. **Directory mirror.** Anthropic's directory reads a small mirror repo, `alfredoperez/speckit-companion-claude-mod`, because this repo is over its 50 MiB limit. Run `tooling/scripts/sync-mod-mirror.sh --push`: it copies the released mod, validates it and pushes, and the directory picks the new version up from that repo's `main`. The listing is managed at https://claude.ai/directory/manage; a version held for review is the user's to follow there. Never open the portal or submit on their behalf without being asked.
+11. **Before a first listing anywhere else**, read the destination's own checklist and run its validator before sending. The directory's is https://claude.com/docs/plugins/pre-submission-checklist: a square PNG icon at `.claude-plugin/icon.png`, and a README that says what the mod reads, runs and sends.
 
 ### Guardrails
 

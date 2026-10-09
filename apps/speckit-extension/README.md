@@ -153,12 +153,9 @@ The specs themselves get smaller, too. Same four steps, smaller output: the spec
 
 ### Build what you configured
 
-What you write in `companion.yml` takes effect when you build. Preview first, then apply:
+If you only use the CLI, edit `.specify/companion.yml` and run your command. Hooks attached to a node take effect on the next run, because the assistant reads the file as it goes. A hook that points at one of your own node files reads it from `.specify/companion/nodes/<id>.md` the same way. There is nothing to build.
 
-```bash
-python3 .specify/extensions/companion/scripts/build-pipeline.py --dry-run   # what would change
-python3 .specify/extensions/companion/scripts/build-pipeline.py             # apply it
-```
+The rest takes a build: `nodes:` order, phase hooks, `templates:` and `decisions:`. The release zip does not carry the build script. The VS Code extension's [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder) runs it for you, and the repo's `apps/speckit-extension/scripts/build-pipeline.py` does the same from a checkout.
 
 A build resolves four things and writes the commands your assistant reads:
 
@@ -173,7 +170,7 @@ Nothing is written until every command has assembled, so a build that cannot fin
 
 Steps are grouped into named **phases** (gather, author, check, wrap-up). A phase is where a hook can attach without naming a single node; it is not a separate dispatch, so the command your assistant receives is still one command.
 
-If you use the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion), its [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder) draws all of this and runs the build for you.
+If you use the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion), its [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder) draws all of this and runs the build for you.
 
 ### A node you can attach: call paths in the plan
 
@@ -192,7 +189,7 @@ It is off unless you add it. [docs/call-paths.md](./docs/call-paths.md) has the 
 
 ## Fast path: a small change skips the ceremony
 
-Not every change deserves four documents. After specify, the change is sized `small`, `normal`, or `oversized` against a fixed bar (about five files or ten tasks). A small change takes a folded path: one lean specify pass that carries the plan inline, then straight to implement. An oversized one gets a visible warning and then the full pipeline. Nothing is ever skipped silently, and an ambiguous size always runs every phase.
+Not every change deserves four documents. After specify, the change is sized `small`, `normal`, or `oversized` against a fixed bar (about five files or ten tasks). A change that is hard to undo or hard to check is never small, whatever its size. A small change takes a folded path: one lean specify pass that carries the plan inline, then straight to implement. An oversized one gets a visible warning and then the full pipeline. Nothing is ever skipped silently, and an ambiguous size always runs every phase.
 
 ```mermaid
 flowchart LR
@@ -329,7 +326,7 @@ Each lifecycle hook appends one entry to the canonical `history[]` and advances 
 
 ## Docs & links
 
-- [**speckit-companion.dev/docs**](https://speckit-companion.dev/docs/): the guides, from install to each step, living specs and the Pipeline Builder.
+- [**speckit-companion.dev/docs**](https://speckit-companion.dev/docs/): the guides, from install to each step, living specs and the Workflow Builder.
 - [**SpecKit Companion for VS Code**](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion): the sidebar, viewer and Overview this feeds.
 - [**The Copilot app board**](https://speckit-companion.dev/docs/copilot-app/install/) and [**the Claude Code mod**](https://speckit-companion.dev/docs/claude-code/install/): the same record outside VS Code.
 - [docs/install.md](./docs/install.md): install (release / dev / fallback) + verification.

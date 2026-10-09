@@ -38,6 +38,8 @@ interface Props {
     onShowChanged?: (step: string) => void;
     /** The first-run line has been read. Absent outside the panel. */
     onDismissFirstRun?: () => void;
+    /** Open the living-specs settings. Absent when the graph carries none. */
+    onOpenLivingSpecs?: () => void;
 }
 
 /**
@@ -73,6 +75,11 @@ export function StatusIcon({ tone }: { tone: string }) {
 /** `1 step`, `3 phases`. A pipeline with one of something said "1 steps". */
 function tally(count: number, noun: string): string {
     return `${count} ${noun}${count === 1 ? '' : 's'}`;
+}
+
+/** `1 capability`, `3 capabilities` — the one noun `tally` pluralises wrong. */
+function capabilities(count: number): string {
+    return `${count} ${count === 1 ? 'capability' : 'capabilities'}`;
 }
 
 /**
@@ -204,6 +211,7 @@ function reportTone(report: BuildReport): string {
 export function Header(props: Props) {
     const { graph, buildState, busy, report, onBuild, onPreview, onOpenConfig } = props;
     const counts = totals(graph);
+    const living = graph.livingSpecs;
     const [showingLog, setShowingLog] = useState(false);
     const changedSteps = graph.steps.filter(changed).length;
     const firstChanged = graph.steps.find(changed)?.name ?? '';
@@ -292,6 +300,25 @@ export function Header(props: Props) {
                     title="What this pipeline holds"
                     options={tallyOptions(counts)}
                     onPick={() => undefined} />
+
+                {/* The other half of what a run reads, and the board drew the
+                    same picture whether it was on or off. A chip rather than a
+                    lane: living specs are not a step, they are what every step
+                    loads before it starts. */}
+                {living && props.onOpenLivingSpecs && (
+                    <button class={`builder-chip${
+                        living.enabled ? ' builder-chip--customised' : ''}`}
+                        title="Living specs — whether they run, and where they live"
+                        aria-label={`Living specs are ${living.enabled ? 'on' : 'off'}`
+                            + ` — ${capabilities(living.capabilities.length)}`}
+                        onClick={props.onOpenLivingSpecs}
+                    >
+                        {living.enabled
+                            ? `Living specs · ${capabilities(living.capabilities.length)}`
+                            : 'Living specs off'}
+                        <span class="builder-chip-caret" aria-hidden="true">›</span>
+                    </button>
+                )}
 
                 {/* A run grows at its end, so the way to grow it belongs in the
                     band that names the run. It was parked past the last lane,

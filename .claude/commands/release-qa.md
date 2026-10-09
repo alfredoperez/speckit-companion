@@ -10,7 +10,7 @@ QA for a release, once, at the end of a batch. It is issue-agnostic: it reads wh
 
 ## Run
 
-Load the `release-qa` skill and follow it in order: Step 0 scope, Step 1 automated gates, Step 2 desktop checks, Step 3 report. The skill owns the flow, `.claude/skills/release-qa/surface-map.yml` owns which paths need which checks, and the helper scripts next to it do the mechanical work.
+Load the `release-qa` skill and follow it in order: Step 0 scope, Step 1 automated gates, Step 2 scripted and desktop checks, Step 3 report. The skill owns the flow, `.claude/skills/release-qa/surface-map.yml` owns which paths need which checks, and the helper scripts next to it do the mechanical work.
 
 `$ARGUMENTS`:
 - empty: the full run, baseline included.

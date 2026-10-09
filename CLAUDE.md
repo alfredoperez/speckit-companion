@@ -11,7 +11,7 @@ Five deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`,
 - `apps/vscode/tests/` — integration, eval and shared fixtures, including the VS Code mock. Unit tests live in `__tests__` beside the code they cover.
 - `assets/` — the mascot and social art. `content/media/` — the clips and renders the site and README serve. `tooling/scripts/` — the build and capture commands that produce them.
 - `.github/`, `.specify/`, `.claude/`, `.agents/`, `.codex/`, `.storybook/`, `.vscode/` — committed dot-folders that are `specify init` output and manual-testing fixtures.
-- `content/design/` — Pipeline Builder design-tool mockups (`*.dc.html` screens plus `canvas.json`), not a dot-folder or a fixture.
+- `content/design/` — Workflow Builder design-tool mockups (`*.dc.html` screens plus `canvas.json`), not a dot-folder or a fixture.
 - `.serena/`, `.pytest_cache/`, and the per-agent command mirrors in `.gitignore` — local caches, not source.
 
 The example apps and bench sandboxes that used to sit here now live in the sibling `speckit-sandboxes` repo: one recipe per reusable test sandbox (`/sandbox` builds one), the seed apps they start from, the benchmark harness in its bench folder, and kept run results in its evidence folder. `.claude/sandboxes-env.sh` is the one place that knows where that checkout is; commands and scripts source it and never spell the path out.

@@ -2,7 +2,7 @@
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
   "description": "See and steer everything your AI builds. Specs 60-68% leaner, same correctness. Live pipeline, per-phase timing, and living specs for GitHub SpecKit with Copilot, Claude, Gemini, and more.",
-  "version": "0.35.0",
+  "version": "0.36.0",
   "license": "MIT",
   "publisher": "alfredoperez",
   "icon": "icon.png",
@@ -647,7 +647,7 @@
       },
       {
         "command": "speckit.companion.openPipelineBuilder",
-        "title": "Open Pipeline Builder",
+        "title": "Open Workflow Builder",
         "category": "SpecKit Companion",
         "icon": "$(circuit-board)"
       }
@@ -688,7 +688,7 @@
         },
         {
           "command": "speckit.companion.openPipelineBuilder",
-          "when": "view == speckit.views.explorer && speckit.companion.installed",
+          "when": "view == speckit.views.explorer",
           "group": "navigation@8"
         },
         {
@@ -1613,9 +1613,13 @@
     "media:all": "node tooling/scripts/capture-docs-images.mjs && node tooling/scripts/capture-docs-images.mjs --clips && node tooling/scripts/render-web-clips.mjs && node tooling/scripts/build-stills.mjs && node tooling/scripts/build-clip-gifs.mjs && node apps/website/scripts/sync-media.mjs && node tooling/scripts/clip-storyboard.mjs --check && node tooling/scripts/check-media-manifest.mjs",
     "check:desktop": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs",
     "check:terminal": "node tooling/scripts/terminal-check.mjs",
-    "shots": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --shots .shots",
+    "shots": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --shots .shots --sheet",
+    "shots:sheet": "node tooling/scripts/shots-sheet.mjs",
     "shots:board": "npm run canvas:build && node tooling/scripts/board-shots.mjs",
     "shots:place": "node tooling/scripts/place-shots.mjs",
+    "record": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-living-spec,film-tasks-ticking",
+    "record:terminal": "node tooling/scripts/terminal-check.mjs --record .record",
+    "record:board": "npm run canvas:build && node tooling/scripts/board-shots.mjs --record .record",
     "clips:capture": "node tooling/scripts/capture-docs-images.mjs",
     "clips:new": "node tooling/scripts/new-clip.mjs",
     "clips:stills": "node tooling/scripts/build-stills.mjs",

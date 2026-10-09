@@ -3,13 +3,14 @@
  * Build the landing page's still images.
  *
  *   npm run clips:stills
+ *   npm run clips:stills -- --only panel-read,panel-review
  *
  * Two sets, same rule behind both: **crop to the content, never show a whole
  * IDE window.** A full window shrunk into a 600px column is unreadable, which is
  * how the hero ended up as a wall of words and the feature panels ended up
  * showing nothing you could actually read.
  *
- *   hero-*    the three surfaces the hero cycles through
+ *   hero-*    the stills the hero shows where it has no loop to play
  *   panel-*   the figure beside each row of the feature accordion
  *
  * Sources are the clip compositions' own captures and renders, so a palette
@@ -41,27 +42,8 @@ const ASPECT = 1836 / 1164;
 
 const STILLS = [
   // ---------------------------------------------------------------- hero
-  {
-    id: 'hero-overview',
-    from: 'overview/assets/captures/overview-tall.png',
-    crop: { x: 0, y: 0, w: 2448 },
-    aspect: ASPECT,
-    width: 1600,
-  },
-  {
-    id: 'hero-living-specs',
-    from: 'living-specs/assets/captures/ls-tree.png',
-    crop: { x: 0, y: 0, w: 1500 },
-    aspect: ASPECT,
-    width: 1600,
-  },
-  {
-    id: 'hero-review',
-    from: 'review/assets/captures/cm-open.png',
-    crop: { x: 435, y: 163, w: 1415 },
-    aspect: ASPECT,
-    width: 1600,
-  },
+  // The hero plays loops now, supplied by hand, so no hero still is cut here.
+  // An entry with `fromFile` or `parts` would cut one from real-window shots.
 
   // ------------------------------------------------------- accordion panels
   {
@@ -131,6 +113,14 @@ function newestRender(id) {
 }
 
 function sourceFor(still) {
+  if (still.parts) {
+    const paths = still.parts.map((part) => path.join(ROOT, part.fromFile));
+    return paths.every((p) => fs.existsSync(p)) ? paths : null;
+  }
+  if (still.fromFile) {
+    const p = path.join(ROOT, still.fromFile);
+    return fs.existsSync(p) ? p : null;
+  }
   if (still.from) {
     const p = path.join(CLIPS, still.from);
     return fs.existsSync(p) ? p : null;
@@ -138,11 +128,17 @@ function sourceFor(still) {
   return newestRender(still.fromRender);
 }
 
-const missing = STILLS.filter((s) => !sourceFor(s));
+// --only builds a subset, so one still can be recut without every other
+// still's gitignored capture or render being on disk.
+const onlyAt = process.argv.indexOf('--only');
+const only = onlyAt > -1 ? new Set((process.argv[onlyAt + 1] || '').split(',')) : null;
+const wanted = only ? STILLS.filter((s) => only.has(s.id)) : STILLS;
+
+const missing = wanted.filter((s) => !sourceFor(s));
 if (missing.length) {
   console.error('build-stills: sources are missing.\n');
   for (const s of missing) {
-    console.error(`  ${s.id.padEnd(20)} ${s.from || `${s.fromRender} (no render yet)`}`);
+    console.error(`  ${s.id.padEnd(20)} ${s.parts?.map((part) => part.fromFile).join(' + ') || s.fromFile || s.from || `${s.fromRender} (no render yet)`}`);
   }
   console.error(
     '\n  Captures:  npm run clips:capture -- --clips overview,living-specs,review' +
@@ -154,9 +150,33 @@ if (missing.length) {
 
 fs.mkdirSync(OUT, { recursive: true });
 
-for (const still of STILLS) {
+for (const still of wanted) {
   const src = sourceFor(still);
   const dest = path.join(OUT, `${still.id}.png`);
+
+  if (still.parts) {
+    // Each part is scaled to the still's height; the last one takes whatever
+    // width is left, and the ground between them is the page's own.
+    const outW = still.width;
+    const outH = Math.round(outW / still.aspect / 2) * 2;
+    const gap = still.gap ?? 0;
+    const args = ['-y', '-v', 'error'];
+    for (const p of src) args.push('-i', p);
+    let used = 0;
+    const chains = still.parts.map((part, i) => {
+      const { x, y, w, h } = part.crop;
+      const last = i === still.parts.length - 1;
+      const partW = last ? outW - used : Math.round((w * outH) / h / 2) * 2;
+      used += partW + gap;
+      return `[${i}:v]crop=${w}:${h}:${x}:${y},scale=${partW}:${outH}:flags=lanczos${last ? '' : `,pad=${partW + gap}:${outH}:0:0:color=0x0a0912`}[p${i}]`;
+    });
+    const stack = `${still.parts.map((_, i) => `[p${i}]`).join('')}hstack=inputs=${still.parts.length}`;
+    args.push('-filter_complex', `${chains.join(';')};${stack}`, ...PNG, dest);
+    await run('ffmpeg', args);
+    const kb = (fs.statSync(dest).size / 1024).toFixed(0);
+    console.log(`${still.id.padEnd(20)} ${src.map((p) => path.basename(p)).join(' + ')}  ->  ${outW}x${outH}  ${kb} KB`);
+    continue;
+  }
   const { x, y, w } = still.crop;
   const h = Math.round(w / still.aspect / 2) * 2;
   const outW = still.width;

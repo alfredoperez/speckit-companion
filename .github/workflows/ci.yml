@@ -7,35 +7,126 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  # The diff is read once here and the answers are passed down. The three gates
+  # below still start on every change and still report a result — a required
+  # check that is skipped outright never reports, and a never-reporting check
+  # blocks the merge. So each one keeps a no-op path that passes in seconds.
+  changes:
     runs-on: ubuntu-latest
+
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      mod: ${{ steps.filter.outputs.mod }}
+      capture: ${{ steps.filter.outputs.capture }}
+      visual: ${{ steps.filter.outputs.visual }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Plain git and plain grep, because a glob library's negation rules are
+      # the part nobody can check by reading. `code` is the inverse of a list of
+      # paths that cannot change behaviour, so a new directory is covered the
+      # day it appears; the other three name the tree their suite owns. When the
+      # diff cannot be worked out at all, everything runs.
+      - name: Work out what changed
+        id: filter
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          # The list goes to a file, never down a pipe into `grep -q`: an early
+          # -q exit makes the writer fail, and with pipefail that reads as "no
+          # match". A file cannot lie that way.
+          everything=no
+          if [ "$EVENT" = "pull_request" ]; then
+            git diff --name-only "$(git merge-base "origin/$BASE_REF" HEAD)" HEAD > changed.txt
+          elif [ -n "${BEFORE:-}" ] && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            git diff --name-only "$BEFORE" HEAD > changed.txt
+          else
+            everything=yes
+            : > changed.txt
+            echo "No usable base commit — running every job."
+          fi
+
+          # A path here is one the suites never read. Markdown, docs/ and specs/
+          # are deliberately NOT here: the integration suite asserts over the
+          # READMEs, the changelog voice, the repo map, the paths docs reference
+          # and the pinned demo fixtures, so a prose-only change can fail it.
+          NO_BEHAVIOUR='(^(assets|\.claude|\.codex|\.agents|\.specify)/|^\.github/ISSUE_TEMPLATE/|^LICENSE$|^icon\.png$)'
+          MOD='^(apps/claude-mod/|apps/copilot-canvas/|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
+          CAPTURE='(^(apps/speckit-extension/|specs/509-timing-capture/|specs/510-living-sync/|specs/514-fast-path-fixture/|\.github/workflows/ci\.yml$)|\.py$)'
+          VISUAL='^(apps/vscode/webview/|apps/website/|content/media/|\.storybook/|tooling/scripts/|docs/media-manifest\.md$|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
+
+          answer() {
+            if [ "$everything" = yes ] || grep -qE "$2" changed.txt; then
+              echo "$1=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "$1=false" >> "$GITHUB_OUTPUT"
+            fi
+          }
+
+          # `code` is the only inverted one: it runs unless every changed path is
+          # in the no-behaviour list, which is what grep -v answers.
+          if [ "$everything" = yes ] || grep -qvE "$NO_BEHAVIOUR" changed.txt; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+          answer mod "$MOD"
+          answer capture "$CAPTURE"
+          answer visual "$VISUAL"
+
+          sed 's/^/changed: /' changed.txt
+          cat "$GITHUB_OUTPUT"
+
+  test:
+    runs-on: ubuntu-latest
+    needs: changes
+
+    steps:
+      - name: Nothing here to test
+        if: needs.changes.outputs.code != 'true' && needs.changes.outputs.mod != 'true'
+        run: echo "No code, test or config change — the suites have nothing to assert."
+
+      - name: Checkout code
+        if: needs.changes.outputs.code == 'true' || needs.changes.outputs.mod == 'true'
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: needs.changes.outputs.code == 'true' || needs.changes.outputs.mod == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
       - name: Install dependencies
+        if: needs.changes.outputs.code == 'true' || needs.changes.outputs.mod == 'true'
         run: npm ci
 
       - name: Compile TypeScript
+        if: needs.changes.outputs.code == 'true'
         run: npm run compile
 
       - name: Type-check the webview
+        if: needs.changes.outputs.code == 'true'
         run: npx tsc -p tsconfig.webview.json --noEmit
 
       - name: Run tests
+        if: needs.changes.outputs.code == 'true'
         run: npm test
 
       - name: Run Copilot canvas tests
+        if: needs.changes.outputs.code == 'true'
         run: npm run test:canvas
 
       - name: Copilot canvas vendor bundles are current
+        if: needs.changes.outputs.code == 'true'
         run: |
           git diff --exit-code -- apps/copilot-canvas/vendor || {
             echo "::error::apps/copilot-canvas/vendor is stale. Run npm run canvas:build and commit the result."
@@ -44,36 +135,58 @@ jobs:
 
       # test:canvas also runs mod:build, so a rules change that skipped the rebuild shows up here.
       - name: Claude Code mod bundle and fixtures are current
+        if: needs.changes.outputs.code == 'true'
         run: |
           git diff --exit-code -- apps/claude-mod/hooks/vendor apps/claude-mod/tests/fixtures || {
             echo "::error::apps/claude-mod is stale. Run npm run mod:build and commit the result."
             exit 1
           }
 
+      # The mod's tests run through the Claude Code CLI, which is not a repo
+      # dependency, so it is installed only for the changes that need it.
+      - name: Setup the Claude Code CLI
+        if: needs.changes.outputs.mod == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude Code mod tests
+        if: needs.changes.outputs.mod == 'true'
+        run: npm run test:mod
+
   capture-suite:
     runs-on: ubuntu-latest
+    needs: changes
 
     steps:
+      - name: Nothing here to check
+        if: needs.changes.outputs.capture != 'true'
+        run: echo "No spec-kit extension or Python tooling change — the capture suite has nothing to check."
+
       - name: Checkout code
+        if: needs.changes.outputs.capture == 'true'
         uses: actions/checkout@v4
 
       - name: Setup Python
+        if: needs.changes.outputs.capture == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Run capture tests (stdlib unittest, no deps)
+        if: needs.changes.outputs.capture == 'true'
         run: python3 -m unittest discover -s apps/speckit-extension/tests -p "test_*.py"
 
       # build.py --check runs the shape-parity sweep itself, so it is not a
       # separate step.
       - name: Check command bodies (part fills, preset goldens, node-assembly parity)
+        if: needs.changes.outputs.capture == 'true'
         run: python3 apps/speckit-extension/scripts/build.py --check
 
       - name: Check release packaging (every script a shipped command calls is packaged)
+        if: needs.changes.outputs.capture == 'true'
         run: python3 apps/speckit-extension/scripts/package-manifest.py --check
 
       - name: Check command inventory (emissions, install records, and docs match the manifest)
+        if: needs.changes.outputs.capture == 'true'
         run: python3 apps/speckit-extension/scripts/check-command-emissions.py
 
       # A ratchet, not the ideal ceiling: the bodies are already over 40, so gating
@@ -81,12 +194,15 @@ jobs:
       # only when a command carries MORE directives than it did, which is the
       # regression worth catching. Shedding some is always fine; --record locks it in.
       - name: Check the instruction budget per command (ratchet)
+        if: needs.changes.outputs.capture == 'true'
         run: python3 apps/speckit-extension/scripts/instruction-budget.py --strict
 
       - name: Report what a run of the pipeline is expected to produce
+        if: needs.changes.outputs.capture == 'true'
         run: python3 apps/speckit-extension/scripts/manifest.py
 
       - name: Command-quality eval (verbosity/timing on fixture specs, prompting on command sources)
+        if: needs.changes.outputs.capture == 'true'
         run: |
           python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/509-timing-capture
           python3 apps/speckit-extension/scripts/check_quality.py --strict --feature-dir specs/510-living-sync
@@ -95,28 +211,39 @@ jobs:
 
   visual-gate:
     runs-on: ubuntu-latest
+    needs: changes
 
     steps:
+      - name: Nothing here to look at
+        if: needs.changes.outputs.visual != 'true'
+        run: echo "No webview, site, media or capture-script change — the visual gate has nothing to compare."
+
       - name: Checkout code
+        if: needs.changes.outputs.visual == 'true'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: needs.changes.outputs.visual == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
       - name: Install dependencies
+        if: needs.changes.outputs.visual == 'true'
         run: npm ci
 
       # No browser needed, so it runs first and fails fast.
       - name: Check storyboard drift and the media manifest
+        if: needs.changes.outputs.visual == 'true'
         run: npm run clips:check
 
       - name: Setup Chrome
+        if: needs.changes.outputs.visual == 'true'
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: stable
 
-      - name: Pipeline Builder visual gate (layout only)
+      - name: Workflow Builder visual gate (layout only)
+        if: needs.changes.outputs.visual == 'true'
         run: npm run test:visual:ci

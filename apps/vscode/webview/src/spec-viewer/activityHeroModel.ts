@@ -7,8 +7,6 @@ import type { ViewerState } from './types';
  */
 
 export interface HeroStats {
-    tasksDone?: number;
-    tasksTotal?: number;
     covered?: number;
     coverageTotal?: number;
     checks?: number;
@@ -17,18 +15,8 @@ export interface HeroStats {
     trustedActiveMs?: number;
 }
 
-// Writers vary: the script emits DONE/DONE_WITH_CONCERNS, legacy AI writers
-// used COMPLETED/COMPLETE. All count as done; REVERTED/IN_PROGRESS do not.
-const DONE_STATUSES = new Set(['DONE', 'DONE_WITH_CONCERNS', 'COMPLETED', 'COMPLETE']);
-
 export function heroStats(state: ViewerState): HeroStats {
     const stats: HeroStats = {};
-
-    const tasks = Object.values(state.taskSummaries ?? {});
-    if (tasks.length > 0) {
-        stats.tasksTotal = tasks.length;
-        stats.tasksDone = tasks.filter(t => DONE_STATUSES.has(String(t.status).toUpperCase())).length;
-    }
 
     if (state.coverage && state.coverage.length > 0) {
         stats.coverageTotal = state.coverage.length;

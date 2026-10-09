@@ -4,9 +4,8 @@ import SoonChip from './SoonChip.astro';
 /*
   The footer link row.
 
-  The artboard lists the workflow builder here with nothing marking it as
-  unshipped, which contradicts the nav. The chip is kept in both places, since
-  nothing on the site may read as if the builder exists.
+  A link to something unshipped carries the SOON chip (`soon: true`). None is
+  listed today.
 
   Set flush when the row sits inside a block that already draws the rule above
   it, so the hairline is not doubled.
@@ -21,7 +20,6 @@ const { flush = false, class: className } = Astro.props;
 const links = [
   { label: 'github', href: 'https://github.com/alfredoperez/speckit-companion', external: true, soon: false },
   { label: 'docs', href: '/docs/', external: false, soon: false },
-  { label: 'workflow builder', href: '/workflow-builder/', external: false, soon: true },
   { label: 'changelog', href: '/changelog/', external: false, soon: false },
   {
     label: 'MIT',

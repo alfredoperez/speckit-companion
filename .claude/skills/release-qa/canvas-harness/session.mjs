@@ -16,6 +16,12 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export class Blocked extends Error {}
 
+/** The file or command a tool call names, so a transcript can answer "did it read that file, did it call that script". */
+function toolDetail(args) {
+    const value = args?.path ?? args?.command ?? args?.pattern ?? args?.skill ?? args?.name ?? '';
+    return String(value).slice(0, 400);
+}
+
 export function withDeadline(promise, ms, label) {
     let timer;
     const stall = new Promise((_, reject) => { timer = setTimeout(() => reject(new Blocked(`${label} stalled after ${Math.round(ms / 1000)}s`)), ms); });
@@ -48,7 +54,7 @@ export async function openSession(cwd) {
         if (e.type === 'session.idle') { log.idleAt = Date.now(); log.busy = false; return; }
         if (/^(user\.message|assistant\.(turn_start|message)|tool\.execution_start)$/.test(e.type)) log.busy = true;
         if (e.type === 'user.message') log.users.push(String(d.content ?? ''));
-        if (e.type === 'tool.execution_start') log.tools.push({ name: d.toolName, canvasId: d.arguments?.canvasId ?? null });
+        if (e.type === 'tool.execution_start') log.tools.push({ name: d.toolName, canvasId: d.arguments?.canvasId ?? null, detail: toolDetail(d.arguments) });
         if (e.type === 'assistant.message' && d.content) log.replies.push(String(d.content));
         if (e.type === 'session.error') log.errors.push(JSON.stringify(d).slice(0, 300));
     });
@@ -91,6 +97,6 @@ export const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 
 /** Every path changed since `base`, committed or not. */
 export function changedSince(cwd, base) {
     const committed = git(cwd, 'diff', '--name-only', base, 'HEAD').split('\n');
-    const working = git(cwd, 'status', '--porcelain', '--untracked-files=all').split('\n').map((l) => l.slice(3));
+    const working = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd, encoding: 'utf8' }).split('\n').map((l) => l.slice(3));
     return [...new Set([...committed, ...working].filter(Boolean))];
 }

@@ -1,0 +1,278 @@
+---
+import Button from './Button.astro';
+import { SIGNUP_BUTTON, SIGNUP_MESSAGES, signupProvider } from '../data/courseSignup';
+
+/*
+  The course list's form: one address, one button that says what happens.
+
+  It is a plain form first. Without JavaScript it posts to /api/course-signup,
+  which redirects to /course/signup/ with the outcome. With JavaScript the same
+  post is made in place and the outcome is written into the status line the
+  field is described by.
+
+  Whether the list is open is known when the site is built, from the same
+  environment the endpoint reads. Closed, the field and the button are disabled
+  and the status line says so before anyone types.
+
+  `layout="strip"` is the one-row form under the landing page's hero. The form
+  box dissolves there so the field, the button and the status line are items of
+  the strip's own row, the label is for screen readers only, and the status
+  line shows only when there is something to say.
+
+  The `company` field is a trap for form-filling scripts. It is off screen, out
+  of the tab order and hidden from assistive technology.
+*/
+interface Props {
+  id: string;
+  placement: 'landing' | 'course' | 'signup';
+  align?: 'center' | 'start';
+  layout?: 'stack' | 'strip';
+}
+
+const { id, placement, align = 'center', layout = 'stack' } = Astro.props;
+const open = signupProvider() !== null;
+const strip = layout === 'strip';
+const idle = !open
+  ? ''
+  : strip
+    ? ''
+    : 'One message, on the day it opens. No newsletter.';
+---
+
+<form
+  class:list={['cs', `cs--${align}`, strip && 'cs--strip']}
+  method="post"
+  action="/api/course-signup"
+  data-course-signup
+  data-messages={JSON.stringify(SIGNUP_MESSAGES)}
+>
+  <input type="hidden" name="placement" value={placement} />
+  <div class="cs-trap" aria-hidden="true">
+    <label for={`${id}-company`}>Leave this field empty</label>
+    <input id={`${id}-company`} name="company" type="text" tabindex="-1" autocomplete="off" />
+  </div>
+
+  <label class="cs-label" for={`${id}-email`}>Email address</label>
+  <div class="cs-row" data-cs-fields>
+    <input
+      class="cs-input"
+      id={`${id}-email`}
+      name="email"
+      type="email"
+      inputmode="email"
+      autocomplete="email"
+      placeholder="you@example.com"
+      required
+      aria-describedby={`${id}-status`}
+    />
+    <Button class="cs-button" type="submit" size="md">{SIGNUP_BUTTON}</Button>
+  </div>
+
+  <p class="cs-status" id={`${id}-status`} role="status" aria-live="polite" data-cs-status>{idle}</p>
+</form>
+
+<style>
+  .cs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .cs--center {
+    align-items: center;
+    text-align: center;
+  }
+
+  .cs--start {
+    align-items: flex-start;
+  }
+
+  .cs-trap {
+    position: absolute;
+    left: -200vw;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .cs-label {
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+  }
+
+  .cs-row {
+    display: flex;
+    gap: var(--space-8);
+    width: 100%;
+  }
+
+  .cs-row[hidden] {
+    display: none;
+  }
+
+  .cs-input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 16px;
+    background: var(--ground);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-button-sm);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--fs-ui-sm);
+    transition: border-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .cs-input::placeholder {
+    color: var(--text-dim);
+  }
+
+  .cs-input[aria-invalid='true'] {
+    border-color: var(--text-error);
+  }
+
+  .cs-row :global(.cs-button) {
+    white-space: nowrap;
+  }
+
+  .cs-row :global(.cs-button[disabled]) {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .cs-input[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .cs--strip {
+    display: contents;
+  }
+
+  .cs--strip .cs-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .cs--strip .cs-row {
+    flex: 0 1 480px;
+    width: auto;
+    min-width: 0;
+  }
+
+  .cs--strip .cs-input {
+    padding-top: 13px;
+    padding-bottom: 13px;
+    font-size: var(--fs-body);
+  }
+
+  .cs--strip .cs-status {
+    order: 9;
+    flex-basis: 100%;
+    min-height: 0;
+    text-align: right;
+  }
+
+  .cs--strip .cs-status:empty {
+    display: none;
+  }
+
+  .cs--strip .cs-status[data-state='ok'] {
+    font-size: var(--fs-ui);
+  }
+
+  .cs-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .cs-status {
+    min-height: 1.5em;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--fs-ui-sm);
+    line-height: var(--lh-ui);
+  }
+
+  .cs-status[data-state='ok'] {
+    color: var(--text-primary);
+    font-size: var(--fs-body);
+    font-weight: var(--fw-bold);
+  }
+
+  .cs-status[data-state='invalid'],
+  .cs-status[data-state='closed'],
+  .cs-status[data-state='error'] {
+    color: var(--text-error);
+  }
+
+  @media (max-width: 520px) {
+    .cs:not(.cs--strip) .cs-row {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .cs--strip .cs-row {
+      flex: 1 1 100%;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('[data-course-signup]').forEach((form) => {
+    const status = form.querySelector<HTMLElement>('[data-cs-status]');
+    const fields = form.querySelector<HTMLElement>('[data-cs-fields]');
+    const input = form.querySelector<HTMLInputElement>('input[type="email"]');
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    const label = form.querySelector<HTMLElement>('.cs-label');
+    if (!status || !fields || !input || !button) return;
+
+    const messages = JSON.parse(form.dataset.messages || '{}') as Record<string, string>;
+
+    const say = (state: string) => {
+      status.dataset.state = state;
+      status.textContent = messages[state] || messages.error;
+      input.setAttribute('aria-invalid', state === 'invalid' ? 'true' : 'false');
+      if (state === 'ok') {
+        fields.hidden = true;
+        if (label) label.hidden = true;
+      } else {
+        input.focus();
+      }
+    };
+
+    // The form validates itself here, so every outcome is said in one place
+    // and in the same words the server uses.
+    form.noValidate = true;
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!input.value.trim() || !input.checkValidity()) {
+        say('invalid');
+        return;
+      }
+
+      button.disabled = true;
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { accept: 'application/json' },
+          body: new FormData(form),
+        });
+        const result = await response.json().catch(() => ({}));
+        say(typeof result.status === 'string' ? result.status : 'error');
+      } catch {
+        say('error');
+      } finally {
+        button.disabled = false;
+      }
+    });
+  });
+</script>

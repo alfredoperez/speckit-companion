@@ -8,6 +8,7 @@
  *  - Multiple file extensions are recognised
  */
 
+import { parseFragment } from 'parse5';
 import { parseInline } from '../inline';
 
 describe('parseInline', () => {
@@ -314,5 +315,83 @@ describe('parseInline: a code span inside a link target or image alt', () => {
 
     it('still links plain targets', () => {
         expect(parseInline('[docs](https://example.com)')).toContain('<a href="https://example.com"');
+    });
+});
+
+describe('parseInline: an image next to a link', () => {
+    type Node = { nodeName: string; attrs?: { name: string; value: string }[]; childNodes?: Node[] };
+
+    const elements = (source: string): Node[] => {
+        const found: Node[] = [];
+        const walk = (node: Node): void => {
+            if (node.attrs) found.push(node);
+            (node.childNodes ?? []).forEach(walk);
+        };
+        walk(parseFragment(parseInline(source)) as unknown as Node);
+        return found;
+    };
+    const names = (node: Node): string[] => (node.attrs ?? []).map((a) => a.name).sort();
+
+    it.each([
+        ['a link written across an image', '![[t](u)](x onmouseover=alert y=)'],
+        ['an image written as a link target', '[t](![a](b onmouseover=alert c=))'],
+    ])('adds no attribute for %s', (_name, source) => {
+        for (const node of elements(source)) {
+            expect(names(node)).toEqual(node.nodeName === 'img' ? ['alt', 'src'] : ['href', 'target']);
+        }
+    });
+
+    it('keeps an image that is the text of a link', () => {
+        const [link, image] = elements('[![build](badge.svg)](https://example.com)');
+
+        expect(link.attrs).toEqual([{ name: 'href', value: 'https://example.com' }, { name: 'target', value: '_blank' }]);
+        expect(image.attrs).toEqual([{ name: 'src', value: 'badge.svg' }, { name: 'alt', value: 'build' }]);
+    });
+});
+
+describe('parseInline: a file reference with a line', () => {
+    const chip = (md: string): Element => {
+        const frag = parseFragment(parseInline(md)) as any;
+        return frag.childNodes.find((n: any) => n.nodeName === 'button');
+    };
+    const attr = (el: any, name: string): string | undefined =>
+        el.attrs.find((a: any) => a.name === name)?.value;
+
+    it('keeps the path clean and sets the line for path:line', () => {
+        const el = chip('`src/a/util.ts:42`');
+        expect(attr(el, 'data-filename')).toBe('src/a/util.ts');
+        expect(attr(el, 'data-line')).toBe('42');
+        expect(attr(el, 'title')).toBe('src/a/util.ts');
+    });
+
+    it('keeps the line in the label, so a reader still sees where it points', () => {
+        const label = (code: string) => {
+            const el: any = chip('`' + code + '`');
+            return el.childNodes[0].childNodes[0].value;
+        };
+        expect(label('src/a/util.ts:42')).toBe('util.ts:42');
+        expect(label('util.ts:10-20')).toBe('util.ts:10-20');
+        expect(label('src/a/util.ts')).toBe('util.ts');
+    });
+
+    it('uses the first number of path:from-to', () => {
+        const el = chip('`util.ts:10-20`');
+        expect(attr(el, 'data-filename')).toBe('util.ts');
+        expect(attr(el, 'data-line')).toBe('10');
+    });
+
+    it('uses the start when the range ends before it', () => {
+        expect(attr(chip('`util.ts:20-10`'), 'data-line')).toBe('20');
+    });
+
+    it.each(['util.ts:0', 'util.ts:abc', 'util.ts:99999999999'])('sets no line for %s', (code) => {
+        const el = chip('`' + code + '`');
+        expect(el ? attr(el, 'data-line') : undefined).toBeUndefined();
+        expect(parseInline('`' + code + '`')).not.toContain('data-line');
+    });
+
+    it('leaves an unknown extension as plain code', () => {
+        const result = parseInline('`thing.xyz:12`');
+        expect(result).toBe('<code>thing.xyz:12</code>');
     });
 });

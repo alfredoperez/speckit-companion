@@ -58,25 +58,34 @@ Then build the checklist:
 3. Each Unreleased bullet is a claim the release makes. Name the check that would show it; a bullet no check reaches gets one extra desktop check of its own. An empty Unreleased section goes in the report as such.
 4. Write the checklist to `$RESULTS/checks.md` (`| check | kind | why | status | note |`). Every later step updates the status as it goes, and the report table is built from this file.
 
-`/release-qa recheck` is the re-run after fixes: it repeats the automated gates and only the checks that ended FAIL or BLOCKED, and carries a PASS over only when nothing changed since then matches its surface.
+`/release-qa recheck` is the re-run after fixes: it repeats the automated gates and only the checks that ended FAIL or BLOCKED, and carries a PASS over only when nothing changed since then matches its surface. A scripted check reruns the whole real-window check and regrades, since its steps build on one another.
 
 ## Step 1. Automated gates, Bash only
 
 Run every `kind: auto` check first, independent ones in parallel, each logging to `$RESULTS/auto/<id>.log`. Record PASS or FAIL per check. A red gate does not stop the run, so one pass gathers every finding; only a failed build or package marks the desktop checks BLOCKED.
 
-`check-capture` and `terminal-run` are not `auto` checks: they need a run first, so they belong to Step 2.
+`check-capture` and `terminal-run` are not `auto` checks: they need a run first, so they belong to Step 2. The `scripted` checks open a real window, so they wait for Step 2 as well.
 
 ## Step 2. Desktop time, only for what needs eyes
 
 Claude Code, on the Mac:
 
 1. **`terminal-run`** first, in its own copy of a sandbox (the Terminal run recipe), so its timing never competes with the desktop run.
-2. **Canvas checks headlessly** through the Copilot SDK harness on a copy of the sandbox (three bare opens, New spec per workflow, per-spec commands). The harness has one model, not the Copilot app's own, so the real-app check stays a separate row.
+2. **Every `kind: scripted` check**, before anything is staged. One run decides them all: the real-window check drives VS Code on a throwaway project with a stand-in assistant, so it types, drags, reads the terminal and needs nobody. It opens one window for about four minutes and takes the keyboard focus while it runs, so say so before starting it.
+   ```bash
+   rm -f "$REPO"/.desktop-check/results.*.json
+   cd "$REPO" && npm run check:desktop > "$RESULTS/auto/check-desktop.log" 2>&1
+   node tooling/scripts/desktop-check.mjs --theme dark --only sidebar-panes,narrow-panel-spec,narrow-panel-tasks,nav-n7 >> "$RESULTS/auto/check-desktop.log" 2>&1
+   python3 "$SKILL/grade-scripted.py" --map "$SKILL/surface-map.yml" --results "$REPO/.desktop-check" | tee "$RESULTS/scripted.txt"
+   ```
+   The first line removes the last run's results, so a run that dies before it starts grades BLOCKED and never PASS on old files. The dark run names the steps the `themes` check lists; keep the two in step. Those steps prove the layout holds in dark, not that it reads well: open the four `.dark.png` pictures and look at colour and contrast yourself, and record what you saw in the `themes` note. The grader prints `<id> PASS|FAIL|BLOCKED: <note>` per check: copy each status and note into `checks.md`. A step that failed is a FAIL with its own note and its screenshot under `.desktop-check/<step>.<theme>.png`; a results file that is missing, or a step that did not run or was skipped, is BLOCKED and never a PASS. Copy `.desktop-check/` into `$RESULTS/desktop-check/` before the next run replaces it. A scripted check is never handed to Claude Desktop.
+3. **Canvas checks headlessly** through the Copilot SDK harness on a copy of the sandbox (three bare opens, New spec per workflow, per-spec commands). The harness has one model, not the Copilot app's own, so the real-app check stays a separate row.
    Run `canvas-harness/canvas-checks.sh <copy> <results>` on a fresh copy of the sandbox (the agent writes specs there; it refuses a non-git or dirty folder). It installs its own deps on first run, gives each session about five minutes (a stall is BLOCKED, never retried), and prints one PASS/FAIL line per check.
-   It writes `<results>/canvas-checks.json` (`checks[]` with `id`, `result`, `evidence`, plus `model`) and every sent message and reply under `<results>/canvas-transcripts/`.
-3. **`qa-stage.sh <run-name>`**. It builds the sandbox and fixtures from the `vscode-qa` recipe and the stock workspace from `vscode-qa-stock`, answers Claude Code's folder-trust prompt once for the sandbox and the stock workspace, creates the timed-run spec headlessly (so nothing needs typing), installs this build into the user's normal VS Code, opens the three QA windows in the Default profile, starts `record-windows.sh`, and writes `desktop-handoff.md` from the template. It prints `READY` only when every gate passed, or `NOT READY` and the gate that failed. Never hand anything to Claude Desktop before `READY`.
+   The checks come in two kinds, so a stale harness and a product finding never share a row. `new-spec-speckit` and `new-spec-companion` assert what the board sent: the command as the sandbox spells it, one run-instructions sentence, no inline lifecycle text. `canvas-new-spec-record-advances` and `canvas-new-spec-stays-in-specify` report what the agent then did: whether the record got the specify complete (with whether it opened the run instructions and how often it called the recorder), and whether anything changed outside `specs/`. Report the second pair as findings about the product and the model the harness ran, named in `model`.
+   It writes `<results>/canvas-checks.json` (`checks[]` with `id`, `result`, `evidence`, plus `model`) and every sent message, reply and tool call (with the file or command it named) under `<results>/canvas-transcripts/`.
+4. **`qa-stage.sh <run-name>`**. It builds the sandbox and fixtures from the `vscode-qa` recipe and the stock workspace from `vscode-qa-stock`, answers Claude Code's folder-trust prompt once for the sandbox and the stock workspace, creates the timed-run spec headlessly (so nothing needs typing), installs this build into the user's normal VS Code, opens the three QA windows in the Default profile, starts `record-windows.sh`, and writes `desktop-handoff.md` from the template. It prints `READY` only when every gate passed, or `NOT READY` and the gate that failed. Never hand anything to Claude Desktop before `READY`.
 
-Then the user pastes the handoff path into Claude Desktop, which clicks through the checks and replies with one line per step. Claude Code turns the reply into the report, runs `timing.py report` and `check_capture.py` on the timed spec (`TIMED` in `stage.env`), stops the recorder (`touch shots/STOP`), and picks screenshots from `shots/`.
+Then the user pastes the handoff path into Claude Desktop, which clicks through the four parts that still need eyes (first open, the stock workspace and two roots, the timed run, the GitHub Copilot app) and replies with one line per step. The handoff is short on purpose: a computer-use grant lapses after thirty idle minutes, so nothing a script can decide is on it. When its reply reports a terminal question, answer it from Bash (the headless fallback) and tell the user to have Desktop carry on. Claude Code turns the reply into the report, runs `timing.py report` and `check_capture.py` on the timed spec (`TIMED` in `stage.env`), stops the recorder (`touch shots/STOP`), and picks screenshots from `shots/`.
 
 What staging has to get right, each learned the hard way:
 
@@ -87,7 +96,7 @@ What staging has to get right, each learned the hard way:
 - `screencapture -R` grabs whatever floats on top. `record-windows.sh` captures every QA window by id instead (guessing the front one missed most of a run), and `screencapture` refuses dot-file names.
 - Close QA windows with their own close button (`AXCloseButton`), never with a keystroke: a keystroke goes to whichever app is in front.
 
-A stuck prompt the clicks cannot answer is a FAIL finding for that check; unblock it through the headless fallback and continue.
+A stuck prompt the clicks cannot answer is a finding for that check, recorded with what it asked; unblock it through the headless fallback and continue.
 
 ## Step 3. The report, one vault note
 
@@ -183,29 +192,7 @@ Then: `open_application` Visual Studio Code, click the SpecKit activity-bar icon
 
 ### Navigation matrix
 
-For every row: do the action with clicks only, take a computer-use screenshot, assert the expected state, save a `shot.sh` only when it fails or is docs-worthy. Log each row as PASS/FAIL in `$RESULTS/nav-matrix.md` (`| # | action | expected | actual | shot |`). Expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx`); quote it in a FAIL.
-
-Sidebar entry types (tree: group → spec → document → related doc):
-
-| # | Action | Expected |
-|---|---|---|
-| N1 | Expand/collapse each group: Active, Completed, Archived | `_05_demo-archived` only under Archived, `_03` under Completed, the rest under Active |
-| N2 | Click each spec name (`_00`…`_05`) | Viewer opens **that** spec (header name matches) on the Overview when it has a run record, else its first document |
-| N3 | Expand a spec, click Spec, Plan, Tasks in turn | Same single viewer tab switches to that document; no second tab for the same spec |
-| N4 | Expand `_04` → Plan → click research, data-model; then the checklist | That doc opens inside `_04`'s tab, rail highlights it under its step |
-| N5 | Click spec A's Plan, then spec B's Tasks, then spec A's name | Two tabs, one per spec; the last click lands on A's Overview, not A's Plan |
-| N6 | Rapid switch: click `_00`, `_01`, `_02`, `_04` names within ~2s | The focused tab ends on `_04` and shows `_04`'s content (no content from a previous spec under `_04`'s header) |
-| N7 | In the viewer, click every rail entry and back to Overview | Only the document changes; status badge and footer step never change |
-| N8 | Locked entry: `_00` has no plan.md | Plan entry is disabled or absent with a tooltip, never opens an empty or other spec's plan |
-| N9 | File change while open: `printf '\n- extra line\n' >> "$SANDBOX/specs/_01_demo-planned/plan.md"` with `_01` Plan showing | Viewer re-renders in place with the line, same tab, same document |
-| N10 | New document appears: `cp "$SANDBOX/specs/_02_demo-tasked/tasks.md" "$SANDBOX/specs/_01_demo-planned/tasks.md"` with `_01` Spec showing | Rail gains Tasks; sidebar shows it without a manual refresh |
-| N11 | Doc deleted: `rm "$SANDBOX/specs/_04_demo-related-docs/research.md"` while it is showing | Viewer says the document is gone; no stale content |
-| N12 | Rename: `mv "$SANDBOX/specs/_02_demo-tasked" "$SANDBOX/specs/_02_demo-renamed"` with `_02` open | Old tab closes or says the spec moved; clicking the new sidebar entry opens the renamed spec, not a stale panel |
-| N13 | Complete: click Mark Completed in `_04`'s footer (or set `"status":"completed"` in its `.spec-context.json` via Bash) | Spec moves to Completed in the sidebar, the open tab's badge updates, clicking it again opens the same spec |
-| N14 | Close the viewer tab, click the same sidebar document again | Opens fresh on that document, not on whatever was last shown |
-| N15 | Sidebar filter/sort buttons (view title bar), then click a spec | The clicked item opens, regardless of its new position |
-
-After the matrix, reset the sandbox fixtures: `git -C "$SANDBOX" stash -u && git -C "$SANDBOX" stash drop` (sandbox only; never run git in the repo).
+Scripted: the `nav-matrix` check. The real-window check walks rows N1 to N15 as steps `nav-n1` to `nav-n15` on demo specs it derives itself (`_00` to `_07`, the same set the `vscode-qa` recipe builds), plus `nav-links` (the Links section) and `nav-empty-record` (the tab title of a spec with no recorded activity). Each step's name says the row's expected state; expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx`), so quote it in a FAIL.
 
 ### Full run, timed
 
@@ -235,27 +222,27 @@ Compare three numbers per step: wall clock (your marks), recorded span (the tabl
 
 ### Theme pass
 
-`"$SKILL/launch-vscode.sh" theme light` (the window picks it up live). Shoot the states already shot in dark, now with `light`: sidebar expanded, viewer on Spec, viewer on Tasks, Overview. Switch back with `theme dark`.
+Scripted: the `themes` check. The steps it names run in Quiet Light in the full run and again under `--theme dark`.
 
 ### Narrow panel
 
-Click **Split Editor Right** in the viewer's tab bar twice so the viewer is a narrow column. With a spec on Spec and again on Tasks, assert the header, rail and footer buttons neither clip nor overflow, and nothing scrolls sideways. `shot.sh` it as `narrow-<state>`.
+Scripted: the `narrow-panel` check, steps `narrow-panel-spec` and `narrow-panel-tasks`. The viewer is narrowed to about 440px; the header, the rail and the footer must stay inside the column. The rail scrolling sideways by design is reported in the note, not failed.
 
 ### Popups
 
-Grep the files the diff changed for `showInformationMessage|showWarningMessage|showErrorMessage`. For each message found, cause it (the code says when) and assert it appears once, reads plainly, and its buttons do what they say. A changed file that raises no popup is nothing to check.
+Scripted for the messages the walked flows raise: the `popups` check. Then grep the files the diff changed for `showInformationMessage|showWarningMessage|showErrorMessage`. A message no scripted step raises gets one desktop check: cause it (the code says when) and assert it appears once, reads plainly, and its buttons do what they say.
 
 ### Provider dispatch
 
-Open the AI provider picker and assert it lists the configured providers. Dispatch one step to the terminal. If `terminal-run` or `vscode-run` already ran, that dispatch counts and only the picker needs checking.
+Scripted: the `provider-dispatch` check. Three buttons each reach the stand-in terminal with their command. The first-start provider picker is captured by `npm run shots`; look at `.shots/provider-picker.png` when the diff touches the providers.
 
-### Pipeline builder
+### Workflow Builder
 
-Open the pipeline builder. Assert the phase menu opens, Add step adds a step that shows in the canvas, and the builder holds at a narrow width (split the editor as in Narrow panel). `shot.sh` it as `builder-<state>`.
+Scripted: the `builder` check, steps `builder-phase-menu`, `builder-add-step`, `builder-narrow` and `builder-move-to-phase`. The move writes to the throwaway project only; nothing is built.
 
 ### Bugs and Ideas panes
 
-In a workspace with reports under `.specify/bugs/` and `.specify/assessments/`: assert the Bugs pane shows its groups with a count and the Ideas pane shows Assessing and Decided; expand one item and open a report, which must be read-only (no footer step buttons). In a workspace with neither Spec Kit extension and no reports: assert each pane holds one install row. `shot.sh` it as `panes-<state>`.
+Scripted: the `process-panes` check. The install row of a workspace with neither Spec Kit extension is seen on the handoff's stock workspace part.
 
 ## Recipe: Clean profile and workspace variants
 
@@ -326,13 +313,13 @@ Find the session's worktree: `git -C "$SANDBOX" worktree list`, and set `WT=<tha
 
 Timed with `surface=canvas`, Companion workflow. Feature: `Show how many todos are left in the list footer.`
 
-- [ ] `mark … canvas specify start`, click **New spec**, type the feature, submit. The chat must receive `/speckit.companion.specify …`, never `/speckit.specify`
+- [ ] `mark … canvas specify start`, click **New spec**, type the feature, submit. The chat must receive the Companion specify command in the spelling the project registers, never the stock one: `/speckit-companion-specify …` where a skill folder registers it (`.github/skills`, `.agents/skills` or `.claude/skills`, which is every sandbox built here), `/speckit.companion.specify …` where only a prompt or agent file does. The message ends with one sentence naming a run-instructions file under `.speckit-companion/prompts/`, and carries no lifecycle text itself
 - [ ] `timing.py wait "$WT/specs" specify 9`, `mark … specify end`, `SPEC=$WT/specs/<newest non-fixture dir>`. The board shows the new spec without a refresh
-- [ ] For plan, tasks, implement: `mark start`, click the run button, confirm the chat line is `/speckit.companion.<step> specs/<dir>`, `wait`, `mark end`. While it runs, screenshot the live update (rail step flips, tasks tick). `shot.sh` each as `run-<step>-running` / `-done`
+- [ ] For plan, tasks, implement: `mark start`, click the run button, confirm the chat line is `/speckit-companion-<step> specs/<dir>` (dotted, `/speckit.companion.<step>`, without skill folders) followed by the one run-instructions sentence, `wait`, `mark end`. While it runs, screenshot the live update (rail step flips, tasks tick). `shot.sh` each as `run-<step>-running` / `-done`
 - [ ] Approve any Copilot tool-permission prompts by clicking (full tier); count them in the notes, each is friction worth recording
 - [ ] `timing.py report "$RESULTS" canvas "$SPEC"` and `check_capture.py "$SPEC" > "$RESULTS/canvas-capture.txt"`
 
-Then once more with the stock workflow, however the canvas exposes the choice: New spec, and the chat must receive `/speckit.specify …`. Only specify has to land; no timing.
+Then once more with the stock workflow, however the canvas exposes the choice: New spec, and the chat must receive `/speckit-specify …` (`/speckit.specify …` without skill folders): with the same one sentence when Companion's recorder is installed, the command alone on a stock project. Only specify has to land; no timing.
 
 Agent actions: in chat ask "what specs are still open?" and "show me the related docs spec". The board should follow (`list_specs`, `focus_spec`). Screenshot. Light shot if the app has a theme toggle; otherwise skip and say so.
 

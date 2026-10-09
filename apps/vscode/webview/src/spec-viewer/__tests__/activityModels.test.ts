@@ -24,8 +24,6 @@ describe('heroStats', () => {
             ],
             verified: [{ what: 'jest' }, { what: 'tsc' }],
         }));
-        expect(stats.tasksDone).toBe(1);
-        expect(stats.tasksTotal).toBe(2);
         expect(stats.covered).toBe(1);
         expect(stats.coverageTotal).toBe(2);
         expect(stats.checks).toBe(2);
@@ -41,18 +39,6 @@ describe('heroStats', () => {
             },
         }));
         expect(stats.trustedActiveMs).toBe(5 * 60000);
-    });
-
-    it('counts legacy COMPLETED statuses as done', () => {
-        const stats = heroStats(base({
-            taskSummaries: {
-                RT1: { status: 'COMPLETED' },
-                RT2: { status: 'COMPLETED' },
-                T001: { status: 'REVERTED' },
-            },
-        }));
-        expect(stats.tasksDone).toBe(2);
-        expect(stats.tasksTotal).toBe(3);
     });
 
     it('formats active time compactly', () => {

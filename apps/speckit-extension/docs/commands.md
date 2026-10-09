@@ -189,7 +189,7 @@ The four step commands are the Companion pipeline itself. They mirror stock spec
 
 ### `speckit.companion.specify`
 
-Writes `<feature_directory>/<short-name>.spec.md` — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — plus `checklists/requirements.md`. It also **classifies the change's size** (`simple` / `normal` / `oversized`, against a 5-file / 10-task bar) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
+Writes `<feature_directory>/<short-name>.spec.md` — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — plus `checklists/requirements.md`. It also **classifies the change's size** (`simple` / `normal` / `oversized`, against a 5-file / 10-task bar; a change that is hard to undo or hard to check is never `simple`) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
 
 ### `speckit.companion.plan`
 
@@ -221,7 +221,7 @@ The workflow's terminal step. Writes `status: completed` — and it is the **onl
 python3 .specify/extensions/companion/scripts/write-context.py --mark-complete --by ai
 ```
 
-It refuses unless the spec is already `implemented` (or `implementing` with every task checked), leaves an already-completed spec untouched, and keeps `currentStep` at `implement`. When living specs are on, completion is also where a feature spec's `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` deltas fold back into the durable living spec.
+It refuses unless the spec is already `implemented` (or `implementing` with every task checked), leaves an already-completed spec untouched, and keeps `currentStep` at `implement`. It never refuses for lack of verification: a spec with nothing verified and no concern explaining why completes with one `finished, unverified` concern and a `[companion] Warning:` line. When living specs are on, completion is also where a feature spec's `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` deltas fold back into the durable living spec.
 
 ## Living-specs commands
 

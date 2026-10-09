@@ -10,6 +10,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Added
 - **Call paths in the plan, checked.** Attach the `call-paths` node and your plan shows ==which functions a change reaches==, each file and line checked. ([#875](https://github.com/alfredoperez/speckit-companion/pull/875)) <!-- area: pipeline -->
+- **A risky small change takes the full pipeline.** Sizing asks whether a change is hard to undo or hard to check, and one that is ==never takes the short path==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: pipeline -->
+- **A spec that finishes unverified says so.** Completing with nothing verified and no concern explaining why still completes, records =="finished, unverified"== and warns. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
+- **A run records its working branch.** A step started on another branch than the spec was created on records it, so the viewer ==names the right branch==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
+- **The configuration writer sets a verdict's routing.** A verdict's skipped steps and its notice are written together, and removing the entry ==restores the declared routing==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
+- **Living specs travel with the pipeline graph.** The graph carries whether they run, where specs live and ==which capabilities are registered==, so a panel can draw them. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
+
+### Fixed
+- **A registry rewrite keeps the chosen layout.** Registering a capability re-emits the registry, which dropped `layout` and sent ==every later adoption back to asking==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
+- **The manual check records its result.** The brownfield preset's click-through step called the recorder with `--concerns`, a flag that does not exist, so the result was dropped. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: run-record -->
+- **A completed spec names no current task.** Marking a spec complete clears the current task, which had kept naming the last one finished. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: run-record -->
 
 ## [0.24.0] - 2026-10-03
 

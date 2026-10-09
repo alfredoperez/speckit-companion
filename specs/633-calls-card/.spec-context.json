@@ -1,0 +1,465 @@
+{
+  "workflow": "companion",
+  "specName": "Calls card",
+  "branch": "feat/plan-calls-card",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-09T13:53:29.306Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-09T13:54:15.317Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-09T13:54:23.020Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:55:16.655Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:55:17.098Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:55:18.232Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-09T13:55:41.700Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:55:41.849Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:55:42.400Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-09T13:55:50.327Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:57:37.459Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:57:37.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:57:37.692Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:57:37.804Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:58:37.230Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T13:59:08.774Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T14:01:15.923Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T14:01:16.023Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T14:01:16.121Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T14:01:16.222Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T14:01:26.850Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T14:01:26.947Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T14:02:55.410Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T14:02:55.451Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "card or fallback",
+      "tasks": [
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-002": {
+      "title": "grammar",
+      "tasks": [
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-003": {
+      "title": "header",
+      "tasks": [
+        "T005"
+      ]
+    },
+    "FR-004": {
+      "title": "rows",
+      "tasks": [
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-005": {
+      "title": "file chip",
+      "tasks": [
+        "T001",
+        "T005"
+      ]
+    },
+    "FR-006": {
+      "title": "escaping",
+      "tasks": [
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-007": {
+      "title": "note footer",
+      "tasks": [
+        "T002",
+        "T003",
+        "T005"
+      ]
+    },
+    "FR-008": {
+      "title": "row line",
+      "tasks": [
+        "T003",
+        "T005"
+      ]
+    },
+    "FR-009": {
+      "title": "strike posts once",
+      "tasks": [
+        "T007",
+        "T009"
+      ]
+    },
+    "FR-010": {
+      "title": "struck state",
+      "tasks": [
+        "T007",
+        "T009"
+      ]
+    },
+    "FR-011": {
+      "title": "host anchor",
+      "tasks": [
+        "T008",
+        "T010"
+      ]
+    },
+    "FR-012": {
+      "title": "tokens css",
+      "tasks": [
+        "T006"
+      ]
+    },
+    "FR-013": {
+      "title": "stories",
+      "tasks": [
+        "T012"
+      ]
+    },
+    "FR-014": {
+      "title": "canvas build",
+      "tasks": [
+        "T013"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 14,
+    "projectedTasks": 14,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "context": [
+    "area: apps/vscode/webview/src/spec-viewer/markdown",
+    "area: apps/vscode/src/features/spec-viewer/extractBlock.ts",
+    "constraint: touch nothing under apps/speckit-extension"
+  ],
+  "intent": "Draw calls fences in a plan as a commentable card",
+  "decisions": [
+    {
+      "decision": "Block renderer receives row source lines and the note",
+      "why": "the loop already holds sourceLineOf",
+      "rejected": "renumber after render"
+    },
+    {
+      "decision": "Single shared file chip helper",
+      "why": "one validation path",
+      "rejected": "duplicate markup"
+    },
+    {
+      "decision": "Row source kept as hidden .line-content text",
+      "why": "existing re-anchoring matches on it, so a comment survives a re-render",
+      "rejected": "data attribute (fence text must not enter attributes)"
+    },
+    {
+      "decision": "No card inside a template-instructions disclosure",
+      "why": "an HTML comment wrapping a fence is example text",
+      "rejected": "drawing it"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "New callsCard module, renderer passes lines and consumes the note, host extractBlock anchors fence rows",
+      "key_finding": "BlockRenderer gets only the body today, so it needs a context argument"
+    },
+    "tasks": {
+      "summary": "13 tasks in 4 phases"
+    },
+    "implement": {
+      "summary": "Calls card, strike, host anchor, stories, canvas rebuild"
+    }
+  },
+  "approach": "callsCard.ts parses and renders; renderer supplies source lines and eats the note; strike reuses addComment; extractBlock anchors fence rows.",
+  "currentTask": null,
+  "task_summaries": {
+    "T004": {
+      "status": "DONE",
+      "did": "Wrote failing card tests",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/__tests__/callsCard.test.ts"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "Chip helper, block context, renderer line and note pass",
+      "files": [
+        "inline.ts",
+        "blockFences.ts",
+        "renderer.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Chip helper, block context, renderer line and note pass",
+      "files": [
+        "inline.ts",
+        "blockFences.ts",
+        "renderer.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Chip helper, block context, renderer line and note pass",
+      "files": [
+        "inline.ts",
+        "blockFences.ts",
+        "renderer.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Parser and card renderer",
+      "files": [
+        "callsCard.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Card styles",
+      "files": [
+        "_calls.css",
+        "index.css"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "strike and host anchor",
+      "files": [
+        "callsStrike.ts",
+        "extractBlock.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "strike and host anchor",
+      "files": [
+        "callsStrike.ts",
+        "extractBlock.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "strike and host anchor",
+      "files": [
+        "callsStrike.ts",
+        "extractBlock.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "strike and host anchor",
+      "files": [
+        "callsStrike.ts",
+        "extractBlock.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Refine prompt reads sensibly for a row, unchanged",
+      "files": [
+        "messageHandlers.ts"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Stories",
+      "files": [
+        "PlanComponents.stories.tsx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "tsc, npm test, canvas build clean",
+      "files": [
+        "apps/copilot-canvas/vendor"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "typecheck",
+      "command": "npx tsc -p ./ --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 5.3,
+      "result": "no output"
+    },
+    {
+      "what": "unit tests",
+      "command": "npx jest apps/vscode/webview apps/vscode/tests/unit/spec-viewer apps/vscode/src/features/spec-viewer",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 9.7,
+      "result": "Snapshots:   0 total · Time:        8.932 s · Ran all test suites matching /apps\\/vscode\\/webview|apps\\/vscode\\/tests\\/unit\\/spec-viewer|apps\\/vscode\\/src\\/features\\/spec-viewer/i."
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Strike/comment/host tests were written together with the code, not strictly red first",
+      "step": "implement"
+    }
+  ]
+}

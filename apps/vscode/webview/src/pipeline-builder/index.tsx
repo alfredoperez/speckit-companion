@@ -1,5 +1,5 @@
 /**
- * The pipeline builder webview.
+ * The Workflow Builder webview.
  *
  * Draws the run left to right — the pipeline is a sequence and the layout says
  * so — with `auto` out of the row because it runs the others rather than taking
@@ -20,8 +20,10 @@ import {
     HookWhen,
     PipelineNode,
     PipelineStatus,
+    StockWorkflowView,
     isGraphError,
 } from '../../../src/protocol/pipeline';
+import { StockBoard } from './StockBoard';
 import { BrokenPipeline } from './BrokenPipeline';
 import { Canvas, hooksAt, withoutNode as withoutNodeOf } from './Canvas';
 import { Header } from './Header';
@@ -32,6 +34,8 @@ import {
     AttachForm, NewStepForm, NewWorkflowForm, Attachment, boundaryOf,
 } from './AttachForm';
 import { TemplateForm } from './TemplateForm';
+import { DecisionForm } from './DecisionForm';
+import { LivingSpecsPanel } from './LivingSpecsPanel';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
 const vscode = acquireVsCodeApi();
@@ -54,6 +58,9 @@ type Side =
     | { kind: 'new-workflow' }
     | { kind: 'new-step'; after?: string }
     | { kind: 'template'; command: string }
+    /** Where one node's verdicts route. `node` is the node that decides. */
+    | { kind: 'decision'; command: string; node: string }
+    | { kind: 'living' }
     | null;
 
 /**
@@ -126,6 +133,8 @@ function findNode(graph: PipelineGraph, at: Selection): PipelineNode | null {
 
 function App() {
     const [graph, setGraph] = useState<PipelineGraphResult | null>(null);
+    // A stock project is a different board, not a graph with things missing.
+    const [stock, setStock] = useState<StockWorkflowView | null>(null);
     const [buildState, setBuildState] = useState<PipelineBuildKind>('unconfigured');
     const [busy, setBusy] = useState(false);
     const [side, setSide] = useState<Side>(null);
@@ -148,7 +157,11 @@ function App() {
             const message = event.data as ExtensionToBuilderMessage;
             if (message.type === 'graph') {
                 setGraph(message.graph);
+                setStock(null);
                 setBuildState(message.buildState);
+            } else if (message.type === 'stock') {
+                setStock(message.view);
+                setGraph(null);
             } else if (message.type === 'busy') {
                 setBusy(message.busy);
             } else if (message.type === 'notice') {
@@ -184,6 +197,25 @@ function App() {
         vscode.postMessage({ type: 'ready' });
         return () => window.removeEventListener('message', onMessage);
     }, []);
+
+    if (stock) {
+        return (
+            <StockBoard
+                view={stock}
+                status={status ?? (notice ? { tone: 'warning', text: notice } : null)}
+                onSetHook={flip => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'setStockHook', ...flip });
+                }}
+                onOpenFile={path => vscode.postMessage({ type: 'openStockFile', path })}
+                onSelectWorkflow={id => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'selectStockWorkflow', id });
+                }}
+                onRunCommand={command => vscode.postMessage({ type: 'runStockCommand', command })}
+            />
+        );
+    }
 
     if (!graph) {
         return <div class="builder-empty">Reading the pipeline…</div>;
@@ -285,6 +317,7 @@ function App() {
                     setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
                 }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
+                onOpenLivingSpecs={() => { setNotice(null); setSide({ kind: 'living' }); }}
             />
             {line && (
                 <StatusLine status={line}
@@ -334,6 +367,10 @@ function App() {
                         });
                     }}
                     onRefuse={reason => { setStatus(null); setNotice(reason); }}
+                    onOpenDecision={(command, node) => {
+                        setNotice(null);
+                        setSide({ kind: 'decision', command, node });
+                    }}
                 />
 
                 {attachStep && attaching && (
@@ -401,6 +438,42 @@ function App() {
                                 },
                             });
                         } : undefined}
+                    />
+                )}
+
+                {side?.kind === 'decision' && (() => {
+                    const step = graph.steps.find(s => s.name === side.command);
+                    const decision = step?.decisions.find(d => d.node === side.node);
+                    if (!step || !decision) { return null; }
+                    return (
+                        <DecisionForm
+                            step={step}
+                            decision={decision}
+                            // Every step that takes a turn in the run, minus the
+                            // one that decides: a verdict cannot skip the step
+                            // it was reached in.
+                            skippable={graph.steps
+                                .filter(s => s.inSequence && s.name !== step.name)
+                                .map(s => s.name)}
+                            changed={step.changes.decisions}
+                            onCancel={() => setSide(null)}
+                            onSave={(verdict, folds, warns) => send({
+                                type: 'setDecision', command: side.command,
+                                node: side.node, verdict, folds, warns,
+                            })}
+                            onRestore={verdict => send({
+                                type: 'restoreDecision', command: side.command,
+                                node: side.node, verdict,
+                            })}
+                        />
+                    );
+                })()}
+
+                {side?.kind === 'living' && graph.livingSpecs && (
+                    <LivingSpecsPanel
+                        living={graph.livingSpecs}
+                        onCancel={() => setSide(null)}
+                        onSet={change => send({ type: 'setLivingSpecs', ...change })}
                     />
                 )}
 

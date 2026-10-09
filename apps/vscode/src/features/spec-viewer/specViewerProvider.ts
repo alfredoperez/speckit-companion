@@ -14,6 +14,7 @@ import { createMessageHandlers, type LivingUndoAction } from "./messageHandlers"
 import { computeStaleness, isStalenessRelevant } from "./staleness";
 import {
   computePanelDerivedState,
+  inFlightTask,
   resolveDisplayDocument,
   resolveTabClickDocument,
   resolveSpecStatus,
@@ -86,6 +87,7 @@ import {
   resolveWorkflow,
 } from "../workflows";
 import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
+import { resolveSpecBranch } from "../specs/specBranch";
 
 /** How long Approve all and Remove stay undoable. */
 const LIVING_UNDO_MS = 5000;
@@ -1090,6 +1092,7 @@ export class SpecViewerProvider {
         phases: derived.phases,
         currentPhase: derived.currentPhase,
         taskCompletionPercent: derived.taskCompletionPercent,
+        taskCounts: derived.taskCounts,
       };
 
       if (instance.state.landing === "overview" && instance.overviewAvailable === undefined) {
@@ -1123,7 +1126,7 @@ export class SpecViewerProvider {
         derived.createdDate,
         derived.lastUpdatedDate,
         resolveSpecDisplayName(featureCtx?.specName, specDirectory),
-        featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
+        resolveSpecBranch(featureCtx) ?? null,
         doc?.filePath ?? null,
         featureCtx?.currentStep ?? doc?.type ?? null,
         derived.stepHistoryByTab,
@@ -1139,6 +1142,9 @@ export class SpecViewerProvider {
         undefined,     // readOnly — default
         resolveSpecAssistant(featureCtx),
         getSpecTerminal(specDirectory) !== undefined,
+        undefined,     // reportActions — default
+        undefined,     // report — default
+        derived.taskCounts,
       );
 
       this.outputChannel.appendLine(
@@ -1338,6 +1344,7 @@ export class SpecViewerProvider {
 
       instance.state.currentDocument = resolvedType;
       instance.state.taskCompletionPercent = derived.taskCompletionPercent;
+      instance.state.taskCounts = derived.taskCounts;
       instance.state.currentPhase = getPhaseNumber(resolvedType);
 
       instance.panel.title = this.panelTitle(instance, doc.label);
@@ -1445,6 +1452,9 @@ export class SpecViewerProvider {
     const effectiveTaskPct = options?.skipContentAndStaleness
       ? instance.state.taskCompletionPercent
       : derived.taskCompletionPercent;
+    const effectiveTaskCounts = options?.skipContentAndStaleness
+      ? instance.state.taskCounts
+      : derived.taskCounts;
     const effectiveSpecStatus = options?.skipContentAndStaleness
       ? resolveSpecStatus(featureCtx, effectiveTaskPct)
       : derived.specStatus;
@@ -1463,18 +1473,19 @@ export class SpecViewerProvider {
       currentDoc: resolvedType,
       workflowPhase: derived.workflowPhase,
       taskCompletionPercent: effectiveTaskPct,
+      taskCounts: effectiveTaskCounts,
       isViewingRelatedDoc: derived.isViewingRelatedDoc,
       enhancementButtons,
       stalenessMap,
       specStatus: effectiveSpecStatus,
-      currentTask: featureCtx?.currentTask ?? null,
+      currentTask: inFlightTask(featureCtx),
       activeStep: runInfo.tab,
       stepHistory: derived.stepHistoryByTab,
       badgeText: derived.badgeText,
       createdDate: derived.createdDate,
       lastUpdatedDate: derived.lastUpdatedDate,
       specContextName: resolveSpecDisplayName(featureCtx?.specName, specDirectory),
-      branch: featureCtx?.workingBranch ?? featureCtx?.branch ?? null,
+      branch: resolveSpecBranch(featureCtx) ?? null,
       assistantName: resolveSpecAssistant(featureCtx),
       hasTerminal: getSpecTerminal(specDirectory) !== undefined,
       currentStep: featureCtx?.currentStep ?? resolvedType ?? null,

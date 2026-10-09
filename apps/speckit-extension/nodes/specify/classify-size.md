@@ -15,9 +15,11 @@ reads: [draft-spec]
 
    ```
    crossedGuardrail = the change exceeds the **small** bar above (more files or tasks than it allows)
+   riskyToShip      = the change is hard to undo or hard to check, as the small bar above defines
 
    verdict = "simple"    if  the change is **small** by the definition above
                          and scopeSignal != "larger"
+                         and not riskyToShip
              "oversized" if  the change exceeds the small bar by a wide margin —
                              roughly double it (more than 10 files or more than 20
                              tasks), or spans multiple subsystems
@@ -31,3 +33,9 @@ reads: [draft-spec]
      ```
 
      Exactly at the threshold (`projectedFiles == 5` / `projectedTasks == 10`) is the simple ceiling: it does **not** warn and stays eligible for `simple`.
+
+     When `riskyToShip == true` and neither of those holds, print this line instead, verbatim, and run the branch the verdict names. Print one line or the other, never both:
+
+     ```
+     [companion] Change is hard to undo or hard to check — running the full pipeline as <normal|oversized>.
+     ```

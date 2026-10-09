@@ -9,9 +9,10 @@
  * No runtime, no price, no platform. None of that is decided, and inventing any
  * of it is exactly the failure the claim ledger exists to stop. The outline is
  * held to the same bar as the rest of the site: every lesson names something
- * that exists today, except the builder one, which is marked as not shipped.
+ * that exists today. The Workflow Builder lesson says it is in beta.
  */
 import SoonPageLayout from '../components/SoonPageLayout.astro';
+import CourseSignup from '../components/CourseSignup.astro';
 
 /*
   Three titles here read differently from how the feature is usually described,
@@ -20,7 +21,8 @@ import SoonPageLayout from '../components/SoonPageLayout.astro';
   the assistant reads, not an engine that runs them. And there is no templates
   lesson, because no template setting is contributed anywhere.
 */
-const modules = [
+type Lesson = { title: string; body: string; soon?: boolean };
+const modules: { n: string; title: string; lessons: Lesson[] }[] = [
   {
     n: '1',
     title: 'Set up',
@@ -55,7 +57,7 @@ const modules = [
     lessons: [
       { title: 'Living specs', body: 'Turning them on, adopting a capability, and keeping it central or beside the code.' },
       { title: 'Drift and coverage', body: 'What each report tells you, and why neither one can ever block a build.' },
-      { title: 'The workflow builder', body: 'Not built yet. This lesson arrives with it.', soon: true },
+      { title: 'The Workflow Builder', body: 'In beta. Change what a step does on a board, then build.' },
     ],
   },
 ];
@@ -93,27 +95,25 @@ const guides = [
   },
 ];
 
-/* The PostHog survey this list posts to. Unset, the form still renders and
-   still counts the interest, but tells the visitor nothing was stored. */
-const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_COURSE;
 ---
 
 <SoonPageLayout
   title="Course"
-  description="A course on spec-driven development with SpecKit Companion is not recorded yet. Here is the outline it would follow, the written guides that cover the same ground, and a list to join."
+  description="A course on applying spec-driven development with Spec Kit is coming. It is not recorded yet. Here is the outline it would follow, the written guides that cover the same ground, and a list to join."
   headline="A course, once there is one worth sitting through"
   standing="Nothing is recorded and there is no date. What follows is the outline it would run, so you know what you would be joining a list for."
-  surveyId={surveyId}
   waitlistId="course"
-  waitlistNote="Once this list is wired up, an address here gets exactly one message, on the day the thing ships. There is no newsletter behind it."
+  waitlistNote="An address here gets exactly one message, on the day the course opens. There is no newsletter behind it."
   pose="reading"
   poseAlt="The SpecKit Companion mascot sitting with an open book, reading."
 >
   <p slot="lead">
-    The plan is a walkthrough of taking real work through the pipeline end to end: writing the spec,
-    reading the plan, reviewing the tasks, and reading the run once it finishes. It has not been
-    made, so the honest answer to when is that we do not know.
+    The plan is a course on applying spec-driven development with Spec Kit: taking real work from a
+    vague idea to a spec, a plan, tasks and shipped code. It has not been made, so the honest answer
+    to when is that we do not know.
   </p>
+
+  <CourseSignup slot="form" id="course-page" placement="course" align="start" />
 
   <section class="section">
     <div class="inner">
@@ -121,7 +121,7 @@ const surveyId = import.meta.env.PUBLIC_POSTHOG_SURVEY_COURSE;
       <h2>Four parts, from an empty workspace to a spec that outlives the ticket</h2>
       <p class="section-lede">
         This is the shape, not a schedule. Every lesson below covers something the product does
-        today, apart from the last one, which waits on the builder.
+        today. The last one, the Workflow Builder, is in beta.
       </p>
 
       <ol class="modules">

@@ -1,27 +1,27 @@
 ---
 import LogoMark from './LogoMark.astro';
-import SoonChip from './SoonChip.astro';
-import { INSTALL_HREF, isCurrentPath, navGroups } from './navLinks';
+import { INSTALL_HREF, isCurrentPath, navLinks } from './navLinks';
 
 /*
   The nav sits on whatever ground its section paints, so it carries no
   background of its own. On the landing page that is the hero dot grid.
 
-  The link order and the grouping come from ./navLinks.ts, which the docs header
-  reads too. The workflow builder and the course are the unshipped pair: they
-  render side by side at a tighter gap, and each keeps its SOON chip.
+  The links and their order come from ./navLinks.ts, which the docs header
+  reads too.
 */
 interface Props {
   installHref?: string;
+  /* The landing hero is wider than the page column, and its nav lines up with it. */
+  wide?: boolean;
   class?: string;
 }
 
-const { installHref = INSTALL_HREF, class: className } = Astro.props;
+const { installHref = INSTALL_HREF, wide = false, class: className } = Astro.props;
 
 const here = Astro.url.pathname;
 ---
 
-<header class:list={['site-nav', className]}>
+<header class:list={['site-nav', wide && 'is-wide', className]}>
   <div class="inner">
     <a class="wordmark" href="/">
       <LogoMark size={24} />
@@ -31,19 +31,11 @@ const here = Astro.url.pathname;
     <nav aria-label="Primary">
       <ul>
         {
-          navGroups.map((group) => (
-            <li class:list={['group', group.length > 1 && 'is-pair']}>
-              {group.map((link) => (
-                <span class="item">
-                  <a
-                    href={link.href}
-                    aria-current={isCurrentPath(here, link.href) ? 'page' : undefined}
-                  >
-                    {link.label}
-                  </a>
-                  {link.soon && <SoonChip />}
-                </span>
-              ))}
+          navLinks.map((link) => (
+            <li>
+              <a href={link.href} aria-current={isCurrentPath(here, link.href) ? 'page' : undefined}>
+                {link.label}
+              </a>
             </li>
           ))
         }
@@ -68,6 +60,10 @@ const here = Astro.url.pathname;
     padding: 20px var(--pad-section-x);
   }
 
+  .is-wide .inner {
+    max-width: 1560px;
+  }
+
   .wordmark {
     display: inline-flex;
     align-items: center;
@@ -80,33 +76,13 @@ const here = Astro.url.pathname;
     text-decoration: none;
   }
 
-  /* The two pairs are pushed apart, not evenly spaced: the unshipped pair sits
-     out on its own and docs + changelog close up against the install button,
-     because those two are where anyone actually goes. */
   nav ul {
     display: flex;
     align-items: center;
-    gap: 52px;
+    gap: var(--space-22);
     margin: 0;
     padding: 0;
     list-style: none;
-  }
-
-  .group {
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* The pair reads as one thing: 14px between its two members against the 22px
-     that separates the groups. */
-  .group.is-pair {
-    gap: var(--space-14);
-  }
-
-  .item {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-6);
   }
 
   nav a {

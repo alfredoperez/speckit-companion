@@ -1,5 +1,5 @@
 /**
- * The pipeline builder panel.
+ * The Workflow Builder panel.
  *
  * Shows the pipeline a build would produce — steps, phases, nodes, hooks, the
  * decision and where its verdicts route — and what this project changed from the
@@ -22,10 +22,16 @@ import {
     PipelineGraphResult,
     PipelineStatus,
     isGraphError,
+    routeReads,
 } from '../../protocol/pipeline';
 import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { getProjectRoot } from '../../core/projectRoot';
 import { nodeFile, readableNode } from './readableNode';
+import { projectKind } from './projectKind';
+import { stockRefusal } from './stockGuard';
+import { setHookEnabled } from './stockHooks';
+import { formatStockCommands, readStockWorkflow, stockFileToOpen } from './stockWorkflow';
+import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
     readPipelineGraph,
@@ -36,7 +42,10 @@ import {
     resolveConfigRepairScript,
     applyRepair,
     resolveGraphScript,
+    restoreDecision,
+    writeDecision,
     writeHook,
+    writeLivingSpecs,
     moveHook,
     removeHook,
     writeNodeOrder,
@@ -50,6 +59,9 @@ const BUILD_COMMAND = 'speckit.companion.buildPipeline';
 
 /** Mirrors `PROJECT_NODES_REL` in `_command_parts.py` — a project's own nodes. */
 const PROJECT_NODES_REL = path.join('.specify', 'companion', 'nodes');
+
+/** Stock Spec Kit's own extension registry — the one file this board edits there. */
+const EXTENSIONS_REL = path.join('.specify', 'extensions.yml');
 
 /** Mirrors `WORKFLOWS_REL` / `SHIPPED_WORKFLOW` in build-pipeline.py. */
 const WORKFLOWS_REL = path.join('.specify', 'companion', 'workflows');
@@ -74,6 +86,10 @@ Omit<HookDraft, 'when' | 'anchor' | 'editIndex'> {
     return type === 'command' ? { type, run: value } : { type, text: value };
 }
 
+function read(file: string): string | null {
+    try { return fs.readFileSync(file, 'utf8'); } catch { return null; }
+}
+
 function nonce(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let out = '';
@@ -88,6 +104,9 @@ export class PipelineBuilderPanel {
 
     /** The way back from the last write, while the status line still offers it. */
     private pendingUndo: { token: string; run: () => Promise<void> } | null = null;
+
+    /** Which installed stock workflow the board is drawing. */
+    private drawing: string | undefined;
 
     private constructor(
         private readonly panel: vscode.WebviewPanel,
@@ -119,6 +138,12 @@ export class PipelineBuilderPanel {
             '.specify/companion/workflows/**/*.yml',
             '.specify/companion/fragments/**/*.md',
             '.specify/templates/**/*.md',
+            // The stock board's own inputs, and the directory whose arrival
+            // turns a stock project into a Companion one.
+            '.specify/extensions.yml',
+            '.specify/workflows/**/*.yml',
+            '.specify/presets/**/preset.yml',
+            '.specify/extensions/companion/**',
         ]) {
             const watcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(workspaceRoot, pattern),
@@ -143,7 +168,7 @@ export class PipelineBuilderPanel {
         }
         const panel = vscode.window.createWebviewPanel(
             VIEW_TYPE,
-            'Pipeline Builder',
+            'Workflow Builder',
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -515,6 +540,137 @@ export class PipelineBuilderPanel {
                 });
         },
 
+        /**
+         * Switch one of stock Spec Kit's extension hooks on or off.
+         *
+         * The only edit this board makes on a stock project, because it is the
+         * only switch stock Spec Kit itself offers in a file it owns.
+         */
+        setStockHook: async message => {
+            const file = path.join(this.workspaceRoot, EXTENSIONS_REL);
+            const text = read(file);
+            if (text === null) {
+                this.say('This project has no .specify/extensions.yml to change.');
+                return;
+            }
+            const result = setHookEnabled(text, message);
+            if ('error' in result) { this.say(result.error); return; }
+            fs.writeFileSync(file, result.text, 'utf8');
+            await this.send();
+            this.sayStatus({
+                tone: 'done',
+                text: `${message.step} ${message.when} hook is `
+                    + `${message.enabled ? 'on' : 'off'}`,
+                detail: 'Saved to .specify/extensions.yml',
+            });
+        },
+
+        /**
+         * Open one of the stock files the board drew, in an editor.
+         *
+         * A template is the project's to edit, and an editor is where that is
+         * done — the panel reads nothing back and writes nothing here.
+         */
+        openStockFile: async message => {
+            const file = stockFileToOpen(this.workspaceRoot, message.path, this.drawing);
+            if (!file) {
+                this.say('That file is not one this board drew.');
+                return;
+            }
+            await vscode.window.showTextDocument(vscode.Uri.file(file));
+        },
+
+        /**
+         * Draw another installed workflow.
+         *
+         * Which workflow a run takes is Spec Kit's to decide when the run
+         * starts, and its registry records no active one — so this changes
+         * which one the board is reading, and no file.
+         */
+        selectStockWorkflow: async message => {
+            const known = readStockWorkflow(this.workspaceRoot)
+                .workflows.some(choice => choice.id === message.id);
+            if (!known) {
+                this.say(`${message.id} is not installed in this project.`);
+                return;
+            }
+            this.drawing = message.id;
+            await this.send();
+        },
+
+        runStockCommand: async () => {
+            await vscode.commands.executeCommand('speckit.constitution');
+        },
+
+        /**
+         * Change where one verdict routes.
+         *
+         * Taken back the way a node removal is: the routing as it stands is
+         * read before the write, and the undo writes that back. Which half of
+         * a verdict a project had changed is not recoverable from the file
+         * afterwards — an override and a declaration read identically once the
+         * override is there — so it has to be held.
+         */
+        setDecision: async message => {
+            const before = await this.verdictShape(
+                message.command, message.node, message.verdict);
+            const token = `decision:${message.command}:${message.node}:${message.verdict}`;
+            const ok = await this.write(
+                script => writeDecision(
+                    script, this.workspaceRoot, message.command, message.node,
+                    message.verdict, message.folds, message.warns),
+                'Changing where a verdict routes',
+                {
+                    tone: 'done',
+                    text: `${message.node} = ${message.verdict} ${routeReads(
+                        message.folds, message.warns)}`,
+                    detail: 'Build to apply',
+                    undo: before ? { token } : undefined,
+                });
+            if (ok && before) { this.offerUndo(token, () => this.putVerdictBack(message, before)); }
+        },
+
+        restoreDecision: async message => {
+            const before = await this.verdictShape(
+                message.command, message.node, message.verdict);
+            const token = `decision:${message.command}:${message.node}:${message.verdict}`;
+            const ok = await this.write(
+                script => restoreDecision(script, this.workspaceRoot, message.command,
+                    message.node, message.verdict),
+                'Giving a verdict back',
+                {
+                    tone: 'done',
+                    text: `${message.node} = ${message.verdict} routes the way Companion ships it`,
+                    detail: 'Build to apply',
+                    undo: before ? { token } : undefined,
+                });
+            if (ok && before) { this.offerUndo(token, () => this.putVerdictBack(message, before)); }
+        },
+
+        /**
+         * Turn living specs on or off, or choose where the specs live.
+         *
+         * The one write that does not go into `companion.yml` or a workflow
+         * file: the script sends it to whichever file the living-specs resolver
+         * reads, so the setting lands where it will be read from.
+         */
+        setLivingSpecs: async message => {
+            await this.write(
+                script => writeLivingSpecs(script, this.workspaceRoot, {
+                    enabled: message.enabled, layout: message.layout,
+                }),
+                'Changing living specs',
+                {
+                    tone: 'done',
+                    text: message.layout
+                        ? `Living specs are kept ${message.layout}`
+                        : `Living specs are ${message.enabled ? 'on' : 'off'}`,
+                    detail: message.enabled === false
+                        ? 'Nothing was deleted — the registry stays'
+                        : 'Build to apply',
+                });
+        },
+
         /** Read once. The panel does not say it again in this workspace. */
         dismissFirstRun: async () => {
             await this.context.workspaceState?.update(FIRST_RUN_SEEN, true);
@@ -636,6 +792,45 @@ export class PipelineBuilderPanel {
         };
     }
 
+    /**
+     * One verdict's routing as it stands, and whether this project owns it.
+     *
+     * `changed` is what tells an undo which write to make: putting back a
+     * routing the project had changed means writing it again, and putting back
+     * one it had not means removing the override entirely.
+     */
+    private async verdictShape(command: string, node: string, verdict: string): Promise<
+        { folds: string[]; warns: string; changed: boolean } | null
+    > {
+        const script = resolveGraphScript(this.workspaceRoot, this.context.extensionPath);
+        if (!script) { return null; }
+        const graph = await readPipelineGraph(script, this.workspaceRoot);
+        if (isGraphError(graph)) { return null; }
+        const step = graph.steps.find(s => s.name === command);
+        const found = step?.decisions.find(d => d.node === node)
+            ?.verdicts.find(v => v.name === verdict);
+        if (!step || !found) { return null; }
+        return {
+            folds: found.folds,
+            warns: found.warns,
+            changed: step.changes.decisions.includes(`${node}.${verdict}`),
+        };
+    }
+
+    /** Write one verdict's routing back as it was — or take the override away again. */
+    private async putVerdictBack(
+        at: { command: string; node: string; verdict: string },
+        before: { folds: string[]; warns: string; changed: boolean },
+    ): Promise<void> {
+        await this.write(
+            script => (before.changed
+                ? writeDecision(script, this.workspaceRoot, at.command, at.node,
+                    at.verdict, before.folds, before.warns)
+                : restoreDecision(script, this.workspaceRoot, at.command, at.node,
+                    at.verdict)),
+            'Putting the routing back');
+    }
+
     /** Send one node's instructions — what it says, and what an edit starts from. */
     private async sendBody(command: string, nodeId: string): Promise<void> {
         const file = this.nodeSource(command, nodeId);
@@ -753,10 +948,24 @@ export class PipelineBuilderPanel {
         }
     }
 
-    private readonly route = createDispatcher(this.handlers, {
+    private readonly dispatch = createDispatcher(this.handlers, {
         onUnhandled: message => this.outputChannel.appendLine(
             `[PipelineBuilder] ignored message: ${(message as { type: string }).type}`),
     });
+
+    /**
+     * Every message passes the project kind first.
+     *
+     * One gate rather than a check in each writer: a stock project must not
+     * gain a `companion.yml`, a `.specify/companion/` directory or a build, and
+     * the way to make that impossible is to refuse before a handler runs.
+     */
+    private readonly route = async (message: BuilderToExtensionMessage): Promise<void> => {
+        const refusal = stockRefusal(projectKind(this.workspaceRoot), message.type);
+        if (refusal) { this.say(refusal); return; }
+        await this.dispatch(message);
+    };
+
 
     /**
      * Run the build, and say here what it did.
@@ -781,10 +990,22 @@ export class PipelineBuilderPanel {
     }
 
     private async send(): Promise<void> {
+        // A stock project is drawn from its own files. The graph script would
+        // otherwise fall back to the copy bundled here and draw Companion's
+        // pipeline over a project that cannot run a single node of it.
+        if (projectKind(this.workspaceRoot) === 'stock') {
+            // The spelling a host registers is the editor's to know, so every
+            // command the board draws is named the way a run of it is typed.
+            const view = formatStockCommands(
+                readStockWorkflow(this.workspaceRoot, this.drawing),
+                formatCommandForProvider);
+            await this.post({ type: 'stock', view });
+            return;
+        }
         const script = resolveGraphScript(this.workspaceRoot, this.context.extensionPath);
         const graph: PipelineGraphResult = script
             ? await readPipelineGraph(script, this.workspaceRoot)
-            : { error: 'The pipeline builder needs the companion spec-kit extension.' };
+            : { error: 'The Workflow Builder needs the companion spec-kit extension.' };
         // Whether the board still has to explain itself is a fact about this
         // workspace's reader, not about the pipeline, so the graph script has no
         // way to know it and the panel fills it in on the way out.
@@ -822,7 +1043,7 @@ export class PipelineBuilderPanel {
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${id}'; font-src ${webview.cspSource};">
 <link href="${tokens}" rel="stylesheet">
 <link href="${styles}" rel="stylesheet">
-<title>Pipeline Builder</title>
+<title>Workflow Builder</title>
 </head>
 <body>
 <div id="app-root"></div>

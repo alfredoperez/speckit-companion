@@ -15,7 +15,7 @@ SpecKit Companion is a VS Code extension for developers who build with an AI ass
      here); the retired illustrated hero stays on disk at docs/screenshots/hero.jpg. -->
 ![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
-**What's new in 0.35.0:** move a node to another phase and drag hooks between steps in the Pipeline Builder, which now also works in a narrow side panel. Step times show the work and not the wait, links between spec documents open in the viewer, and commands wait until the terminal is ready instead of losing their first letter. Spec Kit's converge step and its bug reports now show up too. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
+**What's new in 0.36.0:** follow a Spec Kit run from inside Claude Code with the new mod, which pins your spec above the prompt and ticks off steps and tasks beside the transcript. Bugs and ideas get their own sidebar panes and open as pages: a bug reads as a story, a decided idea as a decision. The viewer gains buttons to answer an open question, run Converge and create GitHub issues from the task list, and the Copilot app board now follows any Spec Kit project. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
 
 ## Install
 
@@ -124,9 +124,9 @@ The sidebar shows test coverage for each capability and flags drift when the cod
 
 ### A pipeline you can see and change
 
-The **Pipeline Builder** draws the Companion pipeline your project runs: each step as a column, its phases, the nodes in them, and the hooks attached. Open it from the circuit icon at the top of the Specs sidebar.
+The **Workflow Builder** draws the Companion pipeline your project runs: each step as a column, its phases, the nodes in them, and the hooks attached. Open it from the circuit icon at the top of the Specs sidebar.
 
-![The Pipeline Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark.](docs/screenshots/generated/builder-board.png)
+![The Workflow Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark.](docs/screenshots/generated/builder-board.png)
 
 From the board you can:
 
@@ -134,19 +134,23 @@ From the board you can:
 - **Rearrange nodes** by dragging, or move one to another phase.
 - **Rewrite a node** in your own words. An upgrade never overwrites your copy.
 - **Add a step** of your own, with its own `/speckit.companion.<name>` command.
+- **Change where a decision routes**: pick which steps each answer to "how big is this change?" skips, and what it warns first.
+- **Turn living specs on or off** and choose where the specs live, with the capabilities you registered listed beside them.
 - **Keep several workflows** and switch between them, starting from what you run today or from one Companion ships.
 
-Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder). It needs the Companion Spec Kit extension.
+Everything your project changed carries one colour, so you can tell at a glance what is yours. Changes are saved to `.specify/companion.yml`, and **Build** applies them. Guide: [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder).
+
+On a project that runs stock Spec Kit, the board draws that project's own workflow from its files and changes what Spec Kit itself owns: an extension hook's switch, the document templates it writes from, and the constitution, which it hands to `/speckit.constitution`.
 
 | Command | What it does |
 |---|---|
-| **Open Pipeline Builder** | Draw the pipeline your configuration resolves to |
+| **Open Workflow Builder** | Draw the pipeline your configuration resolves to |
 | **Preview Pipeline Build** | Show what a build would change, writing nothing |
 | **Build Pipeline from companion.yml** | Apply the configuration |
 
 ### Also in the box
 
-- **Your own process.** Custom phases, custom commands and custom output files, and the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
+- **Your own process.** Custom phases, custom commands and custom output files, written in VS Code settings rather than on the Workflow Builder board, and the sidebar and viewer adapt. [Custom workflows](https://speckit-companion.dev/docs/reference/configuration#custom-workflows)
 - **Which assistant has which spec.** A spec you run from Companion shows the assistant's name on its sidebar row and in the viewer header, and **Show Terminal** brings its terminal to the front while that terminal is open. [Sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar)
 - **Multi-root workspaces.** Companion picks the folder that holds your Spec Kit files, or the one you name in `speckit.projectFolder`. [Configuration](https://speckit-companion.dev/docs/reference/configuration)
 - **Works offline, careful by default.** Fonts and icons ship with the extension, destructive actions ask first or offer undo, and Reduce Motion is honored. [Viewer reference](https://speckit-companion.dev/docs/navigate/inside-the-viewer)
@@ -170,7 +174,9 @@ The same specs and the same run record show up in two other places. Neither need
 
 The spec board opens as a canvas next to the chat. It lists every spec with its pipeline and tasks, updates as the agent writes, and runs the next step from a button. [Install the board](https://speckit-companion.dev/docs/copilot-app/install/)
 
-![The SpecKit Companion board open on a project with five specs. The list on the left gives each spec a status and a four-step bar, and Demo, Tasked is open on the right with its pipeline and a Run implement button.](docs/screenshots/live-copilot-board.png)
+![A recreation of a run on the SpecKit Companion board, sped up: a finished spec's Overview, New spec with one line typed, Run plan pressed and the command landing in the chat, the step rail moving through Plan, Tasks and Implement, the tasks ticking from 0/6 to 6/6, and the new spec's Overview with a time per step.](docs/screenshots/board-story.gif)
+
+A recreation of a run, sped up. The board is the real one, and the window around it is a stand-in for the Copilot app.
 
 ### In Claude Code
 
@@ -198,7 +204,7 @@ Everything lives in plain files in your repo: the spec markdown, and a `.spec-co
 The docs live at [speckit-companion.dev/docs](https://speckit-companion.dev/docs/).
 
 - **Start**: [Install](https://speckit-companion.dev/docs/install), [Your first spec](https://speckit-companion.dev/docs/start/your-first-spec/) and [Spec-driven development](https://speckit-companion.dev/docs/start/spec-driven-development/)
-- **In your IDE**: [the sidebar](https://speckit-companion.dev/docs/navigate/the-sidebar), [inside the viewer](https://speckit-companion.dev/docs/navigate/inside-the-viewer), [each step](https://speckit-companion.dev/docs/steps/specify), [the Overview](https://speckit-companion.dev/docs/results/the-overview), [living specs](https://speckit-companion.dev/docs/results/living-specs) and the [Pipeline Builder](https://speckit-companion.dev/docs/customize/pipeline-builder)
+- **In your IDE**: [the sidebar](https://speckit-companion.dev/docs/navigate/the-sidebar), [inside the viewer](https://speckit-companion.dev/docs/navigate/inside-the-viewer), [each step](https://speckit-companion.dev/docs/steps/specify), [the Overview](https://speckit-companion.dev/docs/results/the-overview), [living specs](https://speckit-companion.dev/docs/results/living-specs) and the [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder)
 - **In the Copilot app**: [install the board](https://speckit-companion.dev/docs/copilot-app/install/) and [run the steps](https://speckit-companion.dev/docs/copilot-app/run-the-steps)
 - **In Claude Code**: [install the mod](https://speckit-companion.dev/docs/claude-code/install/) and [what it shows](https://speckit-companion.dev/docs/claude-code/what-it-shows)
 - **Reference**: [configuration](https://speckit-companion.dev/docs/reference/configuration), [commands](https://speckit-companion.dev/docs/reference/commands), [AI providers](https://speckit-companion.dev/docs/reference/providers) and [telemetry](https://speckit-companion.dev/docs/reference/telemetry)

@@ -16,14 +16,18 @@ The docs sidebar is organized by where you work. A group is a list in the sideba
 
 | Group | Folder under `src/content/docs/docs/` | What its pages are |
 | --- | --- | --- |
-| Start | `index.mdx`, `start/spec-driven-development.mdx`, `install.mdx` | What it is, the method with its glossary and the two other processes, getting set up |
-| In your IDE | `ide/`, `start/your-first-spec.mdx`, `navigate/`, `steps/`, `results/` | Choosing a provider, the first spec, the sidebar and the viewer, then two collapsed sub-groups (Each step, Read the results), then fixing a bug and assessing an idea |
+| Start | `index.mdx`, `start/spec-driven-development.mdx`, `install.mdx` | What it is, the method with its glossary and the two other processes, then the install launchpad |
+| In your IDE | `ide/`, `start/your-first-spec.mdx`, `navigate/`, `steps/`, `results/` | Install, choosing a provider, the first spec, the sidebar and the viewer, then two collapsed sub-groups (Each step, Read the results), then fixing a bug and assessing an idea |
 | In the Copilot app | `copilot-app/` | Install, Navigate the board, Run the steps |
 | In Claude Code | `claude-code/` | Install, What it shows, Switch specs with /spec |
-| Customize | `customize/` | Pipeline Builder, hooks, your own workflow, steering |
+| Customize | `customize/` | Workflow Builder, hooks, your own workflow, steering |
 | Reference | `reference/` | Commands, configuration, providers, telemetry |
 
 The regroup retired the `processes/` folder. Fix a bug and Assess an idea moved to `ide/`, the Copilot app page and the Claude Code page each split into three, and Choose an AI provider is new. The four old `/docs/processes/` addresses redirect, and the two split pages land on their Install page.
+
+`/docs/install` is a launchpad, not a path: three cards, one per place you work, and the parts every path shares (what each piece is, updating, troubleshooting). Each group's own Install page (`ide/install.mdx`, `copilot-app/install.mdx`, `claude-code/install.mdx`) holds that tool's full numbered path. The three pages keep the same order and wording, read their commands from `src/data/installCommands.ts`, and the landing quick start follows them. The launchpad's cards carry the ids the page had when it held every path (`#in-vs-code`, `#in-the-github-copilot-app`, `#in-claude-code` and the step ids), so an old hash link lands on the card that leads to those steps.
+
+The top bar is `src/components/navLinks.ts`, read by the landing nav and the docs header: docs, changelog, install. Nothing unshipped sits in it. In the docs header every link that leaves `/docs/` is a plain navigation, because the docs' page router can only swap docs pages.
 
 The sidebar in `astro.config.mjs` names every page by slug, in reading order, so a new page is added there as well as saved in its folder. A page that moves gets a line under `redirects` in the same file, pointing at its final address.
 
@@ -76,7 +80,7 @@ The Ignored Build Step is the important one. Vercel runs it with the working dir
 
 Both are optional. With no key, `src/components/Analytics.astro` renders nothing at all, which is the intended default locally and on preview deploys. Nothing else in the site names PostHog either, so a build without a key ships no reference to it rather than a disabled one.
 
-`Analytics.astro` is mounted in three places, because three kinds of page build their own document: `BaseLayout.astro` for the landing page and the soon pages, `src/components/DocsHead.astro` for the whole Starlight `/docs/` tree, and `src/pages/changelog.astro`, which is a standalone route. A new page that does not go through `BaseLayout` has to mount it too.
+`Analytics.astro` is mounted in three places, because three kinds of page build their own document: `BaseLayout.astro` for the landing page, the soon pages and the course signup page, `src/components/DocsHead.astro` for the whole Starlight `/docs/` tree, and `src/pages/changelog.astro`, which is a standalone route. A new page that does not go through `BaseLayout` has to mount it too.
 
 | Variable | Value |
 | --- | --- |
@@ -84,6 +88,21 @@ Both are optional. With no key, `src/components/Analytics.astro` renders nothing
 | `PUBLIC_POSTHOG_HOST` | Defaults to `https://us.i.posthog.com`. Only set it if the org moves region. |
 
 Set them in the Vercel project's environment variables. Never commit a key.
+
+### The course list
+
+The course signup form is the slim strip under the landing page's hero, and it is on `/course/` and `/course/signup/` too. It posts to `src/pages/api/course-signup.ts`, the site's second serverless function, which checks the address, drops anything that filled the hidden `company` field, and hands the address to one provider. `src/data/courseSignup.ts` picks the provider and holds the words for every outcome.
+
+| Variable | What it does |
+| --- | --- |
+| `COURSE_SIGNUP_WEBHOOK_URL` | A URL that accepts a JSON `POST` of `{ list, email, placement, at }`. Most list tools offer one. Used first when it is set. Not `PUBLIC_`: it is read on the server only. |
+| `PUBLIC_POSTHOG_SURVEY_COURSE` | The id of a PostHog survey. With `PUBLIC_POSTHOG_KEY` also set and no webhook, the address is stored as that survey's response. |
+
+With neither set the list is closed. The form says so before anyone types, and a submit answers "not open yet" instead of pretending to succeed. The form reads these when the site is built and the function reads them when it runs, so redeploy after changing one.
+
+A webhook is the safer choice. PostHog answers `200` for any key, so a wrong key or survey id looks like success and the address is lost.
+
+Without JavaScript the form is a plain `POST`, and the function redirects to `/course/signup/#ok` (or `#invalid`, `#closed`, `#error`), a static page that shows the matching sentence with `:target`.
 
 Two things about PostHog worth knowing before you debug it. Ingestion answers `200 Ok` for any key, valid or not, so a wrong key fails silently and looks exactly like success: confirm events in the Activity feed rather than by reading a response code. And the loader runs cookieless through `persistence: 'memory'`, which is why the site owes no consent banner, so changing that setting changes the site's obligations.
 
@@ -111,14 +130,13 @@ The funnel this feeds is landing view to install click to getting-started view. 
 
 | Event | Where | Properties |
 | --- | --- | --- |
-| `install_click_vscode` | Landing hero Install for VS Code; landing quick-start Open in VS Code; landing footer CTA; the Marketplace button on the install guide | `placement`: `hero`, `quick-start`, `footer`, `install` |
-| `install_click_speckit_copy` | The copy button on the `specify extension add companion` row, on the landing quick start and on the install guide | `placement`: `quick-start`, `install` |
+| `install_click_vscode` | Landing hero Install for VS Code; landing quick-start Open in VS Code; landing footer CTA; the Marketplace button on the VS Code Install page | `placement`: `hero`, `quick-start`, `footer`, `install` |
+| `install_click_speckit_copy` | The copy button on the `specify extension add companion` row, on the landing quick start and on the three Install pages | `placement`: `quick-start`, `install` |
 | `demo_tab_click` | Each of the six demo tabs on the landing page | `tab`: `understand`, `customize`, `living`, `review`, `bugs`, `ideas` |
 | `install_path_click` | The three choices in the landing quick start | `path`: `vscode`, `copilot`, `claude` |
-| `surface_click` | The three cards in the landing page's Where it runs strip | `surface`: `vscode`, `copilot`, `claude` |
-| `waitlist_submit` | Submit on either soon page's waitlist form, fired from the handler | `list`: `workflow-builder`, `course` |
+| `course_signup` | A stored signup on the course list, sent by the server from `src/pages/api/course-signup.ts`. It never carries the address | `placement`: `landing`, `course`, `signup`; `provider`: `webhook`, `posthog` |
 
-The `code --install-extension` fallback on the install guide is deliberately untagged. It is a copy, not a click through to the Marketplace, and giving it `install_click_vscode` would make it indistinguishable from the Marketplace button one line above it.
+The `code --install-extension` fallback on the VS Code Install page is deliberately untagged. It is a copy, not a click through to the Marketplace, and giving it `install_click_vscode` would make it indistinguishable from the Marketplace button one line above it.
 
 There is no `guide_view` event. `capture_pageview` is on and the docs pages now load the same script the rest of the site does, so every guide view already sends `$pageview` carrying its URL, and a guide view is a path under `/docs/`. A hand-rolled second event would double count the same view and add nothing a URL filter does not already give.
 
