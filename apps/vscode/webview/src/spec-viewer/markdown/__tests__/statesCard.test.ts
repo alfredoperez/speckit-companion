@@ -125,8 +125,8 @@ describe('renderStatesCard', () => {
         const hint = byClass(html, 'states-hint');
 
         expect(hint).toHaveLength(1);
-        expect(text(hint[0])).toBe('Pick a state');
-        expect(byClass(html, 'states-top')[0].childNodes?.some((n) => text(n).includes('Pick a state'))).toBe(false);
+        expect(text(hint[0])).toBe('Pick a state to read what it means');
+        expect(byClass(html, 'states-top')[0].childNodes?.some((n) => text(n).includes('Pick a state to read'))).toBe(false);
     });
 
     it('makes every state a real button, with the start state selected', () => {
@@ -138,8 +138,45 @@ describe('renderStatesCard', () => {
         expect(byClass(html, 'is-selected')).toHaveLength(1);
     });
 
-    it('shows the start state sentence in the caption', () => {
-        expect(text(byClass(html, 'states-caption')[0])).toBe('Edited but not sent.');
+    it('shows the start state name and sentence in the caption', () => {
+        const caption = byClass(html, 'states-caption')[0];
+
+        expect(text(caption)).toBe('Draft: Edited but not sent.');
+        expect(caption.childNodes?.[0].nodeName).toBe('strong');
+        expect(text(caption.childNodes![0])).toBe('Draft');
+    });
+
+    it('tags the start and final states under their names', () => {
+        const tags = byClass(html, 'states-tag').map(text);
+
+        expect(tags).toEqual(['start', 'final']);
+    });
+
+    it('scales the diagram down with a viewBox and a max width', () => {
+        const stage = byClass(html, 'states-stage')[0];
+
+        expect(attrs(stage).style).toContain('max-width:');
+        expect(html).toContain('viewBox="0 0 ');
+    });
+
+    it('offsets two opposing arrows to opposite sides with a label on each', () => {
+        const pair = renderMarkdown(plan('A: one.\nB: two.\nA -> B: go\nB -> A: back\ngrid:\nA | B'));
+        const paths = byClass(pair, 'states-arrow').map((n) => attrs(n).d.match(/-?[\d.]+/g)!.map(Number));
+        const labels = byClass(pair, 'states-label').map((n) => Number(attrs(n).y));
+        const centre = 36 + 27;
+
+        expect(Math.sign(paths[0][1] - centre) * Math.sign(paths[1][1] - centre)).toBe(-1);
+        expect(Math.sign(labels[0] - centre)).toBe(Math.sign(paths[0][1] - centre));
+        expect(Math.sign(labels[1] - centre)).toBe(Math.sign(paths[1][1] - centre));
+        expect(labels[0]).not.toBe(labels[1]);
+        expect(Math.abs(labels[0] - labels[1])).toBeGreaterThan(20);
+    });
+
+    it('leaves a single arrow on the centre line', () => {
+        const lone = renderMarkdown(plan('A: one.\nB: two.\nA -> B: go\ngrid:\nA | B'));
+        const d = attrs(byClass(lone, 'states-arrow')[0]).d.match(/-?[\d.]+/g)!.map(Number);
+
+        expect(d[1]).toBe(d[3]);
     });
 
     it('lists every sentence for a surface with no click', () => {

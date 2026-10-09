@@ -58,7 +58,7 @@ The budget is 2 blocks a plan, 8 states a block, a grid of 4 columns by 3 rows a
 
 ## What the viewer draws
 
-Rounded boxes on the grid, arrows with their labels, and a dashed green outline for what is proposed. Each state is a button with a hover and a focus ring. The start state is picked first, and clicking another shows its sentence in the caption under the diagram. The accent colour marks the picked state and nothing else, and arrows stay neutral. The header carries `4 states`, and `1 proposed` when there is one.
+Rounded boxes on the grid, arrows with their labels (two arrows between the same pair run on opposite sides, each label on its own arrow's outer side), a small `start` or `final` tag under those states, and a dashed green outline for what is proposed. Each state is a button with a hover and a focus ring. The start state is picked first, and clicking another shows `Name: sentence` in the caption under the diagram. The accent colour marks the picked state and nothing else, and arrows stay neutral. The header carries `4 states`, and `1 proposed` when there is one.
 
 The pick is local to the page: it is not saved, and a redraw puts it back on the start state.
 
