@@ -22,7 +22,7 @@
 
 import { AREAS, areaFromKeywords, isArea } from './changelogAreas';
 
-export type ProductId = 'vscode' | 'speckit';
+export type ProductId = 'vscode' | 'speckit' | 'copilot' | 'mod';
 
 export interface ChangelogSection {
   /** The `###` heading this block sat under, or null when it sat under none. */
@@ -408,12 +408,12 @@ function parseHighlights(markdown: string, release: Release): Highlight[] {
  *
  * Sorted on the date in the heading. Two releases dated the same day keep a
  * deterministic order: newer version first within a product, VS Code extension
- * first across products. A release with no date sorts to the end rather than
+ * first across products, then the Spec Kit extension, the Copilot app and the mod. A release with no date sorts to the end rather than
  * being dropped, so a malformed heading upstream shows up on the page instead
  * of silently disappearing.
  */
 export function mergeReleases(streams: Release[][]): Release[] {
-  const productRank: Record<ProductId, number> = { vscode: 0, speckit: 1 };
+  const productRank: Record<ProductId, number> = { vscode: 0, speckit: 1, copilot: 2, mod: 3 };
   const all = streams.flat().filter((release) => !release.unreleased);
 
   return all.sort((a, b) => {

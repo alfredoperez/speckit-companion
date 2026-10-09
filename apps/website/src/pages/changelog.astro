@@ -8,6 +8,8 @@
  *
  *   VS Code extension   -> ../../../../CHANGELOG.md              (package.json version)
  *   Spec Kit extension  -> ../../../../apps/speckit-extension/CHANGELOG.md (extension.yml version)
+ *   Copilot app canvas  -> ../../../../apps/copilot-canvas/CHANGELOG.md (package.json version)
+ *   Claude Code mod     -> ../../../../apps/claude-mod/CHANGELOG.md (plugin.json version)
  *
  * `.specify/extensions/companion/CHANGELOG.md` is generated and gitignored. It is
  * never read here.
@@ -16,8 +18,8 @@
  * its highlights in one sentence each, then lists its small entries one line each.
  * Screenshots come from content/media/changelog.json; see releaseMedia.ts.
  *
- * Unreleased blocks are kept, not dropped, and rendered in their own block above
- * the released timeline so nothing in there can be mistaken for shipped.
+ * Unreleased blocks are kept, not dropped, and rendered under their own "Shipping next"
+ * tab so nothing in there can be mistaken for shipped.
  */
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 
@@ -27,6 +29,8 @@ import vscodeChangelogCurrent from '../../../../CHANGELOG.md?raw';
 // The archive holds 0.30.0 and older; this page is the whole history, so it reads both.
 import vscodeChangelogArchive from '../data/changelog-archive.md?raw';
 import speckitChangelog from '../../../../apps/speckit-extension/CHANGELOG.md?raw';
+import copilotChangelog from '../../../../apps/copilot-canvas/CHANGELOG.md?raw';
+import modChangelog from '../../../../apps/claude-mod/CHANGELOG.md?raw';
 
 const vscodeChangelog = `${vscodeChangelogCurrent}\n${vscodeChangelogArchive}`;
 
@@ -45,7 +49,10 @@ import { areaLabel, areaRank } from '../components/changelog/changelogAreas';
 const vscodeStream = parseChangelog(vscodeChangelog, 'vscode', 'VS Code extension');
 const speckitStream = parseChangelog(speckitChangelog, 'speckit', 'Spec Kit extension');
 
-const streams = [vscodeStream, speckitStream];
+const copilotStream = parseChangelog(copilotChangelog, 'copilot', 'Copilot app');
+const modStream = parseChangelog(modChangelog, 'mod', 'Claude Code mod');
+
+const streams = [vscodeStream, speckitStream, copilotStream, modStream];
 const released = mergeReleases(streams);
 const unreleased = unreleasedOf(streams);
 const everyRelease = [...unreleased, ...released];
@@ -79,7 +86,7 @@ const renderInline = async (markdown: string) =>
   (await renderBlock(markdown)).trim().replace(/^<p>/, '').replace(/<\/p>$/, '');
 
 const latestIds = new Set(
-  ['vscode', 'speckit'].map((product) => released.find((r) => r.product === product)?.id)
+  (['vscode', 'speckit', 'copilot', 'mod'] as const).map((product) => released.find((r) => r.product === product)?.id)
 );
 
 // A highlight leads with one sentence; the rest waits behind "More".
@@ -163,7 +170,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
     <title>Changelog · SpecKit Companion</title>
     <meta
       name="description"
-      content="Release notes for both halves of SpecKit Companion, the VS Code extension and the Spec Kit extension, merged newest first."
+      content="Release notes for SpecKit Companion: the VS Code extension, the Spec Kit extension, the Copilot app and the Claude Code mod, merged newest first."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -198,14 +205,14 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         <p class="cl-eyebrow">RELEASE HISTORY</p>
         <h1>Changelog</h1>
         <p class="cl-lede">
-          Release notes for the VS Code extension and the Spec Kit extension, newest first.
+          Release notes for the VS Code extension, the Spec Kit extension, the Copilot app and the Claude Code mod, newest first.
         </p>
       </header>
 
       <div class="cl-filters">
         <div class="cl-filter" role="group" aria-label="Filter releases by product">
           <button type="button" class="cl-pill is-active" data-filter="all" aria-pressed="true">
-            Both
+            All
           </button>
           <button type="button" class="cl-pill" data-filter="vscode" aria-pressed="false">
             VS Code<span class="cl-pill-more"> extension</span>
@@ -213,12 +220,29 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           <button type="button" class="cl-pill" data-filter="speckit" aria-pressed="false">
             Spec Kit<span class="cl-pill-more"> extension</span>
           </button>
+          <button type="button" class="cl-pill" data-filter="copilot" aria-pressed="false">
+            Copilot<span class="cl-pill-more"> app</span>
+          </button>
+          <button type="button" class="cl-pill" data-filter="mod" aria-pressed="false">
+            Claude Code<span class="cl-pill-more"> mod</span>
+          </button>
         </div>
+
+        {renderedUnreleased.length > 0 && (
+          <div class="cl-filter" role="group" aria-label="Show released or upcoming changes">
+            <button type="button" class="cl-pill cl-tab is-active" data-tab="released" aria-pressed="true">
+              Released
+            </button>
+            <button type="button" class="cl-pill cl-tab" data-tab="next" aria-pressed="false">
+              Shipping next
+            </button>
+          </div>
+        )}
 
       </div>
 
       {renderedUnreleased.length > 0 && (
-        <section class="cl-unreleased" id="unreleased" data-group="unreleased">
+        <section class="cl-unreleased" id="unreleased" data-group="unreleased" hidden>
           <div class="cl-group-head">
             <h2 class="cl-group-title">Shipping <em>next</em></h2>
             <p class="cl-group-note">
@@ -232,7 +256,9 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         </section>
       )}
 
-      <section class="cl-released" data-group="released">
+      <p class="cl-empty" id="cl-empty" hidden>Nothing here for this product yet.</p>
+
+      <section class="cl-released" id="released" data-group="released">
         <div class="cl-group-head">
           <h2 class="cl-group-title">Released</h2>
         </div>
@@ -249,6 +275,14 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           <a
             href="https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/CHANGELOG.md"
             >Spec Kit extension changelog</a
+          >
+          <a
+            href="https://github.com/alfredoperez/speckit-companion/blob/main/apps/copilot-canvas/CHANGELOG.md"
+            >Copilot app changelog</a
+          >
+          <a
+            href="https://github.com/alfredoperez/speckit-companion/blob/main/apps/claude-mod/CHANGELOG.md"
+            >Claude Code mod changelog</a
           >
           <a href="https://github.com/alfredoperez/speckit-companion">github</a>
         </p>
@@ -270,26 +304,68 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         openHash();
       })();
 
-      // Product filter.
+      // Product filter and the Released / Shipping next tab.
       (function () {
-        var buttons = Array.prototype.slice.call(document.querySelectorAll('.cl-pill'));
-        buttons.forEach(function (button) {
+        var products = Array.prototype.slice.call(document.querySelectorAll('.cl-pill[data-filter]'));
+        var tabs = Array.prototype.slice.call(document.querySelectorAll('.cl-pill[data-tab]'));
+        var product = 'all';
+        var tab = 'released';
+        var empty = document.getElementById('cl-empty');
+
+        function press(list, active) {
+          list.forEach(function (button) {
+            var on = button === active;
+            button.classList.toggle('is-active', on);
+            button.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+        }
+
+        function apply() {
+          document.body.setAttribute('data-filter', product);
+          Array.prototype.forEach.call(document.querySelectorAll('.cl-release'), function (card) {
+            card.hidden = product !== 'all' && card.getAttribute('data-product') !== product;
+          });
+          var shown = 0;
+          Array.prototype.forEach.call(document.querySelectorAll('[data-group]'), function (group) {
+            var wanted = group.getAttribute('data-group') === 'unreleased' ? tab === 'next' : tab === 'released';
+            var visible = wanted && group.querySelectorAll('.cl-release:not([hidden])').length > 0;
+            group.hidden = !visible;
+            if (visible) shown += 1;
+          });
+          if (empty) empty.hidden = shown > 0;
+        }
+
+        function setTab(next) {
+          tab = next;
+          press(tabs, tabs.filter(function (button) { return button.getAttribute('data-tab') === next; })[0]);
+          apply();
+        }
+
+        products.forEach(function (button) {
           button.addEventListener('click', function () {
-            var product = button.getAttribute('data-filter');
-            document.body.setAttribute('data-filter', product);
-            buttons.forEach(function (other) {
-              var active = other === button;
-              other.classList.toggle('is-active', active);
-              other.setAttribute('aria-pressed', active ? 'true' : 'false');
-            });
-            Array.prototype.forEach.call(document.querySelectorAll('.cl-release'), function (card) {
-              card.hidden = product !== 'all' && card.getAttribute('data-product') !== product;
-            });
-            Array.prototype.forEach.call(document.querySelectorAll('[data-group]'), function (group) {
-              group.hidden = group.querySelectorAll('.cl-release:not([hidden])').length === 0;
-            });
+            product = button.getAttribute('data-filter');
+            press(products, button);
+            apply();
           });
         });
+        tabs.forEach(function (button) {
+          button.addEventListener('click', function () { setTab(button.getAttribute('data-tab')); });
+        });
+
+        // A permalink into Shipping next must open that tab first.
+        function showTabForHash() {
+          if (!location.hash) return;
+          var target = document.querySelector(location.hash.replace(/[^#\w.-]/g, ''));
+          if (target && target.closest('#unreleased') && tabs.length) {
+            product = 'all';
+            press(products, products[0]);
+            setTab('next');
+            target.scrollIntoView();
+          }
+        }
+        window.addEventListener('hashchange', showTabForHash);
+        showTabForHash();
+        apply();
       })();
 
       // Carousels: scroll-snap does the moving; buttons, dots and arrow keys drive it. No autoplay.
@@ -646,9 +722,16 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         color: var(--on-accent);
       }
 
-      .cl-product--speckit {
+      .cl-product--speckit,
+      .cl-product--copilot,
+      .cl-product--mod {
         border: 1px solid var(--border-strong);
         color: var(--accent);
+      }
+
+      .cl-empty {
+        padding: 56px 48px;
+        color: var(--text-muted);
       }
 
       .cl-version {
