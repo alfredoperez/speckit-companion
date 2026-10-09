@@ -325,7 +325,7 @@ def append_verification_runs(feature_dir: Path, specs: list[str]) -> tuple[Path 
             skipped.append(spec)
             continue
         entries.append(json.dumps(run_verification(what.strip(), command.strip())))
-    target = append_capture_entries(feature_dir, "verified", "what", entries) if entries else None
+    target = append_capture_entries(feature_dir, "verified", "what", entries, replace=True) if entries else None
     return target, skipped
 
 
@@ -340,9 +340,12 @@ def _entry_identity(item, identity_key: str) -> str | None:
 
 
 def append_capture_entries(
-    feature_dir: Path, field: str, identity_key: str, raws: list[str],
+    feature_dir: Path, field: str, identity_key: str, raws: list[str], replace: bool = False,
 ) -> Path | None:
     """De-duped additive append onto ctx[field] (decisions/verified/concerns).
+
+    With `replace`, a new entry takes the place of an earlier one with the same
+    identity: a check that was run again reports its latest result.
 
     Mirrors set_living_specs_loaded: preserves first-seen order, normalizes
     pre-existing duplicates, never touches lifecycle keys. Bare strings already
@@ -356,13 +359,16 @@ def append_capture_entries(
     fill_required(ctx, feature_dir, branch)
     prior = ctx.get(field)
     merged: list = []
-    seen: set[str] = set()
-    for item in (list(prior) if isinstance(prior, list) else []) + entries:
+    seen: dict[str, int] = {}
+    stored = list(prior) if isinstance(prior, list) else []
+    for index, item in enumerate(stored + entries):
         ident = _entry_identity(item, identity_key)
         if ident is not None:
             if ident in seen:
+                if replace and index >= len(stored):
+                    merged[seen[ident]] = item
                 continue
-            seen.add(ident)
+            seen[ident] = len(merged)
         merged.append(item)
     ctx[field] = merged
     atomic_write(target, ctx)

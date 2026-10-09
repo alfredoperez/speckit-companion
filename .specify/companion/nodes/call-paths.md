@@ -24,5 +24,5 @@ python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <featu
 Record where the check ends up, and anything left with `write-context.py --concern`:
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "call paths cite real code::python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory> --strict"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "plan blocks check out::python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory> --strict"
 ```

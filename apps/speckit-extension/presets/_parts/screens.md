@@ -19,5 +19,5 @@ One part per line, two spaces to nest inside a `row:`: `title:`, `row:`, `text:`
 Then run this, fix what it reports once, and record anything left with `write-context.py --concern`:
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "the plan's screens hold to their grammar::python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory> --strict"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "plan blocks check out::python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory> --strict"
 ```

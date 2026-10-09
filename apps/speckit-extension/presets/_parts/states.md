@@ -25,5 +25,5 @@ Then run this, fix what it reports once, and record the result:
 
 ```bash
 python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory>
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "states check::python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory> --strict"
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "plan blocks check out::python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory> --strict"
 ```
