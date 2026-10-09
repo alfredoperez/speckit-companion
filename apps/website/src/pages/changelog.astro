@@ -229,10 +229,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         </div>
 
         {renderedUnreleased.length > 0 && (
-          <div class="cl-filter" role="group" aria-label="Show released or upcoming changes">
-            <button type="button" class="cl-pill cl-tab is-active" data-tab="released" aria-pressed="true">
-              Released
-            </button>
+          <div class="cl-filter" role="group" aria-label="Show upcoming changes">
             <button type="button" class="cl-pill cl-tab" data-tab="next" aria-pressed="false">
               Next
             </button>
@@ -337,7 +334,10 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
         function setTab(next) {
           tab = next;
-          press(tabs, tabs.filter(function (button) { return button.getAttribute('data-tab') === next; })[0]);
+          tabs.forEach(function (button) {
+            button.classList.toggle('is-active', next === 'next');
+            button.setAttribute('aria-pressed', next === 'next' ? 'true' : 'false');
+          });
           apply();
         }
 
@@ -349,7 +349,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           });
         });
         tabs.forEach(function (button) {
-          button.addEventListener('click', function () { setTab(button.getAttribute('data-tab')); });
+          button.addEventListener('click', function () { setTab(tab === 'next' ? 'released' : 'next'); });
         });
 
         // A permalink into Shipping next must open that tab first.
@@ -599,7 +599,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       /* Filters */
       .cl-filters {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
@@ -608,25 +608,27 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       .cl-filter {
         display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
+        flex-wrap: nowrap;
+        gap: 2px;
         width: fit-content;
         max-width: 100%;
-        padding: 4px;
+        padding: 3px;
+        overflow-x: auto;
         background: rgba(10, 9, 19, 0.6);
         border: 1px solid var(--border-accent);
         border-radius: var(--radius-pill);
       }
 
       .cl-pill {
-        padding: 5px 14px;
+        padding: 3px 10px;
         background: none;
         border: 1.5px solid transparent;
         border-radius: var(--radius-pill);
         color: var(--text-muted);
         font-family: var(--font-sans);
-        font-size: var(--fs-ui-sm);
+        font-size: 12px;
         font-weight: var(--fw-semibold);
+        white-space: nowrap;
         cursor: pointer;
       }
 
@@ -696,7 +698,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       .cl-release-head-top {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
@@ -1239,14 +1241,17 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           padding: 18px 16px;
         }
 
-        .cl-filter {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          width: 100%;
+        .cl-filters {
+          gap: 8px;
+        }
+
+        .cl-filters .cl-filter:first-child {
+          flex: 1 1 auto;
+          min-width: 0;
         }
 
         .cl-pill {
-          padding: 5px 8px;
+          padding: 3px 8px;
         }
 
         .cl-pill-more {
