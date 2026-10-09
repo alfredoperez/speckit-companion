@@ -234,7 +234,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
               Released
             </button>
             <button type="button" class="cl-pill cl-tab" data-tab="next" aria-pressed="false">
-              Shipping next
+              Next
             </button>
           </div>
         )}
@@ -599,25 +599,27 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       /* Filters */
       .cl-filters {
         display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding: 0 48px 48px;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0 48px 40px;
       }
 
       .cl-filter {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px;
+        gap: 4px;
         width: fit-content;
         max-width: 100%;
-        padding: 6px;
+        padding: 4px;
         background: rgba(10, 9, 19, 0.6);
         border: 1px solid var(--border-accent);
         border-radius: var(--radius-pill);
       }
 
       .cl-pill {
-        padding: 9px 22px;
+        padding: 5px 14px;
         background: none;
         border: 1.5px solid transparent;
         border-radius: var(--radius-pill);
@@ -1244,7 +1246,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         }
 
         .cl-pill {
-          padding: 8px 10px;
+          padding: 5px 8px;
         }
 
         .cl-pill-more {
