@@ -88,11 +88,12 @@ function renderLocation(row: CallRow): string {
 
 function renderRow(row: CallRow): string {
     const strike = row.mark === ' '
-        ? ''
-        : `<button type="button" class="calls-strike" data-line="${row.sourceLine}" aria-label="${STRIKE_LABEL}: ${escapeHtml(row.name)}">strike</button>`;
+        ? '<span class="calls-strike-slot"></span>'
+        : `<button type="button" class="calls-strike" data-line="${row.sourceLine}" aria-label="${STRIKE_LABEL}: ${escapeHtml(row.name)}" title="${STRIKE_LABEL}"><span aria-hidden="true">×</span><span class="calls-strike-word">strike</span></button>`;
+    const entry = row.depth === 0 ? '<span class="calls-entry">entry</span>' : '';
     const pill = row.isNew ? '<span class="calls-new">new file</span>' : '';
     const mark = row.mark === '-' ? '−' : row.mark.trim();
-    return `<div class="calls-row calls-row--${TINT[row.mark]}"><span class="calls-mark">${mark}</span><span class="calls-tree">${row.guide}</span><span class="calls-name">${escapeHtml(row.name)}</span>${pill}${renderLocation(row)}${strike}<span class="line-content" hidden>${escapeHtml(row.source)}</span></div>`;
+    return `<div class="calls-row calls-row--${TINT[row.mark]}"><span class="calls-mark">${mark}</span><span class="calls-tree">${row.guide}</span><span class="calls-name">${escapeHtml(row.name)}</span>${entry}${pill}${renderLocation(row)}${strike}<span class="line-content" hidden>${escapeHtml(row.source)}</span></div>`;
 }
 
 export function renderCallsCard(body: string, info: FenceInfo, context: BlockContext): string {

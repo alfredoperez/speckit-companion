@@ -152,48 +152,65 @@
   text-decoration: underline;
 }
 
-#markdown-content .calls-strike {
+#markdown-content .calls-strike,
+#markdown-content .calls-strike-slot {
   flex: none;
-  opacity: 0;
+  box-sizing: border-box;
+  min-width: 1.8em;
+  font-size: var(--text-xs);
+}
+
+#markdown-content .calls-strike {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  opacity: 0.55;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
-  color: var(--error);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-secondary);
   border-radius: var(--radius-sm);
   padding: 1px 0;
-  max-width: 0;
-  margin-left: calc(-1 * var(--space-2));
-  overflow: hidden;
-  border-width: 0;
   cursor: pointer;
   transition: opacity var(--transition-fast);
 }
 
-#markdown-content .calls-row:hover .calls-strike,
-#markdown-content .calls-row:focus-within .calls-strike {
-  opacity: 1;
-  max-width: none;
-  margin-left: 0;
-  padding: 1px var(--space-2);
-  border-width: 1px;
+#markdown-content .calls-strike-word {
+  display: none;
 }
 
-@media (hover: none) {
-  #markdown-content .calls-row .calls-strike {
-    opacity: 1;
-    max-width: none;
-    margin-left: 0;
-    padding: 1px var(--space-2);
-    border-width: 1px;
-  }
+#markdown-content .calls-row:hover .calls-strike,
+#markdown-content .calls-strike:focus-visible {
+  opacity: 1;
+  color: var(--error);
+  border-color: var(--border);
+  background: var(--bg-elevated);
+}
+
+#markdown-content .calls-row:hover .calls-strike,
+#markdown-content .calls-strike:focus-visible {
+  padding: 1px var(--space-1);
+}
+
+#markdown-content .calls-row:hover .calls-strike-word,
+#markdown-content .calls-strike:focus-visible .calls-strike-word {
+  display: inline;
 }
 
 @media (max-width: 480px) {
   #markdown-content .calls-head { flex-wrap: wrap; }
   #markdown-content .calls-title { flex: 1 1 60%; white-space: normal; }
   #markdown-content .calls-row { flex-wrap: wrap; }
-  #markdown-content .calls-where { max-width: 100%; flex-basis: 100%; text-align: right; }
+  #markdown-content .calls-where { max-width: 100%; flex-basis: 100%; text-align: right; order: 3; }
+}
+
+#markdown-content .calls-entry {
+  flex: none;
+  font-family: var(--font-family);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
 }
 
 #markdown-content .calls-row--struck .calls-name,
