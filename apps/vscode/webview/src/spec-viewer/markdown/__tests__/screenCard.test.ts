@@ -169,13 +169,48 @@ describe('buildScreen: dots and notes pair up', () => {
 
 const card = (body = BODY, notes = NOTES, head = 'settings The settings page'): string => renderMarkdown(plan(body, notes, head));
 
+describe('renderScreenBlock: note text', () => {
+    const note = (line: string, body = 'text: a (1)'): Node => byClass(card(body, [line]), 'screen-note-text')[0];
+    const strongs = (n: Node): string[] => all(n).filter((c) => c.nodeName === 'strong').map(text);
+
+    it('renders **lead** as bold and never prints the markers', () => {
+        const n = note('1: **The count.** Shows how many open todos are due today, and hides at zero.');
+        expect(strongs(n)).toEqual(['The count.']);
+        expect(text(n)).not.toContain('*');
+    });
+
+    it('bolds only the marked span when there is bold in the middle', () => {
+        expect(strongs(note('1: **A date field.** Optional. Empty means no due date.'))).toEqual(['A date field.']);
+    });
+
+    it('bolds the first sentence when the note has no bold', () => {
+        const n = note('1: A date field. Optional.');
+        expect(strongs(n)).toEqual(['A date field.']);
+        expect(text(n)).toBe('A date field. Optional.');
+    });
+
+    it('keeps typed markup as text', () => {
+        const n = note('1: Has <b>bold</b> typed. Rest.');
+        expect(all(n).some((c) => c.nodeName === 'b')).toBe(false);
+        expect(text(n)).toContain('<b>bold</b>');
+    });
+
+    it('renders backticks as code', () => {
+        const n = note('1: **Saves.** Calls `save()` once.');
+        expect(all(n).filter((c) => c.nodeName === 'code').map(text)).toEqual(['save()']);
+    });
+});
+
 describe('renderScreenBlock: the card', () => {
     it('draws an outlined badge, the title and the note count', () => {
         const html = card();
 
         expect(text(byClass(html, 'screen-badge')[0])).toBe('screen');
         expect(text(byClass(html, 'screen-title')[0])).toBe('The settings page');
-        expect(text(byClass(html, 'screen-count')[0])).toBe('2 notes');
+        expect(text(byClass(html, 'screen-count')[0])).toBe('1 new · 1 changed · 2 notes');
+        expect(attrs(byClass(html, 'screen-count')[0])['aria-label']).toBe('1 new, 1 changed, 2 notes');
+        expect(text(byClass(html, 'screen-count-new')[0])).toBe('1 new');
+        expect(text(byClass(html, 'screen-count-changed')[0])).toBe('1 changed');
     });
 
     it('says "1 note" for one note and shows no count for none', () => {
@@ -206,6 +241,10 @@ describe('renderScreenBlock: the card', () => {
 
         expect(byClass(html, 'screen-part--new').map((n) => classOf(n).includes('screen-part--button'))).toEqual([true]);
         expect(byClass(html, 'screen-part--changed').map((n) => classOf(n).includes('screen-part--field'))).toEqual([true]);
+    });
+
+    it('omits a zero count', () => {
+        expect(text(byClass(card('text: a (new) (1)', ['1: Only. One.']), 'screen-count')[0])).toBe('1 new · 1 note');
     });
 
     it('draws the notes as a numbered list with a bold lead', () => {

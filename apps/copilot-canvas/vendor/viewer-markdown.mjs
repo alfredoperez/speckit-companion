@@ -371,8 +371,8 @@ function preprocessConstitution(markdown) {
       }
       if (name && verdict) {
         const v = verdict.toUpperCase();
-        const noteHtml = note && note.trim() ? `<span class="con-note">${parseInline(note.trim())}</span>` : "";
-        rows.push(`<div class="con-row"><span class="verdict ${v.toLowerCase()}">${v}</span><span class="con-name">${parseInline(name)}</span>${noteHtml}</div>`);
+        const noteHtml2 = note && note.trim() ? `<span class="con-note">${parseInline(note.trim())}</span>` : "";
+        rows.push(`<div class="con-row"><span class="verdict ${v.toLowerCase()}">${v}</span><span class="con-name">${parseInline(name)}</span>${noteHtml2}</div>`);
         continue;
       }
       if (!line.trim()) {
@@ -1142,7 +1142,7 @@ function buildScreen(rawTitle, body, noteLines) {
 var dotHtml = (part, notes) => {
   if (part.dot === null) return "";
   const note = notes.get(part.dot);
-  const label = escapeHtml(`Note ${part.dot}: ${note?.lead ?? ""}`);
+  const label = escapeHtml(`Note ${part.dot}: ${(note?.lead ?? "").replace(/\*\*|`/g, "")}`);
   return `<button type="button" class="screen-dot" data-n="${part.dot}" aria-label="${label}">${part.dot}</button>`;
 };
 function renderPart(part, notes) {
@@ -1162,11 +1162,30 @@ function renderPart(part, notes) {
       return `${open}<span class="screen-text">${text}</span>${hint}${dot}</div>`;
   }
 }
+var noteHtml = (note) => {
+  const text = note.rest ? `${note.lead} ${note.rest}` : note.lead;
+  if (text.includes("**")) return parseInline(text);
+  return `<strong>${parseInline(note.lead)}</strong>${note.rest ? ` ${parseInline(note.rest)}` : ""}`;
+};
+var countMarks = (parts, mark) => parts.reduce((sum, part) => sum + (part.mark === mark ? 1 : 0) + countMarks(part.children, mark), 0);
+function countHtml(def) {
+  const bits = [];
+  const added = countMarks(def.parts, "new");
+  const changed = countMarks(def.parts, "changed");
+  if (added) bits.push({ html: `<span class="screen-count-new">${added} new</span>`, label: `${added} new` });
+  if (changed) bits.push({ html: `<span class="screen-count-changed">${changed} changed</span>`, label: `${changed} changed` });
+  if (def.notes.length) {
+    const label = `${def.notes.length} ${def.notes.length === 1 ? "note" : "notes"}`;
+    bits.push({ html: label, label });
+  }
+  return { html: bits.map((b) => b.html).join(" \xB7 "), label: bits.map((b) => b.label).join(", ") };
+}
 function renderScreenCard(def, hidden = "") {
   const notes = new Map(def.notes.map((note) => [note.n, note]));
-  const count = def.notes.length ? `<span class="screen-count">${def.notes.length} ${def.notes.length === 1 ? "note" : "notes"}</span>` : "";
+  const summary = countHtml(def);
+  const count = summary.html ? `<span class="screen-count" title="${escapeHtml(summary.label)}" aria-label="${escapeHtml(summary.label)}">${summary.html}</span>` : "";
   const quote = hidden ? `<span class="line-content" hidden>${escapeHtml(hidden)}</span>` : "";
-  const list = def.notes.length ? `<ol class="screen-notes">${def.notes.map((note) => `<li class="screen-note" value="${note.n}" data-n="${note.n}" tabindex="0"><span class="screen-note-n" aria-hidden="true">${note.n}</span><span class="screen-note-text"><strong>${escapeHtml(note.lead)}</strong>${note.rest ? ` ${escapeHtml(note.rest)}` : ""}</span></li>`).join("")}</ol>` : "";
+  const list = def.notes.length ? `<ol class="screen-notes">${def.notes.map((note) => `<li class="screen-note" value="${note.n}" data-n="${note.n}" tabindex="0"><span class="screen-note-n" aria-hidden="true">${note.n}</span><span class="screen-note-text">${noteHtml(note)}</span></li>`).join("")}</ol>` : "";
   const frame = def.parts.map((part) => renderPart(part, notes)).join("");
   return `<div class="screen-card" data-screen="${escapeHtml(def.name)}"><div class="screen-head"><span class="screen-badge">screen</span><span class="screen-title">${escapeHtml(def.title || def.name)}</span>${count}</div>${quote}<div class="screen-body"><div class="screen-frame">${frame}</div>${list}</div></div>`;
 }

@@ -37,9 +37,9 @@ row:
 text: Changes apply the next time you open the page.
 list: General | Account (changed) (3) | Billing
 ```
-1: The name is editable. It was read only before.
-2: Save is the only new control. It writes the record and closes the page.
-3: Account shows the new email field. Billing is untouched.
+1: **The name is editable.** It was read only before.
+2: **Save is the only new control.** It writes the record and closes the page.
+3: **Account shows the new email field.** Billing is untouched.
 ````
 
 | Part | Rule |

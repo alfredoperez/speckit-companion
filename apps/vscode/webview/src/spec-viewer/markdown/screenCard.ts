@@ -1,6 +1,6 @@
 import type { BlockContext } from './blockFences';
 import type { FenceInfo } from './fenceInfo';
-import { escapeHtml } from './inline';
+import { escapeHtml, parseInline } from './inline';
 
 export type PartKind = 'title' | 'row' | 'text' | 'chip' | 'button' | 'field' | 'list';
 export type PartMark = 'new' | 'changed';
@@ -131,7 +131,7 @@ export function buildScreen(rawTitle: string, body: string, noteLines: string[])
 const dotHtml = (part: ScreenPart, notes: Map<number, ScreenNote>): string => {
     if (part.dot === null) return '';
     const note = notes.get(part.dot);
-    const label = escapeHtml(`Note ${part.dot}: ${note?.lead ?? ''}`);
+    const label = escapeHtml(`Note ${part.dot}: ${(note?.lead ?? '').replace(/\*\*|`/g, '')}`);
     return `<button type="button" class="screen-dot" data-n="${part.dot}" aria-label="${label}">${part.dot}</button>`;
 };
 
@@ -153,15 +153,38 @@ function renderPart(part: ScreenPart, notes: Map<number, ScreenNote>): string {
     }
 }
 
+const noteHtml = (note: ScreenNote): string => {
+    const text = note.rest ? `${note.lead} ${note.rest}` : note.lead;
+    if (text.includes('**')) return parseInline(text);
+    return `<strong>${parseInline(note.lead)}</strong>${note.rest ? ` ${parseInline(note.rest)}` : ''}`;
+};
+
+const countMarks = (parts: ScreenPart[], mark: PartMark): number =>
+    parts.reduce((sum, part) => sum + (part.mark === mark ? 1 : 0) + countMarks(part.children, mark), 0);
+
+function countHtml(def: ScreenDef): { html: string; label: string } {
+    const bits: { html: string; label: string }[] = [];
+    const added = countMarks(def.parts, 'new');
+    const changed = countMarks(def.parts, 'changed');
+    if (added) bits.push({ html: `<span class="screen-count-new">${added} new</span>`, label: `${added} new` });
+    if (changed) bits.push({ html: `<span class="screen-count-changed">${changed} changed</span>`, label: `${changed} changed` });
+    if (def.notes.length) {
+        const label = `${def.notes.length} ${def.notes.length === 1 ? 'note' : 'notes'}`;
+        bits.push({ html: label, label });
+    }
+    return { html: bits.map((b) => b.html).join(' · '), label: bits.map((b) => b.label).join(', ') };
+}
+
 /** The card for a built screen. `hidden` is the text a line comment on the whole block quotes. */
 export function renderScreenCard(def: ScreenDef, hidden = ''): string {
     const notes = new Map(def.notes.map((note) => [note.n, note] as const));
-    const count = def.notes.length
-        ? `<span class="screen-count">${def.notes.length} ${def.notes.length === 1 ? 'note' : 'notes'}</span>`
+    const summary = countHtml(def);
+    const count = summary.html
+        ? `<span class="screen-count" title="${escapeHtml(summary.label)}" aria-label="${escapeHtml(summary.label)}">${summary.html}</span>`
         : '';
     const quote = hidden ? `<span class="line-content" hidden>${escapeHtml(hidden)}</span>` : '';
     const list = def.notes.length
-        ? `<ol class="screen-notes">${def.notes.map((note) => `<li class="screen-note" value="${note.n}" data-n="${note.n}" tabindex="0"><span class="screen-note-n" aria-hidden="true">${note.n}</span><span class="screen-note-text"><strong>${escapeHtml(note.lead)}</strong>${note.rest ? ` ${escapeHtml(note.rest)}` : ''}</span></li>`).join('')}</ol>`
+        ? `<ol class="screen-notes">${def.notes.map((note) => `<li class="screen-note" value="${note.n}" data-n="${note.n}" tabindex="0"><span class="screen-note-n" aria-hidden="true">${note.n}</span><span class="screen-note-text">${noteHtml(note)}</span></li>`).join('')}</ol>`
         : '';
     const frame = def.parts.map((part) => renderPart(part, notes)).join('');
     return `<div class="screen-card" data-screen="${escapeHtml(def.name)}"><div class="screen-head"><span class="screen-badge">screen</span><span class="screen-title">${escapeHtml(def.title || def.name)}</span>${count}</div>${quote}<div class="screen-body"><div class="screen-frame">${frame}</div>${list}</div></div>`;

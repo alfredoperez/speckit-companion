@@ -48,6 +48,9 @@
   color: var(--text-secondary);
 }
 
+#markdown-content .screen-count-new { color: var(--success); }
+#markdown-content .screen-count-changed { color: var(--warning); }
+
 #markdown-content .screen-body {
   padding: var(--space-3);
 }
@@ -56,10 +59,10 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-4);
+  gap: var(--space-3);
   border: 1px dashed var(--border);
   border-radius: var(--radius-md);
-  padding: var(--space-5) var(--space-5) var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-3);
 }
 
 #markdown-content .screen-part {
@@ -67,7 +70,8 @@
   min-width: 0;
   max-width: 100%;
   font-family: var(--font-family);
-  font-size: var(--text-sm);
+  font-size: 13px;
+  font-weight: 400;
   color: var(--text-body);
 }
 
@@ -75,12 +79,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: var(--space-4);
+  gap: var(--space-3);
 }
 
 #markdown-content .screen-part--title .screen-text {
-  font-size: var(--text-base);
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -95,17 +99,16 @@
   border: 1px solid var(--border);
   background: var(--bg-elevated);
   border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-3);
+  padding: 2px var(--space-2);
 }
 
 #markdown-content .screen-part--chip {
   border-radius: 999px;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2);
   color: var(--text-secondary);
 }
 
 #markdown-content .screen-part--button {
-  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -125,7 +128,7 @@
 
 #markdown-content .screen-input {
   display: block;
-  height: 1.25rem;
+  height: 1rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--bg-elevated);
@@ -138,7 +141,7 @@
 }
 
 #markdown-content .screen-items li {
-  padding: var(--space-1) 0;
+  padding: 2px 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -146,8 +149,8 @@
   border-bottom: 0;
 }
 
-#markdown-content .screen-part--new { border: 1px solid var(--success); }
-#markdown-content .screen-part--changed { border: 1px solid var(--warning); }
+#markdown-content .screen-part--new { border: 2px solid var(--success); }
+#markdown-content .screen-part--changed { border: 2px solid var(--warning); }
 #markdown-content .screen-part--row.screen-part--new,
 #markdown-content .screen-part--row.screen-part--changed,
 #markdown-content .screen-part--title.screen-part--new,
