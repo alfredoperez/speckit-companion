@@ -108,6 +108,21 @@ row:
 
 Each part sits on its own line, two spaces in to nest it inside a `row:`. The spec viewer draws it as a card, with `(new)` and `(changed)` parts edged in green and amber and each numbered dot lighting its note. At most 2 screens of 14 parts and 5 dots, and anything that breaks the grammar stays plain code. The [screens reference](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/screens.md) has the full grammar and the check.
 
+## Example: code with pinned notes
+
+A second node, `code-pins`, lets the plan show a few lines of code with a note pinned under the line that needs one. Attach it the same way, with `ref: code-pins`, after `plan-doc` or after `tasks-doc` in the tasks step.
+
+````markdown
+```ts sketch src/cart/total.ts hl=2
+export function total(lines: Line[]): number {
+    return lines.reduce((sum, line) => sum + line.price * line.qty, 0);
+}
+```
+pin 2: prices are whole cents, so the sum never rounds.
+````
+
+`sketch` marks code that does not exist yet. A citation of real lines is written `src/cart/total.ts:40-42`, and the viewer numbers it from 40 and opens the file when you click the path. The check opens every cited file: a missing file or a range past its end is an error. A sketch is held to 12 lines and 3 pins. The [code pins reference](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/code-pins.md) has the full grammar and the check's rules.
+
 ## What actually runs
 
 Nothing executes `companion.yml`. Your assistant reads it at run time, because instructions for doing so are appended to each command. A hook is a strong convention, not an enforced step. If something must never be skipped, put it in CI.

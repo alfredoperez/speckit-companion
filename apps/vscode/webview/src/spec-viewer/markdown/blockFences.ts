@@ -1,12 +1,23 @@
 import type { FenceInfo } from './fenceInfo';
 
-export const BLOCK_FENCES = ['calls', 'states', 'screen'] as const;
+export const BLOCK_FENCES = ['calls', 'code', 'states', 'screen'] as const;
+
+export const PIN_LINE = /^\s*pin\s+(\d{1,7}):\s*(.*)$/i;
+
+export interface BlockPin {
+    line: number;
+    text: string;
+    sourceLine: number;
+    source: string;
+}
 
 export interface BlockContext {
     /** The file line of the body's first line. */
     firstLine: number;
     /** The text of a `note:` line straight after the closing fence, if any. */
     note: string | null;
+    /** The `pin N: text` lines straight after the closing fence. Only a `code` block is handed any. */
+    pins: BlockPin[];
     /** The text after the language word, as written. */
     rawTitle: string;
     /** The numbered lines (`1: …`) straight after the closing fence of a `screen`, else none. */

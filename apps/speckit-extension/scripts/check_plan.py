@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Check the call paths and screens a plan writes.
+"""Check the call paths, screens and code blocks a plan writes against the code they cite.
 
 The `call-paths` node asks the plan step for fenced ```calls <title>``` blocks in
 `plan.md`: one line per function on the path, a column-0 mark (`+` new, `~`
 changed, `-` removed, space unchanged), two spaces per level, and `@ path:line`
 after the name, or `**new**` and `@ path` for a file that does not exist yet.
 The grammar is documented in docs/call-paths.md.
+
+The `code-pins` node asks for a code fence that names a file: `<lang> sketch <file>`
+for code that does not exist yet, or `<lang> <file>:<from>-<to>` for real lines,
+with an optional `hl=3,6-7` and `pin N: text` lines straight after the fence. It
+is read in `plan.md` and `tasks.md`, and documented in docs/code-pins.md.
 
 A block is worth reading only while its paths are real, so this reads every cited
 file. ERROR is a claim the code contradicts or a line that cannot be parsed;
@@ -18,7 +23,7 @@ of what a person sees, one part per line (`title:`, `row:`, `text:`, `chip:`, `b
 under the fence for each dot. The grammar is documented in docs/screens.md. Nothing is
 read from the code for a screen, so it only holds the block to its grammar and budget.
 
-A plan with no `calls` or `screen` block prints nothing. Always exits 0, so it never fails the
+A plan with none of these blocks prints nothing. Always exits 0, so it never fails the
 step it runs in; `--strict` exits 1 on any error, for a caller that wants a gate.
 Read-only. Stdlib only.
 """
@@ -40,9 +45,14 @@ MAX_LINES = 12
 MAX_NOTE_LINES = 1
 NEAR = 8
 SIDE_FILES = ("call-paths.md", "screens.md")
+CODE_FILE = "tasks.md"
 MAX_SCREENS = 2
 MAX_PARTS = 14
 MAX_DOTS = 5
+MAX_SKETCH_LINES = 12
+MAX_PINS = 3
+OTHER_BLOCKS = frozenset({"calls", "code", "states", "screen", "mermaid"})
+MAX_DIGITS = 7
 
 _FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 _LOCATION = re.compile(r"^(?P<name>.*?)\s+@\s+(?P<path>\S+?)(?::(?P<line>\d+))?$")
@@ -52,6 +62,11 @@ _PART_KINDS = ("title", "row", "text", "chip", "button", "field", "list")
 _TRAILER = re.compile(r"(?:^|[\s:])\((new|changed|\d{1,2})\)\s*$")
 _SCREEN_NAME = re.compile(r"^[A-Za-z][\w-]{0,31}$")
 _NOTE = re.compile(r"^(\d{1,2}):\s+\S")
+_LANGUAGE = re.compile(r"^[a-z0-9][a-z0-9_+#.-]{0,31}$")
+_CITE = re.compile(r"^(.+):([0-9]+)-([0-9]+)$")
+_HL = re.compile(r"^([0-9]{1,7})(?:-([0-9]{1,7}))?$")
+_PIN = re.compile(r"^\s*pin\s+([0-9]+):\s*(.*)$", re.IGNORECASE)
+_OUTSIDE = re.compile(r"^([a-z]:|[\\/])", re.IGNORECASE)
 
 
 class Finding:
@@ -66,40 +81,105 @@ def _lines(text: str) -> list:
     return text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
 
 
-def find_blocks(text: str) -> list:
-    """Every `calls` fence as {title, start, rows: [(lineno, text)], closed, notes}."""
-    lines = _lines(text)
-    blocks = []
+def _fences(lines: list):
+    """Every outermost fence as (info, start, body: [(lineno, text)], closed, index after it)."""
     i = 0
     while i < len(lines):
         m = _FENCE.match(lines[i])
         if not m:
             i += 1
             continue
-        fence, info = m.group(1), m.group(2).strip()
-        words = info.split(None, 1)
-        is_calls = bool(words) and words[0] == "calls"
-        block = {"title": words[1].strip() if is_calls and len(words) > 1 else "",
-                 "start": i + 1, "rows": [], "closed": False, "notes": 0}
+        fence, info, start = m.group(1), m.group(2).strip(), i + 1
+        body, closed = [], False
         i += 1
         while i < len(lines):
             close = _FENCE.match(lines[i])
             if close and close.group(1)[0] == fence[0] and len(close.group(1)) >= len(fence) \
                     and not close.group(2).strip():
-                block["closed"] = True
+                closed = True
                 i += 1
                 break
-            if is_calls and lines[i].strip():
-                block["rows"].append((i + 1, lines[i].rstrip(" ")))
+            body.append((i + 1, lines[i]))
             i += 1
-        if is_calls:
-            j = i
-            while j < len(lines) and not lines[j].strip():
-                j += 1
-            while j < len(lines) and lines[j].lstrip().lower().startswith("note:"):
-                block["notes"] += 1
-                j += 1
-            blocks.append(block)
+        yield info, start, body, closed, i
+
+
+def _after_blanks(lines: list, i: int) -> int:
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    return i
+
+
+def find_blocks(text: str) -> list:
+    """Every `calls` fence as {title, start, rows: [(lineno, text)], closed, notes}."""
+    lines = _lines(text)
+    blocks = []
+    for info, start, body, closed, end in _fences(lines):
+        words = info.split(None, 1)
+        if not words or words[0] != "calls":
+            continue
+        notes = 0
+        j = _after_blanks(lines, end)
+        while j < len(lines) and lines[j].lstrip().lower().startswith("note:"):
+            notes += 1
+            j += 1
+        blocks.append({"title": words[1].strip() if len(words) > 1 else "", "start": start,
+                       "rows": [(n, row.rstrip(" ")) for n, row in body if row.strip()],
+                       "closed": closed, "notes": notes})
+    return blocks
+
+
+def parse_code_info(info: str):
+    """{kind, path, first, last, hl} for a code block's info line, an error string, or None for any other fence."""
+    words = info.split()
+    if len(words) < 2 or not _LANGUAGE.match(words[0].lower()) or words[0].lower() in OTHER_BLOCKS:
+        return None
+    cite = _CITE.match(words[1])
+    if words[1] == "sketch":
+        if len(words) < 3 or words[2].startswith("hl="):
+            return "`sketch` names no file"
+        kind, path, first, last, extra = "sketch", words[2], 1, None, words[3:]
+    elif cite:
+        kind, path, extra = "cite", cite.group(1), words[2:]
+        if max(len(cite.group(2)), len(cite.group(3))) > MAX_DIGITS:
+            return f"`{words[1]}` is not a range of lines"
+        first, last = int(cite.group(2)), int(cite.group(3))
+    else:
+        return None
+    if len(extra) > 1 or (extra and not extra[0].startswith("hl=")):
+        odd = next((w for w in extra if not w.startswith("hl=")), extra[-1])
+        return f"`{odd}` is not allowed after the file: one `hl=` and nothing else"
+    hl = []
+    for part in extra[0][3:].split(",") if extra else []:
+        m = _HL.match(part)
+        low, high = (int(m.group(1)), int(m.group(2) or m.group(1))) if m else (1, 0)
+        if low > high:
+            return f"`{extra[0]}` is not numbers and low-to-high `a-b` ranges split by commas"
+        hl.append((low, high))
+    if _OUTSIDE.match(path) or ".." in re.split(r"[\\/]", path):
+        return f"`{path}` is not a path inside the repo"
+    if kind == "cite" and (first < 1 or first > last):
+        return f"`{first}-{last}` is not a range of lines: count from 1, low to high"
+    return {"kind": kind, "path": path, "first": first, "last": last, "hl": hl}
+
+
+def find_code_blocks(text: str) -> list:
+    """Every code block fence as {info, start, body: [(lineno, text)], closed, pins: [(lineno, line, text)]}."""
+    lines = _lines(text)
+    blocks = []
+    for raw, start, body, closed, end in _fences(lines):
+        info = parse_code_info(raw)
+        if info is None:
+            continue
+        pins = []
+        j = _after_blanks(lines, end) if closed else len(lines)
+        while j < len(lines):
+            m = _PIN.match(lines[j])
+            if not m:
+                break
+            pins.append((j + 1, int(m.group(1)[:MAX_DIGITS + 1]), m.group(2).strip()))
+            j += 1
+        blocks.append({"info": info, "start": start, "body": body, "closed": closed, "pins": pins})
     return blocks
 
 
@@ -276,14 +356,73 @@ def check_screens(screens: list, add, size: str | None, seen: set) -> int:
     return total
 
 
-def check_text(text: str, label: str, root: Path, size: str | None = None) -> dict:
+def _source(cache: dict, root: Path, path: str) -> list:
+    if path not in cache:
+        src = _lines((root / path).read_text(encoding="utf-8", errors="replace"))
+        cache[path] = src[:-1] if src and src[-1] == "" else src
+    return cache[path]
+
+
+def _check_code(block: dict, root: Path, cache: dict, add) -> None:
+    start, info, body = block["start"], block["info"], block["body"]
+    if isinstance(info, str):
+        return add("ERROR", "malformed", start, info)
+    if not block["closed"]:
+        return add("ERROR", "malformed", start, "the code block is never closed")
+    if not any(row.strip() for _n, row in body):
+        return add("ERROR", "malformed", start, "the code block is empty")
+
+    kind, path, first, last = info["kind"], info["path"], info["first"], info["last"]
+    shown = f"{first}-{first + len(body) - 1}"
+    for low, high in info["hl"]:
+        if low < first or high > first + len(body) - 1:
+            add("ERROR", "malformed", start,
+                f"`hl` names line {low if low < first else high}, the block shows {shown}")
+            break
+    for lineno, line, note in block["pins"]:
+        if not note:
+            add("ERROR", "malformed", lineno, f"`pin {line}:` has no text")
+        if not first <= line < first + len(body):
+            add("ERROR", "malformed", lineno, f"`pin {line}` is outside the lines shown, {shown}")
+    if len(block["pins"]) > MAX_PINS:
+        add("WARNING", "too-many-pins", start,
+            f"{len(block['pins'])} pins, the budget is {MAX_PINS} a block")
+
+    if kind == "sketch":
+        if len(body) > MAX_SKETCH_LINES:
+            add("WARNING", "sketch-too-long", start,
+                f"{len(body)} lines, the budget is {MAX_SKETCH_LINES} a sketch")
+        return
+    want = last - first + 1
+    if len(body) != want:
+        add("ERROR", "range-mismatch", start,
+            f"{len(body)} lines in the block, `{first}-{last}` is {want}")
+    try:
+        src = _source(cache, root, path) if (root / path).is_file() else None
+    except (OSError, ValueError):
+        return add("WARNING", "unreadable", start, f"`{path}` could not be read, so it is unverified")
+    if src is None:
+        return add("ERROR", "missing-file", start, f"`{path}` does not exist (code not written yet is a `sketch`)")
+    if last > len(src):
+        return add("ERROR", "line-out-of-range", start,
+                   f"`{path}` has {len(src)} lines, there is no line {last}")
+    if len(body) != want:
+        return
+    for offset, (lineno, row) in enumerate(body):
+        if row.rstrip() != src[first - 1 + offset].rstrip():
+            add("WARNING", "text-differs", lineno,
+                f"line {first + offset} of `{path}` does not read like this")
+            break
+
+
+def check_text(text: str, label: str, root: Path, size: str | None = None, calls: bool = True) -> dict:
     findings = []
     declared = []
 
     def add(level, rule, lineno, message):
         findings.append(Finding(level, rule, f"{label}:{lineno}", message))
 
-    blocks = find_blocks(text)
+    blocks = find_blocks(text) if calls else []
     if size == "simple" and blocks:
         add("WARNING", "simple-size", blocks[0]["start"],
             "this spec is sized `simple`, which writes no call paths")
@@ -337,11 +476,7 @@ def check_text(text: str, label: str, root: Path, size: str | None = None) -> di
             if line is None:
                 add("WARNING", "no-line", lineno, f"`{path}` has no `:line`, so it is unverified")
                 continue
-            if path not in cache:
-                cache[path] = _lines(target.read_text(encoding="utf-8", errors="replace"))
-            src = cache[path]
-            if src and src[-1] == "":
-                src = src[:-1]
+            src = _source(cache, root, path)
             if line < 1 or line > len(src):
                 add("ERROR", "line-out-of-range", lineno,
                     f"`{path}` has {len(src)} lines, there is no line {line}")
@@ -353,8 +488,12 @@ def check_text(text: str, label: str, root: Path, size: str | None = None) -> di
                     add("WARNING", "symbol-not-near", lineno,
                         f"`{symbol}` is not within {NEAR} lines of `{path}:{line}`")
 
-    screens = find_screens(text)
+    screens = find_screens(text) if calls else []
     parts = check_screens(screens, add, size, set())
+
+    code = find_code_blocks(text)
+    for block in code:
+        _check_code(block, root, cache, add)
 
     errors = sum(1 for f in findings if f.level == "ERROR")
     return {
@@ -363,6 +502,7 @@ def check_text(text: str, label: str, root: Path, size: str | None = None) -> di
         "lines": sum(len(b["rows"]) for b in blocks),
         "screens": len(screens),
         "parts": parts,
+        "code_blocks": len(code),
         "errors": errors,
         "warnings": len(findings) - errors,
         "findings": [f.to_dict() for f in findings],
@@ -380,9 +520,9 @@ def _size(feature_dir: Path) -> str | None:
 
 def _merge(reports: list) -> dict:
     out = {"plan": ", ".join(r["plan"] for r in reports), "blocks": 0, "lines": 0,
-           "screens": 0, "parts": 0, "errors": 0, "warnings": 0, "findings": [], "declared": []}
+           "screens": 0, "parts": 0, "code_blocks": 0, "errors": 0, "warnings": 0, "findings": [], "declared": []}
     for r in reports:
-        for key in ("blocks", "lines", "screens", "parts", "errors", "warnings"):
+        for key in ("blocks", "lines", "screens", "parts", "code_blocks", "errors", "warnings"):
             out[key] += r[key]
         out["findings"] += r["findings"]
         out["declared"] += r["declared"]
@@ -392,14 +532,16 @@ def _merge(reports: list) -> dict:
 def render_human(report: dict) -> str:
     counts = []
     if report["blocks"]:
-        counts.append(f"{report['blocks']} call path{'' if report['blocks'] == 1 else 's'}, "
-                      f"{report['lines']} lines")
+        counts += [f"{report['blocks']} call path{'' if report['blocks'] == 1 else 's'}",
+                   f"{report['lines']} lines"]
     if report["screens"]:
-        counts.append(f"{report['screens']} screen{'' if report['screens'] == 1 else 's'}, "
-                      f"{report['parts']} parts")
-    head = f"[plan-check] {report['plan']}: {'; '.join(counts)}"
+        counts += [f"{report['screens']} screen{'' if report['screens'] == 1 else 's'}",
+                   f"{report['parts']} parts"]
+    if report["code_blocks"]:
+        counts.append(f"{report['code_blocks']} code block{'' if report['code_blocks'] == 1 else 's'}")
+    head = f"[plan-check] {report['plan']}: {', '.join(counts)}"
     if not report["findings"]:
-        what = ("Every cited file and line checks out" if report["blocks"]
+        what = ("Every cited file and line checks out" if report["blocks"] or report["code_blocks"]
                 else "Every screen holds to its grammar")
         return f"{head}. {what}."
     rows = [f"  {f['level']:<7} {f['where']}  {f['message']} ({f['rule']})"
@@ -439,11 +581,19 @@ def main(argv=None) -> int:
         except OSError:
             continue
         reports.append(check_text(text, path.name, root, size))
+    if feature_dir:
+        try:
+            tasks = check_text((feature_dir / CODE_FILE).read_text(encoding="utf-8", errors="replace"),
+                               CODE_FILE, root, calls=False)
+        except OSError:
+            tasks = None
+        if tasks and tasks["code_blocks"]:
+            reports.append(tasks)
     report = _merge(reports)
 
     if args.as_json:
         print(json.dumps(report, indent=2))
-    elif report["blocks"] or report["screens"]:
+    elif report["blocks"] or report["screens"] or report["code_blocks"]:
         print(render_human(report))
     return 1 if (args.strict and report["errors"]) else 0
 

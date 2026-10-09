@@ -949,7 +949,8 @@ function mapToSourceLines(source, processed) {
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/blockFences.ts
-var BLOCK_FENCES = ["calls", "states", "screen"];
+var BLOCK_FENCES = ["calls", "code", "states", "screen"];
+var PIN_LINE = /^\s*pin\s+(\d{1,7}):\s*(.*)$/i;
 var renderers = /* @__PURE__ */ new Map();
 function isBlockFence(name) {
   return BLOCK_FENCES.includes(name);
@@ -1226,6 +1227,90 @@ function renderScreenByName(name) {
   return def ? renderScreenCard(def) : null;
 }
 
+// apps/vscode/webview/src/spec-viewer/markdown/codeCard.ts
+var CARD_INFO = /^(sketch(\s|$)|\S+:\d+-\d+(\s|$))/;
+var CITATION = /^(.+):(\d{1,7})-(\d{1,7})$/;
+var HIGHLIGHT = /^hl=(\d{1,7}(?:-\d{1,7})?(?:,\d{1,7}(?:-\d{1,7})?)*)$/;
+var OUTSIDE_REPO = /^([a-z]:|[\\/])/i;
+var isCodeCardInfo = (rawTitle) => CARD_INFO.test(rawTitle);
+function parseCodeInfo(rawTitle) {
+  const words = rawTitle.trim().split(/\s+/);
+  const cited = words[0].match(CITATION);
+  const sketch = words[0] === "sketch";
+  if (!sketch && !cited) return null;
+  const file = sketch ? words[1] ?? "" : cited[1];
+  const from = sketch ? 1 : Number(cited[2]);
+  const to = sketch ? null : Number(cited[3]);
+  if (!file || file.startsWith("hl=")) return null;
+  if (OUTSIDE_REPO.test(file) || file.split(/[\\/]/).includes("..")) return null;
+  if (to !== null && (from < 1 || to < from)) return null;
+  const rest = words.slice(sketch ? 2 : 1);
+  if (rest.length > 1) return null;
+  const hl = [];
+  if (rest.length === 1) {
+    const listed = rest[0].match(HIGHLIGHT);
+    if (!listed) return null;
+    for (const part of listed[1].split(",")) {
+      const [first, last = first] = part.split("-").map(Number);
+      if (last < first) return null;
+      hl.push([first, last]);
+    }
+  }
+  return { kind: sketch ? "sketch" : "cite", file, from, to, hl };
+}
+function parseCode(body, info, context) {
+  if (!body.trim()) return { ok: false, error: "an empty block" };
+  const texts = body.split("\n");
+  const last = info.from + texts.length - 1;
+  if (info.to !== null && info.to !== last) return { ok: false, error: "the body is not as long as the cited range" };
+  const shown = (line) => line >= info.from && line <= last;
+  if (info.hl.some(([first, end]) => !shown(first) || !shown(end))) return { ok: false, error: "a highlight outside the lines" };
+  for (const pin of context.pins) {
+    if (!shown(pin.line)) return { ok: false, error: "a pin outside the lines" };
+    if (!pin.text) return { ok: false, error: "a pin with no text" };
+  }
+  const lines = texts.map((text, index2) => {
+    const number = info.from + index2;
+    return {
+      number,
+      text,
+      sourceLine: context.firstLine + index2,
+      highlighted: info.hl.some(([first, end]) => number >= first && number <= end),
+      pins: context.pins.filter((pin) => pin.line === number)
+    };
+  });
+  return { ok: true, lines };
+}
+function renderFile(info) {
+  const text = escapeHtml(info.file);
+  const chip = info.kind === "cite" ? fileRefHtml(text, info.from, text) : null;
+  return `<span class="code-file">${chip ?? text}</span>`;
+}
+function renderKind(info) {
+  const label = info.to === null ? "sketch" : info.to === info.from ? `line ${info.from}` : `lines ${info.from}-${info.to}`;
+  return `<span class="code-kind code-kind--${info.kind}">${label}</span>`;
+}
+function renderPin(pin, context) {
+  const row = `<div class="code-pin" role="note"><span class="code-pin-text">${parseInline(pin.text)}</span><span class="line-content" hidden>${escapeHtml(pin.source)}</span></div>`;
+  return context.wrapLine(row, pin.sourceLine);
+}
+function renderLine(line, context) {
+  const tint = `${line.highlighted ? " code-row--hl" : ""}${line.pins.length ? " code-row--pinned" : ""}`;
+  const text = escapeHtml(line.text);
+  const row = `<div class="code-row${tint}"><span class="code-num">${line.number}</span><code class="code-text">${text}</code><span class="line-content" hidden>${text}</span></div>`;
+  return context.wrapLine(row, line.sourceLine) + line.pins.map((pin) => renderPin(pin, context)).join("");
+}
+function renderCodeCard(body, fence, context) {
+  const info = parseCodeInfo(context.rawTitle);
+  if (!info) return "";
+  const parsed = parseCode(body, info, context);
+  if (!parsed.ok) return "";
+  const language = fence.language ? ` data-language="${fence.language}"` : "";
+  const head = `<div class="code-head"><span class="code-badge">code</span>${renderFile(info)}${renderKind(info)}</div>`;
+  const lines = parsed.lines.map((line) => renderLine(line, context)).join("");
+  return `<div class="code-card code-card--${info.kind}"${language}>${head}<div class="code-lines">${lines}</div></div>`;
+}
+
 // apps/vscode/webview/src/spec-viewer/markdown/renderer.ts
 var currentTaskId = null;
 var hasSpecContext = false;
@@ -1290,6 +1375,7 @@ function wrapWithLineActions(content, lineNum, lastLineNum = lineNum) {
 }
 registerBlockRenderer("calls", renderCallsCard);
 registerBlockRenderer("screen", renderScreenBlock);
+registerBlockRenderer("code", renderCodeCard);
 function wrapComponentLine(componentHtml, lineNum) {
   return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">${COMMENT_ICON_SVG2}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
 }
@@ -1417,14 +1503,23 @@ function renderMarkdown(markdown) {
         const codeText = codeContent.join("\n");
         let noteAt = i + 1;
         while (noteAt < lines.length && !lines[noteAt].trim()) noteAt++;
-        const noteText = /^note:/i.test(lines[noteAt] ?? "") ? lines[noteAt].replace(/^note:\s*/i, "").trim() : "";
         const isScreen = codeBlockLang === "screen";
-        const note = isScreen ? null : noteText || null;
+        const isCodeCard = !isBlockFence(codeBlockLang) && codeBlockLang !== "" && codeBlockLang !== "mermaid" && isCodeCardInfo(codeRawTitle);
+        const blockName = isCodeCard ? "code" : codeBlockLang === "code" ? "" : codeBlockLang;
+        const noteText = !isCodeCard && !isScreen && /^note:/i.test(lines[noteAt] ?? "") ? lines[noteAt].replace(/^note:\s*/i, "").trim() : "";
+        const note = noteText || null;
         const numbered = [];
         while (isScreen && noteAt + numbered.length < lines.length && NOTE_LINE.test(lines[noteAt + numbered.length])) numbered.push(noteAt + numbered.length);
-        const block = inTemplateNote ? null : renderBlockFence(codeBlockLang, codeText, codeBlockInfo, {
+        const pins = [];
+        for (let at = noteAt; isCodeCard && at < lines.length; at++) {
+          const pin = lines[at].match(PIN_LINE);
+          if (!pin) break;
+          pins.push({ line: Number(pin[1]), text: pin[2].trim(), sourceLine: sourceLineOf[at] ?? 0, source: lines[at] });
+        }
+        const block = inTemplateNote ? null : renderBlockFence(blockName, codeText, codeBlockInfo, {
           firstLine: codeFirstLine,
           note,
+          pins,
           rawTitle: codeRawTitle,
           numberedNotes: numbered.map((at) => lines[at]),
           wrapLine: wrapComponentLine
@@ -1434,6 +1529,7 @@ function renderMarkdown(markdown) {
 `;
           if (note !== null) consumedLines.add(noteAt);
           numbered.forEach((at) => consumedLines.add(at));
+          pins.forEach((_pin, offset) => consumedLines.add(noteAt + offset));
         } else if (codeBlockLang === "mermaid") {
           const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
           html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>

@@ -70,7 +70,7 @@ RUNTIME_SCRIPTS = frozenset({
     "doctor_drift.py",
     "doctor_bleed.py",
     "doctor_chat.py",
-    # Called by the attachable `call-paths` part, which no shipped command carries.
+    # Called by the attachable `call-paths` and `code-pins` parts, which no shipped command carries.
     "check_plan.py",
 })
 

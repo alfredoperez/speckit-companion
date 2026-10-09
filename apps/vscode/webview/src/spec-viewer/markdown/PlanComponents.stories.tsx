@@ -121,3 +121,65 @@ export const ScreenMalformed: Story = {
         ].join('\n'),
     },
 };
+
+const CODE_PINS = [
+    '## Code',
+    '',
+    'New code, with a note where one line needs it.',
+    '',
+    '```ts sketch apps/vscode/webview/src/spec-viewer/markdown/codeCard.ts hl=2-3',
+    'export function renderKind(info: CodeInfo): string {',
+    "    if (info.to === null) return 'sketch';",
+    '    return info.to === info.from ? `line ${info.from}` : `lines ${info.from}-${info.to}`;',
+    '}',
+    '```',
+    'pin 2: a sketch has no end line, so the header says what it is instead of a range.',
+    '',
+    'Real lines, cited from the file. The path opens it at the first line.',
+    '',
+    '```ts apps/vscode/webview/src/spec-viewer/markdown/blockFences.ts:41-48 hl=45',
+    'export function renderBlockFence(name: string, body: string, info: FenceInfo, context: BlockContext): string | null {',
+    '    const render = renderers.get(name);',
+    '    if (!render) return null;',
+    '    try {',
+    '        return render(body, info, context) || null;',
+    '    } catch {',
+    '        return null;',
+    '    }',
+    '```',
+    'pin 45: an empty string is the renderer saying "not mine", and the fence stays plain code.',
+    'pin 47: a renderer that throws never takes the page down with it.',
+].join('\n');
+
+export const CodePinsDark: Story = {
+    args: { md: CODE_PINS },
+    globals: { vscodeTheme: 'monokai-black' },
+};
+
+export const CodePinsLight: Story = {
+    args: { md: CODE_PINS },
+    globals: { vscodeTheme: 'vivid-light' },
+};
+
+const CODE_PINS_MALFORMED = [
+    '## Code',
+    '',
+    'The pin names line 9 of a three-line sketch, so the fence stays a plain code block and the pin stays text.',
+    '',
+    '```ts sketch src/add.ts',
+    'export function add(a: number, b: number) {',
+    '    return a + b;',
+    '}',
+    '```',
+    'pin 9: there is no line 9.',
+].join('\n');
+
+export const CodePinsMalformedDark: Story = {
+    args: { md: CODE_PINS_MALFORMED },
+    globals: { vscodeTheme: 'monokai-black' },
+};
+
+export const CodePinsMalformedLight: Story = {
+    args: { md: CODE_PINS_MALFORMED },
+    globals: { vscodeTheme: 'vivid-light' },
+};

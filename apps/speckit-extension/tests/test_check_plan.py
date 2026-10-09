@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the plan's call-path check (check_plan.py).
+"""Tests for the plan's call-path and code block check (check_plan.py).
 
 Stdlib `unittest` only — run with:
 
@@ -55,6 +55,10 @@ class Repo(unittest.TestCase):
         with redirect_stdout(out):
             code = cp.main(["--feature-dir", str(self.spec), "--root", str(self.root), *extra])
         return code, out.getvalue()
+
+
+def code(info: str, *body: str, pins: tuple = ()) -> str:
+    return "\n".join([f"```{info}", *body, "```", *pins]) + "\n"
 
 
 GOOD = calls(
@@ -194,12 +198,182 @@ class Warnings(Repo):
         self.assertEqual(self.run_main(calls("  settle() @ src/server.mjs"), "--strict")[0], 0)
 
 
+CITE = code("js src/server.mjs:10-12 hl=11", "function settle(at) {", "  reviewRuns();", "}",
+            pins=("pin 11: the only caller.",))
+SKETCH = code("ts sketch src/new.ts hl=1,2-3", "export function add(a, b) {", "    return a + b;", "}",
+              pins=("", "pin 2: no rounding here.", "PIN 3: closes it."))
+
+
+class AFenceThatIsNotACodeBlock(Repo):
+    def test_is_ignored(self):
+        for info in ("ts", "ts title", "bash npm test", "ts sketchy src/a.ts", "ts src/a.ts:12",
+                     "mermaid sketch a.mmd", "states sketch a",
+                     "sketch src/a.ts", ""):
+            report = self.check(code(info, "anything", pins=("pin 9:",)))
+            self.assertEqual((info, report["code_blocks"], report["findings"]), (info, 0, []))
+
+    def test_prints_nothing(self):
+        self.assertEqual(self.run_main(code("ts title", "let a;")), (0, ""))
+
+    def test_a_calls_block_is_never_one(self):
+        self.assertEqual(self.check(code("calls src/a.ts:1-2", "x"))["code_blocks"], 0)
+
+    def test_a_code_block_shown_inside_another_fence_is_not_read(self):
+        self.assertEqual(self.check("````markdown\n" + code("ts sketch", "x") + "````\n")["code_blocks"], 0)
+
+
+class AGoodCodeBlock(Repo):
+    def test_a_citation_passes_clean(self):
+        report = self.check(CITE)
+        self.assertEqual((report["code_blocks"], report["blocks"], report["findings"]), (1, 0, []))
+
+    def test_a_sketch_passes_clean(self):
+        self.assertEqual(self.check(SKETCH)["findings"], [])
+
+    def test_a_sketch_may_name_a_file_that_exists(self):
+        self.assertEqual(self.rules(code("js sketch src/server.mjs", "let a;")), [])
+
+    def test_trailing_spaces_are_not_a_difference(self):
+        self.assertEqual(self.rules(code("js src/server.mjs:10-10", "function settle(at) {  ")), [])
+
+    def test_a_blank_line_counts_as_a_line(self):
+        self.assertEqual(self.rules(code("js src/server.mjs:12-14", "}", "", "function reviewRuns() {")), [])
+
+    def test_says_so_without_naming_call_paths(self):
+        code_, out = self.run_main(CITE + SKETCH)
+        self.assertEqual(code_, 0)
+        self.assertEqual(out, "[plan-check] plan.md: 2 code blocks. Every cited file and line checks out.\n")
+
+    def test_is_counted_beside_the_call_paths(self):
+        _code, out = self.run_main(GOOD + CITE)
+        self.assertIn("plan.md: 1 call path, 4 lines, 1 code block.", out)
+
+    def test_tasks_md_is_read(self):
+        (self.spec / "tasks.md").write_text(code("js src/nope.mjs:1-1", "x"), encoding="utf-8")
+        code_, out = self.run_main("# Plan\n", "--strict")
+        self.assertEqual(code_, 1)
+        self.assertIn("tasks.md:1", out)
+
+    def test_tasks_md_with_no_code_block_changes_nothing(self):
+        (self.spec / "tasks.md").write_text(GOOD, encoding="utf-8")
+        self.assertEqual(self.run_main("# Plan\n"), (0, ""))
+        self.assertTrue(self.run_main(GOOD)[1].startswith("[plan-check] plan.md: 1 call path, 4 lines."))
+
+
+class CodeBlockErrors(Repo):
+    def malformed(self, text: str):
+        self.assertEqual(self.rules(text), [("ERROR", "malformed")], text)
+
+    def test_a_cited_file_that_does_not_exist(self):
+        self.assertEqual(self.rules(code("js src/nope.mjs:1-1", "x")), [("ERROR", "missing-file")])
+        self.assertEqual(self.rules(code("js src:1-1", "x")), [("ERROR", "missing-file")])
+
+    def test_a_range_past_the_end_of_the_file(self):
+        self.assertEqual(self.rules(code("js src/server.mjs:15-16", "}", "")), [("ERROR", "line-out-of-range")])
+
+    def test_a_body_not_as_long_as_its_range(self):
+        finding = self.check("# Plan\n\n" + code("js src/server.mjs:10-12", "function settle(at) {"))["findings"][0]
+        self.assertEqual((finding["rule"], finding["level"], finding["where"]), ("range-mismatch", "ERROR", "plan.md:3"))
+
+    def test_a_sketch_with_no_file(self):
+        self.malformed(code("ts sketch", "let a;"))
+        self.malformed(code("ts sketch hl=1", "let a;"))
+
+    def test_a_path_the_viewer_would_refuse(self):
+        self.malformed(code("ts sketch C:/Users/a.ts", "let a;"))
+        self.malformed(code("ts sketch a\\..\\b.ts", "let a;"))
+
+    def test_numbers_too_long_to_be_lines(self):
+        self.malformed(code("ts src/a.ts:1-" + "9" * 5000, "let a;"))
+        self.malformed(code("ts sketch src/a.ts hl=" + "9" * 5000, "let a;"))
+        self.malformed(code("ts sketch src/a.ts", "let a;", pins=("pin " + "9" * 5000 + ": hi",)))
+
+    def test_a_path_too_long_to_open_never_crashes(self):
+        self.assertEqual(self.rules(code("ts " + "a" * 300 + ".ts:1-1", "x")), [("WARNING", "unreadable")])
+
+    def test_a_first_word_the_viewer_draws_its_own_way_is_not_a_code_block(self):
+        for word in ("code", "Calls", "title=x"):
+            self.assertEqual(self.rules(code(word + " sketch ../a.ts", "let a;")), [], word)
+
+    def test_a_word_that_is_not_hl(self):
+        self.malformed(code("ts sketch src/a.ts wide", "let a;"))
+        self.malformed(code("ts sketch src/a.ts hl=1 hl=1", "let a;"))
+        self.malformed(code("js src/server.mjs:10-10 title", "function settle(at) {"))
+
+    def test_a_bad_hl_value(self):
+        for hl in ("hl=", "hl=a", "hl=1,", "hl=2-1", "hl=1-2-3", "hl=1;2"):
+            self.malformed(code(f"ts sketch src/a.ts {hl}", "let a;", "let b;", "let c;"))
+
+    def test_a_path_outside_the_repo(self):
+        self.malformed(code("ts sketch ../a.ts", "let a;"))
+        self.malformed(code("ts sketch /etc/a.ts", "let a;"))
+        self.malformed(code("ts ../a.ts:1-1", "let a;"))
+
+    def test_a_range_that_is_not_one(self):
+        self.malformed(code("js src/server.mjs:0-1", "a", "b"))
+        self.malformed(code("js src/server.mjs:12-10", "a"))
+
+    def test_an_empty_or_unclosed_block(self):
+        self.malformed("```ts sketch src/a.ts\n```\n")
+        self.malformed("```ts sketch src/a.ts\n\n```\n")
+        self.malformed("```ts sketch src/a.ts\nlet a;\n")
+
+    def test_a_highlight_outside_the_lines_shown(self):
+        self.malformed(code("ts sketch src/a.ts hl=2", "let a;"))
+        self.malformed(code("js src/server.mjs:10-10 hl=1", "function settle(at) {"))
+
+    def test_a_pin_outside_the_lines_shown(self):
+        self.malformed(code("ts sketch src/a.ts", "let a;", pins=("pin 2: why.",)))
+        self.malformed(code("js src/server.mjs:10-10", "function settle(at) {", pins=("pin 1: why.",)))
+
+    def test_a_pin_with_no_text_names_its_own_line(self):
+        finding = self.check(code("ts sketch src/a.ts", "let a;", pins=("pin 1:  ",)))["findings"][0]
+        self.assertEqual((finding["rule"], finding["where"]), ("malformed", "plan.md:4"))
+
+    def test_strict_exits_1_on_an_error_and_plain_exits_0(self):
+        bad = code("js src/nope.mjs:1-1", "x")
+        self.assertEqual(self.run_main(bad)[0], 0)
+        self.assertEqual(self.run_main(bad, "--strict")[0], 1)
+
+
+class CodeBlockWarnings(Repo):
+    def test_cited_text_that_differs_from_the_file(self):
+        findings = self.check(code("js src/server.mjs:10-12", "function settle(at) {", "  other();", "{"))["findings"]
+        self.assertEqual([(f["level"], f["rule"], f["where"]) for f in findings],
+                         [("WARNING", "text-differs", "plan.md:3")])
+        self.assertIn("line 11", findings[0]["message"])
+
+    def test_a_sketch_over_twelve_lines(self):
+        self.assertEqual(self.rules(code("ts sketch src/a.ts", *["let a;"] * 12)), [])
+        self.assertEqual(self.rules(code("ts sketch src/a.ts", *["let a;"] * 13)),
+                         [("WARNING", "sketch-too-long")])
+
+    def test_a_citation_has_no_line_budget(self):
+        self.assertEqual(self.rules(code("js src/server.mjs:1-13", *["// header"] * 9,
+                                         "function settle(at) {", "  reviewRuns();", "}", "")), [])
+
+    def test_more_than_three_pins(self):
+        pins = tuple(f"pin {n}: why." for n in (1, 1, 2, 3))
+        self.assertEqual(self.rules(code("ts sketch src/a.ts", "a", "b", "c", pins=pins[:3])), [])
+        self.assertEqual(self.rules(code("ts sketch src/a.ts", "a", "b", "c", pins=pins)),
+                         [("WARNING", "too-many-pins")])
+        self.assertEqual(self.rules(code("js src/server.mjs:1-1", "// header", pins=("pin 1: why.",) * 4)),
+                         [("WARNING", "too-many-pins")])
+
+    def test_the_first_line_that_is_not_a_pin_ends_the_pins(self):
+        self.assertEqual(self.rules(code("ts sketch src/a.ts", "a", pins=("pin 1: why.", "note: x", "pin 9:"))), [])
+
+    def test_warnings_never_fail_strict(self):
+        self.assertEqual(self.run_main(code("ts sketch src/a.ts", *["let a;"] * 13), "--strict")[0], 0)
+
+
 class TheProjectCopyIsTheShippedNode(unittest.TestCase):
     def test_this_repos_node_file_matches_the_shipped_part(self):
         repo = EXT.parents[1]
-        shipped = (EXT / "presets" / "_parts" / "call-paths.md").read_text(encoding="utf-8")
-        mine = (repo / ".specify" / "companion" / "nodes" / "call-paths.md").read_text(encoding="utf-8")
-        self.assertEqual(mine, shipped)
+        for name in ("call-paths.md", "code-pins.md"):
+            shipped = (EXT / "presets" / "_parts" / name).read_text(encoding="utf-8")
+            mine = (repo / ".specify" / "companion" / "nodes" / name).read_text(encoding="utf-8")
+            self.assertEqual(mine, shipped, name)
 
 
 GOOD_PARTS = [
