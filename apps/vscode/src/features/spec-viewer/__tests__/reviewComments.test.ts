@@ -1,5 +1,5 @@
 import type { SpecContext, ReviewComment } from '../../../core/types/specContext';
-import { editComment } from '../reviewComments';
+import { buildReviewComment, editComment } from '../reviewComments';
 
 function comment(over: Partial<ReviewComment> = {}): ReviewComment {
     return {
@@ -52,5 +52,22 @@ describe('editComment', () => {
         const ctx = ctxWith([comment({ id: 'c1', comment: 'note' })]);
 
         expect(editComment(ctx, 'c1', '  note  ')).toBe(ctx);
+    });
+});
+
+describe('buildReviewComment on a call row', () => {
+    const source = ['## Call paths', '', '```calls A step lands', '  a @ a.ts:1', '~   b() @ b.ts:2', '```'];
+
+    it('anchors to the row and the heading above the fence', () => {
+        const rc = buildReviewComment('plan', 5, '', source, 'Remove this call from the plan.', 'r1');
+
+        expect(rc.anchor).toEqual({ heading: 'Call paths', blockText: '~   b() @ b.ts:2', line: 5 });
+        expect(rc.comment).toBe('Remove this call from the plan.');
+    });
+
+    it('still anchors a line outside a fence to its paragraph', () => {
+        const rc = buildReviewComment('plan', 1, '', ['intro', 'more', '', 'other'], 'x', 'r2');
+
+        expect(rc.anchor.blockText).toBe('intro\nmore');
     });
 });

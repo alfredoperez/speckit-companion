@@ -18,6 +18,7 @@ import { viewerState } from '../signals';
 import { addRestoredRefinement } from './refinements';
 import { currentDoc } from './currentDoc';
 import { resolveAnchorLine, type RenderedLine } from './reanchor';
+import { markStruckRows } from './callsStrike';
 
 function contentText(el: Element): string {
     return el.querySelector('.line-content')?.textContent?.trim() || '';
@@ -55,6 +56,11 @@ function anchorElement(c: ReviewComment, els: HTMLElement[], rendered: RenderedL
  * per comment id.
  */
 export function restoreComments(): void {
+    mountComments();
+    markStruckRows();
+}
+
+function mountComments(): void {
     const comments = viewerState.value?.reviewComments;
     if (!comments || comments.length === 0) return;
     const doc = currentDoc();

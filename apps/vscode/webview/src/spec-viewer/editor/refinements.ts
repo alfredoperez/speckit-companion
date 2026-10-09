@@ -10,6 +10,7 @@ import { detectLineType } from './lineActions';
 import { currentDoc } from './currentDoc';
 import { closeInlineEditor, openInlineEditor } from './editorHost';
 import { isReadOnly } from './readOnly';
+import { markStruckRows } from './callsStrike';
 import { InlineComment } from '../components/InlineComment';
 import { InlineEditor } from '../components/InlineEditor';
 
@@ -206,6 +207,7 @@ export function removeRefinement(refId: string, targetEl?: HTMLElement): void {
         target.querySelector<HTMLElement>('.line-add-btn, .row-add-btn')?.focus();
     }
 
+    markStruckRows();
     updateRefineButton();
 
     // Persist the removal so it survives reopen.
