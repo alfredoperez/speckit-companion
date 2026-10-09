@@ -225,7 +225,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         </div>
 
         {renderedUnreleased.length > 0 && (
-          <button type="button" class="cl-switch" role="switch" aria-checked="false" data-tab="next" title="Show what ships next">
+          <button type="button" class="cl-switch" role="switch" aria-checked="false" data-tab="next" aria-label="Show what ships next" title="Show what ships next">
             <span class="cl-switch-label">Next</span>
             <span class="cl-switch-track" aria-hidden="true"><span class="cl-switch-thumb"></span></span>
           </button>
@@ -324,7 +324,12 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
             group.hidden = !visible;
             if (visible) shown += 1;
           });
-          if (empty) empty.hidden = shown > 0;
+          if (empty) {
+            empty.hidden = shown > 0;
+            empty.textContent = tab === 'next'
+              ? 'Nothing is waiting to ship for this product. Turn off Next to see its releases.'
+              : 'No releases for this product yet.';
+          }
         }
 
         function setTab(next) {
@@ -1298,8 +1303,20 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           min-width: 0;
         }
 
+        .cl-filters .cl-filter:first-child {
+          -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+          mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+          padding-right: 24px;
+        }
+
         .cl-pill {
-          padding: 6px 9px;
+          min-height: 40px;
+          padding: 6px 11px;
+        }
+
+        .cl-switch {
+          min-height: 44px;
+          padding: 6px 4px;
         }
 
         .cl-pill-more {
