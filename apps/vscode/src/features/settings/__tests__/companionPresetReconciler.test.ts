@@ -112,6 +112,31 @@ describe('companionPresetReconciler', () => {
             expect(ops).toEqual([]);
         });
 
+        it('re-adds the standard family when the bundled preset is a newer version', async () => {
+            const manifest = (dir: string, version: string): void => {
+                fs.mkdirSync(path.join(root, dir), { recursive: true });
+                fs.writeFileSync(path.join(root, dir, 'preset.yml'), `preset:\n  id: "companion-standard"\n  version: "${version}"\n`);
+            };
+            manifest('.specify/presets/companion-standard', '1.0.0');
+            manifest('.specify/extensions/companion/presets/companion-standard', '1.1.0');
+            const calls: string[] = [];
+            await ensureStandardFamily(root, { run: async (c: string) => { calls.push(c); } });
+            expect(calls).toEqual([
+                'specify preset remove companion-standard',
+                'specify preset add --dev .specify/extensions/companion/presets/companion-standard',
+            ]);
+        });
+
+        it('leaves the standard family alone when its version matches the bundled preset', async () => {
+            for (const dir of ['.specify/presets/companion-standard', '.specify/extensions/companion/presets/companion-standard']) {
+                fs.mkdirSync(path.join(root, dir), { recursive: true });
+                fs.writeFileSync(path.join(root, dir, 'preset.yml'), 'preset:\n  version: "1.1.0"\n');
+            }
+            const calls: string[] = [];
+            await ensureStandardFamily(root, { run: async (c: string) => { calls.push(c); } });
+            expect(calls).toEqual([]);
+        });
+
         it('migrates a leftover turbo install without ever removing the standard family', async () => {
             install('companion-turbo');
             const calls: string[] = [];

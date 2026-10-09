@@ -57,7 +57,7 @@ If you're stuck on the stock PyPI build and can't reinstall, replicate what the 
 
 Two command families stay installed at once — installing one never removes the other. The stock `/speckit.*` commands (+ timing) are carried by the `companion-standard` preset; the SpecKit Companion workflow is the namespaced `/speckit.companion.*` commands (lean — no user stories, trimmed plan, files/dependencies tasks). See the full reference in the `commands-*` and `workflows-*` living specs.
 
-The Companion workflow is available to everyone with this extension installed — there's no setting to turn on; stock SpecKit is always available too. Both families coexist — no preset is added, removed, or swapped, so you never lose a command set. The extension keeps `companion-standard` present with an **add-only** activation ensure (it never removes it), which also recovers a project whose stock commands a prior version may have stranded.
+The Companion workflow is available to everyone with this extension installed — there's no setting to turn on; stock SpecKit is always available too. Both families coexist — no preset is added, removed, or swapped, so you never lose a command set. The extension keeps `companion-standard` present with an activation ensure, which also recovers a project whose stock commands a prior version may have stranded. The one time it removes the preset is to refresh it: when the bundled preset is a different version than the installed one, it removes and re-adds it in the same pass, because spec-kit builds the command bodies only when a preset is added.
 
 The stock carrier installs from the bundled path; verify or (re-)materialize it manually with:
 

@@ -10,8 +10,8 @@ Three assertions:
       Failure: `part drift: <command>#<name>`.
 
   (b) GOLDEN equality — over the 7 companion-standard presets only
-      (`GOLDEN_CARRIERS`), a hand-kept fork with no generator to re-derive them
-      from: each equals its frozen tests/golden/commands/ capture, compared
+      (`GOLDEN_CARRIERS`), hand-kept wrappers around the stock command with no
+      generator: each equals its frozen tests/golden/commands/ capture, compared
       after normalizing fence-marker comment lines (so the timing marker rename
       and the part-fence convention are not miscounted as content changes). The
       7 namespaced bodies are generated from nodes/ and checked against their

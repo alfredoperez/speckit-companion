@@ -24,8 +24,8 @@ class of regression in the shared part-filling code, which is why they stayed.
 `--check` asserts, without writing anything:
   - part-region equality for all 14 carriers (`_command_parts.PART_CARRIERS`)
   - timing-fence presence on the 7 stock carriers
-  - golden equality for the 7 preset carriers (`GOLDEN_CARRIERS`) — the one
-    hand-kept fork with no generator to re-derive it from
+  - golden equality for the 7 preset carriers (`GOLDEN_CARRIERS`) — hand-kept
+    wrappers around the stock command, with no generator to re-derive them from
   - node-assembly equality: every decomposed command re-assembled from its
     nodes equals its OWN committed body (marker lines aside) — the 7
     namespaced bodies have no golden; the committed body is their ground truth

@@ -395,8 +395,9 @@ def _main() -> int:
     parser.add_argument("--kind", default="start", choices=["start", "complete"])
     parser.add_argument(
         "--at", default=None, metavar="ISO8601",
-        help="Timestamp for a step START the dispatcher already decided (the GUI's "
-             "dispatch time). Refused for anything else: a hand-chosen clock on a "
+        help="Timestamp for a step START read from a real clock before the feature "
+             "directory existed (the GUI's dispatch time, or the clock stock specify "
+             "notes as its first action). Refused for anything else: a hand-chosen clock on a "
              "finish is the batched-timestamp defect the doctor exists to catch.")
     parser.add_argument(
         "--substep", default=None,

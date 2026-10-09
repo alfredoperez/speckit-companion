@@ -26,9 +26,11 @@ export interface PresetOp {
  * leftover `companion-turbo` / legacy `companion-lean` / `sdd-lean` install is
  * removed once (all are leftovers from old installs); after such a removal,
  * `companion-standard` is re-enabled so its bodies aren't left reverted.
- * Already-present-and-clean is a no-op (idempotent).
+ * Already-present-and-clean is a no-op (idempotent). A `stale` install, one
+ * whose version differs from the bundled preset, is removed and re-added,
+ * because the CLI composes command bodies only when a preset is added.
  */
-export function decideEnsureStandardOps(installed: Record<string, boolean>): PresetOp[] {
+export function decideEnsureStandardOps(installed: Record<string, boolean>, stale = false): PresetOp[] {
     const ops: PresetOp[] = [];
     if (installed[TURBO_PRESET_ID]) {
         ops.push({ id: TURBO_PRESET_ID, action: 'remove' });
@@ -40,6 +42,8 @@ export function decideEnsureStandardOps(installed: Record<string, boolean>): Pre
     }
     if (!installed[STANDARD_PRESET_ID]) {
         ops.push({ id: STANDARD_PRESET_ID, action: 'add' });
+    } else if (stale) {
+        ops.push({ id: STANDARD_PRESET_ID, action: 'remove' }, { id: STANDARD_PRESET_ID, action: 'add' });
     } else if (ops.length > 0) {
         ops.push({ id: STANDARD_PRESET_ID, action: 'enable' });
     }
@@ -96,6 +100,21 @@ export function isCompanionInstalled(workspaceRoot: string): boolean {
     return fs.existsSync(path.join(workspaceRoot, COMPANION_EXTENSION_REL));
 }
 
+function presetVersion(manifestPath: string): string | undefined {
+    try {
+        return /^\s+version:\s*["']?([^"'\s]+)/m.exec(fs.readFileSync(manifestPath, 'utf8'))?.[1];
+    } catch {
+        return undefined;
+    }
+}
+
+/** True when the installed standard preset is a different version than the bundled one. */
+export function isStandardPresetStale(workspaceRoot: string): boolean {
+    const installed = presetVersion(path.join(workspaceRoot, PRESETS_REL, STANDARD_PRESET_ID, 'preset.yml'));
+    const bundled = presetVersion(path.join(workspaceRoot, BUNDLED_PRESETS_REL, STANDARD_PRESET_ID, 'preset.yml'));
+    return installed !== undefined && bundled !== undefined && installed !== bundled;
+}
+
 function installedMap(workspaceRoot: string): Record<string, boolean> {
     const map: Record<string, boolean> = {};
     for (const id of [STANDARD_PRESET_ID, TURBO_PRESET_ID, ...LEGACY_PRESET_IDS]) {
@@ -127,7 +146,7 @@ export async function ensureStandardFamily(
     });
     const log = deps.log ?? ((): void => undefined);
 
-    const ops = decideEnsureStandardOps(installedMap(workspaceRoot));
+    const ops = decideEnsureStandardOps(installedMap(workspaceRoot), isStandardPresetStale(workspaceRoot));
     if (ops.length === 0) {
         log('[companion] standard command family already present — no preset action');
         return ops;
