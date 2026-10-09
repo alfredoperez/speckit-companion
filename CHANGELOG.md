@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **Hover a spec to see its branch.** The sidebar tooltip names ==the branch the work is on==, beside the status and the assistant. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: sidebar -->
-- **Call paths draw as a card.** A plan's `calls` block shows ==which functions a change reaches== as a tree. New, changed and removed rows are marked, and you can strike or comment on one. ([#898](https://github.com/alfredoperez/speckit-companion/pull/898), [#904](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: spec-viewer -->
+- **Call paths draw as a card.** A plan's `calls` block shows ==which functions a change reaches== as a tree, and you can strike or comment on a row. ([#898](https://github.com/alfredoperez/speckit-companion/pull/898), [#904](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: spec-viewer -->
 - **The Workflow Builder opens on stock Spec Kit.** It draws your project's own workflow and edits ==what Spec Kit owns==: extension hooks, document templates and the constitution command. ([#889](https://github.com/alfredoperez/speckit-companion/pull/889)) <!-- area: pipeline-builder -->
 - **Change where a decision routes.** The board's decision block opens one row per answer, so a verdict ==skips the steps you choose==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
 - **Living specs reach the Workflow Builder.** A header chip turns them on or off, picks where specs live, and lists ==the capabilities you registered==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
