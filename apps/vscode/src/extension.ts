@@ -374,6 +374,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (gap && gap.state !== 'missing') {
                     void ensureStandardFamily(root, {
                         log: msg => outputChannel.appendLine(msg),
+                        state: context.workspaceState,
                     });
                 }
                 return gap;

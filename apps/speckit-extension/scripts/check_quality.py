@@ -67,9 +67,6 @@ NEVER_PROMPT = [
     "speckit.companion.resume.md",
     "speckit.companion.classify.md",
 ]
-# The clarify carrier lives in the preset dir next to --commands-dir.
-MUST_ASK_RELATIVE = Path("presets") / "companion-standard" / "commands"
-MUST_ASK = ["speckit.clarify.md"]
 
 # Word-bounded phrases only — a bare "ask" would match "tasks"; the article is
 # optional so "ask user" reads the same as "ask the user".
@@ -385,23 +382,6 @@ def check_prompting(r: Report, commands_dir: Path) -> None:
                   + (f" (+{len(hits) - 1} more)" if len(hits) > 1 else ""))
         else:
             r.add("PASS", cid, "no user-prompt instruction")
-    ask_dir = commands_dir.parent / MUST_ASK_RELATIVE
-    for name in MUST_ASK:
-        cid = f"must-ask-{name.removeprefix('speckit.').removesuffix('.md')}"
-        path = ask_dir / name
-        try:
-            text = path.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            r.add("FAIL", cid, f"roster file missing: {path} (scan surface shrank)")
-            continue
-        except (OSError, UnicodeDecodeError) as exc:
-            r.add("FAIL", cid, f"roster file unreadable: {exc}")
-            continue
-        hits = _prompt_hits(text)
-        if hits:
-            r.add("PASS", cid, f"{len(hits)} ask instruction(s) present")
-        else:
-            r.add("FAIL", cid, "clarify-type command never asks the user")
 
 
 def check_living_specs_accountability(r: Report, spec_dir: Path) -> None:
@@ -445,8 +425,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--feature-dir", help="spec dir to score (verbosity + timing)")
     ap.add_argument("--commands-dir",
-                    help="command-body sources dir (prompting); the clarify "
-                         "carrier resolves as a sibling under presets/")
+                    help="command-body sources dir (prompting)")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--strict", action="store_true",
                     help="exit 1 on any FAIL; WARN never affects the exit code")

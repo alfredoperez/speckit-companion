@@ -137,6 +137,72 @@ describe('companionPresetReconciler', () => {
             expect(calls).toEqual([]);
         });
 
+        describe('when spec-kit itself is upgraded', () => {
+            const memory = (seen?: string) => {
+                const store = new Map<string, string>(seen ? [['speckit.companion.standardPresetSpecKitVersion', seen]] : []);
+                return {
+                    store,
+                    state: {
+                        get: (k: string) => store.get(k),
+                        update: async (k: string, v: string): Promise<void> => { store.set(k, v); },
+                    },
+                };
+            };
+
+            it('re-adds the standard family so it wraps the new stock text', async () => {
+                install('companion-standard');
+                const { state, store } = memory('1.0.9');
+                const calls: string[] = [];
+                await ensureStandardFamily(root, {
+                    run: async (c: string) => { calls.push(c); },
+                    specKitVersion: async () => '1.0.10',
+                    state,
+                });
+                expect(calls).toEqual([
+                    'specify preset remove companion-standard',
+                    'specify preset add --dev .specify/extensions/companion/presets/companion-standard',
+                ]);
+                expect([...store.values()]).toEqual(['1.0.10']);
+            });
+
+            it('only records the version the first time it sees one', async () => {
+                install('companion-standard');
+                const { state, store } = memory();
+                const calls: string[] = [];
+                await ensureStandardFamily(root, {
+                    run: async (c: string) => { calls.push(c); },
+                    specKitVersion: async () => '1.0.10',
+                    state,
+                });
+                expect(calls).toEqual([]);
+                expect([...store.values()]).toEqual(['1.0.10']);
+            });
+
+            it('keeps the old version on record when the re-add fails, so the next start retries', async () => {
+                install('companion-standard');
+                const { state, store } = memory('1.0.9');
+                await ensureStandardFamily(root, {
+                    run: async () => { throw new Error('specify: command not found'); },
+                    specKitVersion: async () => '1.0.10',
+                    state,
+                });
+                expect([...store.values()]).toEqual(['1.0.9']);
+            });
+
+            it('does nothing when the spec-kit version cannot be read', async () => {
+                install('companion-standard');
+                const { state, store } = memory('1.0.9');
+                const calls: string[] = [];
+                await ensureStandardFamily(root, {
+                    run: async (c: string) => { calls.push(c); },
+                    specKitVersion: async () => undefined,
+                    state,
+                });
+                expect(calls).toEqual([]);
+                expect([...store.values()]).toEqual(['1.0.9']);
+            });
+        });
+
         it('migrates a leftover turbo install without ever removing the standard family', async () => {
             install('companion-turbo');
             const calls: string[] = [];

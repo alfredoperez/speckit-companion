@@ -127,15 +127,34 @@ export interface ReconcileDeps {
     /** Runs a shell command in the workspace; injected so tests don't touch the real CLI. */
     run?: (cmd: string, cwd: string) => Promise<void>;
     log?: (msg: string) => void;
+    /** Reads the installed spec-kit version; injected so tests don't touch the real CLI. */
+    specKitVersion?: (cwd: string) => Promise<string | undefined>;
+    /** Remembers the spec-kit version the standard family was last composed against. */
+    state?: {
+        get(key: string): string | undefined;
+        update(key: string, value: string): PromiseLike<void>;
+    };
+}
+
+const COMPOSED_SPECKIT_VERSION_KEY = 'speckit.companion.standardPresetSpecKitVersion';
+
+async function readSpecKitVersion(cwd: string): Promise<string | undefined> {
+    try {
+        const { stdout } = await execAsync('specify --version', { cwd });
+        return /\d+\.\d+\.\d+[\w.+-]*/.exec(stdout)?.[0];
+    } catch {
+        return undefined;
+    }
 }
 
 /**
  * Idempotently ensure the standard `/speckit.*` command family is present:
  * add `companion-standard` from the bundled path when absent (recovering a
  * project a prior swap stranded), and migrate away a leftover `companion-turbo`
- * / legacy `companion-lean` / `sdd-lean` install. Add-only — never removes the standard family,
- * so it cannot strand the project. CLI failures are logged, not thrown, so
- * activation is never broken by a missing `specify` binary.
+ * / legacy `companion-lean` / `sdd-lean` install. The standard family is removed
+ * only to be re-added in the same pass, when the bundled preset or the installed
+ * spec-kit changed version since it was composed. CLI failures are logged, not
+ * thrown, so activation is never broken by a missing `specify` binary.
  */
 export async function ensureStandardFamily(
     workspaceRoot: string,
@@ -146,19 +165,30 @@ export async function ensureStandardFamily(
     });
     const log = deps.log ?? ((): void => undefined);
 
-    const ops = decideEnsureStandardOps(installedMap(workspaceRoot), isStandardPresetStale(workspaceRoot));
+    const specKit = deps.state ? await (deps.specKitVersion ?? readSpecKitVersion)(workspaceRoot) : undefined;
+    const composedWith = deps.state?.get(COMPOSED_SPECKIT_VERSION_KEY);
+    const specKitUpgraded = specKit !== undefined && composedWith !== undefined && composedWith !== specKit;
+
+    const ops = decideEnsureStandardOps(
+        installedMap(workspaceRoot),
+        isStandardPresetStale(workspaceRoot) || specKitUpgraded
+    );
     if (ops.length === 0) {
         log('[companion] standard command family already present — no preset action');
-        return ops;
     }
+    let failed = false;
     for (const op of ops) {
         const cmd = presetCommandFor(op);
         log(`[companion] ensure standard → ${cmd}`);
         try {
             await run(cmd, workspaceRoot);
         } catch (e) {
+            failed = true;
             log(`[companion] preset command failed: ${cmd} — ${(e as Error).message}`);
         }
+    }
+    if (specKit !== undefined && !failed && composedWith !== specKit) {
+        await deps.state?.update(COMPOSED_SPECKIT_VERSION_KEY, specKit);
     }
     return ops;
 }
