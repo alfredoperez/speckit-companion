@@ -111,6 +111,7 @@ export function parseStates(body: string): StatesResult {
     const columns = Math.max(...grid.map((row) => row.length));
     if (columns > MAX_COLUMNS) return { ok: false, error: `more than ${MAX_COLUMNS} grid columns` };
     grid.forEach((row) => { while (row.length < columns) row.push(-1); });
+    while (grid.length > 1 && grid[grid.length - 1].every((cell) => cell === -1)) grid.pop();
     if (placed.size !== states.length) return { ok: false, error: 'a state is missing from the grid' };
 
     const starts = states.map((s, i) => (s.start ? i : -1)).filter((i) => i >= 0);

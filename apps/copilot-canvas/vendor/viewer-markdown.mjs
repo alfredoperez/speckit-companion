@@ -1401,6 +1401,7 @@ function parseStates(body) {
   grid.forEach((row) => {
     while (row.length < columns) row.push(-1);
   });
+  while (grid.length > 1 && grid[grid.length - 1].every((cell) => cell === -1)) grid.pop();
   if (placed.size !== states.length) return { ok: false, error: "a state is missing from the grid" };
   const starts = states.map((s, i) => s.start ? i : -1).filter((i) => i >= 0);
   if (starts.length > 1) return { ok: false, error: "more than one start state" };
