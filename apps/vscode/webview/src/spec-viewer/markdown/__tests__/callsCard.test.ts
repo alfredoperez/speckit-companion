@@ -166,6 +166,21 @@ describe('renderCallsCard: the card', () => {
         expect(html).toContain('after text');
     });
 
+    it('draws inline code in the note and keeps markup in it as text', () => {
+        const html = card(EXAMPLE, 'T', '\nnote: `load` never writes <b>back</b>.\n');
+        const note = byClass(html, 'calls-note')[0];
+
+        expect(text(note)).toBe('load never writes <b>back</b>.');
+        expect(html).toContain('<code>load</code>');
+        expect(html).not.toContain('<b>back</b>');
+    });
+
+    it('names the whole title on the header so a cut one can be read', () => {
+        const html = card(EXAMPLE, 'a title with "quotes" in it');
+
+        expect(attrs(byClass(html, 'calls-title')[0]).title).toBe('a title with "quotes" in it');
+    });
+
     it('keeps a bare note: line as text', () => {
         const html = card(EXAMPLE, 'T', 'note:');
 

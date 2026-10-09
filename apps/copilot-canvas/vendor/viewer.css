@@ -2165,6 +2165,7 @@ pre.code-block code.hljs {
   border-radius: var(--radius-sm);
   padding: 1px 0;
   max-width: 0;
+  margin-left: calc(-1 * var(--space-2));
   overflow: hidden;
   border-width: 0;
   cursor: pointer;
@@ -2174,6 +2175,7 @@ pre.code-block code.hljs {
 #markdown-content .calls-row:focus-within .calls-strike {
   opacity: 1;
   max-width: none;
+  margin-left: 0;
   padding: 1px var(--space-2);
   border-width: 1px;
 }

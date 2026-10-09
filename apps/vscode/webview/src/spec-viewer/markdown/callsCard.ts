@@ -1,6 +1,6 @@
 import type { BlockContext } from './blockFences';
 import type { FenceInfo } from './fenceInfo';
-import { escapeHtml, fileRefHtml } from './inline';
+import { escapeHtml, fileRefHtml, parseInline } from './inline';
 
 export interface CallRow {
     mark: '+' | '~' | '-' | ' ';
@@ -101,9 +101,9 @@ export function renderCallsCard(body: string, info: FenceInfo, context: BlockCon
     const { rows } = parsed;
     const count = (mark: CallRow['mark']): number => rows.filter((row) => row.mark === mark).length;
     const title = info.title || context.rawTitle;
-    const titleHtml = title ? `<span class="calls-title">${escapeHtml(title)}</span>` : '';
+    const titleHtml = title ? `<span class="calls-title" title="${escapeHtml(title)}">${escapeHtml(title)}</span>` : '';
     const counts = `<span class="calls-counts"><span class="calls-add">+${count('+')}</span> <span class="calls-del">−${count('-')}</span> <span class="calls-chg">~${count('~')}</span> · 1 entrypoint</span>`;
     const lines = rows.map((row) => context.wrapLine(renderRow(row), row.sourceLine)).join('');
-    const note = context.note ? `<div class="calls-note">${escapeHtml(context.note)}</div>` : '';
+    const note = context.note ? `<div class="calls-note">${parseInline(context.note)}</div>` : '';
     return `<div class="calls-card"><div class="calls-head"><span class="calls-badge">calls</span>${titleHtml}${counts}</div><div class="calls-rows">${lines}</div>${note}</div>`;
 }

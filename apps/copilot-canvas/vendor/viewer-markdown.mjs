@@ -1045,10 +1045,10 @@ function renderCallsCard(body, info, context) {
   const { rows } = parsed;
   const count = (mark) => rows.filter((row) => row.mark === mark).length;
   const title = info.title || context.rawTitle;
-  const titleHtml = title ? `<span class="calls-title">${escapeHtml(title)}</span>` : "";
+  const titleHtml = title ? `<span class="calls-title" title="${escapeHtml(title)}">${escapeHtml(title)}</span>` : "";
   const counts = `<span class="calls-counts"><span class="calls-add">+${count("+")}</span> <span class="calls-del">\u2212${count("-")}</span> <span class="calls-chg">~${count("~")}</span> \xB7 1 entrypoint</span>`;
   const lines = rows.map((row) => context.wrapLine(renderRow(row), row.sourceLine)).join("");
-  const note = context.note ? `<div class="calls-note">${escapeHtml(context.note)}</div>` : "";
+  const note = context.note ? `<div class="calls-note">${parseInline(context.note)}</div>` : "";
   return `<div class="calls-card"><div class="calls-head"><span class="calls-badge">calls</span>${titleHtml}${counts}</div><div class="calls-rows">${lines}</div>${note}</div>`;
 }
 
