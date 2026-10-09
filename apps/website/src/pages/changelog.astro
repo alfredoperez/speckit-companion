@@ -8,6 +8,8 @@
  *
  *   VS Code extension   -> ../../../../CHANGELOG.md              (package.json version)
  *   Spec Kit extension  -> ../../../../apps/speckit-extension/CHANGELOG.md (extension.yml version)
+ *   Copilot app canvas  -> ../../../../apps/copilot-canvas/CHANGELOG.md (package.json version)
+ *   Claude Code mod     -> ../../../../apps/claude-mod/CHANGELOG.md (plugin.json version)
  *
  * `.specify/extensions/companion/CHANGELOG.md` is generated and gitignored. It is
  * never read here.
@@ -16,8 +18,8 @@
  * its highlights in one sentence each, then lists its small entries one line each.
  * Screenshots come from content/media/changelog.json; see releaseMedia.ts.
  *
- * Unreleased blocks are kept, not dropped, and rendered in their own block above
- * the released timeline so nothing in there can be mistaken for shipped.
+ * Unreleased blocks are kept, not dropped, and rendered under their own "Shipping next"
+ * tab so nothing in there can be mistaken for shipped.
  */
 import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 
@@ -27,6 +29,8 @@ import vscodeChangelogCurrent from '../../../../CHANGELOG.md?raw';
 // The archive holds 0.30.0 and older; this page is the whole history, so it reads both.
 import vscodeChangelogArchive from '../data/changelog-archive.md?raw';
 import speckitChangelog from '../../../../apps/speckit-extension/CHANGELOG.md?raw';
+import copilotChangelog from '../../../../apps/copilot-canvas/CHANGELOG.md?raw';
+import modChangelog from '../../../../apps/claude-mod/CHANGELOG.md?raw';
 
 const vscodeChangelog = `${vscodeChangelogCurrent}\n${vscodeChangelogArchive}`;
 
@@ -45,7 +49,10 @@ import { areaLabel, areaRank } from '../components/changelog/changelogAreas';
 const vscodeStream = parseChangelog(vscodeChangelog, 'vscode', 'VS Code extension');
 const speckitStream = parseChangelog(speckitChangelog, 'speckit', 'Spec Kit extension');
 
-const streams = [vscodeStream, speckitStream];
+const copilotStream = parseChangelog(copilotChangelog, 'copilot', 'Copilot app');
+const modStream = parseChangelog(modChangelog, 'mod', 'Claude Code mod');
+
+const streams = [vscodeStream, speckitStream, copilotStream, modStream];
 const released = mergeReleases(streams);
 const unreleased = unreleasedOf(streams);
 const everyRelease = [...unreleased, ...released];
@@ -79,7 +86,7 @@ const renderInline = async (markdown: string) =>
   (await renderBlock(markdown)).trim().replace(/^<p>/, '').replace(/<\/p>$/, '');
 
 const latestIds = new Set(
-  ['vscode', 'speckit'].map((product) => released.find((r) => r.product === product)?.id)
+  (['vscode', 'speckit', 'copilot', 'mod'] as const).map((product) => released.find((r) => r.product === product)?.id)
 );
 
 // A highlight leads with one sentence; the rest waits behind "More".
@@ -163,7 +170,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
     <title>Changelog · SpecKit Companion</title>
     <meta
       name="description"
-      content="Release notes for both halves of SpecKit Companion, the VS Code extension and the Spec Kit extension, merged newest first."
+      content="Release notes for SpecKit Companion: the VS Code extension, the Spec Kit extension, the Copilot app and the Claude Code mod, merged newest first."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -195,17 +202,13 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       </nav>
 
       <header class="cl-head">
-        <p class="cl-eyebrow">RELEASE HISTORY</p>
         <h1>Changelog</h1>
-        <p class="cl-lede">
-          Release notes for the VS Code extension and the Spec Kit extension, newest first.
-        </p>
       </header>
 
       <div class="cl-filters">
         <div class="cl-filter" role="group" aria-label="Filter releases by product">
           <button type="button" class="cl-pill is-active" data-filter="all" aria-pressed="true">
-            Both
+            All
           </button>
           <button type="button" class="cl-pill" data-filter="vscode" aria-pressed="false">
             VS Code<span class="cl-pill-more"> extension</span>
@@ -213,12 +216,25 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           <button type="button" class="cl-pill" data-filter="speckit" aria-pressed="false">
             Spec Kit<span class="cl-pill-more"> extension</span>
           </button>
+          <button type="button" class="cl-pill" data-filter="copilot" aria-pressed="false">
+            Copilot<span class="cl-pill-more"> app</span>
+          </button>
+          <button type="button" class="cl-pill" data-filter="mod" aria-pressed="false">
+            Claude Code<span class="cl-pill-more"> mod</span>
+          </button>
         </div>
+
+        {renderedUnreleased.length > 0 && (
+          <button type="button" class="cl-switch" role="switch" aria-checked="false" data-tab="next" aria-label="Show what ships next" title="Show what ships next">
+            <span class="cl-switch-label">Next</span>
+            <span class="cl-switch-track" aria-hidden="true"><span class="cl-switch-thumb"></span></span>
+          </button>
+        )}
 
       </div>
 
       {renderedUnreleased.length > 0 && (
-        <section class="cl-unreleased" id="unreleased" data-group="unreleased">
+        <section class="cl-unreleased" id="unreleased" data-group="unreleased" hidden>
           <div class="cl-group-head">
             <h2 class="cl-group-title">Shipping <em>next</em></h2>
             <p class="cl-group-note">
@@ -232,7 +248,9 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         </section>
       )}
 
-      <section class="cl-released" data-group="released">
+      <p class="cl-empty" id="cl-empty" hidden>Nothing here for this product yet.</p>
+
+      <section class="cl-released" id="released" data-group="released">
         <div class="cl-group-head">
           <h2 class="cl-group-title">Released</h2>
         </div>
@@ -249,6 +267,14 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           <a
             href="https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/CHANGELOG.md"
             >Spec Kit extension changelog</a
+          >
+          <a
+            href="https://github.com/alfredoperez/speckit-companion/blob/main/apps/copilot-canvas/CHANGELOG.md"
+            >Copilot app changelog</a
+          >
+          <a
+            href="https://github.com/alfredoperez/speckit-companion/blob/main/apps/claude-mod/CHANGELOG.md"
+            >Claude Code mod changelog</a
           >
           <a href="https://github.com/alfredoperez/speckit-companion">github</a>
         </p>
@@ -270,26 +296,75 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         openHash();
       })();
 
-      // Product filter.
+      // Product filter and the Released / Shipping next tab.
       (function () {
-        var buttons = Array.prototype.slice.call(document.querySelectorAll('.cl-pill'));
-        buttons.forEach(function (button) {
+        var products = Array.prototype.slice.call(document.querySelectorAll('.cl-pill[data-filter]'));
+        var tabs = Array.prototype.slice.call(document.querySelectorAll('[data-tab]'));
+        var product = 'all';
+        var tab = 'released';
+        var empty = document.getElementById('cl-empty');
+
+        function press(list, active) {
+          list.forEach(function (button) {
+            var on = button === active;
+            button.classList.toggle('is-active', on);
+            button.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+        }
+
+        function apply() {
+          document.body.setAttribute('data-filter', product);
+          Array.prototype.forEach.call(document.querySelectorAll('.cl-release'), function (card) {
+            card.hidden = product !== 'all' && card.getAttribute('data-product') !== product;
+          });
+          var shown = 0;
+          Array.prototype.forEach.call(document.querySelectorAll('[data-group]'), function (group) {
+            var wanted = group.getAttribute('data-group') === 'unreleased' ? tab === 'next' : tab === 'released';
+            var visible = wanted && group.querySelectorAll('.cl-release:not([hidden])').length > 0;
+            group.hidden = !visible;
+            if (visible) shown += 1;
+          });
+          if (empty) {
+            empty.hidden = shown > 0;
+            empty.textContent = tab === 'next'
+              ? 'Nothing is waiting to ship for this product. Turn off Next to see its releases.'
+              : 'No releases for this product yet.';
+          }
+        }
+
+        function setTab(next) {
+          tab = next;
+          tabs.forEach(function (button) {
+            button.setAttribute('aria-checked', next === 'next' ? 'true' : 'false');
+          });
+          apply();
+        }
+
+        products.forEach(function (button) {
           button.addEventListener('click', function () {
-            var product = button.getAttribute('data-filter');
-            document.body.setAttribute('data-filter', product);
-            buttons.forEach(function (other) {
-              var active = other === button;
-              other.classList.toggle('is-active', active);
-              other.setAttribute('aria-pressed', active ? 'true' : 'false');
-            });
-            Array.prototype.forEach.call(document.querySelectorAll('.cl-release'), function (card) {
-              card.hidden = product !== 'all' && card.getAttribute('data-product') !== product;
-            });
-            Array.prototype.forEach.call(document.querySelectorAll('[data-group]'), function (group) {
-              group.hidden = group.querySelectorAll('.cl-release:not([hidden])').length === 0;
-            });
+            product = button.getAttribute('data-filter');
+            press(products, button);
+            apply();
           });
         });
+        tabs.forEach(function (button) {
+          button.addEventListener('click', function () { setTab(tab === 'next' ? 'released' : 'next'); });
+        });
+
+        // A permalink into Shipping next must open that tab first.
+        function showTabForHash() {
+          if (!location.hash) return;
+          var target = document.querySelector(location.hash.replace(/[^#\w.-]/g, ''));
+          if (target && target.closest('#unreleased') && tabs.length) {
+            product = 'all';
+            press(products, products[0]);
+            setTab('next');
+            target.scrollIntoView();
+          }
+        }
+        window.addEventListener('hashchange', showTabForHash);
+        showTabForHash();
+        apply();
       })();
 
       // Carousels: scroll-snap does the moving; buttons, dots and arrow keys drive it. No autoplay.
@@ -490,80 +565,138 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       /* Head */
       .cl-head {
-        padding: 56px 48px 48px;
+        padding: 48px 48px 20px;
         background-image: var(--hero-grid);
         background-size: 26px 26px;
         border-top: 1px solid var(--rule);
       }
 
-      .cl-eyebrow {
-        margin: 0 0 20px;
-        color: var(--accent);
-        font-family: var(--font-mono);
-        font-size: var(--fs-mono);
-        letter-spacing: var(--ls-eyebrow-lg);
-      }
 
       .cl-head h1 {
-        margin: 0 0 20px;
+        margin: 0;
         font-size: clamp(38px, 8vw, var(--fs-display));
         font-weight: var(--fw-black);
         line-height: var(--lh-display);
         letter-spacing: var(--ls-display);
       }
 
-      .cl-lede {
-        max-width: 660px;
-        margin: 0;
-        color: var(--text-body);
-        font-size: var(--fs-lead);
-        line-height: var(--lh-prose);
-      }
 
       /* Filters */
       .cl-filters {
         display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding: 0 48px 48px;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 48px 24px;
       }
 
       .cl-filter {
         display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        width: fit-content;
-        max-width: 100%;
-        padding: 6px;
-        background: rgba(10, 9, 19, 0.6);
-        border: 1px solid var(--border-accent);
-        border-radius: var(--radius-pill);
+        flex-wrap: nowrap;
+        gap: 2px;
+        min-width: 0;
+        padding: 3px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        background: var(--panel);
+        border: 1px solid var(--border-panel);
+        border-radius: var(--radius-sm);
       }
 
       .cl-pill {
-        padding: 9px 22px;
+        padding: 6px 12px;
         background: none;
-        border: 1.5px solid transparent;
-        border-radius: var(--radius-pill);
-        color: var(--text-muted);
+        border: 0;
+        border-radius: 7px;
+        color: var(--text-body);
         font-family: var(--font-sans);
         font-size: var(--fs-ui-sm);
-        font-weight: var(--fw-semibold);
+        font-weight: var(--fw-medium);
+        line-height: 1.2;
+        white-space: nowrap;
         cursor: pointer;
       }
 
       .cl-pill:hover {
         color: var(--text-primary);
+        background: rgba(167, 139, 250, 0.08);
       }
 
       .cl-pill.is-active {
-        border-color: var(--accent-solid);
+        background: rgba(139, 92, 246, 0.22);
         color: var(--text-primary);
-        font-weight: var(--fw-bold);
+        font-weight: var(--fw-semibold);
       }
 
+      .cl-switch {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 2px;
+        background: none;
+        border: 0;
+        color: var(--text-body);
+        font-family: var(--font-sans);
+        font-size: var(--fs-ui-sm);
+        font-weight: var(--fw-medium);
+        line-height: 1.2;
+        cursor: pointer;
+      }
+
+      .cl-switch:hover,
+      .cl-switch[aria-checked='true'] {
+        color: var(--text-primary);
+      }
+
+      .cl-switch-track {
+        position: relative;
+        width: 32px;
+        height: 18px;
+        background: var(--border-panel);
+        box-shadow: inset 0 0 0 1px var(--border-strong);
+        border-radius: var(--radius-pill);
+        transition: background 0.15s ease;
+      }
+
+      .cl-switch-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        background: var(--text-muted);
+        border-radius: 50%;
+        transition: transform 0.15s ease;
+      }
+
+      .cl-switch[aria-checked='true'] .cl-switch-track {
+        background: var(--accent-solid);
+        box-shadow: none;
+      }
+
+      .cl-switch[aria-checked='true'] .cl-switch-thumb {
+        background: var(--on-accent);
+        transform: translateX(14px);
+      }
+
+      .cl-pill:focus-visible,
+      .cl-switch:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .cl-switch-track,
+        .cl-switch-thumb {
+          transition: none;
+        }
+      }
+
+      .cl-unreleased,
       .cl-released {
-        padding: 56px 48px;
+        padding: 32px 48px 56px;
         border-top: 1px solid var(--rule);
       }
 
@@ -618,7 +751,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       .cl-release-head-top {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
@@ -646,9 +779,16 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         color: var(--on-accent);
       }
 
-      .cl-product--speckit {
+      .cl-product--speckit,
+      .cl-product--copilot,
+      .cl-product--mod {
         border: 1px solid var(--border-strong);
         color: var(--accent);
+      }
+
+      .cl-empty {
+        padding: 56px 48px;
+        color: var(--text-muted);
       }
 
       .cl-version {
@@ -1146,7 +1286,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
         .cl-unreleased,
         .cl-released {
-          padding-top: 40px;
+          padding-top: 24px;
           padding-bottom: 40px;
         }
 
@@ -1154,14 +1294,29 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
           padding: 18px 16px;
         }
 
-        .cl-filter {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          width: 100%;
+        .cl-filters {
+          gap: 8px;
+        }
+
+        .cl-filters .cl-filter:first-child {
+          flex: 1 1 auto;
+          min-width: 0;
+        }
+
+        .cl-filters .cl-filter:first-child {
+          -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+          mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+          padding-right: 24px;
         }
 
         .cl-pill {
-          padding: 8px 10px;
+          min-height: 40px;
+          padding: 6px 11px;
+        }
+
+        .cl-switch {
+          min-height: 44px;
+          padding: 6px 4px;
         }
 
         .cl-pill-more {
