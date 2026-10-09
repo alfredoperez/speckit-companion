@@ -77,3 +77,47 @@ export const CallPathsMalformed: Story = {
         ].join('\n'),
     },
 };
+
+const SCREEN_MD = [
+    '## Screens',
+    '',
+    '```screen settings The settings page, with a way to save',
+    'title: Settings',
+    'row:',
+    '  field: Display name (changed) (1)',
+    '  field: Email',
+    'row:',
+    '  chip: Draft',
+    '  button: Save changes (new) (2)',
+    'text: Changes apply the next time you open the page.',
+    'list: General | Account (changed) (3) | Billing',
+    '```',
+    '1: The name is editable. It was read only before.',
+    '2: Save is the only new control. It writes the record and closes the page.',
+    '3: Account shows the new email field. Billing is untouched.',
+].join('\n');
+
+export const ScreenDark: Story = {
+    args: { md: SCREEN_MD },
+    globals: { vscodeTheme: 'monokai-black' },
+};
+
+export const ScreenLight: Story = {
+    args: { md: SCREEN_MD },
+    globals: { vscodeTheme: 'vivid-light' },
+};
+
+export const ScreenMalformed: Story = {
+    args: {
+        md: [
+            '## Screens',
+            '',
+            'This block uses a part that is not allowed, so it stays a plain code block.',
+            '',
+            '```screen settings The settings page',
+            'title: Settings',
+            'image: logo.png',
+            '```',
+        ].join('\n'),
+    },
+};

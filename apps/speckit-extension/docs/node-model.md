@@ -152,7 +152,7 @@ commands:
 | `node` | `ref` → a file in `presets/_parts/` | another node's body, spliced in whole |
 | `skill` | `ref` → a skill name, optional `text` | work the project has already written down |
 
-A `node` ref is looked for in the project's `.specify/companion/nodes/` first, then in `presets/_parts/`, which is how the extension ships a node a project attaches with one line. [`call-paths`](./call-paths.md) is one: it adds the functions a change reaches to the plan, and a check verifies every file and line it cites.
+A `node` ref is looked for in the project's `.specify/companion/nodes/` first, then in `presets/_parts/`, which is how the extension ships a node a project attaches with one line. [`call-paths`](./call-paths.md) is one: it adds the functions a change reaches to the plan, and a check verifies every file and line it cites. [`screens`](./screens.md) is another: it adds a rough wireframe of what a person sees.
 
 `skill` is the one that carries no text of its own. A project that has written a skill has already written the instructions; copying them into a node forks them the first time the skill is edited. The hook names it and the assistant loads it, the same way a person would ask for it:
 

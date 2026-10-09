@@ -23,7 +23,8 @@ def _flags_called() -> dict[str, set[str]]:
             for line in path.read_text(encoding="utf-8").splitlines():
                 if "write-context.py" not in line:
                     continue
-                for flag in re.findall(r"(?<![\w-])--[a-z][a-z-]*", line.split("write-context.py", 1)[1]):
+                after = re.sub(r'::[^"]*', "", line.split("write-context.py", 1)[1])
+                for flag in re.findall(r"(?<![\w-])--[a-z][a-z-]*", after):
                     called.setdefault(flag, set()).add(str(path.relative_to(EXT)))
     return called
 
