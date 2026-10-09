@@ -180,3 +180,8 @@
 }
 
 #markdown-content .states-card > .line-content { display: none; }
+
+#markdown-content .states-shown {
+  padding: var(--space-3);
+  border-top: 1px solid var(--border);
+}

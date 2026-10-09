@@ -16,6 +16,13 @@ export function selectState(button: HTMLElement): void {
     const strong = document.createElement('strong');
     strong.textContent = name;
     caption.replaceChildren(strong, `: ${sentence}`);
+    card.querySelector('.states-shown')?.remove();
+    const frame = card.querySelector(`.states-screens > [data-state="${index}"]`);
+    if (!frame) return;
+    const row = document.createElement('div');
+    row.className = 'states-shown';
+    row.append(...Array.from(frame.cloneNode(true).childNodes));
+    caption.after(row);
 }
 
 export function setupStatesSelect(): void {

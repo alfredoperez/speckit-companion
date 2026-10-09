@@ -175,6 +175,12 @@ function countHtml(def: ScreenDef): { html: string; label: string } {
     return { html: bits.map((b) => b.html).join(' · '), label: bits.map((b) => b.label).join(', ') };
 }
 
+/** Just the wireframe, parts and dots: no header and no notes list. */
+export function renderScreenFrame(def: ScreenDef): string {
+    const notes = new Map(def.notes.map((note) => [note.n, note] as const));
+    return `<div class="screen-frame">${def.parts.map((part) => renderPart(part, notes)).join('')}</div>`;
+}
+
 /** The card for a built screen. `hidden` is the text a line comment on the whole block quotes. */
 export function renderScreenCard(def: ScreenDef, hidden = ''): string {
     const notes = new Map(def.notes.map((note) => [note.n, note] as const));
@@ -186,8 +192,8 @@ export function renderScreenCard(def: ScreenDef, hidden = ''): string {
     const list = def.notes.length
         ? `<ol class="screen-notes">${def.notes.map((note) => `<li class="screen-note" value="${note.n}" data-n="${note.n}" tabindex="0"><span class="screen-note-n" aria-hidden="true">${note.n}</span><span class="screen-note-text">${noteHtml(note)}</span></li>`).join('')}</ol>`
         : '';
-    const frame = def.parts.map((part) => renderPart(part, notes)).join('');
-    return `<div class="screen-card" data-screen="${escapeHtml(def.name)}"><div class="screen-head"><span class="screen-badge">screen</span><span class="screen-title">${escapeHtml(def.title || def.name)}</span>${count}</div>${quote}<div class="screen-body"><div class="screen-frame">${frame}</div>${list}</div></div>`;
+    const frame = renderScreenFrame(def);
+    return `<div class="screen-card" data-screen="${escapeHtml(def.name)}"><div class="screen-head"><span class="screen-badge">screen</span><span class="screen-title">${escapeHtml(def.title || def.name)}</span>${count}</div>${quote}<div class="screen-body">${frame}${list}</div></div>`;
 }
 
 export function renderScreenBlock(body: string, _info: FenceInfo, context: BlockContext): string {
@@ -221,4 +227,10 @@ export function indexScreens(lines: string[]): void {
 export function renderScreenByName(name: string): string | null {
     const def = index.get(name);
     return def ? renderScreenCard(def) : null;
+}
+
+/** The wireframe of the screen with this name in the document being rendered, or null when there is none. */
+export function renderScreenFrameByName(name: string): string | null {
+    const def = index.get(name);
+    return def ? renderScreenFrame(def) : null;
 }

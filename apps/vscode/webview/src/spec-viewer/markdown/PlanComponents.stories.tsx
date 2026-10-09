@@ -90,11 +90,11 @@ const SCREEN_MD = [
     '  chip: Draft',
     '  button: Save changes (new) (2)',
     'text: Changes apply the next time you open the page.',
-    'list: General | Account (changed) (3) | Billing',
+    'list: General | Account | Billing (changed) (3)',
     '```',
     '1: The name is editable. It was read only before.',
     '2: Save is the only new control. It writes the record and closes the page.',
-    '3: Account shows the new email field. Billing is untouched.',
+    '3: The list gains Billing. General and Account are untouched.',
 ].join('\n');
 
 export const ScreenDark: Story = {
@@ -228,4 +228,54 @@ export const CodePinsMalformedDark: Story = {
 export const CodePinsMalformedLight: Story = {
     args: { md: CODE_PINS_MALFORMED },
     globals: { vscodeTheme: 'vivid-light' },
+};
+
+const ALL_BLOCKS_MD = [
+    '## Call paths',
+    '',
+    '```calls Saving the settings page',
+    '  saveSettings() @ apps/vscode/webview/src/spec-viewer/markdown/statesCard.ts:236',
+    '~   renderStatesCard() @ apps/vscode/webview/src/spec-viewer/markdown/statesCard.ts:236',
+    '```',
+    '',
+    '## Code',
+    '',
+    '```ts sketch apps/vscode/webview/src/spec-viewer/markdown/statesCard.ts hl=2',
+    'const frame = state.shows ? renderScreenFrameByName(state.shows) : null;',
+    'const shown = frame ? `<div class="states-shown">${frame}</div>` : \'\';',
+    '```',
+    'pin 2: the row only exists when the picked state names a screen.',
+    '',
+    '## States',
+    '',
+    '```states A settings page\'s lifecycle',
+    'Viewing: Read only. (start)',
+    'Editing: The name can be changed. shows settings',
+    'Saved: The record is written. (final)',
+    'Viewing -> Editing: edit',
+    'Editing -> Saved: save',
+    'grid:',
+    'Viewing | Editing | Saved',
+    '```',
+    '',
+    '## Screens',
+    '',
+    '```screen settings The settings page, with a way to save',
+    'title: Settings',
+    'row:',
+    '  field: Display name (changed) (1)',
+    '  button: Save changes (new) (2)',
+    '```',
+    '1: **The name is editable.** It was read only before.',
+    '2: **Save is the only new control.** It writes the record and closes the page.',
+].join('\n');
+
+export const AllBlocksLight: Story = {
+    args: { md: ALL_BLOCKS_MD },
+    globals: { vscodeTheme: 'vivid-light' },
+};
+
+export const AllBlocksDark: Story = {
+    args: { md: ALL_BLOCKS_MD },
+    globals: { vscodeTheme: 'monokai-black' },
 };

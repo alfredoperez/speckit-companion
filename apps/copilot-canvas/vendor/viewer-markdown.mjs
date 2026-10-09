@@ -1190,14 +1190,18 @@ function countHtml(def) {
   }
   return { html: bits.map((b) => b.html).join(" \xB7 "), label: bits.map((b) => b.label).join(", ") };
 }
+function renderScreenFrame(def) {
+  const notes = new Map(def.notes.map((note) => [note.n, note]));
+  return `<div class="screen-frame">${def.parts.map((part) => renderPart(part, notes)).join("")}</div>`;
+}
 function renderScreenCard(def, hidden = "") {
   const notes = new Map(def.notes.map((note) => [note.n, note]));
   const summary = countHtml(def);
   const count = summary.html ? `<span class="screen-count" title="${escapeHtml(summary.label)}" aria-label="${escapeHtml(summary.label)}">${summary.html}</span>` : "";
   const quote = hidden ? `<span class="line-content" hidden>${escapeHtml(hidden)}</span>` : "";
   const list = def.notes.length ? `<ol class="screen-notes">${def.notes.map((note) => `<li class="screen-note" value="${note.n}" data-n="${note.n}" tabindex="0"><span class="screen-note-n" aria-hidden="true">${note.n}</span><span class="screen-note-text">${noteHtml(note)}</span></li>`).join("")}</ol>` : "";
-  const frame = def.parts.map((part) => renderPart(part, notes)).join("");
-  return `<div class="screen-card" data-screen="${escapeHtml(def.name)}"><div class="screen-head"><span class="screen-badge">screen</span><span class="screen-title">${escapeHtml(def.title || def.name)}</span>${count}</div>${quote}<div class="screen-body"><div class="screen-frame">${frame}</div>${list}</div></div>`;
+  const frame = renderScreenFrame(def);
+  return `<div class="screen-card" data-screen="${escapeHtml(def.name)}"><div class="screen-head"><span class="screen-badge">screen</span><span class="screen-title">${escapeHtml(def.title || def.name)}</span>${count}</div>${quote}<div class="screen-body">${frame}${list}</div></div>`;
 }
 function renderScreenBlock(body, _info, context) {
   const def = buildScreen(context.rawTitle, body, context.numberedNotes ?? []);
@@ -1225,6 +1229,10 @@ function indexScreens(lines) {
 function renderScreenByName(name) {
   const def = index.get(name);
   return def ? renderScreenCard(def) : null;
+}
+function renderScreenFrameByName(name) {
+  const def = index.get(name);
+  return def ? renderScreenFrame(def) : null;
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/codeCard.ts
@@ -1493,8 +1501,11 @@ function renderStatesCard(body, info, context) {
   const titleHtml = title ? `<span class="states-title">${escapeHtml(title)}</span>` : "";
   const legend = `<span class="states-legend">${states.length} state${states.length === 1 ? "" : "s"}${proposed ? ` \xB7 <span class="states-legend-new">${proposed} proposed</span>` : ""}</span>`;
   const list = states.map((s, i) => `<li data-state="${i}"><span class="states-list-name">${escapeHtml(s.name)}</span> <span class="states-sentence">${escapeHtml(s.sentence)}</span></li>`).join("");
+  const frames = states.map((s) => s.shows ? renderScreenFrameByName(s.shows) : null);
+  const shown = frames[start] ? `<div class="states-shown">${frames[start]}</div>` : "";
+  const stash = frames.some(Boolean) ? `<div class="states-screens" hidden>${frames.map((html, i) => html ? `<div data-state="${i}">${html}</div>` : "").join("")}</div>` : "";
   const note = context.note ? `<div class="states-note">${escapeHtml(context.note)}</div>` : "";
-  const card = `<div class="states-card"><div class="states-top"><span class="states-badge">states</span>${titleHtml}${legend}</div><div class="states-hint">Pick a state to read what it means</div>${renderDiagram(parsed)}<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div><ul class="states-list">${list}</ul>${note}<span class="line-content" hidden>${escapeHtml(body.trim())}</span></div>`;
+  const card = `<div class="states-card"><div class="states-top"><span class="states-badge">states</span>${titleHtml}${legend}</div><div class="states-hint">Pick a state to read what it means</div>${renderDiagram(parsed)}<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div>${shown}${stash}<ul class="states-list">${list}</ul>${note}<span class="line-content" hidden>${escapeHtml(body.trim())}</span></div>`;
   return context.wrapLine(card, context.firstLine);
 }
 

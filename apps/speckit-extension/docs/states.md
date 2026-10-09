@@ -1,6 +1,6 @@
 # States in the plan
 
-A states block shows a lifecycle the change adds or alters: the states, the arrows between them and where each sits on a grid. In the spec viewer it is a diagram you click through, and picking a state shows its sentence underneath.
+A states block shows a lifecycle the change adds or alters: the states, the arrows between them and where each sits on a grid. In the spec viewer it is a diagram you click through, and picking a state shows its sentence underneath, and the screen it `shows`, if it has one.
 
 It is not the code. A state carries a name and one sentence, never a type, a field or a function.
 
@@ -49,7 +49,7 @@ note: only the parked state is new.
 | Fence | ```` ```states <title> ````, the title naming the lifecycle in a few words |
 | State | `name: one sentence`. The name is plain text with no colon. |
 | Marks | After the sentence, in any order: `(start)`, `(final)`, `(proposed)`. With no `(start)` the first state starts. |
-| `shows <screen>` | Optional, last on the line. Kept for the screen block; nothing draws it yet. |
+| `shows <screen>` | Optional, last on the line. Names a `screen` block of the same plan; picking the state draws that screen's wireframe under the caption, dots included and notes left out. The screen block may come before or after. A name no screen block defines is an error, and the Copilot board shows nothing extra. |
 | Arrow | `from -> to: label`, with `(proposed)` after the label for an arrow the change adds. A state can point at itself. |
 | `grid:` | Rows of state names after it. Cells split on `\|`, or on spaces when every name is one word. `.` is an empty cell. |
 | `note:` | One optional line straight after the block |
@@ -80,6 +80,7 @@ It is the same check that reads call paths, and it reads `states` blocks too.
 | ERROR | A state with no way out that is not marked `(final)` |
 | ERROR | A state missing from the grid, or none placed because there is no `grid:` |
 | ERROR | An arrow or a grid cell naming a state that is not listed |
+| ERROR | A state that `shows` a screen name no `screen` block of the plan defines |
 | ERROR | Over the viewer's limit: more than 8 states, or a grid past 4 by 3 |
 | ERROR | A line it cannot parse: a state with no sentence, a repeated name, a second `grid:`, more than one `(start)`, an empty or unclosed block |
 | WARNING | More than 2 blocks, more than one `note:` line, or a block with no title |

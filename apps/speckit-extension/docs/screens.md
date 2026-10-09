@@ -35,11 +35,11 @@ row:
   chip: Draft
   button: Save changes (new) (2)
 text: Changes apply the next time you open the page.
-list: General | Account (changed) (3) | Billing
+list: General | Account | Billing (changed) (3)
 ```
 1: **The name is editable.** It was read only before.
 2: **Save is the only new control.** It writes the record and closes the page.
-3: **Account shows the new email field.** Billing is untouched.
+3: **The list gains Billing.** General and Account are untouched.
 ````
 
 | Part | Rule |
@@ -50,7 +50,7 @@ list: General | Account (changed) (3) | Billing
 | Indent | Two spaces a level, never more than one deeper than the line above. No tabs. |
 | `field: label` | A labelled empty input |
 | `list: a \| b \| c` | Items split on `\|` |
-| `(new)` `(changed)` | A suffix for what the change touches: green and amber edges. A part takes at most one. |
+| `(new)` `(changed)` | A suffix for what the change touches: green and amber edges. A part takes at most one. Marks and dots belong to the whole part and go at the end of the line: written in the middle of a `list:` they are plain text. |
 | `(1)` | A numbered dot, as a suffix, on any part line. A part takes at most one, and a number is used once. |
 | Notes | After the fence, one line per dot: `1: Bold lead. Rest of the sentence.` The first sentence is drawn bold. |
 
@@ -66,7 +66,7 @@ A line comment works on the block as a whole. Every string is shown as text, so 
 
 **The viewer falls back to the plain code block** when anything breaks the grammar: an unknown part, a bad indent, a dot with no note, a note with no dot, or a block over budget. Nothing is lost, and the check below names the cause.
 
-Another block can draw a screen by its name from the same document. The states block will use this to show a state's screen when the state says `shows <name>`.
+A `states` block can point at a screen by its name with `shows <name>` on a state line. Picking that state draws the screen's wireframe, with its dots, under the caption of the states card. The screen block can sit before or after the states block. The notes list is not repeated there, and the Copilot board shows nothing extra.
 
 ## The check
 

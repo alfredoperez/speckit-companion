@@ -1,6 +1,7 @@
 import type { BlockContext } from './blockFences';
 import type { FenceInfo } from './fenceInfo';
 import { escapeHtml } from './inline';
+import { renderScreenFrameByName } from './screenCard';
 
 export interface StateItem {
     name: string;
@@ -8,7 +9,7 @@ export interface StateItem {
     start: boolean;
     final: boolean;
     proposed: boolean;
-    /** The screen this state names. Kept for the screen block; nothing draws it yet. */
+    /** The screen this state names; the card draws its wireframe under the caption. */
     shows: string | null;
 }
 
@@ -229,10 +230,15 @@ export function renderStatesCard(body: string, info: FenceInfo, context: BlockCo
     const legend = `<span class="states-legend">${states.length} state${states.length === 1 ? '' : 's'}${proposed ? ` · <span class="states-legend-new">${proposed} proposed</span>` : ''}</span>`;
     const list = states.map((s, i) =>
         `<li data-state="${i}"><span class="states-list-name">${escapeHtml(s.name)}</span> <span class="states-sentence">${escapeHtml(s.sentence)}</span></li>`).join('');
+    const frames = states.map((s) => (s.shows ? renderScreenFrameByName(s.shows) : null));
+    const shown = frames[start] ? `<div class="states-shown">${frames[start]}</div>` : '';
+    const stash = frames.some(Boolean)
+        ? `<div class="states-screens" hidden>${frames.map((html, i) => (html ? `<div data-state="${i}">${html}</div>` : '')).join('')}</div>`
+        : '';
     const note = context.note ? `<div class="states-note">${escapeHtml(context.note)}</div>` : '';
     const card = `<div class="states-card"><div class="states-top"><span class="states-badge">states</span>${titleHtml}${legend}</div>`
         + `<div class="states-hint">Pick a state to read what it means</div>${renderDiagram(parsed)}`
-        + `<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div>`
+        + `<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div>${shown}${stash}`
         + `<ul class="states-list">${list}</ul>${note}<span class="line-content" hidden>${escapeHtml(body.trim())}</span></div>`;
     return context.wrapLine(card, context.firstLine);
 }
