@@ -187,6 +187,21 @@ commands:
 
 It is off unless you add it. [docs/call-paths.md](./docs/call-paths.md) has the grammar and the check's rules.
 
+### A node you can attach: states in the plan
+
+Another hook line makes the plan draw a lifecycle the change adds or alters, as boxes on a grid with labelled arrows, and the same check stops on a state nothing reaches:
+
+```yaml
+commands:
+  plan:
+    hooks:
+      after:
+        plan-doc:
+          - { type: node, ref: states }
+```
+
+It is off unless you add it. [docs/states.md](./docs/states.md) has the grammar and the check's rules.
+
 ## Fast path: a small change skips the ceremony
 
 Not every change deserves four documents. After specify, the change is sized `small`, `normal`, or `oversized` against a fixed bar (about five files or ten tasks). A change that is hard to undo or hard to check is never small, whatever its size. A small change takes a folded path: one lean specify pass that carries the plan inline, then straight to implement. An oversized one gets a visible warning and then the full pipeline. Nothing is ever skipped silently, and an ambiguous size always runs every phase.
@@ -335,6 +350,7 @@ Each lifecycle hook appends one entry to the canonical `history[]` and advances 
 - [docs/how-it-works.md](./docs/how-it-works.md): the hook → script → `.spec-context.json` chain and canonical schema.
 - [docs/node-model.md](./docs/node-model.md): how Companion commands are composed from nodes and the `.specify/companion.yml` hook model.
 - [docs/call-paths.md](./docs/call-paths.md): the attachable `call-paths` node, its block grammar and the check that verifies it.
+- [docs/states.md](./docs/states.md): the attachable `states` node, its block grammar and the checks that verify it.
 - [docs/publishing.md](./docs/publishing.md): how this extension is released (separate from the VS Code extension).
 - [CHANGELOG.md](./CHANGELOG.md): version history (independent of the VS Code extension).
 

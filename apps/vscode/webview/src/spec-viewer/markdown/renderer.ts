@@ -32,6 +32,7 @@ import { mapToSourceLines } from './sourceLines';
 import { parseFenceInfo, type FenceInfo } from './fenceInfo';
 import { registerBlockRenderer, renderBlockFence } from './blockFences';
 import { renderCallsCard } from './callsCard';
+import { renderStatesCard } from './statesCard';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -169,6 +170,7 @@ function wrapWithLineActions(content: string, lineNum: number, lastLineNum: numb
 }
 
 registerBlockRenderer('calls', renderCallsCard);
+registerBlockRenderer('states', renderStatesCard);
 
 /**
  * Wrap a preprocessed component div as a commentable line — the component sits as

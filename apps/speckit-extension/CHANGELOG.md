@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
+- **States in the plan, checked.** Attach the `states` node and your plan draws a lifecycle you can click through, with ==unreachable states and dead ends caught==. ([#896](https://github.com/alfredoperez/speckit-companion/issues/896)) <!-- area: pipeline -->
 - **Call paths in the plan, checked.** Attach the `call-paths` node and your plan shows ==which functions a change reaches==, each file and line checked. ([#875](https://github.com/alfredoperez/speckit-companion/pull/875)) <!-- area: pipeline -->
 - **A risky small change takes the full pipeline.** Sizing asks whether a change is hard to undo or hard to check, and one that is ==never takes the short path==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: pipeline -->
 - **A spec that finishes unverified says so.** Completing with nothing verified and no concern explaining why still completes, records =="finished, unverified"== and warns. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
