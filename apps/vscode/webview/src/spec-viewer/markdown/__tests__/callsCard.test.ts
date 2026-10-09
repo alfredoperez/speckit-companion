@@ -216,7 +216,7 @@ describe('renderCallsCard: fallback', () => {
 
     it('never throws', () => {
         expect(() => renderCallsCard('\u0000\n+', { language: 'calls', title: '', options: new Map() }, {
-            firstLine: 1, note: null, rawTitle: '', wrapLine: (html) => html,
+            firstLine: 1, note: null, pins: [], rawTitle: '', wrapLine: (html) => html,
         })).not.toThrow();
     });
 });

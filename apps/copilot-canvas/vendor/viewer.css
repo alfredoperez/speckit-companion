@@ -2202,6 +2202,129 @@ pre.code-block code.hljs {
   color: var(--text-body);
 }
 
+/* apps/vscode/webview/styles/spec-viewer/_code-card.css */
+#markdown-content .code-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  margin: var(--space-3) 0 var(--space-4);
+  overflow: hidden;
+}
+#markdown-content .code-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-inset);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+#markdown-content .code-badge {
+  flex: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+#markdown-content .code-file {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+#markdown-content .code-file .file-ref,
+#markdown-content .code-file .file-ref code {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#markdown-content .code-file .file-ref code {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+#markdown-content .code-kind {
+  margin-left: auto;
+  flex: none;
+  color: var(--text-body);
+  font-family: var(--font-family);
+  font-size: var(--text-xs);
+}
+#markdown-content .code-lines {
+  padding: var(--space-1) 0;
+}
+#markdown-content .code-lines .component-line {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+}
+#markdown-content .code-lines .component-line > .line-add-btn {
+  top: 50%;
+  right: var(--space-2);
+  transform: translateY(-50%);
+}
+#markdown-content .code-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 0 40px 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: var(--leading-relaxed);
+}
+#markdown-content .code-row--hl,
+#markdown-content .code-row--pinned {
+  background: var(--accent-subtle);
+}
+#markdown-content .code-num {
+  flex: none;
+  min-width: 3ch;
+  text-align: right;
+  color: var(--text-muted);
+  user-select: none;
+}
+#markdown-content .code-text {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  tab-size: 4;
+}
+#markdown-content .code-text:empty::before {
+  content: " ";
+}
+#markdown-content .code-pin {
+  margin: var(--space-1) 40px var(--space-1) calc(var(--space-3) + 3ch + var(--space-3));
+  padding: var(--space-1) var(--space-3);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--font-family);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-body);
+}
+@media (max-width: 480px) {
+  #markdown-content .code-head {
+    flex-wrap: wrap;
+  }
+  #markdown-content .code-pin {
+    margin-left: var(--space-3);
+  }
+}
+
 /* apps/vscode/webview/styles/spec-viewer/_tables.css */
 #markdown-content table {
   width: 100%;

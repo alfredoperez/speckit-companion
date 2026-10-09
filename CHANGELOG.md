@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **Notes pinned under a line of code.** A code block that names a file gets line numbers, tinted lines and ==each note under the line it explains==. ([#896](https://github.com/alfredoperez/speckit-companion/issues/896)) <!-- area: spec-viewer -->
 - **Hover a spec to see its branch.** The sidebar tooltip names ==the branch the work is on==, beside the status and the assistant. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: sidebar -->
 - **The Workflow Builder opens on stock Spec Kit.** It draws your project's own workflow and edits ==what Spec Kit owns==: extension hooks, document templates and the constitution command. ([#889](https://github.com/alfredoperez/speckit-companion/pull/889)) <!-- area: pipeline-builder -->
 - **Change where a decision routes.** The board's decision block opens one row per answer, so a verdict ==skips the steps you choose==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
