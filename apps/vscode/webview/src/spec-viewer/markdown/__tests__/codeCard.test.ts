@@ -273,6 +273,15 @@ describe('renderCodeCard: untrusted text', () => {
         expect(all(note).filter((n) => n.nodeName === 'code' || classOf(n).includes('file-ref')).length).toBeGreaterThan(0);
     });
 
+    it('keeps the tint classes on highlighted and pinned rows so the code surface shows through', () => {
+        const html = renderMarkdown(fence('ts sketch a.ts hl=1', BODY, ['pin 2: x']));
+        const rows = byClass(html, 'code-row').map((r) => classOf(r));
+
+        expect(rows[0]).toContain('code-row--hl');
+        expect(rows[1]).toContain('code-row--pinned');
+        expect(rows[2]).not.toContain('code-row--hl');
+    });
+
     it('tags the kind after the path', () => {
         const html = renderMarkdown(fence('ts sketch a.ts'));
         const head = byClass(html, 'code-head')[0];

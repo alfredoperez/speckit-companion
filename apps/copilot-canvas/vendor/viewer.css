@@ -2312,7 +2312,12 @@ pre.code-block code.hljs {
 }
 #markdown-content .code-row--hl,
 #markdown-content .code-row--pinned {
-  background: var(--accent-subtle);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+#markdown-content .code-row--hl .code-num,
+#markdown-content .code-row--pinned .code-num {
+  color: color-mix(in srgb, var(--code-text) 75%, transparent);
 }
 #markdown-content .code-num {
   flex: none;
@@ -2345,12 +2350,12 @@ pre.code-block code.hljs {
   margin: var(--space-1) 40px var(--space-1) calc(var(--space-3) + var(--code-num-w) + var(--space-3));
   padding: var(--space-1) var(--space-3);
   border-left: 3px solid var(--accent);
-  background: var(--bg-primary);
+  background: color-mix(in srgb, var(--code-text) 10%, var(--bg-code));
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   font-family: var(--font-family);
   font-size: var(--text-sm);
   font-weight: 400;
-  color: var(--text-body);
+  color: var(--code-text);
 }
 @media (max-width: 480px) {
   #markdown-content .code-head {
