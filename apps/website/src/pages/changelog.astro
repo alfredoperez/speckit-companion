@@ -202,11 +202,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       </nav>
 
       <header class="cl-head">
-        <p class="cl-eyebrow">RELEASE HISTORY</p>
         <h1>Changelog</h1>
-        <p class="cl-lede">
-          Release notes for the VS Code extension, the Spec Kit extension, the Copilot app and the Claude Code mod, newest first.
-        </p>
       </header>
 
       <div class="cl-filters">
@@ -572,13 +568,6 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         border-top: 1px solid var(--rule);
       }
 
-      .cl-eyebrow {
-        margin: 0 0 20px;
-        color: var(--accent);
-        font-family: var(--font-mono);
-        font-size: var(--fs-mono);
-        letter-spacing: var(--ls-eyebrow-lg);
-      }
 
       .cl-head h1 {
         margin: 0 0 20px;
@@ -588,13 +577,6 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         letter-spacing: var(--ls-display);
       }
 
-      .cl-lede {
-        max-width: 660px;
-        margin: 0;
-        color: var(--text-body);
-        font-size: var(--fs-lead);
-        line-height: var(--lh-prose);
-      }
 
       /* Filters */
       .cl-filters {
@@ -642,6 +624,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         font-weight: var(--fw-bold);
       }
 
+      .cl-unreleased,
       .cl-released {
         padding: 56px 48px;
         border-top: 1px solid var(--rule);
