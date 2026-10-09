@@ -124,6 +124,20 @@ class TestGateFailsOnDrift(unittest.TestCase):
         with mock.patch.object(pm, "vsix_closure", lambda: widened):
             self.assertProblem(pm.check(), "stripped from the .vsix: ghost-sibling.py")
 
+    def test_a_script_an_attachable_part_names_is_allowed_into_the_vsix(self):
+        """Parts ship in the .vsix, so a script a part names has to ship with them."""
+        negated = {
+            line[len(pm.VSIX_ROOT) + 1:].strip()
+            for line in (Path(__file__).resolve().parents[3] / ".vscodeignore").read_text().splitlines()
+            if line.strip().startswith("!" + pm.VSIX_ROOT)
+        }
+        for script in sorted(pm.part_refs()):
+            self.assertIn(script, pm.vsix_closure(), f"{script} is named by a part but not a .vsix entry point")
+            self.assertIn(script, negated, f"{script} is named by a part but .vscodeignore strips it")
+
+    def test_call_paths_check_is_one_of_them(self):
+        self.assertIn("check_plan.py", pm.part_refs())
+
     def test_a_negation_with_no_closure_entry_is_whitelisted_but_unreachable(self):
         narrowed = frozenset(pm.vsix_closure() - {"write-context.py"})
         with mock.patch.object(pm, "vsix_closure", lambda: narrowed):

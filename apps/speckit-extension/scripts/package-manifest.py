@@ -175,6 +175,18 @@ def direct_refs() -> set[str]:
     return found
 
 
+def part_refs() -> set[str]:
+    """Scripts named by a shipped part under `presets/_parts/`."""
+    parts = os.path.join(EXT_ROOT, "presets", "_parts")
+    found: set[str] = set()
+    if not os.path.isdir(parts):
+        return found
+    for entry in sorted(os.listdir(parts)):
+        if entry.endswith(".md"):
+            found.update(INSTALLED_SCRIPT_REF.findall(_read(os.path.join(parts, entry))))
+    return found
+
+
 def sibling_deps(script: str, existing: set[str]) -> set[str]:
     """Sibling scripts that `script` imports, by any of the three forms used here:
     a plain import, an import_module of a hyphenated name, or a load-by-filename."""
@@ -221,10 +233,15 @@ VSIX_ROOTS = frozenset({
 
 
 def vsix_closure() -> set[str]:
-    """VSIX_ROOTS plus every sibling `sibling_deps` reaches, to a fixed point."""
+    """VSIX_ROOTS plus every sibling `sibling_deps` reaches, to a fixed point.
+
+    `presets/_parts/` ships in the .vsix, so a script a part names is an entry
+    point too: a project that builds off the bundled extension gets the part and
+    would otherwise run a script the archive does not carry.
+    """
     existing = _script_files()
     closure: set[str] = set()
-    pending = list(VSIX_ROOTS)
+    pending = list(VSIX_ROOTS | part_refs())
     while pending:
         script = pending.pop()
         if script in closure:
