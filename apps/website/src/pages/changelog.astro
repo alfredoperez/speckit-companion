@@ -225,11 +225,10 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         </div>
 
         {renderedUnreleased.length > 0 && (
-          <div class="cl-filter" role="group" aria-label="Show upcoming changes">
-            <button type="button" class="cl-pill cl-tab" data-tab="next" aria-pressed="false">
-              Next
-            </button>
-          </div>
+          <button type="button" class="cl-switch" role="switch" aria-checked="false" data-tab="next" title="Show what ships next">
+            <span class="cl-switch-label">Next</span>
+            <span class="cl-switch-track" aria-hidden="true"><span class="cl-switch-thumb"></span></span>
+          </button>
         )}
 
       </div>
@@ -300,7 +299,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
       // Product filter and the Released / Shipping next tab.
       (function () {
         var products = Array.prototype.slice.call(document.querySelectorAll('.cl-pill[data-filter]'));
-        var tabs = Array.prototype.slice.call(document.querySelectorAll('.cl-pill[data-tab]'));
+        var tabs = Array.prototype.slice.call(document.querySelectorAll('[data-tab]'));
         var product = 'all';
         var tab = 'released';
         var empty = document.getElementById('cl-empty');
@@ -331,8 +330,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         function setTab(next) {
           tab = next;
           tabs.forEach(function (button) {
-            button.classList.toggle('is-active', next === 'next');
-            button.setAttribute('aria-pressed', next === 'next' ? 'true' : 'false');
+            button.setAttribute('aria-checked', next === 'next' ? 'true' : 'false');
           });
           apply();
         }
@@ -562,7 +560,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
       /* Head */
       .cl-head {
-        padding: 56px 48px 48px;
+        padding: 48px 48px 20px;
         background-image: var(--hero-grid);
         background-size: 26px 26px;
         border-top: 1px solid var(--rule);
@@ -570,7 +568,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
 
 
       .cl-head h1 {
-        margin: 0 0 20px;
+        margin: 0;
         font-size: clamp(38px, 8vw, var(--fs-display));
         font-weight: var(--fw-black);
         line-height: var(--lh-display);
@@ -584,44 +582,111 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         flex-wrap: nowrap;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-        padding: 0 48px 40px;
+        gap: 16px;
+        padding: 0 48px 32px;
       }
 
       .cl-filter {
         display: flex;
         flex-wrap: nowrap;
         gap: 2px;
-        width: fit-content;
-        max-width: 100%;
+        min-width: 0;
         padding: 3px;
         overflow-x: auto;
-        background: rgba(10, 9, 19, 0.6);
-        border: 1px solid var(--border-accent);
-        border-radius: var(--radius-pill);
+        scrollbar-width: none;
+        background: var(--panel);
+        border: 1px solid var(--border-panel);
+        border-radius: var(--radius-sm);
       }
 
       .cl-pill {
-        padding: 3px 10px;
+        padding: 6px 12px;
         background: none;
-        border: 1.5px solid transparent;
-        border-radius: var(--radius-pill);
-        color: var(--text-muted);
+        border: 0;
+        border-radius: 7px;
+        color: var(--text-body);
         font-family: var(--font-sans);
-        font-size: 12px;
-        font-weight: var(--fw-semibold);
+        font-size: var(--fs-ui-sm);
+        font-weight: var(--fw-medium);
+        line-height: 1.2;
         white-space: nowrap;
         cursor: pointer;
       }
 
       .cl-pill:hover {
         color: var(--text-primary);
+        background: rgba(167, 139, 250, 0.08);
       }
 
       .cl-pill.is-active {
-        border-color: var(--accent-solid);
+        background: rgba(139, 92, 246, 0.22);
         color: var(--text-primary);
-        font-weight: var(--fw-bold);
+        font-weight: var(--fw-semibold);
+      }
+
+      .cl-switch {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 2px;
+        background: none;
+        border: 0;
+        color: var(--text-body);
+        font-family: var(--font-sans);
+        font-size: var(--fs-ui-sm);
+        font-weight: var(--fw-medium);
+        line-height: 1.2;
+        cursor: pointer;
+      }
+
+      .cl-switch:hover,
+      .cl-switch[aria-checked='true'] {
+        color: var(--text-primary);
+      }
+
+      .cl-switch-track {
+        position: relative;
+        width: 32px;
+        height: 18px;
+        background: var(--border-panel);
+        box-shadow: inset 0 0 0 1px var(--border-strong);
+        border-radius: var(--radius-pill);
+        transition: background 0.15s ease;
+      }
+
+      .cl-switch-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 14px;
+        height: 14px;
+        background: var(--text-muted);
+        border-radius: 50%;
+        transition: transform 0.15s ease;
+      }
+
+      .cl-switch[aria-checked='true'] .cl-switch-track {
+        background: var(--accent-solid);
+        box-shadow: none;
+      }
+
+      .cl-switch[aria-checked='true'] .cl-switch-thumb {
+        background: var(--on-accent);
+        transform: translateX(14px);
+      }
+
+      .cl-pill:focus-visible,
+      .cl-switch:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .cl-switch-track,
+        .cl-switch-thumb {
+          transition: none;
+        }
       }
 
       .cl-unreleased,
@@ -1234,7 +1299,7 @@ const ogImageUrl = Astro.site ? new URL(ogCard.src, Astro.site).href : ogCard.sr
         }
 
         .cl-pill {
-          padding: 3px 8px;
+          padding: 6px 9px;
         }
 
         .cl-pill-more {
