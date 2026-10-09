@@ -45,6 +45,18 @@ function escapeHtml(text) {
 function escapeHtmlInScenario(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+var basenameOf = (code) => code.slice(Math.max(code.lastIndexOf("/"), code.lastIndexOf("\\")) + 1);
+var isLineNumber = (lineNo) => Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE;
+function fileRefHtml(code, lineNo, label) {
+  const basename = basenameOf(code);
+  const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
+  const ext = extMatch ? extMatch[0].toLowerCase() : "";
+  if (!ext || !KNOWN_EXTENSIONS.has(ext)) return null;
+  const inAttr = code.replace(/"/g, "&quot;");
+  const titleAttr = code.includes("/") ? ` title="${inAttr}"` : "";
+  const lineAttr = isLineNumber(lineNo) ? ` data-line="${lineNo}"` : "";
+  return `<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`;
+}
 var inAttribute = (value) => value.includes("\0CODE");
 function parseInline(text) {
   if (!text) return "";
@@ -53,20 +65,8 @@ function parseInline(text) {
     const lineMatch = raw.match(/^(.+?):(\d+)(?:-(\d+))?$/);
     const code = lineMatch ? lineMatch[1] : raw;
     const lineNo = lineMatch ? Number(lineMatch[2]) : NaN;
-    const lastSlash = Math.max(code.lastIndexOf("/"), code.lastIndexOf("\\"));
-    const basename = lastSlash >= 0 ? code.slice(lastSlash + 1) : code;
-    const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
-    const ext = extMatch ? extMatch[0].toLowerCase() : "";
-    if (ext && KNOWN_EXTENSIONS.has(ext)) {
-      const hasDir = code.includes("/");
-      const inAttr = code.replace(/"/g, "&quot;");
-      const titleAttr = hasDir ? ` title="${inAttr}"` : "";
-      const lineAttr = Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE ? ` data-line="${lineNo}"` : "";
-      const label = lineAttr ? raw.slice(code.length - basename.length) : basename;
-      codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`);
-    } else {
-      codeSpans.push(`<code>${raw}</code>`);
-    }
+    const label = isLineNumber(lineNo) ? raw.slice(code.length - basenameOf(code).length) : basenameOf(code);
+    codeSpans.push(fileRefHtml(code, lineNo, label) ?? `<code>${raw}</code>`);
     return `\0CODE${codeSpans.length - 1}\0`;
   }).replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>").replace(/___(.+?)___/g, "<strong><em>$1</em></strong>").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/__(.+?)__/g, "<strong>$1</strong>").replace(/\*(.+?)\*/g, "<em>$1</em>").replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>").replace(/~~(.+?)~~/g, "<del>$1</del>").replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => {
     if (inAttribute(alt) || inAttribute(target)) return match;
@@ -949,15 +949,107 @@ function mapToSourceLines(source, processed) {
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/blockFences.ts
+var BLOCK_FENCES = ["calls", "states", "screen"];
 var renderers = /* @__PURE__ */ new Map();
-function renderBlockFence(name, body, info) {
+function isBlockFence(name) {
+  return BLOCK_FENCES.includes(name);
+}
+function registerBlockRenderer(name, renderer) {
+  if (!isBlockFence(name)) return;
+  if (renderer) renderers.set(name, renderer);
+  else renderers.delete(name);
+}
+function renderBlockFence(name, body, info, context) {
   const render = renderers.get(name);
   if (!render) return null;
   try {
-    return render(body, info) || null;
+    return render(body, info, context) || null;
   } catch {
     return null;
   }
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/callsCard.ts
+var STRIKE_LABEL = "Strike this call from the plan";
+var LOCATION = /^(.*?)\s+@\s+(\S+?)(?::(\d+))?$/;
+var NEW_FILE = /\s*\*\*new\*\*\s*$/;
+var MARKS = "+~- ";
+function parseRow(row, sourceLine) {
+  if (row.includes("	")) return "a tab in the line";
+  if (row.length < 2 || !MARKS.includes(row[0]) || row[1] !== " ") return "column 0 must be a mark followed by a space";
+  const rest = row.slice(2);
+  const indent = rest.length - rest.trimStart().length;
+  if (indent % 2) return "an odd indent";
+  const found = rest.trim().match(LOCATION);
+  if (!found) return "no location after the name";
+  const [, rawName, path, line] = found;
+  const isNew = NEW_FILE.test(rawName);
+  const name = rawName.replace(NEW_FILE, "").trim();
+  const mark = row[0];
+  if (!name) return "no name before the location";
+  if (isNew && mark !== "+") return "a new file must be a + line";
+  if (isNew && line) return "a new file has no line";
+  if (path.startsWith("/") || path.split("/").includes("..")) return "a path outside the repo";
+  return { mark, depth: indent / 2, name, path, line: line ? Number(line) : null, isNew, sourceLine, source: row.trim() };
+}
+function guides(rows) {
+  const hasLaterSibling = (index) => {
+    const depth = rows[index].depth;
+    for (let j = index + 1; j < rows.length && rows[j].depth >= depth; j++) {
+      if (rows[j].depth === depth) return true;
+    }
+    return false;
+  };
+  const open = [];
+  return rows.map((row, index) => {
+    if (row.depth === 0) return "";
+    const later = hasLaterSibling(index);
+    const prefix = open.slice(1, row.depth).map((on) => on ? "\u2502  " : "   ").join("");
+    open[row.depth] = later;
+    return prefix + (later ? "\u251C\u2500 " : "\u2514\u2500 ");
+  });
+}
+function parseCalls(body, firstLine) {
+  const rows = [];
+  const lines = body.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const text = lines[i].replace(/ +$/, "");
+    if (!text.trim()) continue;
+    const row = parseRow(text, firstLine + i);
+    if (typeof row === "string") return { ok: false, error: row };
+    const expected = rows.length === 0 ? 0 : Math.min(row.depth, rows[rows.length - 1].depth + 1);
+    if (rows.length === 0 && row.depth !== 0) return { ok: false, error: "the entry point is not indented" };
+    if (rows.length > 0 && row.depth === 0) return { ok: false, error: "a second entry point" };
+    if (row.depth !== expected) return { ok: false, error: "a skipped level" };
+    rows.push(row);
+  }
+  if (rows.length === 0) return { ok: false, error: "an empty block" };
+  const tree = guides(rows);
+  return { ok: true, rows: rows.map((row, index) => ({ ...row, guide: tree[index] })) };
+}
+var TINT = { "+": "add", "~": "chg", "-": "del", " ": "same" };
+function renderLocation(row) {
+  const label = row.line === null ? row.path : `${row.path}:${row.line}`;
+  const chip = row.isNew ? null : fileRefHtml(escapeHtml(row.path), row.line ?? NaN, escapeHtml(label));
+  return `<span class="calls-where">${chip ?? escapeHtml(label)}</span>`;
+}
+function renderRow(row) {
+  const strike = row.mark === " " ? "" : `<button type="button" class="calls-strike" data-line="${row.sourceLine}" aria-label="${STRIKE_LABEL}">strike</button>`;
+  const pill = row.isNew ? '<span class="calls-new">new file</span>' : "";
+  const mark = row.mark === "-" ? "\u2212" : row.mark.trim();
+  return `<div class="calls-row calls-row--${TINT[row.mark]}"><span class="calls-mark">${mark}</span><span class="calls-tree">${row.guide}</span><span class="calls-name">${escapeHtml(row.name)}</span>${pill}${renderLocation(row)}${strike}<span class="line-content" hidden>${escapeHtml(row.source)}</span></div>`;
+}
+function renderCallsCard(body, info, context) {
+  const parsed = parseCalls(body, context.firstLine);
+  if (!parsed.ok) return "";
+  const { rows } = parsed;
+  const count = (mark) => rows.filter((row) => row.mark === mark).length;
+  const title = info.title || context.rawTitle;
+  const titleHtml = title ? `<span class="calls-title">${escapeHtml(title)}</span>` : "";
+  const counts = `<span class="calls-counts"><span class="calls-add">+${count("+")}</span> <span class="calls-del">\u2212${count("-")}</span> <span class="calls-chg">~${count("~")}</span> \xB7 1 entrypoint</span>`;
+  const lines = rows.map((row) => context.wrapLine(renderRow(row), row.sourceLine)).join("");
+  const note = context.note ? `<div class="calls-note">${escapeHtml(context.note)}</div>` : "";
+  return `<div class="calls-card"><div class="calls-head"><span class="calls-badge">calls</span>${titleHtml}${counts}</div><div class="calls-rows">${lines}</div>${note}</div>`;
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/renderer.ts
@@ -1022,6 +1114,7 @@ function wrapWithLineActions(content, lineNum, lastLineNum = lineNum) {
         <div class="line-comment-slot"></div>
     </div>`;
 }
+registerBlockRenderer("calls", renderCallsCard);
 function wrapComponentLine(componentHtml, lineNum) {
   return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">${COMMENT_ICON_SVG2}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
 }
@@ -1094,6 +1187,10 @@ function renderMarkdown(markdown) {
   let codeBlockLang = "";
   let codeBlockInfo = parseFenceInfo("");
   let codeContent = [];
+  let codeFirstLine = 0;
+  let codeRawTitle = "";
+  let consumedNoteAt = -1;
+  let inTemplateNote = false;
   let inList = false;
   let listType = "ul";
   let listItemCount = 0;
@@ -1119,6 +1216,11 @@ function renderMarkdown(markdown) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const sourceLineNum = sourceLineOf[i];
+    if (i === consumedNoteAt) continue;
+    if (!inCodeBlock) {
+      if (line.startsWith('<details class="template-instructions">')) inTemplateNote = true;
+      else if (line.startsWith("</details>")) inTemplateNote = false;
+    }
     const trimmedLine = line.trim();
     if (trimmedLine.startsWith("```")) {
       if (inList && !inCodeBlock) {
@@ -1132,13 +1234,25 @@ function renderMarkdown(markdown) {
         codeBlockInfo = parseFenceInfo(trimmedLine.slice(3));
         codeBlockLang = codeBlockInfo.language;
         codeContent = [];
+        codeFirstLine = sourceLineOf[i + 1] ?? sourceLineNum + 1;
+        codeRawTitle = trimmedLine.slice(3).trim().split(/\s+/).slice(1).join(" ");
       } else {
         inCodeBlock = false;
         const codeText = codeContent.join("\n");
-        const block = renderBlockFence(codeBlockLang, codeText, codeBlockInfo);
+        let noteAt = i + 1;
+        while (noteAt < lines.length && !lines[noteAt].trim()) noteAt++;
+        const noteText = /^note:/i.test(lines[noteAt] ?? "") ? lines[noteAt].replace(/^note:\s*/i, "").trim() : "";
+        const note = noteText || null;
+        const block = inTemplateNote ? null : renderBlockFence(codeBlockLang, codeText, codeBlockInfo, {
+          firstLine: codeFirstLine,
+          note,
+          rawTitle: codeRawTitle,
+          wrapLine: wrapComponentLine
+        });
         if (block) {
           html += `${block}
 `;
+          if (note !== null) consumedNoteAt = noteAt;
         } else if (codeBlockLang === "mermaid") {
           const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
           html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>

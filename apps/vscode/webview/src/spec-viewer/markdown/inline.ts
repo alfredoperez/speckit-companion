@@ -50,6 +50,23 @@ export function escapeHtmlInScenario(text: string): string {
         .replace(/>/g, '&gt;');
 }
 
+const basenameOf = (code: string): string => code.slice(Math.max(code.lastIndexOf('/'), code.lastIndexOf('\\')) + 1);
+
+const isLineNumber = (lineNo: number): boolean => Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE;
+
+/** The clickable file chip, or null when the path is not a file the viewer opens. `code` and `label` arrive with `&`, `<` and `>` already escaped. */
+export function fileRefHtml(code: string, lineNo: number, label: string): string | null {
+    const basename = basenameOf(code);
+    const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
+    const ext = extMatch ? extMatch[0].toLowerCase() : '';
+    if (!ext || !KNOWN_EXTENSIONS.has(ext)) return null;
+    // A quote inside a code span would close the attribute it lands in and let whatever followed become markup of its own.
+    const inAttr = code.replace(/"/g, '&quot;');
+    const titleAttr = code.includes('/') ? ` title="${inAttr}"` : '';
+    const lineAttr = isLineNumber(lineNo) ? ` data-line="${lineNo}"` : '';
+    return `<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`;
+}
+
 /**
  * Parse inline markdown elements
  */
@@ -72,23 +89,8 @@ export function parseInline(text: string): string {
             const lineMatch = raw.match(/^(.+?):(\d+)(?:-(\d+))?$/);
             const code: string = lineMatch ? lineMatch[1] : raw;
             const lineNo = lineMatch ? Number(lineMatch[2]) : NaN;
-            const lastSlash = Math.max(code.lastIndexOf('/'), code.lastIndexOf('\\'));
-            const basename = lastSlash >= 0 ? code.slice(lastSlash + 1) : code;
-            const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
-            const ext = extMatch ? extMatch[0].toLowerCase() : '';
-            if (ext && KNOWN_EXTENSIONS.has(ext)) {
-                const hasDir = code.includes('/');
-                // `&`, `<` and `>` were escaped above, but a quote inside a code
-                // span would close the attribute it lands in and let whatever
-                // followed become markup of its own.
-                const inAttr = code.replace(/"/g, '&quot;');
-                const titleAttr = hasDir ? ` title="${inAttr}"` : '';
-                const lineAttr = Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE ? ` data-line="${lineNo}"` : '';
-                const label = lineAttr ? raw.slice(code.length - basename.length) : basename;
-                codeSpans.push(`<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`);
-            } else {
-                codeSpans.push(`<code>${raw}</code>`);
-            }
+            const label = isLineNumber(lineNo) ? raw.slice(code.length - basenameOf(code).length) : basenameOf(code);
+            codeSpans.push(fileRefHtml(code, lineNo, label) ?? `<code>${raw}</code>`);
             return `\x00CODE${codeSpans.length - 1}\x00`;
         })
         // Bold + Italic

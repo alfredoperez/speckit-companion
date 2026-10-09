@@ -8,7 +8,7 @@ import type { VSCodeApi, NavState } from './types';
 import { navState, markdownHtml } from './signals';
 import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
-import { setupLineActions } from './editor';
+import { setupCallsStrike, setupLineActions } from './editor';
 import { setupAnswerActions } from './editor/answerEditor';
 import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupOpenLivingRequirement, setupRemoveRequirement, setupRevealGlob } from './actions';
 import { applyPendingFragment, setupDocumentLinkClickHandler } from './documentLinks';
@@ -118,6 +118,7 @@ function init(): void {
     }
 
     setupLineActions();
+    setupCallsStrike();
     setupAnswerActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();

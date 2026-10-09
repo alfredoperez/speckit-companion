@@ -30,7 +30,8 @@ import {
 import { markClarifications, rememberClarifications } from './clarifications';
 import { mapToSourceLines } from './sourceLines';
 import { parseFenceInfo, type FenceInfo } from './fenceInfo';
-import { renderBlockFence } from './blockFences';
+import { registerBlockRenderer, renderBlockFence } from './blockFences';
+import { renderCallsCard } from './callsCard';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -167,6 +168,8 @@ function wrapWithLineActions(content: string, lineNum: number, lastLineNum: numb
     </div>`;
 }
 
+registerBlockRenderer('calls', renderCallsCard);
+
 /**
  * Wrap a preprocessed component div as a commentable line — the component sits as
  * a direct child (not inside `.line-content`, to avoid prose style bleed) so the
@@ -280,6 +283,10 @@ export function renderMarkdown(markdown: string): string {
     let codeBlockLang = '';
     let codeBlockInfo: FenceInfo = parseFenceInfo('');
     let codeContent: string[] = [];
+    let codeFirstLine = 0;
+    let codeRawTitle = '';
+    let consumedNoteAt = -1;
+    let inTemplateNote = false;
     let inList = false;
     let listType: 'ul' | 'ol' = 'ul';
     let listItemCount = 0;
@@ -311,6 +318,13 @@ export function renderMarkdown(markdown: string): string {
         const line = lines[i];
         const sourceLineNum = sourceLineOf[i];
 
+        if (i === consumedNoteAt) continue;
+
+        if (!inCodeBlock) {
+            if (line.startsWith('<details class="template-instructions">')) inTemplateNote = true;
+            else if (line.startsWith('</details>')) inTemplateNote = false;
+        }
+
         // Code blocks (detect indented fences too, e.g. inside list items)
         const trimmedLine = line.trim();
         if (trimmedLine.startsWith('```')) {
@@ -326,13 +340,22 @@ export function renderMarkdown(markdown: string): string {
                 codeBlockInfo = parseFenceInfo(trimmedLine.slice(3));
                 codeBlockLang = codeBlockInfo.language;
                 codeContent = [];
+                codeFirstLine = sourceLineOf[i + 1] ?? sourceLineNum + 1;
+                codeRawTitle = trimmedLine.slice(3).trim().split(/\s+/).slice(1).join(' ');
             } else {
                 inCodeBlock = false;
                 const codeText = codeContent.join('\n');
 
-                const block = renderBlockFence(codeBlockLang, codeText, codeBlockInfo);
+                let noteAt = i + 1;
+                while (noteAt < lines.length && !lines[noteAt].trim()) noteAt++;
+                const noteText = /^note:/i.test(lines[noteAt] ?? '') ? lines[noteAt].replace(/^note:\s*/i, '').trim() : '';
+                const note = noteText || null;
+                const block = inTemplateNote ? null : renderBlockFence(codeBlockLang, codeText, codeBlockInfo, {
+                    firstLine: codeFirstLine, note, rawTitle: codeRawTitle, wrapLine: wrapComponentLine,
+                });
                 if (block) {
                     html += `${block}\n`;
+                    if (note !== null) consumedNoteAt = noteAt;
                 } else if (codeBlockLang === 'mermaid') {
                     const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
                     html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>\n`;

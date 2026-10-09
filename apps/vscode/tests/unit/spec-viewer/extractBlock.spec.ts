@@ -108,3 +108,39 @@ describe('extractBlock', () => {
         expect(block.heading).toBeNull();
     });
 });
+
+describe('extractBlock inside a calls fence', () => {
+    const doc = [
+        '## Call paths',
+        '',
+        '```calls A finished step lands',
+        '  session.idle @ a.ts:1',
+        '~   settle() @ b.ts:2',
+        '+     write() @ c.ts:3',
+        '```',
+        'note: kept apart',
+    ];
+
+    it('anchors a row to that single line', () => {
+        expect(extractBlock(doc, 5)).toEqual({
+            startLine: 5, endLine: 5, text: '~   settle() @ b.ts:2', heading: 'Call paths',
+        });
+    });
+
+    it('anchors the first and the last row alike', () => {
+        expect(extractBlock(doc, 4)).toMatchObject({ startLine: 4, endLine: 4, text: '  session.idle @ a.ts:1' });
+        expect(extractBlock(doc, 6)).toMatchObject({ startLine: 6, endLine: 6, text: '+     write() @ c.ts:3' });
+    });
+
+    it('leaves another fence as one block', () => {
+        const other = ['## H', '```ts', 'const a = 1;', 'const b = 2;', '```'];
+
+        expect(extractBlock(other, 3)).toMatchObject({ startLine: 2, endLine: 5, text: '```ts\nconst a = 1;\nconst b = 2;\n```' });
+    });
+
+    it('finds the row in a second calls block after a closed one', () => {
+        const two = ['# H', '```calls A', '  a @ a.ts:1', '```', '', '## Two', '```calls B', '  b @ b.ts:1', '+   c @ c.ts:2', '```'];
+
+        expect(extractBlock(two, 9)).toEqual({ startLine: 9, endLine: 9, text: '+   c @ c.ts:2', heading: 'Two' });
+    });
+});

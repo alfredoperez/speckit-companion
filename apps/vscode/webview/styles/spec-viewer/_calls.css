@@ -1,0 +1,171 @@
+/**
+ * SpecKit Companion - Calls card
+ * A `calls` fence in a plan, drawn as a tree of rows.
+ */
+
+#markdown-content .calls-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  margin: var(--space-3) 0 var(--space-4);
+}
+
+#markdown-content .calls-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-inset);
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+#markdown-content .calls-badge {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-2);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#markdown-content .calls-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+#markdown-content .calls-counts {
+  margin-left: auto;
+  flex: none;
+  color: var(--text-secondary);
+}
+
+#markdown-content .calls-add { color: var(--success); }
+#markdown-content .calls-del { color: var(--error); }
+#markdown-content .calls-chg { color: var(--warning); }
+
+#markdown-content .calls-rows {
+  padding: var(--space-1) 0;
+}
+
+#markdown-content .calls-rows .component-line {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+}
+
+#markdown-content .calls-rows .component-line > .line-add-btn {
+  top: 50%;
+  right: var(--space-2);
+  transform: translateY(-50%);
+}
+
+#markdown-content .calls-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) 40px var(--space-1) var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+#markdown-content .calls-row--add { background: var(--success-subtle); }
+#markdown-content .calls-row--chg { background: var(--warning-subtle); }
+#markdown-content .calls-row--del { background: var(--error-subtle); }
+
+#markdown-content .calls-mark {
+  flex: none;
+  width: 12px;
+  font-weight: 700;
+}
+
+#markdown-content .calls-row--add .calls-mark { color: var(--success); }
+#markdown-content .calls-row--chg .calls-mark { color: var(--warning); }
+#markdown-content .calls-row--del .calls-mark { color: var(--error); }
+
+#markdown-content .calls-tree {
+  flex: none;
+  color: var(--text-muted);
+  white-space: pre;
+}
+
+#markdown-content .calls-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+}
+
+#markdown-content .calls-row--add .calls-name { font-weight: 700; }
+#markdown-content .calls-row--del .calls-name { text-decoration: line-through; }
+
+#markdown-content .calls-new {
+  flex: none;
+  font-family: var(--font-family);
+  font-size: var(--text-xs);
+  color: var(--success);
+  border: 1px solid var(--success);
+  border-radius: 999px;
+  padding: 0 var(--space-2);
+}
+
+#markdown-content .calls-where {
+  margin-left: auto;
+  min-width: 0;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+#markdown-content .calls-where .file-ref,
+#markdown-content .calls-where .file-ref code {
+  color: inherit;
+  font-size: inherit;
+}
+
+#markdown-content .calls-strike {
+  flex: none;
+  opacity: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--error);
+  border-radius: var(--radius-sm);
+  padding: 1px var(--space-2);
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+#markdown-content .calls-row:hover .calls-strike,
+#markdown-content .calls-strike:focus-visible {
+  opacity: 1;
+}
+
+#markdown-content .calls-row--struck .calls-name,
+#markdown-content .calls-row--struck .calls-where {
+  text-decoration: line-through;
+  opacity: 0.55;
+}
+
+#markdown-content .calls-row--struck .calls-strike {
+  display: none;
+}
+
+#markdown-content .calls-note {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-sm);
+  color: var(--text-body);
+}
