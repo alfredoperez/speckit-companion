@@ -102,7 +102,15 @@ export function renderCallsCard(body: string, info: FenceInfo, context: BlockCon
     const count = (mark: CallRow['mark']): number => rows.filter((row) => row.mark === mark).length;
     const title = info.title || context.rawTitle;
     const titleHtml = title ? `<span class="calls-title" title="${escapeHtml(title)}">${escapeHtml(title)}</span>` : '';
-    const counts = `<span class="calls-counts"><span class="calls-add">+${count('+')}</span> <span class="calls-del">−${count('-')}</span> <span class="calls-chg">~${count('~')}</span> · 1 entrypoint</span>`;
+    const kinds: Array<{ mark: CallRow['mark']; cls: string; glyph: string; word: string }> = [
+        { mark: '+', cls: 'calls-add', glyph: '+', word: 'new' },
+        { mark: '-', cls: 'calls-del', glyph: '−', word: 'removed' },
+        { mark: '~', cls: 'calls-chg', glyph: '~', word: 'changed' },
+    ];
+    const present = kinds.filter((kind) => count(kind.mark) > 0);
+    const spoken = present.map((kind) => `${count(kind.mark)} ${kind.word}`).join(', ');
+    const shown = present.map((kind) => `<span class="${kind.cls}">${kind.glyph}${count(kind.mark)}</span>`).join(' ');
+    const counts = present.length ? `<span class="calls-counts" aria-label="${spoken}" title="${spoken}">${shown}</span>` : '';
     const lines = rows.map((row) => context.wrapLine(renderRow(row), row.sourceLine)).join('');
     const note = context.note ? `<div class="calls-note">${parseInline(context.note)}</div>` : '';
     return `<div class="calls-card"><div class="calls-head"><span class="calls-badge">calls</span>${titleHtml}${counts}</div><div class="calls-rows">${lines}</div>${note}</div>`;

@@ -108,13 +108,13 @@ describe('renderCallsCard: the card', () => {
 
         expect(text(byClass(html, 'calls-badge')[0])).toBe('calls');
         expect(text(byClass(html, 'calls-title')[0])).toBe('A finished step lands');
-        expect(text(byClass(html, 'calls-counts')[0]).replace(/\s+/g, ' ').trim()).toBe('+2 −0 ~2 · 1 entrypoint');
+        expect(text(byClass(html, 'calls-counts')[0]).replace(/\s+/g, ' ').trim()).toBe('+2 ~2');
     });
 
     it('counts a removed row and pluralises nothing it should not', () => {
         const html = card('  a @ a.ts:1\n-   b @ b.ts:2\n-   c @ c.ts:2');
 
-        expect(text(byClass(html, 'calls-counts')[0]).replace(/\s+/g, ' ').trim()).toBe('+0 −2 ~0 · 1 entrypoint');
+        expect(text(byClass(html, 'calls-counts')[0]).replace(/\s+/g, ' ').trim()).toBe('−2');
     });
 
     it('draws one row per call, tinted by mark', () => {
