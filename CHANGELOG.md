@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **Stock commands refresh when the extension updates them.** A project that already has the standard `/speckit.*` commands gets ==the new version on the next start==, where before it kept the copy it first installed. <!-- area: pipeline -->
 - **The Pipeline Builder is renamed Workflow Builder.** The board that draws your Companion pipeline has a ==new name== in the command, the tab and the docs. ([#883](https://github.com/alfredoperez/speckit-companion/pull/883)) <!-- area: pipeline-builder -->
 
 ### Fixed
