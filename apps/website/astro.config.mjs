@@ -189,7 +189,6 @@ export default defineConfig({
                 { label: 'Specify', slug: 'docs/steps/specify' },
                 {
                   label: 'Plan',
-                  collapsed: true,
                   items: [
                     { label: 'The plan step', slug: 'docs/steps/plan' },
                     { label: 'Plan blocks', slug: 'docs/steps/plan-blocks', badge: { text: 'New', variant: 'tip' } },
