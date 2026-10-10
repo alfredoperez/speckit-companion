@@ -86,6 +86,7 @@ It is the same check that reads call paths, and it reads `states` blocks too.
 | ERROR | An arrow or a grid cell naming a state that is not listed |
 | ERROR | A state that `shows` a screen name no `screen` block of the plan defines |
 | ERROR | Over the viewer's limit: more than 8 states, or a grid past 4 by 3 |
+| WARNING | A `screen` block of the plan that no state `shows`, once per screen (`screen-not-shown`); fine if the screen belongs to no state |
 | WARNING | More than 10 arrows in a block. The viewer copes, but the diagram stops being a summary |
 | ERROR | A line it cannot parse: a state with no sentence, a repeated name, a second `grid:`, more than one `(start)`, an empty or unclosed block |
 | WARNING | More than 2 blocks, more than one `note:` line, or a block with no title |

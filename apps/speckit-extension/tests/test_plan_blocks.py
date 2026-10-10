@@ -12,7 +12,7 @@ EXT = Path(__file__).resolve().parents[1]
 SCRIPT = EXT / "scripts" / "plan-blocks.py"
 PARTS = EXT / "presets" / "_parts"
 CHECK = "check_plan.py --feature-dir <feature_directory>"
-LINK = "ends with `shows <screen-name>`"
+LINK = "end that state's line with `shows <screen-name>`"
 
 
 def part(name):
@@ -60,7 +60,11 @@ class ThePicker(unittest.TestCase):
         self.assertIsNone(self.recorded())
 
     def test_the_link_line_needs_both_states_and_screens(self):
-        self.assertIn(LINK, self.run_it("states", "screens").stdout)
+        both = self.run_it("states", "screens").stdout
+        self.assertEqual(both.count(LINK), 1)
+        self.assertLess(both.index(LINK), both.index(part("states")))
+        self.assertLess(both.index(LINK), both.index(part("screens")))
+        self.assertIn("shows reviewer", both)
         self.assertNotIn(LINK, self.run_it("states").stdout)
         self.assertNotIn(LINK, self.run_it("screens").stdout)
 

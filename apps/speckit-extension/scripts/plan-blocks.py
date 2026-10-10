@@ -28,7 +28,16 @@ CHECK = (
     "Then run `python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory>`, "
     "fix what it reports once, and record anything left with `write-context.py --concern`."
 )
-LINK = "Every state that has a screen ends with `shows <screen-name>`, naming a `screen` block in this plan."
+LINK = (
+    "Link each screen to the state it belongs to: end that state's line with `shows <screen-name>`, "
+    "naming a `screen` block of this plan. For example:"
+)
+LINK_EXAMPLE = (
+    "```text\n"
+    "In-review: A reviewer reads the article. shows reviewer\n"
+    "```screen reviewer Reviewer on an article\n"
+    "```"
+)
 
 
 def part_text(root: Path, part: str) -> str:
@@ -66,10 +75,10 @@ def main(argv=None) -> int:
     if not chosen:
         print("No plan block applies to this change.")
     else:
+        if "states" in chosen and "screens" in chosen:
+            print(LINK + "\n\n" + LINK_EXAMPLE + "\n")
         for name in chosen:
             print(part_text(root, PARTS[name]) + "\n")
-        if "states" in chosen and "screens" in chosen:
-            print(LINK + "\n")
         print(CHECK)
 
     if feature_dir is None or not feature_dir.is_dir():

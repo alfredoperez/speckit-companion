@@ -88,6 +88,7 @@ It reads `plan.md` (and `screens.md` beside it, if a project moved the section t
 | WARNING | `over-budget` | More than 2 screens in a plan |
 | WARNING | `no-title` | A screen with a name and no title |
 | WARNING | `simple-size` | A screen in a spec sized `simple` |
+| WARNING | `screen-not-shown` | A plan with a `states` block has a screen no state `shows`; fine if it belongs to no state |
 
 It reads no code, so it proves the block will draw, not that the screen is right.
 

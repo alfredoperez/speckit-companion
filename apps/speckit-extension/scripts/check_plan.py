@@ -334,7 +334,7 @@ def _grid_cells(row: str) -> list:
     return row.split()
 
 
-def check_states(block: dict, label: str, findings: list, screens: set) -> int:
+def check_states(block: dict, label: str, findings: list, screens: set, shown: set) -> int:
     """Check one `states` block. Returns its state count."""
     start_line = block["start"]
 
@@ -410,6 +410,8 @@ def check_states(block: dict, label: str, findings: list, screens: set) -> int:
             f"a grid of {columns} by {len(grid_rows)}, the viewer draws {MAX_COLUMNS} by {MAX_ROWS} at most")
 
     for name, info in states.items():
+        if info["shows"]:
+            shown.add(info["shows"])
         if info["shows"] and info["shows"] not in screens:
             add("ERROR", "unknown-screen", info["line"],
                 f"state {name} shows screen {info['shows']}, which no screen block defines")
@@ -644,7 +646,14 @@ def check_text(text: str, label: str, root: Path, size: str | None = None, calls
         add("WARNING", "too-many-blocks", state_blocks[MAX_STATE_BLOCKS]["start"],
             f"{len(state_blocks)} state blocks, the budget is {MAX_STATE_BLOCKS}")
     screen_names = {b["name"] for b in screens if b["name"]}
-    states_total = sum(check_states(b, label, findings, screen_names) for b in state_blocks)
+    shown: set = set()
+    states_total = sum(check_states(b, label, findings, screen_names, shown) for b in state_blocks)
+    if state_blocks:
+        for b in screens:
+            if b["name"] and b["name"] not in shown:
+                add("WARNING", "screen-not-shown", b["start"],
+                    f"screen `{b['name']}` is not shown by any state: end the state it belongs to with "
+                    f"`shows {b['name']}`, or leave it if it belongs to none")
 
     code = find_code_blocks(text)
     for block in code:

@@ -458,6 +458,18 @@ class StateBlocks(Repo):
         self.assertIn("state A shows screen login-form, which no screen block defines",
                       self.check(text)["findings"][0]["message"])
 
+    def test_a_screen_no_state_shows_warns_once_each_and_never_fails_strict(self):
+        linked = states("A: One. shows one (start)", "B: Two. (final)", "A -> B: go", "grid:", "A | B")
+        two = screen("text: a", head="one The one", notes=()) + screen("text: b", head="two The two", notes=())
+        rules = lambda t: [r for r in self.rules(t) if r[1] == "screen-not-shown"]
+        self.assertEqual(rules(linked + two), [("WARNING", "screen-not-shown")])
+        warn = [f for f in self.check(linked + two)["findings"] if f["rule"] == "screen-not-shown"][0]
+        self.assertEqual(warn["message"], "screen `two` is not shown by any state: end the state it belongs to "
+                         "with `shows two`, or leave it if it belongs to none")
+        self.assertEqual(len(rules(LIFECYCLE + two)), 2)
+        self.assertEqual(rules(two), [])
+        self.assertEqual(self.run_main(linked + two, "--strict")[0], 0)
+
     def test_more_than_two_blocks_and_a_block_with_no_title_warn(self):
         self.assertIn(("WARNING", "too-many-blocks"), self.rules(LIFECYCLE * 3))
         self.assertIn(("WARNING", "no-title"), self.rules(LIFECYCLE.replace("A review", "")))
