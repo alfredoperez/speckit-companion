@@ -109,7 +109,7 @@ Nothing executes `companion.yml`. Your assistant reads it at run time, because i
 
 ## Hooks are not Spec Kit's lifecycle hooks
 
-Spec Kit has its own hooks that fire after each stock command, such as `after_specify`. The Companion Spec Kit extension uses those to write the run record. They are listed in [Commands](/docs/reference/commands#recording-hooks) and you do not edit them.
+Spec Kit has its own hooks that fire before and after each stock command, such as `before_plan` and `after_specify`. The Companion Spec Kit extension uses those to write the run record. They are listed in [Commands](/docs/reference/commands#recording-hooks) and you do not edit them.
 
 ## Related
 

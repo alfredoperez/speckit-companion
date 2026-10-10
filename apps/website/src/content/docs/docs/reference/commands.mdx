@@ -52,16 +52,19 @@ All seven do nothing until [living specs](/docs/results/living-specs) are turned
 
 ## Recording hooks
 
-You do not type these. Spec Kit runs them around its own commands, and they write the run record.
+You do not type these. Spec Kit runs them around its own commands, and they write the run record. The Spec Kit commands themselves are left exactly as Spec Kit ships them.
 
 | Command | Runs | Records |
 | --- | --- | --- |
+| `speckit.companion.before-step` | Before specify, plan, tasks and implement | The step started |
 | `speckit.companion.after-specify` | After specify | Specify finished |
 | `speckit.companion.after-plan` | After plan | Plan finished |
 | `speckit.companion.after-tasks` | After tasks | Tasks finished |
 | `speckit.companion.after-implement` | After implement | Each finished task, and implement finished once every task is checked |
 | `speckit.companion.before-converge` | Before converge | Converge started. The status does not change. |
 | `speckit.companion.after-converge` | After converge | Converge finished. The status does not change. |
+
+A Spec Kit run started from a terminal records step times and task progress, but no task summaries, and `/speckit.clarify` and `/speckit.analyze` are not recorded. A run sent from VS Code records all of it.
 
 `speckit.companion.classify` is also not typed. The workflow runs it to size a change.
 
