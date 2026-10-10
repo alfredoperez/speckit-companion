@@ -1,7 +1,7 @@
 """Shared helpers for the command-parts build + parity tooling.
 
 Single source of: which command bodies are tracked, how a part fence looks, how a
-body is canonicalized for golden comparison, and what `extension.yml` declares
+body is canonicalized for comparison against its committed body, and what `extension.yml` declares
 under `provides.commands`. Stdlib only.
 """
 from __future__ import annotations
@@ -13,17 +13,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 EXT = os.path.dirname(HERE)  # speckit-extension/
 
 PARTS_DIR = "presets/_parts"
-GOLDEN_DIR = "tests/golden/commands"
 NODES_DIR = "nodes"
 
-# Companion-standard preset commands (host-editor profile bodies).
-PRESET_CMDS = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "constitution"]
 # Namespaced /speckit.companion.* bodies the parts mechanism covers.
 NAMESPACED_CMDS = ["specify", "plan", "tasks", "implement", "classify", "mark-complete", "auto"]
 
-# All 14 carriers get region + timing checks; only the 7 presets get a golden.
-GOLDEN_CARRIERS = [f"presets/companion-standard/commands/speckit.{c}.md" for c in PRESET_CMDS]
-PART_CARRIERS = GOLDEN_CARRIERS + [f"commands/speckit.companion.{c}.md" for c in NAMESPACED_CMDS]
+PART_CARRIERS = [f"commands/speckit.companion.{c}.md" for c in NAMESPACED_CMDS]
 
 # Part fence: <!-- speckit-companion:part NAME -->\n<content>\n<!-- /speckit-companion:part NAME -->
 PART_FENCE = re.compile(
@@ -59,7 +54,7 @@ NODE_FENCE = re.compile(
     re.DOTALL,
 )
 
-# Marker-comment lines stripped before golden comparison (legacy timing + the
+# Marker-comment lines stripped before body comparison (legacy timing + the
 # generalized part fences). Content survives; only the convention scaffolding
 # is normalized away, so a marker rename is not counted as a content change.
 _MARKER_LINE = re.compile(
@@ -148,11 +143,6 @@ def body_description(rel: str) -> str | None:
     return found.group(1).strip().strip('"') if found else None
 
 
-def golden_path(rel: str) -> str:
-    """Map a body's repo-relative path to its flattened golden snapshot name."""
-    return os.path.join(EXT, GOLDEN_DIR, rel.replace("/", "__"))
-
-
 def read(rel: str) -> str:
     return open(os.path.join(EXT, rel), encoding="utf-8").read()
 
@@ -168,7 +158,7 @@ def part_content(name: str) -> str:
 
 
 #: Appended only when `debug: true` is set. Absent from an off render entirely —
-#: not present and inactive — so the off render stays byte-identical to golden.
+#: not present and inactive — so the off render stays byte-identical to the committed body.
 DEBUG_TIMING = "debug-timing"
 
 
@@ -239,14 +229,14 @@ def debug_on(root: str = None) -> bool:
 
 
 def canonical(text: str) -> str:
-    """Strip fence/marker comment lines so golden compares content, not convention."""
+    """Strip fence/marker comment lines so the comparison sees content, not convention."""
     return _MARKER_LINE.sub("", text)
 
 
 def strip_node_markers(text: str) -> str:
     """Remove node boundary lines, leaving every node's body exactly as it was.
 
-    This is what makes the boundaries provably additive: the golden bodies are
+    This is what makes the boundaries provably additive: the committed bodies are
     kept marker-free, and assembly is checked against them through this function.
     A marker that shifted a line, swallowed a blank one, or reordered anything
     fails that comparison.
@@ -332,8 +322,8 @@ def project_commands() -> list:
 def decomposed_commands() -> list:
     """Every step that assembles from node files — the shipped ones, then the project's.
 
-    Golden parity never points this at a project, so a project's own steps can
-    never move the shipped goldens.
+    The build check never points this at a project, so a project's own steps can
+    never move the shipped bodies.
     """
     return shipped_commands() + project_commands()
 
@@ -537,8 +527,8 @@ def parse_variants(path: str) -> dict:
 #: A project's own node files, which replace the shipped ones of the same id.
 PROJECT_NODES_REL = os.path.join(".specify", "companion", "nodes")
 
-#: Set by a build for one project; unset means shipped nodes only. Golden parity
-#: never sets it, so a project's replacements can never move the shipped goldens.
+#: Set by a build for one project; unset means shipped nodes only. The build check
+#: never sets it, so a project's replacements can never move the shipped bodies.
 _project_root = None
 
 

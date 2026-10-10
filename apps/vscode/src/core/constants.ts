@@ -186,8 +186,6 @@ export const TreeItemContext = {
     companionConfigItem: 'companion-config-item',
     companionCommandsGroup: 'companion-commands-group',
     companionCommand: 'companion-command',
-    companionTemplatesGroup: 'companion-templates-group',
-    companionTemplate: 'companion-template',
     // Per-workflow steering (reference-doc) sources — issue #425.
     referencesHeader: 'references-header',
     referencesSource: 'references-source',

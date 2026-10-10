@@ -6,8 +6,8 @@ Until now the assembled command was one undifferentiated body: nothing could
 point at a node, so a hook or a replacement had no place to attach except by
 matching the prose around it. Each node's contribution is fenced with its id now.
 
-The guarantee that matters is that this is additive. The golden bodies are kept
-marker-free, and assembly is compared to them with the markers stripped, so a
+The guarantee that matters is that this is additive. Assembly is compared to
+the committed bodies with the markers stripped on both sides, so a
 marker that shifted a line, ate a blank one, or reordered anything fails the
 build. These tests hold the property directly as well.
 
@@ -104,7 +104,7 @@ class TheNamespaceIsSeparateFromParts(unittest.TestCase):
         for name in cp.PART_OPEN.findall(body):
             self.assertFalse(name.startswith("node"), f"part fence named like a node: {name}")
 
-    def test_the_golden_comparison_strips_node_markers_too(self):
+    def test_the_committed_body_comparison_strips_node_markers_too(self):
         marked = "<!-- speckit-companion:node x -->\nbody\n<!-- /speckit-companion:node x -->\n"
         self.assertEqual(cp.canonical(marked), "body\n")
 

@@ -66,6 +66,14 @@ class RecordAuditTests(unittest.TestCase):
         self.assertEqual(hit[0].severity, "warning")
         self.assertLessEqual(hit[0].evidence["span_seconds"], dc.BURST_WINDOW_SECONDS)
 
+    def test_task_finishes_the_extension_synced_in_one_call_are_not_called_batched(self):
+        d, ctx = load("burst-journal")
+        for entry in ctx["history"]:
+            if entry.get("task"):
+                entry["by"] = "extension"
+        _status, findings = dc.check_record(d, ctx, now=LATER)
+        self.assertEqual([f for f in findings if "journaling was batched" in f.title], [])
+
     def test_an_ai_close_on_an_extension_owned_step_is_an_anomaly(self):
         d, ctx = load("attribution-anomaly")
         _status, findings = dc.check_record(d, ctx, now=LATER)

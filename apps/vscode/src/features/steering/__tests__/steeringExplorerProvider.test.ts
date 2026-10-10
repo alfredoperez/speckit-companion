@@ -12,7 +12,6 @@ jest.mock('../../settings/companionPresetReconciler', () => ({
 jest.mock('../companionSteering', () => ({
     readCompanionConfigGroups: jest.fn().mockReturnValue([]),
     readCompanionCommands: jest.fn().mockReturnValue([]),
-    readCompanionTemplates: jest.fn().mockReturnValue([]),
     isWithinRoot: jest.fn().mockReturnValue(true),
     companionCommandFilePath: jest.fn().mockReturnValue(undefined),
     COMPANION_STEERING_PATHS: {

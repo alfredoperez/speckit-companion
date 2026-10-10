@@ -19,6 +19,14 @@ hooks:
     prompt: Execute speckit.git.feature?
     description: Create feature branch before specification
     condition: null
+  - extension: companion
+    command: speckit.companion.before-step
+    enabled: true
+    optional: false
+    priority: 10
+    prompt: Execute speckit.companion.before-step?
+    description: Read the clock so after_specify can record when specify started
+    condition: null
   before_clarify:
   - extension: git
     command: speckit.git.commit
@@ -35,6 +43,14 @@ hooks:
     prompt: Commit outstanding changes before planning?
     description: Auto-commit before implementation planning
     condition: null
+  - extension: companion
+    command: speckit.companion.before-step
+    enabled: true
+    optional: false
+    priority: 10
+    prompt: Execute speckit.companion.before-step?
+    description: Record plan start (currentStep=plan, status=planning) into .spec-context.json
+    condition: null
   before_tasks:
   - extension: git
     command: speckit.git.commit
@@ -43,6 +59,14 @@ hooks:
     prompt: Commit outstanding changes before task generation?
     description: Auto-commit before task generation
     condition: null
+  - extension: companion
+    command: speckit.companion.before-step
+    enabled: true
+    optional: false
+    priority: 10
+    prompt: Execute speckit.companion.before-step?
+    description: Record tasks start (currentStep=tasks, status=tasking) into .spec-context.json
+    condition: null
   before_implement:
   - extension: git
     command: speckit.git.commit
@@ -50,6 +74,15 @@ hooks:
     optional: true
     prompt: Commit outstanding changes before implementation?
     description: Auto-commit before implementation
+    condition: null
+  - extension: companion
+    command: speckit.companion.before-step
+    enabled: true
+    optional: false
+    priority: 10
+    prompt: Execute speckit.companion.before-step?
+    description: Record implement start (currentStep=implement, status=implementing)
+      into .spec-context.json
     condition: null
   before_checklist:
   - extension: git

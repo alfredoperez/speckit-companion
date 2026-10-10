@@ -22,7 +22,7 @@ SLASHED_NAME = re.compile(r"`/speckit\.(?!\*)[a-z][a-z.-]*")
 
 # What ships to an assistant. Docs are excluded on purpose: a human reading them on GitHub
 # needs to know these are slash commands, and no model dispatches from them.
-SHIPPED = ["commands", "nodes", "presets", "tests/golden/commands"]
+SHIPPED = ["commands", "nodes", "presets"]
 
 # The one place both spellings are the subject rather than an example.
 TEACHES_THE_RULE = "presets/_parts/command-spelling.md"

@@ -3,10 +3,11 @@
 The extension follows spec-kit's bundled-extension pattern exactly: a **lifecycle hook** runs a **command-markdown** file, which tells the agent to **run a script**.
 
 ```
-/speckit.specify  →  after_specify hook  →  speckit.companion.after-specify  →  write-context.py  →  .spec-context.json
+/speckit.plan  →  before_plan hook  →  speckit.companion.before-step  →  write-context.py  →  .spec-context.json  (start)
+               →  after_plan hook   →  speckit.companion.after-plan   →  write-context.py  →  .spec-context.json  (finish)
 ```
 
-## The twenty-three commands
+## The twenty-four commands
 
 Everything the extension declares, by family. The README's [Commands](../README.md#commands) table is the short version; this page is the detail. Both are checked against the extension's own command list on every build, so neither can fall behind a rename.
 
@@ -16,7 +17,7 @@ Everything the extension declares, by family. The README's [Commands](../README.
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
 | [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
 | [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-show`, `speckit.companion.living-validate`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
-| [Hooks](#lifecycle-hooks) | `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge` |
+| [Hooks](#lifecycle-hooks) | `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge` |
 
 ## Diagnostics
 
@@ -64,7 +65,11 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 
 | Hook | Command | optional | Effect |
 |------|---------|----------|--------|
-| `after_specify` | `speckit.companion.after-specify` | `false` (auto-runs) | Record specify completion into `.spec-context.json` |
+| `before_specify` | `speckit.companion.before-step` | `false` (auto-runs) | Read the clock so `after_specify` can record when specify started; writes nothing |
+| `before_plan` | `speckit.companion.before-step` | `false` (auto-runs) | Record plan start (`currentStep=plan`, `status=planning`) into `.spec-context.json` |
+| `before_tasks` | `speckit.companion.before-step` | `false` (auto-runs) | Record tasks start (`currentStep=tasks`, `status=tasking`) into `.spec-context.json` |
+| `before_implement` | `speckit.companion.before-step` | `false` (auto-runs) | Record implement start (`currentStep=implement`, `status=implementing`) into `.spec-context.json` |
+| `after_specify` | `speckit.companion.after-specify` | `false` (auto-runs) | Record specify start, from the time read before it, then specify completion (`currentStep=specify`, `status=specified`) into `.spec-context.json` |
 | `after_plan` | `speckit.companion.after-plan` | `false` (auto-runs) | Record plan completion (`currentStep=plan`, `status=planned`) into `.spec-context.json` |
 | `after_tasks` | `speckit.companion.after-tasks` | `false` (auto-runs) | Record tasks completion (`currentStep=tasks`, `status=ready-to-implement`) into `.spec-context.json` |
 | `after_implement` | `speckit.companion.after-implement` | `false` (auto-runs) | Per-task journaling on implement (`currentStep=implement`); `status=implemented` when all tasks checked |
@@ -73,14 +78,42 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 
 `optional: false` means the agent runs it **automatically** with no prompt. (For contrast, the bundled `git` extension's `after_specify` commit hook is `optional: true`, so it only *offers* to run.)
 
-## `speckit.companion.after-specify`
+## `speckit.companion.before-step`
 
-The first command. It carries no business logic itself — it resolves the active feature and invokes the writer script, mirroring `speckit.git.feature.md`. The other hook commands below follow the same pattern.
+Runs before `/speckit.specify`, `/speckit.plan`, `/speckit.tasks` and `/speckit.implement`. One command serves all four hooks, and which step is starting decides what it does. For plan, tasks and implement it records the step's start. The start is idempotent: when the GUI already recorded it at dispatch, the call appends nothing and the earlier time stands. A `completed` or `archived` spec is not written.
 
-**What the agent runs:**
+**What the agent runs** (plan, tasks or implement):
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --step specify --status specified --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --step <step> --status <status> --kind start --by extension
+```
+
+| Step | `--step` | `--status` |
+|------|----------|------------|
+| plan | `plan` | `planning` |
+| tasks | `tasks` | `tasking` |
+| implement | `implement` | `implementing` |
+
+For specify it runs no writer. The new feature directory does not exist yet and `.specify/feature.json` still points at the previous spec, so a write at that moment would land on finished work. It reads the clock and keeps what it prints for `after_specify`:
+
+```bash
+date -u +%Y-%m-%dT%H:%M:%SZ
+```
+
+## `speckit.companion.after-specify`
+
+Runs after `/speckit.specify`. It carries no business logic itself — it resolves the active feature and invokes the writer script, mirroring `speckit.git.feature.md`. The other hook commands follow the same pattern.
+
+**What the agent runs**, in order. First the start, with exactly the time `before_specify` read; this call is skipped when no time was read, and is a no-op when the GUI already recorded the start:
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --step specify --status specifying --kind start --by extension --at <the time read>
+```
+
+Then the finish, every time:
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --step specify --status specified --kind complete --by extension
 ```
 
 **Flags** (`scripts/write-context.py`):
@@ -89,6 +122,8 @@ python3 .specify/extensions/companion/scripts/write-context.py --step specify --
 |------|---------|---------|
 | `--step` | `specify` | Canonical step (`specify`/`clarify`/`plan`/`tasks`/`analyze`/`implement`/`converge`). A non-canonical value (incl. legacy `done`) is a no-op. |
 | `--status` | `specified` | Canonical lifecycle status written to the file. |
+| `--kind` | `start` | Which boundary of the step this call records: `start` or `complete`. |
+| `--at` | — | The time a step start is recorded at, as an ISO-8601 UTC stamp. Step starts only; every other boundary is stamped live. |
 | `--by` | `extension` | Authorship tag on the appended transition. |
 | `--feature-dir` | — | Explicit target dir; otherwise resolved (see [how-it-works.md](./how-it-works.md#active-directory-resolution)). |
 | `--tasks-file` | — | Per-task journaling mode: append one transition per completed task marker in this `tasks.md`. Idempotent; sets `status=implementing` until all checked, then the `--status` value. |
@@ -97,7 +132,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --step specify --
 
 ## `speckit.companion.after-plan`
 
-Runs after `/speckit.plan`. Resolves the active feature and records the plan step's **completion boundary** (the plan body records the matching start when it begins, so both ends of the span are extension-stamped in order).
+Runs after `/speckit.plan`. Resolves the active feature and records the plan step's **completion boundary** (the `before_plan` hook records the matching start, so both ends of the span are extension-stamped in order).
 
 **What the agent runs:**
 
@@ -107,7 +142,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --step plan --sta
 
 ## `speckit.companion.after-tasks`
 
-Runs after `/speckit.tasks`. Resolves the active feature and records the tasks step's **completion boundary** (the tasks body records the matching start when it begins, so both ends of the span are extension-stamped in order).
+Runs after `/speckit.tasks`. Resolves the active feature and records the tasks step's **completion boundary** (the `before_tasks` hook records the matching start, so both ends of the span are extension-stamped in order).
 
 **What the agent runs:**
 
@@ -165,7 +200,7 @@ See [how-it-works.md](./how-it-works.md) for what the writer guarantees (atomic,
 
 ## Read commands: status & resume
 
-Two user-invokable commands turn the captured state into something actionable. Both are **read-only** with respect to `.spec-context.json` (resume writes state only indirectly, via the `after_*` hook of the command it dispatches). Both run `.specify/extensions/companion/scripts/status-context.py`, which reads the canonical state — or derives it from on-disk files when the state file is missing/malformed (`source: derived`) — and emits a human summary plus a final machine line `RESOLUTION: { … }`.
+Two user-invokable commands turn the captured state into something actionable. Both are **read-only** with respect to `.spec-context.json` (resume writes state only indirectly, via the `before_*` and `after_*` hooks of the command it dispatches). Both run `.specify/extensions/companion/scripts/status-context.py`, which reads the canonical state — or derives it from on-disk files when the state file is missing/malformed (`source: derived`) — and emits a human summary plus a final machine line `RESOLUTION: { … }`.
 
 ### `speckit.companion.status`
 

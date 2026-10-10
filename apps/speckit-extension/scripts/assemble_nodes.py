@@ -230,11 +230,11 @@ def assemble_command(command: str, order: list = None, debug: bool = False,
 
     With `debug`, the debug-timing part is appended after the orchestrator part.
     Without it the part is absent from the output entirely — not present and
-    inactive — so an off render stays byte-identical to the frozen golden.
+    inactive — so an off render stays byte-identical to the committed body.
 
     Each node's contribution is fenced with its id so a hook or a replacement can
     name an exact point in the finished command. `markers=False` renders the same
-    body without them, which is what the golden comparison uses.
+    body without them, which is what the committed-body comparison uses.
     """
     cdir = nodes_command_dir(command)
     frame_path, _replaced = frame_source(command)
@@ -405,7 +405,7 @@ def main() -> int:
             open(command_path(command), "w", encoding="utf-8").write(assembled)
 
     if check and drift:
-        print("[assemble] DRIFT — assembled bodies differ from golden:")
+        print("[assemble] DRIFT — assembled bodies differ from the committed body:")
         for command, diff in drift:
             print(f"  - {command}")
             print(diff)

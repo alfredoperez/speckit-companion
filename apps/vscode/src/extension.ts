@@ -13,7 +13,7 @@ import { register as registerTerminalStepTracker } from './features/specs/termin
 import { registerSpecTerminals } from './features/specs/specTerminals';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
 import { OverviewProvider } from './features/settings';
-import { ensureStandardFamily } from './features/settings/companionPresetReconciler';
+import { removeLeftoverPresets } from './features/settings/companionPresetReconciler';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
 import { registerPipelineBuildCommands } from './features/specs/pipelineBuildCommands';
@@ -367,12 +367,11 @@ export async function activate(context: vscode.ExtensionContext) {
                 updateStatusBar.sync(gap);
                 return gap;
             };
-            // What the extension landing on disk means: the surfaces change AND the standard command family is
-            // re-materialized (it shells out, and its bundled preset path lives inside the extension dir).
+            // The extension landing on disk changes the surfaces and removes any preset an earlier version left installed.
             const onCompanionFilesChanged = (): CompanionGap | undefined => {
                 const gap = syncCompanionSurfaces();
                 if (gap && gap.state !== 'missing') {
-                    void ensureStandardFamily(root, {
+                    void removeLeftoverPresets(root, {
                         log: msg => outputChannel.appendLine(msg),
                     });
                 }

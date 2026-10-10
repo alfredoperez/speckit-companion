@@ -74,11 +74,10 @@ function addLivingSpecs(project, fixtures) {
         .replace(/^### (.+)$/gm, (line, heading) => (PHOTO_STORAGE_TOUCHES[heading] ? `${line}\n<!-- touches: ${PHOTO_STORAGE_TOUCHES[heading]} -->` : line));
     writeFileSync(join(project, 'capabilities', 'photo-storage', 'photo-storage.spec.md'), photoStorage);
 
-    // The Living Specs pane lists capabilities only with the Companion spec-kit extension in the project. Its standard commands are marked present, so opening the folder installs nothing.
+    // The Living Specs pane lists capabilities only with the Companion spec-kit extension in the project. No leftover preset folder is created, so opening the folder runs no preset command.
     const companion = join(project, '.specify', 'extensions', 'companion');
     mkdirSync(companion, { recursive: true });
     cpSync(join(EXTENSION, 'apps', 'speckit-extension', 'extension.yml'), join(companion, 'extension.yml'));
-    mkdirSync(join(project, '.specify', 'presets', 'companion-standard'), { recursive: true });
 
     const run = join(project, 'specs', '041-profile-photo-upload');
     cpSync(join(teamboard, '041-profile-photo-upload'), run, { recursive: true, filter: from => !/spec-context\.\w+\.json$/.test(from) });
@@ -231,7 +230,7 @@ async function launch({ root, project, user, bin }) {
             '--window-size=1680,1050',
             ...(FILM_WINDOW ? ['--force-device-scale-factor=2'] : []),
         ],
-        // In a sandbox, keep `specify` off the extension's PATH so opening the folder cannot reinstall presets into it.
+        // In a sandbox, keep `specify` off the extension's PATH so opening the folder cannot run a preset command in it.
         ...(SANDBOX ? { env: { ...process.env, PATH: `${bin}:/usr/bin:/bin:/usr/sbin:/sbin` } } : {}),
         timeout: 60000,
     });

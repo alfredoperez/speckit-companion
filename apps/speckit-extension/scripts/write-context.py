@@ -194,13 +194,16 @@ def update_context(
         else:
             ctx["workingBranch"] = checked_out
 
-    ctx["currentStep"] = step
+    # A start that lands after its step already finished is late, not a re-open.
+    late_start = kind == "start" and substep is None and _has_complete(log, step)
+    if not late_start:
+        ctx["currentStep"] = step
     # A start carries the step forward and leaves status alone. `--status` used to
     # default to "specified" and was written on every branch, so opening a step
     # without naming a status was indistinguishable from asking to go back to the
     # first one: a run would read currentStep=implement alongside status=specified
     # for the whole step, and only the later complete repaired it.
-    if status is not None:
+    if status is not None and not late_start:
         ctx["status"] = status
 
     if kind == "complete":

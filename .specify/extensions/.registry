@@ -55,13 +55,14 @@
       "installed_at": "2026-05-21T18:09:23.850204+00:00"
     },
     "companion": {
-      "version": "0.21.0",
+      "version": "0.24.0",
       "source": "local",
-      "manifest_hash": "sha256:77a18c63deae87583aebb4a415dd30bdd83b211d6c6360a5d6b400e8e258bc03",
+      "manifest_hash": "sha256:e5e50838966723d5b3b828129f5df3270e5aa97b5ddfb7e3e7530285fb3fa296",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
         "claude": [
+          "speckit.companion.before-step",
           "speckit.companion.after-specify",
           "speckit.companion.after-plan",
           "speckit.companion.after-tasks",
@@ -88,7 +89,7 @@
         ]
       },
       "registered_skills": [],
-      "installed_at": "2026-09-11T02:10:23.123915+00:00"
+      "installed_at": "2026-10-10T16:11:37.960572+00:00"
     }
   }
 }

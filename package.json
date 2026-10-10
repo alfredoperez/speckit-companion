@@ -905,12 +905,12 @@
         },
         {
           "command": "speckit.revealItemInExplorer",
-          "when": "view == speckit.views.steering && (viewItem == steering-document || viewItem == steering-file || viewItem == provider-settings || viewItem == agent || viewItem == skill || viewItem == skill-warning || viewItem == speckit-constitution || viewItem == speckit-script || viewItem == speckit-template || viewItem == companion-config-item || viewItem == companion-command || viewItem == companion-template)",
+          "when": "view == speckit.views.steering && (viewItem == steering-document || viewItem == steering-file || viewItem == provider-settings || viewItem == agent || viewItem == skill || viewItem == skill-warning || viewItem == speckit-constitution || viewItem == speckit-script || viewItem == speckit-template || viewItem == companion-config-item || viewItem == companion-command)",
           "group": "4_reveal@1"
         },
         {
           "command": "speckit.revealItemInOS",
-          "when": "view == speckit.views.steering && (viewItem == steering-document || viewItem == steering-file || viewItem == provider-settings || viewItem == agent || viewItem == skill || viewItem == skill-warning || viewItem == speckit-constitution || viewItem == speckit-script || viewItem == speckit-template || viewItem == companion-config-item || viewItem == companion-command || viewItem == companion-template)",
+          "when": "view == speckit.views.steering && (viewItem == steering-document || viewItem == steering-file || viewItem == provider-settings || viewItem == agent || viewItem == skill || viewItem == skill-warning || viewItem == speckit-constitution || viewItem == speckit-script || viewItem == speckit-template || viewItem == companion-config-item || viewItem == companion-command)",
           "group": "4_reveal@2"
         }
       ],

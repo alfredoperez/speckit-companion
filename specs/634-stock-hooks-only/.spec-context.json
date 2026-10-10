@@ -1,0 +1,1001 @@
+{
+  "workflow": "companion",
+  "specName": "Capture plain SpecKit runs with hooks only",
+  "branch": "worktree-stock-hooks-only",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T15:57:16.386Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T15:57:38.282Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T15:59:01.218Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-10T15:59:01.687Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T16:03:26.658Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:04:07.263Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:04:52.519Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:04:52.655Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:04:52.739Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:04:53.043Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T16:05:11.629Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:06:02.654Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:06:03.020Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:06:03.139Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T16:06:18.821Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:06:18.916Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:06:56.891Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:06:57.026Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:06:57.157Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:07:56.913Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:08:51.478Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:08:51.589Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:09:26.855Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:09:26.992Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:09:27.130Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:09:27.266Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:11:02.533Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:11:17.057Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:11:17.188Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:11:17.318Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:02.684Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:02.752Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:02.816Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:02.880Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:02.945Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T030",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:03.010Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T031",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:03.074Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T032",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:03.140Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:12.068Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:12.175Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:12.283Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:12.389Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:12.493Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T033",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:13:28.817Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:18:23.743Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T028",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:18:23.829Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T029",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:18:23.915Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:18:24.021Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T034",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:20:42.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T035",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:20:42.360Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T036",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:20:42.446Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:20:42.465Z"
+    },
+    {
+      "step": "implement",
+      "substep": "execute",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T16:21:01.662Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "36 of 36 tasks done; extension and VS Code checks pass",
+  "coverage": {
+    "FR-001": {
+      "title": "The extension does not ship or install the companion-standard preset",
+      "tasks": [
+        "T003",
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-002": {
+      "title": "A plain SpecKit step records its start through a lifecycle hook",
+      "tasks": [
+        "T001",
+        "T013"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_before_step_hook.py::StartHooks"
+      ]
+    },
+    "FR-003": {
+      "title": "The specify start hook never writes to a spec that existed before the step",
+      "tasks": [
+        "T001",
+        "T013"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_before_step_hook.py::test_specify_reads_the_clock_and_writes_nothing_before_its_folder_exists"
+      ]
+    },
+    "FR-004": {
+      "title": "The specify finish hook records a finish, and a start when a time was read",
+      "tasks": [
+        "T002",
+        "T013"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_before_step_hook.py::SpecifyFinishHook"
+      ]
+    },
+    "FR-005": {
+      "title": "VS Code removes an installed companion-standard preset once and never adds it",
+      "tasks": [
+        "T016",
+        "T017",
+        "T020"
+      ],
+      "tests": [
+        "apps/vscode/src/features/settings/__tests__/companionPresetReconciler.test.ts"
+      ]
+    },
+    "FR-006": {
+      "title": "Activation completes when the specify tool is missing or a preset command fails",
+      "tasks": [
+        "T016",
+        "T017"
+      ],
+      "tests": [
+        "apps/vscode/src/features/settings/__tests__/companionPresetReconciler.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "The note on a plain SpecKit step does not claim the command body carries the capture protocol",
+      "tasks": [
+        "T022"
+      ],
+      "tests": [
+        "apps/vscode/src/ai-providers/__tests__/promptBuilder.test.ts"
+      ]
+    },
+    "FR-008": {
+      "title": "The note on a Companion step is unchanged",
+      "tasks": [
+        "T022"
+      ],
+      "tests": [
+        "apps/vscode/src/ai-providers/__tests__/promptBuilder.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "Build and checks pass with no preset carriers",
+      "tasks": [
+        "T005",
+        "T006",
+        "T007",
+        "T009",
+        "T010",
+        "T034"
+      ],
+      "tests": [
+        "apps/speckit-extension/scripts/build.py --check"
+      ]
+    },
+    "FR-010": {
+      "title": "The new start hook command is listed wherever the hook commands are",
+      "tasks": [
+        "T014",
+        "T023",
+        "T024",
+        "T033"
+      ],
+      "tests": [
+        "apps/speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "FR-011": {
+      "title": "Docs and changelogs describe plain SpecKit commands as untouched and the empty task list",
+      "tasks": [
+        "T025",
+        "T026",
+        "T028",
+        "T029",
+        "T030"
+      ]
+    },
+    "FR-012": {
+      "title": "Companion workflow commands do not run the new start hooks a second time",
+      "tasks": [
+        "T013"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 45,
+    "projectedTasks": 30,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "Companion workflow commands keep their behavior",
+    "No runtime events capture",
+    "No refresh-after-upgrade mechanism",
+    "The bench harness in speckit-sandboxes is not edited here",
+    "The Tasks card stays empty on plain SpecKit runs"
+  ],
+  "context": [
+    "area: apps/speckit-extension presets, hooks, build and parity tooling",
+    "area: apps/vscode preset reconciler and prompt preamble",
+    "area: Workflow Builder stock board and steering view",
+    "constraint: no version bump on the branch",
+    "constraint: committed speckit skill fixtures change only through the specify CLI",
+    "evidence: hooks-only Sonnet runs record start and finish for specify, plan and tasks"
+  ],
+  "intent": "Stop editing spec-kit commands and capture plain SpecKit runs through lifecycle hooks alone",
+  "workingBranch": "634-stock-hooks-only",
+  "decisions": [
+    {
+      "decision": "One before-step command registered for four before hooks",
+      "why": "Every hook command shows in the user command list; four near-identical ones are noise",
+      "rejected": "One command per step"
+    },
+    {
+      "decision": "Specify start is read from the clock by the before hook and written by the after hook with --at",
+      "why": "The spec folder does not exist yet and feature.json still points at the previous spec",
+      "rejected": "A pending-start file written by a new writer flag"
+    },
+    {
+      "decision": "Leave the VS Code preamble code unchanged and pin it with a test",
+      "why": "The slim text is chosen by command name, so stock commands already get the full stock preamble",
+      "rejected": "A third preamble mode that drops the agent close"
+    },
+    {
+      "decision": "companion-standard joins the presets the reconciler removes once",
+      "why": "Existing installs would otherwise keep the wrapped commands forever",
+      "rejected": "Leave installed presets alone"
+    },
+    {
+      "decision": "Remove the Steering sidebar Companion Templates group",
+      "why": "It lists the preset command files, which no longer exist",
+      "rejected": "Repoint it at the shared parts"
+    },
+    {
+      "decision": "The doctor burst warning counts only by:ai task finishes",
+      "why": "A hooks-only run journals every task in one extension sync call",
+      "rejected": "Exempt by workflow name"
+    },
+    {
+      "decision": "Delete the golden files and their checks",
+      "why": "An empty carrier list makes them pass while checking nothing",
+      "rejected": "Keep the machinery for a future preset"
+    },
+    {
+      "decision": "Regenerate committed specify fixtures through the CLI",
+      "why": "They are specify init output and hand edits drift",
+      "rejected": "Leave the wrapped stock skills in the repo"
+    },
+    {
+      "decision": "Fixed two tests outside the planned file list: the hard-coded 23 command count and the removed sidebar item in the manifest test",
+      "why": "Both were invalidated by this change",
+      "rejected": "Leave them red for a follow-up"
+    },
+    {
+      "decision": "Regenerated the stock skills by adding the retired preset and removing it through the CLI",
+      "why": "It is the exact path a user project takes, and it changed only the expected nine files",
+      "rejected": "specify integration upgrade --force, which overwrites templates and scripts"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Plan readers were not re-dispatched from dispatch-briefs: two read-only agents had already mapped the same three areas minutes earlier in this run, and their findings are the research basis"
+    },
+    {
+      "note": "Plan check: five call-path lines cite a file with no line number, so they are unverified"
+    },
+    {
+      "note": "The final preset-free build was not re-run through a real agent session; the hooks-only bench ran on the branch before the preset was deleted, with the preset simply not installed",
+      "step": "implement"
+    },
+    {
+      "note": "Two webview suites cannot load in this worktree because node_modules is absent here; they are untouched by this change and run in CI",
+      "step": "implement"
+    },
+    {
+      "note": "The bench harness in speckit-sandboxes still installs companion-standard for its Companion arms and will fail to bake until its PRESET_BY_MODE is cleared",
+      "step": "implement"
+    },
+    {
+      "note": "Worker task finishes had to use --kind=complete: the worktree shell guard reads --kind complete as the shell builtin",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: task finishes were journaled in bursts (worker results closed together at wave joins), and three capture calls failed without an outcome during the worktree shell-guard refusals; both are this run's own handling, not product defects"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Delete the preset and its golden tooling, flip the reconciler to remove-once, keep the preamble, document the new start hook",
+      "key_finding": "Stock commands sent from VS Code already get the full stock preamble, so the Tasks card still fills there and no preamble change is needed"
+    },
+    "tasks": {
+      "summary": "36 tasks in 7 phases: setup done, foundational deletion in two waves, four story phases with disjoint files, polish"
+    },
+    "implement": {
+      "summary": "The companion-standard preset is gone; plain SpecKit runs are captured by ten lifecycle hooks; VS Code removes a leftover preset once"
+    }
+  },
+  "approach": "Delete the companion-standard preset with its goldens and parity checks. Capture plain SpecKit runs through ten lifecycle hooks, four of them new before hooks sharing one command. The VS Code extension removes a leftover preset once and never adds it.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the before-step hook command and registered it for the four before events",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.before-step.md",
+        "apps/speckit-extension/extension.yml"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "after-specify writes a start from the noted time, then a real complete",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.after-specify.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Deleted the companion-standard preset folder",
+      "files": [
+        "apps/speckit-extension/presets/companion-standard/"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Deleted the golden files and the preset wrap test",
+      "files": [
+        "apps/speckit-extension/tests/golden/",
+        "apps/speckit-extension/tests/test_standard_preset_wrap.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Carrier list is the seven namespaced bodies; golden helpers removed",
+      "files": [
+        "apps/speckit-extension/scripts/_command_parts.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Dropped the stock timing-fence test class and its unused parity import",
+      "files": [
+        "apps/speckit-extension/tests/test_nodes.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Dropped --bless, bless(), the preset glob and the golden clause from build.py and reworded its docstring",
+      "files": [
+        "apps/speckit-extension/scripts/build.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Renamed the three tests that said golden and reworded their comments, assertions unchanged",
+      "files": [
+        "apps/speckit-extension/tests/test_node_replacement.py",
+        "apps/speckit-extension/tests/test_instruction_budget.py",
+        "apps/speckit-extension/tests/test_node_boundaries.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Parity check is region equality over the seven namespaced bodies; golden and stock timing-fence checks removed",
+      "files": [
+        "apps/speckit-extension/scripts/check_shape_parity.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Reworded the golden comments and the drift message in the assembler",
+      "files": [
+        "apps/speckit-extension/scripts/assemble_nodes.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Spelling sweep no longer scans the deleted golden directory",
+      "files": [
+        "apps/speckit-extension/tests/test_command_spelling.py"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Renamed the CI step that named preset goldens",
+      "files": [
+        ".github/workflows/ci.yml"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Test pins the four before hooks to one command and both specify finish calls",
+      "files": [
+        "apps/speckit-extension/tests/test_before_step_hook.py"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Added the start hook to the never-prompt roster",
+      "files": [
+        "apps/speckit-extension/scripts/check_quality.py"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "The batching warning counts only agent-written task finishes, with a test",
+      "files": [
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Pinned that the four stock steps get the full stock preamble and never the body-carries text",
+      "files": [
+        "apps/vscode/src/ai-providers/__tests__/promptBuilder.test.ts"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Added the before-step row to the hooks table and made the hook prose and diagram show a start and a finish hook",
+      "files": [
+        "apps/speckit-extension/README.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Twenty-four commands, four before rows in the hooks table, a before-step section, both after-specify writer calls, and start-from-hook wording",
+      "files": [
+        "apps/speckit-extension/docs/commands.md"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Command families now says stock commands are untouched and captured by hooks, no preset is installed, and how a leftover one is removed",
+      "files": [
+        "apps/speckit-extension/docs/install.md"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "Replaced the stock carrier section with how a stock run is captured by hooks and dropped the golden and bless sentences",
+      "files": [
+        "apps/speckit-extension/docs/node-model.md"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "Hook chain shows before and after, and the publishing notes stop hard-coding a command count",
+      "files": [
+        "apps/speckit-extension/docs/how-it-works.md",
+        "apps/speckit-extension/docs/contributing.md",
+        "apps/speckit-extension/docs/publishing.md"
+      ]
+    },
+    "T030": {
+      "status": "DONE",
+      "did": "Isolation exception now says activation only removes a leftover Companion preset",
+      "files": [
+        "CLAUDE.md"
+      ]
+    },
+    "T031": {
+      "status": "DONE",
+      "did": "Contributor guides no longer point at preset overrides, the preset reconciler or the bless step",
+      "files": [
+        "docs/doc-sync.md",
+        ".claude/pr-profile.md",
+        ".claude/review-checklist.md",
+        ".claude/skills/release-qa/SKILL.md"
+      ]
+    },
+    "T032": {
+      "status": "DONE",
+      "did": "Storybook preset fixture is a made-up team preset",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__stories__/PipelineBuilder.stories.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Rewrote the reconciler tests around removal only: once when installed, nothing when absent, never add or enable, all four, failing CLI, second run",
+      "files": [
+        "apps/vscode/src/features/settings/__tests__/companionPresetReconciler.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "companion-standard is now a removed-once leftover; add, enable and stale paths deleted; entry point renamed removeLeftoverPresets",
+      "files": [
+        "apps/vscode/src/features/settings/companionPresetReconciler.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Removed the Companion preset templates reader and its tests",
+      "files": [
+        "apps/vscode/src/features/steering/companionSteering.ts",
+        "apps/vscode/src/features/steering/__tests__/companionSteering.test.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Desktop check no longer fakes the companion-standard preset folder; comments say what happens now",
+      "files": [
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Activation calls removeLeftoverPresets behind the same gate; comment corrected",
+      "files": [
+        "apps/vscode/src/extension.ts"
+      ]
+    },
+    "T033": {
+      "status": "DONE",
+      "did": "Regenerated the hook list, the registry and the seven stock skills through the specify CLI",
+      "files": [
+        ".specify/extensions.yml",
+        ".specify/extensions/.registry",
+        ".claude/skills/speckit-specify/SKILL.md",
+        ".claude/skills/speckit-plan/SKILL.md",
+        ".claude/skills/speckit-tasks/SKILL.md",
+        ".claude/skills/speckit-implement/SKILL.md",
+        ".claude/skills/speckit-clarify/SKILL.md",
+        ".claude/skills/speckit-analyze/SKILL.md",
+        ".claude/skills/speckit-constitution/SKILL.md"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Removed the Companion Templates group from the Steering tree, its context values, mock and when-clauses",
+      "files": [
+        "apps/vscode/src/features/steering/steeringExplorerProvider.ts",
+        "apps/vscode/src/core/constants.ts",
+        "apps/vscode/src/features/steering/__tests__/steeringExplorerProvider.test.ts",
+        "package.json",
+        "apps/vscode/src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T028": {
+      "status": "DONE",
+      "did": "Replaced the unreleased wrap entry with the hooks-only entries",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T029": {
+      "status": "DONE",
+      "did": "Replaced the unreleased refresh entry with the cleanup entries",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T034": {
+      "status": "DONE",
+      "did": "Ran the extension checks: build, package manifest, command emissions, quality gate, 1,629 Python tests",
+      "files": [
+        "apps/speckit-extension/"
+      ]
+    },
+    "T035": {
+      "status": "DONE",
+      "did": "Ran the VS Code checks: type-check clean, settings, steering, prompt, manifest and docs suites pass",
+      "files": [
+        "apps/vscode/"
+      ]
+    },
+    "T036": {
+      "status": "DONE",
+      "did": "Fresh install leaves 7 of 7 stock commands identical to spec-kit; docs carry no old claim beyond the migration note",
+      "files": [
+        "specs/634-stock-hooks-only/"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "extension build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "extension python tests",
+      "command": "python3 -m pytest apps/speckit-extension/tests -q -p no:cacheprovider",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 65.2,
+      "result": "........................................................................ [ 96%] · .....................................................                    [100%] · 1629 passed, 8 skipped in 64.95s (0:01:04)"
+    },
+    {
+      "what": "command list agrees with docs and registry",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 24 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "shipped scripts closure",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 24 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "command quality gate",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  ✓ [PASS] never-prompts-resume: no user-prompt instruction ·   ✓ [PASS] never-prompts-classify: no user-prompt instruction ·   → 14 pass / 0 warn / 0 fail / 0 info"
+    },
+    {
+      "what": "vscode type-check",
+      "command": "npx tsc -p ./ --noEmit",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "no output"
+    },
+    {
+      "what": "vscode settings, steering, prompt, manifest and docs tests",
+      "command": "npx jest apps/vscode/src/features/settings apps/vscode/src/features/steering apps/vscode/src/ai-providers apps/vscode/src/features/specs/__tests__/manifest.test.ts apps/vscode/tests/integration",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.0,
+      "result": "Snapshots:   0 total · Time:        69.338 s, estimated 70 s · Ran all test suites matching /apps\\/vscode\\/src\\/features\\/settings|apps\\/vscode\\/src\\/features\\/steering|apps\\/vscode\\/src\\/ai-providers|apps\\/vscode\\/src\\/features\\/specs\\/__tests__\\/manifest.test.ts|apps\\/vscode\\/tests\\/integration/i."
+    },
+    {
+      "what": "A fresh install leaves the seven stock commands byte-identical to spec-kit and installs no preset",
+      "command": "scratch script: specify init twice, extension add once, cmp the seven skills",
+      "result": "7 of 7 identical, 0 presets"
+    },
+    {
+      "what": "Hooks-only capture on real Sonnet runs before the build: specify, plan and tasks record a start and a finish from a terminal and VS Code style",
+      "command": "two headless runs in throwaway bench cells",
+      "result": "3 of 4 steps timed; implement started and stayed open because a manual task was left unticked"
+    }
+  ]
+}

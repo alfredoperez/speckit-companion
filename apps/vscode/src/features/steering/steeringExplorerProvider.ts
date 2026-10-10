@@ -10,7 +10,7 @@ import { AgentManager, AgentInfo } from '../agents/agentManager';
 import { SkillManager, SkillInfo, SkillType } from '../skills/skillManager';
 import { AIProviders, TreeItemContext } from '../../core/constants';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
-import { readCompanionConfigGroups, readCompanionCommands, readCompanionTemplates, isWithinRoot, companionCommandFilePath, COMPANION_STEERING_PATHS } from './companionSteering';
+import { readCompanionConfigGroups, readCompanionCommands, isWithinRoot, companionCommandFilePath, COMPANION_STEERING_PATHS } from './companionSteering';
 import { resolveProviderIconKey } from './providerIcon';
 import { detectHostIde } from '../../core/utils/hostIde';
 import { getProjectRoot } from '../../core/projectRoot';
@@ -266,8 +266,6 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             return this.getCompanionConfigChildren();
         } else if (element.contextValue === TreeItemContext.companionCommandsGroup) {
             return this.getCompanionCommandChildren();
-        } else if (element.contextValue === TreeItemContext.companionTemplatesGroup) {
-            return this.getCompanionTemplateChildren();
         }
 
         return [];
@@ -916,16 +914,6 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
             this.context
         ));
 
-        if (readCompanionTemplates(root).length > 0) {
-            items.push(new SteeringItem(
-                'Templates',
-                vscode.TreeItemCollapsibleState.Collapsed,
-                TreeItemContext.companionTemplatesGroup,
-                '',
-                this.context
-            ));
-        }
-
         return items;
     }
 
@@ -976,29 +964,6 @@ export class SteeringExplorerProvider extends BaseTreeDataProvider<SteeringItem>
                     : undefined
             );
             item.tooltip = cmd.description || cmd.name;
-            return item;
-        });
-    }
-
-    /** Preset command-body templates the Companion ships; each opens its template file. */
-    private getCompanionTemplateChildren(): SteeringItem[] {
-        const root = this.companionWorkspaceRoot();
-        if (!root) {
-            return [];
-        }
-        return readCompanionTemplates(root).map(tpl => {
-            const filePath = companionCommandFilePath(root, tpl.file);
-            const item = new SteeringItem(
-                tpl.name,
-                vscode.TreeItemCollapsibleState.None,
-                TreeItemContext.companionTemplate,
-                filePath ?? '',
-                this.context,
-                filePath
-                    ? { command: 'vscode.open', title: `Open ${tpl.name}`, arguments: [vscode.Uri.file(filePath)] }
-                    : undefined
-            );
-            item.tooltip = `Companion template: ${tpl.name}`;
             return item;
         });
     }
@@ -1086,10 +1051,6 @@ class SteeringItem extends vscode.TreeItem {
         } else if (contextValue === C.companionCommandsGroup) {
             this.iconPath = new vscode.ThemeIcon('terminal');
         } else if (contextValue === C.companionCommand) {
-            this.iconPath = undefined;
-        } else if (contextValue === C.companionTemplatesGroup) {
-            this.iconPath = new vscode.ThemeIcon('files');
-        } else if (contextValue === C.companionTemplate) {
             this.iconPath = undefined;
         } else if (contextValue === C.agent) {
             this.iconPath = undefined;

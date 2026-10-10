@@ -81,7 +81,7 @@ In **Claude Code**, the SpecKit Companion mod shows where the run stands in a ba
 
 ## Traceability: every run leaves an enhanced Overview
 
-Install it and change nothing else. The extension rides your *existing* Spec Kit commands through lifecycle hooks, the small scripts Spec Kit runs after each command finishes. Each step (specify, plan, tasks, implement) is recorded as it happens, implement journals every task as it completes, and each step also records *why*: the goal and out-of-scope fence at specify, decisions with rejected alternatives at plan, requirement-to-task coverage at tasks, and what was verified at implement.
+Install it and change nothing else. The extension rides your *existing* Spec Kit commands through lifecycle hooks, the small commands Spec Kit runs as each step starts and again when it finishes. Each step (specify, plan, tasks, implement) is recorded as it happens, implement journals every task as it completes, and each step also records *why*: the goal and out-of-scope fence at specify, decisions with rejected alternatives at plan, requirement-to-task coverage at tasks, and what was verified at implement.
 
 It also **never lies about state**. When a hook did not fire (a skipped command, a run outside the hooks, a project that never had the extension), the state is rebuilt from the documents on disk, so what you see matches what is there.
 
@@ -321,7 +321,8 @@ These run automatically when their lifecycle event fires. They keep `.spec-conte
 
 | Command | Fired by | What it records |
 |---------|----------|-----------------|
-| `speckit.companion.after-specify` | `after_specify` | Specify completion (`specified`) |
+| `speckit.companion.before-step` | `before_specify`, `before_plan`, `before_tasks`, `before_implement` | Step start for plan, tasks and implement; for specify it reads the clock |
+| `speckit.companion.after-specify` | `after_specify` | Specify start, from the time read before it, then completion (`specified`) |
 | `speckit.companion.after-plan` | `after_plan` | Plan completion (`planned`) |
 | `speckit.companion.after-tasks` | `after_tasks` | Tasks completion (`ready-to-implement`) |
 | `speckit.companion.after-implement` | `after_implement` | Per-task journaling on implement (`implemented` when every task is checked) |
@@ -349,12 +350,12 @@ Verify with `specify extension list` (`companion` present), then run a real `/sp
 ## How it works
 
 ```
-/speckit.specify  →  after_specify hook  →  speckit.companion.after-specify
-                                              →  write-context.py
-                                              →  .spec-context.json  (append-only history[])  →  GUI lights up
+/speckit.plan  →  before_plan hook  →  speckit.companion.before-step  ┐
+               →  after_plan hook   →  speckit.companion.after-plan   ┴→  write-context.py
+                                                                       →  .spec-context.json  (append-only history[])  →  GUI lights up
 ```
 
-Each lifecycle hook appends one entry to the canonical `history[]` and advances `currentStep` / `status`; the converge hooks move `currentStep` only, since converge owns no status. Inside implement, each completed task is journaled as a substep, so the viewer never mistakes a single task for the whole step finishing. When no hook fired, the same shape is rebuilt from the documents on disk and tagged `by: "derive"`. Full chain, the writer's guarantees, and the canonical schema: [docs/how-it-works.md](./docs/how-it-works.md).
+A step's `before_*` hook records its start and its `after_*` hook records its finish, so each step has a real duration. Each write appends one entry to the canonical `history[]` and advances `currentStep` / `status`; specify's start is the exception, read from the clock before the step and written after it, once the spec folder exists. The converge hooks move `currentStep` only, since converge owns no status. Inside implement, each completed task is journaled as a substep, so the viewer never mistakes a single task for the whole step finishing. When no hook fired, the same shape is rebuilt from the documents on disk and tagged `by: "derive"`. Full chain, the writer's guarantees, and the canonical schema: [docs/how-it-works.md](./docs/how-it-works.md).
 
 ## Docs & links
 
