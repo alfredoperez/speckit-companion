@@ -175,15 +175,24 @@ export default defineConfig({
         {
           label: 'In your IDE',
           items: [
-            { label: 'Install', slug: 'docs/ide/install' },
-            { label: 'Choose an AI provider', slug: 'docs/ide/choose-a-provider' },
-            { label: 'Configuration', slug: 'docs/reference/configuration' },
-            { label: 'Your first spec', slug: 'docs/start/your-first-spec' },
-            { label: 'The sidebar', slug: 'docs/navigate/the-sidebar' },
-            { label: 'Inside the viewer', slug: 'docs/navigate/inside-the-viewer' },
+            {
+              label: 'Set up',
+              items: [
+                { label: 'Install', slug: 'docs/ide/install' },
+                { label: 'Choose an AI provider', slug: 'docs/ide/choose-a-provider' },
+                { label: 'Configuration', slug: 'docs/reference/configuration' },
+              ],
+            },
+            {
+              label: 'Look around',
+              items: [
+                { label: 'Your first spec', slug: 'docs/start/your-first-spec' },
+                { label: 'The sidebar', slug: 'docs/navigate/the-sidebar' },
+                { label: 'Inside the viewer', slug: 'docs/navigate/inside-the-viewer' },
+              ],
+            },
             {
               label: 'Each step',
-              collapsed: true,
               items: [
                 { label: 'Constitution', slug: 'docs/steps/constitution' },
                 { label: 'Specify', slug: 'docs/steps/specify' },
@@ -202,8 +211,14 @@ export default defineConfig({
               ],
             },
             {
+              label: 'Other ways to start',
+              items: [
+                { label: 'Fix a bug', slug: 'docs/ide/fix-a-bug', badge: { text: 'New', variant: 'tip' } },
+                { label: 'Assess an idea', slug: 'docs/ide/assess-an-idea', badge: { text: 'New', variant: 'tip' } },
+              ],
+            },
+            {
               label: 'Read the results',
-              collapsed: true,
               items: [
                 { label: 'Reading a spec', slug: 'docs/results/reading-a-spec' },
                 { label: 'The Overview', slug: 'docs/results/the-overview' },
@@ -211,8 +226,6 @@ export default defineConfig({
                 { label: 'Living specs', slug: 'docs/results/living-specs' },
               ],
             },
-            { label: 'Fix a bug', slug: 'docs/ide/fix-a-bug', badge: { text: 'New', variant: 'tip' } },
-            { label: 'Assess an idea', slug: 'docs/ide/assess-an-idea', badge: { text: 'New', variant: 'tip' } },
           ],
         },
         {
