@@ -135,15 +135,16 @@ const dotHtml = (part: ScreenPart, notes: Map<number, ScreenNote>): string => {
     return `<button type="button" class="screen-dot" data-n="${part.dot}" aria-label="${label}">${part.dot}</button>`;
 };
 
-function renderPart(part: ScreenPart, notes: Map<number, ScreenNote>): string {
+function renderPart(part: ScreenPart, notes: Map<number, ScreenNote>, inRow = false): string {
     const mark = part.mark ? ` screen-part--${part.mark}` : '';
     const hint = part.mark ? `<span class="screen-sr"> (${part.mark})</span>` : '';
     const dot = dotHtml(part, notes);
-    const open = `<div class="screen-part screen-part--${part.kind}${mark}">`;
+    const inline = part.kind === 'list' && inRow ? ' screen-part--inline' : '';
+    const open = `<div class="screen-part screen-part--${part.kind}${inline}${mark}">`;
     const text = escapeHtml(part.text);
     switch (part.kind) {
         case 'row':
-            return `${open}${part.children.map((child) => renderPart(child, notes)).join('')}${hint}${dot}</div>`;
+            return `${open}${part.children.map((child) => renderPart(child, notes, true)).join('')}${hint}${dot}</div>`;
         case 'field':
             return `${open}<span class="screen-label">${text}${hint}</span><span class="screen-input"></span>${dot}</div>`;
         case 'list':

@@ -49,7 +49,7 @@ list: General | Account | Billing (changed) (3)
 | `row:` | Lays its children out side by side. It holds no text, and only a row has parts under it. |
 | Indent | Two spaces a level, never more than one deeper than the line above. No tabs. |
 | `field: label` | A labelled empty input |
-| `list: a \| b \| c` | Items split on `\|` |
+| `list: a \| b \| c` | Items split on `\|`; inside a `row:` they draw side by side, at the top level they stack |
 | `(new)` `(changed)` | A suffix for what the change touches: green and amber edges. A part takes at most one. Marks and dots belong to the whole part and go at the end of the line: written in the middle of a `list:` they are plain text. |
 | `(1)` | A numbered dot, as a suffix, on any part line. A part takes at most one, and a number is used once. |
 | Notes | After the fence, one line per dot: `1: Bold lead. Rest of the sentence.` The first sentence is drawn bold. |

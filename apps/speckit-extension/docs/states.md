@@ -60,6 +60,8 @@ The budget is 2 blocks a plan, 8 states a block, 10 arrows a block, a grid of 4 
 
 Rounded boxes on the grid, arrows with their labels (two arrows between the same pair run on opposite sides, each label on its own arrow's outer side), a small `start` or `final` tag under those states, and a dashed green outline for what is proposed. Each state is a button with a hover and a focus ring. The start state is picked first, and clicking another shows `Name: sentence` in the caption under the diagram. The accent colour marks the picked state and nothing else, and arrows stay neutral. Under the caption, the picked state lists its way out, one `→ Target: label` line per arrow, with a proposed move in green; a state with no way out lists nothing. An arrow that would cross another box bends around it in one curve, and the picture always grows to hold its labels, so nothing is clipped.
 
+A label is drawn on the diagram only if it fits, within the gap between side-by-side boxes or about 16 characters elsewhere; one that does not fit is left off the diagram, listed under its state in the moves, and the hint says so.
+
 A dense block, more than 8 arrows, draws the arrows without labels, since the transitions list carries them. The picked state's arrows stay at full strength and the rest fade. A sparse block keeps its labels and every arrow at full strength. The header carries `4 states`, and `1 proposed` when there is one.
 
 The pick is local to the page: it is not saved, and a redraw puts it back on the start state.

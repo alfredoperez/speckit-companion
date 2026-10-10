@@ -1155,15 +1155,16 @@ var dotHtml = (part, notes) => {
   const label = escapeHtml(`Note ${part.dot}: ${(note?.lead ?? "").replace(/\*\*|`/g, "")}`);
   return `<button type="button" class="screen-dot" data-n="${part.dot}" aria-label="${label}">${part.dot}</button>`;
 };
-function renderPart(part, notes) {
+function renderPart(part, notes, inRow = false) {
   const mark = part.mark ? ` screen-part--${part.mark}` : "";
   const hint = part.mark ? `<span class="screen-sr"> (${part.mark})</span>` : "";
   const dot = dotHtml(part, notes);
-  const open = `<div class="screen-part screen-part--${part.kind}${mark}">`;
+  const inline = part.kind === "list" && inRow ? " screen-part--inline" : "";
+  const open = `<div class="screen-part screen-part--${part.kind}${inline}${mark}">`;
   const text = escapeHtml(part.text);
   switch (part.kind) {
     case "row":
-      return `${open}${part.children.map((child) => renderPart(child, notes)).join("")}${hint}${dot}</div>`;
+      return `${open}${part.children.map((child) => renderPart(child, notes, true)).join("")}${hint}${dot}</div>`;
     case "field":
       return `${open}<span class="screen-label">${text}${hint}</span><span class="screen-input"></span>${dot}</div>`;
     case "list":
@@ -1413,7 +1414,7 @@ var MIN_BOX_W = 120;
 var MAX_BOX_W = 200;
 var CELL_H = 52;
 var MAX_CHARS = Math.floor((MAX_BOX_W - BOX_PAD_X * 2) / CHAR_W);
-var GAP_X = 104;
+var GAP_X = 120;
 var GAP_Y = 64;
 var PAD_X = 24;
 var PAD_Y = 36;
@@ -1445,6 +1446,8 @@ function edge(from, to, cellW) {
 var MAX_LABELLED_ARROWS = 8;
 var LABEL_CHAR_W = 7;
 var LABEL_H = 16;
+var LABEL_MAX_CHARS = 16;
+var LABEL_GAP_MARGIN = 8;
 var VIEW_PAD = 10;
 var CLEAR = 4;
 var sample = (p, c, q) => [0, 0.25, 0.5, 0.75, 1].map((t) => ({
@@ -1455,6 +1458,11 @@ function labelRect(text, at, anchor) {
   const w = text.length * LABEL_CHAR_W + 6;
   const x = anchor === "start" ? at.x : anchor === "end" ? at.x - w : at.x - w / 2;
   return { x, y: at.y - LABEL_H / 2, w, h: LABEL_H };
+}
+function labelFits(label, a, b, cellW) {
+  if (!label) return true;
+  const adjacent = a.y === b.y && Math.abs(b.x - a.x) === cellW + GAP_X;
+  return adjacent ? label.length * LABEL_CHAR_W + 6 <= GAP_X - LABEL_GAP_MARGIN : label.length <= LABEL_MAX_CHARS;
 }
 function crossedCentre(p, q, arrow, ctx) {
   for (let step = 1; step < 24; step++) {
@@ -1469,14 +1477,15 @@ function crossedCentre(p, q, arrow, ctx) {
   return null;
 }
 function renderArrow(arrow, ctx) {
-  const { centres, cellW, paired, labelled } = ctx;
+  const { centres, cellW, paired, labelled, forced } = ctx;
   const a = centres.get(arrow.from);
   const b = centres.get(arrow.to);
   const cls = `states-arrow${arrow.proposed ? " states-arrow--proposed" : ""}`;
   const marker = arrow.proposed ? "states-head-proposed" : "states-head";
   const wrap = (inner) => `<g class="states-edge" data-from="${arrow.from}">${inner}</g>`;
-  const text = (at2, anchor2) => labelled && arrow.label ? `<text class="states-label" x="${round(at2.x)}" y="${round(at2.y)}" text-anchor="${anchor2}" dominant-baseline="central">${escapeHtml(arrow.label)}</text>` : "";
-  const rect = (at2, anchor2) => labelled && arrow.label ? labelRect(arrow.label, at2, anchor2) : null;
+  const shown = labelled && (forced || labelFits(arrow.label, a, b, cellW));
+  const text = (at2, anchor2) => shown && arrow.label ? `<text class="states-label" x="${round(at2.x)}" y="${round(at2.y)}" text-anchor="${anchor2}" dominant-baseline="central">${escapeHtml(arrow.label)}</text>` : "";
+  const rect = (at2, anchor2) => shown && arrow.label ? labelRect(arrow.label, at2, anchor2) : null;
   if (arrow.from === arrow.to) {
     const x = a.x;
     const top = a.y - CELL_H / 2;
@@ -1544,6 +1553,12 @@ function viewBoxOf(width, height, drawn) {
   const y = Math.floor(y0 - VIEW_PAD);
   return { x, y, w: Math.ceil(x1 + VIEW_PAD) - x, h: Math.ceil(y1 + VIEW_PAD) - y };
 }
+function droppedLabels(parsed) {
+  if (parsed.arrows.length > MAX_LABELLED_ARROWS) return false;
+  const cellW = boxWidth(parsed.states);
+  const { centres } = layout(parsed.grid, cellW);
+  return parsed.arrows.some((arrow) => !labelFits(arrow.label, centres.get(arrow.from), centres.get(arrow.to), cellW));
+}
 function renderDiagram(parsed) {
   const cellW = boxWidth(parsed.states);
   const { width, height, centres } = layout(parsed.grid, cellW);
@@ -1592,7 +1607,7 @@ function renderStatesCard(body, info, context) {
   const shown = frames[start] ? `<div class="states-shown">${frames[start]}</div>` : "";
   const stash = frames.some(Boolean) ? `<div class="states-screens" hidden>${frames.map((html, i) => html ? `<div data-state="${i}">${html}</div>` : "").join("")}</div>` : "";
   const note = context.note ? `<div class="states-note">${escapeHtml(context.note)}</div>` : "";
-  const card = `<div class="states-card"><div class="states-top"><span class="states-badge">states</span>${titleHtml}${legend}</div><div class="states-hint">Pick a state to read what it means</div>${renderDiagram(parsed)}<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div>${movesHtml(parsed, start)}${shown}${stash}<ul class="states-list">${list}</ul>${note}<span class="line-content" hidden>${escapeHtml(body.trim())}</span></div>`;
+  const card = `<div class="states-card"><div class="states-top"><span class="states-badge">states</span>${titleHtml}${legend}</div><div class="states-hint">${droppedLabels(parsed) ? "Pick a state to read what it means and where it goes" : "Pick a state to read what it means"}</div>${renderDiagram(parsed)}<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div>${movesHtml(parsed, start)}${shown}${stash}<ul class="states-list">${list}</ul>${note}<span class="line-content" hidden>${escapeHtml(body.trim())}</span></div>`;
   return context.wrapLine(card, context.firstLine);
 }
 

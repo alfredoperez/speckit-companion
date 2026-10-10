@@ -125,7 +125,7 @@ export const MIN_BOX_W = 120;
 export const MAX_BOX_W = 200;
 export const CELL_H = 52;
 const MAX_CHARS = Math.floor((MAX_BOX_W - BOX_PAD_X * 2) / CHAR_W);
-const GAP_X = 104;
+const GAP_X = 120;
 const GAP_Y = 64;
 const PAD_X = 24;
 const PAD_Y = 36;
@@ -166,6 +166,8 @@ function edge(from: Point, to: Point, cellW: number): Point {
 export const MAX_LABELLED_ARROWS = 8;
 export const LABEL_CHAR_W = 7;
 export const LABEL_H = 16;
+export const LABEL_MAX_CHARS = 16;
+export const LABEL_GAP_MARGIN = 8;
 const VIEW_PAD = 10;
 const CLEAR = 4;
 
@@ -185,11 +187,19 @@ export function labelRect(text: string, at: Point, anchor: string): Rect {
     return { x, y: at.y - LABEL_H / 2, w, h: LABEL_H };
 }
 
+/** A label is drawn only if it fits: inside the gap between side-by-side boxes, or within a fixed length elsewhere. */
+export function labelFits(label: string, a: Point, b: Point, cellW: number): boolean {
+    if (!label) return true;
+    const adjacent = a.y === b.y && Math.abs(b.x - a.x) === cellW + GAP_X;
+    return adjacent ? label.length * LABEL_CHAR_W + 6 <= GAP_X - LABEL_GAP_MARGIN : label.length <= LABEL_MAX_CHARS;
+}
+
 interface ArrowContext {
     centres: Map<number, Point>;
     cellW: number;
     paired: boolean;
     labelled: boolean;
+    forced?: boolean;
 }
 
 function crossedCentre(p: Point, q: Point, arrow: StateArrow, ctx: ArrowContext): Point | null {
@@ -206,16 +216,17 @@ function crossedCentre(p: Point, q: Point, arrow: StateArrow, ctx: ArrowContext)
 }
 
 function renderArrow(arrow: StateArrow, ctx: ArrowContext): Drawn {
-    const { centres, cellW, paired, labelled } = ctx;
+    const { centres, cellW, paired, labelled, forced } = ctx;
     const a = centres.get(arrow.from) as Point;
     const b = centres.get(arrow.to) as Point;
     const cls = `states-arrow${arrow.proposed ? ' states-arrow--proposed' : ''}`;
     const marker = arrow.proposed ? 'states-head-proposed' : 'states-head';
     const wrap = (inner: string): string => `<g class="states-edge" data-from="${arrow.from}">${inner}</g>`;
-    const text = (at: Point, anchor: string): string => labelled && arrow.label
+    const shown = labelled && (forced || labelFits(arrow.label, a, b, cellW));
+    const text = (at: Point, anchor: string): string => shown && arrow.label
         ? `<text class="states-label" x="${round(at.x)}" y="${round(at.y)}" text-anchor="${anchor}" dominant-baseline="central">${escapeHtml(arrow.label)}</text>`
         : '';
-    const rect = (at: Point, anchor: string): Rect | null => (labelled && arrow.label ? labelRect(arrow.label, at, anchor) : null);
+    const rect = (at: Point, anchor: string): Rect | null => (shown && arrow.label ? labelRect(arrow.label, at, anchor) : null);
 
     if (arrow.from === arrow.to) {
         const x = a.x;
@@ -291,9 +302,16 @@ export function diagramGeometry(parsed: ParsedStates, forceLabels = false): { vi
     const labelled = forceLabels || parsed.arrows.length <= MAX_LABELLED_ARROWS;
     const pairs = new Set(parsed.arrows.map((arrow) => `${arrow.from}>${arrow.to}`));
     const drawn = parsed.arrows.map((arrow) =>
-        renderArrow(arrow, { centres, cellW, labelled, paired: arrow.from !== arrow.to && pairs.has(`${arrow.to}>${arrow.from}`) }));
+        renderArrow(arrow, { centres, cellW, labelled, forced: forceLabels, paired: arrow.from !== arrow.to && pairs.has(`${arrow.to}>${arrow.from}`) }));
     const box = viewBoxOf(width, height, drawn);
     return { viewBox: { x: box.x, y: box.y, w: box.w, h: box.h }, labels: drawn.flatMap((d) => (d.label ? [d.label] : [])), labelled };
+}
+
+function droppedLabels(parsed: ParsedStates): boolean {
+    if (parsed.arrows.length > MAX_LABELLED_ARROWS) return false;
+    const cellW = boxWidth(parsed.states);
+    const { centres } = layout(parsed.grid, cellW);
+    return parsed.arrows.some((arrow) => !labelFits(arrow.label, centres.get(arrow.from) as Point, centres.get(arrow.to) as Point, cellW));
 }
 
 function renderDiagram(parsed: ParsedStates): string {
@@ -355,7 +373,7 @@ export function renderStatesCard(body: string, info: FenceInfo, context: BlockCo
         : '';
     const note = context.note ? `<div class="states-note">${escapeHtml(context.note)}</div>` : '';
     const card = `<div class="states-card"><div class="states-top"><span class="states-badge">states</span>${titleHtml}${legend}</div>`
-        + `<div class="states-hint">Pick a state to read what it means</div>${renderDiagram(parsed)}`
+        + `<div class="states-hint">${droppedLabels(parsed) ? 'Pick a state to read what it means and where it goes' : 'Pick a state to read what it means'}</div>${renderDiagram(parsed)}`
         + `<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div>${movesHtml(parsed, start)}${shown}${stash}`
         + `<ul class="states-list">${list}</ul>${note}<span class="line-content" hidden>${escapeHtml(body.trim())}</span></div>`;
     return context.wrapLine(card, context.firstLine);

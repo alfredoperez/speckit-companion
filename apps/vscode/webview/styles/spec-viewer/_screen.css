@@ -257,3 +257,14 @@
 #markdown-content .screen-card:has(.screen-dot[data-n="5"]:is(:hover, :focus-visible)) .screen-note[data-n="5"] {
   background: var(--bg-inset);
 }
+
+#markdown-content .screen-part--inline .screen-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+#markdown-content .screen-part--inline .screen-items li {
+  padding: 0;
+  border-bottom: 0;
+}

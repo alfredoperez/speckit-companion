@@ -175,3 +175,51 @@ describe('the transitions list', () => {
         expect(moves()[0]).toContain('<img');
     });
 });
+
+describe('labels that do not fit', () => {
+    const WAITING = [
+        'Queued: Stored offline, waiting to be sent. (start)',
+        'Sending: Being sent during catch-up.',
+        'Sent: Server accepted it, removed from the list. (final)',
+        'Dropped: Server rejected it, removed from the list. (final)',
+        'Cancelled: Opposite change made, removed from the list. (final)',
+        'Queued -> Sending: online report or launch',
+        'Queued -> Cancelled: opposite change on the same article',
+        'Sending -> Sent: server accepts',
+        'Sending -> Dropped: server answers with an error',
+        'Sending -> Queued: no response, change stays waiting',
+        'grid:',
+        'Queued | Sending | Sent',
+        '.      | Cancelled | Dropped',
+    ].join('\n');
+    const render = (body: string): void => {
+        registerBlockRenderer('states', renderStatesCard);
+        document.body.innerHTML = renderMarkdown('```states Waiting change\n' + body + '\n```');
+    };
+    const drawn = (): string[] => Array.from(document.querySelectorAll('.states-label')).map((n) => n.textContent ?? '');
+
+    it('draws only the labels that fit and says the rest are listed below', () => {
+        render(WAITING);
+
+        expect(drawn()).toEqual(['server accepts']);
+        expect(document.querySelector('.states-hint')?.textContent).toBe('Pick a state to read what it means and where it goes');
+    });
+
+    it('keeps every dropped label in the moves list', () => {
+        render(WAITING);
+        const queued = document.querySelector('.states-list li[data-state="0"]')?.textContent ?? '';
+        const sending = document.querySelector('.states-list li[data-state="1"]')?.textContent ?? '';
+
+        expect(queued).toContain('online report or launch');
+        expect(queued).toContain('opposite change on the same article');
+        expect(sending).toContain('no response, change stays waiting');
+        expect(sending).toContain('server answers with an error');
+    });
+
+    it('draws every label when all are short', () => {
+        render('A: one. (start)\nB: two.\nA -> B: go\nB -> A: back\ngrid:\nA | B');
+
+        expect(drawn().sort()).toEqual(['back', 'go']);
+        expect(document.querySelector('.states-hint')?.textContent).toBe('Pick a state to read what it means');
+    });
+});

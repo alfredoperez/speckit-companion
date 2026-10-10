@@ -395,3 +395,19 @@ describe('renderScreenByName', () => {
         expect(text(byClass(renderScreenByName('dup')!, 'screen-title')[0])).toBe('First');
     });
 });
+
+describe('renderScreenBlock: a list in a row', () => {
+    it('draws inline when its parent is a row', () => {
+        const html = card('row:\n  text: Conduit\n  list: Home | Settings', []);
+        const [list] = byClass(html, 'screen-part--list');
+
+        expect(attrs(list).class).toContain('screen-part--inline');
+    });
+
+    it('keeps the vertical stack at the top level', () => {
+        const html = card('list: Home | Settings', []);
+
+        expect(attrs(byClass(html, 'screen-part--list')[0]).class).not.toContain('screen-part--inline');
+        expect(byClass(html, 'screen-part--inline')).toHaveLength(0);
+    });
+});
