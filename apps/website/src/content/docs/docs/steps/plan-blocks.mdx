@@ -1,0 +1,122 @@
+---
+title: Plan blocks
+description: Four small blocks the plan step adds when a change needs them, and how the viewer draws each one as a card.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+A plan is mostly prose. Some things read better drawn: how far a change spreads, the one line that matters, a lifecycle, a screen. The Companion plan step adds a block for each of these when the change needs it, and the spec viewer draws the block as a card.
+
+## The four blocks
+
+| Block | What it shows | Written when |
+| --- | --- | --- |
+| **calls** | The functions a change reaches, marked new, changed or removed | The change crosses functions or files |
+| **code** | A few lines of code with a note pinned under one | One line needs a note to be understood |
+| **states** | A lifecycle you click through | The change adds or alters a lifecycle |
+| **screens** | A rough sketch of a screen | The change alters what a person sees |
+
+A plan gets only the blocks its change needs, and many plans get one or two. A change sized simple gets none.
+
+## Nothing to set up
+
+After it writes the plan, the plan step asks those four questions about the change and writes the blocks that apply. It records what it picked, so you can see the choice was made even when no block was written. Then it checks every block, and the result is saved with the run.
+
+The stock Spec Kit workflow does not write blocks. To add one there, see [Customize hooks](/docs/customize/hooks).
+
+## Calls
+
+<DocFigure
+  src="plan-block-calls.png"
+  alt="A calls card titled Offline favorite. One entry function, one changed function tinted amber, and two new functions tinted green, each with its file path. The header counts 2 added and 1 changed."
+  caption="Green rows are new, amber rows change. Click a path to open the file at that line."
+/>
+
+````
+```calls Offline favorite
+  FavoriteArticleBriefButton() @ src/features/article/favorite-article/favorite-article.ui.tsx:6
+~   useFavoriteArticleMutation() @ src/features/article/favorite-article/favorite-article.mutation.ts:9
++     isNetworkError() **new** @ src/shared/api/network-error.lib.ts
++     enqueue() **new** @ src/entities/favorite-queue/favorite-queue.model.ts
+```
+note: the unfavorite mutation changes the same way.
+````
+
+`+` is new, `~` is changed, `-` is removed. Indent shows who calls whom. You can comment on a row or strike it, the same way you [review any line](/docs/steps/review-with-comments).
+
+## Code
+
+<DocFigure
+  src="plan-block-code.png"
+  alt="A code card for src/entities/article/article.api.ts, line 44. The line is highlighted and a note under it says why it is the one to delete."
+  caption="One real line, and the reason it matters."
+/>
+
+````
+```ts src/entities/article/article.api.ts:44-44 hl=44
+    placeholderData: keepPreviousData,
+```
+pin 44: this line keeps the old key's articles on screen under the new key, so it is the one to delete.
+````
+
+A path with a line range cites real code, and the check opens the file to confirm it. Write `sketch <file>` in place of the range for code that does not exist yet.
+
+## States
+
+<DocFigure
+  src="plan-block-states.png"
+  alt="A states card titled Waiting change with five states: Queued, Sending, Sent, Cancelled and Dropped. Sending is picked, and below the diagram its sentence and its three next moves are listed."
+  caption="Pick a state to read what it means and where it goes next."
+/>
+
+````
+```states Waiting change
+Queued: Stored offline, waiting to be sent. (start)
+Sending: Being sent during catch-up.
+Sent: Server accepted it, removed from the list. (final)
+Dropped: Server rejected it, removed from the list. (final)
+Cancelled: Opposite change made, removed from the list. (final)
+Queued -> Sending: online report or launch
+Queued -> Cancelled: opposite change on the same article
+Sending -> Sent: server accepts
+Sending -> Dropped: server answers with an error
+Sending -> Queued: no response, change stays waiting
+grid:
+Queued | Sending | Sent
+.      | Cancelled | Dropped
+```
+````
+
+The `grid:` rows place the states, and a `.` leaves a gap. A state can name a screen with `shows <name>`, and picking that state draws the screen under it. The check stops on a state nothing reaches and on a dead end that is not marked final.
+
+## Screens
+
+<DocFigure
+  src="plan-block-screen.png"
+  alt="A screen card titled Header. A row holds the app name, a list of four links and a new chip edged in green with a numbered dot. A note under the sketch explains the chip."
+  caption="A new part is edged in green. Each numbered dot has a note."
+/>
+
+````
+```screen header Header
+row:
+  text: Conduit
+  list: Home | New Article | Settings | Profile
+  chip: Waiting changes count (new) (1)
+```
+1: **Plain number.** Shown only for a signed-in reader and hidden when the count is zero.
+````
+
+A screen is built from eight parts: `title`, `row`, `text`, `chip`, `button`, `field`, `list` and a numbered dot. Mark a part `(new)` or `(changed)`. It is a sketch on purpose, not a design.
+
+## Good to know
+
+- **A block is plain text.** Anywhere outside the viewer, on GitHub or in a terminal, it reads as a code block.
+- **A block the viewer cannot read stays a code block.** Nothing breaks.
+- **Blocks are kept small.** Each kind has a size limit, and the check says so when a block passes it.
+- **The pick is a judgment.** The step can skip a block you wanted. Ask for it and run plan again, or write the block yourself.
+
+## Related
+
+- [Plan](/docs/steps/plan) is the step that writes them.
+- The full grammar and the check's rules: [calls](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/call-paths.md), [code](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/code-pins.md), [states](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/states.md), [screens](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/screens.md).

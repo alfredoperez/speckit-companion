@@ -187,7 +187,13 @@ export default defineConfig({
               items: [
                 { label: 'Constitution', slug: 'docs/steps/constitution' },
                 { label: 'Specify', slug: 'docs/steps/specify' },
-                { label: 'Plan', slug: 'docs/steps/plan' },
+                {
+                  label: 'Plan',
+                  items: [
+                    { label: 'The plan step', slug: 'docs/steps/plan' },
+                    { label: 'Plan blocks', slug: 'docs/steps/plan-blocks', badge: { text: 'New', variant: 'tip' } },
+                  ],
+                },
                 { label: 'Tasks', slug: 'docs/steps/tasks' },
                 { label: 'Implement', slug: 'docs/steps/implement' },
                 { label: 'Converge', slug: 'docs/steps/converge' },
