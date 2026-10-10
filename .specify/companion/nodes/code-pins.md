@@ -15,9 +15,3 @@ pin 2: <one plain line on why this line matters>
 <lines 40 to 42 of the file, all three>
 ```
 pin 41: <one plain line>
-
-Then run this and fix what it reports once:
-
-```bash
-python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory>
-```

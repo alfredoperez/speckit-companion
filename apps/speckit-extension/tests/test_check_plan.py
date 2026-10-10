@@ -11,6 +11,7 @@ from __future__ import annotations
 import importlib
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -620,10 +621,10 @@ class TheScreensNodeIsMirrored(unittest.TestCase):
         mine = (repo / ".specify" / "companion" / "nodes" / "screens.md").read_text(encoding="utf-8")
         self.assertEqual(mine, shipped)
 
-    def test_the_part_runs_the_check_and_leaves_recording_to_the_recorder(self):
+    def test_the_part_leaves_the_check_to_the_block_picker_and_the_recorder(self):
         shipped = (EXT / "presets" / "_parts" / "screens.md").read_text(encoding="utf-8")
         self.assertNotIn("--verify-run", shipped)
-        self.assertIn("check_plan.py", shipped)
+        self.assertNotIn("check_plan.py", shipped)
 
     def test_this_repos_states_node_file_matches_the_shipped_part(self):
         repo = EXT.parents[1]
@@ -631,10 +632,22 @@ class TheScreensNodeIsMirrored(unittest.TestCase):
         mine = (repo / ".specify" / "companion" / "nodes" / "states.md").read_text(encoding="utf-8")
         self.assertEqual(mine, shipped)
 
-    def test_the_states_part_runs_the_check_and_leaves_recording_to_the_recorder(self):
+    def test_the_states_part_leaves_the_check_to_the_block_picker_and_the_recorder(self):
         shipped = (EXT / "presets" / "_parts" / "states.md").read_text(encoding="utf-8")
         self.assertNotIn("--verify-run", shipped)
-        self.assertIn("check_plan.py", shipped)
+        self.assertNotIn("check_plan.py", shipped)
+
+
+class ThePickerPrintsTheCheck(unittest.TestCase):
+    def test_the_check_comes_from_the_block_picker_once(self):
+        script = EXT / "scripts" / "plan-blocks.py"
+        out = subprocess.run([sys.executable, str(script), "--feature-dir", "nowhere", "calls", "states"],
+                             capture_output=True, text=True).stdout
+        self.assertEqual(out.count("check_plan.py"), 1)
+
+    def test_no_part_carries_the_check_itself(self):
+        for name in ("call-paths", "code-pins", "states", "screens"):
+            self.assertNotIn("check_plan.py", (EXT / "presets" / "_parts" / f"{name}.md").read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

@@ -34,9 +34,9 @@ build = importlib.import_module("build-pipeline")
 
 # plan/gather holds two nodes that read nothing from each other, so it is the
 # one phase in the shipped pipeline a reorder can legally touch.
-PLAN_DEFAULT = ["size-budget", "load-living-specs", "gather-context", "plan-doc",
+PLAN_DEFAULT = ["size-budget", "load-living-specs", "gather-context", "plan-doc", "pick-blocks",
                 "constitution-check", "side-files", "handoff"]
-PLAN_SWAPPED = ["gather-context", "load-living-specs", "size-budget", "plan-doc",
+PLAN_SWAPPED = ["gather-context", "load-living-specs", "size-budget", "plan-doc", "pick-blocks",
                 "constitution-check", "side-files", "handoff"]
 
 

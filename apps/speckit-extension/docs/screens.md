@@ -4,9 +4,9 @@ A screen block sketches what a person sees, before it is built: the parts on the
 
 It is a rough wireframe, not a design. Parts are boxes with words in them, never HTML, sizes or colours.
 
-The node is attachable and off by default. It adds one section to `plan.md`, written only when the change alters what a person sees, and every other renderer shows the block as plain code.
+The Companion plan step writes this block when the change needs it: one deciding step, `pick-blocks`, picks the blocks and records the choice as `planBlocks`. A project on the stock pipeline, or one that always wants the block, can still attach the part with the hook below. It adds one section to `plan.md`, written only when the change alters what a person sees, and every other renderer shows the block as plain code.
 
-## Turn it on
+## Attach it by hook
 
 Add the hook to `.specify/companion.yml`:
 

@@ -116,6 +116,7 @@ speckit-extension/**
 # The call-paths check. Its part ships below, and the part names this script by its
 # install path, so a project building off the bundled extension needs it in the .vsix.
 !apps/speckit-extension/scripts/check_plan.py
+!apps/speckit-extension/scripts/plan-blocks.py
 # …and the sources they assemble from.
 !apps/speckit-extension/nodes/**
 !apps/speckit-extension/presets/_parts/**

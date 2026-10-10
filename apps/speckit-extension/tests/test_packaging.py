@@ -135,8 +135,15 @@ class TestGateFailsOnDrift(unittest.TestCase):
             self.assertIn(script, pm.vsix_closure(), f"{script} is named by a part but not a .vsix entry point")
             self.assertIn(script, negated, f"{script} is named by a part but .vscodeignore strips it")
 
-    def test_call_paths_check_is_one_of_them(self):
-        self.assertIn("check_plan.py", pm.part_refs())
+    def test_the_plan_block_scripts_ship(self):
+        for script in ("check_plan.py", "plan-blocks.py"):
+            self.assertIn(script, pm.RUNTIME_SCRIPTS)
+            self.assertIn(script, pm.vsix_closure())
+
+    def test_a_script_a_shipped_node_names_ships_with_it(self):
+        self.assertIn("plan-blocks.py", pm.node_refs())
+        for script in sorted(pm.node_refs()):
+            self.assertIn(script, pm.RUNTIME_SCRIPTS, f"{script} is named by a node but not shipped")
 
     def test_a_negation_with_no_closure_entry_is_whitelisted_but_unreachable(self):
         narrowed = frozenset(pm.vsix_closure() - {"write-context.py"})

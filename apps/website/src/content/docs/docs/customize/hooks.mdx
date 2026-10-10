@@ -68,7 +68,7 @@ Add `background: true` to start a hook without waiting for it. Use it for indepe
 
 ## Example: call paths in the plan
 
-The extension ships a node you can attach to the plan step. It adds a short tree of the functions a change reaches, each with its file and line, so you see how far the change spreads before any code is written.
+The Companion plan step already writes this block when a change crosses functions or files, along with code pins, states and screens, through one deciding step that records its choice as `planBlocks`. On the stock pipeline, or for a project that always wants the block, the extension ships the same node to attach. It adds a short tree of the functions a change reaches, each with its file and line, so you see how far the change spreads before any code is written.
 
 ```yaml
 commands:
