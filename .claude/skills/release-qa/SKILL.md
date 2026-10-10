@@ -173,7 +173,7 @@ The copy is the terminal run's own sandbox, taken before any run touches `specs/
 
 A `--dev` install writes each agent's Companion skills as symlinks into `.specify/extensions/companion/.specify-dev/`, and installing for the other agent repoints or wipes them. A symlink that dangles in the Copilot worktree means the agent never gets `/speckit.companion.*`: it falls back to reading `.claude/skills/...`, writes no `.spec-context.json`, and may implement the feature during specify. So the recipe turns each agent's skills into real files before installing for the next agent, then `verify-companion-skills.sh` fails the setup (exit 1, path printed) unless every `.github/skills/speckit-companion-*/SKILL.md` and `.claude/skills/speckit-companion-*/SKILL.md` resolves with `test -e`. Run it by hand on any sandbox to check it.
 
-Opening the sandbox in VS Code runs the extension's preset reconciler, which calls the `specify` CLI and rewrites the committed `.claude/skills/speckit-*` files (`source: preset:companion-standard`) and creates `.specify/presets/`. That is specified behaviour, but it dirties the tree: commit or restore it before the canvas pass.
+Opening the sandbox in VS Code installs no preset and leaves the committed `.claude/skills/speckit-*` files as `specify init` wrote them. A tree that is dirty after the window opens is a finding, and it must be clean before the canvas pass.
 
 Any `[setup] Missing …` line is a finding before you start; fix or record it.
 

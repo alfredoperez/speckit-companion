@@ -53,6 +53,7 @@ OUTLIER_FLOOR_SECONDS = 300
 # Prompting rosters — enumerated on purpose: never-prompt is per-command
 # semantics, not a namespace property. A missing roster file FAILs loudly.
 NEVER_PROMPT = [
+    "speckit.companion.before-step.md",
     "speckit.companion.after-specify.md",
     "speckit.companion.after-plan.md",
     "speckit.companion.after-tasks.md",

@@ -26,7 +26,7 @@ Paths: `apps/speckit-extension/**`
 - **Version**: `apps/speckit-extension/extension.yml` `extension.version` · **Release**: `/publish-speckit-ext` → `speckit-ext-v*` tag → catalog
 - Sub-areas:
   - **commands** — `apps/speckit-extension/commands/**` (a new command must be in `extension.yml` `provides.commands` or the installer skips it → ⚠️ if missing)
-  - **presets** — `apps/speckit-extension/presets/**` (turbo/standard bodies; run `python3 apps/speckit-extension/scripts/check_shape_parity.py`)
+  - **parts** — `apps/speckit-extension/presets/_parts/**` (shared build parts; rebuild, then run `python3 apps/speckit-extension/scripts/check_shape_parity.py`)
   - **scripts / hooks** — `apps/speckit-extension/scripts/**`
   - **version** — `extension.yml` `extension.version`
 
@@ -50,7 +50,7 @@ If the diff matches the left, the right-hand doc(s) **must** be in the diff too 
 | New/changed configuration setting | README "Configuration" section |
 | Sidebar action / right-click menu | the site's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) + README "Sidebar at a Glance" |
 | Viewer statuses / badges / buttons / step tabs | the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx`) |
-| Template profiles / preset reconciler / timing partial / `templateProfile` setting | `apps/speckit-extension/docs/node-model.md` |
+| Workflow choice / leftover-preset cleanup / timing partial / `templateProfile` setting | `apps/speckit-extension/docs/node-model.md` |
 | `.spec-context.json` capture / lifecycle hooks / `write-context.py` / timing | the capture tests under `apps/speckit-extension/tests/`, plus `docs/architecture.md` "Data flow" when a writer rule changes |
 | Project structure / modules / architecture | `docs/architecture.md` |
 | Webview component with a sibling `*.stories.tsx` | update the stories (or add one if a non-trivial component lacks it) |
@@ -81,4 +81,4 @@ Re-check these red-flag words against the **new** behavior: "no … behavior", "
 
 ## Verify (typical commands)
 
-`npm run compile` · `npm test` · `python3 apps/speckit-extension/scripts/check_shape_parity.py` (preset changes) · `python3 apps/speckit-extension/scripts/check_capture.py specs/<NNN>-<slug>/` (capture/lifecycle changes).
+`npm run compile` · `npm test` · `python3 apps/speckit-extension/scripts/check_shape_parity.py` (node or part changes) · `python3 apps/speckit-extension/scripts/check_capture.py specs/<NNN>-<slug>/` (capture/lifecycle changes).

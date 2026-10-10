@@ -11,7 +11,7 @@ These four words mean specific things. "Node" used to get used loosely for all o
 - **step** — one entry in the workflow (`workflow.yml`): `specify`, `route`, `plan`, `mark-complete`. A step maps to one dispatched `/speckit.companion.*` command.
 - **node** — one section *inside* a command, written as its own file (e.g. `draft-spec`, `plan-doc`). This is the new thing.
 - **part** — a reusable block shared across commands, injected by a fence (`<!-- speckit-companion:part NAME -->`): `timing`, `sizing`, `routing`, `self-advance`. Parts stay as inner fences inside node bodies — they are *not* nodes.
-- **node hook** — a user-added `before`/`after` insert defined in `.specify/companion.yml`. Distinct from the engine-level **lifecycle hook** in `extension.yml` (`after_specify` → capture).
+- **node hook** — a user-added `before`/`after` insert defined in `.specify/companion.yml`. Distinct from the engine-level **lifecycle hook** in `extension.yml` (`before_plan` / `after_plan` → capture).
 
 ## How a command is assembled
 
@@ -32,10 +32,10 @@ nodes/plan/
 
 1. Read `_frame.md` verbatim — the command frontmatter, the `## User Input` block, the step-start / stock-hook / concise part fences, and the `## Outline` lead-in. This is connective glue you'd never reorder, so it has its own home outside the node list, and a rule that must reach every node lives here rather than in one of them.
 2. Read each node named in `_order.yml`, strip its frontmatter, and concatenate the bodies in order.
-3. Run the **part-fence pass** (shared with the preset carriers) so inner `<!-- speckit-companion:part NAME -->` fences fill from `presets/_parts/`.
+3. Run the **part-fence pass** so inner `<!-- speckit-companion:part NAME -->` fences fill from `presets/_parts/`.
 4. Append the **orchestrator** part, when present (run-time hook instructions; see below).
 
-The output is written to `commands/speckit.companion.<command>.md` (still committed and whole). `build.py --check` re-assembles in memory and fails on any drift from the committed body. The 7 companion-standard presets keep a frozen golden, because nothing can re-derive them; `build.py --bless` is the one sanctioned way to move it, and it belongs in its own commit.
+The output is written to `commands/speckit.companion.<command>.md` (still committed and whole). `build.py --check` re-assembles in memory and fails on any drift from the committed body. `check_shape_parity.py` then checks that every part region in the seven namespaced bodies matches its part in `presets/_parts/` byte-for-byte.
 
 ## A node file
 
@@ -62,7 +62,7 @@ A node declares its output two ways. `writes:` is what the step always produces;
 
 ## specify decomposition — the spike result
 
-`specify` was the gating spike: would it cut to byte-identical, given its inline `sizing` fence, its lifecycle-START / completion / fast-path-fold bash, and the connective glue between numbered steps? **It did.** Every byte maps to exactly one node body, the `_frame`, or a named part, and the assembler reproduces the golden byte-for-byte. specify ships decomposed in v1 alongside `plan`, `tasks`, and `implement`. The bash blocks and connective prose live inside their owning `control` nodes (`resolve-dir`, `finalize`); the inline `sizing` part stays a fence inside `classify-size`.
+`specify` was the gating spike: would it cut to byte-identical, given its inline `sizing` fence, its lifecycle-START / completion / fast-path-fold bash, and the connective glue between numbered steps? **It did.** Every byte maps to exactly one node body, the `_frame`, or a named part, and the assembler reproduces the hand-written command byte-for-byte. specify ships decomposed in v1 alongside `plan`, `tasks`, and `implement`. The bash blocks and connective prose live inside their owning `control` nodes (`resolve-dir`, `finalize`); the inline `sizing` part stays a fence inside `classify-size`.
 
 ## Mapping table — every target node and where it came from
 
@@ -96,11 +96,11 @@ A node declares its output two ways. `writes:` is what the step always produces;
 **Nodes stay under 1,000 words.** `instruction-budget.py --strict` (run in CI) fails any node or shared part past that limit. The limit is a constant in the script, not a recorded mark, so a node that outgrows it gets split rather than the number raised. The per-command directive table it prints is a report only.
 Parts (`sizing`, `timing`, `self-advance`, `routing`) stay in `presets/_parts/` and are absorbed as inner fences inside the node bodies that already carried them.
 
-## The stock carrier — what's single-sourced, what isn't
+## How a stock run is captured
 
-The namespaced `/speckit.companion.*` commands above are assembled from nodes. The **stock** family (`presets/companion-standard/commands/speckit.*.md`) is a different shape: each carrier is a **wrap** around the stock command. It holds a `{CORE_TEMPLATE}` placeholder, which spec-kit fills with the project's own stock body at install time, **plus the shared `timing` part**, injected by a `<!-- speckit-companion:part timing -->` fence. The four step commands also open with the `concise` and `step-start` parts. The timing block is single-sourced: it is edited once in `presets/_parts/timing.md`, the parity check locks the fenced region to that part byte-for-byte, and `check_shape_parity.py` separately fails any carrier that drops the fence and inlines its own copy. So the timing single-source cannot silently regress.
+The namespaced `/speckit.companion.*` commands above are assembled from nodes and record their own timing in the body. The **stock** `/speckit.*` commands are spec-kit's own text, which the extension never edits, so a plain SpecKit run is recorded from outside by the lifecycle hooks in `extension.yml`: `speckit.companion.before-step` writes each step's start and the `after-*` commands write its finish. Specify's start is read from the clock before the step and written by `after_specify`, because the feature directory does not exist when the step begins. [commands.md](./commands.md#lifecycle-hooks) lists every hook.
 
-The repo keeps no copy of the stock body, so there is nothing to maintain against upstream: a project gets the stock text of the spec-kit it had installed when the preset was added. spec-kit composes the body at `specify preset add` and not again, so a later spec-kit upgrade needs the preset re-added. The frontmatter is still ours, `handoffs` included, because a wrap inherits only `scripts`, `agent_scripts` and `argument-hint` from the stock command. The cost is that the start stamp cannot sit inside the stock body. It sits above it, and `specify` reads the clock first and passes it with `--at`, because its feature directory does not exist yet when the step begins.
+Those hooks land in the project's `.specify/extensions.yml`, which a Companion command also reads. A Companion command skips any hook there whose `extension` is `companion`, because it already recorded that step itself and running the hook would write it a second time. The rule lives in the shared `speckit-hooks` part (`presets/_parts/speckit-hooks.md`).
 
 ## Two hook systems — stock `extensions.yml` *and* Companion `companion.yml`
 
@@ -276,4 +276,4 @@ To go back, delete the file — there is no state anywhere else recording that a
 
 A hook never fails the host command: its own failure is reported and the pipeline continues unless that clearly makes the rest unsafe — the same "never fail the host command" stance as `mark-complete`.
 
-> **Node hook ≠ lifecycle hook.** These `before`/`after` inserts are *node hooks* (this config). The engine-level **lifecycle hooks** in `extension.yml` (`after_specify` → capture) are a different mechanism and are unaffected.
+> **Node hook ≠ lifecycle hook.** These `before`/`after` inserts are *node hooks* (this config). The engine-level **lifecycle hooks** in `extension.yml` (`before_plan` / `after_plan` → capture) are a different mechanism and are unaffected.

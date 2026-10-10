@@ -404,7 +404,6 @@ describe('sidebar contributions', () => {
             'speckit-template',
             'companion-config-item',
             'companion-command',
-            'companion-template',
         ];
 
         const revealClauses = (command: string) =>

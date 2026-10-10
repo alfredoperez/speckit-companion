@@ -177,7 +177,7 @@ jobs:
 
       # build.py --check runs the shape-parity sweep itself, so it is not a
       # separate step.
-      - name: Check command bodies (part fills, preset goldens, node-assembly parity)
+      - name: Check command bodies (part fills, node-assembly parity against the committed bodies)
         if: needs.changes.outputs.capture == 'true'
         run: python3 apps/speckit-extension/scripts/build.py --check
 

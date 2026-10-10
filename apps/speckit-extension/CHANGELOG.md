@@ -17,7 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Living specs travel with the pipeline graph.** The graph carries whether they run, where specs live and ==which capabilities are registered==, so a panel can draw them. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
 
 ### Changed
-- **Stock commands follow your spec-kit.** The stock `/speckit.*` commands wrap the spec-kit installed in your project, so they ==carry its own text==. ([#901](https://github.com/alfredoperez/speckit-companion/pull/901)) <!-- area: pipeline -->
+- **Plain SpecKit commands stay untouched.** Stock runs are recorded through spec-kit's own hooks, so the `/speckit.*` commands are ==exactly what spec-kit ships==. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: pipeline -->
+- **Terminal runs of plain SpecKit get step times.** Each stock step records ==its own start== through a hook, with or without VS Code. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: run-record -->
+- **Terminal runs of plain SpecKit list no tasks.** The viewer's task list fills ==only when VS Code sends the step==. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: run-record -->
 
 ### Fixed
 - **A registry rewrite keeps the chosen layout.** Registering a capability re-emits the registry, which dropped `layout` and sent ==every later adoption back to asking==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->

@@ -923,10 +923,10 @@ export const StockWithPreset: Story = {
                 ],
                 constitution: { command: 'speckit-constitution', written: false },
                 presets: [{
-                    id: 'companion-standard',
-                    name: 'Companion Standard',
-                    description: 'Stock spec-kit pipeline, unchanged, with Companion timing '
-                        + 'capture baked into every command.',
+                    id: 'acme-house-style',
+                    name: 'Acme House Style',
+                    description: 'Stock spec-kit pipeline with the team\'s own spec and plan '
+                        + 'templates.',
                 }],
             })}
             status={{

@@ -60,7 +60,7 @@ It customises a real `specify init` project, builds it, and actually runs the sp
 
 ## Good to know
 
-- **`companion` is installed in this repo (dogfooding).** Running `/speckit.specify` here auto-fires the `after_specify` capture — expected, harmless.
+- **`companion` is installed in this repo (dogfooding).** Running `/speckit.specify` here auto-fires the `before_specify` and `after_specify` capture hooks — expected, harmless.
 - **Coexists with SDD.** The `/sdd:*` flow writes `.spec-context.json` itself; this extension only fires on `/speckit.*`. Mixed authorship in `history[].by` is normal.
 - **Best-effort contract.** The writer must never fail the host spec-kit command — keep new script paths warn-and-exit-0 on error (see `write-context.py`).
 - **Schema is owned by the GUI repo** at `apps/vscode/src/core/types/spec-context.schema.json`; extend it there, never vendor a copy.

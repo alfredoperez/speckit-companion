@@ -65,9 +65,9 @@ class TheFencePatternIsNotCopied(unittest.TestCase):
 
 
 class ReportingIsAdditive(unittest.TestCase):
-    def test_assembly_still_matches_golden_with_the_report_wired_in(self):
+    def test_assembly_still_matches_the_committed_body_with_the_report_wired_in(self):
         # The report is printed after the check, never woven into it: every
-        # command body must still equal its golden byte for byte.
+        # command body must still equal its committed copy byte for byte.
         result = subprocess.run(
             [sys.executable, str(SCRIPTS / "build.py"), "--check"],
             capture_output=True, text=True,

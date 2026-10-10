@@ -3,10 +3,11 @@
 The extension lives beside the VS Code GUI in the monorepo and is published/installed independently. At runtime it does **not** read or depend on the GUI — it only writes the canonical `.spec-context.json` the GUI already consumes.
 
 ```
-/speckit.specify  →  after_specify hook  →  speckit.companion.after-specify.md  →  write-context.py  →  .spec-context.json  →  Companion GUI re-renders
+/speckit.plan  →  before_plan hook  →  speckit.companion.before-step.md  →  write-context.py  →  .spec-context.json  (start)   →  Companion GUI re-renders
+               →  after_plan hook   →  speckit.companion.after-plan.md   →  write-context.py  →  .spec-context.json  (finish)  →  Companion GUI re-renders
 ```
 
-(The command/hook layer is documented in [commands.md](./commands.md).)
+Every step has a `before_*` hook that records its start and an `after_*` hook that records its finish. Specify is the one step whose start is written late: its `before_specify` hook only reads the clock, because the spec folder does not exist yet, and `after_specify` writes that time as the start before it writes the finish. (The command/hook layer is documented in [commands.md](./commands.md).)
 
 ## The writer (`scripts/write-context.py`)
 
@@ -50,8 +51,8 @@ Expected: a valid canonical `.spec-context.json` with `currentStep: "specify"`, 
 
 1. Install the extension ([install.md](./install.md)) and open the repo with the SpecKit Companion VS Code extension enabled.
 2. Run a real `/speckit.specify "throwaway proof feature"` in your agent.
-3. Let the `after_specify` hook run `speckit.companion.after-specify` (it auto-runs at `optional: false`).
-4. Confirm `specs/<NNN>-<slug>/.spec-context.json` carries `currentStep: specify` / `status: specified` / a `by: extension` transition, and the Companion sidebar renders it at **specify / specified** — no GUI code change.
+3. Let the `before_specify` hook run `speckit.companion.before-step` and the `after_specify` hook run `speckit.companion.after-specify` (both auto-run at `optional: false`).
+4. Confirm `specs/<NNN>-<slug>/.spec-context.json` carries `currentStep: specify` / `status: specified` / a `by: extension` start and finish, and the Companion sidebar renders it at **specify / specified** — no GUI code change.
 5. Clean up: delete the throwaway spec; optionally `specify extension remove companion`.
 
 **Verified 2026-05-25:** one real `/speckit.specify` auto-fired the hook (no nudge) and wrote a canonical file with `workflow: "speckit"` (a plain spec-kit flow, no SDD).

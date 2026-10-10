@@ -8,7 +8,7 @@ except forking the extension.
 
 A node file under `.specify/companion/nodes/<command>/<id>.md` now wins over the
 shipped one of the same id. These tests hold the two halves of that: the
-replacement reaches the built body, and the shipped goldens cannot move because
+replacement reaches the built body, and the shipped bodies cannot move because
 of it — parity never points at a project.
 
 Stdlib `unittest` only.
@@ -194,9 +194,9 @@ class AWholeStepCanBeHandedToOneDocument(unittest.TestCase):
 
 
 class ParityNeverPointsAtAProject(unittest.TestCase):
-    """A project's replacement must not be able to move the shipped goldens."""
+    """A project's replacement must not be able to move the shipped bodies."""
 
-    def test_the_golden_check_passes_while_a_project_replaces_a_node(self):
+    def test_the_build_check_passes_while_a_project_replaces_a_node(self):
         with project_replacing("specify", "draft-spec") as project:
             cp.use_project_nodes(project)
             try:

@@ -173,6 +173,16 @@ describe('buildPrompt', () => {
             expect(out).toContain('--step specify --advance --by ai');
         });
 
+        it.each(['specify', 'plan', 'tasks', 'implement'] as const)(
+            'a stock %s step is never told its command body carries the protocol',
+            step => {
+                const out = buildPrompt({ command: `/speckit.${step}`, step, specDir: 'specs/001-demo' });
+                expect(out).not.toContain("command's body carries the full");
+                expect(out).toContain('"required": ["workflow"');
+                expect(out).toContain('Writing a start-entry for the next step here is a lie');
+            }
+        );
+
         it('classifies by the command VERB, not its args — a stock command with "companion" in the path stays stock (full preamble)', () => {
             const out = buildPrompt({ command: '/speckit.plan specs/123-companion-feature', step: 'plan', specDir: 'specs/123-companion-feature' });
             // Stock → full preamble (the only capture source); must NOT be slimmed.

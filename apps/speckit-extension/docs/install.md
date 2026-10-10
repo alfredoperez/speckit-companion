@@ -51,29 +51,28 @@ specify extension add companion --ai-skills
 
 ## Fallback — CLI-less manual install
 
-If you're stuck on the stock PyPI build and can't reinstall, replicate what the CLI does by hand: copy `apps/speckit-extension/` → `.specify/extensions/companion/`, add a `companion` entry to `.specify/extensions/.registry`, and emit a `.claude/skills/speckit-companion-after-specify/SKILL.md` mirroring `.claude/skills/speckit-git-commit/SKILL.md`. This is a stopgap — the supported path is the source install above.
+If you're stuck on the stock PyPI build and can't reinstall, replicate what the CLI does by hand: copy `apps/speckit-extension/` → `.specify/extensions/companion/`, add a `companion` entry to `.specify/extensions/.registry`, register the hooks from its `extension.yml` in `.specify/extensions.yml`, and emit one `.claude/skills/speckit-companion-<command>/SKILL.md` per hook command (`before-step`, `after-specify` and the rest), each mirroring `.claude/skills/speckit-git-commit/SKILL.md`. This is a stopgap — the supported path is the source install above.
 
 ## Command families (stock SpecKit + the Companion workflow)
 
-Two command families stay installed at once — installing one never removes the other. The stock `/speckit.*` commands (+ timing) are carried by the `companion-standard` preset; the SpecKit Companion workflow is the namespaced `/speckit.companion.*` commands (lean — no user stories, trimmed plan, files/dependencies tasks). See the full reference in the `commands-*` and `workflows-*` living specs.
+Two command families stay installed at once, and installing one never removes the other. The stock `/speckit.*` commands are exactly what spec-kit ships: the extension changes none of their text and records a plain SpecKit run through lifecycle hooks, one as each step starts and one when it finishes. The SpecKit Companion workflow is the namespaced `/speckit.companion.*` commands (lean — no user stories, trimmed plan, files/dependencies tasks). See the full reference in the `commands-*` and `workflows-*` living specs.
 
-The Companion workflow is available to everyone with this extension installed — there's no setting to turn on; stock SpecKit is always available too. Both families coexist — no preset is added, removed, or swapped, so you never lose a command set. The extension keeps `companion-standard` present with an activation ensure, which also recovers a project whose stock commands a prior version may have stranded. The one time it removes the preset is to refresh it: when the bundled preset is a different version than the installed one, it removes and re-adds it in the same pass, because spec-kit builds the command bodies only when a preset is added.
+The Companion workflow is available to everyone with this extension installed — there's no setting to turn on, and stock SpecKit is always available too. The extension installs no preset.
 
-The stock carrier installs from the bundled path; verify or (re-)materialize it manually with:
+A project set up by an older version may still carry a `companion-standard` preset, which wrapped the stock commands. The VS Code extension removes it once when the project opens, and spec-kit restores the stock command bodies as it goes. Without VS Code, remove it by hand:
 
 ```bash
-specify preset add --dev ./apps/speckit-extension/presets/companion-standard   # local/dev install
+specify preset remove companion-standard
 ```
 
-> `specify preset resolve` reports *template* overrides only; these are `type: command` overrides, so it prints "No template…" — confirm `companion-standard` instead by checking that `.specify/presets/companion-standard/` exists and the re-emitted command body carries the timing partial.
+On a plain SpecKit run started from a terminal the viewer's Tasks card stays empty, because the stock commands do not write per-task summaries. Step times and task progress are still recorded. A run sent from VS Code fills the card, since the prompt VS Code sends asks for those summaries. The same holds for `clarify` and `analyze`: only specify, plan, tasks and implement have hooks, so a terminal run of the other two is not recorded.
 
 ## Verify
 
 ```bash
 specify extension list        # companion present
-specify preset list           # companion-standard present
 ```
 
 Then run a real `/speckit.specify` and confirm `specs/<NNN>-<slug>/.spec-context.json` is written — see [how-it-works.md](./how-it-works.md#end-to-end-proof) for the full check. With the Companion workflow, confirm the produced `<short-name>.spec.md` has no user-story section.
 
-> The capture hook invokes the script at its **installed** path, `.specify/extensions/companion/scripts/write-context.py` (mirroring the `git` extension's `.specify/extensions/git/scripts/…` convention) — not the source-repo `apps/speckit-extension/scripts/…`. That's why it runs cleanly on any install. If you ever see `No such file or directory` for `apps/speckit-extension/scripts/…`, the command-markdown drifted back to the dev-source path.
+> The capture hooks invoke the script at its **installed** path, `.specify/extensions/companion/scripts/write-context.py` (mirroring the `git` extension's `.specify/extensions/git/scripts/…` convention) — not the source-repo `apps/speckit-extension/scripts/…`. That's why it runs cleanly on any install. If you ever see `No such file or directory` for `apps/speckit-extension/scripts/…`, the command-markdown drifted back to the dev-source path.
