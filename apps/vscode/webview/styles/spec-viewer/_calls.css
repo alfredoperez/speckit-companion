@@ -23,8 +23,9 @@
 }
 
 #markdown-content .calls-badge {
-  background: var(--text-primary);
-  color: var(--bg-primary);
+  flex: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   border-radius: var(--radius-sm);
   padding: 1px var(--space-2);
   font-weight: 700;
@@ -77,9 +78,16 @@
   font-size: var(--text-sm);
 }
 
-#markdown-content .calls-row--add { background: var(--success-subtle); }
-#markdown-content .calls-row--chg { background: var(--warning-subtle); }
-#markdown-content .calls-row--del { background: var(--error-subtle); }
+#markdown-content .calls-row--add,
+#markdown-content .calls-row--chg,
+#markdown-content .calls-row--del {
+  background: color-mix(in srgb, var(--calls-tint) 45%, transparent);
+  box-shadow: inset 3px 0 0 var(--calls-edge);
+}
+
+#markdown-content .calls-row--add { --calls-tint: var(--success-subtle); --calls-edge: var(--success); }
+#markdown-content .calls-row--chg { --calls-tint: var(--warning-subtle); --calls-edge: var(--warning); }
+#markdown-content .calls-row--del { --calls-tint: var(--error-subtle); --calls-edge: var(--error); }
 
 #markdown-content .calls-mark {
   flex: none;
@@ -132,36 +140,77 @@
 #markdown-content .calls-where .file-ref code {
   color: inherit;
   font-size: inherit;
+  background: none;
+  border-color: transparent;
+  padding-right: 0;
+  margin-right: 0;
+}
+
+#markdown-content .calls-where .file-ref:hover,
+#markdown-content .calls-where .file-ref:focus-visible {
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+#markdown-content .calls-strike,
+#markdown-content .calls-strike-slot {
+  flex: none;
+  box-sizing: border-box;
+  min-width: 1.8em;
+  font-size: var(--text-xs);
 }
 
 #markdown-content .calls-strike {
-  flex: none;
-  opacity: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  opacity: 0.55;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
-  color: var(--error);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-secondary);
   border-radius: var(--radius-sm);
   padding: 1px 0;
-  max-width: 0;
-  overflow: hidden;
-  border-width: 0;
   cursor: pointer;
   transition: opacity var(--transition-fast);
 }
 
+#markdown-content .calls-strike-word {
+  display: none;
+}
+
 #markdown-content .calls-row:hover .calls-strike,
-#markdown-content .calls-row:focus-within .calls-strike {
+#markdown-content .calls-strike:focus-visible {
   opacity: 1;
-  max-width: none;
-  padding: 1px var(--space-2);
-  border-width: 1px;
+  color: var(--error);
+  border-color: var(--border);
+  background: var(--bg-elevated);
+}
+
+#markdown-content .calls-row:hover .calls-strike,
+#markdown-content .calls-strike:focus-visible {
+  padding: 1px var(--space-1);
+}
+
+#markdown-content .calls-row:hover .calls-strike-word,
+#markdown-content .calls-strike:focus-visible .calls-strike-word {
+  display: inline;
 }
 
 @media (max-width: 480px) {
+  #markdown-content .calls-head { flex-wrap: wrap; }
+  #markdown-content .calls-title { flex: 1 1 60%; white-space: normal; }
   #markdown-content .calls-row { flex-wrap: wrap; }
-  #markdown-content .calls-where { max-width: 100%; margin-left: 0; flex-basis: 100%; }
+  #markdown-content .calls-where { max-width: 100%; flex-basis: 100%; text-align: right; order: 3; }
+}
+
+#markdown-content .calls-entry {
+  flex: none;
+  font-family: var(--font-family);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
 }
 
 #markdown-content .calls-row--struck .calls-name,

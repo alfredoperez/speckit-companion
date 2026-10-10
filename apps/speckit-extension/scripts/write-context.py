@@ -88,6 +88,7 @@ from capture import (  # noqa: E402,F401
     apply_batch,
     append_string_list,
     append_verification_runs,
+    record_plan_check,
     set_classification,
     set_fields,
     set_living_specs_loaded,
@@ -864,6 +865,16 @@ def _main() -> int:
     # recorded failure whose cause is only on the terminal cannot be diagnosed
     # from the trace file afterwards, which is the trace file's whole job.
     _record_outcome(target is not None, _DECLINED)
+
+    closes_plan = args.step == "plan" and not args.substep and (
+        args.finish or args.advance
+        or not (args.mark_complete or args.materialize or args.close_task or args.task or args.tasks_file)
+        and args.kind == "complete")
+    if target is not None and closes_plan:
+        try:
+            record_plan_check(feature_dir)
+        except Exception as exc:  # noqa: BLE001 - the close already landed
+            print(f"[companion] Warning: skipped the plan blocks check: {exc}", file=sys.stderr)
 
     if target is not None and not args.tasks_file:
         if args.mark_complete:

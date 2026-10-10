@@ -70,8 +70,10 @@ RUNTIME_SCRIPTS = frozenset({
     "doctor_drift.py",
     "doctor_bleed.py",
     "doctor_chat.py",
-    # Called by the attachable `call-paths` part, which no shipped command carries.
+    # Named by the plan step's `pick-blocks` node and by the attachable plan-block parts.
     "check_plan.py",
+    # Named by the plan step's `pick-blocks` node.
+    "plan-blocks.py",
 })
 
 BUILD_ONLY = frozenset({
@@ -187,6 +189,16 @@ def part_refs() -> set[str]:
     return found
 
 
+def node_refs() -> set[str]:
+    """Scripts named by a shipped node under `nodes/`."""
+    found: set[str] = set()
+    for dirpath, _, files in os.walk(os.path.join(EXT_ROOT, "nodes")):
+        for entry in sorted(files):
+            if entry.endswith(".md"):
+                found.update(INSTALLED_SCRIPT_REF.findall(_read(os.path.join(dirpath, entry))))
+    return found
+
+
 def sibling_deps(script: str, existing: set[str]) -> set[str]:
     """Sibling scripts that `script` imports, by any of the three forms used here:
     a plain import, an import_module of a hyphenated name, or a load-by-filename."""
@@ -229,6 +241,8 @@ VSIX_ROOTS = frozenset({
     "pipeline-graph.py",
     "config_write.py",
     "config_repair.py",
+    # The plan step's `pick-blocks` node names it, and nodes ship in the .vsix.
+    "plan-blocks.py",
 })
 
 

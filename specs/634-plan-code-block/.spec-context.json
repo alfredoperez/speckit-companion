@@ -1,0 +1,769 @@
+{
+  "workflow": "companion",
+  "specName": "Plan code block",
+  "branch": "feat/plan-code-block",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-09T21:35:31.141Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:37:04.043Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-09T21:37:04.911Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-09T21:37:14.064Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:37:40.913Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:37:56.487Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:38:24.628Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:38:24.739Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:38:25.093Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-09T21:39:02.347Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:39:02.494Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:39:03.039Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-09T21:39:09.717Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:41:14.130Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:41:14.233Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:41:14.336Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:41:14.442Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:41:14.561Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:42:31.224Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:42:31.306Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:42:31.385Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:42:31.466Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:42:31.567Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:42:31.650Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:03.744Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:03.846Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:03.950Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:04.053Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:04.156Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:29.895Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:30.002Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:30.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:43:36.599Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:49:20.001Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:49:20.022Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-09T21:49:20.119Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "all 21 tasks done; jest 4549, pytest 1660, build check and shape parity pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Draw a sketch or citation fence as a card",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003",
+        "T005",
+        "T007"
+      ],
+      "tests": [
+        "codeCard.test.ts::draws a sketch",
+        "codeCard.test.ts::draws a citation"
+      ]
+    },
+    "FR-002": {
+      "title": "Number lines from 1 or from <from>; hl and pin use shown numbers",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "codeCard.test.ts::numbers a sketch from 1 and a citation from its first line"
+      ]
+    },
+    "FR-003": {
+      "title": "Path is a link only for a citation",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "codeCard.test.ts::draws a citation with a link that opens at its first line"
+      ]
+    },
+    "FR-004": {
+      "title": "hl tints lines; a pinned line is marked by fill alone",
+      "tasks": [
+        "T002",
+        "T005"
+      ],
+      "tests": [
+        "codeCard.test.ts::tints only the highlighted lines"
+      ]
+    },
+    "FR-005": {
+      "title": "Each pin line is a note row under its line",
+      "tasks": [
+        "T002",
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "codeCard.test.ts::puts each pin under its line and does not print it again"
+      ]
+    },
+    "FR-006": {
+      "title": "A malformed fence falls back to plain code",
+      "tasks": [
+        "T002",
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "codeCard.test.ts::fallback"
+      ]
+    },
+    "FR-007": {
+      "title": "A plain code fence is untouched",
+      "tasks": [
+        "T003",
+        "T008"
+      ],
+      "tests": [
+        "renderer.test.ts::leaves a plain fence exactly as it was"
+      ]
+    },
+    "FR-008": {
+      "title": "Every string is shown as text",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "codeCard.test.ts::untrusted text"
+      ]
+    },
+    "FR-009": {
+      "title": "Code and pin rows are commentable lines",
+      "tasks": [
+        "T002",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "codeCard.test.ts::makes each code row and each pin a commentable line",
+        "extractBlock.spec.ts::inside a code card fence"
+      ]
+    },
+    "FR-010": {
+      "title": "Attachable code-pins part, off by default, mirrored",
+      "tasks": [
+        "T012",
+        "T015",
+        "T016"
+      ],
+      "tests": [
+        "test_check_plan.py::mirror",
+        "test_packaging.py"
+      ]
+    },
+    "FR-011": {
+      "title": "Check errors on a bad citation or grammar",
+      "tasks": [
+        "T011",
+        "T014"
+      ],
+      "tests": [
+        "test_check_plan.py::CodeBlockErrors"
+      ]
+    },
+    "FR-012": {
+      "title": "Check warns on budget and drifted text",
+      "tasks": [
+        "T011",
+        "T014"
+      ],
+      "tests": [
+        "test_check_plan.py::CodeBlockWarnings"
+      ]
+    },
+    "FR-013": {
+      "title": "Part records the check with --verify-run",
+      "tasks": [
+        "T012"
+      ],
+      "tests": [
+        "test_recorder_flags.py"
+      ]
+    },
+    "FR-014": {
+      "title": "Docs, stories, board copy and changelogs ship with it",
+      "tasks": [
+        "T006",
+        "T013",
+        "T017",
+        "T018",
+        "T019",
+        "T020"
+      ],
+      "tests": [
+        "docs-consistency.test.ts"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 20,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "No states or screen block",
+    "No change to the calls card",
+    "Not turned on in this repo plan step",
+    "No pull request"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/spec-viewer/markdown (callsCard, blockFences, fenceInfo, renderer)",
+    "area: apps/speckit-extension (presets/_parts/call-paths.md, scripts/check_plan.py, docs/call-paths.md)",
+    "constraint: no model-written HTML reaches the viewer",
+    "constraint: no version bump, no real VS Code window, no compile",
+    "constraint: issue #896 design notes for the code block"
+  ],
+  "intent": "Draw a sketch or citation code fence as a card with pins, with a part that writes it and a check that verifies it",
+  "decisions": [
+    {
+      "decision": "hl and pin use the numbers the card shows",
+      "why": "reader and writer see the same number",
+      "rejected": "always counting from 1"
+    },
+    {
+      "decision": "Register the card under a new block name, code, routed by the render loop",
+      "why": "reuses the block seam and its fallback",
+      "rejected": "a second registry for any-language renderers"
+    },
+    {
+      "decision": "The loop collects pin lines after the fence and skips them only when a card was drawn",
+      "why": "same shape as the calls note; fallback keeps the text",
+      "rejected": "pins inside the fence body"
+    },
+    {
+      "decision": "A citation body must be exactly as long as its range",
+      "why": "the viewer cannot read the file, so a wrong count would show wrong numbers",
+      "rejected": "numbering whatever is there"
+    },
+    {
+      "decision": "Budgets and drifted text are warnings, bad citations and grammar are errors",
+      "why": "matches the call-paths check",
+      "rejected": "drift as an error"
+    },
+    {
+      "decision": "Accent colour for highlight and pin edge",
+      "why": "green, amber, red and purple already carry meanings",
+      "rejected": "amber highlight"
+    },
+    {
+      "decision": "Read the two areas inline instead of dispatching reader workers",
+      "why": "both were already read in full in this session",
+      "rejected": "two reader subagents"
+    },
+    {
+      "decision": "Skip the stock git feature-branch hook",
+      "why": "the request names the branch to commit on",
+      "rejected": "a new branch"
+    },
+    {
+      "decision": "A fence whose language is the word code never reaches the card",
+      "why": "code is now a block name, and an existing test used it as an ordinary language",
+      "rejected": "letting the card renderer decide"
+    },
+    {
+      "decision": "Highlights are kept as ranges, never expanded",
+      "why": "hl=1-9999999 would otherwise build a huge set in the viewer",
+      "rejected": "a set of every highlighted number"
+    },
+    {
+      "decision": "The recorder-flags test skips quoted text",
+      "why": "the part records a quoted command that carries --strict, which is not a recorder flag",
+      "rejected": "splitting the part command over two lines"
+    },
+    {
+      "decision": "Changelog entries link issue #896",
+      "why": "the request says not to open a pull request",
+      "rejected": "a placeholder PR number"
+    },
+    {
+      "decision": "tasks.md is checked for code blocks only",
+      "why": "keeps the check output unchanged for specs that already have a task list",
+      "rejected": "checking calls blocks there too"
+    },
+    {
+      "decision": "Fixed the review findings on checker crashes, grammar drift between viewer and check, indented pins, long-line tint and the flag test",
+      "why": "each had a concrete input that broke it",
+      "rejected": "leaving the check able to exit 1 on an unreadable file"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One viewer module for the card, the plan check extended with the same grammar, one attachable part",
+      "key_finding": "The block registry is keyed by language, so a code card needs its own block name and a routing rule in the loop"
+    },
+    "tasks": {
+      "summary": "21 tasks in 6 phases: foundational, four story phases, polish"
+    },
+    "implement": {
+      "summary": "Code card in the viewer, code-pins part, plan check extended, docs and stories"
+    }
+  },
+  "approach": "A new codeCard module parses the info line and pins and draws the card through the block seam under the name code. The render loop routes to it and hands it the pin lines. check_plan.py learns the same grammar and a code-pins part asks for the block and records the check.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added the code block name, the pin line pattern and pins on the block context",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/blockFences.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Wrote the info line parser, the body and pin checks and the card markup",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/codeCard.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Render loop routes a sketch or citation fence to the card, collects pins and skips consumed lines",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/renderer.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Card styles from existing tokens: outlined badge, accent tint, body-font pin with an accent edge",
+      "files": [
+        "apps/vscode/webview/styles/spec-viewer/_code-card.css"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Imported the code card stylesheet after the calls one",
+      "files": [
+        "apps/vscode/webview/styles/spec-viewer/index.css"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "check_plan.py reads code block fences in plan.md and tasks.md and reports grammar, citation and budget findings",
+      "files": [
+        "apps/speckit-extension/scripts/check_plan.py"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "The attachable code-pins part, recording the check with --verify-run",
+      "files": [
+        "apps/speckit-extension/presets/_parts/code-pins.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Docs page for code pins: turn it on, grammar, check",
+      "files": [
+        "apps/speckit-extension/docs/code-pins.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Tests for every code block rule, ignored fences, the silent plan and tasks.md",
+      "files": [
+        "apps/speckit-extension/tests/test_check_plan.py"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Mirrored the code-pins part into the repo node folder",
+      "files": [
+        ".specify/companion/nodes/code-pins.md"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Named code-pins beside call-paths in the node model and the packaging note",
+      "files": [
+        "apps/speckit-extension/docs/node-model.md",
+        "apps/speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Tests for the info parser, numbering, hl, pins, link, untrusted text and every fallback",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/__tests__/codeCard.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Stories for a sketch, a citation and a malformed fence in light and dark",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/PlanComponents.stories.tsx"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Renderer tests: plain and titled fences unchanged, routing, pins, mermaid and calls keep their path",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/markdown/__tests__/renderer.test.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "A line inside a code card fence and a pin under one anchor as a single line",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/extractBlock.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Tests for code line and pin anchors, and ordinary fences unchanged",
+      "files": [
+        "apps/vscode/tests/unit/spec-viewer/extractBlock.spec.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Changelog entry and README section for the code-pins node",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md",
+        "apps/speckit-extension/README.md"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Changelog entry for the code card in the viewer",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Added the code-pins example to the hooks page",
+      "files": [
+        "apps/website/src/content/docs/docs/customize/hooks.mdx"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Rebuilt the Copilot board copy of the renderer and styles",
+      "files": [
+        "apps/copilot-canvas/vendor/viewer-markdown.mjs",
+        "apps/copilot-canvas/vendor/viewer.css"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Ran jest, pytest, build check, shape parity and both type-checks: all pass",
+      "files": [
+        "specs/634-plan-code-block/tasks.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "jest suite",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.0,
+      "result": "Snapshots:   0 total · Time:        70.047 s · Ran all test suites."
+    },
+    {
+      "what": "extension python tests",
+      "command": "python3 -m pytest apps/speckit-extension/tests -q",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.3,
+      "result": "........................................................................ [ 99%] · ............                                                             [100%] · 1660 passed, 8 skipped in 70.03s (0:01:10)"
+    },
+    {
+      "what": "command build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 14 bodies match parts and carry the timing fence, 7 match golden"
+    },
+    {
+      "what": "type-check extension",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.3,
+      "result": "no output"
+    },
+    {
+      "what": "type-check webview",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "no output"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The installed copy of check_plan.py under .specify/extensions/companion/scripts is the old one until the extension is reinstalled, so the code-pins part sees no code blocks in this repo yet.",
+      "step": "implement"
+    },
+    {
+      "note": "The second reviewer the review hook asks for on a renderer change was not run: no codex review skill is installed in this session.",
+      "step": "implement"
+    },
+    {
+      "note": "No real VS Code window or Storybook was opened, so the card was not looked at on screen. Left for the pre-release sitting.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: task finishes were stamped in batches, plan read the code inline instead of dispatching 2 readers, and the trace names 6 capture calls with no recorded outcome. No issue opened."
+    },
+    {
+      "note": "Review findings not fixed: the check and the viewer still disagree on tilde fences, fences indented four or more spaces and a fence line inside a body (shared with the calls check); a pin-shaped line after an ordinary fence anchors as one line; a cited body indented under a list item warns text-differs.",
+      "step": "implement"
+    }
+  ]
+}

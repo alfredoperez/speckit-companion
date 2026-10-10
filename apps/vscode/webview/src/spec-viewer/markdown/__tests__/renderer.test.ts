@@ -374,6 +374,41 @@ describe('renderMarkdown: a block fence', () => {
         expect(renderMarkdown(src(name))).toBe(plain(name));
     });
 
+    it.each([
+        ['a plain fence', '```ts\nconst a = 1;\n```\n'],
+        ['a titled fence', '```ts title="a.ts"\nconst a = 1;\n```\n'],
+        ['a fence followed by a pin line', '```ts\nconst a = 1;\n```\npin 1: loose\n'],
+    ])('leaves %s exactly as it was with the code card registered', (_name, markdown) => {
+        const before = renderMarkdown(markdown);
+        registerBlockRenderer('code', () => '<div class="code-card"></div>');
+
+        expect(renderMarkdown(markdown)).toBe(before);
+        expect(before).toContain('<pre class="code-block" data-language="ts"><code class="language-ts">const a = 1;</code></pre>');
+    });
+
+    it('routes a sketch or a citation to the code renderer, with its pins and no note', () => {
+        const seen: unknown[] = [];
+        registerBlockRenderer('code', (body, info, context) => {
+            seen.push(body, info.language, context.rawTitle, context.note, context.pins.map((p) => [p.line, p.text, p.sourceLine]));
+            return '<div class="code-card"></div>';
+        });
+
+        const html = renderMarkdown('```ts sketch a.ts\nx\n```\n\npin 1: why\nnote: stays\n');
+
+        expect(seen).toEqual(['x', 'ts', 'sketch a.ts', null, [[1, 'why', 5]]]);
+        expect(html).not.toContain('pin 1');
+        expect(html).toContain('note: stays');
+    });
+
+    it.each(['mermaid', 'calls'])('keeps a %s fence on its own path when a sketch follows the language', (name) => {
+        const seen: string[] = [];
+        registerBlockRenderer('code', () => { seen.push(name); return '<div class="code-card"></div>'; });
+
+        renderMarkdown('```' + name + ' sketch a.ts\ngraph TD;\n```\n');
+
+        expect(seen).toEqual([]);
+    });
+
     it('keeps the title and options out of the markup', () => {
         const html = renderMarkdown(src('calls', ' title="x" onmouseover="alert(1)"'));
 
@@ -413,8 +448,15 @@ describe('renderMarkdown: a block fence', () => {
     });
 
     it('does not register a name that is not a block fence', () => {
+        registerBlockRenderer('python', () => '<div class="x"></div>');
+
+        expect(renderMarkdown(src('python'))).not.toContain('class="x"');
+    });
+
+    it('never hands a fence whose language is the word code to the code renderer', () => {
         registerBlockRenderer('code', () => '<div class="x"></div>');
 
-        expect(renderMarkdown(src('code'))).not.toContain('class="x"');
+        expect(renderMarkdown(src('code'))).toBe(plain('code'));
+        expect(renderMarkdown(src('code', ' sketch a.ts'))).toBe(plain('code'));
     });
 });

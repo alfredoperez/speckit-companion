@@ -28,6 +28,8 @@ Plan reads the spec and decides how to build it: the approach, the files and str
 
 Only `plan.md` is always written. The Companion workflow writes the others as the size of the change warrants. For a change sized simple, it keeps the summary and folds the rest into it, and [Specify](/docs/steps/specify) has usually written that short plan already.
 
+The Companion plan step can also add four kinds of block to `plan.md` when the change calls for them: the functions a change reaches, a note pinned under one line of code, a lifecycle you can click through, and a rough screen. See [Customize hooks](/docs/customize/hooks) and the [plan block references](https://github.com/alfredoperez/speckit-companion/blob/main/apps/speckit-extension/docs/call-paths.md).
+
 When [living specs](/docs/results/living-specs) are on, plan reads the specs for the capabilities in scope before it designs anything.
 
 ## While it runs, and after

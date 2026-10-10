@@ -9,15 +9,27 @@ export interface ExtractedBlock {
     heading: string | null;
 }
 
-/** Index of the opening line of the `calls` fence that holds line `idx` strictly inside it, or -1. */
-function openCallsFence(lines: string[], idx: number): number {
+const CARD_FENCE = /^(calls(\s|$)|\S+\s+(sketch\s+\S|\S+:\d+-\d+(\s|$)))/i;
+const PIN_LINE = /^\s*pin\s+\d+:/i;
+
+/** Index of the opening line of the `calls` or code card fence that holds line `idx` strictly inside it, or -1. */
+function openCardFence(lines: string[], idx: number): number {
     let open = -1;
     for (let i = 0; i < idx; i++) {
         if (!lines[i].trim().startsWith('```')) continue;
         open = open < 0 ? i : -1;
     }
     if (open < 0 || lines[idx].trim().startsWith('```')) return -1;
-    return /^calls(\s|$)/i.test(lines[open].trim().slice(3).trim()) ? open : -1;
+    return CARD_FENCE.test(lines[open].trim().slice(3).trim()) ? open : -1;
+}
+
+/** Index of the closing fence a `pin` line at `idx` belongs to, or -1. */
+function pinnedFence(lines: string[], idx: number): number {
+    if (!PIN_LINE.test(lines[idx])) return -1;
+    let i = idx - 1;
+    while (i >= 0 && PIN_LINE.test(lines[i])) i--;
+    while (i >= 0 && !lines[i].trim()) i--;
+    return i >= 0 && lines[i].trim().startsWith('```') ? i : -1;
 }
 
 /**
@@ -45,9 +57,9 @@ export function extractBlock(lines: string[], lineNum: number): ExtractedBlock |
         return null;
     };
 
-    const callsFence = openCallsFence(lines, idx);
-    if (callsFence >= 0) {
-        return { startLine: lineNum, endLine: lineNum, text: lines[idx], heading: findHeading(callsFence) };
+    const cardFence = Math.max(openCardFence(lines, idx), pinnedFence(lines, idx));
+    if (cardFence >= 0) {
+        return { startLine: lineNum, endLine: lineNum, text: lines[idx], heading: findHeading(cardFence) };
     }
 
     if (isHeading(lines[idx]) || isHr(lines[idx]) || isBlank(lines[idx])) {

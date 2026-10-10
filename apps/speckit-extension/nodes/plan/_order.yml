@@ -5,6 +5,7 @@ order:
   - load-living-specs
   - gather-context
   - plan-doc
+  - pick-blocks
   - constitution-check
   - side-files
   - handoff
@@ -18,7 +19,7 @@ phases:
   - name: gather
     nodes: [size-budget, load-living-specs, gather-context]
   - name: author
-    nodes: [plan-doc]
+    nodes: [plan-doc, pick-blocks]
   - name: check
     nodes: [constitution-check]
   - name: wrap-up

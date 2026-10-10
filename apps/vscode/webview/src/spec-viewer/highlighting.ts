@@ -6,6 +6,8 @@
 declare const hljs: {
     highlightElement: (element: Element) => void;
     highlightAll: () => void;
+    getLanguage?: (name: string) => unknown;
+    highlight?: (code: string, options: { language: string; ignoreIllegals?: boolean }) => { value: string };
 };
 
 declare const mermaid: {
@@ -18,6 +20,45 @@ declare const mermaid: {
     }) => void;
     run: (config: { querySelector: string }) => void;
 };
+
+/** Close the spans open at each line break and reopen them on the next line. */
+export function splitHighlighted(html: string): string[] {
+    const lines: string[] = [];
+    const open: string[] = [];
+    let current = '';
+    for (const part of html.split(/(<span[^>]*>|<\/span>|\n)/)) {
+        if (part === '\n') {
+            lines.push(current + '</span>'.repeat(open.length));
+            current = open.join('');
+        } else {
+            if (part.startsWith('<span')) open.push(part);
+            else if (part === '</span>') open.pop();
+            current += part;
+        }
+    }
+    lines.push(current + '</span>'.repeat(open.length));
+    return lines;
+}
+
+function highlightCodeCards(): void {
+    if (!hljs.highlight || !hljs.getLanguage) return;
+    document.querySelectorAll<HTMLElement>('.code-card[data-language]').forEach((card) => {
+        const language = card.dataset.language ?? '';
+        const cells = Array.from(card.querySelectorAll<HTMLElement>('.code-text'));
+        if (!cells.length || !hljs.getLanguage!(language)) return;
+        try {
+            const html = hljs.highlight!(cells.map((cell) => cell.textContent ?? '').join('\n'), { language, ignoreIllegals: true }).value;
+            const lines = splitHighlighted(html);
+            if (lines.length !== cells.length) return;
+            cells.forEach((cell, index) => {
+                cell.innerHTML = lines[index];
+                cell.classList.add('hljs');
+            });
+        } catch (e) {
+            console.warn('[SpecViewer] Failed to highlight code card:', e);
+        }
+    });
+}
 
 /**
  * Apply syntax highlighting to code blocks
@@ -37,12 +78,10 @@ export function applyHighlighting(retryCount: number = 0): void {
         return;
     }
 
+    highlightCodeCards();
+
     // Find all code blocks that need highlighting (skip already highlighted ones)
     const codeBlocks = document.querySelectorAll('pre.code-block code[class*="language-"]');
-
-    if (codeBlocks.length === 0) {
-        return;
-    }
 
     codeBlocks.forEach((block) => {
         try {
