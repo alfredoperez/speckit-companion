@@ -6,7 +6,7 @@
 
 The plan step decides which blocks the change calls for and names them here, so
 the grammar text reaches the model only for the blocks it chose. The choice lands
-in `.spec-context.json` as `planBlocks`. A project copy of a part under
+in `.spec-context.json` as `planBlocks` and `planBlocksPicked`; the plan check later corrects `planBlocks` to what the plan holds. A project copy of a part under
 `.specify/companion/nodes/` wins over the shipped one. Recording is best-effort.
 Stdlib only.
 """
@@ -53,6 +53,7 @@ def record(feature_dir: Path, chosen: list[str]) -> None:
     ctx = read_ctx(target)
     fill_required(ctx, feature_dir, _git_branch(_repo_root_for(feature_dir)) or "main")
     ctx["planBlocks"] = chosen
+    ctx["planBlocksPicked"] = list(chosen)
     atomic_write(target, ctx)
 
 

@@ -332,16 +332,26 @@ def append_verification_runs(feature_dir: Path, specs: list[str]) -> tuple[Path 
 PLAN_CHECK_WHAT = "plan blocks check out"
 
 
-def record_plan_check(feature_dir: Path) -> Path | None:
-    """Run check_plan in-process and record it as a derived verification; None when the plan has no checked block."""
+PLAN_KINDS = (("calls", "blocks"), ("code", "code_blocks"), ("states", "state_blocks"), ("screens", "screens"))
+
+
+def record_plan_report(feature_dir: Path, report: dict, started: float | None = None) -> Path | None:
+    """Record a check_plan report as the derived verification and set planBlocks to the blocks the plan holds."""
     import time
 
     import check_plan
 
-    started = time.monotonic()
-    report = check_plan.check_feature(feature_dir)
+    held = [kind for kind, key in PLAN_KINDS if report[key]]
+    ctx = read_ctx(feature_dir / ".spec-context.json")
+    picked = ctx.get("planBlocksPicked")
+    notes = []
+    if isinstance(picked, list) and picked:
+        notes = [f"picked {kind} but the plan has no {kind} block" for kind in picked if kind not in held]
+        notes += [f"the plan has a {kind} block that was not picked" for kind in held if kind not in picked]
+    for note in notes:
+        print(f"[companion] Plan blocks: {note}.", file=sys.stderr)
     if not check_plan.has_blocks(report):
-        return None
+        return _set_plan_blocks(feature_dir, held) if picked else None
     root = _repo_root_for(feature_dir)
     try:
         shown = feature_dir.resolve().relative_to(root.resolve()).as_posix()
@@ -354,14 +364,35 @@ def record_plan_check(feature_dir: Path) -> Path | None:
         "command": f"python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir {shown} --strict",
         "source": "derived",
         "exitCode": 1 if errors else 0,
-        "durationSeconds": round(time.monotonic() - started, 1),
-        "result": " · ".join(tail),
+        "durationSeconds": round(time.monotonic() - started, 1) if started is not None else 0,
+        "result": " · ".join([*tail, *notes]),
     }
     if errors:
         entry["warnings"] = ["exited 1"]
         print(f"[companion] Plan blocks: {errors} error(s). Run check_plan.py --feature-dir {shown} to see them.",
               file=sys.stderr)
-    return append_capture_entries(feature_dir, "verified", "what", [json.dumps(entry)], replace=True)
+    path = append_capture_entries(feature_dir, "verified", "what", [json.dumps(entry)], replace=True)
+    _set_plan_blocks(feature_dir, held)
+    return path
+
+
+def _set_plan_blocks(feature_dir: Path, held: list) -> Path | None:
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, _git_branch(_repo_root_for(feature_dir)) or "main")
+    ctx["planBlocks"] = held
+    atomic_write(target, ctx)
+    return target
+
+
+def record_plan_check(feature_dir: Path) -> Path | None:
+    """Run check_plan in-process and record it as a derived verification; None when the plan has no checked block."""
+    import time
+
+    import check_plan
+
+    started = time.monotonic()
+    return record_plan_report(feature_dir, check_plan.check_feature(feature_dir), started)
 
 
 def _entry_identity(item, identity_key: str) -> str | None:

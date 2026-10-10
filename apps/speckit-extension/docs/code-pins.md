@@ -4,7 +4,7 @@ A code pin is a note that sits under the line of code it explains. A plan shows 
 
 The code is either a sketch, which is code that does not exist yet, or a citation, which is real lines copied from a file. The fence says which, so a reviewer never mistakes a proposal for what the code does today.
 
-The Companion plan step writes this block when the change needs it: one deciding step, `pick-blocks`, picks the blocks and records the choice as `planBlocks`. A project on the stock pipeline, or one that always wants the block, can still attach the part with the hook below. It asks for a code fence that names a file, and every other renderer shows the block as plain code with the pins as text below it.
+The Companion plan step writes this block when the change needs it: one deciding step, `pick-blocks`, picks the blocks and records the choice as `planBlocksPicked`; `planBlocks` is then corrected to the blocks the plan holds each time the check runs and when the plan step closes. A project on the stock pipeline, or one that always wants the block, can still attach the part with the hook below. It asks for a code fence that names a file, and every other renderer shows the block as plain code with the pins as text below it.
 
 ## Attach it by hook
 

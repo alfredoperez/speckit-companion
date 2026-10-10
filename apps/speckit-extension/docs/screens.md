@@ -4,7 +4,7 @@ A screen block sketches what a person sees, before it is built: the parts on the
 
 It is a rough wireframe, not a design. Parts are boxes with words in them, never HTML, sizes or colours.
 
-The Companion plan step writes this block when the change needs it: one deciding step, `pick-blocks`, picks the blocks and records the choice as `planBlocks`. A project on the stock pipeline, or one that always wants the block, can still attach the part with the hook below. It adds one section to `plan.md`, written only when the change alters what a person sees, and every other renderer shows the block as plain code.
+The Companion plan step writes this block when the change needs it: one deciding step, `pick-blocks`, picks the blocks and records the choice as `planBlocksPicked`; `planBlocks` is then corrected to the blocks the plan holds each time the check runs and when the plan step closes. A project on the stock pipeline, or one that always wants the block, can still attach the part with the hook below. It adds one section to `plan.md`, written only when the change alters what a person sees, and every other renderer shows the block as plain code.
 
 ## Attach it by hook
 

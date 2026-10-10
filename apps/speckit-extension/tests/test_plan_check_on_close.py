@@ -108,5 +108,96 @@ class ClosingThePlanStep(unittest.TestCase):
         self.assertTrue(any(h["step"] == "plan" and h["kind"] == "complete" for h in self._ctx()["history"]))
 
 
+CHECKER = SCRIPTS / "check_plan.py"
+PLAN_CODE = GOOD + "\n```ts src/app.py:1-2\ndef greet():\n    return 1\n```\n"
+
+
+class RunningTheChecker(unittest.TestCase):
+    setUp = ClosingThePlanStep.setUp
+    tearDown = ClosingThePlanStep.tearDown
+    _plan = ClosingThePlanStep._plan
+    _run = ClosingThePlanStep._run
+    _ctx = ClosingThePlanStep._ctx
+    _checks = ClosingThePlanStep._checks
+
+    def _check(self, *flags):
+        return subprocess.run([sys.executable, str(CHECKER), "--feature-dir", str(self.fd), *flags],
+                              capture_output=True, text=True, cwd=self.repo)
+
+    def _seed(self, **fields):
+        (self.fd / ".spec-context.json").write_text(json.dumps(fields), encoding="utf-8")
+
+    def test_a_stale_failed_record_becomes_passed(self):
+        self._plan(BAD)
+        self._run("--step", "plan", "--advance")
+        self.assertEqual(self._checks()[0]["exitCode"], 1)
+        self._plan(GOOD)
+        self._check()
+        (entry,) = self._checks()
+        self.assertEqual(entry["exitCode"], 0)
+        self._run("--step", "plan", "--finish")
+        self.assertEqual(len(self._checks()), 1)
+
+    def test_no_record_and_plan_write_nothing(self):
+        self._plan(GOOD)
+        self._check("--no-record")
+        self._check("--plan", str(self.fd / "plan.md"))
+        self.assertFalse((self.fd / ".spec-context.json").exists())
+
+    def test_a_plan_with_no_block_writes_nothing(self):
+        self._plan("# Plan\n")
+        self._check()
+        self.assertFalse((self.fd / ".spec-context.json").exists())
+
+    def test_plan_blocks_follow_the_plan_and_the_pick_is_kept(self):
+        self._seed(planBlocks=["calls", "code", "states"], planBlocksPicked=["calls", "code", "states"])
+        self._plan(GOOD)
+        out = self._check()
+        ctx = self._ctx()
+        self.assertEqual((ctx["planBlocks"], ctx["planBlocksPicked"]), (["calls"], ["calls", "code", "states"]))
+        self.assertIn("picked code but the plan has no code block", out.stderr)
+        self.assertIn("picked states but the plan has no states block", self._checks()[0]["result"])
+        self.assertEqual(out.returncode, 0)
+
+    def test_a_block_that_was_not_picked_is_said(self):
+        self._seed(planBlocks=["calls"], planBlocksPicked=["calls"])
+        self._plan(PLAN_CODE)
+        out = self._check()
+        self.assertEqual(self._ctx()["planBlocks"], ["calls", "code"])
+        self.assertIn("the plan has a code block that was not picked", out.stderr)
+
+    def test_the_stock_path_sets_plan_blocks_and_says_nothing(self):
+        self._plan(GOOD)
+        out = self._check()
+        ctx = self._ctx()
+        self.assertEqual(ctx["planBlocks"], ["calls"])
+        self.assertNotIn("planBlocksPicked", ctx)
+        self.assertNotIn("picked", out.stderr)
+
+    def test_no_block_but_a_pick_empties_plan_blocks(self):
+        self._seed(planBlocks=["code"], planBlocksPicked=["code"])
+        self._plan("# Plan\n")
+        self._check()
+        self.assertEqual(self._ctx()["planBlocks"], [])
+        self.assertEqual(self._checks(), [])
+
+    def test_a_recording_failure_changes_neither_exit_code_nor_stdout(self):
+        self._plan(GOOD)
+        import contextlib
+        import io
+
+        import capture
+        import check_plan
+        argv = ["--feature-dir", str(self.fd), "--strict"]
+        runs = []
+        for patched in (False, True):
+            out, err = io.StringIO(), io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), \
+                    mock.patch.object(capture, "record_plan_report", side_effect=RuntimeError("boom") if patched else capture.record_plan_report):
+                runs.append((check_plan.main(argv + ["--no-record"] if not patched else argv), out.getvalue(), err.getvalue()))
+        self.assertEqual(runs[0][:2], runs[1][:2])
+        self.assertIn("[companion] Warning: could not record the plan check (boom)", runs[1][2])
+
+
 if __name__ == "__main__":
     unittest.main()

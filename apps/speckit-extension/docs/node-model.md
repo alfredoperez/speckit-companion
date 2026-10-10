@@ -79,7 +79,7 @@ A node declares its output two ways. `writes:` is what the step always produces;
 | plan | `_frame` | — | new file |
 | plan | `gather-context` | investigate | new file |
 | plan | `plan-doc` | author | new file (plan.md) |
-| plan | `pick-blocks` | author | new file, decides which plan blocks to write and records `planBlocks` |
+| plan | `pick-blocks` | author | new file, decides which plan blocks to write and records the pick as `planBlocksPicked`; `planBlocks` is what the plan holds, set again whenever the plan check runs and when the step closes |
 | plan | `constitution-check` | gate | new file |
 | plan | `side-files` | author | new file |
 | plan | `handoff` | control | new file — absorbs `timing` + `self-advance` |

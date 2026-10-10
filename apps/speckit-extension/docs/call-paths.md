@@ -4,7 +4,7 @@ A call path shows the shape of a change before any code is written: which entry 
 
 It is not the code. A line carries a name and a location, never a body, a signature or pseudo-code.
 
-The Companion plan step writes this block when the change needs it: one deciding step, `pick-blocks`, picks the blocks and records the choice as `planBlocks`. A project on the stock pipeline, or one that always wants the block, can still attach the part with the hook below. It adds one section to `plan.md`, and every other renderer shows the block as plain code.
+The Companion plan step writes this block when the change needs it: one deciding step, `pick-blocks`, picks the blocks and records the choice as `planBlocksPicked`; `planBlocks` is then corrected to the blocks the plan holds each time the check runs and when the plan step closes. A project on the stock pipeline, or one that always wants the block, can still attach the part with the hook below. It adds one section to `plan.md`, and every other renderer shows the block as plain code.
 
 ## Attach it by hook
 

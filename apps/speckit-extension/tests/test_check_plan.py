@@ -54,7 +54,7 @@ class Repo(unittest.TestCase):
         (self.spec / "plan.md").write_text(plan, encoding="utf-8")
         out = io.StringIO()
         with redirect_stdout(out):
-            code = cp.main(["--feature-dir", str(self.spec), "--root", str(self.root), *extra])
+            code = cp.main(["--feature-dir", str(self.spec), "--root", str(self.root), "--no-record", *extra])
         return code, out.getvalue()
 
 

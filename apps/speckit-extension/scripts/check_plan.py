@@ -30,7 +30,8 @@ its budget. Its grammar is in docs/states.md.
 
 A plan with none of these blocks prints nothing. Always exits 0, so it never fails the
 step it runs in; `--strict` exits 1 on any error, for a caller that wants a gate.
-Read-only. Stdlib only.
+Given a feature directory it also records its result in `.spec-context.json` (`--no-record` skips that);
+given `--plan` it is read-only. Stdlib only.
 """
 from __future__ import annotations
 
@@ -39,6 +40,7 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -750,11 +752,12 @@ def has_blocks(report: dict) -> bool:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="Check a plan's call paths and screens (read-only)")
+    ap = argparse.ArgumentParser(description="Check a plan's call paths and screens (records the result unless --plan or --no-record)")
     ap.add_argument("--feature-dir", default=None, help="the spec whose plan.md to check")
     ap.add_argument("--plan", default=None, help="check this file instead of the spec's plan")
     ap.add_argument("--root", default=None,
                     help="where cited paths resolve from (default: the spec's repository)")
+    ap.add_argument("--no-record", action="store_true", help="do not record the result in the spec's context")
     ap.add_argument("--json", dest="as_json", action="store_true")
     ap.add_argument("--strict", action="store_true",
                     help="exit 1 when any error is found; without it the check always exits 0")
@@ -772,7 +775,14 @@ def main(argv=None) -> int:
         files = [feature_dir / "plan.md", *(feature_dir / side for side in SIDE_FILES)]
         root = Path(args.root) if args.root else _repo_root_for(feature_dir)
 
+    started = time.monotonic()
     report = _check_files(files, root, feature_dir)
+    if feature_dir and not args.no_record:
+        try:
+            from capture import record_plan_report
+            record_plan_report(feature_dir, report, started)
+        except Exception as err:
+            print(f"[companion] Warning: could not record the plan check ({err}).", file=sys.stderr)
 
     if args.as_json:
         print(json.dumps(report, indent=2))
