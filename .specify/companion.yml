@@ -50,10 +50,6 @@ commands:
       before:
         plan-doc:
           - { type: node, ref: debug-timing }
-      after:
-        # Attachable, not shipped on: this repo runs it to learn whether it earns a default.
-        plan-doc:
-          - { type: node, ref: call-paths }
 
   tasks:
     phases:

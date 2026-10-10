@@ -13,10 +13,4 @@ Add a `## Call paths` section to `plan.md`: one block per behaviour that crosses
 ```
 note: <one plain line, if needed>
 
-Column 0 is the mark: `+` new, `~` changed, `-` removed, a space for unchanged. Two spaces a level. Names only: no bodies, signatures or pseudo-code. **Cite only lines you read in this run**; a `+` cites the line it goes after, and a path you could not verify drops its `:line`.
-
-Then run this, fix what it reports once, and record anything left with `write-context.py --concern`:
-
-```bash
-python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir <feature_directory>
-```
+Column 0 is the mark: `+` new, `~` changed, `-` removed, a space for unchanged. Two spaces a level. `**new**` marks a file that does not exist yet, never a new function in a file that does. Names only: no bodies, signatures or pseudo-code. **Cite only lines you read in this run**; a `+` cites the line it goes after, and a path you could not verify drops its `:line`.

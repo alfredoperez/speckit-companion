@@ -9,7 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
-- **Call paths in the plan, checked.** Attach the `call-paths` node and your plan shows ==which functions a change reaches==, each file and line checked. ([#875](https://github.com/alfredoperez/speckit-companion/pull/875)) <!-- area: pipeline -->
+- **The plan step picks its own blocks.** One deciding step adds call paths, code pins, states or screens only when ==the change needs them==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: pipeline -->
+- **Screens in the plan, checked.** The plan step, or an attached `screens` node, sketches ==what a person sees==, with every dot paired to a note. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: pipeline -->
+- **Pinned code in the plan, checked.** The plan step, or an attached `code-pins` node, shows checked lines of code with ==a note under the line that needs one==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: pipeline -->
+- **States in the plan, checked.** The plan step, or an attached `states` node, draws a lifecycle you can click through, with ==unreachable states and dead ends caught==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: pipeline -->
+- **Call paths in the plan, checked.** The plan step, or an attached `call-paths` node, shows ==which functions a change reaches==, each file and line checked. ([#875](https://github.com/alfredoperez/speckit-companion/pull/875)) <!-- area: pipeline -->
 - **A risky small change takes the full pipeline.** Sizing asks whether a change is hard to undo or hard to check, and one that is ==never takes the short path==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: pipeline -->
 - **A spec that finishes unverified says so.** Completing with nothing verified and no concern explaining why still completes, records =="finished, unverified"== and warns. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
 - **A run records its working branch.** A step started on another branch than the spec was created on records it, so the viewer ==names the right branch==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
@@ -17,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Living specs travel with the pipeline graph.** The graph carries whether they run, where specs live and ==which capabilities are registered==, so a panel can draw them. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
 
 ### Changed
+- **The plan step records its check.** Closing the plan step records its block check with an exit code, so ==the result is always kept==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: pipeline -->
 - **Stock commands follow your spec-kit.** The stock `/speckit.*` commands wrap the spec-kit installed in your project, so they ==carry its own text==. ([#901](https://github.com/alfredoperez/speckit-companion/pull/901)) <!-- area: pipeline -->
 
 ### Fixed

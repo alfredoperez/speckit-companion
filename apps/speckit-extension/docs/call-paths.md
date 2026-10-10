@@ -4,9 +4,9 @@ A call path shows the shape of a change before any code is written: which entry 
 
 It is not the code. A line carries a name and a location, never a body, a signature or pseudo-code.
 
-The node is attachable and off by default. It adds one section to `plan.md`, and every other renderer shows the block as plain code.
+The Companion plan step writes this block when the change needs it: one deciding step, `pick-blocks`, picks the blocks and records the choice as `planBlocksPicked`; `planBlocks` is then corrected to the blocks the plan holds each time the check runs and when the plan step closes. A project on the stock pipeline, or one that always wants the block, can still attach the part with the hook below. It adds one section to `plan.md`, and every other renderer shows the block as plain code.
 
-## Turn it on
+## Attach it by hook
 
 Add the hook to `.specify/companion.yml`:
 
@@ -75,7 +75,7 @@ It reads `plan.md` (and `call-paths.md` beside it, if a project moved the sectio
 | WARNING | Over budget: more than 3 blocks, more than 12 lines, more than one `note:` line, or a block with no title |
 | WARNING | A block in a spec sized `simple` |
 
-It proves the files and lines are real. It cannot prove that one function calls another, and line numbers go stale once implement edits the files, so it belongs to the plan step.
+It proves the files and lines are real. It cannot prove that one function calls another, and line numbers go stale once implement edits the files, so it belongs to the plan step. The result is recorded when the plan step closes, as a `plan blocks check out` verification with its exit code, and a later close replaces it, so it is still there after implement has moved the lines.
 
 `--json` prints the same findings plus every declared path, for a bench or a script. `--plan <file>` checks one file, and `--root <dir>` says where cited paths resolve from.
 

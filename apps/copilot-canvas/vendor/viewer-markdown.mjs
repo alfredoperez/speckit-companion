@@ -130,10 +130,10 @@ function mapOutsideFences(markdown, fn) {
     else segments.push({ fenced, lines: [line] });
     if (marker) inFence = !inFence;
   }
-  return segments.map((segment, index) => {
+  return segments.map((segment, index2) => {
     const text = segment.lines.join("\n");
     if (segment.fenced) return text;
-    if (index === 0) return fn(text);
+    if (index2 === 0) return fn(text);
     const out = fn("\n" + text);
     return out.startsWith("\n") ? out.slice(1) : out;
   }).join("\n");
@@ -371,8 +371,8 @@ function preprocessConstitution(markdown) {
       }
       if (name && verdict) {
         const v = verdict.toUpperCase();
-        const noteHtml = note && note.trim() ? `<span class="con-note">${parseInline(note.trim())}</span>` : "";
-        rows.push(`<div class="con-row"><span class="verdict ${v.toLowerCase()}">${v}</span><span class="con-name">${parseInline(name)}</span>${noteHtml}</div>`);
+        const noteHtml2 = note && note.trim() ? `<span class="con-note">${parseInline(note.trim())}</span>` : "";
+        rows.push(`<div class="con-row"><span class="verdict ${v.toLowerCase()}">${v}</span><span class="con-name">${parseInline(name)}</span>${noteHtml2}</div>`);
         continue;
       }
       if (!line.trim()) {
@@ -664,7 +664,7 @@ var STRIP_INFERRED = /\s*\[inferred\]\s*/gi;
 var TOUCHES_LINE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
 var ADOPTED_LINE = /^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$/;
 var ALIGNS_LINE = /^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$/;
-function buildRequirementCard(heading, blockLines, index) {
+function buildRequirementCard(heading, blockLines, index2) {
   const files = touchesCount(blockLines);
   let inferred = false;
   let title = heading.trimEnd();
@@ -730,7 +730,7 @@ function buildRequirementCard(heading, blockLines, index) {
   ].join("");
   const actionsLine = [`<div class="living-req-actions">${actions}</div>`];
   return [
-    `<div class="living-req-card" id="living-req-${index}" data-req-index="${index}" data-req="${escapeAttr(title)}" data-req-state="${state}"${covAttr}${filesAttr}${adoptedAttr}${newAttr}>`,
+    `<div class="living-req-card" id="living-req-${index2}" data-req-index="${index2}" data-req="${escapeAttr(title)}" data-req-state="${state}"${covAttr}${filesAttr}${adoptedAttr}${newAttr}>`,
     '<div class="living-req-header">',
     ...metaLine,
     `### ${title}`,
@@ -777,7 +777,7 @@ function preprocessLivingRequirements(markdown) {
     const isSection = (k) => !fenced.has(k) && /^##(?!#)\s+/.test(lines[k]);
     const cards = [];
     let i = secStart + 1;
-    let index = 0;
+    let index2 = 0;
     while (i < secEnd) {
       const head = isHeading(i) ? lines[i].match(/^###(?!#)\s+(.+)$/) : null;
       if (!head) {
@@ -789,8 +789,8 @@ function preprocessLivingRequirements(markdown) {
       let j = i + 1;
       while (j < secEnd && !isHeading(j) && !isSection(j)) j++;
       const blockLines = lines.slice(i + 1, j);
-      cards.push(...buildRequirementCard(heading, blockLines, index));
-      index++;
+      cards.push(...buildRequirementCard(heading, blockLines, index2));
+      index2++;
       i = j;
     }
     const out = [
@@ -901,20 +901,20 @@ var BLOCK_TAG = /<\/?(?:p|div|li|ul|ol|h[1-6]|table|tr|td|th|pre|blockquote|butt
 var asked = [];
 var marked = 0;
 function markClarifications(html) {
-  let index = 0;
+  let index2 = 0;
   const out = html.replace(TAG_OR_MARKER, (match, question) => {
     if (question === void 0 || question.trim() === "" || BLOCK_TAG.test(question)) return match;
-    const n = index++;
+    const n = index2++;
     return `<span class="rp-question" data-question="${n}"><span class="rp-question__text">${question.trim()}</span> <span class="rp-question__badge">Needs an answer</span> <button type="button" class="rp-question__answer" data-question="${n}">Answer</button></span>`;
   });
-  marked = index;
+  marked = index2;
   return out;
 }
 function rememberClarifications(markdown) {
   asked = clarificationsIn(markdown);
 }
-function writtenQuestion(index) {
-  return asked.length === marked ? asked[index] : void 0;
+function writtenQuestion(index2) {
+  return asked.length === marked ? asked[index2] : void 0;
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/sourceLines.ts
@@ -949,7 +949,8 @@ function mapToSourceLines(source, processed) {
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/blockFences.ts
-var BLOCK_FENCES = ["calls", "states", "screen"];
+var BLOCK_FENCES = ["calls", "code", "states", "screen"];
+var PIN_LINE = /^\s*pin\s+(\d{1,7}):\s*(.*)$/i;
 var renderers = /* @__PURE__ */ new Map();
 function isBlockFence(name) {
   return BLOCK_FENCES.includes(name);
@@ -993,17 +994,17 @@ function parseRow(row, sourceLine) {
   return { mark, depth: indent / 2, name, path, line: line ? Number(line) : null, isNew, sourceLine, source: row.trim() };
 }
 function guides(rows) {
-  const hasLaterSibling = (index) => {
-    const depth = rows[index].depth;
-    for (let j = index + 1; j < rows.length && rows[j].depth >= depth; j++) {
+  const hasLaterSibling = (index2) => {
+    const depth = rows[index2].depth;
+    for (let j = index2 + 1; j < rows.length && rows[j].depth >= depth; j++) {
       if (rows[j].depth === depth) return true;
     }
     return false;
   };
   const open = [];
-  return rows.map((row, index) => {
+  return rows.map((row, index2) => {
     if (row.depth === 0) return "";
-    const later = hasLaterSibling(index);
+    const later = hasLaterSibling(index2);
     const prefix = open.slice(1, row.depth).map((on) => on ? "\u2502  " : "   ").join("");
     open[row.depth] = later;
     return prefix + (later ? "\u251C\u2500 " : "\u2514\u2500 ");
@@ -1025,7 +1026,7 @@ function parseCalls(body, firstLine) {
   }
   if (rows.length === 0) return { ok: false, error: "an empty block" };
   const tree = guides(rows);
-  return { ok: true, rows: rows.map((row, index) => ({ ...row, guide: tree[index] })) };
+  return { ok: true, rows: rows.map((row, index2) => ({ ...row, guide: tree[index2] })) };
 }
 var TINT = { "+": "add", "~": "chg", "-": "del", " ": "same" };
 function renderLocation(row) {
@@ -1034,10 +1035,11 @@ function renderLocation(row) {
   return `<span class="calls-where">${chip ?? escapeHtml(label)}</span>`;
 }
 function renderRow(row) {
-  const strike = row.mark === " " ? "" : `<button type="button" class="calls-strike" data-line="${row.sourceLine}" aria-label="${STRIKE_LABEL}: ${escapeHtml(row.name)}">strike</button>`;
+  const strike = row.mark === " " ? '<span class="calls-strike-slot"></span>' : `<button type="button" class="calls-strike" data-line="${row.sourceLine}" aria-label="${STRIKE_LABEL}: ${escapeHtml(row.name)}" title="${STRIKE_LABEL}"><span aria-hidden="true">\xD7</span><span class="calls-strike-word">strike</span></button>`;
+  const entry = row.depth === 0 ? '<span class="calls-entry">entry</span>' : "";
   const pill = row.isNew ? '<span class="calls-new">new file</span>' : "";
   const mark = row.mark === "-" ? "\u2212" : row.mark.trim();
-  return `<div class="calls-row calls-row--${TINT[row.mark]}"><span class="calls-mark">${mark}</span><span class="calls-tree">${row.guide}</span><span class="calls-name">${escapeHtml(row.name)}</span>${pill}${renderLocation(row)}${strike}<span class="line-content" hidden>${escapeHtml(row.source)}</span></div>`;
+  return `<div class="calls-row calls-row--${TINT[row.mark]}"><span class="calls-mark">${mark}</span><span class="calls-tree">${row.guide}</span><span class="calls-name">${escapeHtml(row.name)}</span>${entry}${pill}${renderLocation(row)}${strike}<span class="line-content" hidden>${escapeHtml(row.source)}</span></div>`;
 }
 function renderCallsCard(body, info, context) {
   const parsed = parseCalls(body, context.firstLine);
@@ -1045,11 +1047,568 @@ function renderCallsCard(body, info, context) {
   const { rows } = parsed;
   const count = (mark) => rows.filter((row) => row.mark === mark).length;
   const title = info.title || context.rawTitle;
-  const titleHtml = title ? `<span class="calls-title">${escapeHtml(title)}</span>` : "";
-  const counts = `<span class="calls-counts"><span class="calls-add">+${count("+")}</span> <span class="calls-del">\u2212${count("-")}</span> <span class="calls-chg">~${count("~")}</span> \xB7 1 entrypoint</span>`;
+  const titleHtml = title ? `<span class="calls-title" title="${escapeHtml(title)}">${escapeHtml(title)}</span>` : "";
+  const kinds = [
+    { mark: "+", cls: "calls-add", glyph: "+", word: "new" },
+    { mark: "-", cls: "calls-del", glyph: "\u2212", word: "removed" },
+    { mark: "~", cls: "calls-chg", glyph: "~", word: "changed" }
+  ];
+  const present = kinds.filter((kind) => count(kind.mark) > 0);
+  const spoken = present.map((kind) => `${count(kind.mark)} ${kind.word}`).join(", ");
+  const shown = present.map((kind) => `<span class="${kind.cls}">${kind.glyph}${count(kind.mark)}</span>`).join(" ");
+  const counts = present.length ? `<span class="calls-counts" aria-label="${spoken}" title="${spoken}">${shown}</span>` : "";
   const lines = rows.map((row) => context.wrapLine(renderRow(row), row.sourceLine)).join("");
-  const note = context.note ? `<div class="calls-note">${escapeHtml(context.note)}</div>` : "";
+  const note = context.note ? `<div class="calls-note">${parseInline(context.note)}</div>` : "";
   return `<div class="calls-card"><div class="calls-head"><span class="calls-badge">calls</span>${titleHtml}${counts}</div><div class="calls-rows">${lines}</div>${note}</div>`;
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/screenCard.ts
+var MAX_PARTS = 14;
+var MAX_DOTS = 5;
+var KINDS = ["title", "row", "text", "chip", "button", "field", "list"];
+var TRAILER = /(?:^|[\s:])\((new|changed|\d{1,2})\)\s*$/;
+var NAME = /^[A-Za-z][\w-]{0,31}$/;
+var NOTE_LINE = /^\d{1,2}:\s+\S/;
+function parseLine(raw) {
+  if (raw.includes("	")) return "a tab in the line";
+  const indent = raw.length - raw.trimStart().length;
+  if (indent % 2) return "an odd indent";
+  let rest = raw.trim();
+  let mark = null;
+  let dot = null;
+  for (let found = rest.match(TRAILER); found; found = rest.match(TRAILER)) {
+    if (/^\d/.test(found[1])) {
+      if (dot !== null) return "two dots on one part";
+      dot = Number(found[1]);
+    } else {
+      if (mark !== null) return "two marks on one part";
+      mark = found[1];
+    }
+    rest = rest.slice(0, found.index + (found[0][0] === ":" ? 1 : 0)).trimEnd();
+  }
+  const head = rest.match(/^([a-z]+):(?:\s+(.*))?$/);
+  if (!head) return "a line with no part kind";
+  if (!KINDS.includes(head[1])) return "an unknown part";
+  const kind = head[1];
+  const text = (head[2] ?? "").trim();
+  if (kind === "row" && text) return "a row holds no text of its own";
+  if (kind !== "row" && !text) return `a ${kind} with no text`;
+  const items = kind === "list" ? text.split("|").map((item) => item.trim()) : [];
+  if (items.some((item) => !item)) return "an empty list item";
+  if (dot !== null && dot < 1) return "a dot must be 1 or more";
+  return { depth: indent / 2, kind, text, items, mark, dot };
+}
+function parseScreen(body) {
+  const roots = [];
+  const stack = [];
+  const dots = [];
+  let count = 0;
+  for (const raw of body.split("\n")) {
+    const text = raw.replace(/ +$/, "");
+    if (!text.trim()) continue;
+    const line = parseLine(text);
+    if (typeof line === "string") return { ok: false, error: line };
+    if (line.depth > stack.length) return { ok: false, error: "a skipped level" };
+    if (line.depth > 0 && stack[line.depth - 1].kind !== "row") return { ok: false, error: "a part nested inside something that is not a row" };
+    stack.length = line.depth;
+    const { depth, ...fields } = line;
+    const part = { ...fields, children: [] };
+    (depth === 0 ? roots : stack[depth - 1].children).push(part);
+    stack.push(part);
+    count++;
+    if (part.dot !== null) dots.push(part.dot);
+  }
+  if (count === 0) return { ok: false, error: "an empty block" };
+  if (count > MAX_PARTS) return { ok: false, error: `more than ${MAX_PARTS} parts` };
+  if (dots.length > MAX_DOTS) return { ok: false, error: `more than ${MAX_DOTS} dots` };
+  if (new Set(dots).size !== dots.length) return { ok: false, error: "the same dot twice" };
+  const emptyRow = (list) => list.some((p) => p.kind === "row" && !p.children.length || emptyRow(p.children));
+  if (emptyRow(roots)) return { ok: false, error: "a row with nothing in it" };
+  return { ok: true, parts: roots, dots };
+}
+function parseNote(line) {
+  const found = line.trim().match(/^(\d{1,2}):\s+(.+)$/);
+  if (!found) return null;
+  const text = found[2].trim();
+  const sentence = text.match(/^(.+?[.!?])(?:\s+(.*))?$/);
+  return { n: Number(found[1]), lead: sentence ? sentence[1] : text, rest: sentence?.[2] ?? "" };
+}
+function parseScreenHeader(rawTitle) {
+  const [name = "", ...title] = rawTitle.trim().split(/\s+/);
+  return NAME.test(name) ? { name, title: title.join(" ") } : null;
+}
+function buildScreen(rawTitle, body, noteLines) {
+  const header = parseScreenHeader(rawTitle);
+  const parsed = parseScreen(body);
+  if (!header || !parsed.ok) return null;
+  const notes = noteLines.map(parseNote);
+  if (notes.some((note) => !note)) return null;
+  const list = notes.sort((a, b) => a.n - b.n);
+  const numbers = list.map((note) => note.n);
+  const same = numbers.length === parsed.dots.length && [...parsed.dots].sort((a, b) => a - b).every((n, i) => n === numbers[i]);
+  if (!same || new Set(numbers).size !== numbers.length) return null;
+  return { ...header, parts: parsed.parts, notes: list };
+}
+var dotHtml = (part, notes) => {
+  if (part.dot === null) return "";
+  const note = notes.get(part.dot);
+  const label = escapeHtml(`Note ${part.dot}: ${(note?.lead ?? "").replace(/\*\*|`/g, "")}`);
+  return `<button type="button" class="screen-dot" data-n="${part.dot}" aria-label="${label}">${part.dot}</button>`;
+};
+function renderPart(part, notes, inRow = false) {
+  const mark = part.mark ? ` screen-part--${part.mark}` : "";
+  const hint = part.mark ? `<span class="screen-sr"> (${part.mark})</span>` : "";
+  const dot = dotHtml(part, notes);
+  const inline = part.kind === "list" && inRow ? " screen-part--inline" : "";
+  const open = `<div class="screen-part screen-part--${part.kind}${inline}${mark}">`;
+  const text = escapeHtml(part.text);
+  switch (part.kind) {
+    case "row":
+      return `${open}${part.children.map((child) => renderPart(child, notes, true)).join("")}${hint}${dot}</div>`;
+    case "field":
+      return `${open}<span class="screen-label">${text}${hint}</span><span class="screen-input"></span>${dot}</div>`;
+    case "list":
+      return `${open}<ul class="screen-items">${part.items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>${hint}${dot}</div>`;
+    default:
+      return `${open}<span class="screen-text">${text}</span>${hint}${dot}</div>`;
+  }
+}
+var noteHtml = (note) => {
+  const text = note.rest ? `${note.lead} ${note.rest}` : note.lead;
+  if (text.includes("**")) return parseInline(text);
+  return `<strong>${parseInline(note.lead)}</strong>${note.rest ? ` ${parseInline(note.rest)}` : ""}`;
+};
+var countMarks = (parts, mark) => parts.reduce((sum, part) => sum + (part.mark === mark ? 1 : 0) + countMarks(part.children, mark), 0);
+function countHtml(def) {
+  const bits = [];
+  const added = countMarks(def.parts, "new");
+  const changed = countMarks(def.parts, "changed");
+  if (added) bits.push({ html: `<span class="screen-count-new">${added} new</span>`, label: `${added} new` });
+  if (changed) bits.push({ html: `<span class="screen-count-changed">${changed} changed</span>`, label: `${changed} changed` });
+  if (def.notes.length) {
+    const label = `${def.notes.length} ${def.notes.length === 1 ? "note" : "notes"}`;
+    bits.push({ html: label, label });
+  }
+  return { html: bits.map((b) => b.html).join(" \xB7 "), label: bits.map((b) => b.label).join(", ") };
+}
+function renderScreenFrame(def) {
+  const notes = new Map(def.notes.map((note) => [note.n, note]));
+  return `<div class="screen-frame">${def.parts.map((part) => renderPart(part, notes)).join("")}</div>`;
+}
+function renderScreenCard(def, hidden = "") {
+  const notes = new Map(def.notes.map((note) => [note.n, note]));
+  const summary = countHtml(def);
+  const count = summary.html ? `<span class="screen-count" title="${escapeHtml(summary.label)}" aria-label="${escapeHtml(summary.label)}">${summary.html}</span>` : "";
+  const quote = hidden ? `<span class="line-content" hidden>${escapeHtml(hidden)}</span>` : "";
+  const list = def.notes.length ? `<ol class="screen-notes">${def.notes.map((note) => `<li class="screen-note" value="${note.n}" data-n="${note.n}" tabindex="0"><span class="screen-note-n" aria-hidden="true">${note.n}</span><span class="screen-note-text">${noteHtml(note)}</span></li>`).join("")}</ol>` : "";
+  const frame = renderScreenFrame(def);
+  return `<div class="screen-card" data-screen="${escapeHtml(def.name)}"><div class="screen-head"><span class="screen-badge">screen</span><span class="screen-title">${escapeHtml(def.title || def.name)}</span>${count}</div>${quote}<div class="screen-body">${frame}${list}</div></div>`;
+}
+function renderScreenBlock(body, _info, context) {
+  const def = buildScreen(context.rawTitle, body, context.numberedNotes ?? []);
+  if (!def) return "";
+  return context.wrapLine(renderScreenCard(def, `screen ${context.rawTitle}`.trim()), context.firstLine);
+}
+var index = /* @__PURE__ */ new Map();
+function indexScreens(lines) {
+  index = /* @__PURE__ */ new Map();
+  for (let i = 0; i < lines.length; i++) {
+    const open = lines[i].trim().match(/^```screen(?:\s+(.*))?$/);
+    if (!open) continue;
+    const body = [];
+    let end = i + 1;
+    while (end < lines.length && !lines[end].trim().startsWith("```")) body.push(lines[end++]);
+    let at = end + 1;
+    while (at < lines.length && !lines[at].trim()) at++;
+    const noteLines = [];
+    while (at < lines.length && NOTE_LINE.test(lines[at])) noteLines.push(lines[at++]);
+    const def = buildScreen(open[1] ?? "", body.join("\n"), noteLines);
+    if (def && !index.has(def.name)) index.set(def.name, def);
+    i = end;
+  }
+}
+function renderScreenByName(name) {
+  const def = index.get(name);
+  return def ? renderScreenCard(def) : null;
+}
+function renderScreenFrameByName(name) {
+  const def = index.get(name);
+  return def ? renderScreenFrame(def) : null;
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/codeCard.ts
+var CARD_INFO = /^(sketch(\s|$)|\S+:\d+-\d+(\s|$))/;
+var CITATION = /^(.+):(\d{1,7})-(\d{1,7})$/;
+var HIGHLIGHT = /^hl=(\d{1,7}(?:-\d{1,7})?(?:,\d{1,7}(?:-\d{1,7})?)*)$/;
+var OUTSIDE_REPO = /^([a-z]:|[\\/])/i;
+var isCodeCardInfo = (rawTitle) => CARD_INFO.test(rawTitle);
+function parseCodeInfo(rawTitle) {
+  const words = rawTitle.trim().split(/\s+/);
+  const cited = words[0].match(CITATION);
+  const sketch = words[0] === "sketch";
+  if (!sketch && !cited) return null;
+  const file = sketch ? words[1] ?? "" : cited[1];
+  const from = sketch ? 1 : Number(cited[2]);
+  const to = sketch ? null : Number(cited[3]);
+  if (!file || file.startsWith("hl=")) return null;
+  if (OUTSIDE_REPO.test(file) || file.split(/[\\/]/).includes("..")) return null;
+  if (to !== null && (from < 1 || to < from)) return null;
+  const rest = words.slice(sketch ? 2 : 1);
+  if (rest.length > 1) return null;
+  const hl = [];
+  if (rest.length === 1) {
+    const listed = rest[0].match(HIGHLIGHT);
+    if (!listed) return null;
+    for (const part of listed[1].split(",")) {
+      const [first, last = first] = part.split("-").map(Number);
+      if (last < first) return null;
+      hl.push([first, last]);
+    }
+  }
+  return { kind: sketch ? "sketch" : "cite", file, from, to, hl };
+}
+function parseCode(body, info, context) {
+  if (!body.trim()) return { ok: false, error: "an empty block" };
+  const texts = body.split("\n");
+  const last = info.from + texts.length - 1;
+  if (info.to !== null && info.to !== last) return { ok: false, error: "the body is not as long as the cited range" };
+  const shown = (line) => line >= info.from && line <= last;
+  if (info.hl.some(([first, end]) => !shown(first) || !shown(end))) return { ok: false, error: "a highlight outside the lines" };
+  for (const pin of context.pins) {
+    if (!shown(pin.line)) return { ok: false, error: "a pin outside the lines" };
+    if (!pin.text) return { ok: false, error: "a pin with no text" };
+  }
+  const lines = texts.map((text, index2) => {
+    const number = info.from + index2;
+    return {
+      number,
+      text,
+      sourceLine: context.firstLine + index2,
+      highlighted: info.hl.some(([first, end]) => number >= first && number <= end),
+      pins: context.pins.filter((pin) => pin.line === number)
+    };
+  });
+  return { ok: true, lines };
+}
+function renderFile(info) {
+  const text = escapeHtml(info.file);
+  const chip = info.kind === "cite" ? fileRefHtml(text, info.from, text) : null;
+  return `<span class="code-file">${chip ?? text}</span>`;
+}
+function renderKind(info) {
+  const label = info.to === null ? "sketch" : info.to === info.from ? `line ${info.from}` : `lines ${info.from}-${info.to}`;
+  return `<span class="code-kind code-kind--${info.kind}">${label}</span>`;
+}
+function renderPin(pin, context) {
+  const row = `<div class="code-pin" role="note"><span class="code-pin-text">${parseInline(pin.text)}</span><span class="line-content" hidden>${escapeHtml(pin.source)}</span></div>`;
+  return context.wrapLine(row, pin.sourceLine);
+}
+function renderLine(line, context) {
+  const tint = `${line.highlighted ? " code-row--hl" : ""}${line.pins.length ? " code-row--pinned" : ""}`;
+  const text = escapeHtml(line.text);
+  const row = `<div class="code-row${tint}"><span class="code-num">${line.number}</span><code class="code-text">${text}</code><span class="line-content" hidden>${text}</span></div>`;
+  return context.wrapLine(row, line.sourceLine) + line.pins.map((pin) => renderPin(pin, context)).join("");
+}
+function renderCodeCard(body, fence, context) {
+  const info = parseCodeInfo(context.rawTitle);
+  if (!info) return "";
+  const parsed = parseCode(body, info, context);
+  if (!parsed.ok) return "";
+  const language = fence.language ? ` data-language="${fence.language}"` : "";
+  const head = `<div class="code-head"><span class="code-badge">code</span>${renderFile(info)}${renderKind(info)}</div>`;
+  const lines = parsed.lines.map((line) => renderLine(line, context)).join("");
+  return `<div class="code-card code-card--${info.kind}"${language}>${head}<div class="code-lines">${lines}</div></div>`;
+}
+
+// apps/vscode/webview/src/spec-viewer/markdown/statesCard.ts
+var MAX_STATES = 8;
+var MAX_COLUMNS = 4;
+var MAX_ROWS = 3;
+var TRAILER2 = /\s*(\((?:start|final|proposed)\)|shows\s+[\w.-]+)\s*$/;
+function parseState(text, names) {
+  const colon = text.indexOf(":");
+  const name = colon < 0 ? "" : text.slice(0, colon).trim();
+  if (!name) return "a state line needs `name: one sentence`";
+  if (names.has(name)) return `the state "${name}" is written twice`;
+  let rest = text.slice(colon + 1).trim();
+  const state = { name, sentence: "", start: false, final: false, proposed: false, shows: null };
+  for (let found = rest.match(TRAILER2); found; found = rest.match(TRAILER2)) {
+    const mark = found[1];
+    if (mark.startsWith("shows")) state.shows = mark.replace(/^shows\s+/, "");
+    else state[mark.slice(1, -1)] = true;
+    rest = rest.slice(0, found.index).trim();
+  }
+  if (!rest) return `the state "${name}" has no sentence`;
+  state.sentence = rest;
+  return state;
+}
+function parseStates(body) {
+  const states = [];
+  const arrowLines = [];
+  const gridLines = [];
+  let inGrid = false;
+  for (const raw of body.split("\n")) {
+    const text = raw.trim();
+    if (!text) continue;
+    if (/^grid:\s*$/i.test(text)) {
+      if (inGrid) return { ok: false, error: "a second grid" };
+      inGrid = true;
+    } else if (inGrid) gridLines.push(text);
+    else if (/^[^:]*->/.test(text)) arrowLines.push(text);
+    else {
+      const state = parseState(text, new Set(states.map((s) => s.name)));
+      if (typeof state === "string") return { ok: false, error: state };
+      states.push(state);
+    }
+  }
+  if (states.length === 0) return { ok: false, error: "no states" };
+  if (states.length > MAX_STATES) return { ok: false, error: `more than ${MAX_STATES} states` };
+  const index2 = new Map(states.map((s, i) => [s.name, i]));
+  const arrows = [];
+  for (const line of arrowLines) {
+    const found = line.match(/^(.+?)\s*->\s*([^:]+?)\s*(?::\s*(.*))?$/);
+    if (!found) return { ok: false, error: "an arrow needs `from -> to: label`" };
+    let label = (found[3] ?? "").trim();
+    const proposed = /\(proposed\)\s*$/.test(label) || !label && /\(proposed\)\s*$/.test(found[2]);
+    label = label.replace(/\s*\(proposed\)\s*$/, "");
+    const toName = found[2].replace(/\s*\(proposed\)\s*$/, "");
+    const from = index2.get(found[1].trim());
+    const to = index2.get(toName);
+    if (from === void 0 || to === void 0) return { ok: false, error: "an arrow names a state that is not listed" };
+    arrows.push({ from, to, label, proposed });
+  }
+  if (gridLines.length === 0) return { ok: false, error: "no grid" };
+  if (gridLines.length > MAX_ROWS) return { ok: false, error: `more than ${MAX_ROWS} grid rows` };
+  const grid = [];
+  const placed = /* @__PURE__ */ new Set();
+  for (const line of gridLines) {
+    const cells = line.includes("|") ? line.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()) : line.split(/\s+/);
+    const row = [];
+    for (const cell of cells) {
+      if (cell === "." || cell === "") {
+        row.push(-1);
+        continue;
+      }
+      const at = index2.get(cell);
+      if (at === void 0) return { ok: false, error: `the grid names "${cell}", which is not a state` };
+      if (placed.has(at)) return { ok: false, error: `the grid places "${cell}" twice` };
+      placed.add(at);
+      row.push(at);
+    }
+    grid.push(row);
+  }
+  const columns = Math.max(...grid.map((row) => row.length));
+  if (columns > MAX_COLUMNS) return { ok: false, error: `more than ${MAX_COLUMNS} grid columns` };
+  grid.forEach((row) => {
+    while (row.length < columns) row.push(-1);
+  });
+  while (grid.length > 1 && grid[grid.length - 1].every((cell) => cell === -1)) grid.pop();
+  if (placed.size !== states.length) return { ok: false, error: "a state is missing from the grid" };
+  const starts = states.map((s, i) => s.start ? i : -1).filter((i) => i >= 0);
+  if (starts.length > 1) return { ok: false, error: "more than one start state" };
+  return { ok: true, states, arrows, grid, start: starts[0] ?? 0 };
+}
+var CHAR_W = 7.6;
+var BOX_PAD_X = 14;
+var MIN_BOX_W = 120;
+var MAX_BOX_W = 200;
+var CELL_H = 52;
+var MAX_CHARS = Math.floor((MAX_BOX_W - BOX_PAD_X * 2) / CHAR_W);
+var GAP_X = 120;
+var GAP_Y = 64;
+var PAD_X = 24;
+var PAD_Y = 36;
+var LANE = 10;
+function shortName(name) {
+  return name.length > MAX_CHARS ? `${name.slice(0, MAX_CHARS - 1)}\u2026` : name;
+}
+function boxWidth(states) {
+  const chars = Math.max(...states.map((s) => shortName(s.name).length));
+  return Math.min(MAX_BOX_W, Math.max(MIN_BOX_W, Math.ceil(chars * CHAR_W + BOX_PAD_X * 2)));
+}
+function layout(grid, cellW) {
+  const columns = grid[0].length;
+  const width = PAD_X * 2 + columns * cellW + (columns - 1) * GAP_X;
+  const height = PAD_Y * 2 + grid.length * CELL_H + (grid.length - 1) * GAP_Y;
+  const centres = /* @__PURE__ */ new Map();
+  grid.forEach((row, r) => row.forEach((at, c) => {
+    if (at >= 0) centres.set(at, { x: PAD_X + c * (cellW + GAP_X) + cellW / 2, y: PAD_Y + r * (CELL_H + GAP_Y) + CELL_H / 2 });
+  }));
+  return { width, height, centres };
+}
+var round = (n) => Math.round(n * 10) / 10;
+function edge(from, to, cellW) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const scale = Math.min(dx ? cellW / 2 / Math.abs(dx) : Infinity, dy ? CELL_H / 2 / Math.abs(dy) : Infinity);
+  return { x: from.x + dx * scale, y: from.y + dy * scale };
+}
+var MAX_LABELLED_ARROWS = 8;
+var LABEL_CHAR_W = 7;
+var LABEL_H = 16;
+var LABEL_MAX_CHARS = 16;
+var LABEL_GAP_MARGIN = 8;
+var VIEW_PAD = 10;
+var CLEAR = 4;
+var sample = (p, c, q) => [0, 0.25, 0.5, 0.75, 1].map((t) => ({
+  x: (1 - t) * (1 - t) * p.x + 2 * (1 - t) * t * c.x + t * t * q.x,
+  y: (1 - t) * (1 - t) * p.y + 2 * (1 - t) * t * c.y + t * t * q.y
+}));
+function labelRect(text, at, anchor) {
+  const w = text.length * LABEL_CHAR_W + 6;
+  const x = anchor === "start" ? at.x : anchor === "end" ? at.x - w : at.x - w / 2;
+  return { x, y: at.y - LABEL_H / 2, w, h: LABEL_H };
+}
+function labelFits(label, a, b, cellW) {
+  if (!label) return true;
+  const adjacent = a.y === b.y && Math.abs(b.x - a.x) === cellW + GAP_X;
+  return adjacent ? label.length * LABEL_CHAR_W + 6 <= GAP_X - LABEL_GAP_MARGIN : label.length <= LABEL_MAX_CHARS;
+}
+function crossedCentre(p, q, arrow, ctx) {
+  for (let step = 1; step < 24; step++) {
+    const t = step / 24;
+    const x = p.x + (q.x - p.x) * t;
+    const y = p.y + (q.y - p.y) * t;
+    for (const [at, c] of ctx.centres) {
+      if (at === arrow.from || at === arrow.to) continue;
+      if (Math.abs(x - c.x) < ctx.cellW / 2 + CLEAR && Math.abs(y - c.y) < CELL_H / 2 + CLEAR) return c;
+    }
+  }
+  return null;
+}
+function renderArrow(arrow, ctx) {
+  const { centres, cellW, paired, labelled, forced } = ctx;
+  const a = centres.get(arrow.from);
+  const b = centres.get(arrow.to);
+  const cls = `states-arrow${arrow.proposed ? " states-arrow--proposed" : ""}`;
+  const marker = arrow.proposed ? "states-head-proposed" : "states-head";
+  const wrap = (inner) => `<g class="states-edge" data-from="${arrow.from}">${inner}</g>`;
+  const shown = labelled && (forced || labelFits(arrow.label, a, b, cellW));
+  const text = (at2, anchor2) => shown && arrow.label ? `<text class="states-label" x="${round(at2.x)}" y="${round(at2.y)}" text-anchor="${anchor2}" dominant-baseline="central">${escapeHtml(arrow.label)}</text>` : "";
+  const rect = (at2, anchor2) => shown && arrow.label ? labelRect(arrow.label, at2, anchor2) : null;
+  if (arrow.from === arrow.to) {
+    const x = a.x;
+    const top = a.y - CELL_H / 2;
+    const d = `M ${round(x - 18)} ${round(top)} C ${round(x - 18)} ${round(top - 30)}, ${round(x + 18)} ${round(top - 30)}, ${round(x + 18)} ${round(top)}`;
+    const at2 = { x, y: top - 32 };
+    return {
+      html: wrap(`<path class="${cls}" d="${d}" marker-end="url(#${marker})"/>${text(at2, "middle")}`),
+      points: [{ x: x - 18, y: top }, { x: x + 18, y: top }, { x, y: top - 23 }],
+      label: rect(at2, "middle")
+    };
+  }
+  const nx = b.y - a.y;
+  const ny = a.x - b.x;
+  const length = Math.hypot(nx, ny) || 1;
+  const ux = nx / length;
+  const uy = ny / length;
+  const shift = paired ? LANE : 0;
+  const ox = ux * shift;
+  const oy = uy * shift;
+  const p = edge({ x: a.x + ox, y: a.y + oy }, { x: b.x + ox, y: b.y + oy }, cellW);
+  const q = edge({ x: b.x + ox, y: b.y + oy }, { x: a.x + ox, y: a.y + oy }, cellW);
+  const crossed = crossedCentre(p, q, arrow, ctx);
+  if (crossed) {
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    const side = ux * (crossed.x - mid.x) + uy * (crossed.y - mid.y) > 0 ? -1 : 1;
+    const bow = CELL_H + 40 + (paired && arrow.from > arrow.to ? 2 * LANE + 16 : 0);
+    const control = { x: mid.x + ux * side * bow, y: mid.y + uy * side * bow };
+    const start = edge(a, control, cellW);
+    const end = edge(b, control, cellW);
+    const apex = { x: (start.x + 2 * control.x + end.x) / 4, y: (start.y + 2 * control.y + end.y) / 4 };
+    const d = `M ${round(start.x)} ${round(start.y)} Q ${round(control.x)} ${round(control.y)} ${round(end.x)} ${round(end.y)}`;
+    return {
+      html: wrap(`<path class="${cls}" d="${d}" marker-end="url(#${marker})"/>${text(apex, "middle")}`),
+      points: sample(start, control, end),
+      label: rect(apex, "middle")
+    };
+  }
+  const upright = Math.abs(ux) > 0.7;
+  const reach = paired ? shift + (upright ? 6 : 8) : 0;
+  const at = { x: (p.x + q.x) / 2 + ux * reach, y: (p.y + q.y) / 2 + uy * reach };
+  const anchor = paired && upright ? ux > 0 ? "start" : "end" : "middle";
+  return {
+    html: wrap(`<path class="${cls}" d="M ${round(p.x)} ${round(p.y)} L ${round(q.x)} ${round(q.y)}" marker-end="url(#${marker})"/>${text(at, anchor)}`),
+    points: [p, q],
+    label: rect(at, anchor)
+  };
+}
+function viewBoxOf(width, height, drawn) {
+  let x0 = 0, y0 = 0, x1 = width, y1 = height;
+  for (const item of drawn) {
+    for (const pt of item.points) {
+      x0 = Math.min(x0, pt.x);
+      x1 = Math.max(x1, pt.x);
+      y0 = Math.min(y0, pt.y);
+      y1 = Math.max(y1, pt.y);
+    }
+    if (item.label) {
+      x0 = Math.min(x0, item.label.x);
+      x1 = Math.max(x1, item.label.x + item.label.w);
+      y0 = Math.min(y0, item.label.y);
+      y1 = Math.max(y1, item.label.y + item.label.h);
+    }
+  }
+  const x = Math.floor(x0 - VIEW_PAD);
+  const y = Math.floor(y0 - VIEW_PAD);
+  return { x, y, w: Math.ceil(x1 + VIEW_PAD) - x, h: Math.ceil(y1 + VIEW_PAD) - y };
+}
+function droppedLabels(parsed) {
+  if (parsed.arrows.length > MAX_LABELLED_ARROWS) return false;
+  const cellW = boxWidth(parsed.states);
+  const { centres } = layout(parsed.grid, cellW);
+  return parsed.arrows.some((arrow) => !labelFits(arrow.label, centres.get(arrow.from), centres.get(arrow.to), cellW));
+}
+function renderDiagram(parsed) {
+  const cellW = boxWidth(parsed.states);
+  const { width, height, centres } = layout(parsed.grid, cellW);
+  const labelled = parsed.arrows.length <= MAX_LABELLED_ARROWS;
+  const pairs = new Set(parsed.arrows.map((arrow) => `${arrow.from}>${arrow.to}`));
+  const drawn = parsed.arrows.map((arrow) => renderArrow(arrow, { centres, cellW, labelled, paired: arrow.from !== arrow.to && pairs.has(`${arrow.to}>${arrow.from}`) }));
+  const box = viewBoxOf(width, height, drawn);
+  const head = (id, cls) => `<marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="${cls}" d="M 0 0 L 10 5 L 0 10 z"/></marker>`;
+  const defs = `<defs>${head("states-head", "states-tip")}${head("states-head-proposed", "states-tip states-tip--proposed")}</defs>`;
+  const edges = drawn.map((d) => d.html).join("").replace(new RegExp(`data-from="${parsed.start}"`, "g"), `data-from="${parsed.start}" data-out="true"`);
+  const dense = labelled ? "" : " states-svg--dense";
+  const svg = `<svg class="states-svg${dense}" viewBox="${box.x} ${box.y} ${box.w} ${box.h}" role="presentation" focusable="false">${defs}${edges}</svg>`;
+  const percent = (n, of) => Math.round(n / of * 1e4) / 100;
+  const buttons = parsed.states.map((state, i) => {
+    const tag = [i === parsed.start ? "start" : "", state.final ? "final" : ""].filter(Boolean).join(" \xB7 ");
+    const tagHtml = tag ? `<span class="states-tag">${tag}</span>` : "";
+    const shown = shortName(state.name);
+    const titleAttr = shown === state.name ? "" : ` title="${escapeHtml(state.name).replace(/"/g, "&quot;").replace(/'/g, "&#39;")}"`;
+    const at = centres.get(i);
+    const cls = ["states-state", i === parsed.start ? "is-selected" : "", state.proposed ? "states-state--proposed" : ""].filter(Boolean).join(" ");
+    const style = `left:${percent(at.x - cellW / 2 - box.x, box.w)}%;top:${percent(at.y - CELL_H / 2 - box.y, box.h)}%;width:${percent(cellW, box.w)}%;height:${percent(CELL_H, box.h)}%`;
+    return `<button type="button" class="${cls}" data-state="${i}" aria-pressed="${i === parsed.start}"${titleAttr} style="${style}"><span class="states-name">${escapeHtml(shown)}</span>${tagHtml}</button>`;
+  }).join("");
+  return `<div class="states-stage" style="--w:${box.w};max-width:${box.w}px;aspect-ratio:${box.w} / ${box.h}">${svg}${buttons}</div>`;
+}
+function movesHtml(parsed, from) {
+  const moves = parsed.arrows.filter((arrow) => arrow.from === from);
+  if (!moves.length) return "";
+  const lines = moves.map((arrow) => {
+    const label = arrow.label ? `: ${escapeHtml(arrow.label)}` : "";
+    const tag = arrow.proposed ? ' <span class="states-move-tag">(proposed)</span>' : "";
+    return `<span class="states-move${arrow.proposed ? " states-move--proposed" : ""}">\u2192 <strong>${escapeHtml(parsed.states[arrow.to].name)}</strong>${label}${tag}</span>`;
+  }).join("");
+  return `<span class="states-moves">${lines}</span>`;
+}
+function renderStatesCard(body, info, context) {
+  const parsed = parseStates(body);
+  if (!parsed.ok) return "";
+  const { states, start } = parsed;
+  const proposed = states.filter((s) => s.proposed).length;
+  const title = info.title || context.rawTitle;
+  const titleHtml = title ? `<span class="states-title">${escapeHtml(title)}</span>` : "";
+  const legend = `<span class="states-legend">${states.length} state${states.length === 1 ? "" : "s"}${proposed ? ` \xB7 <span class="states-legend-new">${proposed} proposed</span>` : ""}</span>`;
+  const list = states.map((s, i) => `<li data-state="${i}"><span class="states-list-name">${escapeHtml(s.name)}</span> <span class="states-sentence">${escapeHtml(s.sentence)}</span>${movesHtml(parsed, i)}</li>`).join("");
+  const frames = states.map((s) => s.shows ? renderScreenFrameByName(s.shows) : null);
+  const shown = frames[start] ? `<div class="states-shown">${frames[start]}</div>` : "";
+  const stash = frames.some(Boolean) ? `<div class="states-screens" hidden>${frames.map((html, i) => html ? `<div data-state="${i}">${html}</div>` : "").join("")}</div>` : "";
+  const note = context.note ? `<div class="states-note">${escapeHtml(context.note)}</div>` : "";
+  const card = `<div class="states-card"><div class="states-top"><span class="states-badge">states</span>${titleHtml}${legend}</div><div class="states-hint">${droppedLabels(parsed) ? "Pick a state to read what it means and where it goes" : "Pick a state to read what it means"}</div>${renderDiagram(parsed)}<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div>${movesHtml(parsed, start)}${shown}${stash}<ul class="states-list">${list}</ul>${note}<span class="line-content" hidden>${escapeHtml(body.trim())}</span></div>`;
+  return context.wrapLine(card, context.firstLine);
 }
 
 // apps/vscode/webview/src/spec-viewer/markdown/renderer.ts
@@ -1115,6 +1674,9 @@ function wrapWithLineActions(content, lineNum, lastLineNum = lineNum) {
     </div>`;
 }
 registerBlockRenderer("calls", renderCallsCard);
+registerBlockRenderer("screen", renderScreenBlock);
+registerBlockRenderer("code", renderCodeCard);
+registerBlockRenderer("states", renderStatesCard);
 function wrapComponentLine(componentHtml, lineNum) {
   return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">${COMMENT_ICON_SVG2}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
 }
@@ -1182,6 +1744,7 @@ function renderMarkdown(markdown) {
   let html = "";
   const slugCounts = /* @__PURE__ */ new Map();
   const lines = markdown.split("\n");
+  indexScreens(lines);
   const sourceLineOf = mapToSourceLines(source, markdown);
   let inCodeBlock = false;
   let codeBlockLang = "";
@@ -1189,7 +1752,7 @@ function renderMarkdown(markdown) {
   let codeContent = [];
   let codeFirstLine = 0;
   let codeRawTitle = "";
-  let consumedNoteAt = -1;
+  const consumedLines = /* @__PURE__ */ new Set();
   let inTemplateNote = false;
   let inList = false;
   let listType = "ul";
@@ -1216,7 +1779,7 @@ function renderMarkdown(markdown) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const sourceLineNum = sourceLineOf[i];
-    if (i === consumedNoteAt) continue;
+    if (consumedLines.has(i)) continue;
     if (!inCodeBlock) {
       if (line.startsWith('<details class="template-instructions">')) inTemplateNote = true;
       else if (line.startsWith("</details>")) inTemplateNote = false;
@@ -1241,18 +1804,33 @@ function renderMarkdown(markdown) {
         const codeText = codeContent.join("\n");
         let noteAt = i + 1;
         while (noteAt < lines.length && !lines[noteAt].trim()) noteAt++;
-        const noteText = /^note:/i.test(lines[noteAt] ?? "") ? lines[noteAt].replace(/^note:\s*/i, "").trim() : "";
+        const isScreen = codeBlockLang === "screen";
+        const isCodeCard = !isBlockFence(codeBlockLang) && codeBlockLang !== "" && codeBlockLang !== "mermaid" && isCodeCardInfo(codeRawTitle);
+        const blockName = isCodeCard ? "code" : codeBlockLang === "code" ? "" : codeBlockLang;
+        const noteText = !isCodeCard && !isScreen && /^note:/i.test(lines[noteAt] ?? "") ? lines[noteAt].replace(/^note:\s*/i, "").trim() : "";
         const note = noteText || null;
-        const block = inTemplateNote ? null : renderBlockFence(codeBlockLang, codeText, codeBlockInfo, {
+        const numbered = [];
+        while (isScreen && noteAt + numbered.length < lines.length && NOTE_LINE.test(lines[noteAt + numbered.length])) numbered.push(noteAt + numbered.length);
+        const pins = [];
+        for (let at = noteAt; isCodeCard && at < lines.length; at++) {
+          const pin = lines[at].match(PIN_LINE);
+          if (!pin) break;
+          pins.push({ line: Number(pin[1]), text: pin[2].trim(), sourceLine: sourceLineOf[at] ?? 0, source: lines[at] });
+        }
+        const block = inTemplateNote ? null : renderBlockFence(blockName, codeText, codeBlockInfo, {
           firstLine: codeFirstLine,
           note,
+          pins,
           rawTitle: codeRawTitle,
+          numberedNotes: numbered.map((at) => lines[at]),
           wrapLine: wrapComponentLine
         });
         if (block) {
           html += `${block}
 `;
-          if (note !== null) consumedNoteAt = noteAt;
+          if (note !== null) consumedLines.add(noteAt);
+          numbered.forEach((at) => consumedLines.add(at));
+          pins.forEach((_pin, offset) => consumedLines.add(noteAt + offset));
         } else if (codeBlockLang === "mermaid") {
           const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
           html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>
@@ -1533,6 +2111,7 @@ export {
   preprocessTechnicalContext,
   preprocessUserStories,
   renderMarkdown,
+  renderScreenByName,
   resetScenarioTableCounter,
   setCurrentTask,
   setHasSpecContext,

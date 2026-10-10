@@ -30,8 +30,11 @@ import {
 import { markClarifications, rememberClarifications } from './clarifications';
 import { mapToSourceLines } from './sourceLines';
 import { parseFenceInfo, type FenceInfo } from './fenceInfo';
-import { registerBlockRenderer, renderBlockFence } from './blockFences';
+import { isBlockFence, PIN_LINE, registerBlockRenderer, renderBlockFence, type BlockPin } from './blockFences';
 import { renderCallsCard } from './callsCard';
+import { NOTE_LINE, indexScreens, renderScreenBlock } from './screenCard';
+import { isCodeCardInfo, renderCodeCard } from './codeCard';
+import { renderStatesCard } from './statesCard';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -169,6 +172,9 @@ function wrapWithLineActions(content: string, lineNum: number, lastLineNum: numb
 }
 
 registerBlockRenderer('calls', renderCallsCard);
+registerBlockRenderer('screen', renderScreenBlock);
+registerBlockRenderer('code', renderCodeCard);
+registerBlockRenderer('states', renderStatesCard);
 
 /**
  * Wrap a preprocessed component div as a commentable line — the component sits as
@@ -278,6 +284,7 @@ export function renderMarkdown(markdown: string): string {
     let html = '';
     const slugCounts = new Map<string, number>();
     const lines = markdown.split('\n');
+    indexScreens(lines);
     const sourceLineOf = mapToSourceLines(source, markdown);
     let inCodeBlock = false;
     let codeBlockLang = '';
@@ -285,7 +292,7 @@ export function renderMarkdown(markdown: string): string {
     let codeContent: string[] = [];
     let codeFirstLine = 0;
     let codeRawTitle = '';
-    let consumedNoteAt = -1;
+    const consumedLines = new Set<number>();
     let inTemplateNote = false;
     let inList = false;
     let listType: 'ul' | 'ol' = 'ul';
@@ -318,7 +325,7 @@ export function renderMarkdown(markdown: string): string {
         const line = lines[i];
         const sourceLineNum = sourceLineOf[i];
 
-        if (i === consumedNoteAt) continue;
+        if (consumedLines.has(i)) continue;
 
         if (!inCodeBlock) {
             if (line.startsWith('<details class="template-instructions">')) inTemplateNote = true;
@@ -348,14 +355,27 @@ export function renderMarkdown(markdown: string): string {
 
                 let noteAt = i + 1;
                 while (noteAt < lines.length && !lines[noteAt].trim()) noteAt++;
-                const noteText = /^note:/i.test(lines[noteAt] ?? '') ? lines[noteAt].replace(/^note:\s*/i, '').trim() : '';
+                const isScreen = codeBlockLang === 'screen';
+                const isCodeCard = !isBlockFence(codeBlockLang) && codeBlockLang !== '' && codeBlockLang !== 'mermaid' && isCodeCardInfo(codeRawTitle);
+                const blockName = isCodeCard ? 'code' : codeBlockLang === 'code' ? '' : codeBlockLang;
+                const noteText = !isCodeCard && !isScreen && /^note:/i.test(lines[noteAt] ?? '') ? lines[noteAt].replace(/^note:\s*/i, '').trim() : '';
                 const note = noteText || null;
-                const block = inTemplateNote ? null : renderBlockFence(codeBlockLang, codeText, codeBlockInfo, {
-                    firstLine: codeFirstLine, note, rawTitle: codeRawTitle, wrapLine: wrapComponentLine,
+                const numbered: number[] = [];
+                while (isScreen && noteAt + numbered.length < lines.length && NOTE_LINE.test(lines[noteAt + numbered.length])) numbered.push(noteAt + numbered.length);
+                const pins: BlockPin[] = [];
+                for (let at = noteAt; isCodeCard && at < lines.length; at++) {
+                    const pin = lines[at].match(PIN_LINE);
+                    if (!pin) break;
+                    pins.push({ line: Number(pin[1]), text: pin[2].trim(), sourceLine: sourceLineOf[at] ?? 0, source: lines[at] });
+                }
+                const block = inTemplateNote ? null : renderBlockFence(blockName, codeText, codeBlockInfo, {
+                    firstLine: codeFirstLine, note, pins, rawTitle: codeRawTitle, numberedNotes: numbered.map((at) => lines[at]), wrapLine: wrapComponentLine,
                 });
                 if (block) {
                     html += `${block}\n`;
-                    if (note !== null) consumedNoteAt = noteAt;
+                    if (note !== null) consumedLines.add(noteAt);
+                    numbered.forEach((at) => consumedLines.add(at));
+                    pins.forEach((_pin, offset) => consumedLines.add(noteAt + offset));
                 } else if (codeBlockLang === 'mermaid') {
                     const mermaidId = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
                     html += `<div class="mermaid-container"><pre class="mermaid" id="${mermaidId}">${escapeHtml(codeText)}</pre></div>\n`;

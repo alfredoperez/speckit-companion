@@ -4,6 +4,7 @@
  */
 
 export { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setTaskSummaries, slugify } from './renderer';
+export { renderScreenByName } from './screenCard';
 export { markClarifications, writtenQuestion } from './clarifications';
 export {
     setLivingCoverage,

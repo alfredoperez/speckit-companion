@@ -13,6 +13,7 @@ reads: []
   - `plan.md`: keep the **Summary** only. **Skip the Project Structure section** (the task list already names every file) and **skip the Constitution Check** unless there is a real violation to flag.
   - **Skip `data-model.md`**; fold the one or two types into the plan's prose.
   - Write the design rationale as a short **Key Decisions** note folded into `plan.md` (a few Decision/why lines), not a separate `research.md`, unless a decision genuinely needs its own page.
+  - Skip the plan's blocks (calls, code, states, screens).
   - Generate `contracts/` only if the feature exposes an interface a consumer or test codes against.
 
 This budget governs every step that follows. Where a later step would produce something the budget skips, omit it. Do not produce it and then delete it.

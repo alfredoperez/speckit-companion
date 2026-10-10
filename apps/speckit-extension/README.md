@@ -172,9 +172,9 @@ Steps are grouped into named **phases** (gather, author, check, wrap-up). A phas
 
 If you use the [VS Code extension](https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion), its [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder) draws all of this and runs the build for you.
 
-### A node you can attach: call paths in the plan
+### Blocks in the plan
 
-One hook line makes the plan show which functions a change reaches, as a short tree with a file and line on every row, and a check opens each cited file before the plan is handed on:
+The Companion plan step writes call paths, code pins, states and screens when the change needs them, through one deciding node, `pick-blocks`. A project on the stock pipeline, or one that always wants a block, can attach the part instead. This hook makes the plan show which functions a change reaches, as a short tree with a file and line on every row, and a check opens each cited file before the plan is handed on:
 
 ```yaml
 commands:
@@ -185,7 +185,39 @@ commands:
           - { type: node, ref: call-paths }
 ```
 
-It is off unless you add it. [docs/call-paths.md](./docs/call-paths.md) has the grammar and the check's rules.
+[docs/call-paths.md](./docs/call-paths.md) has the grammar and the check's rules.
+
+The other parts attach the same way; `ref: screens` adds a rough wireframe of what a person sees, written as plain text, with numbered notes. [docs/screens.md](./docs/screens.md) has the grammar.
+
+### Code with pinned notes
+
+The plan step writes these when one line needs a note, and a hook (`ref: code-pins`) attaches it anywhere. It lets the plan show a few lines of code with a note pinned under the line that needs one. A sketch is code that does not exist yet, a citation is real lines, and a check opens every cited file:
+
+```yaml
+commands:
+  plan:
+    hooks:
+      after:
+        plan-doc:
+          - { type: node, ref: code-pins }
+```
+
+It is off unless you add it, and the same line works after `tasks-doc` in the tasks step. [docs/code-pins.md](./docs/code-pins.md) has the grammar and the check's rules.
+
+### A node you can attach: states in the plan
+
+Another hook line makes the plan draw a lifecycle the change adds or alters, as boxes on a grid with labelled arrows, and the same check stops on a state nothing reaches:
+
+```yaml
+commands:
+  plan:
+    hooks:
+      after:
+        plan-doc:
+          - { type: node, ref: states }
+```
+
+It is off unless you add it. [docs/states.md](./docs/states.md) has the grammar and the check's rules.
 
 ## Fast path: a small change skips the ceremony
 
@@ -334,7 +366,10 @@ Each lifecycle hook appends one entry to the canonical `history[]` and advances 
 - [docs/living-specs.md](./docs/living-specs.md): the living specs reference.
 - [docs/how-it-works.md](./docs/how-it-works.md): the hook → script → `.spec-context.json` chain and canonical schema.
 - [docs/node-model.md](./docs/node-model.md): how Companion commands are composed from nodes and the `.specify/companion.yml` hook model.
-- [docs/call-paths.md](./docs/call-paths.md): the attachable `call-paths` node, its block grammar and the check that verifies it.
+- [docs/call-paths.md](./docs/call-paths.md): the `call-paths` plan block, its block grammar and the check that verifies it.
+- [docs/screens.md](./docs/screens.md): the `screens` plan block, its block grammar and the check that verifies it.
+- [docs/code-pins.md](./docs/code-pins.md): the `code-pins` plan block, its sketch and citation grammar and the check that verifies it.
+- [docs/states.md](./docs/states.md): the `states` plan block, its block grammar and the checks that verify it.
 - [docs/publishing.md](./docs/publishing.md): how this extension is released (separate from the VS Code extension).
 - [CHANGELOG.md](./CHANGELOG.md): version history (independent of the VS Code extension).
 

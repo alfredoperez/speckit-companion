@@ -6,7 +6,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **A plan draws its screens.** A `screen` block shows ==a rough wireframe== with numbered notes that light up their dots. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: spec-viewer -->
+- **Notes pinned under a line of code.** A code block that names a file gets line numbers, tinted lines and ==each note under the line it explains==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: spec-viewer -->
+- **A plan's lifecycle you can click through.** A `states` block is drawn as boxes with arrows, and a click ==shows that state's sentence==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: spec-viewer -->
 - **Hover a spec to see its branch.** The sidebar tooltip names ==the branch the work is on==, beside the status and the assistant. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: sidebar -->
+- **Call paths draw as a card.** A plan's `calls` block shows ==which functions a change reaches== as a tree, and you can strike or comment on a row. ([#898](https://github.com/alfredoperez/speckit-companion/pull/898), [#904](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: spec-viewer -->
 - **The Workflow Builder opens on stock Spec Kit.** It draws your project's own workflow and edits ==what Spec Kit owns==: extension hooks, document templates and the constitution command. ([#889](https://github.com/alfredoperez/speckit-companion/pull/889)) <!-- area: pipeline-builder -->
 - **Change where a decision routes.** The board's decision block opens one row per answer, so a verdict ==skips the steps you choose==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
 - **Living specs reach the Workflow Builder.** A header chip turns them on or off, picks where specs live, and lists ==the capabilities you registered==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->

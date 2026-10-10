@@ -1,0 +1,195 @@
+/**
+ * SpecKit Companion - Code card
+ * A code fence that names a file, drawn with line numbers and pinned notes.
+ */
+
+#markdown-content .code-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  margin: var(--space-3) 0 var(--space-4);
+  overflow: hidden;
+}
+
+#markdown-content .code-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-inset);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+#markdown-content .code-badge {
+  flex: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#markdown-content .code-file {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+#markdown-content .code-file .file-ref,
+#markdown-content .code-file .file-ref code {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-body);
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+#markdown-content .code-file .file-ref::before {
+  display: none;
+}
+
+#markdown-content .code-file .file-ref:hover,
+#markdown-content .code-file .file-ref:focus-visible {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+}
+
+#markdown-content .code-file .file-ref:hover code,
+#markdown-content .code-file .file-ref:focus-visible code {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+#markdown-content .code-card--sketch .code-file {
+  cursor: default;
+  text-decoration: none;
+}
+
+#markdown-content .code-kind {
+  flex: none;
+  font-family: var(--font-family);
+  font-size: var(--text-xs);
+  color: var(--text-body);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 var(--space-2);
+}
+
+#markdown-content .code-kind--sketch {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+#markdown-content .code-lines {
+  --code-num-w: 36px;
+  display: grid;
+  grid-auto-columns: minmax(100%, max-content);
+  container-type: inline-size;
+  overflow-x: auto;
+  padding: var(--space-1) 0;
+  background: var(--bg-code);
+  color: var(--code-text);
+}
+
+#markdown-content .code-lines .component-line {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+}
+
+#markdown-content .code-lines .component-line > .line-add-btn {
+  top: 50%;
+  right: var(--space-2);
+  transform: translateY(-50%);
+}
+
+#markdown-content .code-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 0 40px 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: var(--leading-relaxed);
+}
+
+#markdown-content .code-row--hl,
+#markdown-content .code-row--pinned {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+#markdown-content .code-row--hl .code-num,
+#markdown-content .code-row--pinned .code-num {
+  color: color-mix(in srgb, var(--code-text) 75%, transparent);
+}
+
+#markdown-content .code-num {
+  flex: none;
+  width: var(--code-num-w);
+  text-align: right;
+  color: color-mix(in srgb, var(--code-text) 50%, transparent);
+  user-select: none;
+}
+
+#markdown-content .code-text {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--code-text);
+  font-size: inherit;
+  white-space: pre;
+  tab-size: 4;
+}
+
+#markdown-content .code-text:empty::before {
+  content: ' ';
+}
+
+#markdown-content .code-lines .component-line:has(> .code-pin) {
+  position: sticky;
+  left: 0;
+  width: 100cqw;
+  contain: inline-size;
+}
+
+#markdown-content .code-pin {
+  margin: var(--space-1) 40px var(--space-1) calc(var(--space-3) + var(--code-num-w) + var(--space-3));
+  padding: var(--space-1) var(--space-3);
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--code-text) 10%, var(--bg-code));
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--font-family);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--code-text);
+}
+
+@media (max-width: 480px) {
+  #markdown-content .code-head { flex-wrap: wrap; }
+  #markdown-content .code-pin { margin-left: var(--space-3); }
+}
+
+#markdown-content .code-pin strong,
+#markdown-content .code-pin em,
+#markdown-content .code-pin code {
+  color: inherit;
+}
+
+#markdown-content .code-pin code {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}

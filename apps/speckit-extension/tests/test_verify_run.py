@@ -73,6 +73,13 @@ class AppendingThem(unittest.TestCase):
         self.assertEqual(skipped, [])
         self.assertEqual([v["what"] for v in self._verified()], ["Echo", "Fails"])
 
+    def test_a_check_run_again_reports_its_latest_result(self):
+        capture.append_verification_runs(self.fd, ["Same::exit 1", "Other::echo hi"])
+        capture.append_verification_runs(self.fd, ["Same::echo fixed"])
+        verified = self._verified()
+        self.assertEqual([v["what"] for v in verified], ["Same", "Other"])
+        self.assertEqual(verified[0]["exitCode"], 0)
+
     def test_a_spec_without_a_command_is_skipped_and_named(self):
         target, skipped = capture.append_verification_runs(self.fd, ["no separator here"])
         self.assertIsNone(target)

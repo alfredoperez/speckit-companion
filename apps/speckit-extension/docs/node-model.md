@@ -79,6 +79,7 @@ A node declares its output two ways. `writes:` is what the step always produces;
 | plan | `_frame` | — | new file |
 | plan | `gather-context` | investigate | new file |
 | plan | `plan-doc` | author | new file (plan.md) |
+| plan | `pick-blocks` | author | new file, decides which plan blocks to write and records the pick as `planBlocksPicked`; `planBlocks` is what the plan holds, set again whenever the plan check runs and when the step closes |
 | plan | `constitution-check` | gate | new file |
 | plan | `side-files` | author | new file |
 | plan | `handoff` | control | new file — absorbs `timing` + `self-advance` |
@@ -152,7 +153,7 @@ commands:
 | `node` | `ref` → a file in `presets/_parts/` | another node's body, spliced in whole |
 | `skill` | `ref` → a skill name, optional `text` | work the project has already written down |
 
-A `node` ref is looked for in the project's `.specify/companion/nodes/` first, then in `presets/_parts/`, which is how the extension ships a node a project attaches with one line. [`call-paths`](./call-paths.md) is one: it adds the functions a change reaches to the plan, and a check verifies every file and line it cites.
+A `node` ref is looked for in the project's `.specify/companion/nodes/` first, then in `presets/_parts/`, which is how the extension ships a node a project attaches with one line. The Companion plan step already carries a `pick-blocks` node that prints the four grammars below for the blocks a change needs, so attaching is for the stock pipeline or a project that always wants one; the check runs when the step closes either way. [`call-paths`](./call-paths.md) is one: it adds the functions a change reaches to the plan, and a check verifies every file and line it cites. [`screens`](./screens.md) is another: it adds a rough wireframe of what a person sees. [`code-pins`](./code-pins.md) is a third: it pins a note under the one line of code that needs it, and the same check holds each cited range to the file. [`states`](./states.md) is a fourth: it adds a lifecycle the viewer draws as a diagram you can click through.
 
 `skill` is the one that carries no text of its own. A project that has written a skill has already written the instructions; copying them into a node forks them the first time the skill is edited. The hook names it and the assistant loads it, the same way a person would ask for it:
 

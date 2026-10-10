@@ -108,13 +108,13 @@ describe('renderCallsCard: the card', () => {
 
         expect(text(byClass(html, 'calls-badge')[0])).toBe('calls');
         expect(text(byClass(html, 'calls-title')[0])).toBe('A finished step lands');
-        expect(text(byClass(html, 'calls-counts')[0]).replace(/\s+/g, ' ').trim()).toBe('+2 −0 ~2 · 1 entrypoint');
+        expect(text(byClass(html, 'calls-counts')[0]).replace(/\s+/g, ' ').trim()).toBe('+2 ~2');
     });
 
     it('counts a removed row and pluralises nothing it should not', () => {
         const html = card('  a @ a.ts:1\n-   b @ b.ts:2\n-   c @ c.ts:2');
 
-        expect(text(byClass(html, 'calls-counts')[0]).replace(/\s+/g, ' ').trim()).toBe('+0 −2 ~0 · 1 entrypoint');
+        expect(text(byClass(html, 'calls-counts')[0]).replace(/\s+/g, ' ').trim()).toBe('−2');
     });
 
     it('draws one row per call, tinted by mark', () => {
@@ -164,6 +164,21 @@ describe('renderCallsCard: the card', () => {
         expect(text(byClass(html, 'calls-note')[0])).toBe('only a board run is written.');
         expect(html.match(/only a board run is written/g)).toHaveLength(1);
         expect(html).toContain('after text');
+    });
+
+    it('draws inline code in the note and keeps markup in it as text', () => {
+        const html = card(EXAMPLE, 'T', '\nnote: `load` never writes <b>back</b>.\n');
+        const note = byClass(html, 'calls-note')[0];
+
+        expect(text(note)).toBe('load never writes <b>back</b>.');
+        expect(html).toContain('<code>load</code>');
+        expect(html).not.toContain('<b>back</b>');
+    });
+
+    it('names the whole title on the header so a cut one can be read', () => {
+        const html = card(EXAMPLE, 'a title with "quotes" in it');
+
+        expect(attrs(byClass(html, 'calls-title')[0]).title).toBe('a title with "quotes" in it');
     });
 
     it('keeps a bare note: line as text', () => {
@@ -216,7 +231,7 @@ describe('renderCallsCard: fallback', () => {
 
     it('never throws', () => {
         expect(() => renderCallsCard('\u0000\n+', { language: 'calls', title: '', options: new Map() }, {
-            firstLine: 1, note: null, rawTitle: '', wrapLine: (html) => html,
+            firstLine: 1, note: null, pins: [], rawTitle: '', wrapLine: (html) => html,
         })).not.toThrow();
     });
 });
