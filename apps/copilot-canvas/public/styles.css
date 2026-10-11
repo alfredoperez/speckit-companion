@@ -386,20 +386,16 @@ button { font: inherit; color: inherit; }
 
 /* ---------- the viewer's document, embedded ----------
    vendor/viewer.css styles #markdown-content and .dossier exactly as the VS Code viewer does.
-   The board has no line comments or checkbox editing, so those affordances stay inert. */
+   The board has no line comments, checkbox editing or file opening, so those affordances stay inert. */
 .viewer-scope { container-type: inline-size; container-name: viewer; }
 .viewer-scope .content-area { padding: 0; overflow: visible; grid-template-columns: minmax(0, 1fr); }
 .viewer-scope #markdown-content { max-width: none; margin: 0; }
 .viewer-scope .dossier { grid-column: 1 / -1; }
 .viewer-scope .line-add-btn,
-.viewer-scope .calls-strike { display: none; }
-.viewer-scope .states-state { pointer-events: none; }
-.viewer-scope .states-hint,
-.viewer-scope .states-shown,
-.viewer-scope .states-caption { display: none; }
-.viewer-scope #markdown-content .states-list { position: static; width: auto; height: auto; margin: 0; padding: 8px 12px; overflow: visible; clip: auto; white-space: normal; border-top: 1px solid var(--border, currentColor); font-size: 13px; }
-.viewer-scope .states-list-name { font-weight: 600; }
+.viewer-scope .calls-strike { display: none !important; }
 .viewer-scope #markdown-content input[type="checkbox"] { pointer-events: none; }
+.viewer-scope .file-ref,
+.viewer-scope #markdown-content .file-ref { cursor: default; pointer-events: none; }
 .viewer-scope .dossier { width: 100%; }
 
 /* ---------- toast ---------- */

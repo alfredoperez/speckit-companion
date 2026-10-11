@@ -1,0 +1,528 @@
+{
+  "workflow": "companion",
+  "specName": "Plan cards that respond on the Copilot app board",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-11T21:06:50.753Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:06:50.968Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:07:19.840Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-11T21:07:20.182Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-11T21:07:20.346Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:08:50.350Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:09:07.889Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:08.140Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:08.436Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-11T21:10:08.551Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:08.663Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:08.750Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:09.054Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-11T21:10:09.116Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:24.420Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:24.527Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:24.635Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:24.932Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:10:51.106Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:11:29.135Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:11:29.240Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:11:38.087Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:11:38.169Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:13:30.038Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:15:21.010Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:22:38.446Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:22:38.465Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T21:22:38.548Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Picking a state on the board shows its name and sentence",
+      "tasks": [
+        "T005",
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/page.test.mjs::picks a state in a plan states card"
+      ]
+    },
+    "FR-002": {
+      "title": "Picking marks the state and unmarks the previous one",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/page.test.mjs::picks a state in a plan states card"
+      ]
+    },
+    "FR-003": {
+      "title": "Picking shows the state next moves and screen when it has them",
+      "tasks": [
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/page.test.mjs::picks a state in a plan states card"
+      ]
+    },
+    "FR-004": {
+      "title": "The board and VS Code run the same picking code",
+      "tasks": [
+        "T001",
+        "T002",
+        "T004"
+      ]
+    },
+    "FR-005": {
+      "title": "Picking keeps working after the board redraws a document",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/page.test.mjs::picks a state in a plan states card"
+      ]
+    },
+    "FR-006": {
+      "title": "A file name on the board shows no pointer or hover and takes no focus",
+      "tasks": [
+        "T008",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/page.test.mjs::picks a state in a plan states card"
+      ]
+    },
+    "FR-007": {
+      "title": "Comment and strike on a calls row stay hidden on the board",
+      "tasks": [
+        "T007",
+        "T010"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/page.test.mjs::picks a state in a plan states card"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 8,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "Comment and strike on the board",
+    "Opening a file from the board",
+    "A new board screenshot (release QA)",
+    "Checking that a board-started plan run writes blocks (release QA)"
+  ],
+  "context": [
+    "area: apps/copilot-canvas (build.mjs, server.mjs, public/app.js, public/styles.css, tests/page.test.mjs)",
+    "area: apps/vscode/webview/src/spec-viewer/editor/statesSelect.ts",
+    "constraint: the board already hides calls strike and line comment buttons and shows states as a static list (styles.css 394-401)",
+    "constraint: vendor/ is generated by npm run canvas:build and CI diffs it"
+  ],
+  "intent": "Make the states card pickable on the Copilot board with the viewer own code, and make file names read as names",
+  "workingBranch": "636-board-states-card",
+  "planBlocks": [
+    "calls"
+  ],
+  "planBlocksPicked": [
+    "calls"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/636-board-states-card --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 1 call path, 3 lines ·   WARNING plan.md:31  `apps/copilot-canvas/public/app.js` has no `:line`, so it is unverified (no-line) ·   0 error(s), 1 warning(s)"
+    },
+    {
+      "what": "Board tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 14.7,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 14032.218042"
+    },
+    {
+      "what": "Vendored files are current",
+      "command": "npm run canvas:build && git diff --exit-code -- apps/copilot-canvas/vendor apps/claude-mod",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.2,
+      "result": "> speckit-companion@0.36.0 canvas:build · > node apps/copilot-canvas/build.mjs · built vendor/viewer-markdown.mjs, vendor/preamble.mjs, vendor/step-history.mjs, vendor/states-select.mjs and vendor/viewer.css"
+    },
+    {
+      "what": "Type-check and build",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.6,
+      "result": "> speckit-companion@0.36.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "Unit tests",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 71.2,
+      "result": "Snapshots:   0 total · Time:        70.667 s · Ran all test suites."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Bundle statesSelect.ts into vendor/states-select.mjs and import it from app.js",
+      "why": "It has no imports, and the board already vendors the renderer and styles this way with a CI drift check",
+      "rejected": "Moving the file to a shared folder, or copying the function into app.js"
+    },
+    {
+      "decision": "Call setupStatesSelect() once at page load",
+      "why": "It listens on the document and the board replaces the panel on every redraw",
+      "rejected": "Wiring after each draw, which stacks listeners"
+    },
+    {
+      "decision": "Disable each file name after a draw and turn off its pointer events in CSS",
+      "why": "Only disabled removes a button from the tab order",
+      "rejected": "Changing the shared renderer to emit a span"
+    },
+    {
+      "decision": "No new screenshot here",
+      "why": "Pictures are taken once in release QA",
+      "rejected": "Running shots:board for this ticket"
+    },
+    {
+      "decision": "Set each style attribute again as a property after a document is drawn",
+      "why": "The board page policy drops style attributes in markup, which collapsed the states diagram to a heap; setting the property is allowed, so the policy stays strict",
+      "rejected": "Adding unsafe-inline to style-src"
+    },
+    {
+      "decision": "Hide comment and strike with !important",
+      "why": "The viewer rules carry an id and outrank the board override, so the buttons were in fact showing",
+      "rejected": "Matching the viewer selectors one by one"
+    },
+    {
+      "decision": "The changelog entry goes in the root changelog",
+      "why": "That is where every Copilot board entry is, tagged area: copilot-app",
+      "rejected": "The canvas own changelog, as the task first said"
+    },
+    {
+      "decision": "Review rounds: apply only the states diagram layout properties with numeric values, restore a picked state across a redraw, assert the strike button exists before asserting it is hidden",
+      "why": "The first pass showed that re-applying every style attribute would let raw HTML in a plan overlay the page, and that a live run would snap the card back",
+      "rejected": "Re-applying all style attributes; matching restored picks by title and name, left as a gap"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "plan.md call path cites app.js without a line: the import goes at the top of a file that has no imports today",
+      "step": "plan"
+    },
+    {
+      "note": "The browser console still logs one policy warning per style attribute when a document is parsed; the styles are then applied as properties, so it is noise, not a fault",
+      "step": "implement"
+    },
+    {
+      "note": "No new board screenshot and no check in the real Copilot app; both are left to release QA",
+      "step": "implement"
+    },
+    {
+      "note": "Whether a plan run started from the board writes plan blocks was not checked; it needs the real app",
+      "step": "implement"
+    },
+    {
+      "note": "A restored pick is matched by card position and state index, so a plan edit that inserts a card above can pick the wrong state",
+      "step": "implement"
+    },
+    {
+      "note": "A file name on the board no longer shows its full-path tooltip, because it takes no pointer events",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One more vendored module, one call, six CSS lines removed, file names disabled",
+      "key_finding": "The board already hid comment and strike and replaced the states card with a static list in #905; only picking and the file-name look were missing"
+    },
+    "tasks": {
+      "summary": "12 tasks: a foundational bundle, two story phases that share files and so run in order, and polish"
+    },
+    "implement": {
+      "summary": "The states card is laid out and pickable on the board with the viewer own code; dead buttons are gone and file names are inert"
+    }
+  },
+  "approach": "Bundle the viewer states picking module as a fifth vendor file, serve and import it on the board page, remove the CSS that switched the card off, and disable file-name buttons after each draw.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Fifth bundle: vendor/states-select.mjs from the viewer statesSelect.ts",
+      "files": [
+        "apps/copilot-canvas/build.mjs"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Served at /states-select.mjs",
+      "files": [
+        "apps/copilot-canvas/server.mjs"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "README vendor row names the state picking module",
+      "files": [
+        "apps/copilot-canvas/README.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Rebuilt vendor; states-select.mjs generated",
+      "files": [
+        "apps/copilot-canvas/vendor/states-select.mjs"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Page test: a plan with a states fence, a calls fence and a file name",
+      "files": [
+        "apps/copilot-canvas/tests/page.test.mjs"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "app.js imports setupStatesSelect and calls it once at load",
+      "files": [
+        "apps/copilot-canvas/public/app.js"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Removed the rules that switched the states card off; comment and strike stay hidden",
+      "files": [
+        "apps/copilot-canvas/public/styles.css"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Every file name in a drawn document or overview is disabled",
+      "files": [
+        "apps/copilot-canvas/public/app.js"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "File names get a default cursor and no pointer events on the board",
+      "files": [
+        "apps/copilot-canvas/public/styles.css"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Page test also checks the diagram is laid out, the file name is disabled, and comment and strike are not visible",
+      "files": [
+        "apps/copilot-canvas/tests/page.test.mjs"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Changelog entry under Unreleased, in the root changelog where Copilot board entries live",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Board tests 171/171, compile and unit tests pass, vendor folder current",
+      "files": [
+        "apps/copilot-canvas/vendor/states-select.mjs"
+      ]
+    }
+  },
+  "last_action": "12/12 tasks done; 171 board tests and 4697 unit tests pass"
+}

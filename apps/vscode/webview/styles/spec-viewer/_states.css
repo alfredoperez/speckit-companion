@@ -159,7 +159,7 @@
   min-height: 1.5em;
 }
 
-/* Screen readers get every sentence; the board shows them as a list instead of the caption. */
+/* Screen readers get every sentence. */
 #markdown-content .states-list {
   position: absolute;
   width: 1px;
