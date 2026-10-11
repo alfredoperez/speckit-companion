@@ -11,7 +11,7 @@ import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { writeTeamboardRun } from './lib/teamboard-run.mjs';
+import { tickTask, writeTeamboardRun } from './lib/teamboard-run.mjs';
 import { SCROLL_PX_PER_FRAME, recordDir, startRecording } from './lib/recording.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -837,7 +837,7 @@ try {
         await phase.waitFor({ timeout: 15000 });
         return film('tasks-ticking', 'The Tasks tab of a run that is under way. Nothing is ticked when it opens; then three tasks are finished one at a time, and each checkbox fills in while the count beside the title climbs from none of six to three of six, with nobody touching the window.', async (recording) => {
             for (const id of ['T001', 'T002', 'T003']) {
-                writeFileSync(tasks, readFileSync(tasks, 'utf8').replace(`- [ ] **${id}**`, `- [x] **${id}**`));
+                tickTask(tasks, id);
                 await recording.hold(1.6);
             }
         });

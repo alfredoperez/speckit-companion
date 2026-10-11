@@ -193,6 +193,17 @@ It is also the scripted half of release QA: the viewer at a narrow width, the Wo
 | The changelog | `apps/website/public/changelog/<media id>.png`, with its alt text in `content/media/changelog.json` |
 | An article | The post's image folder in the blog repo, numbered in reading order (`01.png`), 1400 to 1800px wide |
 
+**Which command makes which picture.** A skill or a person follows this table and reads no script.
+
+| Command | What it makes | Where it lands | What the machine needs |
+| --- | --- | --- | --- |
+| `npm run shots` | Every named crop of the extension in the table below, plus `_sheet.png` | `.shots/` | VS Code (`VSCODE_BIN` overrides the path). It opens a real window. |
+| `npm run shots:board` | The Copilot app board's pictures | `.shots/` | Google Chrome. Headless, no window. |
+| `npm run check:terminal` | The Claude Code mod's screen at every step, with a band crop and a pane crop | `.terminal-check/<recipe>-<mode>/` | `tmux`, the `claude` CLI already logged in, Google Chrome, and the `speckit-sandboxes` checkout that `.claude/sandboxes-env.sh` locates |
+| `npm run shots:place` | A copy of each crop at every place that uses it, as `tooling/scripts/shots.json` lists | The paths in that file | Nothing. It opens no window. |
+
+**One step at a time.** `npm run shots -- --only <step,step>` and `npm run check:terminal -- --only <step,step>` run only the named steps. `--only` takes step names, not crop names. A step's name is the first argument of its `step(...)` call, so search the script for the crop's name to find the step that takes it. A name that matches no step runs nothing and says nothing, so check that the picture was written. `npm run shots:board` does not read `--only`: it is headless and quick, so it always makes every board picture.
+
 `--shots` changes nothing the check asserts. It adds the crops under `<dir>` and runs the capture-only steps, which assert only that the thing is on screen.
 
 A step saves a crop with `capture(name, { target, padding, ratio, anchor })`. `target` is `'window'`, `'editor'`, `'sidebar'`, `'panel'`, a locator, or a list of locators whose boxes are joined. `ratio` cuts the box to that shape from its top, or from its bottom with `anchor: 'bottom'`. Crop to what matters: a figure sits in a 16:9 frame about 650px wide, so a whole window is unreadable there and a tall crop is shrunk to fit. Under `--shots` the window is 1240 by 800 for the same reason, and it widens for a moment whenever a step reads the terminal, so a long command is not wrapped. A page taller than the window is scrolled to the part that shows the feature (`scrollTo`), not stitched.
@@ -234,22 +245,35 @@ All three write into `.record/` (gitignored, like `.shots/`). **Frames are the w
 
 `recording.json` is facts, never treatment — the name, the surface, the frame rate, the frame size, the number of frames, and one plain sentence saying what is on screen and what a viewer should notice. That sentence is prose a person would say out loud, so it survives being read aloud in a script; a shot instruction ("push in on the drift badge") does not belong in it.
 
-**A recording is deliberate.** A still costs a file and a recording costs a few hundred, so a step opts in the way a capture-only step does: `{ record: true }` beside `{ shots: true }`, and such a step runs under `--record` alone. Today three steps carry it, and they are the two things worth watching: a long document going past, and a run moving on its own.
+**A recording is deliberate.** A still costs a file and a recording costs a few hundred, so a step opts in the way a capture-only step does: `{ record: true }` beside `{ shots: true }`, and such a step runs under `--record` alone. Today four steps carry it, two in `desktop-check.mjs` and two in `terminal-check.mjs`, and `board-shots.mjs` films three more under the same flag. They are the two things worth watching: a long document going past, and a run moving on its own.
 
 | Recording | Script | What it films |
 | --- | --- | --- |
 | `living-spec-read` | `desktop-check.mjs` | A capability's living spec scrolled from its counts and covered paths, through every requirement and scenario, down past the one marked Drifted |
 | `tasks-ticking` | `desktop-check.mjs` | The Tasks tab of a run under way, repainting on its own as three tasks are finished one at a time |
 | `mod-tick-task` | `terminal-check.mjs` | The mod's pane and the band above the prompt counting each task as it is ticked from outside the terminal |
+| `mod-session-start` | `terminal-check.mjs` | Claude Code starting in a project that has specs: the prompt appears, the pane opens beside the transcript by itself, and three tasks tick |
 | `board-tasks-read` | `board-shots.mjs` | A run's whole task list on the Copilot board, scrolled from the first phase to the last |
+| `board-run-steps` | `board-shots.mjs` | A run moving through its steps on the Copilot board: the implement step sent from the button, the rail turning to Running, the tasks ticking off, and the rail reaching done |
+| `board-spec-journey` | `board-shots.mjs` | One spec's whole journey on the Copilot board: the list of specs, one opened at Specify and read a little, then Plan, Tasks and Implement each sent from the board's own button and each finishing under it |
+
+`mod-tick-task` and the two board run films use the same spec, the profile photo upload one in `tooling/scripts/lib/teamboard-run.mjs`, so footage of the terminal and of the board can be cut together. `board-spec-journey` also writes `events.json` beside its frames: the name, frame number and second of each beat (a step sent, a step finished, a scroll), so an edit can find a cut without counting frames. `frame` is how many frames were taken before the beat, so the beat begins on the next file, and the board repaints a moment after a file changes, so a `done` mark sits a few frames ahead of the tick on screen.
+
+**One recording at a time.** `npm run record:terminal -- --only film-session-start` records one terminal step, and `-- --only start,film-tick-task` the other: `film-tick-task` types into the session, so it needs `start` to have waited for the prompt. `npm run record` already names its two steps, and a second `--only` after it is ignored, so for one of them call the script: `npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-living-spec` (or `film-tasks-ticking`). `npm run record:board` always records all three board films, which takes about a minute.
+
+**What the machine needs** is what the stills need: VS Code for `npm run record`; `tmux`, the logged-in `claude` CLI, Google Chrome and the `speckit-sandboxes` checkout for `npm run record:terminal`; Google Chrome alone for `npm run record:board`.
+
+**The films are made somewhere else.** The promo video projects live in the `alfredo-perez.dev` repository, under `apps/videos/`. Its scripts read a recording's frames and `recording.json` from `.record/` here and turn them into plates, the still backgrounds a film moves a camera over. This repository keeps only what needs the product on screen: the recording scripts and the look in [`THEME.md`](../THEME.md).
 
 A dialog opening is not on that list and should not join it: it is one state arriving, which a still already says better.
 
-**Scroll speed lives in one place.** A scroll that reads well on screen is too fast on film, so a recorded scroll moves `SCROLL_PX_PER_FRAME` pixels per frame — `tooling/scripts/lib/recording.mjs`, 16 px at 12 fps, about 190 pixels a second — and no step picks its own. Change the constant and every recorded scroll changes with it. `FPS` and `HOLD_SECONDS` (the still each recording opens and closes on, so a cut has somewhere to land) are in the same file.
+**Scroll speed lives in one place.** A scroll that reads well on screen is too fast on film, so a recorded scroll moves `SCROLL_PX_PER_FRAME` pixels per frame — `tooling/scripts/lib/recording.mjs`, 16 px at 12 fps, about 190 pixels a second — and no step picks its own. Change the constant and every recorded scroll changes with it. `FPS`, `HOLD_SECONDS` (the still each recording opens and closes on, so a cut has somewhere to land) and `READ_SECONDS` (the longer beat for a state with words in it, such as the note saying what was sent or a task that just finished) are in the same file.
+
+**A run advancing is staged through the board's own server, never drawn.** The board films press the real button, and everything after it is the fixture's files changing under `createSpecServer`: `tasks.md` ticked a task at a time, then the run record written with `writeTeamboardRecord`, with `settle()` for the chat turn ending. The server's watchers push each change to the page, so every frame is the board reacting to a file. Nothing in a recording may write to the page. A tick goes through `tickTask`, which fails when the task it names is not in the file. Each board film also waits for the board to say the run finished before it ends. Nothing checks every tick on screen, so look at a film before using it.
 
 Adding one is a step with `{ record: true }` that calls `film(name, what, body)`: the helper opens the recording, dismisses anything floating over the surface, holds, runs your body, holds again and writes the JSON. Inside the body, `recording.frame()` takes one frame, `recording.hold(seconds)` holds the picture, and `recordScroll(recording, locator)` runs a page to its end at the shared speed. The terminal's `film` is the same shape but keeps each screen as text and draws them all once the recording closes, so a frame there costs one `tmux` read rather than a browser screenshot.
 
-Frames are big: the window recordings are 2480x1600, the terminal's 3420x1840, and a recording runs from roughly 60 to 220 frames, so a folder is tens of megabytes. That is why nothing under `.record/` is committed and why the set is kept small.
+Frames are big: the window recordings are 2480x1600, the terminal's 3420x1840, and a recording runs from roughly 60 to 270 frames, so a folder is tens of megabytes. That is why nothing under `.record/` is committed and why the set is kept small.
 
 ## The terminal check
 

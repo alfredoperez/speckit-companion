@@ -1,0 +1,516 @@
+{
+  "workflow": "companion",
+  "specName": "Keep the recording tooling here, send the films elsewhere",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-11T20:31:57.137Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:32:25.224Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:33:11.229Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-11T20:33:11.704Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-11T20:33:18.459Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:34:40.704Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:35:03.299Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:36:04.564Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:36:04.954Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-11T20:36:18.954Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "size-budget",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:36:19.107Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:36:39.889Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:36:40.421Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-11T20:36:48.215Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:36:48.407Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:36:54.327Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:36:54.469Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:37:16.885Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:51:18.307Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:51:18.411Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:51:23.980Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:52:05.817Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:52:05.900Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:52:05.984Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:52:06.068Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:54:11.536Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:54:11.555Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-11T20:54:11.639Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "12/12 tasks done; compile and tests pass; record:board wrote three films",
+  "coverage": {
+    "FR-001": {
+      "title": "Board recording films a run moving through its steps",
+      "tasks": [
+        "T001",
+        "T005"
+      ]
+    },
+    "FR-002": {
+      "title": "Board recording films one spec from Specify to Implement, sent from the board",
+      "tasks": [
+        "T002",
+        "T005"
+      ]
+    },
+    "FR-003": {
+      "title": "Terminal check films a session from launch until the pane opens and three tasks tick",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-004": {
+      "title": "Terminal task-ticking film runs on the board walkthrough spec",
+      "tasks": [
+        "T003"
+      ]
+    },
+    "FR-005": {
+      "title": "No film projects or their helper scripts in the repository",
+      "tasks": [
+        "T001",
+        "T012"
+      ]
+    },
+    "FR-006": {
+      "title": "Guide names each stills command, the one-step flag, output and machine needs",
+      "tasks": [
+        "T006"
+      ]
+    },
+    "FR-007": {
+      "title": "Guide names recording commands, output, frame rate, each recording and how frames are used",
+      "tasks": [
+        "T007"
+      ]
+    },
+    "FR-008": {
+      "title": "Root look file states palette, type, mascot, mark and motifs with real values",
+      "tasks": [
+        "T008",
+        "T012"
+      ]
+    },
+    "FR-009": {
+      "title": "Project instructions point at the look file",
+      "tasks": [
+        "T010"
+      ]
+    },
+    "FR-010": {
+      "title": "Look file does not ship in the packaged extension",
+      "tasks": [
+        "T011",
+        "T012"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 8,
+    "projectedTasks": 10,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "Deleting the board-run worktree and feat/board-run-recording branch",
+    "Pointing the create-image skill at THEME.md",
+    "Making new videos",
+    "Root CHANGELOG entry or version bump"
+  ],
+  "context": [
+    "area: tooling/scripts (board-shots, terminal-check, lib/recording, lib/teamboard-run)",
+    "area: docs/visual-assets.md",
+    "area: apps/website/src/styles/tokens.css (read only, palette source)",
+    "constraint: cherry-pick only 90b5b159, never diff the side branch against main",
+    "constraint: no real VS Code window or Claude Code session for this ticket"
+  ],
+  "intent": "Land all recording tooling on main, document stills and recordings for skills, and add one marketing look file",
+  "workingBranch": "635-recording-tooling-home",
+  "planBlocks": [],
+  "planBlocksPicked": [],
+  "decisions": [
+    {
+      "decision": "Apply only the patch of 90b5b159, then the two worktree diffs",
+      "why": "The scripts on main equal that commit parent, so it applies cleanly",
+      "rejected": "Merging the branch, which carries three film commits and is behind main"
+    },
+    {
+      "decision": "Keep both worktree edits",
+      "why": "Both are recording code and put the board and terminal films on the same spec",
+      "rejected": "Dropping the terminal edit and filming two different specs"
+    },
+    {
+      "decision": "One tickTask helper that throws on a missed task line",
+      "why": "A recorded step must fail when what it films is absent",
+      "rejected": "Asserting the on-screen count per surface"
+    },
+    {
+      "decision": "New root THEME.md plus one pointer line in DESIGN.md",
+      "why": "Skills need values alone; DESIGN.md holds rules and an older banner palette",
+      "rejected": "A new section inside DESIGN.md"
+    },
+    {
+      "decision": "tickTask also replaces the tick in desktop-check.mjs",
+      "why": "It is the same silent miss, and the helper is where every tick should pass",
+      "rejected": "Leaving one caller on the old string replace"
+    },
+    {
+      "decision": "Review round: tolerate a note that already hid itself, wait for the run to finish in board-run-steps, clear a recording folder before a new take, and run film-session-start in replay mode only",
+      "why": "One /code-review pass found each of these as a way a film could die or lie",
+      "rejected": "Asserting every tick on screen, and removing duplication in the films, left as gaps"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Three clean patches, a doc update and one look file; one fail-loud fix for task ticks",
+      "key_finding": "board-shots.mjs does not read --only and npm run record ignores a second --only, so the docs must say which commands can run one step"
+    },
+    "tasks": {
+      "summary": "12 tasks in three story phases that own different files, plus one validation task"
+    },
+    "implement": {
+      "summary": "All recording code on one branch, a tick that fails when its task is missing, a stills and recordings runbook, and THEME.md"
+    }
+  },
+  "approach": "Apply 90b5b159 and the two worktree diffs onto this tree, add a tickTask helper that throws on a miss, bring docs/visual-assets.md up to date for stills and recordings, and add a root THEME.md transcribed from the site tokens.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Applied the script hunks of 90b5b159: run-steps film, READ_SECONDS, writeTeamboardRecord",
+      "files": [
+        "tooling/scripts/board-shots.mjs",
+        "tooling/scripts/lib/recording.mjs",
+        "tooling/scripts/lib/teamboard-run.mjs"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Applied the worktree diff: board-spec-journey film with event marks",
+      "files": [
+        "tooling/scripts/board-shots.mjs"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Applied the worktree diff on top of film-session-start: film-tick-task on RUN_FOLDER",
+      "files": [
+        "tooling/scripts/terminal-check.mjs"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added tickTask, which throws on a missing task line, and used it for every tick",
+      "files": [
+        "tooling/scripts/lib/teamboard-run.mjs",
+        "tooling/scripts/board-shots.mjs",
+        "tooling/scripts/terminal-check.mjs",
+        "tooling/scripts/desktop-check.mjs"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "node --check passes on the scripts; npm run record:board wrote board-tasks-read (63 frames), board-run-steps (204) and board-spec-journey (264)",
+      "files": [
+        ".record/"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added a stills runbook table and how --only works per command",
+      "files": [
+        "docs/visual-assets.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Recordings section: three new rows, step count, one-recording commands, machine needs, where the films are made",
+      "files": [
+        "docs/visual-assets.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Wrote THEME.md from the site tokens",
+      "files": [
+        "THEME.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "DESIGN.md points at THEME.md",
+      "files": [
+        "DESIGN.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "CLAUDE.md lists THEME.md and DESIGN.md",
+      "files": [
+        "CLAUDE.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "THEME.md excluded from the package",
+      "files": [
+        ".vscodeignore"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Compile, 'npm test', the palette check, the package listing and the videos check all pass",
+      "files": [
+        "THEME.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Scripts parse",
+      "command": "for f in tooling/scripts/board-shots.mjs tooling/scripts/terminal-check.mjs tooling/scripts/desktop-check.mjs tooling/scripts/lib/recording.mjs tooling/scripts/lib/teamboard-run.mjs; do node --check $f || exit 1; done",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "no output"
+    },
+    {
+      "what": "Type-check and build",
+      "command": "npm run compile",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.8,
+      "result": "> speckit-companion@0.36.0 compile · > tsc -p ./"
+    },
+    {
+      "what": "Unit tests",
+      "command": "npm test",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 74.3,
+      "result": "Snapshots:   0 total · Time:        73.526 s · Ran all test suites."
+    },
+    {
+      "what": "THEME.md colours match the site tokens and its paths exist",
+      "command": "python3 /tmp/theme-check.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "checked 22 values; bad 0"
+    },
+    {
+      "what": "THEME.md is not in the package",
+      "command": "! npx vsce ls 2>/dev/null | grep -qx THEME.md",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 25.8,
+      "result": "no output"
+    },
+    {
+      "what": "No videos folder",
+      "command": "test ! -e videos",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "no output"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "npm run record:board hung on exit once in three runs after writing all three films; the next two runs exited cleanly, cause not found",
+      "step": "implement"
+    },
+    {
+      "note": "npm run record and npm run record:terminal were not run: they need a real VS Code window and a real Claude Code session, and are left to release QA",
+      "step": "implement"
+    },
+    {
+      "note": "DESIGN.md still says nothing decides between Constellation and the older night-forest look for banners; THEME.md does not settle it",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: four task finishes (the one-wave look-file tasks) were journaled in one burst, so their durations are not trustworthy; self-inflicted, history is append-only",
+      "step": "implement"
+    }
+  ]
+}
