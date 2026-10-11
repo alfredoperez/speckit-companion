@@ -16,7 +16,7 @@ export function TimelineEvent({ event, stepStartedAt }: TimelineEventProps) {
         <div class="timeline-entry">
             <span class="timeline-substep">{event.name}</span>
             {actor && (
-                <span class={`timeline-actor-badge is-${actor}`}>{event.by}</span>
+                <span class={`activity-actor-badge is-${actor}`}>{event.by}</span>
             )}
             <time class="timeline-offset" dateTime={event.recordedAt} title={event.recordedAt}>
                 recorded at {offset}

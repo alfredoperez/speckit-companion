@@ -144,6 +144,49 @@ The settings above are VS Code's. What the Companion pipeline runs lives in file
 | `.specify/companion/fragments/<name>.md` | A document section you wrote | No, you write it |
 | `living-specs.yml` | `enabled`, `layout`, `capabilities`, `exempt` and `rules` for [living specs](/docs/results/living-specs) | `enabled` and `layout` only |
 
+### living-specs.yml
+
+[Living specs](/docs/results/living-specs) stay off until this file exists at the repo root.
+
+```yaml
+enabled: true
+exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
+capabilities:
+  - name: spec-viewer
+    match: ["src/features/spec-viewer/**"]
+    spec: src/features/spec-viewer/spec-viewer.spec.md
+  - name: workflows
+    match: ["src/features/workflows/**", "speckit-extension/workflows/**"]
+```
+
+| Key | What it does |
+| --- | --- |
+| `enabled` | The opt-in. Without a registry, or with this unset, every living-specs command acts as if the feature were absent. |
+| `exempt` | Globs that never count as drift. Default: `*.config.*`, `*.test.*`, `**/migrations/**`. |
+| `name` | The capability id, and its folder name when the location is derived. |
+| `match` | Globs whose files belong to it, minus the capability's own `exclude` globs. |
+| `spec` | Where the spec lives. Optional. |
+| `layout` | `central` or `colocated`, which is the layout adoption uses for a capability you do not place yourself. Defaults to `central`. |
+
+An older `livingSpecs:` block in `.specify/companion.yml` is still read. If both exist, `living-specs.yml` wins.
+
+**Where a spec lives.** Give a capability a `spec:` path and its spec sits beside the code, as `<something>.spec.md`. Omit it and the spec goes to `capabilities/<name>/<name>.spec.md`. You can mix both, and `/speckit.companion.living-move` switches a capability later.
+
+**The coverage file.** `<stem>.coverage.md` beside a spec maps requirements to tests and feeds the coverage count. You write it.
+
+**Which capability owns a file.** A file matching several capabilities goes to the one with the longest literal path prefix, then by name. The scan stops at a subfolder with its own `living-specs.yml`. A spec file no capability claims shows under **Orphans**.
+
+**How a run writes its changes.** A run adds a block to its own feature spec for each capability it changed:
+
+```markdown
+## ADDED Requirements
+<!-- capability: spec-viewer -->
+
+- The viewer re-anchors a stored comment onto the freshly rendered page when its tab reopens.
+```
+
+The other headings are `## MODIFIED Requirements`, `## REMOVED Requirements` and `## RENAMED Requirements`. A block without a capability comment goes to whichever capability the changed files matched. At mark-complete a script folds each block into its capability spec, and folding twice changes nothing. Each capability a Companion run loaded must end with a block or a recorded skip note. If not, the fold prints a receipt saying the loop did not close. It never blocks the run.
+
 ### Where a verdict routes
 
 `specify` ends by judging how big the change is, and each answer sends the run a different way. Your configuration carries only what you changed about that.

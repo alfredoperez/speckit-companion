@@ -292,14 +292,54 @@
       "to": "docs/screenshots/live-living-spec-drifted.png"
     }
   ],
-  "overview-living-specs": [
-    {
-      "to": "docs/screenshots/live-overview-living-specs.png"
-    }
-  ],
   "board-completed-overview": [
     {
       "to": "docs/screenshots/live-copilot-finished.png"
+    }
+  ],
+  "sidebar-hover": [
+    {
+      "to": "docs/screenshots/generated/live-sidebar-hover.png"
+    }
+  ],
+  "sidebar-more-actions": [
+    {
+      "to": "docs/screenshots/generated/live-sidebar-more-actions.png"
+    }
+  ],
+  "overview-intent": [
+    {
+      "to": "docs/screenshots/live-run-intent.png"
+    }
+  ],
+  "overview-timing": [
+    {
+      "to": "docs/screenshots/live-run-timing.png"
+    }
+  ],
+  "overview-expectations": [
+    {
+      "to": "docs/screenshots/live-run-expectations.png"
+    }
+  ],
+  "overview-verified": [
+    {
+      "to": "docs/screenshots/live-run-verified.png"
+    }
+  ],
+  "overview-decisions": [
+    {
+      "to": "docs/screenshots/live-run-decisions.png"
+    }
+  ],
+  "overview-coverage": [
+    {
+      "to": "docs/screenshots/live-run-coverage.png"
+    }
+  ],
+  "overview-run-log": [
+    {
+      "to": "docs/screenshots/live-run-log.png"
     }
   ]
 }
