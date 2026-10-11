@@ -2,6 +2,8 @@
 
 Three sections, outside in: [Tokens](#tokens) is the viewer's own CSS, [Editorial](#editorial) is the taste and brand rules that govern every surface, and [Generated art](#generated-art) is the reference for anything AI-generated (heroes, banners, social cards).
 
+The site's Constellation values, for anything promotional that should match the site, are in [`THEME.md`](THEME.md).
+
 ## Tokens
 
 Shared scale/spacing/type tokens come from `apps/vscode/webview/styles/tokens.css` (host-derived — the spec-editor and workflow-editor webviews ride it and keep tracking the VS Code theme). The **spec viewer's owned palette** lives in `apps/vscode/webview/styles/spec-viewer/_tokens-viewer.css`, loaded only by the viewer (after tokens.css, so it wins the cascade): deliberate light/dark literals for canvas, surfaces, ink, statuses, and syntax — chosen for predictable WCAG contrast rather than inherited from `--vscode-*` variables. Only typography (`--vscode-font-family` / `--vscode-editor-font-family`) and **high-contrast mode** follow the host. **Never hardcode hex in partials** — use the tokens; theme blocks (`body.vscode-light` / `-dark` / `-high-contrast`) re-value them. A `tokensScope` jest spec guards the split — Codex literals must never leak into the shared file.

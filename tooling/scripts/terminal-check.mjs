@@ -13,7 +13,7 @@ import { promisify } from 'node:util';
 import { LOOKS, gridHtml, gridText, parseAnsi } from './lib/terminal/ansi.mjs';
 import { bandRow, dialog, focusedControl, isWorking, paneHasKeyboard, paneRows, paneText, promptBox } from './lib/terminal/screen.mjs';
 import { outsideEnv, sleep, startSession } from './lib/terminal/tmux.mjs';
-import { RUN_FOLDER, writeTeamboardRun } from './lib/teamboard-run.mjs';
+import { RUN_FOLDER, tickTask, writeTeamboardRun } from './lib/teamboard-run.mjs';
 import { recordDir, startRecording } from './lib/recording.mjs';
 
 const run = promisify(execFile);
@@ -203,6 +203,18 @@ async function waitFor(what, test, timeout = 15000) {
     }
     const pane = paneText(grid).split('\n').slice(0, 14).join(' / ');
     throw new Error(`${what}. The band read "${bandRow(grid, specNames)?.text ?? ''}" and the pane read "${pane}"`);
+}
+
+/** waitFor for a recording: a frame is taken on every poll, so the wait is on film instead of skipped. */
+async function filmUntil(recording, what, test, timeout = 15000) {
+    const until = Date.now() + timeout;
+    for (;;) {
+        const grid = await look();
+        const value = test(grid);
+        if (value) return value;
+        if (Date.now() > until) throw new Error(what);
+        await recording.frame();
+    }
 }
 
 // The tab in view carries a ▸ marker, and section headings are drawn in capitals.
@@ -469,18 +481,31 @@ async function replaySteps(project, root) {
         await slash('/speckit-tracker demo-tasked');
         await paneShows(/^Phase 1.*\b0\/4$/m, 'the phase does not start at 0/4');
         const file = join(project, 'specs', '_02_demo-tasked', 'tasks.md');
-        writeFileSync(file, readFileSync(file, 'utf8').replace('- [ ] **T001**', '- [x] **T001**'));
+        tickTask(file, 'T001');
         const started = Date.now();
         const count = await paneShows(/^Phase 1.*\b1\/4$/m, 'the phase count did not move to 1/4 in 10 seconds', 10000);
         await paneShows(/^✓ T001\b/m, 'T001 is not ticked in the list', 3000);
         const text = await bandShows(/(Tasks|Implement) 1\/4.*/, 'the band did not count the ticked task', 5000);
         return `${count} after ${((Date.now() - started) / 1000).toFixed(1)}s; band: ${text}`;
     });
+    // The same spec the board walkthrough runs, at the point the board opens on, so the two recordings can be cut together.
     await step('film-tick-task', 'A run ticking along: the pane and the band count each task as it is ticked from outside', async () => {
-        const file = join(project, 'specs', '_02_demo-tasked', 'tasks.md');
-        return film('mod-tick-task', 'A Claude Code session with the tracker pane open beside the transcript, on a spec whose first task is already done. Two more tasks are finished outside the terminal, and the pane ticks each one and raises its phase count while the band above the prompt counts along with it, so a run can be followed without asking where it is.', async (recording) => {
-            for (const id of ['T002', 'T003']) {
-                writeFileSync(file, readFileSync(file, 'utf8').replace(`- [ ] **${id}**`, `- [x] **${id}**`));
+        writeTeamboardRun(REPO, join(project, 'specs', RUN_FOLDER), 'implementing', { record: RECIPES[RECIPE].companion });
+        specNames = [...DEMOS, RUN_FOLDER];
+        await slash('/speckit-tracker 41');
+        await bandShows(new RegExp(`^${RUN_FOLDER}\\b`), `the band did not move to ${RUN_FOLDER}`);
+        await toPane();
+        await session.keys('1');
+        for (const label of ['Specify', 'Plan', 'Tasks']) await paneShows(new RegExp(`^✓ ${label}\\b`, 'm'), `${label} is not ticked`, 12000);
+        await paneShows(/^● Implement\b/m, 'Implement is not the live step', 12000);
+        await paneShows(/^Phase 1.*\b3\/4$/m, 'the first phase does not read 3/4', 12000);
+        // The keyboard goes back to the prompt, so the film has no focused control on screen.
+        await toPrompt();
+        await sleep(600);
+        const file = join(project, 'specs', RUN_FOLDER, 'tasks.md');
+        return film('mod-tick-task', 'A Claude Code session with the tracker pane open beside the transcript, on the profile photo upload spec with Specify, Plan and Tasks ticked and Implement the live step at three of six tasks. Two more tasks are finished outside the terminal, and the pane ticks each one and raises its phase count while the band above the prompt counts along with it, so a run can be followed without asking where it is.', async (recording) => {
+            for (const id of ['T004', 'T005']) {
+                tickTask(file, id);
                 await recording.hold(6);
             }
         });
@@ -624,6 +649,34 @@ console.log(`Project: ${project}\nWatch it live: ${session.watch}\n`);
 
 let started = false;
 try {
+    // Filmed from launch, before `start` waits for the prompt, so the pane is seen opening; replay only, because it ticks a demo spec.
+    if (MODE === 'replay') await step('film-session-start', 'Claude Code starts, the pane opens beside the transcript by itself, and three tasks tick', async () => {
+        const file = join(project, 'specs', '_02_demo-tasked', 'tasks.md');
+        const before = readFileSync(file, 'utf8');
+        try {
+            return await film('mod-session-start', 'Claude Code starts in a project that has specs. The prompt appears and the mod draws the spec pane beside the transcript by itself, with the band above the prompt. The pane then follows the tasked spec, and three tasks are finished outside the terminal; the pane ticks each one and raises its count while the band counts along, so the run can be followed from the moment the session opens.', async (recording) => {
+                const until = (what, test, timeout) => filmUntil(recording, what, test, timeout);
+                await until('no prompt after 90 seconds', grid => promptBox(grid)?.text === '' && /Claude Code v/.test(gridText(grid)), 90000);
+                await until('the pane did not open by itself', grid => paneRows(grid) !== null && TABS.test(pane(grid)), 30000);
+                await until('the band named no spec', grid => bandRow(grid, specNames), 20000);
+                await recording.hold(2.5);
+                await session.type('/speckit-tracker demo-tasked');
+                await recording.hold(0.6);
+                await session.keys('Enter');
+                await until('the pane does not show demo-tasked at 0/4', grid => /^Phase 1.*\b0\/4$/m.test(pane(grid)), 15000);
+                await session.keys('Escape');
+                await recording.hold(2);
+                for (const id of ['T001', 'T002', 'T003']) {
+                    tickTask(file, id);
+                    await recording.hold(6);
+                }
+                await recording.hold(1);
+            });
+        } finally {
+            writeFileSync(file, before);
+        }
+    }, { record: true });
+
     started = await step('start', 'Claude Code starts with the mod and reaches an empty prompt', async () => {
         const until = Date.now() + 90000;
         for (;;) {

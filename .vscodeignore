@@ -62,6 +62,7 @@ apps/vscode/webview/**
 .sdd.json
 tsconfig.webview.json
 DESIGN.md
+THEME.md
 
 # Dev workspace — never runtime code (vsce ignores .gitignore when this file exists,
 # so gitignored caches/build output must be listed here too)

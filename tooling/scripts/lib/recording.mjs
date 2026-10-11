@@ -1,6 +1,6 @@
 // Records a piece of footage as numbered PNG frames plus one JSON file of facts about it, for the video tool that consumes them.
 // A capture script takes --record <dir> and hands each recording a grab function; nothing here knows about video, timing curves or camera moves.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 // Every recording runs at this rate, and the JSON says so, so the consumer plays the frames back at the speed they were taken.
@@ -9,6 +9,8 @@ export const FPS = 12;
 export const SCROLL_PX_PER_FRAME = 16;
 // How long a recording holds still at a state worth reading, so the cut has somewhere to land.
 export const HOLD_SECONDS = 1;
+// How long it holds at a state with words to take in — a note of what was sent, a task that just finished — which a one-second beat cuts off.
+export const READ_SECONDS = 2;
 
 export function recordDir(argv = process.argv) {
     const at = argv.indexOf('--record');
@@ -28,6 +30,8 @@ function pngSize(file) {
  */
 export function startRecording(dir, name, { surface, what, fps = FPS, grab, flush }) {
     const folder = join(dir, name);
+    // A shorter take must not keep the longer one's last frames.
+    rmSync(folder, { recursive: true, force: true });
     mkdirSync(folder, { recursive: true });
     const files = [];
     // Frames are held apart by the frame rate, so a cheap grab does not race ahead of what is happening on the surface.
