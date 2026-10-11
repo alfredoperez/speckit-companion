@@ -366,6 +366,60 @@ describe('board page', { concurrency: false }, async () => {
         }
     });
 
+    it('picks a state in a plan\'s states card, and draws a file name as a name', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        const planRoot = mkdtempSync(join(tmpdir(), 'canvas-page-plan-'));
+        const folder = join(planRoot, 'specs/001-review');
+        mkdirSync(folder, { recursive: true });
+        writeFileSync(join(folder, 'spec.md'), '# Review\n');
+        const plan = [
+            '# Plan', '', 'It changes `src/review.ts`.', '',
+            '```calls Sending a review', '  send() @ src/review.ts:10', '~   notify() @ src/notify.ts:4', '```', '',
+            '```states A review', 'Draft: Edited. (start)', 'Sent: Waiting.', 'Done: Merged. (final)', 'Draft -> Sent: submit', 'Sent -> Done: approve', 'grid:', 'Draft | Sent | Done', '```', '',
+        ].join('\n');
+        writeFileSync(join(folder, 'plan.md'), plan);
+        writeFileSync(join(folder, '.spec-context.json'), JSON.stringify({ workflow: 'speckit', specName: 'Review', currentStep: 'plan', status: 'planned', history: [] }));
+        const server = await createSpecServer({ root: planRoot, send: async () => true });
+        const context = await browser.newContext({ viewport: { width: 1280, height: 860 }, colorScheme: 'dark' });
+        const planPage = await context.newPage();
+        const card = () => planPage.evaluate(() => ({
+            caption: document.querySelector('.states-caption')?.textContent,
+            picked: [...document.querySelectorAll('.states-state.is-selected')].map(b => b.textContent.trim()),
+            moves: document.querySelector('.states-card > .states-moves')?.textContent ?? '',
+        }));
+        try {
+            await planPage.goto(server.url);
+            await planPage.click('.tab:has-text("Plan")');
+            await planPage.waitForSelector('.states-card');
+            assert.match((await card()).caption, /^Draft: Edited\./);
+            const lefts = await planPage.locator('.states-state').evaluateAll(buttons => buttons.map(b => Math.round(b.getBoundingClientRect().left)));
+            assert.equal(new Set(lefts).size, 3, 'each state sits at its own place in the diagram');
+
+            await planPage.locator('.states-state').nth(1).click();
+            const sent = await card();
+            assert.match(sent.caption, /^Sent: Waiting\./);
+            assert.deepEqual(sent.picked, ['Sent']);
+            assert.match(sent.moves, /approve/);
+            assert.ok(await planPage.locator('.states-caption').isVisible(), 'the caption is on screen');
+
+            writeFileSync(join(folder, 'plan.md'), `${plan}\nOne more line.\n`);
+            await planPage.waitForFunction(() => document.querySelector('#markdown-content')?.textContent.includes('One more line.'));
+            assert.match((await card()).caption, /^Sent: Waiting\./, 'the pick survives the redraw');
+            await planPage.locator('.states-state').nth(2).click();
+            assert.match((await card()).caption, /^Done: Merged\./, 'picking still works on the redrawn card');
+
+            const names = await planPage.locator('#markdown-content .file-ref').evaluateAll(buttons => buttons.map(b => [b.disabled, getComputedStyle(b).cursor, getComputedStyle(b).pointerEvents]));
+            assert.ok(names.length > 0, 'the plan draws a file name');
+            for (const name of names) assert.deepEqual(name, [true, 'default', 'none']);
+            assert.ok(await planPage.locator('.calls-card').count(), 'the plan draws a calls card');
+            assert.ok(await planPage.locator('.calls-strike').count(), 'the calls card draws a strike button');
+            assert.equal(await planPage.locator('.calls-strike:visible, .line-add-btn:visible').count(), 0, 'comment and strike stay hidden');
+        } finally {
+            await context.close();
+            await server.close();
+        }
+    });
+
     it('reads in light mode', async (t) => {
         if (skipWithoutChrome(t)) return;
         await page.emulateMedia({ colorScheme: 'light' });

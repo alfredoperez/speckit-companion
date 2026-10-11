@@ -1,3 +1,5 @@
+import { selectState, setupStatesSelect } from '/states-select.mjs';
+
 const params = new URLSearchParams(location.search);
 const token = params.get('token') ?? '';
 
@@ -36,6 +38,7 @@ const state = {
     snapshot: null,
     selected: null,
     detail: null,
+    shown: null,
     filter: 'active',
     query: '',
     tab: null,
@@ -407,8 +410,29 @@ function tabsFor(detail) {
     return tabs;
 }
 
+const STATES_LAYOUT = /^(left|top|width|height|max-width|aspect-ratio|--w)$/;
+
 function viewerScope(...children) {
-    return el('div', { class: 'viewer-scope' }, el('main', { class: 'content-area' }, children));
+    const scope = el('div', { class: 'viewer-scope' }, el('main', { class: 'content-area' }, children));
+    for (const name of scope.querySelectorAll('.file-ref')) name.disabled = true;
+    // The page's policy drops style attributes in markup, so the states diagram's own layout is set again as properties, and nothing else is.
+    for (const node of scope.querySelectorAll('.states-stage[style], .states-stage > .states-state[style]')) {
+        for (const rule of node.getAttribute('style').split(';')) {
+            const [name, value] = rule.split(':').map(part => part.trim());
+            if (STATES_LAYOUT.test(name) && /^[\d.\s/%px]+$/.test(value ?? '')) node.style.setProperty(name, value);
+        }
+    }
+    return scope;
+}
+
+const pickedStates = () => [...els.detail.querySelectorAll('.states-card')].map(card => card.querySelector('.states-state.is-selected')?.dataset.state);
+
+/** A redraw starts every states card over, so the state picked in each is picked again. */
+function restoreStates(picked) {
+    els.detail.querySelectorAll('.states-card').forEach((card, i) => {
+        const button = picked[i] === undefined ? null : card.querySelector(`.states-state[data-state="${CSS.escape(picked[i])}"]`);
+        if (button && !button.classList.contains('is-selected')) selectState(button);
+    });
 }
 
 function renderPanel(detail, tabId) {
@@ -461,6 +485,9 @@ function renderDetail() {
         state.tab = tabs.some(t => t.id === preferred) ? preferred : tabs[0].id;
     }
     const scrollTop = els.detail.scrollTop;
+    const shown = `${spec.id} ${state.tab}`;
+    const picked = shown === state.shown ? pickedStates() : [];
+    state.shown = shown;
     const head = el('div', {},
         el('button', { class: 'btn btn-quiet back', type: 'button', onclick: () => showView('board') }, '← All specs'),
         el('p', { class: 'eyebrow' }, spec.id, spec.branch ? `  ·  ${spec.branch}` : ''),
@@ -488,6 +515,7 @@ function renderDetail() {
         renderNext(spec),
         tabBar,
         el('div', { class: 'panel', role: 'tabpanel' }, renderPanel(detail, state.tab))));
+    restoreStates(picked);
     els.detail.scrollTop = scrollTop;
 }
 
@@ -651,4 +679,5 @@ els.newSpec.addEventListener('submit', async (event) => {
     }
 });
 
+setupStatesSelect();
 connect();

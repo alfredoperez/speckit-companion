@@ -18,6 +18,7 @@ const ASSETS = {
     '/app.js': ['app.js', 'text/javascript; charset=utf-8'],
     '/styles.css': ['styles.css', 'text/css; charset=utf-8'],
     '/viewer.css': ['../vendor/viewer.css', 'text/css; charset=utf-8'],
+    '/states-select.mjs': ['../vendor/states-select.mjs', 'text/javascript; charset=utf-8'],
 };
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'";
 const BODY_LIMIT = 16 * 1024;
