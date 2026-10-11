@@ -57,10 +57,12 @@ Each spec has two siblings named from its stem.
 
 | File | Holds | Written by |
 | --- | --- | --- |
-| `<stem>.rules.md` | Conventions as plain bullets for people and assistants. The workflow does not load it. | `living-adopt` only |
+| `<stem>.rules.md` | Conventions as plain bullets for people and assistants. The workflow does not load it. | Nothing now. Older projects have one from adoption. |
 | `<stem>.coverage.md` | Requirements mapped to tests. Feeds the coverage count. | Nothing. You write it. |
 
 A capability without a coverage file shows no number, which is not the same as zero coverage.
+
+The rules file is a leftover from earlier versions. Adoption used to write one for conventions such as import order and file naming. It no longer does, because those rules already live in your project instructions and linters. A project that has one keeps it, and `living-move` carries it along with the spec.
 
 - **Most specific wins.** A file matching several capabilities goes to the one with the longest literal path prefix, then by name.
 - **A nested registry is a separate project.** The scan stops at a subfolder with its own `living-specs.yml`.
@@ -69,9 +71,15 @@ A capability without a coverage file shows no number, which is not the same as z
 ## In the sidebar and the viewer
 
 <DocFigure
-  src="living-specs-pair-16x9.png"
-  alt="The Living Specs view with a coverage count or drift flag on each capability, beside the viewer open on one capability's spec."
+  src="live-living-specs-window.png"
+  alt="VS Code with the Living Specs tree in the sidebar: five capabilities grouped by folder, most with a coverage count, two flagged as drifted. Beside it the Photo Storage spec is open, with its counts, the paths it covers and its first requirement."
   caption="The Living Specs view beside a spec: each capability shows how much of it is covered and whether the code has drifted."
+/>
+
+<DocFigure
+  src="live-living-spec-drifted.png"
+  alt="A living spec scrolled to one requirement marked Drifted, with a line saying the code it touches changed since the spec was last updated. The header counts 1 drifted."
+  caption="Drift lands on the requirement that names the changed file, and the header counts it."
 />
 
 [The sidebar](/docs/navigate/the-sidebar#living-specs) covers the tree, and [Reading a spec](/docs/results/reading-a-spec#a-living-spec) covers how a living spec looks in the viewer.

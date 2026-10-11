@@ -84,6 +84,7 @@ function addLivingSpecs(project, fixtures) {
     const context = JSON.parse(readFileSync(join(teamboard, '041-profile-photo-upload', 'spec-context.completed.json'), 'utf8'));
     context.livingSpecs = { loaded: ['member-profiles', 'photo-storage'], synced: ['member-profiles'] };
     writeFileSync(join(run, '.spec-context.json'), JSON.stringify(context, null, 2));
+    for (const id of ['T001', 'T002', 'T003', 'T004', 'T005', 'T006']) tickTask(join(run, 'tasks.md'), id);
 
     // Every test a coverage file names exists, so a requirement's card reads "1 test" and not "0/1 tests".
     const tests = [];
@@ -1262,20 +1263,31 @@ try {
         return `${name}, rail lists Research`;
     }, { needs: 'fixtures', check: true });
 
-    await step('nav-n7', 'Clicking every rail entry changes only the document', async () => {
+    await step('nav-n7', 'Clicking every rail entry changes only the document, and the tab names the one showing', async () => {
         await freshSpecs();
         await openSpec('Demo — Tasked');
         const badge = () => webview().locator('.spec-header-badges').first().innerText();
         const footer = async () => (await webview().locator('footer.actions').first().innerText()).match(/(Next|Step)[^\n]*/)?.[0] ?? '';
         const before = [await badge(), await footer()];
         if (!before[1]) throw new Error('the footer names no step');
+        const titled = async (label) => {
+            const tab = page.locator('.tab.active .label-name').first();
+            for (let tries = 0; tries < 25; tries++) {
+                if ((await tab.innerText()).trim().endsWith(`- ${label}`)) return;
+                await page.waitForTimeout(200);
+            }
+            throw new Error(`the tab reads "${(await tab.innerText()).trim()}" with ${label} showing`);
+        };
         const entries = await webview().locator('.step-tab:not([disabled]) .step-label').allInnerTexts();
+        if (!entries.length) throw new Error('the rail lists no document to click');
         for (const entry of entries) {
             await webview().locator('.step-tab', { has: webview().locator(`.step-label:text-is("${entry.trim()}")`) }).first().click();
             await webview().locator('.step-tab[aria-current="page"]', { hasText: entry.trim() }).waitFor({ timeout: 15000 });
+            await titled(entry.trim());
         }
         await webview().locator('.rail-overview').first().click();
         await page.waitForTimeout(600);
+        await titled('Overview');
         const after = [await badge(), await footer()];
         if (before[0] !== after[0]) throw new Error(`the badge changed from "${before[0]}" to "${after[0]}"`);
         if (before[1] !== after[1]) throw new Error(`the footer step changed from "${before[1]}" to "${after[1]}"`);

@@ -271,5 +271,35 @@
     {
       "to": "docs/screenshots/live-mod-specs.png"
     }
+  ],
+  "living-specs-window": [
+    {
+      "to": "docs/screenshots/live-living-specs-window.png"
+    }
+  ],
+  "living-specs-pane": [
+    {
+      "to": "docs/screenshots/live-living-specs-pane.png"
+    }
+  ],
+  "living-spec": [
+    {
+      "to": "docs/screenshots/live-living-spec.png"
+    }
+  ],
+  "living-spec-drifted": [
+    {
+      "to": "docs/screenshots/live-living-spec-drifted.png"
+    }
+  ],
+  "overview-living-specs": [
+    {
+      "to": "docs/screenshots/live-overview-living-specs.png"
+    }
+  ],
+  "board-completed-overview": [
+    {
+      "to": "docs/screenshots/live-copilot-finished.png"
+    }
   ]
 }
