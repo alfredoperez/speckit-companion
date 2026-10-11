@@ -226,6 +226,8 @@ A step saves a crop with `capture(name, { target, padding, ratio, anchor })`. `t
 | `living-spec-drifted` | The requirement marked Drifted |
 | `living-specs-window`, `living-drift-window` | The whole window: the Living Specs tree beside a capability's requirements, and beside the drifted requirement |
 | `overview-living-specs`, `overview-living-specs-window` | A finished run's Overview with the living specs it updated and the ones it read, alone and in the whole window |
+| `overview-intent`, `overview-timing`, `overview-expectations`, `overview-verified`, `overview-decisions`, `overview-coverage`, `overview-run-log` | Each region of a finished run's Overview on its own, with the floating action bar hidden |
+| `sidebar-hover`, `sidebar-more-actions` | A spec row hovered, with Resume and More Actions, and the More Actions menu open |
 
 The install prompt on a spec's Overview is dismissed by the script before a crop is taken.
 

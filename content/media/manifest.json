@@ -980,10 +980,10 @@
       },
       "unnormalized": [],
       "alt": {
-        "docs/screenshots/generated/live-sidebar-hover.png": "The Specs view with a spec row hovered, showing its inline Run and More actions buttons."
+        "docs/screenshots/generated/live-sidebar-hover.png": "The Specs view with a spec row hovered, showing its inline Resume and More Actions buttons."
       },
       "referencedBy": {},
-      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+      "notes": "A real-window capture in Quiet Light, taken by the shot-sidebar-hover step of npm run shots and placed by tooling/scripts/shots.json. Keep the filename."
     },
     {
       "id": "live-sidebar-more-actions",
@@ -1008,7 +1008,7 @@
         "docs/screenshots/generated/live-sidebar-more-actions.png": "The More Actions menu on a spec: Set Status, Mark Complete, Archive, Copy Spec Name, Copy Spec Path, Reveal in VS Code Explorer, Reveal in File Manager and Delete."
       },
       "referencedBy": {},
-      "notes": "Shot by hand in the real app (2026-09-29 live run), cropped to the content. Not produced by capture-docs-images.mjs: retake it by hand, keep the filename."
+      "notes": "A real-window capture in Quiet Light, taken by the shot-sidebar-hover step of npm run shots and placed by tooling/scripts/shots.json. Keep the filename."
     },
     {
       "id": "live-overview-decisions",

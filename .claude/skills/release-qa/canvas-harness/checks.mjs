@@ -67,7 +67,7 @@ function boardCommand(step, commandSet) {
 }
 
 /** POST /api/specify for one workflow and wait for the agent to finish. Returns the sent message, the new spec folders and what the agent touched. */
-async function newSpec(name, workflow, description) {
+async function newSpec(name, workflow, description, timeoutMs) {
     return inSession(name, async ({ session, log }) => {
         const { url, headers } = await openBoardInstance(session, `${name}-board`);
         const before = specDirs();
@@ -79,14 +79,14 @@ async function newSpec(name, workflow, description) {
         if (!res.ok) throw new Error(`/api/specify ${res.status}: ${JSON.stringify(posted).slice(0, 200)}`);
         let stalled = null;
         try {
-            await waitSettled(log, { since, label: `${workflow} specify` });
+            await waitSettled(log, { since, timeoutMs, label: `${workflow} specify` });
         } catch (error) {
             if (!(error instanceof Blocked) || !log.users.length) throw error;
             stalled = error.message;
         }
         const created = [...specDirs()].filter((d) => !before.has(d));
         const stray = outsideSpecs(changedSince(WS, BASE).filter((p) => !changedBefore.has(p)));
-        return { workflow, description, sent: log.users[0] ?? '', messages: log.users.length, created, stray, tools: [...log.tools], stalled, seconds: Math.round((Date.now() - since) / 1000) };
+        return { workflow, description, sent: log.users[0] ?? '', messages: log.users.length, created, stray, tools: [...log.tools], replies: [...log.replies], stalled, seconds: Math.round((Date.now() - since) / 1000) };
     });
 }
 
@@ -217,6 +217,31 @@ async function stockCommandSet() {
     });
 }
 
+/** A product observation: Auto on a one-file change folds plan and tasks into specify, so neither command runs. It runs the whole pipeline, so it gets longer than one step does. */
+async function autoFolds() {
+    if (!COMPANION) throw new Blocked('SpecKit Companion is not installed in this sandbox, so the board cannot offer Auto');
+    const description = 'Show the app name in the page footer.';
+    const run = await newSpec('5-auto', 'auto', description, (Number(process.env.CANVAS_AUTO_TIMEOUT) || 1200) * 1000);
+    const command = `/${boardCommand('auto', 'companion')}`;
+    const ctx = run.created.length === 1 ? readContext(run.created[0]) : null;
+    const facts = `${created(run)} size=${ctx?.size ?? 'none'} status=${ctx?.status ?? 'no record'}, ${run.seconds}s${run.stalled ? `, ${run.stalled}` : ''}`;
+    if (!run.sent.startsWith(`${command} ${description}`)) return { result: 'FAIL', evidence: `expected the message to start ${JSON.stringify(`${command} …`)}, it starts ${JSON.stringify(run.sent.slice(0, 40))}; ${facts}` };
+    const loaded = run.tools.some((t) => /speckit[.-]companion[.-]auto/.test(t.detail));
+    if (!ctx?.size && run.stray.length) return { result: 'FAIL', evidence: `the agent built the change without the pipeline: ${loaded ? 'it loaded the auto command but' : 'it never loaded the auto command,'} recorded no size, and changed ${run.stray.join(', ')}; ${facts}` };
+    if (!ctx) return { result: 'BLOCKED', evidence: `the run left no record to read; ${facts}` };
+    if (ctx.size !== 'simple') return { result: 'BLOCKED', evidence: `the agent sized the change ${ctx.size ?? 'unsized'}, so nothing was expected to fold; ${facts}` };
+    const ran = run.tools.filter((t) => /speckit[.-]companion[.-](plan|tasks)\b/.test(t.detail)).map((t) => t.detail.slice(0, 60));
+    const closed = (step) => (ctx.history ?? []).some((h) => h.step === step && h.kind === 'complete' && !h.task && !h.substep);
+    const problems = [
+        ran.length && `it still ran ${ran.join(', ')}`,
+        !closed('plan') && 'plan is not recorded as done',
+        !closed('tasks') && 'tasks is not recorded as done',
+        !existsSync(join(WS, 'specs', run.created[0], 'tasks.md')) && 'no tasks.md was written',
+    ].filter(Boolean);
+    const said = run.replies.some((reply) => /folded plan and tasks/i.test(reply)) ? 'said it folded' : 'never said it folded';
+    return { result: problems.length ? 'FAIL' : 'PASS', evidence: `${problems.length ? `${problems.join('; ')}; ` : 'no plan or tasks command ran; '}${said}; ${facts}` };
+}
+
 const CHECKS = [
     ['bare-open-x3', 'three new sessions send only "Open the SpecKit Companion canvas"; the board opens; workspace stays clean', bareOpens],
     ['new-spec-speckit', 'New spec (Spec Kit) sends the stock specify command as this sandbox spells it, with one run-instructions pointer when the recorder exists and no inline lifecycle text', stockSpecify],
@@ -224,6 +249,7 @@ const CHECKS = [
     ['canvas-new-spec-record-advances', 'product observation: after specify the record carries the step\'s complete, for each workflow that has a recorder', recordAdvances],
     ['canvas-new-spec-stays-in-specify', 'product observation: specify changes nothing outside specs/', staysInSpecify],
     ['stock-commandset', 'GET /api/spec returns the stock commandSet for a spec recorded as speckit', stockCommandSet],
+    ['canvas-auto-folds', 'product observation: Auto on a one-file change records plan and tasks as done without running either command', autoFolds],
 ];
 
 const checks = [];

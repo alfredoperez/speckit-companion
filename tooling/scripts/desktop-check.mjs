@@ -84,6 +84,12 @@ function addLivingSpecs(project, fixtures) {
     const context = JSON.parse(readFileSync(join(teamboard, '041-profile-photo-upload', 'spec-context.completed.json'), 'utf8'));
     context.livingSpecs = { loaded: ['member-profiles', 'photo-storage'], synced: ['member-profiles'] };
     writeFileSync(join(run, '.spec-context.json'), JSON.stringify(context, null, 2));
+    for (const id of ['T001', 'T002', 'T003', 'T004', 'T005', 'T006']) tickTask(join(run, 'tasks.md'), id);
+    // The tests the run's coverage names exist, so the Coverage region reads as it does after a real run.
+    for (const file of new Set(Object.values(context.coverage ?? {}).flatMap(entry => entry.tests ?? []).map(test => String(test).split('::')[0]))) {
+        mkdirSync(dirname(join(project, file)), { recursive: true });
+        writeFileSync(join(project, file), '');
+    }
 
     // Every test a coverage file names exists, so a requirement's card reads "1 test" and not "0/1 tests".
     const tests = [];
@@ -262,10 +268,11 @@ async function dismissInstallBanner() {
  * target: 'window', 'editor', 'sidebar', 'panel', a locator, or a list of locators whose boxes are joined.
  * ratio crops the box to width / ratio, keeping its top (or its bottom with anchor: 'bottom').
  */
-async function capture(name, { target = 'window', padding = 0, ratio, anchor = 'top', keepPointer = false } = {}) {
+async function capture(name, { target = 'window', padding = 0, ratio, anchor = 'top', keepPointer = false, hover, within } = {}) {
     if (!SHOTS) return;
     await dismissInstallBanner();
-    if (!keepPointer) await page.mouse.move(2, 2);
+    if (hover) await hover.hover();
+    else if (!keepPointer) await page.mouse.move(2, 2);
     await page.waitForTimeout(400);
     const path = join(SHOTS, `${name}.png`);
     if (target === 'window') return void (await page.screenshot({ path }));
@@ -280,11 +287,16 @@ async function capture(name, { target = 'window', padding = 0, ratio, anchor = '
     const view = await page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
     const left = Math.max(0, Math.min(...boxes.map(box => box.x)) - padding);
     let top = Math.max(0, Math.min(...boxes.map(box => box.y)) - padding);
-    const right = Math.min(view.width, Math.max(...boxes.map(box => box.x + box.width)) + padding);
-    let bottom = Math.min(view.height, Math.max(...boxes.map(box => box.y + box.height)) + padding);
+    const frame = within ? await page.locator(parts[within]).boundingBox() : { x: 0, y: 0, width: view.width, height: view.height };
+    const right = Math.min(frame.x + frame.width, Math.max(...boxes.map(box => box.x + box.width)) + padding);
+    let bottom = Math.min(frame.y + frame.height, Math.max(...boxes.map(box => box.y + box.height)) + padding);
     if (ratio && bottom - top > (right - left) / ratio) {
         if (anchor === 'bottom') top = bottom - (right - left) / ratio;
         else bottom = top + (right - left) / ratio;
+    }
+    if (hover) {
+        await hover.hover();
+        await page.waitForTimeout(300);
     }
     await page.screenshot({ path, clip: { x: Math.round(left), y: Math.round(top), width: Math.round(right - left), height: Math.round(bottom - top) } });
 }
@@ -528,6 +540,27 @@ try {
         return groups.filter(text => /\(\d+\)/.test(text)).map(text => text.trim().split('\n')[0]).join(', ');
     }, { needs: 'fixtures' });
 
+    await step('shot-sidebar-hover', 'Hovering a spec shows Resume and More Actions on its row, and More Actions opens its menu', async () => {
+        const item = await row('Specs', 'Demo — Tasked');
+        await item.hover();
+        const more = item.locator('a.action-label[aria-label^="More Actions"]');
+        await more.waitFor({ timeout: 5000 });
+        const specs = [pane('Specs').locator('.pane-header'), pane('Specs').locator('.monaco-list-row').last()];
+        await capture('sidebar-hover', { target: specs, hover: item });
+        await item.hover();
+        await more.click();
+        try {
+            const menu = page.locator('.context-view .monaco-menu').first();
+            await menu.waitFor({ timeout: 5000 });
+            const entries = (await menu.locator('.action-label').allInnerTexts()).map(text => text.trim()).filter(Boolean);
+            if (!entries.some(entry => entry.startsWith('Set Status'))) throw new Error(`the menu lists ${JSON.stringify(entries)}`);
+            await capture('sidebar-more-actions', { target: [...specs, menu], padding: 8, hover: menu.locator('.action-label').first() });
+            return entries.join(', ');
+        } finally {
+            await page.keyboard.press('Escape');
+        }
+    }, { needs: 'fixtures', shots: true });
+
     await step('bug-story', 'A bug opens on its Story page', async () => {
         await (await row('Bugs', 'cartTotal skips the first cart item')).click();
         const lead = await expectText(webview().locator('.rp-lead'), /Fixed and verified\./);
@@ -716,6 +749,38 @@ try {
         }
         return `${updated}; ${read}`.replace(/\s+/g, ' ');
     }, { needs: 'fixtures' });
+
+    await step('shot-overview-regions', 'Each region of a finished run\'s Overview is on the page', async () => {
+        await clear();
+        const completed = await row('Specs', 'Completed');
+        if ((await completed.getAttribute('aria-expanded')) === 'false') await completed.click();
+        await (await row('Specs', 'Profile photo upload')).click();
+        await webview().locator('.rail-overview').first().click();
+        const regions = {
+            'overview-intent': '.dossier-intent',
+            'overview-timing': '.dossier-timing',
+            'overview-expectations': '.dossier-section[aria-label="Expectations"]',
+            'overview-verified': '.dossier-section[aria-label="Verified"]',
+            'overview-decisions': '.dossier-section[aria-label="Decisions"]',
+            'overview-coverage': '.dossier-section[aria-label="Coverage"]',
+            'overview-run-log': '.dossier-log',
+        };
+        // The floating action bar sits over the foot of the page, so it is out of these pictures.
+        const footer = webview().locator('footer.actions').first();
+        await footer.evaluate(element => { element.style.visibility = 'hidden'; });
+        for (const [name, selector] of Object.entries(regions)) {
+            const region = webview().locator(selector).first();
+            await region.waitFor({ timeout: 15000 });
+            if (name === 'overview-run-log') await region.locator('summary').first().click();
+            await scrollTo(region, 'start', 24);
+            await page.waitForTimeout(300);
+            // The log runs past the window, so its picture ends on a whole task line.
+            const target = name === 'overview-run-log' ? [region.locator('summary').first(), region.locator('.phases-events__group .timeline-entry').nth(3)] : region;
+            await capture(name, { target, padding: 16, within: 'editor' });
+        }
+        await footer.evaluate(element => { element.style.visibility = ''; });
+        return Object.keys(regions).join(', ');
+    }, { needs: 'fixtures', shots: true });
 
     await step('living-tree', 'The Living Specs pane groups capabilities by folder, with coverage and drift on each row', async () => {
         await clear();
@@ -1262,20 +1327,31 @@ try {
         return `${name}, rail lists Research`;
     }, { needs: 'fixtures', check: true });
 
-    await step('nav-n7', 'Clicking every rail entry changes only the document', async () => {
+    await step('nav-n7', 'Clicking every rail entry changes only the document, and the tab names the one showing', async () => {
         await freshSpecs();
         await openSpec('Demo — Tasked');
         const badge = () => webview().locator('.spec-header-badges').first().innerText();
         const footer = async () => (await webview().locator('footer.actions').first().innerText()).match(/(Next|Step)[^\n]*/)?.[0] ?? '';
         const before = [await badge(), await footer()];
         if (!before[1]) throw new Error('the footer names no step');
+        const titled = async (label) => {
+            const tab = page.locator('.tab.active .label-name').first();
+            for (let tries = 0; tries < 25; tries++) {
+                if ((await tab.innerText()).trim().endsWith(`- ${label}`)) return;
+                await page.waitForTimeout(200);
+            }
+            throw new Error(`the tab reads "${(await tab.innerText()).trim()}" with ${label} showing`);
+        };
         const entries = await webview().locator('.step-tab:not([disabled]) .step-label').allInnerTexts();
+        if (!entries.length) throw new Error('the rail lists no document to click');
         for (const entry of entries) {
             await webview().locator('.step-tab', { has: webview().locator(`.step-label:text-is("${entry.trim()}")`) }).first().click();
             await webview().locator('.step-tab[aria-current="page"]', { hasText: entry.trim() }).waitFor({ timeout: 15000 });
+            await titled(entry.trim());
         }
         await webview().locator('.rail-overview').first().click();
         await page.waitForTimeout(600);
+        await titled('Overview');
         const after = [await badge(), await footer()];
         if (before[0] !== after[0]) throw new Error(`the badge changed from "${before[0]}" to "${after[0]}"`);
         if (before[1] !== after[1]) throw new Error(`the footer step changed from "${before[1]}" to "${after[1]}"`);
