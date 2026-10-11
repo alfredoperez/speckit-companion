@@ -97,8 +97,18 @@ export function specifyInstructionsName(now = new Date()) {
 }
 
 /** The instruction file's text: which command it belongs to, then the preamble exactly as VS Code renders it. */
-export function runInstructionsDoc(commandLine, preamble) {
-    return `# Run instructions\n\nThese belong to the \`${commandLine}\` command the SpecKit Companion board sent to the chat. Follow them while you run it.\n\n${preamble}\n`;
+export function runInstructionsDoc(commandLine, preamble, body = null) {
+    const steps = body ? ` They add to the command and do not replace it: its own steps are in \`${body}\`, and every one of them still runs.` : '';
+    return `# Run instructions\n\nThese belong to the \`${commandLine}\` command the SpecKit Companion board sent to the chat. Follow them while you run it.${steps}\n\n${preamble}\n`;
+}
+
+/** The sentence that names the command's body, so a chat that did not load the command still runs its steps instead of improvising. */
+function bodySentence(spelling, target) {
+    if (!spelling?.instructions) return '';
+    const { name, instructions } = spelling;
+    return spelling.registered
+        ? `\n\nIf the steps of /${name} are not already loaded in this chat, read \`${instructions}\` first and follow every one of them ${target}.`
+        : `\n\nIf /${name} is not a command here, read \`${instructions}\` and follow it ${target}.`;
 }
 
 function ownDirectory(realRoot, dir, label) {
@@ -123,14 +133,13 @@ export function writeRunInstructions(root, name, content) {
     return `${PROMPTS_DIR}/${safeName(name)}`;
 }
 
-/** The chat message a run button sends: the command as `spelling` has it, its body's path only when unregistered, and the instruction file's sentence when there is one. */
+/** The chat message a run button sends: the command as `spelling` has it, the path of its body, and the instruction file's sentence when there is one. */
 export function buildPrompt(command, specId, commandSet = 'companion', spelling = null, instructionsFile = null) {
     if (!availableCommands(commandSet).includes(command)) {
         throw new Error(`Unknown command for the ${commandSet} command set: ${command}`);
     }
     const name = spelling?.name ?? dottedName(command, commandSet);
-    let text = `/${name} ${specId}`;
-    if (spelling && !spelling.registered && spelling.instructions) text += `\n\nIf /${name} is not a command here, read \`${spelling.instructions}\` and follow it for the spec in \`${specId}\`.`;
+    const text = `/${name} ${specId}${bodySentence(spelling, `for the spec in \`${specId}\``)}`;
     return instructionsFile ? `${text}\n\n${instructionsSentence(instructionsFile)}` : text;
 }
 
@@ -218,8 +227,7 @@ export function buildSpecifyPrompt({ description, workflow, root, specDirs = DEF
     const installed = isCompanionInstalled(root);
     const { command, effective } = resolveSpecify(workflow, installed);
     const spelling = resolveCommand(root, command.replace(/^speckit\.(companion\.)?/, ''), effective);
-    let message = `/${spelling.name} ${text}`;
-    if (!spelling.registered && spelling.instructions) message += `\n\nIf /${spelling.name} is not a command here, read \`${spelling.instructions}\` and follow it with the feature description above.`;
+    let message = `/${spelling.name} ${text}${bodySentence(spelling, 'with the feature description above')}`;
     const numbering = numberingRule(root, specDirs);
     if (numbering) message += `\n\n${numbering}`;
     const sent = { command: spelling.name, workflow: effective, startedAt: now.toISOString() };
@@ -231,7 +239,7 @@ export function buildSpecifyPrompt({ description, workflow, root, specDirs = DEF
         prompt: `${message}\n\n${instructionsSentence(`${PROMPTS_DIR}/${instructionsName}`)}`,
         preamble,
         instructionsName,
-        instructionsDoc: runInstructionsDoc(`/${spelling.name}`, preamble),
+        instructionsDoc: runInstructionsDoc(`/${spelling.name}`, preamble, spelling.instructions),
     };
 }
 

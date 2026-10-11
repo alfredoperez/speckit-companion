@@ -33,9 +33,9 @@ The board spells each command the way your project registers it. A project whose
 
 ## What lands in the chat
 
-Where Companion is installed, a button sends two things: the command, and one sentence telling the agent to read its run instructions from a file. The instructions themselves, which tell the agent how to record the run, are written to `.speckit-companion/prompts/` in the project, so the chat stays short. That folder is ignored by git.
+A button sends the command and one sentence naming the file that holds the command's steps. Some models do not load a command they are sent, and that sentence keeps them on its steps instead of building the change their own way. Where Companion is installed, one more sentence tells the agent to read its run instructions from a file. The instructions themselves, which tell the agent how to record the run, are written to `.speckit-companion/prompts/` in the project, so the chat stays short. That folder is ignored by git.
 
-In a stock Spec Kit project a button sends the command and nothing else. There are no run instructions, because the script they rely on comes with Companion.
+In a stock Spec Kit project there are no run instructions, because the script they rely on comes with Companion.
 
 After a send, a note at the bottom of the board shows the message that was sent, with **Show prompt**, **Copy** and the path of the instructions file when there is one.
 

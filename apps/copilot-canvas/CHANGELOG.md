@@ -4,6 +4,11 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+### Fixed
+
+- **A button's command now runs its own steps on every model.** With some models, New spec and the run buttons sent a command the agent never loaded: it wrote the spec by hand and, on Auto, built the change with no plan or tasks. The message now names the file that holds the command's steps, and the run instructions say they add to the command instead of replacing it.
+  <!-- area: copilot-app; issue: 817 -->
+
 ## [0.1.0] - 2026-09-30
 
 First version.

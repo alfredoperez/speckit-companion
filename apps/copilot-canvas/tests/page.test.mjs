@@ -347,10 +347,10 @@ describe('board page', { concurrency: false }, async () => {
 
             await stockPage.click('.next .btn-primary');
             await stockPage.waitForSelector('.next-title:has-text("Tasks is running")');
-            assert.equal(stockSent.at(-1), '/speckit-tasks specs/001-todo-stars');
+            assert.equal(stockSent.at(-1), '/speckit-tasks specs/001-todo-stars\n\nIf the steps of /speckit-tasks are not already loaded in this chat, read `.github/skills/speckit-tasks/SKILL.md` first and follow every one of them for the spec in `specs/001-todo-stars`.');
             assert.equal((await stockPage.locator('#toast-msg').textContent()).trim(), 'Sent /speckit-tasks to the chat');
             await stockPage.click('#toast-actions button:has-text("Show prompt")');
-            assert.equal(await stockPage.locator('#toast-prompt').textContent(), '/speckit-tasks specs/001-todo-stars');
+            assert.equal(await stockPage.locator('#toast-prompt').textContent(), stockSent.at(-1));
             assert.equal(await stockPage.locator('#toast-file').isVisible(), false, 'no instruction file for a stock run');
             assert.deepEqual(await stockPage.locator('.rail .rail-state').allTextContents(), ['Done', 'Done', 'Running', 'Not started']);
             assert.equal((await stockPage.locator('.spec-card .pill').textContent()).trim(), 'Tasking');

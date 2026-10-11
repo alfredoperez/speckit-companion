@@ -319,7 +319,7 @@ Timed with `surface=canvas`, Companion workflow. Feature: `Show how many todos a
 - [ ] Approve any Copilot tool-permission prompts by clicking (full tier); count them in the notes, each is friction worth recording
 - [ ] `timing.py report "$RESULTS" canvas "$SPEC"` and `check_capture.py "$SPEC" > "$RESULTS/canvas-capture.txt"`
 
-Then once more with the stock workflow, however the canvas exposes the choice: New spec, and the chat must receive `/speckit-specify …` (`/speckit.specify …` without skill folders): with the same one sentence when Companion's recorder is installed, the command alone on a stock project. Only specify has to land; no timing.
+Then once more with the stock workflow, however the canvas exposes the choice: New spec, and the chat must receive `/speckit-specify …` (`/speckit.specify …` without skill folders): with the same one sentence when Companion's recorder is installed, and without it on a stock project. Every message also carries one sentence naming the file that holds the command's steps. Only specify has to land; no timing.
 
 Agent actions: in chat ask "what specs are still open?" and "show me the related docs spec". The board should follow (`list_specs`, `focus_spec`). Screenshot. Light shot if the app has a theme toggle; otherwise skip and say so.
 

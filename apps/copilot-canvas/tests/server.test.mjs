@@ -379,11 +379,11 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
         }
     });
 
-    it('sends the dashed command the project registers and nothing else: no fallback line, no instruction file', async () => {
+    it('sends the dashed command the project registers with the file that holds its steps, and no instruction file', async () => {
         const { root, board, sent } = await open();
         try {
             const result = await board.run(SPEC, 'tasks');
-            assert.equal(sent.at(-1), '/speckit-tasks specs/001-todo-stars');
+            assert.equal(sent.at(-1), '/speckit-tasks specs/001-todo-stars\n\nIf the steps of /speckit-tasks are not already loaded in this chat, read `.github/skills/speckit-tasks/SKILL.md` first and follow every one of them for the spec in `specs/001-todo-stars`.');
             assert.equal(result.instructionsFile, null);
             assert.ok(!existsSync(join(root, '.speckit-companion')), 'nothing written for the run');
             const detail = JSON.parse((await call(board, `/api/spec?id=${SPEC}`, { headers: { 'x-speckit-token': board.token } })).body);
@@ -541,8 +541,9 @@ describe('a stock Spec Kit project, with no Companion writer anywhere', () => {
         const { board, sent, row, context, write } = await open({ record: SPECIFIED });
         try {
             await board.run(SPEC, 'tasks');
-            board.began(`${sent.at(-1)}-more`);
-            board.began(`please do not run ${sent.at(-1)} yet`);
+            const line = sent.at(-1).split('\n')[0];
+            board.began(`${line}-more`);
+            board.began(`please do not run ${line} yet`);
             write('tasks.md', '- [ ] T001 One\n');
             board.settle();
             assert.equal(row().steps.tasks, 'in-progress', 'neither turn was this run\'s');
