@@ -97,6 +97,7 @@ The board never writes a spec document. It writes two things:
 - **Opening the board starts nothing.** The canvas tells the agent to stop after opening it. If your agent still goes looking for work, ask "Only open it, then wait for me."
 - **Copilot worktrees have no `node_modules`.** Each session runs in a fresh worktree, so an implement step that runs tests installs the project's dependencies first.
 - **Companion's commands must be committed files.** The worktree is cut from your committed default branch. If `/speckit.companion.*` does not resolve in a session, check that `.github/skills/speckit-companion-*/SKILL.md` are real files in the commit, not symlinks from a `--dev` install.
+- **Known limitation: the board is clipped after you narrow the panel.** Dragging the divider between the chat and the canvas to the right leaves the board at its old width, cut off on the left. The Copilot app does not resize the panel's page, so the board never gets the chance to reflow. Close the canvas and open it again after resizing.
 - **In this repo it already works.** `.github/extensions/speckit-companion/extension.mjs` loads this folder.
 - **Trying it from a branch?** A project copy only shows up once it is merged, so point your user folder at your checkout:
 
