@@ -19,6 +19,7 @@ jobs:
       mod: ${{ steps.filter.outputs.mod }}
       capture: ${{ steps.filter.outputs.capture }}
       visual: ${{ steps.filter.outputs.visual }}
+      builder: ${{ steps.filter.outputs.builder }}
 
     steps:
       - name: Checkout code
@@ -29,7 +30,7 @@ jobs:
       # Plain git and plain grep, because a glob library's negation rules are
       # the part nobody can check by reading. `code` is the inverse of a list of
       # paths that cannot change behaviour, so a new directory is covered the
-      # day it appears; the other three name the tree their suite owns. When the
+      # day it appears; the others name the tree their suite owns. When the
       # diff cannot be worked out at all, everything runs.
       - name: Work out what changed
         id: filter
@@ -62,6 +63,10 @@ jobs:
           MOD='^(apps/claude-mod/|apps/copilot-canvas/|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
           CAPTURE='(^(apps/speckit-extension/|specs/509-timing-capture/|specs/510-living-sync/|specs/514-fast-path-fixture/|\.github/workflows/ci\.yml$)|\.py$)'
           VISUAL='^(apps/vscode/webview/|apps/website/|content/media/|\.storybook/|tooling/scripts/|docs/media-manifest\.md$|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
+          # The browser step is thirteen minutes, so it gets its own narrower
+          # list: the panel, the stories that render it, and the script that
+          # drives them. A site or media change stops at clips:check.
+          BUILDER='^(apps/vscode/webview/|\.storybook/|tooling/scripts/visual-builder\.mjs$|tooling/scripts/lib/storybook-browser\.mjs$|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
 
           answer() {
             if [ "$everything" = yes ] || grep -qE "$2" changed.txt; then
@@ -81,6 +86,7 @@ jobs:
           answer mod "$MOD"
           answer capture "$CAPTURE"
           answer visual "$VISUAL"
+          answer builder "$BUILDER"
 
           sed 's/^/changed: /' changed.txt
           cat "$GITHUB_OUTPUT"
@@ -239,11 +245,11 @@ jobs:
         run: npm run clips:check
 
       - name: Setup Chrome
-        if: needs.changes.outputs.visual == 'true'
+        if: needs.changes.outputs.builder == 'true'
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: stable
 
       - name: Workflow Builder visual gate (layout only)
-        if: needs.changes.outputs.visual == 'true'
+        if: needs.changes.outputs.builder == 'true'
         run: npm run test:visual:ci
