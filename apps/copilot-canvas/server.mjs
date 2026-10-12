@@ -306,7 +306,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         const line = buildPrompt(command, spec.id, set, spelling);
         const startedAt = new Date(now());
         const preamble = buildStepPreamble(command, spec.id, state.root, set, startedAt, writer());
-        const file = preamble ? writeRunInstructions(state.root, stepInstructionsName(command, spec.id), runInstructionsDoc(line.split('\n')[0], preamble)) : null;
+        const file = preamble ? writeRunInstructions(state.root, stepInstructionsName(command, spec.id), runInstructionsDoc(line.split('\n')[0], preamble, spelling?.instructions)) : null;
         const prompt = buildPrompt(command, spec.id, set, spelling, file);
         if (!STEP_COMMANDS.includes(command)) return deliver(spec.id, command, prompt, file);
         // The run is known before the send, so a turn that starts while the send is still in flight finds it.

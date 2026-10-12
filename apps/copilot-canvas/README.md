@@ -63,7 +63,7 @@ The board watches the spec folders. When the agent writes `plan.md` or ticks a t
 
 ### A short message in the chat
 
-After a button is pressed, a note at the foot of the board names the command it sent. **Show prompt** shows the whole message and **Copy** copies it. Where Companion is installed the message is the command plus one sentence that points the agent at its run instructions, which the board writes to a file under `.speckit-companion/prompts/`. That folder is ignored by git.
+After a button is pressed, a note at the foot of the board names the command it sent. **Show prompt** shows the whole message and **Copy** copies it. The message is the command plus one sentence naming the file that holds the command's steps, so an agent that did not load the command still runs them. Where Companion is installed one more sentence points the agent at its run instructions, which the board writes to a file under `.speckit-companion/prompts/`. That folder is ignored by git.
 
 ![The board after Run tasks was pressed. A note reads Sent /speckit.tasks to the chat, with Hide prompt and Copy beside it, and under it the short message that was sent and the path of its run instructions file with Copy path.](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/live-copilot-sent-prompt.png)
 

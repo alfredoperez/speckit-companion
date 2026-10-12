@@ -273,6 +273,16 @@ describe('specify prompt', () => {
         assert.throws(() => buildSpecifyPrompt({ description: 'x', workflow: 'auto', root }), /Auto needs/);
     });
 
+    it('names the file that holds the steps of a registered command, in the message and in the run instructions', () => {
+        const root = workspace({ companion: true });
+        skill(root, 'speckit-companion-auto');
+        const built = buildSpecifyPrompt({ description: 'x', workflow: 'auto', root, now: AT });
+        const paragraphs = built.prompt.split('\n\n');
+        assert.equal(paragraphs[0], '/speckit-companion-auto x');
+        assert.equal(paragraphs[1], 'If the steps of /speckit-companion-auto are not already loaded in this chat, read `.github/skills/speckit-companion-auto/SKILL.md` first and follow every one of them with the feature description above.');
+        assert.match(built.instructionsDoc, /They add to the command and do not replace it: its own steps are in `\.github\/skills\/speckit-companion-auto\/SKILL\.md`, and every one of them still runs\./);
+    });
+
     it('sends the dashed name a skill folder registers, with no fallback line', () => {
         const root = workspace({ companion: true });
         skill(root, 'speckit-companion-specify');
@@ -289,7 +299,7 @@ describe('the spelling a project registers for a command', () => {
         const root = workspace({ companion: false });
         skill(root, 'speckit-plan');
         assert.deepEqual(resolveCommand(root, 'plan', 'speckit'), { name: 'speckit-plan', registered: true, instructions: '.github/skills/speckit-plan/SKILL.md' });
-        assert.equal(buildPrompt('plan', 'specs/001-todo-stars', 'speckit', resolveCommand(root, 'plan', 'speckit')), '/speckit-plan specs/001-todo-stars');
+        assert.equal(buildPrompt('plan', 'specs/001-todo-stars', 'speckit', resolveCommand(root, 'plan', 'speckit')), '/speckit-plan specs/001-todo-stars\n\nIf the steps of /speckit-plan are not already loaded in this chat, read `.github/skills/speckit-plan/SKILL.md` first and follow every one of them for the spec in `specs/001-todo-stars`.');
         assert.equal(commandPattern(root, 'speckit'), '/speckit-<step>');
         skill(root, 'speckit-specify');
         assert.equal(buildSpecifyPrompt({ description: 'Star a todo', workflow: 'speckit', root, now: AT, writer: null }).prompt.split('\n')[0], '/speckit-specify Star a todo');
@@ -301,7 +311,7 @@ describe('the spelling a project registers for a command', () => {
             mkdirSync(join(root, file, '..'), { recursive: true });
             writeFileSync(join(root, file), '# plan');
             assert.deepEqual(resolveCommand(root, 'plan', 'speckit'), { name: 'speckit.plan', registered: true, instructions: file });
-            assert.equal(buildPrompt('plan', 'specs/042-x', 'speckit', resolveCommand(root, 'plan', 'speckit')), '/speckit.plan specs/042-x');
+            assert.equal(buildPrompt('plan', 'specs/042-x', 'speckit', resolveCommand(root, 'plan', 'speckit')), `/speckit.plan specs/042-x\n\nIf the steps of /speckit.plan are not already loaded in this chat, read \`${file}\` first and follow every one of them for the spec in \`specs/042-x\`.`);
             assert.equal(commandPattern(root, 'speckit'), '/speckit.<step>');
         }
     });
@@ -309,11 +319,11 @@ describe('the spelling a project registers for a command', () => {
     it('spells the Companion commands the same way: dashed for a skill, dotted for a prompt', () => {
         const dashed = workspace({ companion: true });
         skill(dashed, 'speckit-companion-tasks', '.claude/skills');
-        assert.equal(buildPrompt('tasks', 'specs/042-x', 'companion', resolveCommand(dashed, 'tasks')), '/speckit-companion-tasks specs/042-x');
+        assert.equal(buildPrompt('tasks', 'specs/042-x', 'companion', resolveCommand(dashed, 'tasks')).split('\n')[0], '/speckit-companion-tasks specs/042-x');
         const dotted = workspace({ companion: true });
         mkdirSync(join(dotted, '.github/prompts'), { recursive: true });
         writeFileSync(join(dotted, '.github/prompts/speckit.companion.tasks.prompt.md'), '# tasks');
-        assert.equal(buildPrompt('tasks', 'specs/042-x', 'companion', resolveCommand(dotted, 'tasks')), '/speckit.companion.tasks specs/042-x');
+        assert.equal(buildPrompt('tasks', 'specs/042-x', 'companion', resolveCommand(dotted, 'tasks')).split('\n')[0], '/speckit.companion.tasks specs/042-x');
     });
 
     it('prefers the skill when a project has both', () => {
