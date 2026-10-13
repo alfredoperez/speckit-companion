@@ -1,5 +1,32 @@
 {
   "_readme": "Screenshots for the site's /changelog page, keyed by release (<product>@<version>, product vscode or speckit) then by the media id a highlight names in its <!-- area: …; pr: …; media: … --> comment. file is a repo-relative PNG under apps/website/public/ or docs/screenshots/generated/. alt is required. highlight is optional, in the image's own pixels, and is drawn over the image by the page. The site build fails on an unknown id, a missing alt or file, an unused shot, or a key that matches no release. See apps/website/src/components/changelog/releaseMedia.ts.",
+  "vscode@0.37.0": {
+    "plan-calls": {
+      "file": "apps/website/public/changelog/vscode-0.37.0-plan-calls.png",
+      "alt": "A Call paths card in a plan: the functions a change reaches drawn as a tree, each row with its file and line, one row struck through.",
+      "caption": "Call paths draw as a tree. Strike a row or comment on it."
+    },
+    "plan-states": {
+      "file": "apps/website/public/changelog/vscode-0.37.0-plan-states.png",
+      "alt": "A States card in a plan: a lifecycle drawn as boxes with arrows, one state selected and its sentence shown beneath.",
+      "caption": "A lifecycle you can click through. Each state shows its sentence."
+    },
+    "plan-screen": {
+      "file": "apps/website/public/changelog/vscode-0.37.0-plan-screen.png",
+      "alt": "A Screen card in a plan: a rough wireframe with numbered dots, and the numbered notes listed beside it.",
+      "caption": "A screen as a rough wireframe. Each note lights up its dot."
+    },
+    "plan-code": {
+      "file": "apps/website/public/changelog/vscode-0.37.0-plan-code.png",
+      "alt": "A Code card in a plan: a few numbered lines of a named file, two lines tinted, and a note pinned under the line it explains.",
+      "caption": "Code with a note pinned under the line it explains."
+    },
+    "builder-hooks": {
+      "file": "docs/screenshots/generated/builder-hooks.png",
+      "alt": "The Workflow Builder on a Spec Kit project, showing the extension hooks attached before and after a step with their switches.",
+      "caption": "On stock Spec Kit the board edits what Spec Kit owns, hooks first."
+    }
+  },
   "vscode@0.36.0": {
     "bug-story": {
       "file": "apps/website/public/changelog/bug-story.png",

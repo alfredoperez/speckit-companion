@@ -1607,6 +1607,35 @@
       },
       "referencedBy": {},
       "notes": "A hero loop for the landing page. Supplied by hand, not produced by any script here: clips:render never touches these three files. The composition is not on main. It lives on the media/hero-loops-and-reply branch under content/media/loops/hero-sidebar/. 1600x1000, silent, seamless, product UI only with no added words. Keep the filenames."
+    },
+    {
+      "id": "plan-block-calls",
+      "name": "Plan: call paths card",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/plan-block-calls.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/plan-block-calls.png": "A Call paths card in a plan: the functions a change reaches drawn as a tree, each row with its file and line"
+      },
+      "referencedBy": {
+        "docs/screenshots/plan-block-calls.png": [
+          "README.md"
+        ]
+      },
+      "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
     }
   ]
 }

@@ -4,25 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-10-13
+
+A plan that draws what a change touches, and a Workflow Builder that works on plain Spec Kit.
+
+### Highlights
+
+#### A plan draws its blocks
+A plan can now carry four kinds of block, and the viewer draws each one as a card: call paths as a tree, a lifecycle as boxes you can click through, a screen as ==a rough wireframe with numbered notes==, and code with a note pinned under the line it explains.
+<!-- area: spec-viewer; pr: 898, 904, 905; media: plan-calls, plan-states, plan-screen, plan-code -->
+
+#### The Workflow Builder opens on stock Spec Kit
+Renamed from Pipeline Builder, the board now draws a plain Spec Kit project's own workflow and edits ==what Spec Kit owns==: extension hooks, document templates and the constitution command. A decision block opens one row per answer so a verdict skips the steps you choose, and a header chip turns living specs on or off.
+<!-- area: pipeline-builder; pr: 883, 888, 889; media: builder-hooks -->
+
+#### Plain Spec Kit stays plain
+A project that still carries the retired Companion wrapper around the stock commands is ==cleaned up on the next start==, and the Steering view no longer lists its files.
+<!-- area: pipeline; pr: 906 -->
+
 ### Added
-
-- **A plan draws its screens.** A `screen` block shows ==a rough wireframe== with numbered notes that light up their dots. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: spec-viewer -->
-- **Notes pinned under a line of code.** A code block that names a file gets line numbers, tinted lines and ==each note under the line it explains==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: spec-viewer -->
-- **A plan's lifecycle you can click through.** A `states` block is drawn as boxes with arrows, and a click ==shows that state's sentence==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: spec-viewer -->
 - **Hover a spec to see its branch.** The sidebar tooltip names ==the branch the work is on==, beside the status and the assistant. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: sidebar -->
-- **Call paths draw as a card.** A plan's `calls` block shows ==which functions a change reaches== as a tree, and you can strike or comment on a row. ([#898](https://github.com/alfredoperez/speckit-companion/pull/898), [#904](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: spec-viewer -->
-- **The Workflow Builder opens on stock Spec Kit.** It draws your project's own workflow and edits ==what Spec Kit owns==: extension hooks, document templates and the constitution command. ([#889](https://github.com/alfredoperez/speckit-companion/pull/889)) <!-- area: pipeline-builder -->
-- **Change where a decision routes.** The board's decision block opens one row per answer, so a verdict ==skips the steps you choose==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
-- **Living specs reach the Workflow Builder.** A header chip turns them on or off, picks where specs live, and lists ==the capabilities you registered==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
-
-### Changed
-
-- **An old Companion preset is removed for you.** A project that still carries the retired wrapper around the stock commands is ==cleaned up on the next start==. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: pipeline -->
-- **The Companion Templates group left the Steering view.** It listed the wrapper's command files, which ==are not shipped any more==. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: sidebar -->
-- **The Pipeline Builder is renamed Workflow Builder.** The board that draws your Companion pipeline has a ==new name== in the command, the tab and the docs. ([#883](https://github.com/alfredoperez/speckit-companion/pull/883)) <!-- area: pipeline-builder -->
 
 ### Fixed
-
 - **The Run log reads cleanly.** Each task line in the Overview's Run log has ==space between its parts== and a badge for who recorded it. ([#912](https://github.com/alfredoperez/speckit-companion/pull/912)) <!-- area: overview -->
 - **Plan cards work on the Copilot board.** A `states` block is drawn as a diagram where ==a click shows that state==, and the buttons that did nothing are gone. ([#911](https://github.com/alfredoperez/speckit-companion/pull/911)) <!-- area: copilot-app -->
 - **A file link opens its own file.** A path in a spec opens ==the file it names== at its line, not a same-named file elsewhere. ([#897](https://github.com/alfredoperez/speckit-companion/pull/897)) <!-- area: spec-viewer -->

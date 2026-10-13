@@ -15,7 +15,7 @@ SpecKit Companion is a VS Code extension for developers who build with an AI ass
      here); the retired illustrated hero stays on disk at docs/screenshots/hero.jpg. -->
 ![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
-**What's new in 0.36.0:** follow a Spec Kit run from inside Claude Code with the new mod, which pins your spec above the prompt and ticks off steps and tasks beside the transcript. Bugs and ideas get their own sidebar panes and open as pages: a bug reads as a story, a decided idea as a decision. The viewer gains buttons to answer an open question, run Converge and create GitHub issues from the task list, and the Copilot app board now follows any Spec Kit project. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
+**What's new in 0.37.0:** a plan draws what a change touches: call paths as a tree, a lifecycle you can click through, a screen as a rough wireframe with numbered notes, and code with a note pinned under its line. The Workflow Builder opens on stock Spec Kit and edits what Spec Kit owns, routes each decision answer to the steps it skips, and turns living specs on or off. A project that still carries the retired Companion wrapper is cleaned up on the next start. Full notes: [Changelog](https://speckit-companion.dev/changelog/).
 
 ## Install
 
@@ -45,6 +45,12 @@ A spec opens as a page, not a wall of markdown. Requirements are labeled rows, a
 
 ![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](docs/screenshots/generated/spec-viewer.gif)
 
+### A plan that draws itself
+
+A plan can carry four kinds of block, and the viewer draws each as a card: call paths as a tree you can strike or comment on, a lifecycle as boxes with arrows where a click shows that state's sentence, a screen as a rough wireframe with numbered notes, and code with line numbers, tinted lines and a note pinned under the line it explains. The plan step adds a block only when the change needs it. Guide: [Plan blocks](https://speckit-companion.dev/docs/steps/plan-blocks).
+
+![A Call paths card in a plan: the functions a change reaches drawn as a tree, each row with its file and line](docs/screenshots/plan-block-calls.png)
+
 ### Review comments on any line
 
 Comment on a line of a spec the way you review a pull request. A comment is saved the moment you add it and can be committed, so a review picks up next session or on another machine. Click **Refine** and your pending comments go to your assistant, which edits the spec in place.
@@ -69,7 +75,7 @@ A spec with a recorded run opens on its Overview: why the spec exists, how long 
 
 ### A sidebar for every spec
 
-Specs are grouped by where they stand, with live status on each document and the assistant each spec was last sent to. Hover a spec to resume it. Filter, sort, or select several at once. A workspace with hundreds of finished specs still opens to a short list.
+Specs are grouped by where they stand, with live status on each document and the assistant each spec was last sent to. Hover a spec to see its branch and resume it. Filter, sort, or select several at once. A workspace with hundreds of finished specs still opens to a short list.
 
 ![The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath](docs/screenshots/generated/specs-sidebar.gif)
 
