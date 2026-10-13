@@ -1,6 +1,6 @@
 # Doc Sync
 
-**Docs are part of the change, not a follow-up.** Any time you touch behavior, configuration, commands, the pipeline, or architecture, update the matching doc in the *same* change — before the work counts as done. README.md is the single source of truth for configuration, workflows, and features. Before finishing, scan the maps below and the long-form references (`docs/*.md`, the two READMEs, the relevant CHANGELOG); a behavior change without its doc update is an incomplete change. When in doubt, look at how an existing feature is documented and follow the same pattern.
+**Docs are part of the change, not a follow-up.** `CLAUDE.md` "One fact, one owner" says where each fact lives; a behaviour change updates that one place in the same change. The table below adds the areas with a non-obvious follow-on.
 
 ## Which doc for which area
 
@@ -25,47 +25,18 @@ Behaviour lives in the code and its tests, so a behaviour change updates its tes
 | A new surface ships: an app, a panel, a provider, or a top-level feature path | Add its path glob and checks to `.claude/skills/release-qa/surface-map.yml`. `/release-qa` scopes each release from that map, lists any changed path it does not cover as "no QA mapping", and `/publish*` refuse to tag without its report. |
 | Webview component with a sibling `.stories.tsx` | Update the stories in the same change to cover the new state/variant. Storybook is the visual baseline — stale stories are worse than missing stories because they lie. If a non-trivial component changes materially and no `.stories.tsx` exists, add one in the same PR. |
 
-## Feature → README section map
-
-| Change you made | README section to update |
-|-----------------|--------------------------|
-| New AI provider | "Supported AI Providers" matrix (add column) + provider count anywhere it's stated (e.g. "Six providers ship today" in "Why it exists") + `package.json` `contributes.configuration["speckit.aiProvider"].enum` must match |
-| New canonical workflow status | the website's [spec viewer anatomy](https://speckit-companion.dev/docs/navigate/inside-the-viewer) (header badge color tiers) + "Status vocabulary" under Spec Context in README |
-| New configuration setting | "Configuration" section in README (add subsection with JSON example + value table) + the website's [Configuration reference](https://speckit-companion.dev/docs/reference/configuration) |
-| New sidebar action / right-click menu item | the website's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar) (full reference) + the brief "Sidebar at a Glance" summary in README |
-| New keyboard or visual safety affordance | "Safety Affordances for Destructive Actions" in README |
-| New workflow phase or sub-document type | "Spec-Driven Phases" in README + Step Properties table under Custom Workflows |
-| New custom command type | "Custom Commands" properties table in README |
-| New platform support / shell support | "Platform Support" table in README |
-| New webview UI element (header, badge, tab, etc.) | "Reading Specs" subsection in README + retake associated screenshot |
-| Bug fix that changes documented behavior | The README section that documented the broken behavior |
-| Change under `apps/speckit-extension/` (commands, scripts, hooks, manifest) | `apps/speckit-extension/README.md` + an `[Unreleased]` entry in `apps/speckit-extension/CHANGELOG.md` — **not** the root README/CHANGELOG/`package.json`, and **not** `extension.yml` `version` / the README version badge / `publishing.md` (`/publish-speckit-ext` owns the bump). A new command must be added to `extension.yml` `provides.commands` or the installer skips it. |
-
 ## Per-release checklist (run before tagging a version)
 
 > This checklist is for the **VS Code extension** (`/publish`, `v*` tag), the last step of `/release-loop`. The **spec-kit extension** has its own flow — see `/publish-speckit-ext` and `apps/speckit-extension/docs/publishing.md` (prefixed `speckit-ext-v*` tag, `.zip` archive, catalog issue). The Claude Code mod and the Copilot canvas have theirs in `/publish-mod` and `/publish-canvas`, and `/publish-all` runs all four.
 
 1. Run `git diff $(git describe --tags --abbrev=0)..HEAD -- README.md` to see what was already updated since the last tag.
-2. Cross-check `CHANGELOG.md` entries since the last release against the map above.
-3. For every highlight and every Added entry in the new version, confirm a README section was touched. If not, add one.
+2. Confirm the README install and first-run steps still match what ships.
 4. Update the "What's new" block at the top of README: the version in its lead sentence, and its three lines to the new release's own highlights.
 5. Verify `package.json` `contributes.configuration["speckit.aiProvider"].enum` matches the README provider matrix (count + names).
 6. Verify `package.json` `engines.vscode` matches the README "VS Code" badge.
 7. Re-render any screenshot whose UI changed in this release and refresh its caption if the value prop shifted. **Keep screenshot filenames stable — overwrite in place, never rename or delete** (see the gotcha in `CLAUDE.md`).
 8. Give each highlight its screenshots on the site's changelog. Name them in the highlight's comment (`media: builder-move-hook, builder-side-panel`) and add one entry per shot under the release's `vscode@<version>` key in `content/media/changelog.json`: `file` (a generated still under `docs/screenshots/generated/`, or a real-app screenshot copied to `apps/website/public/changelog/`), `alt`, a one-line `caption`, and a `highlight` box `{x, y, w, h}` in the image's own pixels around the changed area when there is a clear one. Several shots make a carousel. Do the same under `speckit@<version>` for a spec-kit extension release that has something to show. The site build fails on a media id with no entry, a missing alt or file, a shot no highlight names, and a key that matches no release, so add it in the release commit, after the version heading exists, and run `cd apps/website && npm run build`.
 9. Run `npm run clips:check`. Broken must be zero — a broken count is a 404 on the published Marketplace listing, not a to-do item.
-
-## README conventions
-
-The root README keeps relative image paths on purpose. It's rendered by GitHub and packaged by vsce for the Marketplace, and both resolve relative paths (vsce rewrites them to absolute raw URLs at package time). `apps/speckit-extension/README.md` uses absolute `raw.githubusercontent` URLs instead, because the Spec Kit community catalog renders it from `main` and can't resolve relative paths.
-
-The root README's H1 has two alternates on file, either of which can swap in for the current headline if it needs a refresh: "SpecKit Companion: the whole spec lifecycle, visible and under your control" and "SpecKit Companion: know what your AI is doing before, during, and after it writes code".
-
-## Doc size ceiling
-
-A doc under `docs/` stays under 3,000 words. That's where the repo's healthy docs top out (`architecture.md`, `configuration.md`, `viewer.md`). Past the ceiling, split it: pull a self-contained topic into its own doc and link it from the original, or, if part of the doc describes behavior that's finished and superseded, archive that part the way `CHANGELOG.md` archives old releases into `apps/website/src/data/changelog-archive.md`. Check with `wc -w docs/*.md`.
-
-**Split along what the reader came for, not by length.** A doc over the ceiling is almost always four docs stapled together: a lesson someone follows once, a recipe for a specific job, a reference to look things up in, and an explanation of why it works that way. Those four want different shapes and different readers, which is why the long ones read as heavy no matter how well each paragraph is written. Cut at those seams. Better still, when the doc is really restating enforceable behavior: turn it into a test and cut the prose — a doc under `docs/` has nothing keeping it honest.
 
 ## Changelog voice
 

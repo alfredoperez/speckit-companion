@@ -1,6 +1,6 @@
 # PR profile — speckit-companion
 
-PR-time distillation for the `create-pr` skill. **Source of truth = `CLAUDE.md`** — keep this in sync when the two-extension split or docs rules change. This repo ships **two independently-versioned, separately-released extensions**; a PR usually touches one.
+PR-time distillation for the `create-pr` skill. **Source of truth = `CLAUDE.md`.** This repo ships **two independently-versioned, separately-released extensions**; a PR usually touches one.
 
 ## Conventional-commit scopes
 
@@ -14,7 +14,7 @@ Title rule: `type(scope): summary` — **issue refs go in the body (`Closes #N`)
 Paths: `apps/vscode/src/**`, `apps/vscode/webview/**`, `package.json`, root `README.md`, root `CHANGELOG.md`, `assets/**`, `apps/vscode/tests/**`, `docs/**`, `CLAUDE.md`, `.vscodeignore`, `.storybook/**`
 - **Version**: `package.json` `version` · **Release**: `/release-loop` (ends in `/publish`) → `v*` tag → Marketplace/OpenVSX
 - Sub-areas to name in the checklist:
-  - **settings** — `package.json` `contributes.configuration` (+ matching README Configuration section)
+  - **settings** — `package.json` `contributes.configuration`
   - **commands / menus** — `package.json` `contributes.commands|menus|submenus`, `apps/vscode/src/features/specs/specCommands.ts`
   - **webview** — `apps/vscode/webview/**` (+ any sibling `*.stories.tsx` for changed components)
   - **dispatch / providers** — `apps/vscode/src/ai-providers/**`
@@ -39,35 +39,15 @@ A change under `apps/speckit-extension/**` updates **its** README/CHANGELOG/vers
 - A feature/bugfix that changes documented behavior is **⚠️ missing changelog** if no entry was added.
 - **Never** edit `.specify/extensions/companion/CHANGELOG.md` — it's a generated copy, gitignored.
 
-## Docs map (change-type → required doc)
+## Docs (one fact, one owner)
 
-If the diff matches the left, the right-hand doc(s) **must** be in the diff too — else ⚠️:
+`CLAUDE.md` "One fact, one owner" is the rule: a fact lives on one surface, and a change updates that surface only. Flag ⚠️ when the diff changes a fact and its owner is not in the diff, and flag ⚠️ when the diff adds a second copy of a fact somewhere else.
 
-| Change | Required doc |
-|---|---|
-| New/changed AI provider | README "Supported AI Providers" matrix + provider count + `package.json` `speckit.aiProvider` enum |
-| New canonical workflow status | the site's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) badge tiers + README "Status vocabulary" |
-| New/changed configuration setting | README "Configuration" section |
-| Sidebar action / right-click menu | the site's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) + README "Sidebar at a Glance" |
-| Viewer statuses / badges / buttons / step tabs | the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx`) |
-| Workflow choice / leftover-preset cleanup / timing partial / `templateProfile` setting | `apps/speckit-extension/docs/node-model.md` |
-| `.spec-context.json` capture / lifecycle hooks / `write-context.py` / timing | the capture tests under `apps/speckit-extension/tests/`, plus `docs/architecture.md` "Data flow" when a writer rule changes |
-| Project structure / modules / architecture | `docs/architecture.md` |
-| Webview component with a sibling `*.stories.tsx` | update the stories (or add one if a non-trivial component lacks it) |
-| New workflow phase / sub-document type | README "Spec-Driven Phases" + Step Properties table |
-| New platform / shell support | README "Platform Support" table |
-| Bug fix changing documented behavior | the README section that documented it |
-| Change under `apps/speckit-extension/**` | `apps/speckit-extension/README.md` + `apps/speckit-extension/CHANGELOG.md` + `extension.yml` version |
-
-## Setting-description sync (drift trap)
-
-When you change what an existing setting **value does** (not just add a value), its description lives in a fixed set of places — reconcile **all** of them or a stale guarantee ships:
-- `package.json` `enumDescriptions` (the settings-dropdown text)
-- README "Configuration" — both the prose summary **and** the value-table row
-- the site's [Configuration reference](https://speckit-companion.dev/docs/reference/configuration) (`apps/website/src/content/docs/docs/reference/configuration.mdx`)
-- `apps/speckit-extension/README.md` if the value is named there
-
-Re-check these red-flag words against the **new** behavior: "no … behavior", "plain upstream", "always", "never", "removes", "guarantees", "added". (This is exactly how `templateProfile: "off"` shipped a false "no Companion behavior" claim in four places after `off` stopped uninstalling `companion-standard` — the behavior changed, the descriptions didn't.)
+- **Setting added, or a value's behaviour changed** → `package.json` description / `enumDescriptions` + the site's `reference/configuration.mdx`. Re-read both for "always", "never", "removes", "guarantees" against the new behaviour.
+- **Provider added** → the `speckit.aiProvider` enum + the site's `reference/providers.mdx` (a test fails otherwise).
+- **Something a user sees changed** → its one site page, and one `[Unreleased]` line in the changelog of the deliverable that changed.
+- **Webview component with a sibling `*.stories.tsx`** → the stories.
+- **A README** only when the install or the first run changed.
 
 ## Quality gates (PR-level)
 

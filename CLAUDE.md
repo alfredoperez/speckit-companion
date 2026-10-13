@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs, IDE chat, the Claude Code panel) visual spec-driven development: specs (spec/plan/tasks), steering docs, and the Companion pipeline. The repo also ships a second, independently-versioned **spec-kit extension** under `apps/speckit-extension/`. Provider list: README "Supported AI Providers".
+SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs, IDE chat, the Claude Code panel) visual spec-driven development: specs (spec/plan/tasks), steering docs, and the Companion pipeline. The repo also ships a second, independently-versioned **spec-kit extension** under `apps/speckit-extension/`. Provider list: the `speckit.aiProvider` enum in `package.json`.
 
 ## Repo map
 
@@ -20,13 +20,28 @@ The example apps and bench sandboxes that used to sit here now live in the sibli
 
 Read the matching doc instead of re-deriving from code:
 
-- `docs/doc-sync.md` — **docs are part of the change, not a follow-up.** Which doc each area maps to, the feature → README section map, the per-release checklist, changelog voice. Consult before finishing any user-facing change.
+- `docs/doc-sync.md` — the per-release checklist and the changelog voice. The table under "One fact, one owner" below says which doc moves with a change.
 - `docs/architecture.md` — structure and module map.
 - `THEME.md` — the marketing look (the site's Constellation colours, type, mascot and motifs) for anything promotional; `DESIGN.md` — the viewer's tokens and the taste rules for figures and captures.
 - Behaviour is documented by the code and its tests first. `docs/architecture.md` carries the few cross-module rules the code cannot show (the `.spec-context.json` writer guarantees, webview escaping), `docs/visual-assets.md` and `docs/media-manifest.md` cover docs images, README GIFs and web clips (regenerate with `npm run clips:capture` on any webview UI, styling, token or fixture change; never hand-edit a generated file), and the sidebar, viewer, builder, living specs, configuration and provider references live on the site, under `apps/website/src/content/docs/`. This repo does not keep living specs of its own; the feature it ships is unaffected.
 - `docs/visual-assets.md` and `docs/media-manifest.md` are also the runbooks for how to shoot the five hand-taken screenshots, how the site picks up new media, and why the two READMEs write image links differently.
 - `.claude/review-checklist.md` — webview/CSS correctness invariants review scans for (`.sr-only` vs `hidden`, ellipsis trio, Preact string styles, etc.).
 - `apps/speckit-extension/docs/publishing.md` — spec-kit extension release flow.
+
+## One fact, one owner
+
+A fact is written once, on the surface this table names. Every other surface links to it and never restates it, so a change updates the owner and nothing else. A second copy is a bug: delete it, do not sync it.
+
+| Fact | Owner |
+|---|---|
+| A setting, its values and its default | `package.json` `contributes.configuration`, shown to users on the site's `apps/website/src/content/docs/docs/reference/configuration.mdx` |
+| The providers | the `speckit.aiProvider` enum, shown on the site's `apps/website/src/content/docs/docs/reference/providers.mdx`; a test holds the two together |
+| Install steps | the site's install page; a README carries its own install command and nothing about the other deliverables' |
+| How a feature works for a user | its one page under `apps/website/src/content/docs/` |
+| What changed for a user | one `[Unreleased]` line in the changelog of the deliverable that changed; site and docs changes get no line |
+| A rule the code cannot show | this file |
+
+A README is an intro, an install, a first run and a link to the site. It gets an edit when the install or the first run changes, not when a feature does.
 
 ## Gotchas
 
@@ -40,7 +55,7 @@ Both products share one GitHub releases list, so `…/releases/latest` can retur
 
 ### Screenshot filenames are load-bearing
 
-README image URLs are absolute and pinned to `main` (`raw.githubusercontent.com/.../main/docs/screenshots/<file>`). The Marketplace serves the *last published* README but resolves images against *current* `main` — renaming or deleting a referenced screenshot retroactively 404s the published listing (this broke the v0.18.0 listing). Overwrite in place; never rename or delete.
+The root README writes relative image paths and `vsce` rewrites them to `raw.githubusercontent.com/.../main/docs/screenshots/<file>` when it packages; `apps/speckit-extension/README.md` writes that absolute form by hand, because the Spec Kit catalog renders it from `main`. Either way the Marketplace serves the *last published* README but resolves images against *current* `main` — renaming or deleting a referenced screenshot retroactively 404s the published listing (this broke the v0.18.0 listing). Overwrite in place; never rename or delete.
 
 ### `escapeHtml` is safe for element content only
 
