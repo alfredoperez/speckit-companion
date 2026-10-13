@@ -26,13 +26,15 @@ import { createMarkdownProcessor } from '@astrojs/markdown-remark';
 // Imported with Vite's ?raw so the two files are inlined at build time and the
 // path is resolved relative to this source file, not to the build's cwd.
 import vscodeChangelogCurrent from '../../../../CHANGELOG.md?raw';
-// The archive holds 0.30.0 and older; this page is the whole history, so it reads both.
+// Each repo changelog keeps its two latest releases; the archives hold the rest. This page is the whole history, so it reads both.
 import vscodeChangelogArchive from '../data/changelog-archive.md?raw';
-import speckitChangelog from '../../../../apps/speckit-extension/CHANGELOG.md?raw';
+import speckitChangelogCurrent from '../../../../apps/speckit-extension/CHANGELOG.md?raw';
+import speckitChangelogArchive from '../data/changelog-archive-speckit.md?raw';
 import copilotChangelog from '../../../../apps/copilot-canvas/CHANGELOG.md?raw';
 import modChangelog from '../../../../apps/claude-mod/CHANGELOG.md?raw';
 
 const vscodeChangelog = `${vscodeChangelogCurrent}\n${vscodeChangelogArchive}`;
+const speckitChangelog = `${speckitChangelogCurrent}\n${speckitChangelogArchive}`;
 
 import Analytics from '../components/Analytics.astro';
 import LogoMark from '../components/LogoMark.astro';

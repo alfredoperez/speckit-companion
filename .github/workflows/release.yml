@@ -73,7 +73,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: '*.vsix'
-          generate_release_notes: true
+          generate_release_notes: false
           name: Release v${{ steps.get_version.outputs.VERSION }}
           body: |
             ## 🎉 SpecKit Companion v${{ steps.get_version.outputs.VERSION }}
@@ -106,8 +106,6 @@ jobs:
             - [OpenVSX Registry](https://open-vsx.org/extension/alfredoperez/speckit-companion)
             - [Documentation](https://github.com/alfredoperez/speckit-companion#readme)
 
-            ---
-            See below for auto-generated release notes.
 
       - name: Publish to VSCode Marketplace
         run: vsce publish -p ${{ secrets.VSCE_PAT }}
