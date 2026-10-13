@@ -1,0 +1,100 @@
+---
+title: Bugs and ideas
+description: Spec Kit's bug and assess extensions run outside the spec steps. SpecKit Companion lists their reports, shows them as pages and sends the next command.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+| | Bugs | Ideas |
+| --- | --- | --- |
+| Install | `specify extension add bug` | `specify extension add assess` |
+| Commands | `/speckit.bug.assess`, `fix`, `test` | `/speckit.assess.intake`, `research`, `define`, `shape`, `decide` |
+| Reports land in | `.specify/bugs/<slug>/` | `.specify/assessments/<slug>/` |
+| Ends in | A verified fix, or closed as invalid | A go, needs-clarification or kill verdict |
+
+Both are Spec Kit's own extensions, and neither goes through specify, plan and tasks. Where your Spec Kit has bundles, `specify bundle install bugfix` or `specify bundle install assess` adds the extension and a guided workflow together.
+
+## What the two share
+
+Each command writes one markdown report into the item's folder. Name the item once with `slug=` and reuse the name on every later command.
+
+The sidebar has a **Bugs** pane and an **Ideas** pane under Specs. They're built from the reports on disk, so an item you handled by typing the commands yourself shows up the same. Before an extension is installed, its pane holds one row that installs it. [The viewer and sidebar](/docs/navigate/viewer-and-sidebar) explains the groups.
+
+<DocFigure
+  src="live-bugs-ideas-panes.png"
+  alt="The SpecKit side bar with three panes: Specs with its Active and Completed groups, Bugs grouped as To fix, Verified and Closed with a severity and outcome on each row, and Ideas grouped as Assessing and Decided with the verdict beside each idea."
+  caption="Bugs and Ideas sit under Specs, each item under the group that says what it needs next."
+/>
+
+To start one from Companion, choose **+** on the pane, describe it and press **Assess bug** or **Assess idea**. The folder name is suggested from what you wrote and you can edit it. A name that's already taken can't be sent.
+
+Click an item and it opens in the viewer with one tab per report. A report that isn't written yet is disabled. The pages are for reading: there's no Overview and no comment button, and the viewer writes nothing to the item's folder. The page updates when a report changes on disk.
+
+The footer holds the next step. A button sends that command to your assistant with the item's name, and when the report it writes appears, the buttons move on by themselves.
+
+An open question shows **Needs an answer** with an **Answer** button, on a bug's Assessment, Fix and Test tabs and on an idea's Intake, Research, Problem and Concept tabs. Your reply is saved in the project's `.speckit-companion/` folder, which git ignores, and the command that wrote the report is sent again with it, so the report is rewritten with the question settled.
+
+<DocFigure
+  src="live-report-answer.png"
+  alt="A bug's Assessment tab scrolled to Open Questions. The question carries a Needs an answer label and an Answer link, and the answer box under it is open with a reply typed in and a Send answer button."
+  caption="Answer opens a box under the question, and Send answer hands your reply to the assistant."
+/>
+
+## Bugs
+
+| Command | What it does | Writes |
+| --- | --- | --- |
+| `/speckit.bug.assess` | Reads a bug report, pasted or from a URL, judges whether it's a real bug, finds the suspected code and proposes a fix | `assessment.md` |
+| `/speckit.bug.fix` | Applies the proposed fix and records what changed. It's the only one that edits code. | `fix.md` |
+| `/speckit.bug.test` | Runs the reproduction and any added tests again, and records the result | `test.md` |
+
+A full pass looks like `/speckit.bug.assess https://github.com/example/repo/issues/1234 slug=callback-token`, then `/speckit.bug.fix slug=callback-token`, then `/speckit.bug.test slug=callback-token`.
+
+A bug opens on **Story**, which puts all three reports on one page. It starts with one sentence saying where the bug stands, such as "Fixed, not tested yet." or "The fix did not hold.", and one line of facts. Then a timeline runs through **What was wrong**, **What changed** and **How it was verified**, and **Risks and open questions** closes the page. A bug closed as invalid shows only the first step. The badge shows the latest outcome, or **BUG** when there's none.
+
+<DocFigure
+  src="live-bug-story.png"
+  alt="A bug open on its Story tab, badge Verified. The page starts with Fixed and verified, one line of facts, then the first timeline step, What was wrong, dated from the assessment."
+  caption="The Story tab: where the bug stands in one sentence, then what was wrong, what changed and how it was verified."
+/>
+
+The reports as written are the tabs beside it: **Assessment**, **Fix** and **Test**. Clicking a report in the sidebar opens the viewer on that tab.
+
+| The bug is | Main button | Also offered |
+| --- | --- | --- |
+| Waiting for a fix | **Fix bug** | **Test again**, when a test already failed |
+| Waiting for a test | **Test fix** | **Fix again** |
+| Verified | | **Test again** |
+| Closed | | **Assess again** |
+
+## Ideas
+
+| Command | What it does | Writes |
+| --- | --- | --- |
+| `/speckit.assess.intake` | Captures the raw idea: pasted text, a URL, a ticket or a pointer at existing code | `intake.md` |
+| `/speckit.assess.research` | Gathers evidence about users, the market and prior art, including evidence against the idea | `research.md` |
+| `/speckit.assess.define` | Defines the problem: users, goals, non-goals, success metrics and the cost of doing nothing | `problem.md` |
+| `/speckit.assess.shape` | Shapes two or three options with their size and trade-offs, and recommends one or none | `concept.md` |
+| `/speckit.assess.decide` | Scores the idea and gives the verdict | `decision.md` |
+
+None of these commands changes source code. The order isn't rigid: define can run straight from your input, without intake or research. Shape and decide both need `problem.md`.
+
+In the viewer the rail lists **Intake**, **Research**, **Problem**, **Concept** and **Decision**, and an idea still being assessed opens on the latest stage it reached. The footer offers the next one: **Research**, **Define the problem**, **Shape a concept**, then **Decide**.
+
+A decided idea's **Decision** tab opens with the verdict and the first sentence of the rationale, then the rest of the rationale, then a **Scorecard** with each criterion, its rating and why.
+
+<DocFigure
+  src="live-idea-decision.png"
+  alt="An idea open on its Decision stage, badge Go, with all five stages checked in the rail. The page starts with Go and the first sentence of the rationale, and the Scorecard begins below with Problem validity rated strong."
+  caption="A go decision: the verdict and its rationale first, then the scorecard."
+/>
+
+The last section of that page and the footer button both depend on the verdict.
+
+| Verdict | Means | The page closes with | The footer offers |
+| --- | --- | --- | --- |
+| **go** | The problem is valid, the evidence is adequate and a concept is shaped | **Handoff** | **Create spec from this idea** |
+| **needs-clarification** | Something is missing. A go without a shaped concept is downgraded to this. | **What is blocking** | **Continue assessment** |
+| **kill** | Not worth building | **Revisit trigger** | **Reopen from intake** |
+
+**Create spec from this idea** opens Create Spec with the idea's title and rationale filled in for you to edit and send, and from there it's [a spec like any other](/docs/steps#specify). For a needs-clarification verdict, fill the gap in the file that has it, by editing it or asking your assistant, then have the decision revised. You don't rerun the stage.

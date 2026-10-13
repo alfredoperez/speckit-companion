@@ -4,52 +4,83 @@ import starlight from '@astrojs/starlight';
 import vercel from '@astrojs/vercel';
 import { mkdir, writeFile } from 'node:fs/promises';
 
-// Retired URLs. The docs were regrouped by the spec journey, and every page
-// that moved, merged or split keeps its old address pointing at the page that
-// now holds its content, so a bookmark or a link in a published README never
-// 404s. Targets are final pages, never another redirect.
+// Retired URLs. Every page that moved or merged keeps its old address pointing
+// at the page that now holds its content, so a bookmark or a link in a
+// published README never 404s. Targets are final pages, never another redirect.
 //
-// getting-started   became Your first spec; its command table is Commands.
-// pick-a-pipeline   the two workflows are explained with the method itself.
-// the two Workflow Builder pages (anatomy and guide) are one page now.
-// customize         custom commands stayed with Your own workflow; hooks got
-//                   their own page, which that one links to first.
-//
-// The sidebar was then regrouped by where you work, and the Other processes
-// folder went away.
-//
-// fix-a-bug, assess-an-idea   moved in with the IDE pages.
-// copilot-app, claude-code    each split into three pages; the old address
-//                             lands on Install, the first of them.
-//
-// /workflow-builder was a page for a builder that was not built. It shipped
-// as the Pipeline Builder and was renamed Workflow Builder, so that address and
-// the docs page's old slug both land on its docs page.
+// The docs went from 39 pages to 16: one Install page for every surface, one
+// page for all the steps, one page each for the Copilot app and Claude Code,
+// and one Settings page that holds the providers and telemetry.
+const STEPS = '/docs/steps';
+const INSTALL = '/docs/install';
+const VIEWER = '/docs/navigate/viewer-and-sidebar';
+const OVERVIEW = '/docs/results/the-overview';
+const BUILDER = '/docs/customize/workflow-builder';
+const BUGS = '/docs/ide/bugs-and-ideas';
+const COPILOT = '/docs/copilot-app';
+const CLAUDE = '/docs/claude-code';
+const SETTINGS = '/docs/reference/configuration';
+
 const MOVED = {
   '/docs/start/getting-started': '/docs/start/your-first-spec',
-  '/docs/anatomy/the-sidebar': '/docs/navigate/the-sidebar',
-  '/docs/anatomy/sidebar-and-steering': '/docs/navigate/the-sidebar',
-  '/docs/anatomy/anatomy-of-the-spec-viewer': '/docs/navigate/inside-the-viewer',
-  '/docs/anatomy/anatomy-of-the-overview': '/docs/results/the-overview',
-  '/docs/guides/reading-the-overview': '/docs/results/the-overview',
-  '/docs/anatomy/anatomy-of-the-pipeline-builder': '/docs/customize/workflow-builder',
-  '/docs/guides/pipeline-builder': '/docs/customize/workflow-builder',
-  '/docs/customize/pipeline-builder': '/docs/customize/workflow-builder',
-  '/docs/guides/customize': '/docs/customize/your-own-workflow',
-  '/docs/guides/steering': '/docs/customize/steering',
+  '/docs/start/spec-driven-development': STEPS,
+  '/docs/guides/pick-a-pipeline': STEPS,
+  '/docs/discussions/pick-a-pipeline': STEPS,
+  '/docs/steps/constitution': STEPS,
+  '/docs/steps/specify': STEPS,
+  '/docs/steps/plan': STEPS,
+  '/docs/steps/tasks': STEPS,
+  '/docs/steps/implement': STEPS,
+  '/docs/steps/converge': STEPS,
+  '/docs/steps/auto': STEPS,
   '/docs/guides/review-and-refine': '/docs/steps/review-with-comments',
-  '/docs/guides/check-a-run': '/docs/results/track-progress',
-  '/docs/guides/copilot-app': '/docs/copilot-app/install',
-  '/docs/guides/claude-code': '/docs/claude-code/install',
+
+  '/docs/ide/install': INSTALL,
+  '/docs/ide/choose-a-provider': INSTALL,
+  '/docs/copilot-app/install': INSTALL,
+  '/docs/claude-code/install': INSTALL,
+
+  '/docs/anatomy/the-sidebar': VIEWER,
+  '/docs/anatomy/sidebar-and-steering': VIEWER,
+  '/docs/anatomy/anatomy-of-the-spec-viewer': VIEWER,
+  '/docs/navigate/the-sidebar': VIEWER,
+  '/docs/navigate/inside-the-viewer': VIEWER,
+  '/docs/results/reading-a-spec': VIEWER,
+  '/docs/guides/steering': VIEWER,
+  '/docs/customize/steering': VIEWER,
+
+  '/docs/anatomy/anatomy-of-the-overview': OVERVIEW,
+  '/docs/guides/reading-the-overview': OVERVIEW,
+  '/docs/guides/check-a-run': OVERVIEW,
+  '/docs/results/track-progress': OVERVIEW,
   '/docs/guides/living-specs': '/docs/results/living-specs',
   '/docs/discussions/living-specs': '/docs/results/living-specs',
-  '/docs/guides/pick-a-pipeline': '/docs/start/spec-driven-development',
-  '/docs/discussions/pick-a-pipeline': '/docs/start/spec-driven-development',
-  '/docs/processes/fix-a-bug': '/docs/ide/fix-a-bug',
-  '/docs/processes/assess-an-idea': '/docs/ide/assess-an-idea',
-  '/docs/processes/copilot-app': '/docs/copilot-app/install',
-  '/docs/processes/claude-code': '/docs/claude-code/install',
-  '/workflow-builder': '/docs/customize/workflow-builder',
+
+  '/docs/processes/fix-a-bug': BUGS,
+  '/docs/processes/assess-an-idea': BUGS,
+  '/docs/ide/fix-a-bug': BUGS,
+  '/docs/ide/assess-an-idea': BUGS,
+
+  '/docs/guides/copilot-app': COPILOT,
+  '/docs/processes/copilot-app': COPILOT,
+  '/docs/copilot-app/navigate-the-board': COPILOT,
+  '/docs/copilot-app/run-the-steps': COPILOT,
+  '/docs/copilot-app/a-run-step-by-step': COPILOT,
+  '/docs/guides/claude-code': CLAUDE,
+  '/docs/processes/claude-code': CLAUDE,
+  '/docs/claude-code/what-it-shows': CLAUDE,
+  '/docs/claude-code/a-run-step-by-step': CLAUDE,
+  '/docs/claude-code/switch-specs': CLAUDE,
+
+  '/docs/anatomy/anatomy-of-the-pipeline-builder': BUILDER,
+  '/docs/guides/pipeline-builder': BUILDER,
+  '/docs/customize/pipeline-builder': BUILDER,
+  '/docs/customize/hooks': BUILDER,
+  '/workflow-builder': BUILDER,
+  '/docs/guides/customize': '/docs/customize/your-own-workflow',
+
+  '/docs/reference/providers': SETTINGS,
+  '/docs/reference/telemetry': SETTINGS,
 };
 
 // The adapter turns each redirect into a Vercel route that matches the path
@@ -145,122 +176,54 @@ export default defineConfig({
           href: 'https://github.com/alfredoperez/speckit-companion',
         },
       ],
-      // Six groups, by where you work: get set up, the VS Code extension, the
-      // Copilot app, Claude Code, make it yours, then the dictionaries. Every
-      // entry is named here by slug, because the order is the reading order
-      // and the footer's previous and next buttons walk it. A new page is
-      // added to its group below.
-      //
-      // A group is not a folder. The IDE group gathers pages from start/,
-      // navigate/, steps/, results/ and ide/, which kept their addresses when
-      // the sidebar was regrouped.
-      //
-      // Introduction and Install where you work are /docs/ and /docs/install:
-      // the first is the section root, and the second is linked from published
-      // READMEs. It is a launchpad: three cards, each opening the Install page
-      // that leads its own group below and holds that tool's full path.
-      //
-      // Configuration sits with the IDE pages and keeps its /docs/reference/
-      // address. Telemetry is a page without a sidebar entry: Configuration
-      // links to it.
+      // Sixteen pages in six groups, in reading order: the footer's previous
+      // and next buttons walk it. A page is added to its group below, and a
+      // new page needs a reason an existing page cannot hold.
       sidebar: [
         {
           label: 'Start',
           items: [
             { label: 'Introduction', slug: 'docs' },
-            { label: 'What is spec-driven development?', slug: 'docs/start/spec-driven-development' },
-            { label: 'Install where you work', slug: 'docs/install' },
+            { label: 'Install', slug: 'docs/install' },
+            { label: 'Quickstart', slug: 'docs/start/your-first-spec' },
           ],
         },
         {
-          label: 'In your IDE',
+          label: 'Run',
           items: [
-            {
-              label: 'Set up',
-              items: [
-                { label: 'Install', slug: 'docs/ide/install' },
-                { label: 'Choose an AI provider', slug: 'docs/ide/choose-a-provider' },
-                { label: 'Configuration', slug: 'docs/reference/configuration' },
-              ],
-            },
-            {
-              label: 'Look around',
-              items: [
-                { label: 'Your first spec', slug: 'docs/start/your-first-spec' },
-                { label: 'The sidebar', slug: 'docs/navigate/the-sidebar' },
-                { label: 'Inside the viewer', slug: 'docs/navigate/inside-the-viewer' },
-              ],
-            },
-            {
-              label: 'Each step',
-              items: [
-                { label: 'Constitution', slug: 'docs/steps/constitution' },
-                { label: 'Specify', slug: 'docs/steps/specify' },
-                {
-                  label: 'Plan',
-                  items: [
-                    { label: 'The plan step', slug: 'docs/steps/plan' },
-                    { label: 'Plan blocks', slug: 'docs/steps/plan-blocks', badge: { text: 'New', variant: 'tip' } },
-                  ],
-                },
-                { label: 'Tasks', slug: 'docs/steps/tasks' },
-                { label: 'Implement', slug: 'docs/steps/implement' },
-                { label: 'Converge', slug: 'docs/steps/converge' },
-                { label: 'Review with comments', slug: 'docs/steps/review-with-comments' },
-                { label: 'Run it all with Auto', slug: 'docs/steps/auto' },
-              ],
-            },
-            {
-              label: 'Other ways to start',
-              items: [
-                { label: 'Fix a bug', slug: 'docs/ide/fix-a-bug', badge: { text: 'New', variant: 'tip' } },
-                { label: 'Assess an idea', slug: 'docs/ide/assess-an-idea', badge: { text: 'New', variant: 'tip' } },
-              ],
-            },
-            {
-              label: 'Read the results',
-              items: [
-                { label: 'Reading a spec', slug: 'docs/results/reading-a-spec' },
-                { label: 'The Overview', slug: 'docs/results/the-overview' },
-                { label: 'Track progress', slug: 'docs/results/track-progress' },
-                { label: 'Living specs', slug: 'docs/results/living-specs' },
-              ],
-            },
+            { label: 'The steps', slug: 'docs/steps' },
+            { label: 'Review with comments', slug: 'docs/steps/review-with-comments' },
+            { label: 'Plan blocks', slug: 'docs/steps/plan-blocks' },
+            { label: 'Bugs and ideas', slug: 'docs/ide/bugs-and-ideas' },
           ],
         },
         {
-          label: 'In the Copilot app',
+          label: 'Read',
           items: [
-            { label: 'Install', slug: 'docs/copilot-app/install' },
-            { label: 'Navigate the board', slug: 'docs/copilot-app/navigate-the-board' },
-            { label: 'Run the steps', slug: 'docs/copilot-app/run-the-steps' },
-            { label: 'A run, step by step', slug: 'docs/copilot-app/a-run-step-by-step' },
+            { label: 'Viewer and sidebar', slug: 'docs/navigate/viewer-and-sidebar' },
+            { label: 'Overview and progress', slug: 'docs/results/the-overview' },
+            { label: 'Living specs', slug: 'docs/results/living-specs' },
           ],
         },
         {
-          label: 'In Claude Code',
-          badge: { text: 'New', variant: 'tip' },
+          label: 'Other surfaces',
           items: [
-            { label: 'Install', slug: 'docs/claude-code/install' },
-            { label: 'What it shows', slug: 'docs/claude-code/what-it-shows' },
-            { label: 'A run, step by step', slug: 'docs/claude-code/a-run-step-by-step' },
-            { label: 'Switch specs with /speckit-tracker', slug: 'docs/claude-code/switch-specs' },
+            { label: 'Copilot app', slug: 'docs/copilot-app' },
+            { label: 'Claude Code', slug: 'docs/claude-code' },
           ],
         },
         {
           label: 'Customize',
           items: [
-            { label: 'Workflow Builder', slug: 'docs/customize/workflow-builder' },
-            { label: 'Hooks', slug: 'docs/customize/hooks' },
-            { label: 'Your own workflow', slug: 'docs/customize/your-own-workflow' },
-            { label: 'Steering', slug: 'docs/customize/steering' },
+            { label: 'Workflow Builder and hooks', slug: 'docs/customize/workflow-builder' },
+            { label: 'Custom workflows and commands', slug: 'docs/customize/your-own-workflow' },
           ],
         },
         {
           label: 'Reference',
           items: [
             { label: 'Commands', slug: 'docs/reference/commands' },
-            { label: 'Providers', slug: 'docs/reference/providers' },
+            { label: 'Settings', slug: 'docs/reference/configuration' },
           ],
         },
       ],

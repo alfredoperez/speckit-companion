@@ -1,12 +1,12 @@
 ---
 title: Introduction
-description: What SpecKit Companion gives you in VS Code, which half does what, and where each part of these docs picks up.
+description: What SpecKit Companion adds to Spec Kit, the two pieces you install, and the other places it runs.
 ---
 
 import DocFigure from '../../../components/journey/DocFigure.astro';
 import WorkflowDiagram from '../../../components/docs/WorkflowDiagram.astro';
 
-SpecKit Companion lets you read, review and track your specs in VS Code. A **spec** is a markdown file that describes what to build before your AI assistant builds it. [Spec Kit](https://github.com/github/spec-kit), the open source tool behind the `specify` command, has your assistant write those files. [Spec-driven development](/docs/start/spec-driven-development) explains the method.
+SpecKit Companion puts your [Spec Kit](https://github.com/github/spec-kit) specs in front of you while your AI assistant works on them. You read each spec as a page, comment on its lines, send the next step with a button, and see what every run decided and checked.
 
 <DocFigure
   src="hero.png"
@@ -14,60 +14,31 @@ SpecKit Companion lets you read, review and track your specs in VS Code. A **spe
   caption="The sidebar and the viewer, mid-plan. Both read the folder your assistant already wrote. There is no second copy of the spec."
 />
 
-## What you get in VS Code
+## The two halves
 
-| Part | What it does | Read more |
+| | VS Code extension | Companion extension for Spec Kit |
 | --- | --- | --- |
-| Spec viewer | Opens the spec, `plan.md` and `tasks.md` as a page, with a rail for each document | [Inside the viewer](/docs/navigate/inside-the-viewer) |
-| Inline review | Lets you comment on any line and send the comments to your assistant | [Review with comments](/docs/steps/review-with-comments) |
-| Specs sidebar | Lists every spec, grouped by where it stands | [The sidebar](/docs/navigate/the-sidebar) |
-| Steering view | Lists the standing instruction files your assistant already reads | [Steering](/docs/customize/steering) |
+| Installs into | Your editor | Your project, with `specify extension add` |
+| Gives you | The [sidebar and viewer](/docs/navigate/viewer-and-sidebar), [line comments](/docs/steps/review-with-comments), and a button for each [step](/docs/steps) | A record of each run, the `/speckit.companion.*` [commands](/docs/reference/commands), [Auto](/docs/steps#auto) and [living specs](/docs/results/living-specs) |
+| Without it | You run the commands yourself and read the markdown files | Stock Spec Kit commands, and [the Overview](/docs/results/the-overview) has no step times, decisions or checks to show |
 
-<DocFigure src="spec-viewer-x16x9.png" caption="One spec as a page, with every workflow document one click away." />
+Either half works alone. They only share the spec folder, so a spec made with one half opens fine in the other.
 
-<DocFigure
-  src="inline-comments-16x9.png"
-  alt="A spec in the viewer with two review cards pinned under their lines, one pending and one applied, and the comment composer open on line 4."
-  caption="A comment sits on the line it is about, and travels with the spec."
-/>
+## One run
 
-## What the Companion Spec Kit extension adds
-
-This is a second piece that you install separately with the `specify` command. It records what each step did, how long it took, what it decided and what it checked, in a **run record** next to each spec. [The Overview](/docs/results/the-overview) in the viewer shows that record.
-
-<DocFigure
-  src="overview-16x9.png"
-  alt="The Overview of a finished run: intent, run timing, approach and size, a requirement to task to test table, decisions with what each rejected, and the verified checks."
-  caption="The Overview reads the run record: intent, timing, decisions, checks and coverage."
-/>
-
-It also brings the `/speckit.companion.*` commands, a Resume button, a closing `mark-complete` step and [Living specs](/docs/results/living-specs). A **living spec** is a spec for behavior that outlives any one change.
-
-<DocFigure
-  src="live-living-specs-window.png"
-  alt="VS Code with the Living Specs tree in the sidebar: five capabilities grouped by folder, most with a coverage count, two flagged as drifted. Beside it the Photo Storage spec is open, with its counts, the paths it covers and its first requirement."
-  caption="Living specs sit next to the code they describe and flag when the code moves on."
-/>
-
-Either half works alone. With only the VS Code extension you get the viewer, comments and sidebar. A spec made without the second half just has less recorded on it.
-
-## One run, start to finish
-
-A Companion run turns a feature request into a spec, a plan, a task list and code. Where a step has several independent pieces, it can hand them to workers. When living specs are on, they are read before the work starts and updated when it ends.
+A run takes a feature request through specify, plan, tasks and implement, and the Companion workflow closes the spec for you at the end.
 
 <WorkflowDiagram />
 
-## What it does not do
+Companion hands your assistant the text of a command and then reads whatever lands on disk. It never reads the chat, and it gets no signal when the assistant finishes, so everything you see comes from files.
 
-SpecKit Companion hands your assistant the text of a command, then reads whatever lands on disk. It never reads the chat back, and it gets no signal when your assistant finishes.
+## Outside VS Code
 
-## Where to go
+The Companion extension for Spec Kit writes the same files wherever your assistant runs, and two other surfaces read them:
 
-| You want to | Go to |
-| --- | --- |
-| Set it up | [Install where you work](/docs/install), then [Your first spec](/docs/start/your-first-spec) |
-| Know what a step does and leaves behind | **Each step**, starting with [Specify](/docs/steps/specify) |
-| Understand what a run recorded | [The Overview](/docs/results/the-overview) and [Track progress](/docs/results/track-progress) |
-| Work outside VS Code | [In the Copilot app](/docs/copilot-app/install) or [In Claude Code](/docs/claude-code/install) |
-| Change what a step does | [Workflow Builder](/docs/customize/workflow-builder) |
-| Look up a command or a setting | [Commands](/docs/reference/commands) and [Configuration](/docs/reference/configuration) |
+- [GitHub Copilot app](/docs/copilot-app): a board of every spec beside the chat, with a button for the next step.
+- [Claude Code](/docs/claude-code): a line above the prompt and a pane with the steps and tasks, in your terminal.
+
+## Start
+
+[Install](/docs/install) it where you work, then follow the [Quickstart](/docs/start/your-first-spec) to your first spec. To change what a step does, open the [Workflow Builder](/docs/customize/workflow-builder). Every setting is in [Settings](/docs/reference/configuration).

@@ -1,11 +1,13 @@
 ---
-title: The Overview
-description: 'The Overview page region by region, in the order it renders them: what each one shows, what it means, and how far to trust it.'
+title: Overview and progress
+description: What each region of the Overview means, which of its numbers were measured and which were only reported, and the commands that say where a spec stands.
 ---
 
+import CodeLine from '../../../../components/CodeLine.astro';
+import Actions from '../../../../components/journey/Actions.astro';
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 
-The Overview shows what a run did, on one page: why the spec exists, how long each phase took, what was checked, what was decided and which requirement got which test. Click **Overview**, the first entry in the rail, to open it.
+The Overview is the first tab in the viewer's rail. It reads the run record, a `.spec-context.json` file next to the spec, and nothing on the page runs or re-checks anything.
 
 <DocFigure
   src="overview-annotated-16x9.png"
@@ -13,29 +15,28 @@ The Overview shows what a run did, on one page: why the spec exists, how long ea
   caption="A finished run. The Run overview strip shows a time for a phase only when both of its ends were recorded."
 />
 
-It is read from the **run record**, a `.spec-context.json` file next to the spec. Nothing on the page runs or re-checks anything.
+## What's measured and what's reported
 
-## When it appears
+| On the page | Where it comes from | How far it goes |
+| --- | --- | --- |
+| Step boundaries and task finishes | A script writes them | Measured |
+| Clarify and analyze closes, and the stages inside plan and tasks | The assistant reports them, to the second | The assistant's account |
+| A blank phase time | One end of the phase is missing | Not a zero. The page won't guess. |
+| "X active" total | Shown only when specify, plan, tasks and implement all measured cleanly | Excludes the waits between phases |
+| A checked row in Verified | A command the recorder ran, with its exit code | Measured |
+| A reported row in Verified, marked with a quote | The assistant's account of something that couldn't be run | Nothing was run for you |
+| Evidence in Coverage | The viewer checks that each named test file is on disk | Nothing runs the test |
+| Intent, Expectations, Decisions | The assistant writes them during the run | As good as the run that wrote them |
 
-| Situation | What you get |
-| --- | --- |
-| A feature spec whose run recorded something | The Overview, as the first entry in the rail |
-| A spec that was never run | No Overview. The spec opens on its document. A status, a current step or your own review comments do not count as a run. |
-| A living spec | Its own overview, not this one |
-| `speckit.viewer.activityPanel` set to `false` | No Overview |
-| The Companion Spec Kit extension is not installed | A thin page and a banner offering the install, because most of what the page reads never gets written |
-
-A region with nothing recorded does not render, so a thin page means a thin record.
+The Companion Spec Kit extension writes the record and the VS Code extension only reads it. The log only grows: a write that would publish a shorter history is rejected. Commit the file and the record travels with the branch.
 
 ## The regions
 
-The page has seven regions, top to bottom. Most have a title and, on the right, a count. Skim the counts first. They tell you where to read closely.
+A region with nothing recorded doesn't render, so a thin page means a thin record. Most regions have a count on the right, which tells you where to read closely.
 
-### Intent
+### Intent and Run overview
 
-The one sentence the run answers to. Under it sit the time each phase took, then a card with the approach, any living specs the run updated or only read, the working area, and a sizing line such as `Sized simple: 6 files, 6 tasks projected`.
-
-Read it first. If it does not match what you expected, stop there.
+The one sentence the run answers to, then the time each phase took, then a card with the approach, the living specs the run updated or read, the working area and a sizing line such as `Sized simple: 6 files, 6 tasks projected`. If the sentence doesn't match what you asked for, stop there.
 
 <DocFigure
   src="live-run-intent.png"
@@ -43,28 +44,11 @@ Read it first. If it does not match what you expected, stop there.
   caption="Intent, with the approach and the living specs the run touched."
 />
 
-### Run overview
-
-It sits inside Intent, right under the sentence. One entry per phase with the time it took, and the run's total as active time: the time the phases took, without the waits between them.
-
-<DocFigure
-  src="live-run-timing.png"
-  alt="The Run overview strip: Specify 5 minutes 40, Plan 7 minutes 36, Tasks 3 minutes 25, Implement 34 minutes 45, and 51 minutes 28 active on the right."
-  caption="A time for each phase, and the total on the right."
-/>
-
-| A phase reads | Meaning |
-| --- | --- |
-| A duration | Both ends of the phase were recorded |
-| Blank | One end is missing. The page declines to guess. It is not a zero. |
-| "folded into Plan" | The run merged this phase into an earlier one |
-| No end yet | The phase is running. Its live timer is on the rail tab. |
-
-When some phases have no time, the head reads "Timing coverage: N of M phases", or "Timing not recorded".
+A phase reads as a duration, as blank, or as "folded into Plan" when the run merged it into an earlier phase. A phase that's still running has no time here, and its live timer is on the rail tab. When some phases have no time, the total is replaced by "Timing coverage: N of M phases" or "Timing not recorded".
 
 ### Expectations
 
-What must stay true on one card, and what was left out on purpose on the other. Something you expected is not in the diff? Check the second card before calling it a gap.
+One card holds what must stay true and the other what was left out on purpose. When something you expected isn't in the diff, check the second card before calling it a gap.
 
 <DocFigure
   src="live-run-expectations.png"
@@ -74,9 +58,7 @@ What must stay true on one card, and what was left out on purpose on the other. 
 
 ### Verified
 
-Each check with its command and outcome. The count reads `3 checked`, or `2 checked · 1 reported`.
-
-A checked row is a command the recorder ran itself, and it keeps the exit code. A reported row, marked with a quote, is the assistant's own account of something that could not be run. So `0 checked · 5 reported`, as in this picture, means nothing was run for you. Use the list to learn which commands to run yourself.
+Each check with its command and outcome. The count reads `3 checked`, or `2 checked · 1 reported`. A count of `0 checked · 5 reported`, as below, means no command was run, so use the list to learn which commands to run yourself.
 
 <DocFigure
   src="live-run-verified.png"
@@ -86,9 +68,7 @@ A checked row is a command the recorder ran itself, and it keeps the exit code. 
 
 ### Decisions
 
-The choice, why, and what was rejected. The first three show and the rest sit behind "Show N more decisions".
-
-The rejected line is the useful part. It is what a later session would otherwise rediscover the slow way.
+Each decision keeps the choice, the reason and what was rejected. The first three show and the rest sit behind "Show N more decisions". [Review with comments](/docs/steps/review-with-comments) is how you say one is wrong.
 
 <DocFigure
   src="live-run-decisions.png"
@@ -98,7 +78,7 @@ The rejected line is the useful part. It is what a later session would otherwise
 
 ### Coverage
 
-Each requirement, the tasks that delivered it and the tests that exercise it. This table most often carries bad news. Untraced requirements sort first, and six rows show before "Show all N requirements". The count reads `4/7 traced`, in a warning tone until every requirement has evidence.
+Each requirement, the tasks that delivered it and the tests that exercise it. Untraced requirements sort first, and six rows show before "Show all N requirements". The count reads `4/7 traced` in a warning tone until every requirement names a test.
 
 <DocFigure
   src="live-run-coverage.png"
@@ -113,11 +93,9 @@ Each requirement, the tasks that delivered it and the tests that exercise it. Th
 | "N tests not found" | It names N tests, and none of the files is on disk |
 | "K of N found" | It names N tests, and only K of the files are on disk |
 
-The check is that the file exists. Nothing runs the test.
-
 ### Run log
 
-Collapsed until you open it: the latest activity, when the phases started and ended, and one line per task with who recorded it and when. Open it when you need to know what one task did or which files a run touched.
+Collapsed until you open it: the latest activity, when each phase started and ended, and one line per task with who recorded it and when.
 
 <DocFigure
   src="live-run-log.png"
@@ -125,14 +103,45 @@ Collapsed until you open it: the latest activity, when the phases started and en
   caption="The Run log, opened. Each task line says who recorded it and when."
 />
 
-## How far to trust it
+## When there's no Overview
 
-- **Where it comes from.** The Companion Spec Kit extension writes `.spec-context.json` during runs, and the VS Code extension only reads it. Commit the file and the record travels with the branch.
-- **Timestamps differ in trust.** Step boundaries and per-task finishes are written by a script. Clarify and analyze closes, and the smaller stages inside plan and tasks, are reported by the assistant to the second. The run only says "X active" when specify, plan, tasks and implement all measured cleanly.
-- **The log only grows.** A write that would publish a shorter history is rejected.
-- **The install banner.** Dismiss it once and it stays gone, or set `speckit.companion.installPrompt` to `false`.
+A spec that was never run opens on its document, and a status, a current step or your own review comments don't count as a run. Setting `speckit.viewer.activityPanel` to `false` removes the tab. Without the Companion Spec Kit extension you get a thin page and a banner offering the install, because most of what the page reads never gets written.
 
-## Related
+## While a run is in flight
 
-- [Review with comments](/docs/steps/review-with-comments) is how you say a decision here is wrong.
-- [Track progress](/docs/results/track-progress) covers the doctor, which checks whether the record itself can be believed.
+<DocFigure
+  src="figure-mid-run.png"
+  recapture
+  alt="The viewer while Plan runs: Specification is checked, and the Plan tab shows a spinner and its running time, 1m 18s."
+  caption="While a step runs, its tab spins and keeps time."
+/>
+
+The rail, the sidebar row and the footer follow the files the run writes, and [Viewer and sidebar](/docs/navigate/viewer-and-sidebar) explains their marks. When a step or a phase of tasks completes you also get a notification with **Open spec**, which `speckit.notifications.stepComplete` turns off.
+
+## Status, resume and doctor
+
+All three need the [Companion Spec Kit extension](/docs/install) and work with any assistant.
+
+| Question | Command | What it does |
+| --- | --- | --- |
+| Where does this spec stand? | `/speckit.companion.status` | Reports the current step, its status, the decisions recorded so far and the next action. Changes nothing. |
+| I stopped halfway. How do I carry on? | `/speckit.companion.resume` | Finds the next step, carries the recorded decisions into scope and sends that step's command. In implement it continues at the next unchecked task. |
+| Did the run do what it says it did? | `/speckit.companion.doctor` | Recomputes what happened and reports problems. Read-only. |
+
+Resume is also the play button on a spec's row in the sidebar. On a spec that's already implemented, completed or archived, it reports that the run is complete and sends nothing.
+
+<Actions>
+  <CodeLine command="/speckit.companion.doctor" prompt={false} />
+</Actions>
+
+With no arguments the doctor checks the active spec. `--feature-dir specs/042-export-csv` checks one spec, `--all` checks every spec, `--json` gives a machine-readable report, and `--chat` also reads the assistant's session transcript to explain failed or abandoned work.
+
+| It finds | For example |
+| --- | --- |
+| Unfinished work | A step that started and never finished, or a task ticked in `tasks.md` with nothing recorded for it |
+| A step doing the next step's work | Plan content in the spec, a task list in the plan, code written before implement |
+| A step that closed having verified nothing | Implement finished but no test or check ever ran |
+| A missing file | A step that closed without the document it promised |
+| Why a spec didn't complete | The write was refused, it never arrived, or it landed and the display disagrees |
+
+Every check says whether it ran, was skipped and why, or doesn't apply, so a check that couldn't look never reads as clean. The doctor reports and stops there. To explain a failed capture it reads `specs/<NNN>/.trace.jsonl`, where every capture call writes one line, and that file is safe to delete.

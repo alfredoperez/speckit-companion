@@ -1,213 +1,126 @@
 ---
-title: Configuration
-description: Every speckit setting of the VS Code extension, grouped by what you want to change.
+title: Settings
+description: Every speckit setting of the VS Code extension with its type and default, the assistants it can send commands to, and what telemetry counts.
 ---
 
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 
-Open **Settings** and type `@ext:alfredoperez.speckit-companion` in the search box. Every setting on this page is listed there.
+Open **Settings** and search `@ext:alfredoperez.speckit-companion` to list all 15 settings.
 
 <DocFigure
   src="live-settings-filter.png"
-  alt="VS Code Settings with @ext:alfredoperez.speckit-companion in the search box and 15 Settings Found beside it. The list on the left reads Extensions, SpecKit Companion, Companion and Telemetry, and the first setting is Speckit: Ai Context Instructions, ticked."
-  caption="Settings filtered to the extension: 15 settings, with Companion and Telemetry as a group of their own."
+  alt="VS Code Settings with @ext:alfredoperez.speckit-companion in the search box and 15 Settings Found beside it."
+  caption="Settings filtered to the extension, with Companion and Telemetry as a group of their own."
 />
 
-## Choose your AI and how it runs
+## Assistant
 
-<DocFigure
-  src="live-settings-provider.png"
-  alt="The Speckit: Ai Provider setting with its dropdown open on twelve assistants, from Claude Code, the default, through Oh My Pi, Gemini CLI, GitHub Copilot CLI and Codex CLI to Antigravity, with a line describing the highlighted one."
-  caption="speckit.aiProvider is one dropdown: every assistant Companion can send commands to."
-/>
+VS Code stores the first three per machine, so set them in user settings. A workspace `settings.json` can't override them.
 
-| Setting | Default | Effect |
-| --- | --- | --- |
-| `speckit.aiProvider` | `"claude"` | Which assistant gets your commands: `claude`, `omp`, `claude-vscode`, `gemini`, `copilot`, `codex`, `qwen`, `opencode`, `ide-chat`, `wibey`, `wibey-vscode` or `antigravity`. See [Providers](/docs/reference/providers). |
-| `speckit.permissionMode` | `"interactive"` | `"interactive"` lets the CLI ask before acting. `"auto-approve"` skips prompts. |
-| `speckit.commandFormat` | `"auto"` | `"auto"` lets the provider decide. `"dot"` sends `speckit.plan`, `"dash"` sends `speckit-plan`. Change it only if your spec-kit version needs one. |
-| `speckit.aiContextInstructions` | `true` | Adds a short note to each command asking the assistant to record its progress, so the viewer can show finer steps. `false` sends the bare command. |
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `speckit.aiProvider` | string | `"claude"` | The assistant that gets your commands. The values are the ids under [Providers](#providers). |
+| `speckit.permissionMode` | string | `"interactive"` | `"interactive"` lets the CLI ask before it acts. `"auto-approve"` skips the prompts. |
+| `speckit.commandFormat` | string | `"auto"` | `"auto"` lets the provider decide. `"dot"` sends `speckit.plan` and `"dash"` sends `speckit-plan`. |
+| `speckit.aiContextInstructions` | boolean | `true` | Adds a note to each command asking the assistant to record its progress, so the viewer shows finer steps |
 
-### Permission mode
+Auto-approve adds `--permission-mode bypassPermissions` for the Claude Code CLI, `--auto-approve` for Oh My Pi, and `--yolo` for Copilot CLI and Qwen Code. The other assistants take no flag. Copilot CLI always runs auto-approved, because it can't show a permission prompt when a command is sent to it.
 
-Auto-approve adds `--permission-mode bypassPermissions` for the Claude Code CLI, `--auto-approve` for Oh My Pi, and `--yolo` for Copilot CLI and Qwen. The other assistants take no flag.
+## Specs and workflows
 
-GitHub Copilot CLI always runs auto-approved, whatever this setting says, because it cannot show a permission prompt when a command is sent to it.
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `speckit.specDirectories` | string[] | `["specs", ".specify/specs"]` | Where specs are found. `specs` and `apps/*/specs` list their children as specs. A trailing wildcard, as in `openspec/changes/*`, makes each match a spec folder. |
+| `speckit.projectFolder` | string | `""` | In a multi-root workspace, the folder treated as the Spec Kit project, by name or path. Empty picks the first folder with `.specify/`, then the first with `specs/`. |
+| `speckit.defaultWorkflow` | string | `"speckit"` | The workflow Create New Spec pre-selects: `"speckit"` or `"companion"`. While you haven't set it, installing the Companion extension for Spec Kit makes Companion the pre-selection. |
+| `speckit.customWorkflows` | object[] | `[]` | Your own workflows. See [Custom workflows and commands](/docs/customize/your-own-workflow). |
+| `speckit.customCommands` | array | `[]` | Your own slash commands, each a string or an object. Same page. |
 
-## Choose a workflow
+## Views and notifications
 
-<span id="workflow-choice"></span>
-
-| Setting | Default | Effect |
-| --- | --- | --- |
-| `speckit.defaultWorkflow` | `"speckit"` | The workflow Create New Spec pre-selects: `"speckit"` (stock) or `"companion"` (needs the Companion Spec Kit extension). Only a value you set yourself is honored. Unset, installing the extension makes Companion the pre-selection. |
-| `speckit.customWorkflows` | `[]` | Your own workflows. See [below](#custom-workflows). |
-
-<DocFigure src="own-workflow-x16x9.png" caption="The workflow is chosen when a spec is created, then recorded on the spec." />
-
-[Spec-driven development](/docs/start/spec-driven-development#the-two-workflows-that-ship) explains the difference between the two built-ins.
-
-### Measured impact
-
-These figures come from one benchmark run (2026-06-10): the same features built through each workflow at three sizes, scored by an independent judge. Timing is one sample per cell, so read it as a direction.
-
-| Easy / medium / hard | SpecKit | SpecKit Companion |
-|---|---|---|
-| `spec.md` lines | 61 / 91 / 94 | 24 / 29 / 36 |
-| Throwaway side files | 3 / 4 / 4 | 0 / 0 / 0 |
-| Wall-clock | 2m05s / 4m31s / 7m38s | 3m03s / 5m03s / 5m59s |
-
-Companion specs run about 60 to 68% leaner. Correctness tied: every cell shipped a passing build and scored 5.0 out of 5 from the judge.
-
-## Find and show specs
-
-| Setting | Default | Effect |
-| --- | --- | --- |
-| `speckit.specDirectories` | `["specs", ".specify/specs"]` | Where specs are found. `specs` lists its children as specs. A trailing wildcard such as `openspec/changes/*` treats each match as a spec folder. `apps/*/specs` lists each match's children. |
-| `speckit.projectFolder` | `""` | In a workspace with several folders, the one Companion treats as the Spec Kit project: a folder name or its path. Empty picks the first folder with `.specify/`, then the first with `specs/`, then the first folder. Living specs in another workspace folder are not found, and one window shows one project at a time. |
-| `speckit.views.steering.visible` | `true` | Show the Steering view. |
-| `speckit.views.settings.visible` | `false` | Show the Settings view. |
-| `speckit.notifications.stepComplete` | `true` | Notify when a step or task phase completes, with an **Open spec** action. `false` silences both and keeps the viewer's timer. |
-| `speckit.customCommands` | `[]` | Your own slash commands. See [Your own workflow](/docs/customize/your-own-workflow#custom-commands). |
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `speckit.views.steering.visible` | boolean | `true` | Shows the Steering view in the [sidebar](/docs/navigate/viewer-and-sidebar) |
+| `speckit.views.settings.visible` | boolean | `false` | Shows the Settings view in the sidebar |
+| `speckit.notifications.stepComplete` | boolean | `true` | Notifies when a step or a task phase completes, with an **Open spec** action |
 
 ## Companion and telemetry
 
-These sit under **Companion & Telemetry** in Settings.
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `speckit.companion.installPrompt` | boolean | `true` | Offers the Companion extension for Spec Kit when it's missing or out of date, through banners, a status-bar warning and a notification. The activity-bar badge and the row in the Specs view stay either way. |
+| `speckit.viewer.activityPanel` | boolean | `true` | Shows each spec's Activity timeline in the viewer. Needs the Companion extension for Spec Kit. |
+| `speckit.telemetry` | boolean | `true` | Anonymous usage counts. See [Telemetry](#telemetry). |
 
-| Setting | Default | Effect |
-| --- | --- | --- |
-| `speckit.companion.installPrompt` | `true` | Offers the Companion Spec Kit extension when it is missing or out of date, with banners, a status-bar warning and a notification. `false` hides those. The badge on the activity bar and the row in the Specs view stay. |
-| `speckit.viewer.activityPanel` | `true` | Shows each spec's Activity timeline in the viewer: steps, decisions and files touched. Needs the Companion Spec Kit extension. |
-| `speckit.telemetry` | `true` | Anonymous usage counts. See [Telemetry](/docs/reference/telemetry). |
+## Providers
 
-There is no toggle for the Companion workflow itself. Once the extension is installed, the picker and Resume button are always there.
+The first time the extension starts with no provider set, a picker asks for one and saves it to your user settings. After that it's the `speckit.aiProvider` dropdown.
 
-## Custom workflows
+<DocFigure
+  src="live-settings-provider.png"
+  alt="The Speckit: Ai Provider setting with its dropdown open on twelve assistants, from Claude Code to Antigravity."
+  caption="The dropdown lists twelve assistants, and Claude Code is the default."
+/>
 
-A custom workflow is any set of steps that runs commands and writes markdown files. The sidebar and viewer rail adapt to whatever you declare. [Your own workflow](/docs/customize/your-own-workflow) has the smallest valid example. This is the property reference.
+Choose the provider before you initialize a new project, because Spec Kit sets the project up for that assistant and records it in `.specify/integration.json`. If the file names a different assistant than your setting, the extension says so when it starts and offers **Switch to** that one or **Keep** yours. Switch takes effect after a reload. Keep stops it asking about that pair in this project.
 
-```json
-{
-  "speckit.customWorkflows": [
-    {
-      "name": "agent-teams-lite",
-      "displayName": "Agent Teams Lite (SDD)",
-      "steps": [
-        { "name": "specify", "label": "Spec",   "command": "sdd-spec",   "file": "spec.md", "subDir": "specs" },
-        { "name": "plan",    "label": "Design", "command": "sdd-design", "file": "design.md", "includeRelatedDocs": true },
-        { "name": "tasks",   "label": "Tasks",  "command": "sdd-tasks",  "file": "tasks.md" }
-      ]
-    }
-  ],
-  "speckit.specDirectories": ["specs", "openspec/changes/*"]
-}
-```
+## How each one is reached
 
-This one is for [Agent Teams Lite](https://github.com/Gentleman-Programming/agent-teams-lite).
-
-### Workflow properties
-
-| Property | Required | Description |
-|---|---|---|
-| `name` | Yes | Identifier, recorded on each spec. |
-| `displayName` | Yes | Label in the picker. |
-| `steps` | Yes | The steps, in order. |
-| `commands` | No | Extra buttons: `name`, `command` and `step` (required), `title` and `tooltip` (optional). A `step: "specify"` button sits next to **Submit**. |
-| `supportedAiProviders` | No | Provider ids that can use it (the `aiProvider` values above). The workflow is hidden for any other provider. Omit or leave empty for all. |
-| `steering` | No | Reference folders the workflow reads. They appear under Steering. |
-
-### Step properties
-
-| Property | Required | Description |
-|---|---|---|
-| `name` | Yes | Step identifier. |
-| `command` | Yes | Slash command to run. The leading slash is optional. |
-| `label` | No | Name in the sidebar and rail. Defaults to the capitalized `name`. |
-| `file` | No | Output file. Defaults to `{name}.md`. |
-| `actionOnly` | No | No output file and no rail entry. The step's actions live in the footer. |
-| `subFiles` | No | Explicit list of child documents. |
-| `subDir` | No | Folder scanned for child `.md` files, not recursive. |
-| `includeRelatedDocs` | No | Groups the spec folder's unassigned `.md` files under this step. Use it on one step only. |
-| `model`, `effort` | No | Per-step model or reasoning effort, for Claude Code. |
-
-A spec keeps the workflow it was created with. With none chosen, `speckit.defaultWorkflow` applies. A step whose file is missing shows as not started.
-
-## The pipeline's own files
-
-The settings above are VS Code's. What the Companion pipeline runs lives in files in your repository, and the [Workflow Builder](/docs/customize/workflow-builder) edits them rather than asking you to.
-
-| File | Holds | Builder writes |
-|---|---|---|
-| `.specify/companion.yml` | Node order, phases, hooks, document sections, and `commands.<step>.decisions` for where a verdict routes | Yes |
-| `.specify/companion/workflows/<name>.yml` | A named configuration you switch to. While one is in force, every edit goes here instead | Yes |
-| `.specify/companion/nodes/<step>/<node>.md` | A node you rewrote, or a step you added | Yes |
-| `.specify/companion/fragments/<name>.md` | A document section you wrote | No, you write it |
-| `living-specs.yml` | `enabled`, `layout`, `capabilities`, `exempt` and `rules` for [living specs](/docs/results/living-specs) | `enabled` and `layout` only |
-
-### living-specs.yml
-
-[Living specs](/docs/results/living-specs) stay off until this file exists at the repo root.
-
-```yaml
-enabled: true
-exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
-capabilities:
-  - name: spec-viewer
-    match: ["src/features/spec-viewer/**"]
-    spec: src/features/spec-viewer/spec-viewer.spec.md
-  - name: workflows
-    match: ["src/features/workflows/**", "speckit-extension/workflows/**"]
-```
-
-| Key | What it does |
+| Provider (`aiProvider` value) | Runs as |
 | --- | --- |
-| `enabled` | The opt-in. Without a registry, or with this unset, every living-specs command acts as if the feature were absent. |
-| `exempt` | Globs that never count as drift. Default: `*.config.*`, `*.test.*`, `**/migrations/**`. |
-| `name` | The capability id, and its folder name when the location is derived. |
-| `match` | Globs whose files belong to it, minus the capability's own `exclude` globs. |
-| `spec` | Where the spec lives. Optional. |
-| `layout` | `central` or `colocated`, which is the layout adoption uses for a capability you do not place yourself. Defaults to `central`. |
+| Claude Code (`claude`) | `claude` in a terminal |
+| Claude Code (VS Code) (`claude-vscode`) | The Claude Code panel, no terminal |
+| GitHub Copilot CLI (`copilot`) | `ghcs` / `gh copilot` in a terminal |
+| Gemini CLI (`gemini`) | `gemini` in a terminal |
+| Codex CLI (`codex`) | `codex` in a terminal |
+| Qwen Code (`qwen`) | `qwen` in a terminal |
+| OpenCode (`opencode`) | `opencode` in a terminal |
+| IDE Chat (`ide-chat`) | Your editor's built-in chat (Copilot, Composer, Cascade) |
+| Wibey CLI (`wibey`) | `wibey` in a terminal |
+| Wibey (VS Code) (`wibey-vscode`) | The Wibey chat panel, no terminal |
+| Antigravity (`antigravity`) | `agy` in an interactive terminal |
+| Oh My Pi (`omp`) | `omp` in a terminal |
 
-An older `livingSpecs:` block in `.specify/companion.yml` is still read. If both exist, `living-specs.yml` wins.
+IDE Chat submits the prompt only in an initialized workspace, where the chat recognizes `/speckit.*`. Otherwise it prefills the prompt and warns.
 
-**Where a spec lives.** Give a capability a `spec:` path and its spec sits beside the code, as `<something>.spec.md`. Omit it and the spec goes to `capabilities/<name>/<name>.spec.md`. You can mix both, and `/speckit.companion.living-move` switches a capability later.
+<DocFigure
+  src="copilot.png"
+  recapture
+  alt="SpecKit Companion dispatching /speckit.plan into GitHub Copilot Chat in VS Code."
+  caption="A plan command sent into GitHub Copilot Chat."
+/>
 
-**The coverage file.** `<stem>.coverage.md` beside a spec maps requirements to tests and feeds the coverage count. You write it.
+Claude Code (VS Code) prefills the command and you press Enter, because the panel can't be submitted from outside. It needs the [Claude Code extension](https://marketplace.visualstudio.com/items?itemName=anthropic.claude-code).
 
-**Which capability owns a file.** A file matching several capabilities goes to the one with the longest literal path prefix, then by name. The scan stops at a subfolder with its own `living-specs.yml`. A spec file no capability claims shows under **Orphans**.
+<DocFigure
+  src="claude-vscode.png"
+  recapture
+  alt="SpecKit Companion dispatching /speckit.implement into the Claude Code panel in VS Code."
+  caption="An implement command prefilled in the Claude Code panel."
+/>
 
-**How a run writes its changes.** A run adds a block to its own feature spec for each capability it changed:
+The [GitHub Copilot app](/docs/copilot-app) and the [Claude Code terminal](/docs/claude-code) aren't `aiProvider` values. Each has its own install.
 
-```markdown
-## ADDED Requirements
-<!-- capability: spec-viewer -->
+## What each one reads
 
-- The viewer re-anchors a stored comment onto the freshly rendered page when its tab reopens.
-```
+Paths are relative to your project, and the Steering view also reads the user-level MCP config at the same path under your home folder. IDE Chat owns none of these.
 
-The other headings are `## MODIFIED Requirements`, `## REMOVED Requirements` and `## RENAMED Requirements`. A block without a capability comment goes to whichever capability the changed files matched. At mark-complete a script folds each block into its capability spec, and folding twice changes nothing. Each capability a Companion run loaded must end with a block or a recorded skip note. If not, the fold prints a receipt saying the loop did not close. It never blocks the run.
+| Provider | Steering file | Steering folder | Agents | Skills | Hooks | MCP config |
+|---|---|---|---|---|---|---|
+| Claude Code, and in VS Code | `CLAUDE.md` | `.claude/steering/` | `.claude/agents/*.md` | `.claude/skills/` | `.claude/settings.json` | `.claude/settings.json` |
+| GitHub Copilot CLI | `.github/copilot-instructions.md` | `.github/instructions/*.instructions.md` | `.github/agents/*.agent.md` | none | none | `.copilot/mcp-config.json` |
+| Gemini CLI | `GEMINI.md` | none | none | none | none | `.gemini/settings.json` |
+| Codex CLI | `AGENTS.md` | `.codex/` | none | `.agents/skills/` | none | `~/.codex/config.toml` |
+| Qwen Code | `QWEN.md` | `.qwen/steering/` | none | none | none | `.qwen/settings.json` |
+| OpenCode | `AGENTS.md` | none | `.opencode/agent/*.md` | none | none | `.opencode/opencode.jsonc` |
+| Wibey, CLI and VS Code | `AGENTS.md` | none | `.wibey/agents/*.md` | `.wibey/skills/` | `.wibey/hooks/hooks.json` | `.wibey/.mcp.json` |
+| Antigravity | `AGENTS.md` | none | none | none | none | none |
+| Oh My Pi | `AGENTS.md` | none | `.omp/agents/*.md` | `.omp/skills/` | `.omp/hooks/pre/*.ts`, `.omp/hooks/post/*.ts` | `.omp/mcp.json` |
 
-### Where a verdict routes
+## Telemetry
 
-`specify` ends by judging how big the change is, and each answer sends the run a different way. Your configuration carries only what you changed about that.
+The extension counts anonymously which assistant and workflow you chose, that a step was sent, that a spec was created, opened, completed or archived, which views were opened, and that an install prompt was shown or clicked. Each event carries the extension, VS Code and Spec Kit CLI versions, your platform, and a random id per install and per spec.
 
-```yaml
-commands:
-  specify:
-    decisions:
-      classify-size:
-        simple:
-          folds: [plan]
-          warns: ""
-```
+It never sends your prompts, file paths, spec names, capability names or the names of your own workflows.
 
-| Key | What it does |
-|---|---|
-| `folds` | The steps that answer skips. `[]` runs everything. |
-| `warns` | A line printed before the run continues. `""` prints nothing. |
-
-The answers a node can give are declared with the node, so an entry for one it cannot give is never read. The builder refuses to write one.
-
-## Related
-
-[Providers](/docs/reference/providers) lists what each assistant reads and how it is reached.
+Set `speckit.telemetry` to `false` to turn it off. Turning off VS Code's own `telemetry.telemetryLevel` does the same. Every event and its properties are listed in [docs/telemetry.md](https://github.com/alfredoperez/speckit-companion/blob/main/apps/vscode/docs/telemetry.md) in the repository.

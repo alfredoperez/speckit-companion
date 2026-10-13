@@ -85,7 +85,7 @@ describe('the board on a stock Spec Kit project', () => {
         const foot = host.querySelectorAll('.pb-stock-foot');
         expect(foot).toHaveLength(1);
         expect(foot[0].querySelector('a')!.getAttribute('href'))
-            .toContain('/docs/ide/install/');
+            .toContain('/docs/install/');
     });
 
     it('asks for one hook to be switched off, by its address in the registry', async () => {

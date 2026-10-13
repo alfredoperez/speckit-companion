@@ -26,7 +26,7 @@ import manifest from '../../../../content/media/manifest.json';
 
 const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
 const OPEN_IN_VSCODE = 'vscode:extension/alfredoperez.speckit-companion';
-const METHODOLOGY = '/docs/reference/configuration#workflow-choice';
+const METHODOLOGY = '/docs/steps/#stock-or-companion-measured';
 
 // The full --from URL form, verbatim. The short catalog form does not work:
 // the extension is not listed in the spec-kit catalog.
@@ -260,7 +260,7 @@ const tabs = [
       src: '/landing/bug-story.png',
       alt: 'A bug page in VS Code: the lead reads Fixed and verified, then What was wrong with the root cause.',
     },
-    link: { label: 'How fixing a bug works', href: '/docs/ide/fix-a-bug/' },
+    link: { label: 'How fixing a bug works', href: '/docs/ide/bugs-and-ideas/' },
   },
   {
     id: 'ideas',
@@ -273,7 +273,7 @@ const tabs = [
       src: '/landing/idea-decision.png',
       alt: 'An idea page in VS Code: the verdict Go with its reason, then a scorecard.',
     },
-    link: { label: 'How assessing an idea works', href: '/docs/ide/assess-an-idea/' },
+    link: { label: 'How assessing an idea works', href: '/docs/ide/bugs-and-ideas/' },
   },
 ];
 
@@ -321,34 +321,34 @@ const cards = [
   {
     title: 'Watch it run, keep the record',
     body: 'Phases and timing while the agent works, written to one file you can commit.',
-    link: { label: 'Track progress', href: '/docs/results/track-progress/' },
+    link: { label: 'Track progress', href: '/docs/results/the-overview/' },
   },
   {
     // ledger: "any agent can drive it" is a never-say. Three of the twelve
     // cannot submit for you.
     title: 'Twelve providers',
     body: 'Terminal CLIs, IDE chat, the Claude Code panel. Not every provider supports every piece.',
-    link: { label: 'Compare providers', href: '/docs/reference/providers/' },
+    link: { label: 'Compare providers', href: '/docs/reference/configuration/#providers' },
   },
   {
     title: 'Steering in view',
     body: 'The standing instruction files your assistant already reads, listed in one view.',
-    link: { label: 'Steering', href: '/docs/customize/steering/' },
+    link: { label: 'Steering', href: '/docs/navigate/viewer-and-sidebar/' },
   },
   {
     title: 'Check the code against the spec',
     body: 'On a finished spec, one button sends Spec Kit’s converge command.',
-    link: { label: 'Converge', href: '/docs/steps/converge/' },
+    link: { label: 'Converge', href: '/docs/steps/#converge' },
   },
   {
     title: 'Tasks to issues',
     body: 'Turn the task list into GitHub issues from the Tasks tab. It asks first.',
-    link: { label: 'The tasks step', href: '/docs/steps/tasks/' },
+    link: { label: 'The tasks step', href: '/docs/steps/#tasks' },
   },
   {
     title: 'Answer where you read',
     body: 'A report marks what it still needs to know. Answer on the page.',
-    link: { label: 'Fix a bug', href: '/docs/ide/fix-a-bug/' },
+    link: { label: 'Fix a bug', href: '/docs/ide/bugs-and-ideas/' },
   },
 ];
 
@@ -384,7 +384,7 @@ const installPaths: Array<{
     id: 'vscode',
     hash: 'install-vscode',
     label: 'VS Code',
-    full: { label: 'See the full VS Code path, with what to expect at each step', href: '/docs/ide/install/' },
+    full: { label: 'See the full VS Code path, with what to expect at each step', href: '/docs/install/' },
     shot: {
       src: '/landing/quickstart-vscode.png',
       width: 1300,
@@ -408,7 +408,7 @@ const installPaths: Array<{
     label: 'GitHub Copilot app',
     full: {
       label: 'See the full Copilot app path, with what to expect at each step',
-      href: '/docs/copilot-app/install/',
+      href: '/docs/install/',
     },
     shot: {
       src: '/landing/quickstart-copilot-app.png',
@@ -447,7 +447,7 @@ const installPaths: Array<{
     label: 'Claude Code',
     full: {
       label: 'See the full Claude Code path, with what to expect at each step',
-      href: '/docs/claude-code/install/',
+      href: '/docs/install/',
     },
     shot: {
       src: '/landing/quickstart-claude-code.png',

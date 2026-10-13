@@ -12,7 +12,7 @@ import {
 import { StatusIcon } from './Header';
 
 /** The one way on to Companion, for a reader who wants more than this. */
-const INSTALL_DOCS = 'https://speckit-companion.dev/docs/ide/install/#vscode-companion';
+const INSTALL_DOCS = 'https://speckit-companion.dev/docs/install/';
 
 interface Props {
     view: StockWorkflowView;
