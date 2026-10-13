@@ -8,12 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-13
+
+The plan step draws what a change touches, and plain Spec Kit commands are left exactly as shipped.
+
+### Highlights
+
+#### The plan draws its blocks
+One deciding step adds call paths, pinned code, states or screens to the plan ==only when the change needs them==, and checks each one: every file and line resolves, every state is reachable, every screen dot has its note.
+<!-- area: pipeline; pr: 875, 905 -->
+
+#### Plain Spec Kit commands stay untouched
+Stock runs are recorded through spec-kit's own hooks, so the `/speckit.*` commands are ==exactly what spec-kit ships==, and a terminal run of plain Spec Kit still gets its step times.
+<!-- area: pipeline; pr: 906 -->
+
 ### Added
-- **The plan step picks its own blocks.** One deciding step adds call paths, code pins, states or screens only when ==the change needs them==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: pipeline -->
-- **Screens in the plan, checked.** The plan step, or an attached `screens` node, sketches ==what a person sees==, with every dot paired to a note. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: pipeline -->
-- **Pinned code in the plan, checked.** The plan step, or an attached `code-pins` node, shows checked lines of code with ==a note under the line that needs one==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: pipeline -->
-- **States in the plan, checked.** The plan step, or an attached `states` node, draws a lifecycle you can click through, with ==unreachable states and dead ends caught==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/905)) <!-- area: pipeline -->
-- **Call paths in the plan, checked.** The plan step, or an attached `call-paths` node, shows ==which functions a change reaches==, each file and line checked. ([#875](https://github.com/alfredoperez/speckit-companion/pull/875)) <!-- area: pipeline -->
 - **A risky small change takes the full pipeline.** Sizing asks whether a change is hard to undo or hard to check, and one that is ==never takes the short path==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: pipeline -->
 - **A spec that finishes unverified says so.** Completing with nothing verified and no concern explaining why still completes, records =="finished, unverified"== and warns. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
 - **A run records its working branch.** A step started on another branch than the spec was created on records it, so the viewer ==names the right branch==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
@@ -21,8 +30,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Living specs travel with the pipeline graph.** The graph carries whether they run, where specs live and ==which capabilities are registered==, so a panel can draw them. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
 
 ### Changed
-- **Plain SpecKit commands stay untouched.** Stock runs are recorded through spec-kit's own hooks, so the `/speckit.*` commands are ==exactly what spec-kit ships==. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: pipeline -->
-- **Terminal runs of plain SpecKit get step times.** Each stock step records ==its own start== through a hook, with or without VS Code. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: run-record -->
 - **Terminal runs of plain SpecKit list no tasks.** The viewer's task list fills ==only when VS Code sends the step==. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: run-record -->
 - **The plan step records its check.** Closing the plan step records its block check with an exit code, so ==the result is always kept==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: pipeline -->
 
