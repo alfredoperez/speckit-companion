@@ -103,7 +103,7 @@ The **moss-sprite**: a round fuzzy moss ball with two big glossy black eyes, whi
 | A hero or carousel prompt | the kaiju `create-image` profiles, `branded-editorial-hero` and `editorial-brush-marker` |
 | Generated banner art | [Generated art](#generated-art) |
 | How the writing sounds | the kaiju `writing` skill, `core-voice.md` |
-| Which images are stale after a change | [docs/visual-assets.md](docs/visual-assets.md) |
+| Which images are stale after a change | [the feature-clip skill's visual-assets reference](.claude/skills/feature-clip/references/visual-assets.md) |
 
 ## Generated art
 

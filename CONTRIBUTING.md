@@ -70,7 +70,7 @@ CI runs each suite only where it can say something. A `changes` job reads the di
 ```
 apps/vscode/src/       — extension entry, providers, managers, AI provider integrations
 apps/vscode/webview/   — webview UIs (spec viewer, spec editor, workflow editor)
-docs/        — long-form references (linked below)
+docs/        — images only: screenshots, the architecture diagram
 specs/       — spec-driven development specs (one folder per feature)
 .specify/    — SpecKit CLI config / templates (NOT shipped with the extension)
 .claude/     — workspace AI setup (NOT shipped with the extension)
@@ -112,13 +112,10 @@ Each fact has one home, listed under "One fact, one owner" in `CLAUDE.md`. Setti
 
 ## References
 
-Long-form docs live under `docs/` and are linked from the README:
-
-- [docs/architecture.md](docs/architecture.md) — module structure, extension/webview boundaries, build pipeline
-- [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) — sidebar tree-view behaviour: filters, sorts, lifecycle groups, badges, transitions
-- [spec viewer anatomy](https://speckit-companion.dev/docs/navigate/inside-the-viewer) — spec viewer behaviour: reading a spec, commenting, moving a spec forward, what the run recorded
-- `apps/vscode/src/core/types/specContext.ts` — `.spec-context.json` contract (writer rules in [docs/architecture.md](docs/architecture.md#data-flow))
-- [CLAUDE.md](CLAUDE.md) — instructions for AI assistants editing this repo, and which doc owns which fact
+- [CLAUDE.md](CLAUDE.md) — the repo map, the architecture rules the code cannot show, and which doc owns which fact
+- [docs/architecture/diagram.html](docs/architecture/diagram.html) — how a command travels, as one page you open in a browser
+- [The docs site](https://speckit-companion.dev/docs/) — how every feature behaves for a user
+- `apps/vscode/src/core/types/specContext.ts` — the `.spec-context.json` contract
 
 ## Reporting Issues
 

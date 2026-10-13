@@ -7,7 +7,7 @@ SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs
 Five deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), the GitHub Copilot app canvas (`apps/copilot-canvas/`, loaded in this repo through `.github/extensions/speckit-companion/`), the Claude Code mod (`apps/claude-mod/`, listed by the repo-root `.claude-plugin/marketplace.json`; its `hooks/vendor/` is bundled from the canvas's `spec-rules.mjs` by `npm run mod:build`), and the marketing site (`apps/website/`).
 
 - `specs/` — historical feature folders plus the pinned `_0N_demo-*` viewer fixtures.
-- `docs/` — reference only, never the source of truth for behaviour.
+- `docs/` — images only: the screenshots the READMEs and the site load, the architecture diagram, the walkthrough video. No prose lives here; a test fails on a new markdown file.
 - `apps/vscode/tests/` — integration, eval and shared fixtures, including the VS Code mock. Unit tests live in `__tests__` beside the code they cover.
 - `assets/` — the mascot and social art. `content/media/` — the clips and renders the site and README serve. `tooling/scripts/` — the build and capture commands that produce them.
 - `.github/`, `.specify/`, `.claude/`, `.agents/`, `.codex/`, `.storybook/`, `.vscode/` — committed dot-folders that are `specify init` output and manual-testing fixtures.
@@ -18,15 +18,18 @@ The example apps and bench sandboxes that used to sit here now live in the sibli
 
 ## Where things are documented
 
-Read the matching doc instead of re-deriving from code:
+Behaviour is documented by the code and its tests first. User-facing reference lives on the site, under `apps/website/src/content/docs/`. Everything else is one of these:
 
-- `docs/doc-sync.md` — the per-release checklist and the changelog voice. The table under "One fact, one owner" below says which doc moves with a change.
-- `docs/architecture.md` — structure and module map.
+- "Architecture rules" below — the cross-module rules the code cannot show.
+- `.claude/skills/feature-clip/` — how every generated image, GIF and web clip is made, and what a feature owes the media manifest. Regenerate with `npm run clips:capture` on any webview UI, styling, token or fixture change; never hand-edit a generated file.
+- `.claude/skills/shots/` — screenshots and recordings of the real product, and the real-window and terminal checks.
+- `.claude/commands/changelog-entry.md` — the changelog voice and the shape of a release. `.claude/commands/publish.md` — the release checklist.
 - `THEME.md` — the marketing look (the site's Constellation colours, type, mascot and motifs) for anything promotional; `DESIGN.md` — the viewer's tokens and the taste rules for figures and captures.
-- Behaviour is documented by the code and its tests first. `docs/architecture.md` carries the few cross-module rules the code cannot show (the `.spec-context.json` writer guarantees, webview escaping), `docs/visual-assets.md` and `docs/media-manifest.md` cover docs images, README GIFs and web clips (regenerate with `npm run clips:capture` on any webview UI, styling, token or fixture change; never hand-edit a generated file), and the sidebar, viewer, builder, living specs, configuration and provider references live on the site, under `apps/website/src/content/docs/`. This repo does not keep living specs of its own; the feature it ships is unaffected.
-- `docs/visual-assets.md` and `docs/media-manifest.md` are also the runbooks for how to shoot the five hand-taken screenshots, how the site picks up new media, and why the two READMEs write image links differently.
 - `.claude/review-checklist.md` — webview/CSS correctness invariants review scans for (`.sr-only` vs `hidden`, ellipsis trio, Preact string styles, etc.).
-- `apps/speckit-extension/docs/publishing.md` — spec-kit extension release flow.
+- `apps/speckit-extension/docs/` — the spec-kit extension's own notes: `node-model.md` (how commands are built from nodes), `living-specs.md`, `publishing.md` (its release flow).
+- `apps/vscode/docs/telemetry.md` and `apps/website/docs/analytics.md` — the event catalogs and how to read them in PostHog.
+
+This repo does not keep living specs of its own; the feature it ships is unaffected.
 
 ## One fact, one owner
 
@@ -35,13 +38,38 @@ A fact is written once, on the surface this table names. Every other surface lin
 | Fact | Owner |
 |---|---|
 | A setting, its values and its default | `package.json` `contributes.configuration`, shown to users on the site's `apps/website/src/content/docs/docs/reference/configuration.mdx` |
-| The providers | the `speckit.aiProvider` enum, shown on the site's `apps/website/src/content/docs/docs/reference/providers.mdx`; a test holds the two together |
+| The providers | the `speckit.aiProvider` enum, shown in the provider table on the same page; a test holds the two together |
 | Install steps | the site's install page; a README carries its own install command and nothing about the other deliverables' |
 | How a feature works for a user | its one page under `apps/website/src/content/docs/` |
 | What changed for a user | one `[Unreleased]` line in the changelog of the deliverable that changed; site and docs changes get no line |
 | A rule the code cannot show | this file |
 
 A README is an intro, an install, a first run and a link to the site. It gets an edit when the install or the first run changes, not when a feature does.
+
+A few changes carry a follow-on that is easy to miss:
+
+- **Webview UI, styling, tokens, capture stories or fixtures** → `npm run clips:capture`, then commit what it regenerates, including `content/media/web/` (tracked on purpose: a deploy cannot rebuild it).
+- **A webview component with a sibling `*.stories.tsx`** → update the stories in the same change.
+- **`spec-rules.mjs` in the Copilot canvas** → `npm run mod:build` and commit the bundle the Claude Code mod reads.
+- **A new command in `apps/speckit-extension/`** → add it to `extension.yml` `provides.commands`, or the installer skips it.
+- **A new surface** (an app, a panel, a provider, a top-level feature path) → add its path glob to `.claude/skills/release-qa/surface-map.yml`.
+- **The Get Started walkthrough** → keep its step copy consistent with `contributes.viewsWelcome`.
+
+## Architecture rules
+
+`docs/architecture/diagram.html` draws how a command travels (generated from the JSON beside it by archify; edit the JSON, never the HTML). These are the rules it cannot show.
+
+- **The host owns the filesystem.** `apps/vscode/src/` reads and writes; the webview under `apps/vscode/webview/src/` gets state by `postMessage` and never touches a file.
+- **`core/` imports nothing from `features/` or `ai-providers/`.** A test holds the two grandfathered files to an exact allowlist, so the list only shrinks.
+- **Ask `getProjectRoot()` for the project folder.** Never read the first workspace folder; a test fails on a direct read.
+- **`.spec-context.json` is the one store, and only writers that keep its guarantees touch it.** History only grows, writes merge, a status never moves backward, and one cross-process lock covers every writer. Deterministic writes come from the extension's buttons and the in-command hook scripts (`by: extension`); the assistant's journaling is best effort (`by: ai`).
+- **A step closes itself as its last action.** Leaving the close to the hook that follows strands the step on a provider that can only print the hook for a person to run.
+- **Everything a repository controls reaches a panel as text, never markup.** Document text, filenames, run-record notes and version strings go through `escapeHtml` for element content, DOM APIs for attributes and `safeUrl` for links, in the viewer, the editor and the builder alike. Fenced code and diagrams are escaped before highlighting sees them.
+- **The pipeline's shape is derived once.** `apps/speckit-extension/scripts/pipeline-graph.py` resolves it with the same code the build uses, and the Workflow Builder reads that JSON. Do not write a second derivation in TypeScript.
+- **A new capture script goes on two packing lists.** Add it to `RUNTIME_SCRIPTS` in `package-manifest.py` and give it a `!` rule in `.vscodeignore`, and import it by plain name; `package-manifest.py --check` fails when either list falls behind.
+- **The Copilot canvas and the Claude Code mod share no code with `apps/vscode/`.** They read the same `.spec-context.json` contract through `spec-rules.mjs`. The mod only reads. The canvas writes the record only in a project without the Companion writer, plus the one missing step finish it appends when a turn ended with the document written.
+- **Adding a provider** → implement `IAIProvider`, register it in `aiProviderFactory.ts`, add its `PROVIDER_PATHS` entry, add the enum value in `package.json`, add its row to the provider table on the site. Terminal CLIs extend `cliTerminalProvider.ts`; Gemini and Wibey stay outside it because both run interactively.
+- **Retired, do not reintroduce:** the `templateProfile`, `turboWorkflowPicker` and `complexityFastPath` toggles and the `companion-turbo` preset. `speckit.companion.templateProfile` survives only in `apps/vscode/src/core/settingsMigration.ts`, to migrate old values.
 
 ## Gotchas
 

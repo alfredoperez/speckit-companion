@@ -4,7 +4,7 @@ The look anything promotional takes when it should match the site: a film, a soc
 
 **The source is `apps/website/src/styles/tokens.css`.** Every value below is copied from it. When the two disagree, the stylesheet is right and this file is out of date.
 
-**What this does not cover.** The spec viewer's own colours, the taste rules for figures and captures, and the older night-forest look that banners and the Marketplace listing still use are all in [`DESIGN.md`](DESIGN.md). A picture of Claude Code uses the terminal check's `claude` look, described in `docs/visual-assets.md`.
+**What this does not cover.** The spec viewer's own colours, the taste rules for figures and captures, and the older night-forest look that banners and the Marketplace listing still use are all in [`DESIGN.md`](DESIGN.md). A picture of Claude Code uses the terminal check's `claude` look, described in the `shots` skill (`.claude/skills/shots/SKILL.md`).
 
 ## Colour
 

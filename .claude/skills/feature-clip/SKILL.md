@@ -18,6 +18,8 @@ timelines, the HyperFrames runtime, keyframes, the CLI — belongs to the upstre
 `hyperframes-*` skills. Defer to those for anything about the engine, and use this for
 anything about the pipeline.
 
+Two references sit beside this file. Read `references/visual-assets.md` before regenerating documentation images, changing the capture palette, a capture story or a fixture, or touching site stills, favicons or mascot poses: it says what each change makes stale and which script rebuilds it. Read `references/media-manifest.md` before adding a feature or an output, wiring a clip or still into a README or the site, or acting on a `clips:check` failure: it is the `content/media/manifest.json` contract. Screenshots and recordings of the real product are the `shots` skill.
+
 ## The chain
 
 ```
@@ -93,7 +95,8 @@ Each of these has already cost someone a session.
   text.** `node tooling/scripts/clip-storyboard.mjs --apply <id>` writes storyboard label edits
   back into the composition. Rects stay code-owned and are never in the storyboard.
 - **Hand-authored compositions have no `BEATS`** and are skipped by the checker by
-  design: `make-it-yours`, `overview-engine`, `overview-readme`.
+  design: `make-it-yours`, `overview-engine`, `overview-readme`,
+  `write-only-specs`.
 - **An underscore prefix means scaffolding.** `_template` is skipped by the storyboard
   checker and the encoder.
 
@@ -111,8 +114,8 @@ surface on the site's near-black ground.
 **The composition chrome.** The marker, scrim and caption band a clip draws over the
 screenshot live in the `:root` block of its own `index.html`, named by role.
 
-The trap is a composition that is **drawn rather than captured** — `make-it-yours`,
-`living-specs-explained`. Those have no screenshot under them, so the capture palette
+The trap is a composition that is **drawn rather than captured**: `make-it-yours`,
+`living-specs-explained`, `write-only-specs`. Those have no screenshot under them, so the capture palette
 cannot reach them at all and they have to be re-themed by hand or they end up as the one
 dark thing in a light set. The same trap caught the README composite stories, which had
 hardcoded a dark theme's neutrals instead of reading the derived variables; they read
@@ -130,7 +133,7 @@ every composition, then `clips:render`, `clips:stills`, `clips:gifs`, `clips:syn
 | Capture list | `CLIP_CAPTURES` in `tooling/scripts/capture-docs-images.mjs` |
 | Capture palette | `.storybook/capture-theme.ts` |
 | Canonical renders | `content/media/feature-clips/<id>/renders/` (gitignored) |
-| Web outputs | `content/media/web/` (gitignored) |
+| Web outputs | `content/media/web/` (tracked on purpose) |
 | What the site serves | `apps/website/public/media/` |
 | Asset registry | `content/media/manifest.json` |
 | Encode settings | `DEFAULTS` in `tooling/scripts/render-web-clips.mjs` |

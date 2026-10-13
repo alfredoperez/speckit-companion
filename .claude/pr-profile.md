@@ -11,7 +11,7 @@ Title rule: `type(scope): summary` — **issue refs go in the body (`Closes #N`)
 ## Affected-area detection (path → area)
 
 ### VS Code extension (the GUI · `.vsix`)
-Paths: `apps/vscode/src/**`, `apps/vscode/webview/**`, `package.json`, root `README.md`, root `CHANGELOG.md`, `assets/**`, `apps/vscode/tests/**`, `docs/**`, `CLAUDE.md`, `.vscodeignore`, `.storybook/**`
+Paths: `apps/vscode/src/**`, `apps/vscode/webview/**`, `package.json`, root `README.md`, root `CHANGELOG.md`, `assets/**`, `apps/vscode/tests/**`, `docs/**` (images), `CLAUDE.md`, `.vscodeignore`, `.storybook/**`
 - **Version**: `package.json` `version` · **Release**: `/release-loop` (ends in `/publish`) → `v*` tag → Marketplace/OpenVSX
 - Sub-areas to name in the checklist:
   - **settings** — `package.json` `contributes.configuration`
