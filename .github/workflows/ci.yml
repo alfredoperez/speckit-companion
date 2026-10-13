@@ -55,14 +55,15 @@ jobs:
             echo "No usable base commit — running every job."
           fi
 
-          # A path here is one the suites never read. Markdown, docs/ and specs/
-          # are deliberately NOT here: the integration suite asserts over the
-          # READMEs, the changelog voice, the repo map, the paths docs reference
-          # and the pinned demo fixtures, so a prose-only change can fail it.
-          NO_BEHAVIOUR='(^(assets|\.claude|\.codex|\.agents|\.specify)/|^\.github/ISSUE_TEMPLATE/|^LICENSE$|^icon\.png$)'
+          # A path here is one the suites never read. Markdown, docs/, specs/ and
+          # .claude/ are deliberately NOT here: the integration suite asserts over
+          # the READMEs, the changelog voice, the repo map, the pinned demo fixtures
+          # and the paths CLAUDE.md names, many of them under .claude/, so a
+          # prose-only change or a renamed skill can fail it.
+          NO_BEHAVIOUR='(^(assets|\.codex|\.agents|\.specify)/|^\.github/ISSUE_TEMPLATE/|^LICENSE$|^icon\.png$)'
           MOD='^(apps/claude-mod/|apps/copilot-canvas/|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
           CAPTURE='(^(apps/speckit-extension/|specs/509-timing-capture/|specs/510-living-sync/|specs/514-fast-path-fixture/|\.github/workflows/ci\.yml$)|\.py$)'
-          VISUAL='^(apps/vscode/webview/|apps/website/|content/media/|\.storybook/|tooling/scripts/|\.claude/skills/feature-clip/references/media-manifest\.md$|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
+          VISUAL='^(apps/vscode/webview/|apps/website/|content/media/|\.storybook/|tooling/scripts/|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
           # The browser step is thirteen minutes, so it gets its own narrower
           # list: the panel, the stories that render it, and the script that
           # drives them. A site or media change stops at clips:check.
@@ -134,8 +135,8 @@ jobs:
       - name: Copilot canvas vendor bundles are current
         if: needs.changes.outputs.code == 'true'
         run: |
-          git diff --exit-code -- apps/copilot-canvas/vendor || {
-            echo "::error::apps/copilot-canvas/vendor is stale. Run npm run canvas:build and commit the result."
+          git diff --exit-code -- apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor || {
+            echo "::error::apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor is stale. Run npm run canvas:build and commit the result."
             exit 1
           }
 

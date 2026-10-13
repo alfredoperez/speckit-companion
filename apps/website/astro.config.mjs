@@ -26,19 +26,19 @@ const MOVED = {
   '/docs/start/spec-driven-development': STEPS,
   '/docs/guides/pick-a-pipeline': STEPS,
   '/docs/discussions/pick-a-pipeline': STEPS,
-  '/docs/steps/constitution': STEPS,
-  '/docs/steps/specify': STEPS,
-  '/docs/steps/plan': STEPS,
-  '/docs/steps/tasks': STEPS,
-  '/docs/steps/implement': STEPS,
-  '/docs/steps/converge': STEPS,
-  '/docs/steps/auto': STEPS,
+  '/docs/steps/constitution': `${STEPS}#constitution`,
+  '/docs/steps/specify': `${STEPS}#specify`,
+  '/docs/steps/plan': `${STEPS}#plan`,
+  '/docs/steps/tasks': `${STEPS}#tasks`,
+  '/docs/steps/implement': `${STEPS}#implement`,
+  '/docs/steps/converge': `${STEPS}#converge`,
+  '/docs/steps/auto': `${STEPS}#auto`,
   '/docs/guides/review-and-refine': '/docs/steps/review-with-comments',
 
-  '/docs/ide/install': INSTALL,
+  '/docs/ide/install': `${INSTALL}#vs-code`,
   '/docs/ide/choose-a-provider': INSTALL,
-  '/docs/copilot-app/install': INSTALL,
-  '/docs/claude-code/install': INSTALL,
+  '/docs/copilot-app/install': `${INSTALL}#copilot-app`,
+  '/docs/claude-code/install': `${INSTALL}#claude-code`,
 
   '/docs/anatomy/the-sidebar': VIEWER,
   '/docs/anatomy/sidebar-and-steering': VIEWER,
@@ -79,8 +79,8 @@ const MOVED = {
   '/workflow-builder': BUILDER,
   '/docs/guides/customize': '/docs/customize/your-own-workflow',
 
-  '/docs/reference/providers': SETTINGS,
-  '/docs/reference/telemetry': SETTINGS,
+  '/docs/reference/providers': `${SETTINGS}#providers`,
+  '/docs/reference/telemetry': `${SETTINGS}#telemetry`,
 };
 
 // The adapter turns each redirect into a Vercel route that matches the path

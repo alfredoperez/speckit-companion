@@ -151,7 +151,7 @@ Run each and stop with a one-line reason on the first failure. The two Copilot i
 - [ ] `specify extension --help` works (source build of spec-kit, see `apps/speckit-extension/docs/install.md`)
 - [ ] `claude --version` works and `claude -p "say ok"` answers (the VS Code provider shells out to it)
 - [ ] `code --version` works
-- [ ] `test -f ~/.copilot/extensions/speckit-companion/extension.mjs` (canvas loader, it imports `$REPO/apps/copilot-canvas/extension.mjs`)
+- [ ] `test -f ~/.copilot/extensions/speckit-companion/extension.mjs` (canvas loader, it imports `$REPO/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/extension.mjs`)
 - [ ] `gh api /copilot_internal/user --jq '[.copilot_plan, .chat_enabled, .copilot_app_enabled]'` shows chat enabled; a lapsed plan answers every canvas run with a 403, so stop here and say so
 - [ ] `ls "$SANDBOXES_REPO/seeds/todo/src"` (the app fixture) and `"$SANDBOXES_REPO/new-sandbox.sh" --list` names `vscode-qa` and `vscode-qa-stock`
 - [ ] `request_access` for **Visual Studio Code** and **GitHub Copilot**; confirm the returned tiers match the table above

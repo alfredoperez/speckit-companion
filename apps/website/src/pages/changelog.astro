@@ -33,8 +33,12 @@ import speckitChangelogArchive from '../data/changelog-archive-speckit.md?raw';
 import copilotChangelog from '../../../../apps/copilot-canvas/CHANGELOG.md?raw';
 import modChangelog from '../../../../apps/claude-mod/CHANGELOG.md?raw';
 
-const vscodeChangelog = `${vscodeChangelogCurrent}\n${vscodeChangelogArchive}`;
-const speckitChangelog = `${speckitChangelogCurrent}\n${speckitChangelogArchive}`;
+// The changelog ends on a line pointing at its archive, and the archive opens with a
+// title and an intro. Neither is a release entry, so both are cut before the join.
+const withArchive = (current: string, archive: string) =>
+  `${current.replace(/^Older releases are archived in .*$/m, '')}\n${archive.slice(Math.max(0, archive.search(/^## \[/m)))}`;
+const vscodeChangelog = withArchive(vscodeChangelogCurrent, vscodeChangelogArchive);
+const speckitChangelog = withArchive(speckitChangelogCurrent, speckitChangelogArchive);
 
 import Analytics from '../components/Analytics.astro';
 import LogoMark from '../components/LogoMark.astro';

@@ -4,10 +4,19 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-13
+
+The board installs as a plugin from this repo, and its buttons run their own steps on every model.
+
+### Changed
+
+- **The board is now packaged as a plugin.** Its files moved one level down, into `com.github.copilot/extensions/speckit-companion/`, so the Copilot app marketplace can install it ==straight from this repo==. ([#918](https://github.com/alfredoperez/speckit-companion/pull/918)) <!-- area: copilot-app -->
+
 ### Fixed
 
-- **A button's command runs its own steps.** New spec and the run buttons ==run the real command== on every model, where some wrote the spec by hand.
-  <!-- area: copilot-app; issue: 817 -->
+- **A button's command runs its own steps on every model.** New spec and the run buttons name the file that holds the command's steps, so an agent that never loaded the command ==reads them before it writes==. ([#913](https://github.com/alfredoperez/speckit-companion/pull/913)) <!-- area: copilot-app; issue: 817 -->
+- **Plan cards work on the board.** A `states` block is drawn as a diagram where a click shows that state, and the buttons that did nothing are gone. ([#911](https://github.com/alfredoperez/speckit-companion/pull/911)) <!-- area: copilot-app -->
+- **The board unlocks the next step.** A step the agent wrote the document for but never closed in the run record is closed when the turn ends. ([#881](https://github.com/alfredoperez/speckit-companion/pull/881)) <!-- area: copilot-app -->
 
 ## [0.1.0] - 2026-09-30
 

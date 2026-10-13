@@ -4,6 +4,7 @@ description: Install Spec Kit and the Companion extension for Spec Kit, then add
 ---
 
 import { Steps, TabItem, Tabs } from '@astrojs/starlight/components';
+import TabFromHash from '../../../components/journey/TabFromHash.astro';
 import Button from '../../../components/Button.astro';
 import CodeLine from '../../../components/CodeLine.astro';
 import Actions from '../../../components/journey/Actions.astro';
@@ -48,6 +49,8 @@ A one-time **untrusted source** prompt, because the archive comes from a URL and
 ## 3. Add it to your tool
 
 You can install more than one. They all read the same spec files, so a spec started in one shows up in the others.
+
+<TabFromHash tabs={{ 'vs-code': 'VS Code', 'copilot-app': 'GitHub Copilot app', 'claude-code': 'Claude Code' }}/>
 
 <Tabs syncKey="surface">
 <TabItem label="VS Code">
@@ -99,12 +102,12 @@ Here Companion is a board that opens as a canvas beside the chat. You don't need
 
 1. **Copy the board in**
 
-   Copy the `apps/copilot-canvas` folder from a checkout of the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas). Swap `<project>` for your project's path:
+   Copy the board's folder from a checkout of the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas). Swap `<project>` for your project's path:
 
    <Actions>
-     <CodeLine command="cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion" />
+     <CodeLine command="cp -R apps/copilot-canvas/com.github.copilot/extensions/speckit-companion <project>/.github/extensions/speckit-companion" />
      <p>Or into your user folder, for every project on your machine. This is the quick way to try it out:</p>
-     <CodeLine command="cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion" />
+     <CodeLine command="cp -R apps/copilot-canvas/com.github.copilot/extensions/speckit-companion ~/.copilot/extensions/speckit-companion" />
      <p>If the <code>extensions</code> folder does not exist yet, create it first with <code>mkdir -p</code>.</p>
    </Actions>
 

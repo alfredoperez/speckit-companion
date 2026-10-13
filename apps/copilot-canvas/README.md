@@ -12,7 +12,7 @@ The board is a [canvas extension](https://docs.github.com/en/copilot/how-tos/git
 
 ```bash
 git clone https://github.com/alfredoperez/speckit-companion
-cp -R speckit-companion/apps/copilot-canvas ~/.copilot/extensions/speckit-companion
+cp -R speckit-companion/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion ~/.copilot/extensions/speckit-companion
 ```
 
 ## First run
@@ -28,7 +28,7 @@ Open a spec to read its documents, and press the button on the card under the pi
 Copy the folder into the project and commit it:
 
 ```bash
-cp -R speckit-companion/apps/copilot-canvas <project>/.github/extensions/speckit-companion
+cp -R speckit-companion/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion <project>/.github/extensions/speckit-companion
 ```
 
 A project copy is code, so the app keeps it off until you accept it. Since Copilot app 1.1.26:

@@ -12,15 +12,17 @@ The page suite drives the board in the installed Google Chrome through `playwrig
 
 Clicking through the demo specs (`specs/_0N_demo-*`) can change their `.spec-context.json`. Restore them with `git restore specs/_0*` before committing.
 
-- **In this repo it already works.** `.github/extensions/speckit-companion/extension.mjs` loads this folder.
+- **In this repo it already works.** `.github/extensions/speckit-companion/extension.mjs` loads the board from this folder.
 - **Trying it from a branch?** A project copy only shows up once it is merged, so point your user folder at your checkout:
 
   ```bash
   mkdir -p ~/.copilot/extensions/speckit-companion
-  echo "import '$PWD/apps/copilot-canvas/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
+  echo "import '$PWD/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
   ```
 
 ## How it's built
+
+This folder is an [Agent Plugin](https://agent-plugins.org): `plugin.json` at its root and the board itself in `com.github.copilot/extensions/speckit-companion/`, which is where the files below live. The tests, `build.mjs` and `dev.mjs` stay at the root because they read this repo's sources.
 
 | File | Job |
 |---|---|

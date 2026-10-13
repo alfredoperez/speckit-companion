@@ -4,7 +4,7 @@ SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs
 
 ## Repo map
 
-Five deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), the GitHub Copilot app canvas (`apps/copilot-canvas/`, loaded in this repo through `.github/extensions/speckit-companion/`), the Claude Code mod (`apps/claude-mod/`, listed by the repo-root `.claude-plugin/marketplace.json`; its `hooks/vendor/` is bundled from the canvas's `spec-rules.mjs` by `npm run mod:build`), and the marketing site (`apps/website/`).
+Five deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), the GitHub Copilot app canvas (`apps/copilot-canvas/`, an Agent Plugin whose board lives under `com.github.copilot/extensions/speckit-companion/`, loaded in this repo through `.github/extensions/speckit-companion/`), the Claude Code mod (`apps/claude-mod/`, listed by the repo-root `.claude-plugin/marketplace.json`; its `hooks/vendor/` is bundled from the canvas's `spec-rules.mjs` by `npm run mod:build`), and the marketing site (`apps/website/`).
 
 - `specs/` — historical feature folders plus the pinned `_0N_demo-*` viewer fixtures.
 - `docs/` — images only: the screenshots the READMEs and the site load, the architecture diagram, the walkthrough video. No prose lives here; a test fails on a new markdown file.

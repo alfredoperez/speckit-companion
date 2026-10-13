@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
-import { createSpecServer } from '../../apps/copilot-canvas/server.mjs';
+import { createSpecServer } from '../../apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/server.mjs';
 import { RUN_FOLDER, RUN_STATES, tickTask, writeTeamboardRecord, writeTeamboardRun } from './lib/teamboard-run.mjs';
 import { FPS, HOLD_SECONDS, READ_SECONDS, SCROLL_PX_PER_FRAME, recordDir, startRecording } from './lib/recording.mjs';
 

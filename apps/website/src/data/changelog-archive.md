@@ -1,6 +1,57 @@
 # Changelog archive
 
-This holds SpecKit Companion release notes for 0.34.0 and earlier, moved out of the root `CHANGELOG.md` to keep that file to recent history; current entries (the two latest releases, plus Unreleased) live there.
+This holds SpecKit Companion release notes for every release but the two latest, moved out of the root `CHANGELOG.md` to keep that file to recent history; current entries (the two latest releases, plus Unreleased) live there.
+
+## [0.35.0] - 2026-10-03
+
+Rearrange your pipeline from the Pipeline Builder, read step times you can trust, and stop losing commands to a shell that is still starting.
+
+### Highlights
+
+#### Move a node to another phase
+A free node's panel now has Move to phase… beside Move up and Move down. It lists the phases the node is not in and puts it at the edge of the one you pick, nearest where it was, so you no longer have to drag it or remove and re-add it. Docked in a side panel, the Pipeline Builder now stacks its steps one under the next at the panel's width instead of clipping them behind a sideways scroll.
+<!-- area: pipeline-builder; pr: 797; media: move-to-phase, side-panel -->
+
+#### Drag a hook to move it
+Drop one of your hooks before or after another node, on a phase, or above or below another hook, and the new order is written to `companion.yml` in one step, keeping the rest of the file as you wrote it. From the keyboard, the hook's form has Move up and Move down. Hooks from an installed extension, and a move to somewhere the step has no place for, are refused with the reason.
+<!-- area: pipeline-builder; pr: 818; media: move-hook -->
+
+#### Step times you can trust
+A step's time on the Overview now stops when that step finishes: a spec specified in 22 seconds used to read "Specify 35m 56s" once Plan was clicked half an hour later. The wait between steps counts toward no step and not toward the run's total, which now reads as active time, and a step you start from the viewer and the assistant finishes now shows its time too. The Copilot board times steps with the same rule, so both read Specify 22s.
+<!-- area: run-record; pr: 804; media: run-overview -->
+
+#### Commands wait for the shell
+A shell that asked something at startup, such as oh-my-zsh's "Would you like to update?", took the first letter of a step's command as its answer, so `claude` ran as `laude` and the step sat on "Step running" forever. Every command now waits until the shell is at its prompt, however long you take to answer, and a notice saying the terminal is waiting has a Run button to send it yourself. A step whose command exits with an error before it records anything goes back to where it was and tells you which terminal to look at.
+<!-- area: assistants; pr: 808, 810 -->
+
+#### The viewer shows Spec Kit's converge step
+When you run `/speckit.converge` after implement, the Tasks entry in the viewer's rail shows it running, with its timer, and the Overview lists Converge after Implement with how long it took. Converge never changes a spec's status, so a spec that ran it still offers Mark Completed and Archive, and the viewer has no button to start it.
+<!-- area: spec-viewer; pr: 813 -->
+
+#### Bug reports show up in the sidebar
+When you use Spec Kit's bug extension, the Specs view lists each bug in a Bugs group, named by its title, with the reports it has and the latest outcome, like `assess · fix · test · verified`. Click one to read its assessment, fix and test reports in the viewer. Bug reports are read-only: the viewer offers no actions on them and changes nothing on disk.
+<!-- area: sidebar; pr: 815 -->
+
+#### Links between documents work, and the viewer says what it shows
+Clicking a link to another document of the spec opens it and scrolls to the heading the link names, a link to another spec opens that spec in the viewer, and a source file opens in the one group beside the viewer instead of adding a group on every click. When the document you are reading is moved or deleted, a line now says so until you navigate, instead of the viewer jumping to the Specification without a word.
+<!-- area: spec-viewer; pr: 796, 802, 800; media: removed-doc -->
+
+### Added
+- **SpecKit Companion suggests the assistant your project was set up for.** Spec Kit records which assistant a project was set up for. When that is not the assistant your AI provider setting names, SpecKit Companion now says so when it starts and offers to switch, or to keep your current one. It never switches on its own, and once you keep your choice it does not ask again for that project. A project set up for an assistant SpecKit Companion has no provider for shows nothing. ([#799](https://github.com/alfredoperez/speckit-companion/pull/799)) <!-- area: assistants -->
+
+### Fixed
+- **Move to phase… works in a narrow Pipeline Builder.** In a side panel the node's panel now scrolls, so the button is always reachable, and its list opens inside the panel on the side with room, showing every phase instead of being cut off at the edge. ([#805](https://github.com/alfredoperez/speckit-companion/pull/805)) <!-- area: pipeline-builder -->
+- **Move to phase… opens in the right place with reduced motion on.** With the system's reduce-motion setting turned on, the list of phases opened far from its button, off the top of the panel; it now opens right under it. ([#806](https://github.com/alfredoperez/speckit-companion/pull/806)) <!-- area: pipeline-builder -->
+- **A fresh project no longer warns the Pipeline Builder is out of date.** The header said the configuration changed since the last build before anything had been configured. ([#800](https://github.com/alfredoperez/speckit-companion/pull/800)) <!-- area: pipeline-builder -->
+- **The Copilot board no longer turns a Spec Kit spec into a Companion one.** Its run buttons sent Companion commands to every spec once the extension was installed, which flipped a stock spec's workflow; a spec recorded as Spec Kit now runs the standard commands. ([#800](https://github.com/alfredoperez/speckit-companion/pull/800)) <!-- area: copilot-app -->
+- **A fresh checkout no longer says Tasks may be stale.** Files written together, as when a spec is cloned or copied, are treated as one generation, so the stale banner only appears once a document is edited more than a second after the one below it. ([#800](https://github.com/alfredoperez/speckit-companion/pull/800)) <!-- area: spec-viewer -->
+- **A spec with nothing recorded no longer has a tab titled Overview.** The tab now names the document the pane is showing, and switches to Overview once the run has recorded something. ([#796](https://github.com/alfredoperez/speckit-companion/pull/796)) <!-- area: spec-viewer -->
+- **No more empty Intent heading on the Overview.** A spec that recorded phase times but no intent showed an Intent title with nothing under it; now only the run overview shows. ([#800](https://github.com/alfredoperez/speckit-companion/pull/800)) <!-- area: overview -->
+- **Review comments alone no longer give a spec an Overview.** A spec whose run recorded nothing, but which still had a status and a review comment, opened on an Overview holding only an empty run log under a tab titled Overview. It now opens on its document, and the tab says which from the first paint. ([#802](https://github.com/alfredoperez/speckit-companion/pull/802)) <!-- area: overview -->
+- **Phase-complete notifications name the spec on Windows.** The toast read "completed in unknown" instead of the feature folder, because Windows paths use backslashes. ([#792](https://github.com/alfredoperez/speckit-companion/pull/792)) <!-- area: run-record -->
+- **A pulled spec-kit extension release no longer leaves you out of date.** If a release was published and then retracted, every project kept being told its spec-kit commands were behind a version that no longer exists and could not be installed. The daily update check now confirms the newest version it remembers is still a published release, and drops it when it is not. A release that has only scrolled off the releases page, or a check that cannot reach GitHub, leaves the remembered version alone. ([#793](https://github.com/alfredoperez/speckit-companion/pull/793)) <!-- area: install -->
+- **Upgrade Project and Upgrade All use Spec Kit's current init flag.** They still passed the agent with `--ai`, which newer Spec Kit no longer accepts, so the upgrade failed in the terminal. They now use `--integration`, and Upgrade Project falls back to `--ai` for an older Spec Kit that only knows the old flag. ([#794](https://github.com/alfredoperez/speckit-companion/pull/794)) <!-- area: install -->
+- **Initialize Workspace sets up the assistant you already chose.** It used to start Spec Kit's own picker, so the project could end up set up for a different assistant than your AI provider setting. It now names your assistant, with the flag your Spec Kit version understands. IDE Chat on Windsurf, which current Spec Kit no longer lists, gets Spec Kit's picker instead of a command that fails. ([#812](https://github.com/alfredoperez/speckit-companion/pull/812)) <!-- area: install -->
 
 ## [0.34.0] - 2026-09-30
 

@@ -1,9 +1,9 @@
 {
   "name": "speckit-companion",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "main": "extension.mjs",
+  "main": "com.github.copilot/extensions/speckit-companion/extension.mjs",
   "description": "SpecKit Companion spec board for the GitHub Copilot app: every spec with its specify → plan → tasks → implement pipeline, task progress and run history, live, with buttons that run the next step.",
   "license": "MIT",
   "scripts": {

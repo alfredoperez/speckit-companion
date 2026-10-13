@@ -2,12 +2,14 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "speckit-companion",
   "description": "A live board of every spec in your repo, next to the chat: each spec's specify → plan → tasks → implement pipeline, its documents, task progress and run history, and a button that runs the next step. Works with stock Spec Kit and with SpecKit Companion.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Alfredo Perez",
     "url": "https://github.com/alfredoperez"
   },
   "homepage": "https://speckit-companion.dev",
+  "repository": "https://github.com/alfredoperez/speckit-companion",
+  "license": "MIT",
   "keywords": [
     "canvas",
     "spec-driven-development",
@@ -19,11 +21,6 @@
   "extensions": {
     "com.github.copilot": {
       "logo": "assets/preview.png"
-    },
-    "com.github.awesome-copilot": {
-      "extensions": [
-        "./extensions/speckit-companion"
-      ]
     }
   }
 }

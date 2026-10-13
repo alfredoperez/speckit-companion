@@ -23,7 +23,7 @@ Help the user publish a new version of the extension by:
 4. Update CHANGELOG.md by adding a new section at the top (after the header) with:
    - `## [X.X.X] - YYYY-MM-DD` format, then one plain lead sentence for the release
    - The format in `.claude/commands/changelog-entry.md` ("Changelog voice"): the big features under `### Highlights`, one `#### <Feature title>` block each with its `<!-- area: …; pr: …; media: … -->` comment, and every other entry as one bullet under Added / Fixed / Changed / Security ending with its full PR link and an `<!-- area: … -->` tag
-   - Keep all previous versions' changelogs intact
+   - `CHANGELOG.md` keeps `[Unreleased]` and the two latest releases. Cut every older release section and paste it at the top of `apps/website/src/data/changelog-archive.md`, above the newest one there, unchanged. A test fails when the changelog holds a third release.
 5. Run the release checklist before anything is committed, and stop on a failure:
    - `npm run clips:check` must report 0 broken. A broken count is a 404 on the published Marketplace listing.
    - The README install and first-run steps still match what ships, and the README "VS Code" badge matches `engines.vscode` in `package.json`.

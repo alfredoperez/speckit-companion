@@ -48,6 +48,10 @@ The [Quickstart](https://speckit-companion.dev/docs/start/your-first-spec) follo
 
   ![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](docs/screenshots/generated/spec-viewer.gif)
 
+- **A plan that draws itself.** Call paths, a lifecycle, a screen and annotated code each draw as a card in the plan. [Plan blocks](https://speckit-companion.dev/docs/steps/plan-blocks)
+
+  ![A Call paths card in a plan: the functions a change reaches drawn as a tree, each row with its file and line](docs/screenshots/plan-block-calls.png)
+
 - **Review comments on any line.** Comment on a spec the way you review a pull request, then click **Refine** and your assistant edits the spec from your comments. [Review with comments](https://speckit-companion.dev/docs/steps/review-with-comments)
 
   ![Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates](docs/screenshots/generated/inline-comments.gif)

@@ -44,7 +44,7 @@ A change under `apps/speckit-extension/**` updates **its** README/CHANGELOG/vers
 `CLAUDE.md` "One fact, one owner" is the rule: a fact lives on one surface, and a change updates that surface only. Flag ⚠️ when the diff changes a fact and its owner is not in the diff, and flag ⚠️ when the diff adds a second copy of a fact somewhere else.
 
 - **Setting added, or a value's behaviour changed** → `package.json` description / `enumDescriptions` + the site's `reference/configuration.mdx`. Re-read both for "always", "never", "removes", "guarantees" against the new behaviour.
-- **Provider added** → the `speckit.aiProvider` enum + the site's `reference/providers.mdx` (a test fails otherwise).
+- **Provider added** → the `speckit.aiProvider` enum + the provider table in the site's `reference/configuration.mdx` (a test fails otherwise).
 - **Something a user sees changed** → its one site page, and one `[Unreleased]` line in the changelog of the deliverable that changed.
 - **Webview component with a sibling `*.stories.tsx`** → the stories.
 - **A README** only when the install or the first run changed.

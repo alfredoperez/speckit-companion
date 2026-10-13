@@ -111,7 +111,7 @@ const STORIES = [
     {
         // The benchmark stat strip under "Pick a pipeline once, run it end to
         // end" (ReadmeCapture.stories.tsx C2). Numbers quoted from
-        // the site's configuration reference, Workflow choice; change them there first.
+        // the site's steps page, "Stock or Companion, measured"; change them there first.
         story: 'scenes-readme-composites--c-2-pipeline-stats',
         out: 'pipeline-stats.png',
     },

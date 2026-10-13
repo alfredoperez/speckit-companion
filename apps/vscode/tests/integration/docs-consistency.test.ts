@@ -404,6 +404,14 @@ describe('docs consistency', () => {
       expect(voiceProblems(sample, { links: false, areas: false })).not.toContain('"Untagged.": no PR link');
     });
 
+    it.each(['CHANGELOG.md', 'apps/speckit-extension/CHANGELOG.md'])(
+      '%s → keeps Unreleased and two releases, the rest lives in the site archive',
+      (file) => {
+        const released = [...read(file).matchAll(/^## \[(\d[^\]]*)\]/gm)].map((m) => m[1]);
+        expect(released.length).toBeLessThanOrEqual(2);
+      },
+    );
+
     it('caps a release at twelve bullets and three highlights', () => {
       const bullet = (n: number) => `- **Entry ${n}.** A menu keeps its text inside.`;
       const highlight = (n: number) => `#### Feature ${n}\nIt does a thing.`;
