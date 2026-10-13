@@ -4,16 +4,16 @@ import { readFileSync, existsSync, mkdtempSync, mkdirSync, writeFileSync } from 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readSpecDetail } from '../specs-core.mjs';
-import { coverageRows, renderOverview, stepTiming } from '../overview.mjs';
+import { readSpecDetail } from '../com.github.copilot/extensions/speckit-companion/specs-core.mjs';
+import { coverageRows, renderOverview, stepTiming } from '../com.github.copilot/extensions/speckit-companion/overview.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const TEAMBOARD = join(REPO, 'apps/vscode/webview/src/spec-viewer/__fixtures__/teamboard/041-profile-photo-upload');
 
 describe('documents render through the VS Code viewer pipeline', () => {
     it('ships the vendored renderer and stylesheet', () => {
-        assert.ok(existsSync(new URL('../vendor/viewer-markdown.mjs', import.meta.url)));
-        assert.ok(existsSync(new URL('../vendor/viewer.css', import.meta.url)));
+        assert.ok(existsSync(new URL('../com.github.copilot/extensions/speckit-companion/vendor/viewer-markdown.mjs', import.meta.url)));
+        assert.ok(existsSync(new URL('../com.github.copilot/extensions/speckit-companion/vendor/viewer.css', import.meta.url)));
     });
 
     it('renders user stories, task phases and checkboxes the way the viewer does', () => {

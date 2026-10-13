@@ -56,7 +56,7 @@ surfaces:
     checks: [canvas-tests, canvas-open, canvas-new-spec]
 
   - name: Claude Code mod
-    paths: ["apps/claude-mod/**", ".claude-plugin/**", "apps/copilot-canvas/spec-rules.mjs"]
+    paths: ["apps/claude-mod/**", ".claude-plugin/**", "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/spec-rules.mjs"]
     checks: [mod-tests, mod-terminal]
 
   - name: website

@@ -7,7 +7,7 @@ import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createSpecServer } from '../server.mjs';
+import { createSpecServer } from '../com.github.copilot/extensions/speckit-companion/server.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const TEAMBOARD = join(REPO, 'apps/vscode/webview/src/spec-viewer/__fixtures__/teamboard/041-profile-photo-upload');

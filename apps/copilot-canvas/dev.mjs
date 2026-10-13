@@ -2,7 +2,7 @@
 // Run buttons print the prompt they would send instead of sending it.
 
 import { resolve } from 'node:path';
-import { createSpecServer } from './server.mjs';
+import { createSpecServer } from './com.github.copilot/extensions/speckit-companion/server.mjs';
 
 const root = resolve(process.argv[2] ?? process.cwd());
 const board = await createSpecServer({

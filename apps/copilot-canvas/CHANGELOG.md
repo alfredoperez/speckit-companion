@@ -4,6 +4,10 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+### Changed
+
+- **The board is now packaged as a plugin.** Its files moved one level down, into `com.github.copilot/extensions/speckit-companion/`, so the Copilot app marketplace can install it straight from this repo. If you install by copying the folder, copy that one: the install commands in the README are updated.
+
 ### Fixed
 
 - **A button's command now runs its own steps on every model.** With some models, New spec and the run buttons sent a command the agent never loaded: it wrote the spec by hand and, on Auto, built the change with no plan or tasks. The message now names the file that holds the command's steps, and the run instructions say they add to the command instead of replacing it.

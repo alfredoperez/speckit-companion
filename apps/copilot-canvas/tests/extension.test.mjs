@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { CANVAS_DESCRIPTION, OPEN_NOTE, SYSTEM_RULE } from '../prompts.mjs';
+import { CANVAS_DESCRIPTION, OPEN_NOTE, SYSTEM_RULE } from '../com.github.copilot/extensions/speckit-companion/prompts.mjs';
 
 // extension.mjs joins a Copilot session on import, so it is loaded once against the stub SDK (tests/sdk-stub) and we read what it registered.
 async function loadExtension() {
-    if (!globalThis.__copilotJoined?.length) await import('../extension.mjs');
+    if (!globalThis.__copilotJoined?.length) await import('../com.github.copilot/extensions/speckit-companion/extension.mjs');
     assert.equal(globalThis.__copilotJoined.length, 1, 'joins exactly one session');
     return globalThis.__copilotJoined[0];
 }
