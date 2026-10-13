@@ -8,6 +8,8 @@
     "url": "https://github.com/alfredoperez"
   },
   "homepage": "https://speckit-companion.dev",
+  "repository": "https://github.com/alfredoperez/speckit-companion",
+  "license": "MIT",
   "keywords": [
     "canvas",
     "spec-driven-development",
@@ -19,11 +21,6 @@
   "extensions": {
     "com.github.copilot": {
       "logo": "assets/preview.png"
-    },
-    "com.github.awesome-copilot": {
-      "extensions": [
-        "./extensions/speckit-companion"
-      ]
     }
   }
 }

@@ -10,11 +10,11 @@ One spec from **New spec** to done. This is a recreation of a run, sped up, not 
 
 ## Install
 
-The board is a [canvas extension](https://docs.github.com/en/copilot/how-tos/github-copilot-app/working-with-canvas-extensions). Copy this folder into your user folder and it shows up in every new session:
+The board is a [canvas extension](https://docs.github.com/en/copilot/how-tos/github-copilot-app/working-with-canvas-extensions). Copy its folder into your user folder and it shows up in every new session:
 
 ```bash
 git clone https://github.com/alfredoperez/speckit-companion
-cp -R speckit-companion/apps/copilot-canvas ~/.copilot/extensions/speckit-companion
+cp -R speckit-companion/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion ~/.copilot/extensions/speckit-companion
 ```
 
 Then open your project in the Copilot app, start a **new** session, and ask: **Open the SpecKit Companion canvas**. It is also in the session's **+** menu, under **Canvas** → **SpecKit Companion**.
@@ -24,7 +24,7 @@ Then open your project in the Copilot app, start a **new** session, and ask: **O
 Copy the folder into the project and commit it:
 
 ```bash
-cp -R speckit-companion/apps/copilot-canvas <project>/.github/extensions/speckit-companion
+cp -R speckit-companion/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion <project>/.github/extensions/speckit-companion
 ```
 
 A project copy is code, so the app keeps it off until you accept it. Since Copilot app 1.1.26:
@@ -98,12 +98,12 @@ The board never writes a spec document. It writes two things:
 - **Copilot worktrees have no `node_modules`.** Each session runs in a fresh worktree, so an implement step that runs tests installs the project's dependencies first.
 - **Companion's commands must be committed files.** The worktree is cut from your committed default branch. If `/speckit.companion.*` does not resolve in a session, check that `.github/skills/speckit-companion-*/SKILL.md` are real files in the commit, not symlinks from a `--dev` install.
 - **Known limitation: the board is clipped after you narrow the panel.** Dragging the divider between the chat and the canvas to the right leaves the board at its old width, cut off on the left. The Copilot app does not resize the panel's page, so the board never gets the chance to reflow. Close the canvas and open it again after resizing.
-- **In this repo it already works.** `.github/extensions/speckit-companion/extension.mjs` loads this folder.
+- **In this repo it already works.** `.github/extensions/speckit-companion/extension.mjs` loads the board from this folder.
 - **Trying it from a branch?** A project copy only shows up once it is merged, so point your user folder at your checkout:
 
   ```bash
   mkdir -p ~/.copilot/extensions/speckit-companion
-  echo "import '$PWD/apps/copilot-canvas/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
+  echo "import '$PWD/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/extension.mjs';" > ~/.copilot/extensions/speckit-companion/extension.mjs
   ```
 
 ## The other places SpecKit Companion runs
@@ -129,6 +129,8 @@ The page suite drives the board in the installed Google Chrome through `playwrig
 Clicking through the demo specs (`specs/_0N_demo-*`) can change their `.spec-context.json`. Restore them with `git restore specs/_0*` before committing.
 
 ## How it's built
+
+This folder is an [Agent Plugin](https://agent-plugins.org): `plugin.json` at its root and the board itself in `com.github.copilot/extensions/speckit-companion/`, which is where the files below live. The tests, `build.mjs` and `dev.mjs` stay at the root because they read this repo's sources.
 
 | File | Job |
 |---|---|

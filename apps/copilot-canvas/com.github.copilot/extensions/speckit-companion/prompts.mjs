@@ -24,7 +24,7 @@ export function commandSetFor(root, workflow) {
 }
 
 const WORKSPACE_WRITER = CONTEXT_WRITER;
-const CHECKOUT_WRITER = fileURLToPath(new URL('../speckit-extension/scripts/write-context.py', import.meta.url));
+const CHECKOUT_WRITER = fileURLToPath(new URL('../../../../speckit-extension/scripts/write-context.py', import.meta.url));
 
 /** The context writer run instructions may name: the workspace's copy, else this checkout's; null when neither exists. */
 export function writerPath(root, checkout = CHECKOUT_WRITER) {

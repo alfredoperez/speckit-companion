@@ -5,8 +5,8 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, rmSync, ex
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createSpecServer } from '../server.mjs';
-import { recordLockPath, recordStep } from '../run-record.mjs';
+import { createSpecServer } from '../com.github.copilot/extensions/speckit-companion/server.mjs';
+import { recordLockPath, recordStep } from '../com.github.copilot/extensions/speckit-companion/run-record.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 

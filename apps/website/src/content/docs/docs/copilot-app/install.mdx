@@ -58,12 +58,12 @@ The path has the same shape everywhere: Spec Kit itself, then the Companion exte
 
 3. <span id="copilot-board"></span>**Add the board**
 
-   Copy the `apps/copilot-canvas` folder from a checkout of the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project. Swap `<project>` for your project's path:
+   Copy the board's folder from a checkout of the [repository](https://github.com/alfredoperez/speckit-companion/tree/main/apps/copilot-canvas) into your project. Swap `<project>` for your project's path:
 
    <Actions>
-     <CodeLine command="cp -R apps/copilot-canvas <project>/.github/extensions/speckit-companion" />
+     <CodeLine command="cp -R apps/copilot-canvas/com.github.copilot/extensions/speckit-companion <project>/.github/extensions/speckit-companion" />
      <p>Or into your user folder, for every project on your machine. This is the quick way to try it out:</p>
-     <CodeLine command="cp -R apps/copilot-canvas ~/.copilot/extensions/speckit-companion" />
+     <CodeLine command="cp -R apps/copilot-canvas/com.github.copilot/extensions/speckit-companion ~/.copilot/extensions/speckit-companion" />
      <p>If the <code>extensions</code> folder does not exist yet, create it first with <code>mkdir -p</code>.</p>
    </Actions>
 

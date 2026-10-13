@@ -25,7 +25,7 @@ Release every deliverable in one pass. This command only orchestrates: each phas
 | 1 | spec-kit extension | `.claude/commands/publish-speckit-ext.md` | `speckit-ext-v*` | GitHub release, `companion-latest` |
 | 2 | VS Code extension | `.claude/commands/publish.md` | `v*` | Marketplace, through `release.yml` |
 | 3 | Claude Code mod | `.claude/commands/publish-mod.md` | `speckit-companion--v*` | this repo's plugin marketplace |
-| 4 | Copilot canvas | `.claude/commands/publish-canvas.md` | `canvas-v*` | pull request on github/awesome-copilot |
+| 4 | Copilot canvas | `.claude/commands/publish-canvas.md` | `canvas-v*` | external plugin listing on github/awesome-copilot |
 
 **The spec-kit extension goes before the VS Code extension, always.** The `.vsix` bundles `apps/speckit-extension/extension.yml` and compares it with the version installed in a user's project to say their spec-kit commands are out of date. Packaging the VS Code extension before the spec-kit bump ships a `.vsix` that expects the old version, so nobody hears about the new one until the next VS Code release. Packaging it against a version `companion-latest` does not serve yet tells every user to update to something the download does not have.
 
@@ -46,7 +46,7 @@ The mod and the canvas depend on neither. The canvas goes last because it is the
    }
    echo "spec-kit extension: $(changed 'speckit-ext-v*' apps/speckit-extension)"
    echo "VS Code extension:  $(changed 'v*' apps/vscode package.json README.md CHANGELOG.md)"
-   echo "Claude Code mod:    $(changed 'speckit-companion--v*' apps/claude-mod .claude-plugin apps/copilot-canvas/spec-rules.mjs)"
+   echo "Claude Code mod:    $(changed 'speckit-companion--v*' apps/claude-mod .claude-plugin apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/spec-rules.mjs)"
    echo "Copilot canvas:     $(changed 'canvas-v*' apps/copilot-canvas)"
    ```
 3. **Ask every target version in one question**, one line per deliverable with its current version and the step 2 result. Offer **skip** for a deliverable with no changes and recommend it; one that changed, or was never released, defaults to a release. A never-released mod or canvas may keep its current version. When the spec-kit extension is released and the user skips VS Code, say what that costs: the installed VS Code extension will not tell anyone about the new spec-kit version. Do not ask for a version again inside a phase.
@@ -57,13 +57,13 @@ The mod and the canvas depend on neither. The canvas goes last because it is the
    - `gh run list --workflow=release.yml --limit 2` shows no new run (both spec-kit tags are non-`v*`).
 6. **Phase 2, VS Code extension.** Read `.claude/commands/publish.md` and execute its task section exactly, with the version from step 3. The `.vsix` it tags now bundles the manifest `companion-latest` serves. It ends with the `vX.Y.Z` tag pushed; confirm `release.yml` started for it.
 7. **Phase 3, Claude Code mod.** Read `.claude/commands/publish-mod.md` and execute it exactly, with the version from step 3. It ends with the release commit on `main`, the `speckit-companion--vX.Y.Z` tag pushed, and the directory submission text printed for the user.
-8. **Phase 4, Copilot canvas.** Read `.claude/commands/publish-canvas.md` and execute it exactly, with the version from step 3. Its stop before sending still applies: the approval that started this command is not a go for the pull request.
+8. **Phase 4, Copilot canvas.** Read `.claude/commands/publish-canvas.md` and execute it exactly, with the version from step 3. Its stop before sending still applies: the approval that started this command is not a go for the submission.
 9. **No rollback.** A phase that fails stops the run, and everything released before it stays out: users already have it. Report what completed, what failed and what remains. The user finishes the rest later with each remaining phase's own command, in the same order.
 10. **Final report**, one block per released deliverable and a line for each skipped one:
     - spec-kit extension: the tag, the release URL, the `specify extension add companion --from <url>` install command, and whether the catalog update was filed or deferred.
     - VS Code extension: the tag and the `release.yml` run status.
     - Claude Code mod: the tag, the `claude plugin marketplace add` and `claude plugin install` commands, and the directory submission text, marked as the user's to send.
-    - Copilot canvas: the tag, the pull request URL and the state of its checks, or that the user declined to send it.
+    - Copilot canvas: the tag, the issue or pull request URL and the state of its checks, or that the user declined to send it.
 
 ### Guardrails
 

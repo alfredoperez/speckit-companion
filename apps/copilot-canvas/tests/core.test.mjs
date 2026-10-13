@@ -4,10 +4,10 @@ import { readFileSync, mkdtempSync, mkdirSync, copyFileSync, writeFileSync, exis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { countTaskCheckboxes, listTasks, phaseProgress } from '../tasks.mjs';
-import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, readTemplates, recordLive, scanSpec, specStatusLabel } from '../specs-core.mjs';
-import { buildSpecRow, isWritten, parseSpecContext, phaseTimings, recordLiveIn, sortSpecs, statusFromSteps, timingSummaryText } from '../spec-rules.mjs';
-import { INSTALL_COMMAND, OPEN_NOTE, PROMPTS_DIR, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandPattern, commandSetFor, detectCommandSet, instructionsSentence, nextSpecNumber, openStatus, resolveCommand, resolveSpecify, runInstructionsDoc, specifyChoices, specifyInstructionsName, stepInstructionsName, writeRunInstructions, writerPath } from '../prompts.mjs';
+import { countTaskCheckboxes, listTasks, phaseProgress } from '../com.github.copilot/extensions/speckit-companion/tasks.mjs';
+import { buildSnapshot, deriveStepBadges, findSpec, listSpecFolders, readSpecDetail, readTemplates, recordLive, scanSpec, specStatusLabel } from '../com.github.copilot/extensions/speckit-companion/specs-core.mjs';
+import { buildSpecRow, isWritten, parseSpecContext, phaseTimings, recordLiveIn, sortSpecs, statusFromSteps, timingSummaryText } from '../com.github.copilot/extensions/speckit-companion/spec-rules.mjs';
+import { INSTALL_COMMAND, OPEN_NOTE, PROMPTS_DIR, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandInstructions, commandPattern, commandSetFor, detectCommandSet, instructionsSentence, nextSpecNumber, openStatus, resolveCommand, resolveSpecify, runInstructionsDoc, specifyChoices, specifyInstructionsName, stepInstructionsName, writeRunInstructions, writerPath } from '../com.github.copilot/extensions/speckit-companion/prompts.mjs';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const GRAMMAR = join(REPO, 'apps/vscode/tests/fixtures/task-grammar');
