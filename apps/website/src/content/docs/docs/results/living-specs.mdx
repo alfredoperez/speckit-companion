@@ -5,17 +5,15 @@ description: One lasting spec per capability, kept next to the code, updated by 
 
 import DocFigure from '../../../../components/journey/DocFigure.astro';
 
-A feature spec describes one change. Once it ships it is a record of something that happened. A year later, current behavior is the sum of thirty specs minus the parts later specs undid.
-
-A **living spec** describes a **capability**, a piece of behavior your code keeps having. You write it once, keep it next to the code, and update it from the runs that change that code. Living specs come with the Companion Spec Kit extension.
+A feature spec describes one change, and a year later current behavior is the sum of thirty of them minus what later ones undid. A **living spec** describes a **capability**, a piece of behavior your code keeps having, and the runs that change that code keep it current. Living specs come with the Companion Spec Kit extension and stay off until you set them up.
 
 <DocFigure src="living-specs-explained-x16x9.png" caption="Specs for a shipped feature go quiet. Capability specs settle next to the source files they describe, each with a coverage count or a drift flag." />
 
 ## Start with one area
 
-Open the **Living Specs** pane in the sidebar and click **Set up living specs**. It asks one question: keep the specs together in one folder, or beside the code they describe.
+Open the **Living Specs** view in the sidebar and click **Set up living specs**. It asks one question, whether to keep the specs together in one folder or beside the code they describe, and writes `living-specs.yml` at the repo root.
 
-Then pick the area you explain most often and run `/speckit.companion.living-adopt` on it. Your assistant reads the code and drafts a spec for it. Read the draft. It is the fastest way to learn whether you drew the boundary in the right place.
+Then pick the area you explain most often and run `/speckit.companion.living-adopt` on it. Your assistant reads the code's surface and drafts a spec marked `[DRAFT]`. Reading that draft is the fastest way to learn whether you drew the boundary in the right place.
 
 ## What you see
 
@@ -25,7 +23,12 @@ Then pick the area you explain most often and run `/speckit.companion.living-ado
   caption="Each capability is a row. Open one to read its requirements."
 />
 
-A row tells you two things: how many requirements have a test, and whether the code changed after the spec was last updated. That second one is **drift**.
+| On a row | Meaning |
+| --- | --- |
+| `7/9 covered` | Requirements with a test mapped in the coverage file. No file means no number, which isn't the same as zero. |
+| Warning icon, `drift` | Source files changed after the spec was last committed |
+
+A living spec opens in the same viewer with its own header: the code it covers and the coverage count, where a feature spec shows a branch and a status. Requirements drafted from existing code carry an **adopted** badge until you approve them, and a drifted spec gets an **Update** button.
 
 <DocFigure
   src="live-living-spec-drifted.png"
@@ -33,22 +36,56 @@ A row tells you two things: how many requirements have a test, and whether the c
   caption="Drift lands on the requirement that names the changed file."
 />
 
-[The sidebar](/docs/navigate/the-sidebar#living-specs) covers the tree, and [Reading a spec](/docs/results/reading-a-spec#a-living-spec) covers the page.
+In any source file a capability claims, the status bar reads `2 living specs`. Click it to see which ones.
 
 ## How a spec stays current
 
-When a Companion run finishes, it writes what it changed about each capability into its own feature spec, and a script folds that into the living spec. You review it in the feature's diff like any other change.
+A Companion run adds a block to its own feature spec for each capability it changed:
 
-A run with plain Spec Kit does not do this. Run `/speckit.companion.living-sync` afterwards.
+```markdown
+## ADDED Requirements
+<!-- capability: spec-viewer -->
+
+- The viewer re-anchors a stored comment onto the freshly rendered page when its tab reopens.
+```
+
+The other headings are `## MODIFIED Requirements`, `## REMOVED Requirements` and `## RENAMED Requirements`. A block without a capability comment goes to whichever capability the changed files matched. At [mark-complete](/docs/steps#mark-complete) a script folds each block into its capability spec, so you review the result in the feature's diff. Folding twice changes nothing.
+
+A run with plain Spec Kit doesn't do this, and neither does code you write by hand. Run `/speckit.companion.living-sync` afterwards. [Commands](/docs/reference/commands) lists all seven living-specs commands.
+
+## living-specs.yml
+
+```yaml
+enabled: true
+layout: central
+exempt: ["*.config.*", "*.test.*", "**/migrations/**"]
+capabilities:
+  - name: spec-viewer
+    match: ["src/features/spec-viewer/**"]
+    spec: src/features/spec-viewer/spec-viewer.spec.md
+  - name: workflows
+    match: ["src/features/workflows/**"]
+rules:
+  spec:
+    - "Write every scenario as WHEN/THEN with exactly one observable outcome"
+```
+
+| Key | What it does |
+| --- | --- |
+| `enabled` | The opt-in. Unset, or with no file, every living-specs command acts as if the feature were absent. |
+| `layout` | `central` or `colocated`: where adoption puts a spec you don't place yourself. Defaults to `central`. |
+| `exempt` | Globs that never count as drift. The default is the list above. |
+| `name` | The capability id, and its folder name under `capabilities/` |
+| `match`, `exclude` | Globs for the files that belong to the capability, and the ones subtracted from it |
+| `spec` | Puts the spec beside the code, as `<something>.spec.md`. Omit it and the spec goes to `capabilities/<name>/<name>.spec.md`. |
+| `rules.spec`, `rules.plan` | Sentences handed to the specify step and the plan step on every run |
+
+You can mix both layouts, and `/speckit.companion.living-move` switches a capability later. A file that matches several capabilities goes to the one with the longest literal path prefix. A spec file no capability claims shows under **Orphans**. `<stem>.coverage.md` beside a spec maps requirements to tests, and you write it.
+
+The **Living specs** chip in the [Workflow Builder](/docs/customize/workflow-builder) edits `enabled` and `layout`. It shows capabilities, exempt and rules read-only, because adoption and the capability commands write them. An older `livingSpecs:` block in `.specify/companion.yml` is still read, and `living-specs.yml` wins when both exist.
 
 ## What stays manual
 
-- Nothing updates a spec on its own. It is current only if a run folded its changes in, or someone ran `living-sync`.
-- Drift and coverage never block anything. They report and always exit zero, so a CI job that should fail has to read their output.
-- A capability whose spec is not committed yet is skipped, and so is one in a CI checkout with too little history. The report names each one and why.
-- The coverage count comes from a file you write. No file means no number, which is not the same as zero.
-
-## Go deeper
-
-- [Commands](/docs/reference/commands#living-specs) lists all seven living-specs commands.
-- [Configuration](/docs/reference/configuration#living-specsyml) covers the registry file, the two layouts and how a run's changes are written.
+- Nothing updates a spec on its own. It's current only if a run folded its changes in or someone ran `living-sync`.
+- Drift and coverage never block anything. They always exit zero, so a CI job that should fail has to read their output. A run that loaded a capability and wrote no block for it gets a printed receipt, not a stop.
+- Drift reads committed history. A capability whose spec isn't committed yet is skipped, and so is one in a CI checkout with too little history. The report names each one and why.

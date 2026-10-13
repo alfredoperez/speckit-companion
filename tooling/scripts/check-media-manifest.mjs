@@ -121,7 +121,7 @@ for (const f of manifest.features) {
 // No duplicate-poster check here: a poster is frame zero of its own clip, render-web-clips.mjs already fails when it is not, and two clips opening on the same shot legitimately match.
 
 // The load-bearing check: nothing a README shows may be absent from the manifest.
-for (const file of ['README.md', 'apps/speckit-extension/README.md']) {
+for (const file of ['README.md', 'apps/speckit-extension/README.md', 'apps/claude-mod/README.md', 'apps/copilot-canvas/README.md']) {
     for (const ref of readmeImages(file)) {
         const entry = indexed.get(ref.src);
         if (!entry) {

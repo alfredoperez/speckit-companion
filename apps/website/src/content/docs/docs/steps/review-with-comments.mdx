@@ -4,18 +4,9 @@ description: Comment on a spec line by line, keep the comments in the repo, and 
 ---
 
 import DocFigure from '../../../../components/journey/DocFigure.astro';
-import YouSee from '../../../../components/journey/YouSee.astro';
 import refine from '../../../../../../../docs/screenshots/live-footer-refine.png';
 
-Open a spec in the viewer and hover any line. Click the comment button that appears, type your note, and the card pins under that line as **Pending**. A paragraph that is wrapped over several lines in the file counts as one line here: it has one comment button, and a comment made on any of its lines stays with it. When you are done, press **Refine (N)** in the footer to send every pending comment on the document to your assistant in one prompt.
-
-<DocFigure
-  src="inline-comments-16x9.png"
-  alt="A spec in the viewer with two review cards pinned under their lines, one pending and one applied, and the comment composer open on line 4."
-  caption="Each comment sits under the line it is about and shows whether it is still pending."
-/>
-
-You can review at any step. It works the same on the spec, the plan and the task list.
+Hover a line in the viewer, click the comment button and type your note. The card pins under that line as **Pending**. Press **Refine (N)** in the footer and every pending comment on that document goes to your assistant in one prompt.
 
 <DocFigure
   src="live-review-comments.png"
@@ -23,59 +14,32 @@ You can review at any step. It works the same on the spec, the plan and the task
   caption="Two comments in the viewer, each under its paragraph: one already sent, one still pending."
 />
 
+It works the same on the spec, the plan and the task list, at any step.
+
 ## Comment on a line
 
-The composer knows what kind of line you are on (user story, task, section, scenario or paragraph) and offers matching quick actions. Most just fill in suggested wording. On a task line, **Toggle** also flips the task's checkbox.
+You can comment on paragraphs, headings, list items, tasks, blockquotes, requirement rows and acceptance scenarios. Code blocks, tables and Mermaid diagrams take no comments, so comment on the heading or paragraph above them. A paragraph wrapped over several lines in the file counts as one line.
 
-| You can comment on | You cannot comment on |
-| --- | --- |
-| Paragraphs, headings, list items, tasks, blockquotes, requirement rows and acceptance scenarios | Code blocks, tables and Mermaid diagrams. Comment on the heading or paragraph above them. |
+The composer offers a quick action that fills in suggested wording for the kind of line you're on, such as **Suggest removing task**. On a task line, **Toggle** flips the task's checkbox.
 
-A card starts collapsed and reads **Pending** or **Applied**. Expanded, it offers:
-
-| Action | When | What it does |
-| --- | --- | --- |
-| **Refine** | While the comment is pending | Sends every pending comment on the document |
-| **Edit** | Any time the spec is active | Changes the text. Keeps the comment's place and status. |
-| **Delete** | Any time the spec is active | Removes the comment from the record |
+Expand a card to **Edit** or **Delete** it. Editing keeps the comment's place and status.
 
 <DocFigure src="panel-review.png" caption="A pending comment, expanded: Refine sends it, Edit and Delete change it." />
 
 ## Send the pending comments
 
-The footer button reads **Refine (N)** once N comments are pending, and is hidden when none are. Pressing it, or **Refine** on any card, does the same thing.
+**Refine (N)** shows in the footer once N comments are pending. **Refine** on any pending card does the same thing.
 
 <p class="not-content"><img src={refine.src} width={Math.round(refine.width / 2)} height={Math.round(refine.height / 2)} alt="The viewer footer reading Next: Plan, with Regenerate, Plan and a Refine (1) button at the end." /></p>
 
-| The prompt | Detail |
-| --- | --- |
-| Covers the current document only | Comments on the plan do not ride along with the spec |
-| Includes context | Each comment names its line and section, quotes the source text, then gives your note |
-| Asks for an edit, not a rewrite | Your assistant edits that file in place |
+The prompt covers the current document only, so comments on the plan don't ride along with the spec. For each comment it names the line and section, quotes the source text and gives your note, and it asks your assistant to edit the file in place.
 
-The prompt goes to the assistant you configured: a terminal, an IDE chat or the Claude Code panel.
+The sent comments change to **Applied** and stay as history. Applied means sent, and nobody has checked the result. Read the change yourself, then comment again on anything missed.
 
-<YouSee>
+## Where comments are kept
 
-The sent comments flip to **Applied** and stay as history. Applied means sent, not checked. Read the change yourself, then comment again on anything missed.
+Comments are written to `.spec-context.json` in the spec's folder, so committing that file takes the review along with the branch. The viewer creates the file when the spec is first opened, and a comment can't be saved without it.
 
-</YouSee>
+A comment follows its block of text and not a line number. If the block is edited away, the comment stays listed with its status in the Activity list under Run log on [the Overview](/docs/results/the-overview).
 
-## Comments stay in the repo
-
-A comment is written to `.spec-context.json` in the spec's folder. Commit it and the review travels with the branch.
-
-- Comments written quickly never overwrite each other.
-- A comment follows its block of text, not a line number. If the block is edited away, the comment stays listed with its status in the Activity list under Run log on [the Overview](/docs/results/the-overview).
-- On completed or archived specs, cards stay readable but Refine, Edit and Delete are gone.
-
-## If a comment goes missing
-
-| What happened | Where to look |
-| --- | --- |
-| A comment did not save | Check the spec folder for `.spec-context.json`. The viewer creates it when the spec is first opened, and a comment cannot be saved without it. |
-| A comment vanished after an edit | The Activity list under Run log |
-
-## Related
-
-[Steering](/docs/customize/steering) is the other way to shape what your assistant does, for every spec and not just one.
+On a completed or archived spec the cards stay readable, and Refine, Edit and Delete are gone.

@@ -1,0 +1,32 @@
+---
+// Opens the tab an address names, so /docs/install/#copilot-app lands on that
+// tool's steps and not on the first tab. `tabs` maps a hash to a tab's label.
+// Each hash is also a real anchor just above the tabs, so the page scrolls there.
+interface Props {
+  tabs: Record<string, string>;
+}
+const { tabs } = Astro.props;
+---
+
+<tab-from-hash data-tabs={JSON.stringify(tabs)}>
+  {Object.keys(tabs).map((hash) => <span id={hash} />)}
+</tab-from-hash>
+
+<script>
+  const open = () => {
+    const host = document.querySelector('tab-from-hash') as HTMLElement | null;
+    if (!host) return;
+    const label = JSON.parse(host.dataset.tabs ?? '{}')[location.hash.slice(1)];
+    if (!label) return;
+    const tab = [...document.querySelectorAll<HTMLElement>('starlight-tabs [role="tab"]')].find(
+      (t) => t.textContent?.trim() === label
+    );
+    tab?.click();
+    host.scrollIntoView();
+  };
+  // A click before the tabs' own script has run follows the tab's link instead of switching.
+  const whenReady = () => customElements.whenDefined('starlight-tabs').then(open);
+  whenReady();
+  window.addEventListener('hashchange', open);
+  document.addEventListener('astro:page-load', whenReady);
+</script>

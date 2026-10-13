@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "about": "The feature asset bundle contract. One entry per feature id; every surface reads its assets from here. Paths are repo-relative POSIX paths. A path is listed even when the file does not exist yet: this file states the target shape, and scripts/check-media-manifest.mjs reports the gap. Contract prose: docs/media-manifest.md.",
+  "about": "The feature asset bundle contract. One entry per feature id; every surface reads its assets from here. Paths are repo-relative POSIX paths. A path is listed even when the file does not exist yet: this file states the target shape, and scripts/check-media-manifest.mjs reports the gap. Contract prose: .claude/skills/feature-clip/references/media-manifest.md.",
   "conventions": {
     "captureSize": "1836x1164",
     "captureAspect": "1.577:1",
@@ -126,9 +126,6 @@
       "referencedBy": {
         "docs/screenshots/generated/overview.gif": [
           "README.md"
-        ],
-        "docs/screenshots/generated/overview-annotated.png": [
-          "README.md"
         ]
       },
       "notes": "The root README's hero overview.gif is rendered from THIS composition. The filename is overview.gif, not a per-composition name, and it is referenced by the root README, so it can only be overwritten in place. The sibling overview-readme covers the same page more slowly and no longer publishes anywhere."
@@ -227,9 +224,6 @@
       "referencedBy": {
         "docs/screenshots/generated/spec-viewer.gif": [
           "README.md"
-        ],
-        "docs/screenshots/generated/spec-viewer.png": [
-          "apps/speckit-extension/README.md"
         ]
       }
     },
@@ -301,7 +295,7 @@
           "README.md"
         ]
       },
-      "notes": "The sidebar is a presentational recreation, not a live TreeView capture. See docs/visual-assets.md."
+      "notes": "The sidebar is a presentational recreation, not a live TreeView capture. See .claude/skills/feature-clip/references/visual-assets.md."
     },
     {
       "id": "run-in-flight",
@@ -362,11 +356,7 @@
         "content/media/web/make-it-yours-x16x9.png": "Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches",
         "content/media/web/panel-bend.png": "A workflow written by hand: its own phases listed as the steps a run will take."
       },
-      "referencedBy": {
-        "docs/screenshots/generated/make-it-yours.gif": [
-          "README.md"
-        ]
-      }
+      "referencedBy": {}
     },
     {
       "id": "step-rail",
@@ -448,12 +438,7 @@
         "content/media/web/living-specs-poster.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished",
         "content/media/web/living-specs-x16x9.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished"
       },
-      "referencedBy": {
-        "docs/screenshots/generated/living-specs-pair.png": [
-          "README.md",
-          "apps/speckit-extension/README.md"
-        ]
-      },
+      "referencedBy": {},
       "notes": "The still ships in both READMEs. The clip is cut and feeds the site's Living specs tab; it is not promoted to a published GIF, so no README points at it. The cut ends on the spec open in the viewer, which is what the click is for; the run's fold-back Overview was dropped from it deliberately and that is recorded in the composition's STORYBOARD. Beat wording is checked against the claim ledger there: the Update action is described as handing the changed files to your assistant, never as a rewrite."
     },
     {
@@ -562,12 +547,8 @@
       "alt": {
         "docs/screenshots/generated/pipeline-stats.png": "The benchmark in four tiles: 60 to 68% smaller specs, zero throwaway side files, ceremony right-sized to the change, and a 5.0 out of 5 correctness tie"
       },
-      "referencedBy": {
-        "docs/screenshots/generated/pipeline-stats.png": [
-          "README.md"
-        ]
-      },
-      "notes": "The numbers on this image are quoted from the site's configuration reference, Workflow choice. Change them there first, then regenerate."
+      "referencedBy": {},
+      "notes": "The numbers on this image are quoted from the site's steps page, under \"Stock or Companion, measured\". Change them there first, then regenerate."
     },
     {
       "id": "benefits-strip",
@@ -591,11 +572,7 @@
       "alt": {
         "docs/screenshots/generated/benefits-strip.png": "Four benefit panels: the Overview's run timing with two verified checks and their commands, the companion.yml hooks block that attaches custom steps, a change sized simple at 6 files and 6 tasks projected, and the photo-storage living spec header with coverage counts and a drift flag"
       },
-      "referencedBy": {
-        "docs/screenshots/generated/benefits-strip.png": [
-          "apps/speckit-extension/README.md"
-        ]
-      }
+      "referencedBy": {}
     },
     {
       "id": "readme-hero",
@@ -644,12 +621,8 @@
       "alt": {
         "docs/screenshots/generated/banner-install-engine.png": "Install the other half: the sprout mascot invites you to add the companion Spec Kit extension, the engine that records every run"
       },
-      "referencedBy": {
-        "docs/screenshots/generated/banner-install-engine.png": [
-          "README.md"
-        ]
-      },
-      "notes": "Linked image: the root README wraps it in a link to ./docs/getting-started.md#install-the-spec-kit-extension."
+      "referencedBy": {},
+      "notes": "Cross-promo banner. No README shows it since each one carries the shared other-products table."
     },
     {
       "id": "banner-install-vscode",
@@ -673,12 +646,8 @@
       "alt": {
         "docs/screenshots/generated/banner-install-vscode.png": "Install the other half: the sprout mascot invites you to add the free VS Code extension that shows everything this engine records"
       },
-      "referencedBy": {
-        "docs/screenshots/generated/banner-install-vscode.png": [
-          "apps/speckit-extension/README.md"
-        ]
-      },
-      "notes": "Linked image: the extension README wraps it in a link to the VS Code Marketplace listing."
+      "referencedBy": {},
+      "notes": "Cross-promo banner. No README shows it since each one carries the shared other-products table."
     },
     {
       "id": "mascot-hero",
@@ -1237,11 +1206,7 @@
       "alt": {
         "docs/screenshots/live-bugs-ideas-panes.png": "The SpecKit side bar with three panes: Specs with its Active and Completed groups, Bugs grouped as To fix, Verified and Closed with a severity and outcome on each row, and Ideas grouped as Assessing and Decided with the verdict beside each idea."
       },
-      "referencedBy": {
-        "docs/screenshots/live-bugs-ideas-panes.png": [
-          "README.md"
-        ]
-      },
+      "referencedBy": {},
       "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
     },
     {
@@ -1266,11 +1231,7 @@
       "alt": {
         "docs/screenshots/live-bug-story.png": "A bug open on its Story tab, badge Verified. The page starts with Fixed and verified, one line of facts, then the first timeline step, What was wrong, dated from the assessment."
       },
-      "referencedBy": {
-        "docs/screenshots/live-bug-story.png": [
-          "README.md"
-        ]
-      },
+      "referencedBy": {},
       "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
     },
     {
@@ -1295,11 +1256,7 @@
       "alt": {
         "docs/screenshots/live-idea-decision.png": "An idea open on its Decision stage, badge Go, with all five stages checked in the rail. The page starts with Go and the first sentence of the rationale, and the Scorecard begins below with Problem validity rated strong."
       },
-      "referencedBy": {
-        "docs/screenshots/live-idea-decision.png": [
-          "README.md"
-        ]
-      },
+      "referencedBy": {},
       "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
     },
     {
@@ -1324,11 +1281,7 @@
       "alt": {
         "docs/screenshots/live-report-answer.png": "A bug's Assessment tab scrolled to Open Questions. The question carries a Needs an answer label and an Answer link, and the answer box under it is open with a reply typed in and a Send answer button."
       },
-      "referencedBy": {
-        "docs/screenshots/live-report-answer.png": [
-          "README.md"
-        ]
-      },
+      "referencedBy": {},
       "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
     },
     {
@@ -1353,11 +1306,7 @@
       "alt": {
         "docs/screenshots/live-tasks-create-issues.png": "The Tasks tab with the footer reading Next: Implement, then Regenerate, Other actions and Implement. Other actions is open on Analyze and Create GitHub issues."
       },
-      "referencedBy": {
-        "docs/screenshots/live-tasks-create-issues.png": [
-          "README.md"
-        ]
-      },
+      "referencedBy": {},
       "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
     },
     {
@@ -1382,11 +1331,7 @@
       "alt": {
         "docs/screenshots/live-converge-footer.png": "The Overview of a completed spec with the footer reading Run complete, then Converge, Archive and Reactivate, and no forward button."
       },
-      "referencedBy": {
-        "docs/screenshots/live-converge-footer.png": [
-          "README.md"
-        ]
-      },
+      "referencedBy": {},
       "notes": "Real-window crop placed by npm run shots:place (tooling/scripts/shots.json); retake with npm run shots, keep the filename."
     },
     {
@@ -1413,7 +1358,7 @@
       },
       "referencedBy": {
         "docs/screenshots/live-copilot-board.png": [
-          "apps/speckit-extension/README.md"
+          "apps/copilot-canvas/README.md"
         ]
       },
       "notes": "Taken headless by npm run shots:board; keep the filename."
@@ -1442,8 +1387,36 @@
       },
       "referencedBy": {
         "docs/screenshots/live-mod-window.png": [
-          "README.md",
-          "apps/speckit-extension/README.md"
+          "apps/claude-mod/README.md"
+        ]
+      },
+      "notes": "Drawn by npm run check:terminal --look site; keep the filename."
+    },
+    {
+      "id": "live-mod-run",
+      "name": "The Claude Code mod's pane on its Run tab",
+      "kind": "still",
+      "status": "shipped",
+      "composition": null,
+      "films": null,
+      "claim": "",
+      "outputs": {
+        "canonicalMp4": null,
+        "webWebm": null,
+        "webMp4": null,
+        "poster": null,
+        "xCrop": null,
+        "readmeGif": null,
+        "docsStill": "docs/screenshots/live-mod-run.png",
+        "extraStills": []
+      },
+      "unnormalized": [],
+      "alt": {
+        "docs/screenshots/live-mod-run.png": "The pane on its Run tab for Profile photo upload, Implementing. Specify, Plan and Tasks are ticked with their times, Implement reads running, six documents are listed with a read hint on each, the task bar reads 3/6, and tasks T001 to T003 are ticked under Phase 1. The foot lists the keys."
+      },
+      "referencedBy": {
+        "docs/screenshots/live-mod-run.png": [
+          "apps/claude-mod/README.md"
         ]
       },
       "notes": "Drawn by npm run check:terminal --look site; keep the filename."
@@ -1502,7 +1475,6 @@
       },
       "referencedBy": {
         "docs/screenshots/board-story.gif": [
-          "README.md",
           "apps/copilot-canvas/README.md"
         ]
       },

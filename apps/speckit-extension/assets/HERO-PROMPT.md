@@ -8,7 +8,7 @@ prompt below and re-compress (`sips --resampleWidth 1600 … && sips -s format j
 Brand art direction it follows: dark `#0F0F13`, blueprint grid, blue glow
 `#60A5FA`/`#3B82F6`, one yellow accent `#FACC15`, **no purple** — and the
 `SpecKit` / `Companion` (yellow marker) wordmark + `Specify → Plan → Tasks → Done`
-pills, mirroring the VS Code hero (`docs/screenshots/hero/PROMPT.md`).
+pills.
 
 ## Prompt
 

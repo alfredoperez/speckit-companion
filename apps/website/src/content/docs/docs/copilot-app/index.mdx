@@ -1,0 +1,102 @@
+---
+title: Copilot app
+description: The SpecKit Companion board in the GitHub Copilot app, covering what it shows, what each button sends to the chat, one run from New spec to implement, and its known limits.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import DocClip from '../../../../components/journey/DocClip.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+import YouSee from '../../../../components/journey/YouSee.astro';
+
+<DocFigure
+  src="canvas/board.png"
+  alt="The SpecKit Companion board in the Copilot app: the spec list on the left, and on the right one spec with its pipeline, the next-step button, and the Overview."
+  caption="The board: every spec on the left, and the selected one with its pipeline and Overview on the right."
+/>
+
+The board sits next to the chat in the GitHub Copilot app. It lists every spec in the project, opens the one you select, and runs the next step from a button. [Install](/docs/install) puts it there.
+
+## What the board shows
+
+| Part | What you see |
+| --- | --- |
+| Spec list | Each spec's status, a four-step bar (specify, plan, tasks, implement) and its task count, most recently active first. Filter by Active, Done or All, or search by name or number. |
+| Pipeline | The four steps of the open spec, each marked Not started, Running or Done |
+| Next-step card | The step that comes next and the button that runs it, with the command it sends on the line below |
+| Document tabs | The spec, plan, tasks, research, data model and checklists, rendered as they are in the VS Code viewer |
+| Overview tab | The same record as [the Overview in VS Code](/docs/results/the-overview) |
+| Activity tab | The run history, newest first |
+
+<YouSee>
+
+When the agent creates a spec, writes `plan.md` or ticks a task, the board updates without a refresh. That includes the first spec of a project that had none.
+
+</YouSee>
+
+You can also drive the board from the chat. Ask "which specs are still open?" or "show me the export spec" and the board follows.
+
+## What each button sends
+
+A button sends one command into the chat, and your agent runs the step from there. The board never edits a spec document itself.
+
+| Button | Where | What it sends |
+| --- | --- | --- |
+| **New spec** | The header | Specify with your description, in the workflow you choose: Companion, Spec Kit, or Auto, which runs every step without pausing |
+| **Run plan**, **Run tasks**, **Run implement** | The next-step card | The next step for the open spec |
+| **Mark complete** | The card, once every step is done | [Mark complete](/docs/steps#mark-complete) |
+| **Resume** | The card while a step is running, or the row under it | Picks a stopped run back up |
+| **Doctor** | The row under the card | A health check of the run |
+| **Ask Copilot** | The row under the card | A read-only question about where the spec stands |
+
+With the Companion Spec Kit extension in the project, the buttons send `/speckit.companion.*`. Without it they send the stock Spec Kit commands, and Mark complete, Resume, Doctor, and the Companion and Auto choices on New spec aren't offered. A spec keeps the workflow it was started with, so one that was started on Spec Kit gets the stock commands even where Companion is installed.
+
+The board spells each command the way your project registers it: `/speckit-plan` when the commands are skills, `/speckit.plan` when they're prompt files.
+
+After a send, a note at the foot of the board names the command. **Show prompt** opens the whole message and **Copy** copies it, which is what you need when a session has no chat to send to.
+
+<DocFigure
+  src="live-copilot-sent-prompt.png"
+  alt="The board after Run tasks was pressed. A note reads Sent /speckit.tasks to the chat, with Hide prompt and Copy beside it, and under it the short message that was sent and the path of its run instructions file with Copy path."
+  caption="After Run tasks: the command that was sent, and the full message behind Show prompt."
+/>
+
+In a project without Companion, the card and the New spec form say so in one line. **Install it** shows the install command with a Copy button, and **Ask Copilot to install it** asks the agent to run it. Dismiss the line and it stays hidden for the session.
+
+## A run on the board
+
+You press one button per step and the board moves on when the agent finishes. This clip follows one spec, a profile photo upload, from New spec to done.
+
+<DocClip
+  id="board-story"
+  caption="The whole run in 25 seconds. This is a recreation of a run, sped up, not a recording: the board is the real one, and the window and chat around it are a plain stand-in for the Copilot app."
+/>
+
+<Steps>
+
+1. Press **New spec**, choose **Companion**, describe what you want and submit. When the agent finishes, the spec is in the list as **Specified** and the card offers **Run plan**.
+
+2. Press **Run plan**. Plan turns to Done, and the plan, the research and the data model get a tab each.
+
+3. Press **Run tasks**. The Tasks tab lists every task by phase and counts `0/6`.
+
+4. Press **Run implement**. Implement reads **Running** until the chat turn ends, and each task is ticked as the agent finishes it, with the files it touched. If the run stops, press **Resume**.
+
+</Steps>
+
+<DocFigure
+  src="live-copilot-walk-implementing.png"
+  alt="The same spec during implement. The status reads Implementing, Implement is running in the pipeline, the card reads Implement is running with a Resume button, and the Tasks tab reads 3/6 with T001 and T002 ticked and the files each one touched."
+  caption="During implement: three of six tasks ticked, and Resume on the card."
+/>
+
+What each step writes is on [The steps](/docs/steps).
+
+## Step times without Companion
+
+Companion records every step, so the Overview has a time for each one. In a stock Spec Kit project the board reads progress from the files instead: a written spec, `plan.md` or `tasks.md` marks its step done, and ticked tasks show how far Implement is. There the Overview times only the steps you sent from the board, because a step you typed into the chat yourself has no start the board could note.
+
+## Known limits
+
+- **The board is clipped after you narrow the panel.** Dragging the divider between the chat and the board leaves the board at its old width, cut off on the left, because the Copilot app doesn't resize the panel's page. Close the board and open it again after resizing.
+- **Each session runs in a fresh worktree.** The app cuts it from your committed default branch, so it has no `node_modules`, and an implement step that runs tests installs the project's dependencies first. For the same reason, Companion's commands only resolve when they're committed as real files.
+- **Opening the board starts nothing.** If your agent goes looking for work after opening it, ask "Only open it, then wait for me."

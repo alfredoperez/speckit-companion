@@ -137,7 +137,7 @@ Sections, in this order:
 - Evidence: ![[QA Report <DATE> - <slug>.png]]
 ```
 
-6. **Screenshots worth keeping**: each docs candidate as `file`, what it shows, and which existing asset it could replace. Never copy into `docs/screenshots/`: the five README shots have their own recipe in `docs/visual-assets.md` and their filenames are load-bearing; generated images come from Storybook.
+6. **Screenshots worth keeping**: each docs candidate as `file`, what it shows, and which existing asset it could replace. Never copy into `docs/screenshots/` by hand: its filenames are load-bearing, product pictures are placed by `npm run shots:place` (the `shots` skill), and generated images come from Storybook.
 7. **Evidence**: the `$RESULTS` path.
 
 Copy each embedded shot (every finding's evidence and every docs candidate) next to the note as `QA Report <DATE> - <slug>.png`, embed it with `![[…]]`, and give it a one-line italic caption. Raw evidence, the other shots, logs and capture output stay in `$RESULTS`. Run the `obsidian` skill's hard-wrap check on the note, then open it in Obsidian.
@@ -192,7 +192,7 @@ Then: `open_application` Visual Studio Code, click the SpecKit activity-bar icon
 
 ### Navigation matrix
 
-Scripted: the `nav-matrix` check. The real-window check walks rows N1 to N15 as steps `nav-n1` to `nav-n15` on demo specs it derives itself (`_00` to `_07`, the same set the `vscode-qa` recipe builds), plus `nav-links` (the Links section) and `nav-empty-record` (the tab title of a spec with no recorded activity). Each step's name says the row's expected state; expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/inside-the-viewer.mdx`), so quote it in a FAIL.
+Scripted: the `nav-matrix` check. The real-window check walks rows N1 to N15 as steps `nav-n1` to `nav-n15` on demo specs it derives itself (`_00` to `_07`, the same set the `vscode-qa` recipe builds), plus `nav-links` (the Links section) and `nav-empty-record` (the tab title of a spec with no recorded activity). Each step's name says the row's expected state; expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/viewer-and-sidebar.mdx`), so quote it in a FAIL.
 
 ### Full run, timed
 

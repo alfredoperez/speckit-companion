@@ -1,0 +1,203 @@
+---
+title: The steps
+description: Every step a spec goes through, with the command that runs it, the files it writes and what the viewer shows when it's done.
+---
+
+import CodeLine from '../../../../components/CodeLine.astro';
+import { Aside } from '@astrojs/starlight/components';
+import Actions from '../../../../components/journey/Actions.astro';
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+| Workflow | Steps | How it ends |
+| --- | --- | --- |
+| Spec Kit | specify, plan, tasks, implement | At Implemented, until you press **Mark Completed** |
+| SpecKit Companion | specify, plan, tasks, implement, mark-complete | Its last step marks the spec complete as part of the run |
+
+You pick the workflow in Create New Spec, and it's recorded on the spec. Companion is pre-selected when the Companion Spec Kit extension is installed, unless you set `speckit.defaultWorkflow` in [Settings](/docs/reference/configuration). The commands below are Companion's. Each of the four step commands has a stock twin without the `companion.` part, such as `/speckit.plan`, and the stock commands stay installed either way.
+
+While a step runs, its tab in the rail spins and keeps time, and the footer reads **Step running, actions unlock when it settles**. When it settles, the footer offers the next step and a notification offers **Open spec**.
+
+<DocFigure
+  src="figure-mid-run.png"
+  recapture
+  alt="The viewer while Plan runs: Specification is checked, and the Plan tab shows a spinner and its running time, 1m 18s."
+  caption="While plan runs, its tab spins and keeps time."
+/>
+
+## Constitution
+
+<Actions>
+  <CodeLine command="/speckit.constitution" prompt={false} />
+  <p>Or click <strong>Configure Constitution</strong> in the Specs view, or run <strong>SpecKit: Constitution</strong> from the command palette.</p>
+</Actions>
+
+This is Spec Kit's own step. It writes `.specify/memory/constitution.md`, once per project.
+
+`specify init` creates that file as a template full of placeholders. While they're still there, the Specs view shows **Configure Constitution**, and a notification offers **Run Setup** when the project opens. You can skip both and create a spec first. Once the file has real content the prompt goes away, and the Steering view lists the file as **Constitution** under **SpecKit Project Files**.
+
+<DocFigure
+  src="live-step-constitution.png"
+  alt="The SpecKit side bar with the Steering view open on Companion, Claude Code and SpecKit Project Files. Constitution is selected under SpecKit Project Files, and constitution.md is open beside it with three principles and a Governance section."
+  caption="The Steering view, with the Constitution under SpecKit Project Files. Clicking it opens the file."
+/>
+
+The plan step checks its design against the constitution and records the result in `plan.md`.
+
+## Specify
+
+<Actions>
+  <CodeLine command="/speckit.companion.specify <what you want to build>" prompt={false} />
+  <p>Or click <code>+</code> in the Specs view, write the brief and press <strong>Create Spec</strong>.</p>
+</Actions>
+
+Specify creates a `specs/<number>-<name>/` folder and writes two files in it: the spec, named `<name>.spec.md` (the stock workflow names it `spec.md`), and `checklists/requirements.md`, a quality checklist the assistant grades the spec against once.
+
+Where the brief leaves a question open, the spec marks it in the text. **Clarify**, under **Other actions** in the footer, has your assistant ask you those questions and write the answers in.
+
+The Companion command also sizes the change. There's no setting for this.
+
+| Verdict | The bar | What specify does |
+| --- | --- | --- |
+| Simple | Up to 5 files and 10 tasks, and easy to undo and easy to check | Writes a short plan and the task list in the same pass. The next step is implement. |
+| Normal | Over that bar, or inside it but hard to undo or hard to check | Writes only the spec. You continue with plan, then tasks. |
+| Oversized | Over it by a wide margin, across several parts of the code | Same as normal. The verdict is recorded. |
+
+A migration, deleted stored data or a contract other code depends on is sized normal whatever its file count, so a risky change never skips plan and tasks. The verdict shows on [the Overview](/docs/results/the-overview) as a line such as `Sized simple: 6 files, 8 tasks projected`.
+
+When specify settles, **Specification** is checked in the rail, the badge reads **Specified**, and the footer offers **Next: Plan**. After a simple verdict, Plan and Tasks are checked too and the footer offers **Next: Implement**.
+
+<DocFigure
+  src="live-step-specify.png"
+  alt="The Specification tab of Profile Photo Upload after specify. The badge reads Specified, Specification is checked with Requirements beside it, Plan and Tasks are empty, and the spec opens on Why this exists."
+  caption="After specify: the badge reads Specified and Specification is checked, with its checklist beside it. Plan and Tasks wait for their documents."
+/>
+
+## Plan
+
+<Actions>
+  <CodeLine command="/speckit.companion.plan" prompt={false} />
+  <p>Or press <strong>Plan</strong> in the viewer footer.</p>
+</Actions>
+
+Plan always writes `plan.md`: a summary, a check against the constitution, and the project structure. The Companion command adds `research.md`, `data-model.md` and `contracts/` only when the size of the change warrants them, and can draw parts of the plan as [plan blocks](/docs/steps/plan-blocks). When [living specs](/docs/results/living-specs) are on, it reads the specs for the capabilities in scope first.
+
+When plan settles, **Plan** is checked, the badge reads **Planned**, the supporting documents sit beside Plan in the rail, and the footer offers **Next: Tasks**.
+
+<DocFigure
+  src="live-step-plan.png"
+  alt="The Plan tab of Profile Photo Upload after plan. The badge reads Planned, Specification and Plan are checked, Data Model and Research sit beside Plan, Tasks is still empty, and the plan opens on its Technical Context and Shape of the change."
+  caption="After plan: the badge reads Planned, Plan is checked, and Data Model and Research sit beside it. Tasks waits."
+/>
+
+**Checklist**, under **Other actions**, runs Spec Kit's quality checklist on the plan. If you edit the spec after the plan was written, the plan shows a stale banner with **Regenerate**.
+
+## Tasks
+
+<Actions>
+  <CodeLine command="/speckit.companion.tasks" prompt={false} />
+  <p>Or press <strong>Tasks</strong> in the viewer footer.</p>
+</Actions>
+
+Tasks writes `tasks.md`, a checklist in the order the work has to happen. The Companion command makes one phase per user story after a shared setup, and splits each phase into waves. Tasks inside a wave don't depend on each other, and a wave has to finish before the next one starts. [The viewer and sidebar](/docs/navigate/viewer-and-sidebar) explains the markers on each task.
+
+When tasks settles, **Tasks** is checked, the badge reads **Tasks Created**, and the footer offers **Next: Implement**.
+
+<DocFigure
+  src="live-step-tasks.png"
+  alt="The Tasks tab of Profile Photo Upload after tasks. The badge reads Tasks Created, Specification, Plan and Tasks are checked, and Phase 1, Service, lists tasks T001 to T004 with empty checkboxes."
+  caption="After tasks: the badge reads Tasks Created, every document is checked, and each phase lists its tasks with empty boxes."
+/>
+
+**Other actions** has two entries here. **Analyze** cross-checks the spec, the plan and the tasks for consistency. **Create GitHub issues** sends `/speckit.taskstoissues`, which creates one GitHub issue per task.
+
+<Aside type="caution" title="It creates real issues">
+It needs a GitHub remote and the GitHub MCP server in your assistant. Companion can't undo the issues, so it asks you to confirm first.
+</Aside>
+
+## Implement
+
+<Actions>
+  <CodeLine command="/speckit.companion.implement" prompt={false} />
+  <p>Or press <strong>Implement</strong> in the viewer footer.</p>
+</Actions>
+
+Implement works through `tasks.md` and writes the code. It writes no document of its own, so it has no tab in the rail and its progress shows on the Tasks tab: a live percentage counted from the checked boxes. In the sidebar, the spec's row shows the last finished task and how long ago, like `T004 · 2h ago`.
+
+<DocFigure
+  src="live-step-implement.png"
+  alt="The Tasks tab of Profile Photo Upload during implement. The badge reads Implementing, the Tasks tab shows 50%, and under Phase 1 tasks T001 and T002 are ticked, each with a line saying what was done and the files it touched."
+  caption="Implement, halfway: the badge reads Implementing, the Tasks tab carries the percentage, and each finished task is ticked."
+/>
+
+The Companion command records each task the moment it finishes, with one line on what it did and the files it touched, so a run that stops halfway picks up at the next unchecked task. Where your assistant can run work in parallel, large user stories are built side by side.
+
+For a run that stopped, [Overview and progress](/docs/results/the-overview) has Resume, status and doctor.
+
+## Converge
+
+<Actions>
+  <CodeLine command="/speckit.converge" prompt={false} />
+  <p>Or press <strong>Converge</strong> in the footer of a spec whose build is done, or choose it from the spec's row menu in the sidebar.</p>
+</Actions>
+
+Converge is Spec Kit's own command. It checks the code against the spec, the plan and the task list. If something is missing it appends a Convergence phase of new tasks to `tasks.md`, and otherwise it reports "Converged". You run implement and converge again until it converges.
+
+<DocFigure
+  src="live-converge-footer.png"
+  alt="The Overview of a completed spec with the footer reading Run complete, then Converge, Archive and Reactivate."
+  caption="A finished spec's footer offers Converge beside Archive and Reactivate."
+/>
+
+Spec Kit works on the feature of your current branch. Companion names the spec in the request and asks the assistant to stop if the branch belongs to a different one. Converge never changes the spec's status, so if it adds tasks to a completed spec, press **Reactivate** before you run implement again.
+
+With the Companion Spec Kit extension installed, [the Overview](/docs/results/the-overview) lists **Converge** after Implement with how long it took. Only the first pass is timed.
+
+Converge compares the code with one feature's own documents. It doesn't check [living specs](/docs/results/living-specs), which have drift and sync for that.
+
+## Auto
+
+<Actions>
+  <CodeLine command="/speckit.companion.auto <what you want to build>" prompt={false} />
+  <p>Or click <strong>Auto</strong> beside <strong>Create Spec</strong> in Create New Spec, or run <strong>SpecKit: Run Spec Hands-Off (Auto)</strong> from the command palette.</p>
+</Actions>
+
+Auto runs specify, plan, tasks, implement and mark-complete in order without stopping for approval. It dispatches the same step commands, so the documents come out the same.
+
+<DocFigure
+  src="live-new-spec.png"
+  alt="Create New Spec with SpecKit Companion chosen as the workflow, a one-sentence feature brief typed, and Cancel, Auto and Create Spec at the foot."
+  caption="Auto sits beside Create Spec when the chosen workflow is SpecKit Companion."
+/>
+
+It needs the Companion Spec Kit extension, the SpecKit Companion workflow, and an assistant that keeps working after a step finishes. In a terminal that runs one command and stops, auto runs the first step and stops there.
+
+Three things differ from running the steps yourself:
+
+- A change sized simple goes from specify straight to implement.
+- The run is marked unattended, so a [hook](/docs/customize/workflow-builder) that would stop and ask a person records the checkpoint and carries on.
+- You can't pause it from the editor. To stop it, stop your assistant.
+
+To read the spec before it becomes code, run the steps one at a time and [review with comments](/docs/steps/review-with-comments).
+
+## Mark complete
+
+<Actions>
+  <CodeLine command="/speckit.companion.mark-complete" prompt={false} />
+  <p>In the stock workflow, press <strong>Mark Completed</strong> in the viewer footer.</p>
+</Actions>
+
+This is the Companion workflow's last step, and the Companion implement command runs it when the last task is checked, so you rarely type it. It writes the `completed` status to the spec's `.spec-context.json`, and the spec moves to **Completed** in the sidebar.
+
+The stock workflow has no such step. A spec stays at **Implemented**, with a yellow beaker in the sidebar, until you press **Mark Completed**. A completed spec's footer reads **Run complete** and offers **Converge**, **Archive** and **Reactivate**.
+
+## Stock or Companion, measured
+
+One benchmark run (2026-06-10) built the same features through each workflow at three sizes, scored by an independent judge. Timing is one sample per cell, so read it as a direction.
+
+| Easy / medium / hard | Spec Kit | SpecKit Companion |
+| --- | --- | --- |
+| `spec.md` lines | 61 / 91 / 94 | 24 / 29 / 36 |
+| Throwaway side files | 3 / 4 / 4 | 0 / 0 / 0 |
+| Wall-clock | 2m05s / 4m31s / 7m38s | 3m03s / 5m03s / 5m59s |
+
+Companion specs run about 60 to 68% leaner. Correctness tied: every cell shipped a passing build and scored 5.0 out of 5 from the judge.

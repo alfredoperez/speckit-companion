@@ -2,7 +2,7 @@
 
 Thanks for considering a contribution. This guide tells you how to get the extension running locally, what conventions the codebase expects, and how to land a PR cleanly.
 
-If you only have five minutes, skim **Quick Start** and the **README docs map** sections — those two cover 80% of what reviewers care about.
+If you only have five minutes, skim **Quick Start** and **Docs** — those two cover 80% of what reviewers care about.
 
 > **Two extensions live in this repo.** This guide is for the **VS Code extension** (the GUI — `apps/vscode/src/`, `apps/vscode/webview/`, `package.json`). The **spec-kit extension** (`apps/speckit-extension/`, `id: companion`) is a separate, independently-versioned product with its own dev loop, changelog, and version — if you're working on it, follow **[apps/speckit-extension/docs/contributing.md](apps/speckit-extension/docs/contributing.md)** instead.
 
@@ -70,7 +70,7 @@ CI runs each suite only where it can say something. A `changes` job reads the di
 ```
 apps/vscode/src/       — extension entry, providers, managers, AI provider integrations
 apps/vscode/webview/   — webview UIs (spec viewer, spec editor, workflow editor)
-docs/        — long-form references (linked below)
+docs/        — images only: screenshots, the architecture diagram
 specs/       — spec-driven development specs (one folder per feature)
 .specify/    — SpecKit CLI config / templates (NOT shipped with the extension)
 .claude/     — workspace AI setup (NOT shipped with the extension)
@@ -78,8 +78,8 @@ specs/       — spec-driven development specs (one folder per feature)
 
 Two things to internalise before editing:
 
-1. **Extension isolation** (`CLAUDE.md` → "Extension Isolation"): the packaged extension only ships code under `apps/vscode/src/` plus the bundled webview. Anything under `.claude/**` or `.specify/**` is the user's environment, not the extension's. Don't implement extension features by editing those — use `apps/vscode/src/` code or prompt text instead.
-2. **Spec-driven development**: this project uses SDD. Non-trivial features live as a folder under `specs/NNN-slug/` with `spec.md`, `plan.md`, and `tasks.md`. See `specs/058-floating-toast/` or any recent spec for the shape.
+1. **Extension isolation** (`CLAUDE.md` → "Extension isolation"): the packaged extension only ships code under `apps/vscode/src/` plus the bundled webview. Anything under `.claude/**` or `.specify/**` is the user's environment, not the extension's. Don't implement extension features by editing those — use `apps/vscode/src/` code or prompt text instead.
+2. **Spec-driven development**: this project uses SDD. Non-trivial features live as a folder under `specs/NNN-slug/` with `spec.md`, `plan.md`, and `tasks.md`. See any recent folder under `specs/` for the shape.
 
 ## Commit Style
 
@@ -97,39 +97,25 @@ Types in use: `feat`, `fix`, `docs`, `refactor`, `chore`. The subject is imperat
 
 For `chore` commits (version bumps, release prep) the scope is usually omitted.
 
-## The README is the source of truth — keep it that way
+## Docs
 
-`CLAUDE.md` contains a **"Feature → README section map"** that lists, for every kind of change, which README section must be updated. **Read it before opening a PR.** Examples from that map:
-
-| You added… | Update in README… |
-|---|---|
-| A new AI provider | "Supported AI Providers" matrix + provider count + `package.json` enum |
-| A new configuration setting | "Configuration" section (JSON example + value table) |
-| A new sidebar action | the site's [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) + the "Sidebar at a Glance" summary in README |
-| A new webview UI element | "Reading Specs" subsection + retake the screenshot |
-
-If your change is documented in `CLAUDE.md`'s map but not in the README after your PR, reviewers will ask. Save the round trip.
+Each fact has one home, listed under "One fact, one owner" in `CLAUDE.md`. Settings and providers live on the docs site's reference pages, how a feature works lives on its one site page, and the README is only an intro, an install and a first run. Update the one home; do not add a second copy.
 
 ## Pull Request Process
 
 1. Branch from `main` (don't stack new work on a previously-merged feature branch — this repo squash-merges, so the old commits won't be in the history of your new branch).
 2. Make your changes.
 3. Run `npm run test:all` and `npm run compile`. For a change that touches no Python, `npm test` and `npm run compile` are enough.
-4. Update `README.md` per the docs map in `CLAUDE.md`. If your change is internal-only (refactor, test-only, build), say so in the PR.
+4. Update the doc that owns what you changed (see **Docs** above). If your change is internal-only (refactor, test-only, build), say so in the PR.
 5. Open a PR using the template in `.github/pull_request_template.md`. Fill in the related issue, description, screenshots (for UI changes), and the checklist.
 6. Reviewers merge by squashing — keep your commits readable but don't stress over rebase noise.
 
 ## References
 
-Long-form docs live under `docs/` and are linked from the README:
-
-- [docs/architecture.md](docs/architecture.md) — module structure, extension/webview boundaries, build pipeline
-- [sidebar reference](https://speckit-companion.dev/docs/navigate/the-sidebar/) — sidebar tree-view behaviour: filters, sorts, lifecycle groups, badges, transitions
-- [spec viewer anatomy](https://speckit-companion.dev/docs/navigate/inside-the-viewer) — spec viewer behaviour: reading a spec, commenting, moving a spec forward, what the run recorded
-- `apps/vscode/src/core/types/specContext.ts` — `.spec-context.json` contract (writer rules in [docs/architecture.md](docs/architecture.md#data-flow))
-- [CLAUDE.md](CLAUDE.md) — instructions for AI assistants editing this repo, plus the README docs map and per-release checklist
-
-Look at a recent spec under `specs/` (for example, [specs/058-floating-toast/](specs/058-floating-toast/)) for an example of the SDD format used here.
+- [CLAUDE.md](CLAUDE.md) — the repo map, the architecture rules the code cannot show, and which doc owns which fact
+- [docs/architecture/diagram.html](docs/architecture/diagram.html) — how a command travels, as one page you open in a browser
+- [The docs site](https://speckit-companion.dev/docs/) — how every feature behaves for a user
+- `apps/vscode/src/core/types/specContext.ts` — the `.spec-context.json` contract
 
 ## Reporting Issues
 

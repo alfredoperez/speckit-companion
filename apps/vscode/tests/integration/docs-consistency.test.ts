@@ -3,9 +3,9 @@
  *
  * Runs as part of `npm test`. Fails loud when documentation drifts from reality
  * along the dimensions that historically rot:
- *   - provider count in prose vs. package.json enum
- *   - provider files added without a mention in architecture.md
- *   - .ts/.tsx paths in docs that no longer exist on disk
+ *   - the provider table on the site vs. the package.json enum
+ *   - .ts/.tsx paths in CLAUDE.md that no longer exist on disk
+ *   - prose growing back under docs/
  *
  * If you're updating docs to add a new file, the test will pass once the path
  * is real. If you're deleting a file, the test will fail until you remove its
@@ -35,30 +35,18 @@ describe('docs consistency', () => {
       return properties['speckit.aiProvider'].enum;
     })();
 
-    it('package.json enum, the website provider matrix, and architecture.md prose agree', () => {
+    it('package.json enum and the website provider table agree', () => {
       const count = enumValues.length;
 
       // The website's provider reference lists every provider once, with its `aiProvider` value in
       // backticks, in the table under "How each one is reached". Those values must be exactly the enum.
-      const providersDoc = read('apps/website/src/content/docs/docs/reference/providers.mdx');
+      const providersDoc = read('apps/website/src/content/docs/docs/reference/configuration.mdx');
       const reached = providersDoc.match(/^## How each one is reached\n+((?:\|[^\n]*\n)+)/m);
       expect(reached).not.toBeNull();
       const documented = [...reached![1].matchAll(/\(`([a-z-]+)`\)\s*\|/g)].map((m) => m[1]);
       expect([...documented].sort()).toEqual([...enumValues].sort());
       expect(documented).toHaveLength(count);
 
-      const arch = read('docs/architecture.md');
-      // The architecture doc must claim a provider count that matches the enum.
-      // We accept any English digit phrasing ("8 supported providers", "eight providers ship", etc.).
-      const wordForCount: Record<number, string> = {
-        5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten', 11: 'eleven', 12: 'twelve',
-      };
-      const expectedWord = wordForCount[count];
-      const hasNumeric = new RegExp(`\\b${count}\\b[^.\\n]*provider`, 'i').test(arch);
-      const hasWord = expectedWord
-        ? new RegExp(`\\b${expectedWord}\\b[^.\\n]*provider`, 'i').test(arch)
-        : false;
-      expect(hasNumeric || hasWord).toBe(true);
     });
 
     it('custom workflows accept every selectable provider id', () => {
@@ -110,24 +98,8 @@ describe('docs consistency', () => {
     });
   });
 
-  describe('provider file inventory', () => {
-    it('every *Provider.ts under src/ai-providers/ is named in architecture.md', () => {
-      const arch = read('docs/architecture.md');
-      const dir = path.join(REPO_ROOT, 'apps/vscode/src/ai-providers');
-      const providerFiles = fs
-        .readdirSync(dir)
-        .filter((f) => /Provider\.ts$/.test(f));
-      expect(providerFiles.length).toBeGreaterThan(0);
-      const missing = providerFiles.filter((f) => !arch.includes(f));
-      expect(missing).toEqual([]);
-    });
-  });
-
   describe('paths referenced in docs exist on disk', () => {
-    const DOCS = [
-      'docs/architecture.md',
-      'CLAUDE.md',
-    ];
+    const DOCS = ['CLAUDE.md'];
 
     // Extract paths from backticked spans that look like real source paths.
     // We're strict: must contain a slash and end in .ts/.tsx/.css/.json/.md.
@@ -191,36 +163,30 @@ describe('docs consistency', () => {
         .sort();
 
     it('CLAUDE.md names every top-level directory a contributor sees', () => {
-      const map = read('CLAUDE.md').split('## Gotchas')[0];
+      const map = read('CLAUDE.md').split('## Where things are documented')[0];
       const unnamed = topLevelDirs().filter((dir) => !map.includes(`${dir}/`));
       expect(unnamed).toEqual([]);
     });
 
     it('the repo map names no directory that has been moved or deleted', () => {
-      const map = read('CLAUDE.md').split('## Gotchas')[0];
+      const map = read('CLAUDE.md').split('## Where things are documented')[0];
       const named = [...map.matchAll(/`([a-z][a-z-]*)\/`/g)].map((m) => m[1]);
       expect(named.filter((dir) => !exists(dir))).toEqual([]);
     });
   });
 
   describe('docs/ does not regrow', () => {
-    // A cleanup pass deleted the docs that restated, as prose, behaviour the
-    // living specs now state enforceably. This allowlist is what's left —
-    // anything else is a doc going stale again. See docs/doc-sync.md.
-    const ALLOWED_FILES = new Set([
-      'architecture.md',
-      'configuration.md',
-      'doc-sync.md',
-      'getting-started.md',
-      'media-manifest.md',
-      'pipeline-builder.md',
-      'providers.md',
-      'sidebar.md',
-      'telemetry.md',
-      'viewer.md',
-      'visual-assets.md',
-    ]);
-    const ALLOWED_DIRS = new Set(['architecture', 'media', 'providers', 'reference', 'screenshots', 'style-guide']);
+    // docs/ holds images and the generated diagram. Prose that lived here had
+    // nothing keeping it honest, so it moved to the site, CLAUDE.md and skills.
+    const ALLOWED_FILES = new Set<string>();
+    const ALLOWED_DIRS = new Set(['architecture', 'media', 'reference', 'screenshots', 'style-guide']);
+
+    it('holds no markdown anywhere under it', () => {
+      const markdown = fs
+        .readdirSync(path.join(REPO_ROOT, 'docs'), { recursive: true, encoding: 'utf8' })
+        .filter((f) => /\.mdx?$/.test(f));
+      expect(markdown).toEqual([]);
+    });
 
     it('holds no file outside the allowlist', () => {
       const entries = fs
@@ -230,6 +196,25 @@ describe('docs consistency', () => {
         .filter((e) => (e.isDirectory() ? !ALLOWED_DIRS.has(e.name) : !ALLOWED_FILES.has(e.name)))
         .map((e) => e.name);
       expect(stray).toEqual([]);
+    });
+  });
+
+  describe('the other-products block', () => {
+    // Each product README introduces the other three with one shared block, so
+    // nobody syncs four hand-written versions.
+    const READMES = [
+      'README.md',
+      'apps/speckit-extension/README.md',
+      'apps/claude-mod/README.md',
+      'apps/copilot-canvas/README.md',
+    ];
+    const block = (rel: string) =>
+      read(rel).match(/<!-- other-products:start -->\n([\s\S]*?)<!-- other-products:end -->/)?.[1] ?? '';
+
+    it('is present and identical in every product README', () => {
+      const [first, ...rest] = READMES.map(block);
+      expect(first.trim()).not.toBe('');
+      for (const other of rest) expect(other).toBe(first);
     });
   });
 
@@ -293,16 +278,19 @@ describe('docs consistency', () => {
   });
 
   describe('changelog voice', () => {
-    // docs/doc-sync.md "Changelog voice", enforced on the Unreleased block only:
+    // .claude/commands/changelog-entry.md "Changelog voice", enforced on the Unreleased block only:
     // a released version is history and is never checked. A file is held to the
     // PR links and area tags it already writes; the Claude Code mod's has neither.
     const CHANGELOGS = [
       { file: 'CHANGELOG.md', links: true, areas: true },
       { file: 'apps/speckit-extension/CHANGELOG.md', links: true, areas: true },
       { file: 'apps/claude-mod/CHANGELOG.md', links: false, areas: false },
+      { file: 'apps/copilot-canvas/CHANGELOG.md', links: false, areas: false },
     ];
     const TITLE_WORDS = 8;
     const SENTENCE_WORDS = 22;
+    const MAX_BULLETS = 12;
+    const MAX_HIGHLIGHTS = 3;
 
     const COMMENT = /<!--[\s\S]*?-->/g;
     const PR_LINKS = /\(\[#\d+\]\([^)\s]+\)(?:,\s*\[#\d+\]\([^)\s]+\))*\)/g;
@@ -348,8 +336,12 @@ describe('docs consistency', () => {
 
       let section = '';
       let open: { kind: 'bullet' | 'highlight'; title: string; raw: string[] } | null = null;
+      const count = { bullet: 0, highlight: 0 };
       const close = () => {
-        if (open) check(open.kind, open.title, open.raw.join('\n'));
+        if (open) {
+          count[open.kind] += 1;
+          check(open.kind, open.title, open.raw.join('\n'));
+        }
         open = null;
       };
       for (const line of lines) {
@@ -368,6 +360,12 @@ describe('docs consistency', () => {
         }
       }
       close();
+      if (count.bullet > MAX_BULLETS) {
+        problems.push(`${count.bullet} bullets, a release gets at most ${MAX_BULLETS}: fold related ones into one line per area`);
+      }
+      if (count.highlight > MAX_HIGHLIGHTS) {
+        problems.push(`${count.highlight} highlights, a release gets at most ${MAX_HIGHLIGHTS}: the rest are bullets`);
+      }
       return problems;
     }
 
@@ -404,6 +402,33 @@ describe('docs consistency', () => {
         '"Untagged.": says "now" or "previously"',
       ]);
       expect(voiceProblems(sample, { links: false, areas: false })).not.toContain('"Untagged.": no PR link');
+    });
+
+    it.each(['CHANGELOG.md', 'apps/speckit-extension/CHANGELOG.md'])(
+      '%s → keeps Unreleased and two releases, the rest lives in the site archive',
+      (file) => {
+        const released = [...read(file).matchAll(/^## \[(\d[^\]]*)\]/gm)].map((m) => m[1]);
+        expect(released.length).toBeLessThanOrEqual(2);
+      },
+    );
+
+    it('caps a release at twelve bullets and three highlights', () => {
+      const bullet = (n: number) => `- **Entry ${n}.** A menu keeps its text inside.`;
+      const highlight = (n: number) => `#### Feature ${n}\nIt does a thing.`;
+      const block = (bullets: number, highlights: number) =>
+        [
+          '## [Unreleased]',
+          '### Highlights',
+          ...Array.from({ length: highlights }, (_, i) => highlight(i)),
+          '### Fixed',
+          ...Array.from({ length: bullets }, (_, i) => bullet(i)),
+        ].join('\n');
+      const loose = { links: false, areas: false };
+      expect(voiceProblems(block(12, 3), loose)).toEqual([]);
+      expect(voiceProblems(block(13, 4), loose)).toEqual([
+        '13 bullets, a release gets at most 12: fold related ones into one line per area',
+        '4 highlights, a release gets at most 3: the rest are bullets',
+      ]);
     });
 
     it('the site draws ==a phrase== as a marker stroke, outside code and URLs only', () => {

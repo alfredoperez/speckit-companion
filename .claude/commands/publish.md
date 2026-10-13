@@ -22,19 +22,19 @@ Help the user publish a new version of the extension by:
 3. Get the previous version tag and analyze commits since then to generate a changelog.
 4. Update CHANGELOG.md by adding a new section at the top (after the header) with:
    - `## [X.X.X] - YYYY-MM-DD` format, then one plain lead sentence for the release
-   - The format in `docs/doc-sync.md` ("Changelog voice"): the big features under `### Highlights`, one `#### <Feature title>` block each with its `<!-- area: …; pr: …; media: … -->` comment, and every other entry as one bullet under Added / Fixed / Changed / Security ending with its full PR link and an `<!-- area: … -->` tag
-   - Keep all previous versions' changelogs intact
-5. Run the release checklist in `docs/doc-sync.md` ("Per-release checklist") before anything is committed, and stop on a failure:
-   - `npm run clips:check` must report 0 broken.
-   - The README "What's new" block names this version and its three highlights, the provider matrix matches `speckit.aiProvider` in `package.json`, and the README "VS Code" badge matches `engines.vscode`.
-   - Every changelog bullet under the new version has its README section or site page, and the site builds: `cd apps/website && npm run build && npx astro check`.
+   - The format in `.claude/commands/changelog-entry.md` ("Changelog voice"): the big features under `### Highlights`, one `#### <Feature title>` block each with its `<!-- area: …; pr: …; media: … -->` comment, and every other entry as one bullet under Added / Fixed / Changed / Security ending with its full PR link and an `<!-- area: … -->` tag
+   - `CHANGELOG.md` keeps `[Unreleased]` and the two latest releases. Cut every older release section and paste it at the top of `apps/website/src/data/changelog-archive.md`, above the newest one there, unchanged. A test fails when the changelog holds a third release.
+5. Run the release checklist before anything is committed, and stop on a failure:
+   - `npm run clips:check` must report 0 broken. A broken count is a 404 on the published Marketplace listing.
+   - The README install and first-run steps still match what ships, and the README "VS Code" badge matches `engines.vscode` in `package.json`.
+   - Re-render any screenshot whose UI changed in this release. Overwrite in place; never rename or delete a screenshot file.
+   - Give each highlight its screenshots on the site's changelog. Name them in the highlight's comment (`media: builder-move-hook, builder-side-panel`) and add one entry per shot under the release's `vscode@<version>` key in `content/media/changelog.json`: `file` (a generated still under `docs/screenshots/generated/`, or a real-app screenshot copied to `apps/website/public/changelog/`), `alt`, a one-line `caption`, and a `highlight` box `{x, y, w, h}` in the image's own pixels when there is a clear changed area. Several shots make a carousel. Do it after the version heading exists.
+   - The site builds: `cd apps/website && npm run build && npx astro check`. The build fails on a media id with no entry, a missing alt or file, a shot no highlight names, and a key that matches no release.
    - If the release touches `apps/speckit-extension/`, say so: the spec-kit extension ships separately with `/publish-speckit-ext`, and changes there (Auto folding, the writer) reach users only through it.
 6. Update documentation files with the new version:
-   - Update version references in CLAUDE.md if needed
-   - Update version references in README.md (e.g., in installation commands)
-   - Update version references in README.zh-CN.md (e.g., in installation commands)
+   - Update version references in README.md if it has any
 7. Update package.json version using `npm version X.X.X --no-git-tag-version`.
-8. Commit CHANGELOG.md, CLAUDE.md, README.md, README.zh-CN.md, package.json and package-lock.json with message "chore: bump version to X.X.X".
+8. Commit CHANGELOG.md, README.md, `content/media/changelog.json`, package.json and package-lock.json with message "chore: bump version to X.X.X".
 9. Create an annotated tag `vX.X.X` with message "Release vX.X.X - See CHANGELOG.md for details".
 10. Push both the commit and tag to origin.
 11. Inform the user that GitHub Actions will handle the rest.
