@@ -551,6 +551,14 @@ describe('numbering a new spec', () => {
         assert.equal(nextSpecNumber(root), null);
         assert.doesNotMatch(buildSpecifyPrompt({ description: 'x', workflow: 'speckit', root, now: AT }).prompt, /Name the new spec folder/);
     });
+
+    it('reads the feature_numbering key a Spec Kit 1.1+ project writes before the older branch_numbering', () => {
+        const root = withFolders('041-profile-photo');
+        writeFileSync(join(root, '.specify/init-options.json'), JSON.stringify({ feature_numbering: 'timestamp', branch_numbering: 'sequential' }));
+        assert.equal(nextSpecNumber(root), null);
+        writeFileSync(join(root, '.specify/init-options.json'), JSON.stringify({ feature_numbering: 'sequential', branch_numbering: 'timestamp' }));
+        assert.equal(nextSpecNumber(root), '042');
+    });
 });
 
 describe('context writer path', () => {

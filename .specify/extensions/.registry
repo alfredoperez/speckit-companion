@@ -2,48 +2,13 @@
   "schema_version": "1.0",
   "extensions": {
     "git": {
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "local",
-      "manifest_hash": "sha256:9731aa8143a72fbebfdb440f155038ab42642517c2b2bdbbf67c8fdbe076ed79",
+      "manifest_hash": "sha256:698cc7089602db44622de39730555db4999cda94ab47195bcfe18f41d08b430a",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
-        "agy": [
-          "speckit.git.feature",
-          "speckit.git.validate",
-          "speckit.git.remote",
-          "speckit.git.initialize",
-          "speckit.git.commit"
-        ],
         "claude": [
-          "speckit.git.feature",
-          "speckit.git.validate",
-          "speckit.git.remote",
-          "speckit.git.initialize",
-          "speckit.git.commit"
-        ],
-        "codex": [
-          "speckit.git.feature",
-          "speckit.git.validate",
-          "speckit.git.remote",
-          "speckit.git.initialize",
-          "speckit.git.commit"
-        ],
-        "copilot": [
-          "speckit.git.feature",
-          "speckit.git.validate",
-          "speckit.git.remote",
-          "speckit.git.initialize",
-          "speckit.git.commit"
-        ],
-        "gemini": [
-          "speckit.git.feature",
-          "speckit.git.validate",
-          "speckit.git.remote",
-          "speckit.git.initialize",
-          "speckit.git.commit"
-        ],
-        "qwen": [
           "speckit.git.feature",
           "speckit.git.validate",
           "speckit.git.remote",
@@ -51,13 +16,19 @@
           "speckit.git.commit"
         ]
       },
-      "registered_skills": [],
-      "installed_at": "2026-05-21T18:09:23.850204+00:00"
+      "registered_skills": [
+        "speckit-git-feature",
+        "speckit-git-validate",
+        "speckit-git-remote",
+        "speckit-git-initialize",
+        "speckit-git-commit"
+      ],
+      "installed_at": "2026-10-15T15:10:26.859466+00:00"
     },
     "companion": {
-      "version": "0.24.0",
+      "version": "0.25.0",
       "source": "local",
-      "manifest_hash": "sha256:e5e50838966723d5b3b828129f5df3270e5aa97b5ddfb7e3e7530285fb3fa296",
+      "manifest_hash": "sha256:6c71d56fbf5912e3d0c056b56e0d30ff571fc9b370add089147f3e65ee622b09",
       "enabled": true,
       "priority": 10,
       "registered_commands": {
@@ -88,8 +59,33 @@
           "speckit.companion.living-sync"
         ]
       },
-      "registered_skills": [],
-      "installed_at": "2026-10-10T16:11:37.960572+00:00"
+      "registered_skills": [
+        "speckit-companion-before-step",
+        "speckit-companion-after-specify",
+        "speckit-companion-after-plan",
+        "speckit-companion-after-tasks",
+        "speckit-companion-after-implement",
+        "speckit-companion-before-converge",
+        "speckit-companion-after-converge",
+        "speckit-companion-status",
+        "speckit-companion-resume",
+        "speckit-companion-specify",
+        "speckit-companion-plan",
+        "speckit-companion-tasks",
+        "speckit-companion-implement",
+        "speckit-companion-classify",
+        "speckit-companion-mark-complete",
+        "speckit-companion-auto",
+        "speckit-companion-doctor",
+        "speckit-companion-living-adopt",
+        "speckit-companion-living-move",
+        "speckit-companion-living-drift",
+        "speckit-companion-living-show",
+        "speckit-companion-living-validate",
+        "speckit-companion-living-coverage",
+        "speckit-companion-living-sync"
+      ],
+      "installed_at": "2026-10-15T15:10:27.399672+00:00"
     }
   }
 }
