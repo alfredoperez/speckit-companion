@@ -1,0 +1,56 @@
+version: 1
+# What SpecKit Companion follows upstream. spec-kit is pinned to the release the
+# extension was last verified against, so `npm run upstreams` can say what moved
+# since: a new command, template, script, CLI flag or extension/workflow API the
+# extension should support. Same schema as kaiju's upstreams.yml; `supports` is
+# this repo's role, and it is watched.
+#
+#   npm run upstreams                        what moved since the pin
+#   npm run upstreams -- --apply             we looked: restamp last_checked
+#   npm run upstreams -- --adopt <id>        support verified: move the pin
+#
+# Look about once a month, and before a release that claims a spec-kit version.
+# Record what was worth supporting in `notes`.
+upstreams:
+  - id: spec-kit
+    name: GitHub Spec Kit
+    skills: []
+    role: supports
+    kind: repo
+    url: https://github.com/github/spec-kit
+    repo: github/spec-kit
+    paths:
+      - CHANGELOG.md
+      - templates/
+      - scripts/bash/
+      - src/specify_cli/
+      - extensions/EXTENSION-API-REFERENCE.md
+      - extensions/RFC-EXTENSION-SYSTEM.md
+      - extensions/git/
+      - workflows/ARCHITECTURE.md
+      - workflows/speckit/
+      - workflows/step-catalog.json
+      - presets/ARCHITECTURE.md
+      - integrations/catalog.json
+    ref: b5d97b41a3ad703800179eab0e711c1d7173422e
+    ref_date: 2026-09-22
+    last_checked: 2026-09-22
+    license: MIT
+    what: >-
+      The engine the extension drives: `/speckit.*` commands and their templates,
+      the bash scripts they call, the `specify` CLI (init, extension, workflow),
+      the extension and workflow-step APIs our spec-kit extension rides, and the
+      integration catalog that decides which agents the extension can target.
+    notes: >-
+      Pinned to v1.0.10, the newest spec-kit the code was verified against (tests
+      and spec 634 record 1.0.10.dev0). The extension's install floor stays
+      >=0.9.5 in apps/speckit-extension/extension.yml; the pin is about what we
+      have read, not what we require. Community catalogs are left out of paths
+      because they change daily and never need support work.
+      First run, 2026-10-15: 169 commits ahead (v1.2.0 released 2026-10-13), file
+      list truncated at 300. Worth a support look: taskstoissues deprecated in core
+      and moved to a bundled `github` extension; Claude `--no-model-invocation`;
+      a built-in GitHub workflow step and composed workflows (execution tree,
+      new expression filters); `--json` on version, preset info and extension
+      info; an experimental MCP server; MiniMax Code integration and
+      catalog-installed agent adapters.
