@@ -180,7 +180,9 @@ export function resolveSpecify(workflow, installed) {
 
 function usesTimestampNumbering(root) {
     try {
-        return JSON.parse(readFileSync(join(root, '.specify', 'init-options.json'), 'utf8')).branch_numbering === 'timestamp';
+        const options = JSON.parse(readFileSync(join(root, '.specify', 'init-options.json'), 'utf8'));
+        // Spec Kit 1.1+ writes feature_numbering; older projects carry only branch_numbering.
+        return (options.feature_numbering ?? options.branch_numbering) === 'timestamp';
     } catch {
         return false;
     }

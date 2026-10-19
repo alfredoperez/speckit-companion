@@ -32,9 +32,9 @@ upstreams:
       - workflows/step-catalog.json
       - presets/ARCHITECTURE.md
       - integrations/catalog.json
-    ref: b5d97b41a3ad703800179eab0e711c1d7173422e
-    ref_date: 2026-09-22
-    last_checked: 2026-09-22
+    ref: 4ca46a0706a662b1edc07086ef16f021820c2db0
+    ref_date: 2026-10-13
+    last_checked: 2026-10-15
     license: MIT
     what: >-
       The engine the extension drives: `/speckit.*` commands and their templates,
@@ -42,15 +42,22 @@ upstreams:
       the extension and workflow-step APIs our spec-kit extension rides, and the
       integration catalog that decides which agents the extension can target.
     notes: >-
-      Pinned to v1.0.10, the newest spec-kit the code was verified against (tests
-      and spec 634 record 1.0.10.dev0). The extension's install floor stays
-      >=0.9.5 in apps/speckit-extension/extension.yml; the pin is about what we
-      have read, not what we require. Community catalogs are left out of paths
-      because they change daily and never need support work.
-      First run, 2026-10-15: 169 commits ahead (v1.2.0 released 2026-10-13), file
-      list truncated at 300. Worth a support look: taskstoissues deprecated in core
-      and moved to a bundled `github` extension; Claude `--no-model-invocation`;
-      a built-in GitHub workflow step and composed workflows (execution tree,
-      new expression filters); `--json` on version, preset info and extension
-      info; an experimental MCP server; MiniMax Code integration and
-      catalog-installed agent adapters.
+      Pinned to the v1.2.0 tag commit, adopted 2026-10-15: the repo's fixtures were refreshed
+      with `specify` 1.2.0 (claude default, codex and copilot command sets, git
+      extension 1.0.1, bundled workflow 1.0.1), the full suite passed, and the
+      Copilot canvas now reads `feature_numbering` before `branch_numbering`.
+      Still unsupported from 1.2.0: the bundled `github` extension's
+      `speckit.github.taskstoissues` (the viewer still sends the deprecated core
+      `speckit.taskstoissues`); the `agent-context` extension and the bundled
+      `assess`/`bugfix` workflows as their own pipelines; Claude
+      `--no-model-invocation`; the GitHub workflow step and composed workflows;
+      `--json` on version, preset info and extension info; the experimental MCP
+      server; MiniMax Code and catalog-installed agent adapters; `--script py`;
+      timestamp numbering and git `branch_template` in Companion's own folder and
+      branch creation; hook `priority` ordering in Companion's command bodies.
+      Extension commands now register only for the default integration, so the
+      codex and copilot fixtures no longer carry the git commands.
+      The extension's install floor stays >=0.9.5 in
+      apps/speckit-extension/extension.yml; the pin is about what we have read,
+      not what we require. Community catalogs are left out of paths because they
+      change daily and never need support work.
