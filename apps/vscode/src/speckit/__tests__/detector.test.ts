@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { promisify } from 'util';
 import { SpecKitDetector } from '../detector';
+import { _resetSpecifyVersionForTests } from '../specKitUpgrade';
 
 // Mock child_process and fs since detector uses them
 jest.mock('child_process', () => {
@@ -32,6 +33,7 @@ beforeEach(() => {
     mockExecAsync.mockResolvedValue({ stdout: INTEGRATION_HELP, stderr: '' });
     // Reset singleton for isolation
     (SpecKitDetector as any).instance = undefined;
+    _resetSpecifyVersionForTests();
 });
 
 describe('SpecKitDetector', () => {
@@ -195,7 +197,7 @@ describe('SpecKitDetector', () => {
             it('runs Upgrade All with no agent flag after reinstalling the CLI', async () => {
                 await SpecKitDetector.getInstance().upgradeAll();
                 const sent = lastSentText();
-                expect(sent.endsWith('&& specify init --here --force')).toBe(true);
+                expect(sent.endsWith('; specify init --here --force')).toBe(true);
                 expect(sent).not.toContain('windsurf');
             });
         });
@@ -234,13 +236,63 @@ describe('SpecKitDetector', () => {
             });
         });
 
-        describe('upgradeAll', () => {
-            it('dispatches --ai claude for the default provider, never claude-code (US2)', async () => {
+        describe('the documented upgrade', () => {
+            const disk = jest.requireMock('fs') as { existsSync: jest.Mock; readFileSync: jest.Mock };
+            const VERSION_JSON = JSON.stringify({ cli_version: '1.2.7', features: { integration_upgrade_command: true } });
+
+            beforeEach(() => {
+                mockExecAsync.mockImplementation(async (cmd: string) => ({
+                    stdout: cmd.startsWith('specify version') ? VERSION_JSON : INTEGRATION_HELP,
+                    stderr: '',
+                }));
+                disk.readFileSync.mockReturnValue(JSON.stringify({ installed_integrations: ['claude', 'copilot'] }));
+            });
+
+            afterEach(() => {
+                disk.readFileSync.mockReset();
+                disk.existsSync.mockReset().mockReturnValue(false);
+            });
+
+            it('upgrades each recorded agent instead of re-running init', async () => {
                 mockProvider('claude');
+                await SpecKitDetector.getInstance().upgradeProject();
+                expect(lastSentText()).toBe('specify integration upgrade claude; specify integration upgrade copilot');
+            });
+
+            it('falls back to init when spec-kit recorded no agent, instead of upgrading nothing', async () => {
+                disk.readFileSync.mockImplementation(() => { throw new Error('ENOENT'); });
+                mockProvider('claude');
+                await SpecKitDetector.getInstance().upgradeProject();
+                expect(lastSentText()).toBe('specify init --here --force --integration claude');
+            });
+
+            it('re-adds Companion after the agents when it is installed', async () => {
+                disk.existsSync.mockImplementation((target: string) => target.endsWith('.specify/extensions/companion'));
+                await SpecKitDetector.getInstance().upgradeProject();
+                expect(lastSentText()).toMatch(/specify integration upgrade copilot; specify extension add companion.* --force$/);
+            });
+
+            it('runs Upgrade All as self upgrade, the uv fallback, then each agent', async () => {
                 await SpecKitDetector.getInstance().upgradeAll();
-                const sent = lastSentText();
-                expect(sent).toContain('--integration claude');
-                expect(sent).not.toContain('claude-code');
+                expect(lastSentText()).toBe(
+                    'specify self upgrade || uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git' +
+                    '; specify integration upgrade claude; specify integration upgrade copilot'
+                );
+            });
+
+            it('spells the uv fallback for PowerShell, which has no ||', async () => {
+                const env = vscode.env as { shell?: string };
+                const saved = env.shell;
+                env.shell = '/usr/local/bin/pwsh';
+                await SpecKitDetector.getInstance().upgradeCli();
+                env.shell = saved;
+                expect(lastSentText()).toMatch(/^specify self upgrade; if \(-not \$\?\) \{ uv tool install .* \}$/);
+            });
+
+            it('never passes an agent key that is not a plain name to the shell', async () => {
+                disk.readFileSync.mockReturnValue(JSON.stringify({ installed_integrations: ['claude', 'x; rm -rf ~'] }));
+                await SpecKitDetector.getInstance().upgradeProject();
+                expect(lastSentText()).toBe('specify integration upgrade claude');
             });
         });
 
@@ -272,16 +324,6 @@ describe('SpecKitDetector', () => {
                 const opts = calls[calls.length - 1][0];
                 expect((opts.cwd as { fsPath: string }).fsPath).toBe('/tmp/a"$(touch x)');
             }
-        });
-
-        it('both upgrade paths emit the same agent value for the same provider (FR-006)', async () => {
-            mockProvider('claude');
-            await SpecKitDetector.getInstance().upgradeProject();
-            const projectAgent = lastSentText().match(/--(?:integration|ai) (\S+)/)?.[1];
-            await SpecKitDetector.getInstance().upgradeAll();
-            const allAgent = lastSentText().match(/--(?:integration|ai) (\S+)/)?.[1];
-            expect(projectAgent).toBe('claude');
-            expect(allAgent).toBe('claude');
         });
     });
 });

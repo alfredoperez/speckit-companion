@@ -2,7 +2,9 @@ import * as vscode from 'vscode';
 import {
     companionUpdateStatusBarText,
     createCompanionUpdateStatusBar,
+    maybeOfferCompanionInstall,
     maybeShowCompanionUpdateNudge,
+    _resetInstallOfferForTests,
     shouldShowCompanionUpdateNudge,
 } from '../companionUpdateNudge';
 import type { CompanionGap } from '../companionVersionGap';
@@ -11,11 +13,15 @@ jest.mock('../specKitExtensionInstall', () => ({
     readInstallPromptEnabled: jest.fn().mockReturnValue(true),
     dismissInstallPrompt: jest.fn(),
     updateAlreadyAttempted: jest.fn().mockReturnValue(false),
+    isInstallPromptDismissed: (globalState: { get: (key: string) => unknown }) => globalState.get('speckit.installBannerDismissed') === true,
 }));
 
+jest.mock('../../core/projectRoot', () => ({ hasSpecKitMarker: jest.fn().mockReturnValue(true) }));
+
+import { hasSpecKitMarker } from '../../core/projectRoot';
 import { dismissInstallPrompt, readInstallPromptEnabled, updateAlreadyAttempted } from '../specKitExtensionInstall';
 const { createMockExtensionContext } = vscode as unknown as {
-    createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown> };
+    createMockExtensionContext: (seed?: Record<string, unknown>) => { context: vscode.ExtensionContext; store: Map<string, unknown>; workspaceStore: Map<string, unknown> };
 };
 
 const outdated: CompanionGap = { state: 'outdated', installed: '0.20.2', expected: '0.21.0' };
@@ -90,6 +96,55 @@ describe('companion update nudge', () => {
             (readInstallPromptEnabled as jest.Mock).mockReturnValue(true);
             (updateAlreadyAttempted as jest.Mock).mockReturnValue(true);
             maybeShowCompanionUpdateNudge(makeContext().context, outdated);
+            expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('maybeOfferCompanionInstall', () => {
+        const missing: CompanionGap = { state: 'missing' };
+
+        beforeEach(() => {
+            _resetInstallOfferForTests();
+            (hasSpecKitMarker as jest.Mock).mockReturnValue(true);
+        });
+
+        it('offers the install on a Spec Kit project without it, once per session', async () => {
+            const show = vscode.window.showInformationMessage as jest.Mock;
+            show.mockResolvedValue('Add to project');
+            const { context } = makeContext();
+            maybeOfferCompanionInstall(context, missing, '/ws');
+            maybeOfferCompanionInstall(context, missing, '/ws');
+            expect(show).toHaveBeenCalledTimes(1);
+            expect(show.mock.calls[0].slice(1)).toEqual(['Add to project', 'Not now', "Don't ask for this project"]);
+            await Promise.resolve();
+            expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.companion.installNudge', 'activation');
+        });
+
+        it("stops asking in a project once the user says don't ask", async () => {
+            (vscode.window.showInformationMessage as jest.Mock).mockResolvedValue("Don't ask for this project");
+            const { context, workspaceStore } = createMockExtensionContext();
+            maybeOfferCompanionInstall(context, missing, '/ws');
+            await Promise.resolve();
+            expect(workspaceStore.get('speckit.companionInstallDeclined')).toBe(true);
+            _resetInstallOfferForTests();
+            maybeOfferCompanionInstall(context, missing, '/ws');
+            expect(vscode.window.showInformationMessage).toHaveBeenCalledTimes(1);
+        });
+
+        it('honours an install banner the user already dismissed', () => {
+            const { context } = createMockExtensionContext({ 'speckit.installBannerDismissed': true });
+            maybeOfferCompanionInstall(context, missing, '/ws');
+            expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
+        });
+
+        it('stays quiet when installed, opted out, or not a Spec Kit project', () => {
+            maybeOfferCompanionInstall(makeContext().context, { state: 'current' }, '/a');
+            maybeOfferCompanionInstall(makeContext().context, outdated, '/b');
+            (readInstallPromptEnabled as jest.Mock).mockReturnValue(false);
+            maybeOfferCompanionInstall(makeContext().context, missing, '/c');
+            (readInstallPromptEnabled as jest.Mock).mockReturnValue(true);
+            (hasSpecKitMarker as jest.Mock).mockReturnValue(false);
+            maybeOfferCompanionInstall(makeContext().context, missing, '/d');
             expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
         });
     });

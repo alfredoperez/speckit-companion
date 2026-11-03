@@ -92,6 +92,8 @@ export const ConfigKeys = {
     workspaceState: {
         specsFilterQuery: 'speckit.specs.filter.query',
         specsSortMode: 'speckit.specs.sort.mode',
+        /** The user said not to offer Companion's spec-kit extension in this project again. */
+        companionInstallDeclined: 'speckit.companionInstallDeclined',
     },
 } as const;
 
