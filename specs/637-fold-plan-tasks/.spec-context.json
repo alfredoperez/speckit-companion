@@ -1,0 +1,330 @@
+{
+  "workflow": "companion",
+  "specName": "Fold plan and tasks in one writer call",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:04:01.212Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:04:46.836Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:04:47.039Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:05:11.283Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:05:11.397Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:05:11.732Z"
+    },
+    {
+      "step": "specify",
+      "substep": "branch",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:05:23.156Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T02:05:23.429Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:05:27.768Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T02:05:27.881Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:05:28.003Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T02:05:28.118Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:05:35.376Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:07:07.546Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:07:07.656Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:07:23.279Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:07:31.859Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:09:26.221Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:09:26.249Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:09:26.364Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "5/5 tasks done, python suite + build check + parity + tsc green",
+  "coverage": {
+    "FR-001": {
+      "title": "One call records plan start, plan complete, tasks start, tasks complete in order under one lock",
+      "tests": [
+        "apps/speckit-extension/tests/test_fold_plan_tasks.py::test_records_four_boundaries_in_order"
+      ]
+    },
+    "FR-002": {
+      "title": "The fold leaves the spec at tasks / ready-to-implement",
+      "tests": [
+        "apps/speckit-extension/tests/test_fold_plan_tasks.py::test_records_four_boundaries_in_order"
+      ]
+    },
+    "FR-003": {
+      "title": "A second fold leaves the record unchanged",
+      "tests": [
+        "apps/speckit-extension/tests/test_fold_plan_tasks.py::test_second_fold_changes_nothing"
+      ]
+    },
+    "FR-004": {
+      "title": "The fold never moves status backward",
+      "tests": [
+        "apps/speckit-extension/tests/test_fold_plan_tasks.py::test_never_moves_a_later_spec_backward"
+      ]
+    },
+    "FR-005": {
+      "title": "Each fold stamp is strictly later than the one before",
+      "tests": [
+        "apps/speckit-extension/tests/test_fold_plan_tasks.py::test_stamps_strictly_increase"
+      ]
+    },
+    "FR-006": {
+      "title": "The specify fold instruction is one writer line",
+      "tests": [
+        "apps/speckit-extension/tests/test_fold_plan_tasks.py::test_finalize_holds_one_fold_line"
+      ]
+    },
+    "FR-007": {
+      "title": "The fold exits 0 when it cannot write",
+      "tests": [
+        "apps/speckit-extension/tests/test_fold_plan_tasks.py::test_other_values_are_a_caller_error"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 5,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "template stack (w4) is the next slice",
+    "no change to how a normal-size spec records plan and tasks"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts/write-context.py",
+    "area: apps/speckit-extension/nodes/specify/finalize.md",
+    "constraint: history only grows, status never moves backward, one write lock"
+  ],
+  "intent": "Record a small spec's folded plan and tasks in one writer call so the fold lands whole",
+  "approach": "Add --fold plan,tasks to the writer and make finalize.md emit that one line",
+  "workingBranch": "637-fold-plan-tasks",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added --fold plan,tasks: missing boundaries only, 1 ms apart, forward-only, one write",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Tests for order, stamps, idempotence, partial repair, no backward move, bad value",
+      "files": [
+        "apps/speckit-extension/tests/test_fold_plan_tasks.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "finalize.md emits the one --fold line; assembled specify command rebuilt",
+      "files": [
+        "apps/speckit-extension/nodes/specify/finalize.md",
+        "apps/speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Changelog line under Unreleased / Fixed",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Python suite, build check, shape parity, tsc and 3 related Jest suites green",
+      "files": [
+        "apps/speckit-extension/"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 88.3,
+      "result": "---------------------------------------------------------------------- · Ran 1763 tests in 88.045s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 7 bodies match parts"
+    },
+    {
+      "what": "type check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.9,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "speckit-extension python suite (after review fixes)",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.2,
+      "result": "---------------------------------------------------------------------- · Ran 1765 tests in 70.032s · OK (skipped=8)"
+    },
+    {
+      "what": "shape parity (after review fixes)",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 7 bodies match parts"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "--fold takes only plan,tasks",
+      "why": "plan and tasks are the only steps specify ever folds",
+      "rejected": "an arbitrary step list"
+    },
+    {
+      "decision": "stamps 1 ms apart from one clock read",
+      "why": "each folded step needs a positive span for the trust rule, and the viewer still reads it as a fold",
+      "rejected": "four live clock reads that can land on the same millisecond"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "write-context.py --fold plan,tasks records a small spec's plan and tasks in one write; finalize.md emits that one line"
+    }
+  },
+  "concerns": [
+    {
+      "note": "doctor TRACE: 4 failed lifecycle calls were my own shell-quoting slip (re-run correctly); 1 'exited without recording an outcome' is the speckit-extension test suite leaking a write-context trace line (6-byte argv, likely --help) into whichever spec .specify/feature.json names. Pre-existing, unrelated to this change."
+    }
+  ]
+}

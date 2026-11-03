@@ -244,8 +244,8 @@ class TimingTests(QualityEvalBase):
 def _fastpath_fold() -> list[dict]:
     """A simple-mode run: specify plus folded plan/tasks, each a step-level
     extension-stamped start+complete pair (the trusted post-#514 shape). The
-    four fold boundaries are separate `python3` writes tens of ms apart, so their
-    timestamps are honestly near-zero but strictly increasing. No implement step
+    four fold boundaries land in one write, so their timestamps are near-zero
+    but strictly increasing. No implement step
     yet — the developer triggers that next."""
     def _pair(step: str, start: str, end: str) -> list[dict]:
         return [
