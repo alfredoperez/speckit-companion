@@ -31,6 +31,8 @@ export interface StepTabProps {
     runningStepIndex?: number | null;
     /** This tab renders the live implement percent (the implement entry, or the last tab). */
     isPercentHost?: boolean;
+    /** Tasks converge added that are still unchecked; shown as a +N badge on the tasks item. */
+    convergeAdded?: number;
     onClick: (phase: string) => void;
 }
 
@@ -38,7 +40,7 @@ export function StepTab(props: StepTabProps) {
     const { doc, index, currentDoc,
         taskCompletionPercent, isViewingRelatedDoc, parentPhaseForRelated,
         activeStep, currentStep, stepHistory, stalenessMap, hasRelatedChildren,
-        runningStepIndex, isPercentHost, onClick } = props;
+        runningStepIndex, isPercentHost, convergeAdded, onClick } = props;
 
     const phase = doc.type;
     const stepDocExists = doc.exists;
@@ -159,6 +161,14 @@ export function StepTab(props: StepTabProps) {
             )}
             {substep && <span class="step-tab__substep">{substep}</span>}
             {runningStartedAt && <ElapsedTimer startedAt={runningStartedAt} />}
+            {phase === 'tasks' && !!convergeAdded && convergeAdded > 0 && (
+                <span
+                    class="step-tab__converge"
+                    aria-label={`${convergeAdded} tasks added by converge`}
+                >
+                    +{convergeAdded}
+                </span>
+            )}
             {isStale && <span class="stale-badge">!</span>}
         </button>
     );

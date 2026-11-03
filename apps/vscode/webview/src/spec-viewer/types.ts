@@ -106,6 +106,33 @@ export interface SerializedFooterAction {
 // ============================================
 
 
+/** One row of the converge result: a pass and what it added. */
+export interface ConvergePassRow {
+    index: number;
+    outcome: ConvergeOutcome;
+    addedIds: string[];
+    durationMs?: number;
+}
+
+/** A task the latest converge pass added, as tasks.md holds it now. */
+export interface ConvergeAddedTask {
+    id: string;
+    title: string;
+    checked: boolean;
+}
+
+export type ConvergeOutcome = 'running' | 'gaps' | 'clean' | 'unknown';
+
+/** What the viewer shows for converge; absent when converge never ran. */
+export interface ConvergeResult {
+    outcome: ConvergeOutcome;
+    passCount: number;
+    passes: ConvergePassRow[];
+    addedTasks: ConvergeAddedTask[];
+    openAdded: number;
+    completedBy?: { at: string; by: string };
+}
+
 export interface ViewerState {
     status: string;
     activeStep: string;
@@ -139,6 +166,8 @@ export interface ViewerState {
     verified?: ViewerVerification[];
     coverage?: ViewerCoverageRow[];
     classification?: ClassificationEntry;
+    /** Converge result; absent when converge never ran. */
+    converge?: ConvergeResult;
 }
 
 

@@ -46,6 +46,8 @@ The one sentence the run answers to, then the time each phase took, then a card 
 
 A phase reads as a duration, as blank, or as "folded into Plan" when the run merged it into an earlier phase. A phase that's still running has no time here, and its live timer is on the rail tab. When some phases have no time, the total is replaced by "Timing coverage: N of M phases" or "Timing not recorded".
 
+Converge has its own pill at the end of the row. Amber means the last pass added tasks: a card under the row lists each one, the next implement round shows as waiting, the Tasks tab carries a `+N` badge, and the footer offers to implement them. Green means the last pass added nothing, and the card lists every pass and who completed the spec. Converge again from the footer runs another pass.
+
 ### Expectations
 
 One card holds what must stay true and the other what was left out on purpose. When something you expected isn't in the diff, check the second card before calling it a gap.

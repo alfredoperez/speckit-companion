@@ -1,0 +1,740 @@
+{
+  "workflow": "companion",
+  "specName": "The viewer shows converge as its own step",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T04:30:01.027Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T04:33:15.979Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T04:33:29.376Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:36:45.361Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:37:14.702Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:38:04.870Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:38:47.230Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:38:50.490Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T04:39:04.986Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:39:49.915Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:39:56.108Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T04:40:05.582Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:40:40.270Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:40:47.716Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:41:55.952Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:43:36.870Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:44:26.818Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:44:59.951Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:45:23.173Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:47:09.984Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:49:17.647Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:49:17.712Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:49:17.777Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:49:17.845Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:49:30.084Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:49:30.178Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:49:30.263Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:49:58.427Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:50:29.740Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:59:15.036Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:59:15.056Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T04:59:15.147Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:04:22.227Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:04:48.901Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:05:17.179Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "all 18 tasks done; python 1824, jest 4735, canvas 173 pass",
+  "coverage": {
+    "FR-001": {
+      "title": "Each converge pass is recorded with its start, finish and the task ids it added",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_converge_passes.py"
+      ]
+    },
+    "FR-002": {
+      "title": "Recording a pass keeps the run record guarantees (grow-only, merge, one lock, never-fail)",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_converge_passes.py::test_a_malformed_pass_list_never_fails_the_hook"
+      ]
+    },
+    "FR-003": {
+      "title": "The overview shows converge as its own pill, amber with gaps or green and clean",
+      "tasks": [
+        "T009",
+        "T010",
+        "T011"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "FR-004": {
+      "title": "A gaps pass shows a card of added tasks with titles, and a waiting implement round",
+      "tasks": [
+        "T003",
+        "T006",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx",
+        "apps/vscode/src/features/spec-viewer/__tests__/convergeResult.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "A clean completion shows a card with one row per pass and a completion row",
+      "tasks": [
+        "T006",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "FR-006": {
+      "title": "Header facts say N added by converge or converge clean",
+      "tasks": [
+        "T014",
+        "T016"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/RunStrip.test.tsx"
+      ]
+    },
+    "FR-007": {
+      "title": "The Tasks rail item carries a +N badge for open added tasks",
+      "tasks": [
+        "T014",
+        "T016"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/StepTab.test.tsx"
+      ]
+    },
+    "FR-008": {
+      "title": "The footer offers implementing new tasks, or converging again when completed",
+      "tasks": [
+        "T004",
+        "T013",
+        "T015",
+        "T016"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/footerActions.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "Pill, card, badge, fact and footer read one converge result derived once",
+      "tasks": [
+        "T002",
+        "T006",
+        "T008",
+        "T015"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/RunStrip.test.tsx"
+      ]
+    },
+    "FR-010": {
+      "title": "A pass recorded without its task list never reads as clean",
+      "tasks": [
+        "T001",
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/convergeResult.test.ts",
+        "apps/speckit-extension/tests/test_converge_passes.py::test_a_pass_with_no_snapshot_has_no_added"
+      ]
+    },
+    "FR-011": {
+      "title": "The implement entry lists each round duration"
+    },
+    "FR-012": {
+      "title": "Task ids and titles reach the screen as text, never markup",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 22,
+    "projectedTasks": 18,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "source-ticket chip from the mock (#931)",
+    "workflow engine converge loop",
+    "canvas and mod rendering of converge passes"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts/write-context.py converge hooks (start 1178, finish 1184, _after_converge 569); capture.py append_capture_entries pattern; task_sync.parse_task_markers",
+    "area: apps/vscode/src/features/spec-viewer/ stateDerivation.ts deriveViewerState, specViewerProvider.ts readViewerState (reads tasks.md), footerActions.ts (no implement action; converge on implemented/completed)",
+    "area: apps/vscode/src/features/specs/stepHistoryDerivation.ts groups all runs of a step into one entry; repeated starts drop the duration",
+    "area: apps/vscode/webview/src/spec-viewer/components OverviewDossier.tsx OverviewTiming, RunStrip.tsx FactKey, NavigationBar/StepTab (no badge prop), ActivityPanel section order; styles/spec-viewer/_overview-dossier.css, _base.css, _tokens-viewer.css",
+    "constraint: schema additionalProperties true; SpecContext interface needs the new field typed",
+    "constraint: one converge model derived once (review-checklist line 69); styles change ships rebuilt canvas vendor/viewer.css",
+    "constraint: DESIGN.md no hex in partials, green scarce, task ids as chips"
+  ],
+  "intent": "The viewer shows each converge pass: gaps it added, or a clean finish that completed the spec",
+  "workingBranch": "644-viewer-converge-step",
+  "planBlocks": [
+    "calls",
+    "states",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "states",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/644-viewer-converge-step --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 3 call paths, 14 lines, 2 screens, 26 parts, 1 state block (5 states) ·   WARNING plan.md:63  `pill` is not within 8 lines of `apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx:56` (symbol-not-near) ·   0 error(s), 1 warning(s)"
+    },
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 85.8,
+      "result": "---------------------------------------------------------------------- · Ran 1824 tests in 85.652s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "host type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "webview type-check",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json"
+    },
+    {
+      "what": "full jest",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 73.3,
+      "result": "Snapshots:   0 total · Time:        72.588 s · Ran all test suites."
+    },
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 20.2,
+      "result": "npm notice run node apps/copilot-canvas/build.mjs · npm notice run speckit-companion@0.37.0 mod:build · npm notice run node apps/claude-mod/build.mjs"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Record each converge pass in a new top-level convergePasses list written by the converge hooks",
+      "why": "history keeps only the first converge start and finish, so later passes cannot be read back",
+      "rejected": "per-pass history entries (would loosen dedupe for every step); a sidecar file"
+    },
+    {
+      "decision": "Clean means the pass added no task ids; the completion check uses the same rule when a snapshot exists",
+      "why": "the pill and the auto-complete must never disagree",
+      "rejected": "keeping the tasks.md mtime rule alone"
+    },
+    {
+      "decision": "One deriveConvergeResult on the host feeds pill, card, badge, fact and footer",
+      "why": "one fact derived once; context-only refreshes skip tasks.md so the provider reads it",
+      "rejected": "deriving in the webview"
+    },
+    {
+      "decision": "New footer ids implement-gaps and open-tasks; Mark Completed hides while added tasks are open",
+      "why": "no implement action exists and approve/regenerate route on currentStep, which is converge",
+      "rejected": "reusing approve or regenerate"
+    },
+    {
+      "decision": "Defer per-round implement durations (FR-011)",
+      "why": "writers record one implement start per spec; measuring from a pass finish bills waiting time as work",
+      "rejected": "wall-clock round durations"
+    },
+    {
+      "decision": "implement-gaps dispatches the workflow implement step directly, like Regenerate",
+      "why": "approve and regenerate route on currentStep, which is converge after a gaps pass",
+      "rejected": "reusing approve or regenerate"
+    },
+    {
+      "decision": "A running step wins the footer context line and hides implement-gaps",
+      "why": "a second click would dispatch implement twice while round 2 runs",
+      "rejected": "always showing Converge added N tasks"
+    },
+    {
+      "decision": "A taskEntries reader in taskCheckboxes.ts returns id, checked state and raw-line title",
+      "why": "one task reader; titles keep backticked text",
+      "rejected": "a second regex in convergeResult.ts"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "FR-011 per-round implement durations deferred: no recorded start for implement round 2",
+      "step": "plan"
+    },
+    {
+      "note": "FR-011 per-round implement durations deferred: the writers record one implement start per spec, so round 2 has no recorded start",
+      "step": "implement"
+    },
+    {
+      "note": "No viewer fixture carries converge passes, so the regenerated clips show no converge pill; the Storybook stories do",
+      "step": "implement"
+    },
+    {
+      "note": "doctor TRACE: 5 failed capture calls (e.g. --fold plan) come from the Python test suite's error-path cases writing into this repo's trace, not from this run's bookkeeping"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan, research, data model and UI contract for recording converge passes and drawing them in the viewer",
+      "key_finding": "history dedupes repeated starts and finishes, so converge passes need their own field"
+    },
+    "tasks": {
+      "summary": "18 tasks: foundational writer + types + one derivation (8), overview phase (4), header/rail/footer phase (4), polish (2); FR-011 deferred"
+    },
+    "implement": {
+      "summary": "Converge passes are recorded with the ids they added; the viewer draws a pill, a gaps or clean card, a +N badge, a run-strip fact and footer actions from one derived result"
+    }
+  },
+  "approach": "The converge hooks record each pass with the task ids it added. The host derives one converge result from those passes and tasks.md. The webview draws it as a pill, a gaps or clean card, a rail badge, a run-strip fact and footer actions.",
+  "currentTask": null,
+  "task_summaries": {
+    "T002": {
+      "status": "DONE",
+      "did": "Typed convergePasses on SpecContext and the ConvergeResult on host and webview ViewerState",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts",
+        "apps/vscode/webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added taskTitle(rawLine) returning the human task description",
+      "files": [
+        "apps/vscode/src/core/utils/taskCheckboxes.ts",
+        "apps/vscode/src/core/utils/__tests__/taskCheckboxes.test.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added IMPLEMENT_GAPS and OPEN_TASKS footer action ids",
+      "files": [
+        "apps/vscode/src/core/constants.ts"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "Converge start/finish hooks record convergePasses with before/added/completed; clean rule uses ids when a snapshot exists",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "7 writer tests: gaps, clean, reworded, second pass, no snapshot, completed spec, malformed list",
+      "files": [
+        "apps/speckit-extension/tests/test_converge_passes.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "deriveConvergeResult plus a taskEntries reader for ids, checked state and titles",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/convergeResult.ts",
+        "apps/vscode/src/core/utils/taskCheckboxes.ts",
+        "apps/vscode/src/core/types/specContext.ts",
+        "apps/vscode/webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "7 derivation tests: none, gaps, clean, unknown, running, deleted task, malformed",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/convergeResult.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "readViewerState reads tasks.md when passes exist and passes the converge result into deriveViewerState",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts",
+        "apps/vscode/src/features/spec-viewer/stateDerivation.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Footer tests and matrix rows for converge gaps and clean completion",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/footerActions.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/footerMatrix.fixtures.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/footerMatrix.test.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Run-strip fact, +N Tasks badge and same-count tests",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/RunStrip.test.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/StepTab.test.tsx"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Footer takes the converge result: implement-gaps, open-tasks, Converge again, handlers",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/footerActions.ts",
+        "apps/vscode/src/features/spec-viewer/stateDerivation.ts",
+        "apps/vscode/src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Run-strip fact, Tasks +N badge, footer context line and primary implement-gaps, stories",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/RunStrip.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/StepTab.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/NavigationBar.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/footer/CatalogFooter.tsx",
+        "apps/vscode/webview/styles/spec-viewer/_navigation.css",
+        "apps/vscode/webview/src/spec-viewer/components/RunStrip.stories.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/StepTab.stories.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/FooterActions.stories.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "8 overview tests: gaps pill and waiting round, gaps card, singular, markup as text, clean pill and card, one clean pass, amber on completed, never ran",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Converge pill in OverviewTiming, the waiting implement round, and ConvergeCard for gaps and clean",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Pill and card styles from warning and success tokens; chips match coverage chips",
+      "files": [
+        "apps/vscode/webview/styles/spec-viewer/_overview-dossier.css"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Activity panel stories: converge found gaps, clean converge completed",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/ActivityPanel.stories.tsx"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Changelog line in each deliverable and the overview page explains the converge pill and cards",
+      "files": [
+        "CHANGELOG.md",
+        "apps/speckit-extension/CHANGELOG.md",
+        "apps/website/src/content/docs/docs/results/the-overview.mdx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Canvas CSS rebuilt, clips regenerated, all suites and type-checks green",
+      "files": [
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor/viewer.css",
+        "docs/screenshots/generated/"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Open tasks stays on a completed spec with open added tasks; implement stays hidden there",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/footerActions.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/footerActions.test.ts"
+      ]
+    }
+  },
+  "convergeStartedAt": "2026-11-03T05:05:25.129Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-03T05:04:22.292Z",
+      "by": "extension",
+      "finishedAt": "2026-11-03T05:04:48.923Z",
+      "added": [
+        "T019"
+      ]
+    },
+    {
+      "startedAt": "2026-11-03T05:05:25.164Z",
+      "by": "extension",
+      "finishedAt": "2026-11-03T05:05:31.540Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

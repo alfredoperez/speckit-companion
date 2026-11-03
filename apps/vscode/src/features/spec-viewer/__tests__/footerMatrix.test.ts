@@ -27,7 +27,7 @@ function ctxFor(row: FooterMatrixRow): SpecContext {
 }
 
 function zones(row: FooterMatrixRow) {
-    const footer = deriveViewerState(ctxFor(row), row.currentStep, WORKFLOW_STEPS).footer;
+    const footer = deriveViewerState(ctxFor(row), row.currentStep, WORKFLOW_STEPS, row.converge).footer;
     return {
         footer,
         left: footer.filter(a => LEFT_IDS.has(a.id)).map(a => a.id).sort(),
@@ -42,6 +42,12 @@ describe('footer button matrix', () => {
             expect(left).toEqual([...row.left].sort());
             expect(right).toEqual([...row.right].sort());
         });
+
+        if (row.convergeLabel) {
+            it(`${row.name}: Converge is labeled "${row.convergeLabel}"`, () => {
+                expect(zones(row).footer.find(a => a.id === 'converge')?.label).toBe(row.convergeLabel);
+            });
+        }
 
         if (row.approveLabel) {
             it(`${row.name}: the forward action is labeled "${row.approveLabel}"`, () => {

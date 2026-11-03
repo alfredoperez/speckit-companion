@@ -7,7 +7,7 @@ import { heroStats, formatActiveTime } from '../activityHeroModel';
  */
 
 /** Least → most important; the CSS hides by this key as width runs out. */
-type FactKey = 'timing' | 'checks' | 'traced' | 'concerns' | 'tasks';
+type FactKey = 'timing' | 'checks' | 'traced' | 'concerns' | 'converge' | 'tasks';
 
 export function RunStrip() {
     const vs = viewerState.value;
@@ -22,6 +22,12 @@ export function RunStrip() {
         facts.push({ key: 'tasks', value: `${counts.checked}/${counts.total} tasks` });
     } else if (typeof ns?.taskCompletionPercent === 'number' && ns.taskCompletionPercent > 0) {
         facts.push({ key: 'tasks', value: `${ns.taskCompletionPercent}% tasks` });
+    }
+    const converge = vs.converge;
+    if (converge && converge.openAdded > 0) {
+        facts.push({ key: 'converge', value: `${converge.openAdded} added by converge`, warning: true });
+    } else if (converge?.outcome === 'clean') {
+        facts.push({ key: 'converge', value: 'converge clean' });
     }
     if (stats.coverageTotal !== undefined) {
         facts.push({

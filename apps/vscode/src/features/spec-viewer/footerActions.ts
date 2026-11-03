@@ -15,6 +15,7 @@
  */
 
 import {
+    ConvergeResult,
     FooterAction,
     lifecycleStepFor,
     SpecContext,
@@ -247,16 +248,50 @@ export const FOOTER_ACTIONS: FooterAction[] = [
     },
 ];
 
+export function implementGapsLabel(openAdded: number): string {
+    return `Implement ${openAdded} new task${openAdded === 1 ? '' : 's'}`;
+}
+
+function convergeGapActions(openAdded: number, canImplement: boolean): FooterAction[] {
+    const open: FooterAction = {
+        id: FooterActionIds.OPEN_TASKS,
+        label: 'Open tasks',
+        scope: 'spec',
+        tooltip: 'Read the tasks converge added',
+        visibleWhen: () => true,
+    };
+    if (!canImplement) return [open];
+    return [
+        {
+            id: FooterActionIds.IMPLEMENT_GAPS,
+            label: implementGapsLabel(openAdded),
+            scope: 'spec',
+            tooltip: 'Build the tasks converge added to tasks.md',
+            visibleWhen: () => true,
+        },
+        open,
+    ];
+}
+
 export function getFooterActions(
     ctx: SpecContext,
     step: StepName,
     workflowSteps?: WorkflowStepConfig[],
-    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status),
+    converge?: ConvergeResult
 ): FooterAction[] {
-    const visible = FOOTER_ACTIONS.filter(a => a.visibleWhen(ctx, step, stepHistory, workflowSteps));
-    return visible.map(a =>
-        a.id === FooterActionIds.APPROVE
-            ? { ...a, label: getApproveLabel(step, workflowSteps) }
-            : a
-    );
+    const openAdded = converge?.openAdded ?? 0;
+    const gaps = openAdded > 0 && ctx.status !== SpecStatuses.ARCHIVED;
+    // A completed spec keeps its status after converge, so implement cannot restart it.
+    const canImplement = gaps && ctx.status !== SpecStatuses.COMPLETED;
+    const cleanDone = ctx.status === SpecStatuses.COMPLETED && converge?.outcome === 'clean';
+    const visible = FOOTER_ACTIONS
+        .filter(a => a.visibleWhen(ctx, step, stepHistory, workflowSteps))
+        .filter(a => !(canImplement && a.id === FooterActionIds.COMPLETE))
+        .map(a => {
+            if (a.id === FooterActionIds.APPROVE) return { ...a, label: getApproveLabel(step, workflowSteps) };
+            if (a.id === FooterActionIds.CONVERGE && cleanDone && !gaps) return { ...a, label: 'Converge again' };
+            return a;
+        });
+    return gaps ? [...visible, ...convergeGapActions(openAdded, canImplement)] : visible;
 }

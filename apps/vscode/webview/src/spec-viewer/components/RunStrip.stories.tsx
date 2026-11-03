@@ -103,3 +103,25 @@ export const NoFactsYet: Story = {
         );
     },
 };
+
+export const ConvergeAddedTasks: Story = {
+    render: () => {
+        navState.value = mockNavState({ taskCompletionPercent: 80, taskCounts: { checked: 12, total: 15 } });
+        viewerState.value = baseState({
+            status: 'implemented',
+            converge: { outcome: 'gaps', passCount: 1, passes: [{ index: 1, outcome: 'gaps', addedIds: ['T013', 'T014', 'T015'] }], addedTasks: [], openAdded: 3 },
+        });
+        return <RunStrip />;
+    },
+};
+
+export const ConvergeClean: Story = {
+    render: () => {
+        navState.value = mockNavState({ taskCompletionPercent: 100, taskCounts: { checked: 15, total: 15 } });
+        viewerState.value = baseState({
+            status: 'completed',
+            converge: { outcome: 'clean', passCount: 2, passes: [], addedTasks: [], openAdded: 0 },
+        });
+        return <RunStrip />;
+    },
+};

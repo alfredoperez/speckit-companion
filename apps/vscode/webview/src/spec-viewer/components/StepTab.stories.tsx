@@ -300,3 +300,11 @@ export const AllStatesWithPercent: Story = {
         </div>
     ),
 };
+
+export const TasksWithConvergeBadge: Story = {
+    args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, currentDoc: 'plan', convergeAdded: 3 },
+};
+
+export const TasksWithConvergeBadgeStale: Story = {
+    args: { ...base, doc: mockDoc('tasks', true, 'Tasks'), index: 2, currentDoc: 'tasks', convergeAdded: 1, stalenessMap: staleMap('tasks') },
+};

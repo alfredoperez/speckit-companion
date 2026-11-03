@@ -12,6 +12,7 @@
  */
 
 import type {
+    ConvergeResult,
     HistoryEntry,
     StepName,
     Status,
@@ -65,6 +66,10 @@ export interface FooterMatrixRow {
     right: string[];
     /** Expected resolved label of the `approve` action, when present. */
     approveLabel?: string;
+    /** The converge result the footer is derived with. */
+    converge?: ConvergeResult;
+    /** Expected resolved label of the `converge` action, when present. */
+    convergeLabel?: string;
 }
 
 export const FOOTER_MATRIX: FooterMatrixRow[] = [
@@ -159,6 +164,25 @@ export const FOOTER_MATRIX: FooterMatrixRow[] = [
         right: ['archive', 'complete'],
     },
     {
+        name: 'converge added 3 tasks',
+        status: 'implemented',
+        currentStep: 'converge',
+        history: historyThrough('implement'),
+        converge: { outcome: 'gaps', passCount: 1, passes: [], addedTasks: [], openAdded: 3 },
+        left: [],
+        right: ['archive', 'implement-gaps'],
+    },
+    {
+        name: 'completed by a clean converge',
+        status: 'completed',
+        currentStep: 'converge',
+        history: historyThrough('implement'),
+        converge: { outcome: 'clean', passCount: 1, passes: [], addedTasks: [], openAdded: 0 },
+        left: [],
+        right: ['reactivate', 'archive'],
+        convergeLabel: 'Converge again',
+    },
+    {
         name: 'completed',
         status: 'completed',
         currentStep: 'implement',
@@ -178,4 +202,4 @@ export const FOOTER_MATRIX: FooterMatrixRow[] = [
 
 /** Zone partition mirroring webview CatalogFooter. */
 export const LEFT_IDS = new Set(['regenerate']);
-export const RIGHT_IDS = new Set(['refine', 'approve', 'reactivate', 'archive', 'complete', 'start']);
+export const RIGHT_IDS = new Set(['refine', 'approve', 'reactivate', 'archive', 'complete', 'start', 'implement-gaps']);

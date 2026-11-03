@@ -11,7 +11,7 @@ import {
     WORKFLOW_STEPS,
     type FooterMatrixRow,
 } from './footerMatrix.fixtures';
-import type { SpecContext } from '../../../core/types/specContext';
+import type { ConvergeResult, SpecContext } from '../../../core/types/specContext';
 
 function ctxFor(row: FooterMatrixRow): SpecContext {
     return {
@@ -216,5 +216,66 @@ describe('a spec on converge keeps the implement footer', () => {
         const ids = footerIds(onConverge('implementing', false));
         expect(ids).not.toContain('approve');
         expect(ids).not.toContain('complete');
+    });
+});
+
+describe('a converge that added tasks', () => {
+    const entry = (step: string, kind: 'start' | 'complete', at: string) => ({
+        step, substep: null, kind, from: { step: null, substep: null }, by: 'extension', at,
+    });
+    const ctxAt = (status: SpecContext['status']) => ({
+        workflow: 'speckit-companion', specName: 'converge', branch: 'main',
+        currentStep: 'converge', status,
+        history: [
+            entry('implement', 'start', '2026-07-21T10:00:00.000Z'),
+            entry('implement', 'complete', '2026-07-21T10:05:00.000Z'),
+            entry('converge', 'start', '2026-07-21T10:06:00.000Z'),
+            entry('converge', 'complete', '2026-07-21T10:08:00.000Z'),
+        ],
+    }) as unknown as SpecContext;
+    const result = (over: Partial<ConvergeResult>): ConvergeResult =>
+        ({ outcome: 'gaps', passCount: 1, passes: [], addedTasks: [], openAdded: 3, ...over });
+    const footer = (status: SpecContext['status'], converge?: ConvergeResult) =>
+        deriveViewerState(ctxAt(status), 'converge', WORKFLOW_STEPS, converge).footer;
+
+    it('offers Implement N new tasks and Open tasks, and hides Mark Completed', () => {
+        const f = footer('implemented', result({ openAdded: 3 }));
+        expect(f.find(a => a.id === 'implement-gaps')?.label).toBe('Implement 3 new tasks');
+        expect(f.map(a => a.id)).toContain('open-tasks');
+        expect(f.map(a => a.id)).not.toContain('complete');
+    });
+
+    it('uses the singular at one task', () => {
+        const f = footer('implemented', result({ openAdded: 1 }));
+        expect(f.find(a => a.id === 'implement-gaps')?.label).toBe('Implement 1 new task');
+    });
+
+    it('gives both actions a scope and a tooltip', () => {
+        const f = footer('implemented', result({ openAdded: 2 }));
+        for (const id of ['implement-gaps', 'open-tasks']) {
+            const a = f.find(x => x.id === id)!;
+            expect(a.scope).toBe('spec');
+            expect(a.tooltip.length).toBeGreaterThan(0);
+        }
+    });
+
+    it('offers neither action once every added task is checked', () => {
+        const ids = footer('implemented', result({ openAdded: 0, outcome: 'gaps' })).map(a => a.id);
+        expect(ids).not.toContain('implement-gaps');
+        expect(ids).not.toContain('open-tasks');
+        expect(ids).toContain('complete');
+    });
+
+    it('offers Open tasks but no implement action on a completed spec, which keeps its status', () => {
+        const ids = footer('completed', result({ openAdded: 2 })).map(a => a.id);
+        expect(ids).not.toContain('implement-gaps');
+        expect(ids).toContain('open-tasks');
+    });
+
+    it('relabels Converge on a cleanly completed spec only', () => {
+        const label = (f: { id: string; label: string }[]) => f.find(a => a.id === 'converge')?.label;
+        expect(label(footer('completed', result({ outcome: 'clean', openAdded: 0 })))).toBe('Converge again');
+        expect(label(footer('implemented', result({ outcome: 'clean', openAdded: 0 })))).toBe('Converge');
+        expect(label(footer('completed'))).toBe('Converge');
     });
 });

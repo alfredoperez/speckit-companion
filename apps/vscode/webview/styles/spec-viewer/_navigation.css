@@ -242,6 +242,25 @@
     margin-left: 6px;
 }
 
+/* Tasks converge added and nobody built yet: a warning chip that sits with the other right-aligned badges. */
+.step-tab__converge {
+    margin-left: auto;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.3;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    background: var(--warning-subtle);
+    border: 1px solid var(--warning);
+}
+
+.step-tab__percent ~ .step-tab__converge,
+.step-tab__elapsed ~ .step-tab__converge {
+    margin-left: 6px;
+}
+
 .step-tab__substep {
     display: block;
     font-size: 0.72em;

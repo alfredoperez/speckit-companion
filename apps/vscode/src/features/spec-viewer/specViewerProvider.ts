@@ -69,6 +69,7 @@ import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { resolveInstallPrompt, type InstallPrompt } from "../../speckit/specKitExtensionInstall";
 import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
 import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests } from "./stateDerivation";
+import { deriveConvergeResult } from "./convergeResult";
 import { enrichLivingSpecs } from "../living-specs/livingSpecsContent";
 import { bugDirectoryOf } from "../bugs/bugReports";
 import { ideaDirectoryOf } from "../ideas/ideaReports";
@@ -1534,7 +1535,11 @@ export class SpecViewerProvider {
         const active: StepName = STEP_NAMES.includes(specCtx.currentStep as StepName)
           ? (specCtx.currentStep as StepName)
           : (specCtx.currentStep as StepName) || 'specify';
-        const derivedVs = deriveViewerState(specCtx, active, wfSteps);
+        // Context-only refreshes skip the tasks.md read, and converge's finish is one of them.
+        const converge = Array.isArray(specCtx.convergePasses) && specCtx.convergePasses.length > 0
+          ? deriveConvergeResult(specCtx, await fs.promises.readFile(path.join(specDirectory, "tasks.md"), "utf-8").catch(() => ""))
+          : undefined;
+        const derivedVs = deriveViewerState(specCtx, active, wfSteps, converge);
         // Coverage is the same shape of enrichment: the derivation cannot open a
         // file, so the table would otherwise present a named test that is not
         // there exactly like one that is.

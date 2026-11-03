@@ -553,11 +553,13 @@ def fold_plan_tasks(feature_dir: Path, by: str) -> Path | None:
     return target
 
 
-def _complete_after_clean_converge(feature_dir: Path, by: str) -> Path | None:
+def _complete_after_clean_converge(feature_dir: Path, by: str, added: list[str] | None = None) -> Path | None:
     """Complete a spec whose converge added no task and left every task checked."""
     ctx = read_ctx(feature_dir / ".spec-context.json")
     if not _feature_tasks_at_100(feature_dir):
         return None
+    if added is not None:
+        return mark_spec_complete(feature_dir, by) if not added else None
     starts = [e for e in canonical_log(ctx)
               if e.get("step") == "converge" and _is_step_level(e) and _entry_kind(e) == "start"]
     at = _utc_stamp(str(ctx.get("convergeStartedAt") or (starts[-1].get("at") if starts else "")))
@@ -566,18 +568,70 @@ def _complete_after_clean_converge(feature_dir: Path, by: str) -> Path | None:
     return mark_spec_complete(feature_dir, by)
 
 
+def _open_converge_pass(ctx: dict) -> dict | None:
+    passes = ctx.get("convergePasses")
+    if isinstance(passes, list) and passes and isinstance(passes[-1], dict) and not passes[-1].get("finishedAt"):
+        return passes[-1]
+    return None
+
+
+def _record_converge_start(feature_dir: Path, by: str) -> Path | None:
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    if _open_converge_pass(ctx) is not None:
+        return None
+    before, _done = parse_task_markers(feature_dir / "tasks.md")
+    passes = ctx.get("convergePasses")
+    ctx["convergePasses"] = (list(passes) if isinstance(passes, list) else []) + [
+        {"startedAt": _now_iso(), "by": by, "before": before}
+    ]
+    atomic_write(target, ctx)
+    return target
+
+
+def _record_converge_finish(feature_dir: Path, added: list[str] | None, completed: bool) -> Path | None:
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    open_pass = _open_converge_pass(ctx)
+    if open_pass is None:
+        return None
+    open_pass["finishedAt"] = _now_iso()
+    open_pass.pop("before", None)
+    if added is not None:
+        open_pass["added"] = added
+    if completed:
+        open_pass["completed"] = True
+    atomic_write(target, ctx)
+    return target
+
+
 def _after_converge(feature_dir: Path, by: str) -> None:
     ctx = read_ctx(feature_dir / ".spec-context.json")
-    if ctx.get("status") != "completed":
-        _complete_after_clean_converge(feature_dir, by)
-        return
-    all_ids, done_ids = parse_task_markers(feature_dir / "tasks.md")
-    open_count = len(all_ids) - len(done_ids)
-    if open_count > 0:
-        append_capture_entries(
-            feature_dir, "concerns", "note",
-            [f"converge appended {open_count} open task(s) after completion"],
-        )
+    open_pass = _open_converge_pass(ctx)
+    added: list[str] | None = None
+    if open_pass is not None and isinstance(open_pass.get("before"), list):
+        before = set(open_pass["before"])
+        now_ids, _done = parse_task_markers(feature_dir / "tasks.md")
+        added = list(dict.fromkeys(i for i in now_ids if i not in before))
+    completed = False
+    try:
+        if ctx.get("status") != "completed":
+            completed = _complete_after_clean_converge(feature_dir, by, added) is not None
+        else:
+            all_ids, done_ids = parse_task_markers(feature_dir / "tasks.md")
+            open_count = len(all_ids) - len(done_ids)
+            if open_count > 0:
+                append_capture_entries(
+                    feature_dir, "concerns", "note",
+                    [f"converge appended {open_count} open task(s) after completion"],
+                )
+    finally:
+        try:
+            _record_converge_finish(feature_dir, added, completed)
+        except Exception as exc:  # noqa: BLE001 - the close already landed
+            print(f"[companion] Warning: skipped recording the converge pass: {exc}", file=sys.stderr)
 
 
 UNVERIFIED_NOTE = "finished, unverified"
@@ -1179,6 +1233,7 @@ def _main() -> int:
         # History keeps only the first converge start, so each run's own window is kept beside it.
         try:
             set_fields(feature_dir, [f"convergeStartedAt={_now_iso()}"])
+            _record_converge_start(feature_dir, args.by)
         except Exception as exc:  # noqa: BLE001 - the converge start already landed
             print(f"[companion] Warning: skipped noting this converge run's start: {exc}", file=sys.stderr)
     if target is not None and args.hook == "finish" and args.step == "converge":
