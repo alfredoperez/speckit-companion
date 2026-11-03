@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **New specs are `spec.md`.** Companion writes new specs as `spec.md`, so stock converge, analyze and clarify find them, and older named specs still open. ([#941](https://github.com/alfredoperez/speckit-companion/pull/941)) <!-- area: pipeline -->
 
 ### Fixed
+- **Copilot gets the built pipeline.** A build refreshes the skills ==in `.github/skills/`== too, so Copilot runs the project's pipeline. ([#950](https://github.com/alfredoperez/speckit-companion/pull/950)) <!-- area: pipeline -->
 - **Monorepo projects record their runs.** The writer finds the project ==the way Spec Kit does==, from the nearest `.specify/` up, and the feature pointer outranks the label. ([#949](https://github.com/alfredoperez/speckit-companion/pull/949)) <!-- area: run-record -->
 - **Hook pages are one line each.** Each hook that records a plain spec-kit step runs one command, and a broken `.specify/extensions.yml` is reported, not skipped. ([#938](https://github.com/alfredoperez/speckit-companion/pull/938)) <!-- area: run-record -->
 - **Your team's templates shape Companion runs too.** Overrides and presets on spec, plan or tasks templates shape Companion runs, and the built copy stays out of stock runs. ([#937](https://github.com/alfredoperez/speckit-companion/pull/937)) <!-- area: pipeline -->

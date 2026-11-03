@@ -47,6 +47,7 @@ KNOWN_AREAS = {
     ".claude/skills": ("dir", ""),
     ".agents/skills": ("dir", ""),
     ".cursor/skills": ("dir", ""),
+    ".github/skills": ("dir", ""),
     ".github/prompts": ("file", ".prompt.md"),
     ".github/agents": ("file", ".agent.md"),
     ".qwen/commands": ("file", ".md"),
