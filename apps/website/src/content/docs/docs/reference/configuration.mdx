@@ -21,7 +21,7 @@ VS Code stores the first three per machine, so set them in user settings. A work
 | --- | --- | --- | --- |
 | `speckit.aiProvider` | string | `"claude"` | The assistant that gets your commands. The values are the ids under [Providers](#providers). |
 | `speckit.permissionMode` | string | `"interactive"` | `"interactive"` lets the CLI ask before it acts. `"auto-approve"` skips the prompts. |
-| `speckit.commandFormat` | string | `"auto"` | `"auto"` lets the provider decide. `"dot"` sends `speckit.plan` and `"dash"` sends `speckit-plan`. |
+| `speckit.commandFormat` | string | `"auto"` | `"auto"` follows how Spec Kit registered the commands in this project, then the skills on disk, then the provider default. `"dot"` sends `speckit.plan` and `"dash"` sends `speckit-plan`. |
 | `speckit.aiContextInstructions` | boolean | `true` | Adds a note to each command asking the assistant to record its progress, so the viewer shows finer steps |
 
 Auto-approve adds `--permission-mode bypassPermissions` for the Claude Code CLI, `--auto-approve` for Oh My Pi, and `--yolo` for Copilot CLI and Qwen Code. The other assistants take no flag. Copilot CLI always runs auto-approved, because it can't show a permission prompt when a command is sent to it.

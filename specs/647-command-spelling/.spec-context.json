@@ -1,0 +1,255 @@
+{
+  "workflow": "companion",
+  "specName": "Spell commands the way the project registered them",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:45:49.039Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:46:40.841Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:46:40.956Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:46:40.957Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:46:40.958Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:46:40.959Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:46:41.036Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:48:59.142Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:48:59.227Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:48:59.310Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:48:59.393Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:50:30.666Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:50:30.684Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:54:34.434Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:54:41.386Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Spelling from integration.json invoke_separator for the provider agent",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/commandSeparator.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Else from the agent skills folder on disk",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/commandSeparator.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Else the provider table",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/commandSeparator.test.ts"
+      ]
+    },
+    "FR-004": {
+      "title": "Explicit dot or dash setting wins",
+      "tests": [
+        "apps/vscode/src/speckit/__tests__/commandSeparator.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "Setting description no longer says Copilot uses dots"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 5,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "Copilot CLI slash handling (needs a recorded manual run)"
+  ],
+  "context": [
+    "area: apps/vscode/src/ai-providers/aiProvider.ts formatCommandForProvider, PROVIDER_PATHS",
+    "area: apps/vscode/src/speckit/specKitAgent.ts resolveSpecKitAgent"
+  ],
+  "intent": "Commands are spelled the way spec-kit registered them in this project",
+  "source": "#929",
+  "approach": "formatCommandForProvider reads integration.json invoke_separator for the provider agent, then probes the skills folder, then the table.",
+  "workingBranch": "647-command-spelling",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Recorded separator, then the skills on disk",
+      "files": [
+        "apps/vscode/src/speckit/commandSeparator.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "formatCommandForProvider asks the project before the table",
+      "files": [
+        "apps/vscode/src/ai-providers/aiProvider.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "commandFormat descriptions no longer say Copilot uses dots",
+      "files": [
+        "package.json"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "6 tests: record, disk, bare, auto with a v1.2.5 Copilot fixture, table fallback, setting wins",
+      "files": [
+        "apps/vscode/src/speckit/__tests__/commandSeparator.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Changelog line; type-check and full Jest pass",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "host type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "full jest",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.6,
+      "result": "Snapshots:   0 total · Time:        69.874 s, estimated 73 s · Ran all test suites."
+    },
+    {
+      "what": "full jest after review fixes",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 72.0,
+      "result": "Snapshots:   0 total · Time:        71.282 s, estimated 74 s · Ran all test suites."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Key the lookup on the provider agent via resolveSpecKitAgent",
+      "why": "a two-agent project records a separator per agent; the default integration can be another agent",
+      "rejected": "reading default_integration"
+    },
+    {
+      "decision": "Leave the Copilot CLI slash handling as is",
+      "why": "the issue asks for a recorded manual run before changing it",
+      "rejected": "keeping the slash without evidence"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Copilot CLI slash form unchanged; needs one recorded manual run with a dotted and a dashed prompt",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Commands are spelled from integration.json, then the skills on disk, then the table"
+    }
+  },
+  "convergeStartedAt": "2026-11-03T05:54:34.463Z"
+}
