@@ -64,6 +64,12 @@ class FindingWhatTheAssistantReads(unittest.TestCase):
         self.assertEqual(emission_sync.emission_paths(str(self.root), "specify"),
                          [str(made)])
 
+    def test_a_copilot_skill_gets_the_built_body(self):
+        made = emission(self.root, ".github/skills", "specify", BODY)
+        built = BODY.replace("Write the spec.", "Write the spec the team's way.")
+        self.assertEqual(emission_sync.sync_command(str(self.root), "specify", built), [str(made)])
+        self.assertIn("Write the spec the team's way.", made.read_text(encoding="utf-8"))
+
     def test_an_agent_this_project_does_not_use_is_not_a_failure(self):
         self.assertEqual(emission_sync.emission_paths(str(self.root), "specify"), [])
 

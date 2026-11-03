@@ -16,6 +16,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { BuildReport } from '../../protocol/pipeline';
 import { getProjectRoot } from '../../core/projectRoot';
+import { readPipelineBuildState } from './pipelineBuild';
 
 /** How long a build may take before it is abandoned. Assembly is fast; a hang is a bug. */
 const BUILD_TIMEOUT_MS = 60_000;
@@ -85,6 +86,58 @@ function changedCommands(output: string): string[] {
         if (row && row[2] !== 'unchanged') { changed.push(row[1]); }
     }
     return changed;
+}
+
+/**
+ * A reinstall or `extension update` puts the shipped commands back while `companion.yml`
+ * survives. The fresh files look newer than the configuration, so the build reads as current;
+ * only the build's own preview shows the difference. Rebuild then, and never for a
+ * configuration edited ahead of its build, which the person builds themselves.
+ */
+export function rebuildIfLost(
+    workspaceRoot: string,
+    extensionPath: string,
+    log: (message: string) => void,
+): Promise<string[]> {
+    const running = inFlight.get(workspaceRoot);
+    if (running) { return running; }
+    const check = restoreLostBuild(workspaceRoot, extensionPath, log)
+        .catch(error => {
+            log(`[pipeline] Could not check the pipeline build: ${error}`);
+            return [];
+        })
+        .finally(() => { inFlight.delete(workspaceRoot); });
+    inFlight.set(workspaceRoot, check);
+    return check;
+}
+
+const inFlight = new Map<string, Promise<string[]>>();
+
+function lastLine(output: string): string {
+    return output.split('\n').map(line => line.trim()).filter(Boolean).pop() ?? '';
+}
+
+async function restoreLostBuild(workspaceRoot: string, extensionPath: string, log: (message: string) => void): Promise<string[]> {
+    if (readPipelineBuildState(workspaceRoot).kind !== 'current') { return []; }
+    const script = resolveBuildScript(workspaceRoot, extensionPath);
+    if (!script) { return []; }
+    const preview = await runBuild(script, workspaceRoot, true);
+    if (!preview.ok) {
+        log(`[pipeline] Could not check the pipeline build: ${lastLine(preview.output)}`);
+        return [];
+    }
+    const lost = changedCommands(preview.output);
+    if (lost.length === 0) { return []; }
+    const built = await runBuild(script, workspaceRoot, false);
+    if (!built.ok) {
+        log(`[pipeline] Rebuild after a reinstall failed: ${lastLine(built.output)}`);
+        return [];
+    }
+    log(`[pipeline] Rebuilt ${lost.join(', ')}: the installed commands no longer matched this project's companion.yml`);
+    if (/could not refresh/i.test(built.output)) {
+        log(`[pipeline] The assistant's own copies were not all refreshed: ${lastLine(built.output)}`);
+    }
+    return lost;
 }
 
 /** What the run did, in the shape the panel reports it. */

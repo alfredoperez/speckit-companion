@@ -1,0 +1,298 @@
+{
+  "workflow": "companion",
+  "specName": "Rebuild the pipeline after a Companion reinstall",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:05:37.264Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T06:06:36.701Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:06:36.866Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:06:37.078Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:06:37.149Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:06:37.278Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:06:37.343Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:07:41.429Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:09:20.534Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:09:20.617Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:09:20.701Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:09:20.784Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:12:22.757Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:12:22.775Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:16:16.295Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T06:16:23.511Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "VS Code previews the build at startup and on extension changes",
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/rebuildIfLost.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Rebuild and log restored commands on a difference",
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/rebuildIfLost.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Nothing written when current or unconfigured",
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/rebuildIfLost.test.ts"
+      ]
+    },
+    "FR-004": {
+      "title": "Doctor warns on a mismatched build"
+    },
+    "FR-005": {
+      "title": "Copy step refreshes .github/skills",
+      "tests": [
+        "apps/speckit-extension/tests/test_emission_sync.py::test_a_copilot_skill_gets_the_built_body"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 7,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "reading the folder list from integration.json"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/specs/pipelineBuildCommands.ts runBuild, changedCommands",
+    "area: apps/vscode/src/extension.ts onCompanionFilesChanged",
+    "area: apps/speckit-extension/scripts/emission_sync.py KNOWN_AREAS, doctor_checks.py"
+  ],
+  "intent": "A reinstall never silently drops the project pipeline",
+  "source": "#929",
+  "workingBranch": "649-rebuild-after-reinstall",
+  "approach": "VS Code and the doctor run the build's dry-run preview; VS Code rebuilds on a difference; the copy step learns .github/skills.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Copy step refreshes .github/skills entries",
+      "files": [
+        "apps/speckit-extension/scripts/emission_sync.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "rebuildIfLost previews the build and rebuilds on a difference, logging the restored commands",
+      "files": [
+        "apps/vscode/src/features/specs/pipelineBuildCommands.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Called when the extension's files land, at startup and after a reinstall",
+      "files": [
+        "apps/vscode/src/extension.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "3 tests: lost build rebuilt, current build untouched, unconfigured project skipped",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/rebuildIfLost.test.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "A Copilot skill gets the built body",
+      "files": [
+        "apps/speckit-extension/tests/test_emission_sync.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Changelog lines; all gates pass",
+      "files": [
+        "CHANGELOG.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "The doctor cannot check a lost build: build-pipeline.py is not shipped with the spec-kit extension (US2 dropped)"
+    },
+    {
+      "note": "Integration upgrade and forced init rewrite only the agent copies, which the build preview cannot compare; not detected"
+    }
+  ],
+  "verified": [
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 80.3,
+      "result": "---------------------------------------------------------------------- · Ran 1824 tests in 80.113s · OK (skipped=8)"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "host type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "full jest",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 74.2,
+      "result": "Snapshots:   0 total · Time:        73.551 s · Ran all test suites."
+    },
+    {
+      "what": "full jest after review fixes",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 72.4,
+      "result": "Snapshots:   0 total · Time:        71.743 s, estimated 74 s · Ran all test suites."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Detect a lost build with the build dry-run preview",
+      "why": "a reinstall writes fresh files, so modified times read as current",
+      "rejected": "comparing file times"
+    },
+    {
+      "decision": "Rebuild from onCompanionFilesChanged",
+      "why": "it runs at startup and whenever the extension files land, which covers reinstall, update, integration upgrade and forced init",
+      "rejected": "a separate watcher"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "VS Code rebuilds a configured pipeline a reinstall dropped; the copy step learns .github/skills"
+    }
+  },
+  "convergeStartedAt": "2026-11-03T06:16:16.326Z"
+}

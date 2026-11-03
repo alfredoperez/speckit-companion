@@ -16,7 +16,7 @@ import { OverviewProvider } from './features/settings';
 import { removeLeftoverPresets } from './features/settings/companionPresetReconciler';
 import { AgentManager } from './features/agents';
 import { SkillManager } from './features/skills';
-import { registerPipelineBuildCommands } from './features/specs/pipelineBuildCommands';
+import { registerPipelineBuildCommands, rebuildIfLost } from './features/specs/pipelineBuildCommands';
 import { registerPipelineBuilderCommands } from './features/pipeline-builder/builderPanel';
 import { registerSpecEditorCommands } from './features/spec-editor';
 import { registerSpecViewerCommands, isSpecDocument } from './features/spec-viewer';
@@ -374,6 +374,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     void removeLeftoverPresets(root, {
                         log: msg => outputChannel.appendLine(msg),
                     });
+                    void rebuildIfLost(root, context.extensionPath, msg => outputChannel.appendLine(msg));
                 }
                 return gap;
             };
