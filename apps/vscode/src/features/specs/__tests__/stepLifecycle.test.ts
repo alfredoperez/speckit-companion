@@ -52,7 +52,9 @@ describe('stepLifecycle', () => {
             expect(mockSetStepStarted).toHaveBeenCalledWith(
                 expect.any(Object),
                 'plan',
-                'extension'
+                'extension',
+                undefined,
+                true
             );
         });
 

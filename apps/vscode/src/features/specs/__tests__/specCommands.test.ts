@@ -1056,8 +1056,9 @@ describe('speckit.converge command handler', () => {
     });
 
     it('times converge itself when Companion\'s spec-kit extension is not installed', async () => {
+        (getAIProvider().executeInTerminal as jest.Mock).mockResolvedValueOnce({ name: 'SpecKit - Converge' });
         const handler = captureCommandHandlers(createMockContext()).get('speckit.converge')!;
         await handler({ label: '041-foo', specPath: 'specs/041-foo' });
-        expect(startStep).toHaveBeenCalledWith(expect.stringContaining('041-foo'), 'converge', 'extension');
+        expect(startStep).toHaveBeenCalledWith(expect.stringContaining('041-foo'), 'converge', 'extension', false);
     });
 });

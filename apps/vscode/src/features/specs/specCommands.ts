@@ -721,8 +721,6 @@ function registerPhaseCommands(
             }
             outputChannel.appendLine(`[SpecKit] Converge command triggered for: ${targetDir}`);
             const root = getProjectRoot();
-            const recordHere = !!root && !isCompanionInstalled(root);
-            if (recordHere) await startStep(targetDir, 'converge', 'extension');
             const assistant = getConfiguredProviderType();
             const terminal = await getAIProvider().executeInTerminal(
                 convergeCommandLine(formatCommandForProvider('speckit.converge'), targetDir),
@@ -730,7 +728,11 @@ function registerPhaseCommands(
                 { specDir: targetDir },
             );
             noteSpecDispatch(targetDir, terminal, assistant);
-            if (recordHere) trackTerminal(terminal, targetDir, 'converge');
+            // Every converge pass gets its own start, so it is not deduped against the last one.
+            if (terminal && root && !isCompanionInstalled(root)) {
+                await startStep(targetDir, 'converge', 'extension', false);
+                trackTerminal(terminal, targetDir, 'converge');
+            }
         })
     );
 

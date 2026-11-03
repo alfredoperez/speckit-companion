@@ -46,6 +46,14 @@ describe('how a project spells its commands', () => {
         expect(projectCommandFormat(project(claudeOnly), 'copilot')).toBe('dash');
     });
 
+    it('keeps Copilot\'s own dot commands over Claude\'s dash skills', () => {
+        const both = {
+            '.github/prompts/speckit.specify.prompt.md': '',
+            '.claude/skills/speckit-specify/SKILL.md': '',
+        };
+        expect(projectCommandFormat(project(both), 'copilot')).toBe('dot');
+    });
+
     it('ignores settings left behind for an agent that is no longer installed', () => {
         const stale = { '.specify/integration.json': JSON.stringify({ installed_integrations: ['claude'], integration_settings: { copilot: { invoke_separator: '-' } } }) };
         expect(projectCommandFormat(project(stale), 'copilot')).toBeUndefined();

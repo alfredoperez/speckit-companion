@@ -57,12 +57,13 @@ function buildFallback(specDir: string, step: StepName): SpecContext {
 export async function startStep(
     specDir: string,
     step: StepName,
-    by: HistoryEntryBy
+    by: HistoryEntryBy,
+    dedupe = true
 ): Promise<void> {
     try {
         await updateSpecContext(
             specDir,
-            ctx => setStepStarted(ctx, step, by),
+            ctx => setStepStarted(ctx, step, by, undefined, dedupe),
             buildFallback(specDir, step)
         );
     } catch (err) {
