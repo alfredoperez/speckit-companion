@@ -87,12 +87,33 @@ class ConvergeCompletes(unittest.TestCase):
         self.write("--hook", "finish", "--step", "converge")
         self.assertEqual(self.status()[0], "completed")
 
-    def test_a_completed_spec_is_unchanged(self):
+    def ctx(self):
+        return json.loads((self.spec / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_a_converge_on_a_completed_spec_is_recorded_and_the_spec_stays_completed(self):
         self.implemented("- [x] **T001** done")
         self.write("--mark-complete")
-        before = (self.spec / ".spec-context.json").read_bytes()
+        before = self.ctx()
+        self.write("--hook", "start", "--step", "converge")
         self.write("--hook", "finish", "--step", "converge")
-        self.assertEqual((self.spec / ".spec-context.json").read_bytes(), before)
+        after = self.ctx()
+        self.assertEqual(after["status"], "completed")
+        self.assertEqual(after["currentStep"], before["currentStep"])
+        self.assertTrue(after.get("convergeStartedAt"))
+        self.assertGreaterEqual(len(after["history"]), len(before["history"]))
+        self.assertFalse([c for c in after.get("concerns") or [] if "converge appended" in str(c)])
+
+    def test_a_converge_that_appends_tasks_on_a_completed_spec_names_the_open_count(self):
+        self.implemented("- [x] **T001** done")
+        self.write("--mark-complete")
+        self.write("--hook", "start", "--step", "converge")
+        with self.tasks.open("a", encoding="utf-8") as fh:
+            fh.write("- [ ] **T002** found\n- [ ] **T003** found\n")
+        self.write("--hook", "finish", "--step", "converge")
+        after = self.ctx()
+        self.assertEqual(after["status"], "completed")
+        notes = [c.get("note") if isinstance(c, dict) else c for c in after["concerns"]]
+        self.assertIn("converge appended 2 open task(s) after completion", notes)
 
 
 if __name__ == "__main__":

@@ -44,6 +44,7 @@ OPS = (
     "tasks-sync",
     "materialize",
     "mark-complete",
+    "converge-finish",
     "fold-living-spec",
     "drift-compute",
     "dispatch-checkin",

@@ -809,7 +809,7 @@ class StatusResolveTests(unittest.TestCase):
         self.assertIsNone(res["nextTask"])
 
     def test_terminal_status_is_complete(self) -> None:
-        for status in ("implemented", "completed", "archived"):
+        for status in ("completed", "archived"):
             wc.update_context(self.fd, "tasks", "ready-to-implement", "extension")
             ctx = _ctx(self.fd)
             ctx["status"] = status
@@ -846,12 +846,12 @@ class StatusResolveTests(unittest.TestCase):
         self.assertEqual(res["nextTask"], "T002")
         self.assertNotIn("Finish", res["nextActionLabel"])
 
-    def test_converge_with_no_open_task_is_pipeline_complete(self) -> None:
+    def test_converge_with_no_open_task_at_implemented_is_next_converge(self) -> None:
         self._converge_ctx("implemented", "- [x] **T001** a")
         res = status_mod.resolve(self.fd)
-        self.assertTrue(res["complete"])
-        self.assertEqual(res["nextActionLabel"], "Pipeline complete")
-        self.assertIsNone(res["nextCommand"])
+        self.assertFalse(res["complete"])
+        self.assertEqual(res["nextStep"], "converge")
+        self.assertNotEqual(res["nextActionLabel"], "Pipeline complete")
 
     def test_converge_on_a_closed_spec_is_pipeline_complete(self) -> None:
         for status in ("completed", "archived"):
@@ -869,11 +869,11 @@ class StatusResolveTests(unittest.TestCase):
         self.assertEqual(res["nextTask"], "T002")
         self.assertFalse(res["complete"])
 
-    def test_implement_at_implemented_with_open_tasks_stays_pipeline_complete(self) -> None:
+    def test_implement_at_implemented_with_open_tasks_is_next_implement(self) -> None:
         self._converge_ctx("implemented", "- [x] **T001** a", "- [ ] **T002** b", step="implement")
         res = status_mod.resolve(self.fd)
-        self.assertTrue(res["complete"])
-        self.assertEqual(res["nextActionLabel"], "Pipeline complete")
+        self.assertFalse(res["complete"])
+        self.assertEqual(res["nextStep"], "implement")
 
     def test_no_files_is_empty(self) -> None:
         res = status_mod.resolve(self.fd)

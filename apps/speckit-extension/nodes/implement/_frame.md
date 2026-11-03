@@ -1,5 +1,5 @@
 ---
-description: "Companion implement — execute tasks.md in dependency order, then mark complete"
+description: "Companion implement — execute tasks.md in dependency order, then converge"
 ---
 
 ## User Input
@@ -26,4 +26,4 @@ $ARGUMENTS
 
 ## Outline
 
-Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as ordered **waves** split by `⟶ Wait …` join lines: a dependency map where tasks within a wave are independent and a `⟶ Wait` marks where the next tasks depend on what came before. Setup and polish are built inline, wave by wave, stopping at each `⟶ Wait` line until the wave above is done; Foundational waves of four or more tasks go to workers through `dispatch-briefs.py --waves`, and smaller ones stay inline; each user-story phase goes to its own worker wherever a subagent tool exists, and inline is the fallback for a host that cannot dispatch. Each task's finish is logged as it completes; then mark the spec complete.
+Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as ordered **waves** split by `⟶ Wait …` join lines: a dependency map where tasks within a wave are independent and a `⟶ Wait` marks where the next tasks depend on what came before. Setup and polish are built inline, wave by wave, stopping at each `⟶ Wait` line until the wave above is done; Foundational waves of four or more tasks go to workers through `dispatch-briefs.py --waves`, and smaller ones stay inline; each user-story phase goes to its own worker wherever a subagent tool exists, and inline is the fallback for a host that cannot dispatch. Each task's finish is logged as it completes; implement then ends at `implemented` and `converge` completes the spec.

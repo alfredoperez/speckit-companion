@@ -274,6 +274,15 @@ class ReviewRegressionTests(unittest.TestCase):
             self.assertEqual(attempts, [],
                              "another run's failure outside this spec's window is not this spec's")
 
+    def test_a_converge_finish_is_not_a_completion_attempt(self):
+        import tempfile, run_trace
+        with tempfile.TemporaryDirectory() as tmp:
+            spec = Path(tmp) / "specs" / "001-x"
+            spec.mkdir(parents=True)
+            run_trace.record("write-context", "converge-finish", True, ms=1, feature_dir=spec, spec=None)
+            attempts = dc._completion_attempts(spec, {"history": []})
+            self.assertEqual(attempts, [])
+
     def test_an_older_run_failure_alone_is_a_note_not_this_run_problem(self):
         import tempfile, run_trace
         with tempfile.TemporaryDirectory() as tmp:

@@ -72,7 +72,9 @@ Then run plan, tasks and implement the same way, or all four at once with `/spec
 | `/speckit.companion.living-validate` | Check the shape of every living spec |
 | `/speckit.companion.living-move` | Move a living spec between central and colocated storage |
 
-The rest run by themselves, so don't type them: `speckit.companion.classify`, `speckit.companion.mark-complete`, and the hooks `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge` and `speckit.companion.after-converge`. Two more, `speckit.companion.on-prompt` and `speckit.companion.on-stop`, record step boundaries from spec-kit's runtime events with no model in the loop; agents without events keep the hooks.
+The rest run by themselves, so don't type them: `speckit.companion.classify`, and the hooks `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge` and `speckit.companion.after-converge`. Two more, `speckit.companion.on-prompt` and `speckit.companion.on-stop`, record step boundaries from spec-kit's runtime events with no model in the loop; agents without events keep the hooks.
+
+`speckit.companion.mark-complete` marks a spec complete by hand; a clean converge pass normally does it for you.
 
 Full reference: [docs/commands.md](./docs/commands.md). A build check requires every command to be named in this section.
 

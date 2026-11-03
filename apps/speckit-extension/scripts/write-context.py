@@ -191,7 +191,11 @@ def update_context(
 
     # Never drag a more-advanced (e.g. shipped) spec backward. Leave it fully
     # intact — this is the bug the schema reconciliation exists to prevent.
-    if ctx and _is_more_advanced(ctx, step):
+    converge_on_completed = (
+        ctx.get("status") == "completed" and step == "converge" and substep is None
+        and kind in ("start", "complete")
+    )
+    if ctx and not converge_on_completed and _is_more_advanced(ctx, step):
         print(
             f"[companion] {target} already at currentStep={ctx.get('currentStep')} / "
             f"status={ctx.get('status')}; not regressing to {step}/{status}.",
@@ -201,11 +205,13 @@ def update_context(
 
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)
-    if kind == "start":
+    if kind == "start" and not converge_on_completed:
         _note_working_branch(ctx, feature_dir)
 
     # A start that lands after its step already finished is late, not a re-open.
     late_start = kind == "start" and substep is None and _has_complete(log, step)
+    if converge_on_completed:
+        late_start, status = True, None
     if not late_start:
         ctx["currentStep"] = step
     # A start carries the step forward and leaves status alone. `--status` used to
@@ -560,6 +566,20 @@ def _complete_after_clean_converge(feature_dir: Path, by: str) -> Path | None:
     return mark_spec_complete(feature_dir, by)
 
 
+def _after_converge(feature_dir: Path, by: str) -> None:
+    ctx = read_ctx(feature_dir / ".spec-context.json")
+    if ctx.get("status") != "completed":
+        _complete_after_clean_converge(feature_dir, by)
+        return
+    all_ids, done_ids = parse_task_markers(feature_dir / "tasks.md")
+    open_count = len(all_ids) - len(done_ids)
+    if open_count > 0:
+        append_capture_entries(
+            feature_dir, "concerns", "note",
+            [f"converge appended {open_count} open task(s) after completion"],
+        )
+
+
 UNVERIFIED_NOTE = "finished, unverified"
 
 
@@ -570,9 +590,9 @@ def _has_entries(value) -> bool:
 def mark_spec_complete(feature_dir: Path, by: str) -> Path | None:
     """Promote a finished spec to the terminal `completed` status.
 
-    This is the only sanctioned writer of `status: completed`. The Companion
-    workflow's terminal `mark-complete` node dispatches the command that calls
-    this; the AI never hand-writes `completed`. `update_context` deliberately
+    This is the only sanctioned writer of `status: completed`. A pipeline run
+    reaches it from the after-converge hook; the manual mark-complete command
+    calls it too. The AI never hand-writes `completed`. `update_context` deliberately
     refuses to advance a spec whose status is already terminal (`implemented`),
     so the final promotion needs this dedicated path. `currentStep` stays at
     `implement` (the last real step), keeping the canonical invariant that the
@@ -1163,7 +1183,7 @@ def _main() -> int:
             print(f"[companion] Warning: skipped noting this converge run's start: {exc}", file=sys.stderr)
     if target is not None and args.hook == "finish" and args.step == "converge":
         try:
-            _complete_after_clean_converge(feature_dir, args.by)
+            _after_converge(feature_dir, args.by)
         except Exception as exc:  # noqa: BLE001 - the converge close already landed
             print(f"[companion] Warning: skipped completing after converge: {exc}", file=sys.stderr)
 
@@ -1244,6 +1264,8 @@ def _classify_op(argv: list) -> str:
         return "capture"
     if _has_flag(argv, "--set"):
         return "set"
+    if _flag_value(argv, "--hook") == "finish" and _flag_value(argv, "--step") == "converge":
+        return "converge-finish"
     for flag, op in _OP_FLAGS:
         if _has_flag(argv, flag):
             return op

@@ -11,7 +11,7 @@ import DocFigure from '../../../../components/journey/DocFigure.astro';
 | Workflow | Steps | How it ends |
 | --- | --- | --- |
 | Spec Kit | specify, plan, tasks, implement | At Implemented, until you press **Mark Completed** |
-| SpecKit Companion | specify, plan, tasks, implement, mark-complete | Its last step marks the spec complete as part of the run |
+| SpecKit Companion | specify, plan, tasks, implement, converge | A clean converge pass marks the spec complete as part of the run |
 
 You pick the workflow in Create New Spec, and it's recorded on the spec. Companion is pre-selected when the Companion Spec Kit extension is installed, unless you set `speckit.defaultWorkflow` in [Settings](/docs/reference/configuration). The commands below are Companion's. Each of the four step commands has a stock twin without the `companion.` part, such as `/speckit.plan`, and the stock commands stay installed either way.
 
@@ -121,7 +121,7 @@ It needs a GitHub remote and the GitHub MCP server in your assistant. Companion 
   <p>Or press <strong>Implement</strong> in the viewer footer.</p>
 </Actions>
 
-Implement works through `tasks.md` and writes the code. It writes no document of its own, so it has no tab in the rail and its progress shows on the Tasks tab: a live percentage counted from the checked boxes. In the sidebar, the spec's row shows the last finished task and how long ago, like `T004 · 2h ago`.
+Implement works through `tasks.md` and writes the code. In the Companion workflow it ends at **Implemented** and hands off to converge, which decides whether the spec is done. It writes no document of its own, so it has no tab in the rail and its progress shows on the Tasks tab: a live percentage counted from the checked boxes. In the sidebar, the spec's row shows the last finished task and how long ago, like `T004 · 2h ago`.
 
 <DocFigure
   src="live-step-implement.png"
@@ -140,7 +140,7 @@ For a run that stopped, [Overview and progress](/docs/results/the-overview) has 
   <p>Or press <strong>Converge</strong> in the footer of a spec whose build is done, or choose it from the spec's row menu in the sidebar.</p>
 </Actions>
 
-Converge is Spec Kit's own command. It checks the code against the spec, the plan and the task list. If something is missing it appends a Convergence phase of new tasks to `tasks.md`, and otherwise it reports "Converged". You run implement and converge again until it converges.
+Converge is Spec Kit's own command. It checks the code against the spec, the plan and the task list. If something is missing it appends a Convergence phase of new tasks to `tasks.md`, and otherwise it reports "Converged". You run implement and converge again until it converges. In the Companion workflow, a converge pass that adds no task marks the spec **Completed**, whether you run the steps yourself or through auto, and a pass that adds tasks sends the work back to implement. On the stock workflow a clean pass marks the spec completed too, once every task is checked.
 
 <DocFigure
   src="live-converge-footer.png"
@@ -148,7 +148,7 @@ Converge is Spec Kit's own command. It checks the code against the spec, the pla
   caption="A finished spec's footer offers Converge beside Archive and Reactivate."
 />
 
-Spec Kit works on the feature of your current branch. Companion names the spec in the request and asks the assistant to stop if the branch belongs to a different one. Converge never changes the spec's status, so if it adds tasks to a completed spec, press **Reactivate** before you run implement again.
+Spec Kit works on the feature of your current branch. Companion names the spec in the request and asks the assistant to stop if the branch belongs to a different one. Running converge on a spec that is already completed is recorded and leaves it completed. If that pass adds tasks, it raises a concern naming them, so press **Reactivate** before you run implement again.
 
 With the Companion Spec Kit extension installed, [the Overview](/docs/results/the-overview) lists **Converge** after Implement with how long it took. Only the first pass is timed.
 
@@ -161,7 +161,7 @@ Converge compares the code with one feature's own documents. It doesn't check [l
   <p>Or click <strong>Auto</strong> beside <strong>Create Spec</strong> in Create New Spec, or run <strong>SpecKit: Run Spec Hands-Off (Auto)</strong> from the command palette.</p>
 </Actions>
 
-Auto runs specify, plan, tasks, implement and mark-complete in order without stopping for approval. It dispatches the same step commands, so the documents come out the same.
+Auto runs specify, plan, tasks, implement and converge in order without stopping for approval. It repeats implement and converge until a converge pass adds nothing, up to three passes. If tasks are still being added after the third, it stops and raises a concern instead of looping on. It dispatches the same step commands, so the documents come out the same.
 
 <DocFigure
   src="live-new-spec.png"
@@ -186,9 +186,9 @@ To read the spec before it becomes code, run the steps one at a time and [review
   <p>In the stock workflow, press <strong>Mark Completed</strong> in the viewer footer.</p>
 </Actions>
 
-This is the Companion workflow's last step, and the Companion implement command runs it when the last task is checked, so you rarely type it. It writes the `completed` status to the spec's `.spec-context.json`, and the spec moves to **Completed** in the sidebar.
+Converge is the Companion workflow's last step, so you rarely need this command. Use it to mark a spec complete by hand. It writes the `completed` status to the spec's `.spec-context.json`, and the spec moves to **Completed** in the sidebar.
 
-The stock workflow has no such step. A spec stays at **Implemented**, with a yellow beaker in the sidebar, until you press **Mark Completed**. A completed spec's footer reads **Run complete** and offers **Converge**, **Archive** and **Reactivate**.
+In the stock workflow a spec stays at **Implemented**, with a yellow beaker in the sidebar, until a clean converge pass completes it or you press **Mark Completed**. A completed spec's footer reads **Run complete** and offers **Converge**, **Archive** and **Reactivate**.
 
 ## Stock or Companion, measured
 

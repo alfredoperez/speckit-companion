@@ -12,7 +12,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-STEPS = ["specify", "plan", "tasks", "implement", "mark-complete"]
+STEPS = ["specify", "plan", "tasks", "implement", "converge"]
 
 
 def now():

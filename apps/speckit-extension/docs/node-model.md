@@ -8,7 +8,7 @@ The Companion commands are no longer single hand-written markdown files. Each on
 
 These four words mean specific things. "Node" used to get used loosely for all of them — it doesn't anymore.
 
-- **step** — one entry in the workflow (`workflow.yml`): `specify`, `route`, `plan`, `mark-complete`. A step maps to one dispatched `/speckit.companion.*` command.
+- **step** — one entry in the workflow (`workflow.yml`): `specify`, `route`, `plan`, `converge`. A step maps to one dispatched `/speckit.companion.*` command.
 - **node** — one section *inside* a command, written as its own file (e.g. `draft-spec`, `plan-doc`). This is the new thing.
 - **part** — a reusable block shared across commands, injected by a fence (`<!-- speckit-companion:part NAME -->`): `timing`, `sizing`, `routing`, `self-advance`. Parts stay as inner fences inside node bodies — they are *not* nodes.
 - **node hook** — a user-added `before`/`after` insert defined in `.specify/companion.yml`. Distinct from the engine-level **lifecycle hook** in `extension.yml` (`before_plan` / `after_plan` → capture).
@@ -91,7 +91,7 @@ A node declares its output two ways. `writes:` is what the step always produces;
 | implement | `record-verified` | control | records what was verified, decided and left open, split out of `implement-exec` to keep nodes under the word limit |
 | implement | `handoff` | control | new file — absorbs `timing` + `self-advance` |
 | classify | — | — | **existing command** (`speckit.companion.classify.md`) — stays separately dispatchable; not decomposed in v1 |
-| mark-complete | — | — | **existing command** (`speckit.companion.mark-complete.md`) — stays separately dispatchable; not decomposed in v1 |
+| mark-complete | — | — | **existing command** (`speckit.companion.mark-complete.md`) — stays separately dispatchable for marking a spec complete by hand; not decomposed in v1 |
 
 
 **Nodes stay under 1,000 words.** `instruction-budget.py --strict` (run in CI) fails any node or shared part past that limit. The limit is a constant in the script, not a recorded mark, so a node that outgrows it gets split rather than the number raised. The per-command directive table it prints is a report only.
