@@ -64,6 +64,7 @@ from spec_context import (  # noqa: E402,F401
     commit_log,
     feature_dir_from_tasks_file,
     fill_required,
+    pending_start_path,
     read_ctx,
     resolve_feature_dir,
 )
@@ -314,6 +315,104 @@ def journal_advance(feature_dir: Path, step: str, by: str) -> Path | None:
     return target
 
 
+HOOK_START_STATUS = {"plan": "planning", "tasks": "tasking", "implement": "implementing"}
+#: A saved specify start this much older than its folder belongs to an abandoned run.
+PENDING_START_MAX_AGE_S = 3600
+
+
+def _read_pending(path: Path):
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except OSError:
+        return None
+    try:
+        with os.fdopen(fd, encoding="utf-8") as fh:
+            return _utc_stamp(fh.read().strip())
+    except (OSError, ValueError):
+        return None
+
+
+def _write_pending(path: Path, stamp: str) -> None:
+    path.unlink(missing_ok=True)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+    with os.fdopen(os.open(path, flags, 0o600), "w", encoding="utf-8") as fh:
+        fh.write(stamp)
+
+
+def _born(folder: Path) -> float:
+    """When specify made `folder`: its birth time, or its oldest entry where the OS keeps none."""
+    made = folder.stat()
+    if hasattr(made, "st_birthtime"):
+        return made.st_birthtime
+    return min([made.st_mtime, *(p.stat().st_mtime for p in folder.iterdir())])
+
+
+def _utc_stamp(text: str):
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    utc = parsed.astimezone(timezone.utc)
+    return utc.strftime("%Y-%m-%dT%H:%M:%S.") + f"{utc.microsecond // 1000:03d}Z"
+
+
+def _apply_hook(args):
+    """Turn `--hook` into the flags the hook pages used to spell out; an int means the call is done."""
+    step = args.step
+    if args.hook == "start" and step == "specify":
+        stamp = _utc_stamp(args.at) if args.at else _now_iso()
+        if stamp is None:
+            print(f"[companion] Ignoring --at {args.at!r}: not an ISO-8601 UTC stamp.", file=sys.stderr)
+            stamp = _now_iso()
+        pending = pending_start_path(_repo_root())
+        kept = _read_pending(pending)
+        if kept is not None and _age_s(kept) < PENDING_START_MAX_AGE_S:
+            print(f"[companion] Keeping the specify start already saved ({kept})")
+        else:
+            _write_pending(pending, stamp)
+            print(f"[companion] Saved the specify start ({stamp}) until its folder exists")
+        _record_outcome(True, None)
+        return 0
+    if args.hook == "start":
+        args.kind, args.status = "start", HOOK_START_STATUS.get(step)
+        return None
+    if step == "implement":
+        feature_dir = resolve_feature_dir(_repo_root(), args.feature_dir)
+        tasks_md = feature_dir / "tasks.md" if feature_dir is not None else None
+        if tasks_md is None or not tasks_md.is_file():
+            print("[companion] Skipping the implement finish: no tasks.md for the active feature.",
+                  file=sys.stderr)
+            _record_outcome(False, "no tasks.md for the active feature")
+            return 0
+        args.tasks_file = str(tasks_md)
+        return None
+    if step == "specify":
+        _record_pending_specify_start(args)
+    args.kind, args.status = "complete", STEP_COMPLETED_STATUS.get(step)
+    return None
+
+
+def _age_s(stamp: str) -> float:
+    return datetime.now(timezone.utc).timestamp() - datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+
+
+def _record_pending_specify_start(args) -> None:
+    pending = pending_start_path(_repo_root())
+    at = _read_pending(pending)
+    feature_dir = resolve_feature_dir(_repo_root(), args.feature_dir)
+    if at is None or feature_dir is None:
+        return
+    pending.unlink(missing_ok=True)
+    if _has_complete(canonical_log(read_ctx(feature_dir / ".spec-context.json")), "specify"):
+        return
+    started = datetime.fromisoformat(at.replace("Z", "+00:00")).timestamp()
+    if started < _born(feature_dir) - PENDING_START_MAX_AGE_S:
+        return
+    update_context(feature_dir, "specify", "specifying", args.by, "start", None, at)
+
+
 FOLD_BOUNDARIES = (("plan", "start"), ("plan", "complete"), ("tasks", "start"), ("tasks", "complete"))
 
 
@@ -496,6 +595,11 @@ def _main() -> int:
              "clarify/analyze record only the finish (no status change).",
     )
     parser.add_argument(
+        "--hook", default=None, choices=["start", "finish"],
+        help="A lifecycle hook's one call: the boundary of --step, with the status this "
+             "writer picks. A specify start waits outside the project for its folder.",
+    )
+    parser.add_argument(
         "--fold", default=None, metavar="plan,tasks",
         help="A simple spec's fast path: record plan start, plan complete, tasks start and "
              "tasks complete (ready-to-implement) in order, in one write. Idempotent.",
@@ -610,6 +714,11 @@ def _main() -> int:
     )
     args = parser.parse_args()
 
+    if args.hook:
+        handled = _apply_hook(args)
+        if handled is not None:
+            return handled
+
     if args.fold is not None and args.fold != "plan,tasks":
         msg = f"--fold takes exactly 'plan,tasks'; got {args.fold!r}."
         print(f"[companion] {msg}", file=sys.stderr)
@@ -702,18 +811,14 @@ def _main() -> int:
     if args.at:
         # An unparseable or tz-naive stamp is worse than no stamp: the doctor
         # reads None for it and the step's duration disappears.
-        try:
-            _parsed_at = datetime.fromisoformat(args.at.replace("Z", "+00:00"))
-        except ValueError:
-            _parsed_at = None
-        if _parsed_at is None or _parsed_at.tzinfo is None:
+        stamp = _utc_stamp(args.at)
+        if stamp is None:
             msg = (f"--at must be an ISO-8601 UTC stamp (e.g. 2026-09-06T10:00:00Z); "
                    f"got {args.at!r}.")
             print(f"[companion] {msg}", file=sys.stderr)
             _record_outcome(False, msg)
             return 2
-        utc = _parsed_at.astimezone(timezone.utc)
-        args.at = utc.strftime("%Y-%m-%dT%H:%M:%S.") + f"{utc.microsecond // 1000:03d}Z"
+        args.at = stamp
 
     if args.batch:
         try:
@@ -981,6 +1086,7 @@ _OP_FLAGS = (
     ("--finish", "finish"),
     ("--advance", "advance"),
     ("--fold", "fold"),
+    ("--hook", "hook"),
 )
 
 _CAPTURE_FLAGS = (
@@ -1106,13 +1212,24 @@ def main() -> int:
     out_buf, err_buf = io.StringIO(), io.StringIO()
     real_out, real_err = sys.stdout, sys.stderr
     sys.stdout, sys.stderr = _Tee(real_out, out_buf), _Tee(real_err, err_buf)
+    hook = _has_flag(argv, "--hook")
     try:
         code = _main()
+    except SystemExit as exc:
+        if not hook:
+            raise
+        code = exc.code if isinstance(exc.code, int) else 2
+    except Exception as exc:  # noqa: BLE001 - only a hook call reaches here quietly
+        if not hook:
+            raise
+        print(f"[companion] Warning: the hook could not record its step: {exc}", file=sys.stderr)
+        code = 1
     finally:
         sys.stdout, sys.stderr = real_out, real_err
         _trace_call(argv, out_buf.getvalue(), err_buf.getvalue(),
                     int((time.monotonic() - started) * 1000))
-    return code
+    # A lifecycle hook is bookkeeping: it never fails the spec-kit command that fired it.
+    return 0 if hook else code
 
 
 def _trace_call(argv: list, out: str, err: str, ms: int) -> None:

@@ -7,7 +7,7 @@ The extension lives beside the VS Code GUI in the monorepo and is published/inst
                →  after_plan hook   →  speckit.companion.after-plan.md   →  write-context.py  →  .spec-context.json  (finish)  →  Companion GUI re-renders
 ```
 
-Every step has a `before_*` hook that records its start and an `after_*` hook that records its finish. Specify is the one step whose start is written late: its `before_specify` hook only reads the clock, because the spec folder does not exist yet, and `after_specify` writes that time as the start before it writes the finish. (The command/hook layer is documented in [commands.md](./commands.md).)
+Every step has a `before_*` hook that records its start and an `after_*` hook that records its finish. Specify is the one step whose start is written late: its `before_specify` hook saves the clock to a file kept outside the project, because the spec folder does not exist yet, and `after_specify` writes that saved time as the start before it writes the finish. Each hook is one call, `write-context.py --hook start|finish --step <step>`, and the writer owns which status each boundary records. (The command/hook layer is documented in [commands.md](./commands.md).)
 
 ## The writer (`scripts/write-context.py`)
 

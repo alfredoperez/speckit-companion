@@ -1,0 +1,569 @@
+{
+  "workflow": "companion",
+  "specName": "One-line journaling hooks",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:46:27.409Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:49:34.590Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:49:34.679Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:49:34.934Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T02:49:35.120Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:49:46.678Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:51:29.171Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:51:29.364Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:51:29.447Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:52:02.179Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:52:02.469Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:52:30.524Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:52:30.638Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:52:30.923Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:52:31.022Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:52:43.516Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:53:46.168Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:54:48.226Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:55:18.717Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:55:19.010Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:55:50.321Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:55:50.384Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:55:50.448Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:55:50.512Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:55:50.576Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:57:37.236Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:57:37.255Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:57:37.338Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "One hook command per boundary picks the status itself",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_mode.py"
+      ]
+    },
+    "FR-002": {
+      "title": "Hook start/finish for plan, tasks, implement, converge writes the same history as today",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_mode.py"
+      ]
+    },
+    "FR-003": {
+      "title": "Specify start saves the clock; specify finish records it then the finish",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_mode.py"
+      ]
+    },
+    "FR-004": {
+      "title": "Implement finish syncs tasks from tasks.md",
+      "tasks": [
+        "T002",
+        "T003"
+      ]
+    },
+    "FR-005": {
+      "title": "Each hook page is one sentence and one command",
+      "tasks": [
+        "T004",
+        "T007"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_before_step_hook.py"
+      ]
+    },
+    "FR-006": {
+      "title": "Hooks part reports an unreadable extensions.yml",
+      "tasks": [
+        "T008"
+      ]
+    },
+    "FR-007": {
+      "title": "Every hook command exits 0 when it cannot write",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_mode.py"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 15,
+    "projectedTasks": 10,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "runtime-event handlers (w16, w17) are the next slice",
+    "mark-complete as a script (w45) is the third slice"
+  ],
+  "context": [
+    "area: apps/speckit-extension/commands/speckit.companion.{before-step,after-*,before-converge}.md (registered in extension.yml hooks :105-145; wording pinned by tests/test_before_step_hook.py)",
+    "area: apps/speckit-extension/presets/_parts/speckit-hooks.md (spliced into specify/plan/tasks/implement via nodes/*/_frame.md; build.py rebuilds)",
+    "area: apps/speckit-extension/scripts/write-context.py (--at help :449-453)",
+    "docs: apps/speckit-extension/docs/how-it-works.md:10,54 and docs/commands.md:68,97,107-110,126 describe the clock handoff",
+    "constraint: GUI dispatch path promptPreamble.ts:304-309 passes --at on the start call"
+  ],
+  "intent": "Each journaling hook is one sentence and one script call that picks the status itself",
+  "workingBranch": "639-one-line-hooks",
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/639-one-line-hooks --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  WARNING plan.md:30  `update_context` is not within 8 lines of `apps/speckit-extension/scripts/write-context.py:161` (symbol-not-near) ·   WARNING plan.md:31  `apps/speckit-extension/scripts/task_sync.py` has no `:line`, so it is unverified (no-line) ·   0 error(s), 2 warning(s)"
+    },
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 74.3,
+      "result": "---------------------------------------------------------------------- · Ran 1786 tests in 74.038s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 7 bodies match parts"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 24 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "quality gate",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  ✓ [PASS] never-prompts-resume: no user-prompt instruction ·   ✓ [PASS] never-prompts-classify: no user-prompt instruction ·   → 14 pass / 0 warn / 0 fail / 0 info"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "type check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.3,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "speckit-extension python suite (after review)",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 74.0,
+      "result": "---------------------------------------------------------------------- · Ran 1789 tests in 73.830s · FAILED (failures=2, skipped=8)",
+      "warnings": [
+        "exited 1"
+      ]
+    },
+    {
+      "what": "build check (after review)",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "quality gate (after review)",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  ✓ [PASS] never-prompts-resume: no user-prompt instruction ·   ✓ [PASS] never-prompts-classify: no user-prompt instruction ·   → 14 pass / 0 warn / 0 fail / 0 info"
+    },
+    {
+      "what": "command emissions (after review)",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 0.1,
+      "result": "  - speckit.companion.before-converge: extension.yml and commands/speckit.companion.before-converge.md describe it differently ·       manifest: Capture converge start (currentStep=converge, status unchanged) into .spec-context.json for the Companion GUI ·       body:     Record the converge start in .spec-context.json for the Companion GUI",
+      "warnings": [
+        "exited 1"
+      ]
+    },
+    {
+      "what": "package manifest (after review)",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "speckit-extension python suite (final)",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 77.0,
+      "result": "---------------------------------------------------------------------- · Ran 1789 tests in 76.845s · OK (skipped=8)"
+    },
+    {
+      "what": "command emissions (final)",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 24 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "type check (final)",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    }
+  ],
+  "planBlocks": [
+    "calls"
+  ],
+  "decisions": [
+    {
+      "decision": "--hook rewrites into today's flags early in _main()",
+      "why": "history is identical by construction and tracing, plan check and output need no new branch",
+      "rejected": "a separate dispatch branch"
+    },
+    {
+      "decision": "specify start saved beside the lock root, keyed by project root, ignored when over an hour older than the new folder",
+      "why": "no folder yet, never in git, no cross-project sharing",
+      "rejected": "a file under .specify, or the assistant carrying the time"
+    },
+    {
+      "decision": "a --hook call always exits 0",
+      "why": "bookkeeping must never fail a stock run",
+      "rejected": "exit 2 on caller errors"
+    },
+    {
+      "decision": "--hook rewrites into the old flags early in _main()",
+      "why": "parity with today's history by construction",
+      "rejected": "a separate dispatch branch"
+    },
+    {
+      "decision": "main() turns any exit, including argparse errors, into 0 for --hook",
+      "why": "a hook never fails the spec-kit command that fired it",
+      "rejected": "exit 2 on caller errors"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "one --hook mode in the writer, seven one-line pages, stock-matching extensions.yml wording",
+      "key_finding": "the GUI preamble passes --at on the start call, so --hook start must keep accepting --at"
+    },
+    "tasks": {
+      "summary": "10 tasks: writer foundation, one-line pages (US1+US2), hooks part (US3), polish"
+    },
+    "implement": {
+      "summary": "Seven hook pages are one line each through write-context.py --hook; stock wording for a broken extensions.yml"
+    }
+  },
+  "approach": "write-context.py --hook start|finish --step <s> translates into the exact flags the pages pass today; the specify start is saved outside the project and recorded at the specify finish; each hook page is one sentence and one call.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "pending_start_path() beside the lock root, keyed by project; lock root split out",
+      "files": [
+        "apps/speckit-extension/scripts/spec_context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "--hook start|finish translates into today's flags; specify start saved outside the project and recorded at the finish; hook calls always exit 0",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Changelog line under Unreleased / Fixed",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Hooks part now reports an unparseable extensions.yml instead of skipping silently",
+      "files": [
+        "apps/speckit-extension/presets/_parts/speckit-hooks.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Phase 3 T003 done",
+      "files": [
+        "tests/test_hook_mode.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Phase 3 T004 done",
+      "files": [
+        "the seven hook pages"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Phase 3 T005 done",
+      "files": [
+        "extension.yml hook descriptions"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Phase 3 T006 done",
+      "files": [
+        "docs/how-it-works.md",
+        "docs/commands.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Phase 3 T007 done",
+      "files": [
+        "tests/test_before_step_hook.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Pages 331 -> 77 lines; suite, build check, parity, emissions, quality gate, manifest, tsc all exit 0",
+      "files": [
+        "apps/speckit-extension/"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "simplified: a saved specify start more than an hour older than the new folder is dropped as an abandoned run's.",
+      "step": "implement"
+    },
+    {
+      "note": "The project build was not re-run after refreshing the extension, so the installed implement body lacked this project's review and PR hooks; followed .specify/companion.yml by hand (this is #929 w5).",
+      "step": "implement"
+    },
+    {
+      "note": "doctor: Phase 3 worker journaled its tasks in a burst; TRACE failures are the test suite's --help leak and a pointer-less suite call."
+    }
+  ],
+  "last_action": "10/10 tasks, all gates green, pages 331 -> 77 lines"
+}

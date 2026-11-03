@@ -12,7 +12,6 @@ sys.path.insert(0, str(EXT / "scripts"))
 wc = importlib.import_module("write-context")
 MANIFEST = (EXT / "extension.yml").read_text(encoding="utf-8")
 BEFORE_STEP = (EXT / "commands" / "speckit.companion.before-step.md").read_text(encoding="utf-8")
-AFTER_SPECIFY = (EXT / "commands" / "speckit.companion.after-specify.md").read_text(encoding="utf-8")
 STEPS = {"plan": "planning", "tasks": "tasking", "implement": "implementing"}
 
 
@@ -25,6 +24,14 @@ def writer_calls(body):
     return [line for line in body.splitlines() if "write-context.py" in line]
 
 
+PAGES = ["before-step", "after-specify", "after-plan", "after-tasks", "after-implement", "before-converge", "after-converge"]
+
+
+def page_body(name):
+    text = (EXT / "commands" / f"speckit.companion.{name}.md").read_text(encoding="utf-8")
+    return text.split("---\n", 2)[2]
+
+
 class StartHooks(unittest.TestCase):
     def test_every_step_registers_the_one_start_command_as_mandatory(self):
         for step in ["specify", *STEPS]:
@@ -33,31 +40,32 @@ class StartHooks(unittest.TestCase):
     def test_the_start_command_is_one_the_extension_provides(self):
         self.assertIn("    - name: speckit.companion.before-step\n      file: commands/speckit.companion.before-step.md", MANIFEST)
 
-    def test_it_names_each_step_with_its_in_progress_status(self):
-        for step, status in STEPS.items():
-            self.assertRegex(BEFORE_STEP, rf"\| {step} \| `{step}` \| `{status}` \|")
-
-    def test_its_one_writer_call_records_a_start(self):
-        calls = writer_calls(BEFORE_STEP)
-        self.assertEqual(len(calls), 1)
-        self.assertIn("--kind start --by extension", calls[0])
-
-    def test_specify_reads_the_clock_and_writes_nothing_before_its_folder_exists(self):
-        specify = BEFORE_STEP.split("**Specify.**")[1].split("## ")[0]
-        self.assertIn("Do not run the writer", specify)
-        self.assertIn("date -u +%Y-%m-%dT%H:%M:%SZ", specify)
-        self.assertEqual(writer_calls(specify), [])
+    def test_before_step_tells_the_agent_to_pass_the_step_about_to_run(self):
+        self.assertIn("--step", BEFORE_STEP.split("```")[0])
 
 
-class SpecifyFinishHook(unittest.TestCase):
-    def test_it_writes_the_noted_start_then_a_real_finish(self):
-        start, finish = writer_calls(AFTER_SPECIFY)
-        self.assertIn("--status specifying --kind start --by extension --at", start)
-        self.assertIn("--status specified --kind complete --by extension", finish)
+class OneLinePages(unittest.TestCase):
+    def test_each_page_has_one_hook_call(self):
+        for name in PAGES:
+            calls = writer_calls(page_body(name))
+            self.assertEqual(len(calls), 1, name)
+            self.assertRegex(calls[0], r"--hook (start|finish) --step ", name)
 
-    def test_no_call_falls_back_to_the_default_kind(self):
-        for call in writer_calls(AFTER_SPECIFY):
-            self.assertIn("--kind", call)
+    def test_no_page_checks_python_or_carries_a_status_table(self):
+        for name in PAGES:
+            body = page_body(name)
+            self.assertNotIn("python3 --version", body, name)
+            self.assertNotIn("|", body, name)
+
+    def test_each_body_stays_short(self):
+        for name in PAGES:
+            lines = [line for line in page_body(name).splitlines() if line.strip()]
+            self.assertLessEqual(len(lines), 7, name)
+
+    def test_each_page_names_its_boundary(self):
+        for name in PAGES:
+            boundary = "start" if name.startswith("before") else "finish"
+            self.assertIn(f"--hook {boundary} ", page_body(name), name)
 
 
 class LateStart(unittest.TestCase):
