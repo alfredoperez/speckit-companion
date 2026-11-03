@@ -287,18 +287,17 @@ function renderSlimLifecycleBody(_featureDir) {
   ].join("\n");
 }
 function renderAutoFinishClause(featureDir, writerPath) {
-  const writerBase = writerInvocation(writerPath, featureDir);
   return [
     "UNATTENDED AUTO RUN \u2014 FINISH THE LIFECYCLE, DO NOT STOP AT `implemented`.",
     'This is a hands-off `:auto` run: no one is waiting to click "Mark Completed",',
     "so the final approval gate does not apply here. Once the implement step is",
-    "closed at `implemented` (every task checked), promote the spec to `completed`",
-    "yourself \u2014 run this exactly once, last:",
-    `    ${writerBase} --mark-complete --by ai`,
-    "It refuses unless the spec is already `implemented`, closes the implement step,",
-    "and keeps `currentStep` on `implement`. This is the ONLY place an auto run",
-    "writes `completed`, and it overrides the single-step rule above that reserves",
-    "`completed` for the user \u2014 that rule is for manual runs, not auto."
+    "closed at `implemented` (every task checked), end the run by running converge",
+    "(`speckit.converge`) exactly once, last. Its after-hook completes the spec when",
+    "the pass is clean. If this agent cannot run hooks, run that hook yourself once",
+    `converge ends: \`python3 ${writerPath} --feature-dir ${featureDir} --hook finish --step converge\`.`,
+    "Never write `completed` by hand. This overrides the",
+    "single-step rule above that reserves `completed` for the user \u2014 that rule is",
+    "for manual runs, not auto."
   ].join("\n");
 }
 function renderLifecycleBody(target, dispatchUtc, companionInstalled = false, writerPath = WORKSPACE_WRITER_PATH, unattended = false) {

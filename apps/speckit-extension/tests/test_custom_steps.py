@@ -188,14 +188,24 @@ class ConvergeIsRecordedLikeAnyOtherStep(unittest.TestCase):
         self.assertEqual(self.converge_kinds(), ["start", "complete"])
         self.assertEqual(self.read()["status"], "implemented")
 
-    def test_a_completed_spec_is_not_written(self):
+    def test_a_converge_on_a_completed_spec_is_recorded_and_the_spec_stays_completed(self):
         self.context("completed")
         self.write("start")
         self.write("complete")
         recorded = self.read()
-        self.assertEqual(recorded["history"], [])
+        self.assertEqual(self.converge_kinds(), ["start", "complete"])
         self.assertEqual(recorded["currentStep"], "implement")
         self.assertEqual(recorded["status"], "completed")
+
+    def test_another_step_on_a_completed_spec_is_still_refused(self):
+        self.context("completed")
+        subprocess.run(
+            [sys.executable, str(SCRIPTS / "write-context.py"), "--feature-dir", str(self.spec),
+             "--step", "plan", "--kind", "start", "--by", "extension"],
+            capture_output=True, text=True)
+        recorded = self.read()
+        self.assertEqual(recorded["history"], [])
+        self.assertEqual(recorded["currentStep"], "implement")
 
 
     def test_implement_can_still_finish_after_converge_ran_mid_implement(self):

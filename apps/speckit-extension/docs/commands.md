@@ -163,7 +163,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --step converge -
 
 ## `speckit.companion.after-converge`
 
-Runs after `/speckit.converge`. Records converge's finish, again with no `--status`, so the viewer can show how long converge took. When converge appended convergence tasks, the status stays where it was and `/speckit.companion.status` names the next one. Idempotent, like the start.
+Runs after `/speckit.converge`. Records converge's finish, again with no `--status`, so the viewer can show how long converge took. When converge appended convergence tasks, the status stays where it was and `/speckit.companion.status` names the next one. When it added none and every task is checked, the spec is marked completed, in manual, auto and stock runs alike. On a spec that is already completed, the pass is recorded, the spec stays completed, and a concern names any open tasks the pass added. Idempotent, like the start.
 
 **What the agent runs:**
 
@@ -203,9 +203,9 @@ python3 .specify/extensions/companion/scripts/status-context.py --feature-dir sp
 
 ### `speckit.companion.resume`
 
-Resolves the next step from the same script, then dispatches the next `/speckit.*` command with the recorded `decisions[]` in scope. Inside the implement step it continues at the next unchecked task. On a terminal state (`implemented`/`completed`/`archived`) it reports "Pipeline complete" and dispatches nothing. Resume dispatches the **already-installed** `/speckit.*` commands — it does not require a `specify workflow resume` CLI subcommand, so it works on the stock spec-kit version.
+Resolves the next step from the same script, then dispatches the next `/speckit.*` command with the recorded `decisions[]` in scope. Inside the implement step it continues at the next unchecked task. On a terminal state (`completed`/`archived`) it reports "Pipeline complete" and dispatches nothing. Resume dispatches the **already-installed** `/speckit.*` commands — it does not require a `specify workflow resume` CLI subcommand, so it works on the stock spec-kit version.
 
-The next-action mapping: `specify/specified → /speckit.plan`, `plan/planned → /speckit.tasks`, `tasks/ready-to-implement → /speckit.implement`, `implement/implementing → /speckit.implement` (at the next unchecked task). In-progress statuses re-dispatch the current step.
+The next-action mapping: `specify/specified → /speckit.plan`, `plan/planned → /speckit.tasks`, `tasks/ready-to-implement → /speckit.implement`, `implement/implementing → /speckit.implement` (at the next unchecked task), `implement/implemented → /speckit.converge`. In-progress statuses re-dispatch the current step.
 
 ## Pipeline commands
 
@@ -225,13 +225,13 @@ Writes `tasks.md`: a dependency-ordered checklist grouped by user story into pha
 
 ### `speckit.companion.implement`
 
-Executes `tasks.md` wave by wave in dependency order, journaling each task's finish the moment it completes and folding the journal into `.spec-context.json` after each wave. It owns the `- [ ]` checkboxes through that fold rather than editing them by hand, then marks the spec complete at the end.
+Executes `tasks.md` wave by wave in dependency order, journaling each task's finish the moment it completes and folding the journal into `.spec-context.json` after each wave. It owns the `- [ ]` checkboxes through that fold rather than editing them by hand. It ends at `implemented` and hands off to converge, which is what completes the spec.
 
 On a host with a subagent tool it hands each user-story phase that owns five or more files to its own worker: the phases are disjoint because the tasks step gave every file exactly one owner phase, the workers only append their finishes, and the main agent folds each result as it returns. The Foundational phase goes through `dispatch-briefs.py --waves`, which splits it into waves (at join lines, `###` blocks and `Wave` headers, so tests stay ahead of the code they test) and prints the next wave that still has unfinished tasks: up to four worker briefs when it holds four or more, otherwise the tasks to build inline. Implement runs it before each Foundational wave and crosses a join line only once that wave's workers have returned; Setup and Polish it builds itself. Without a subagent tool it builds the waves inline exactly as before. Before it folds living-spec deltas, `dispatch-briefs.py --living` hands them to one reviewer with a short rubric (one rule per requirement, a checkable heading, behaviour rather than implementation, no filler) and the shape checker's findings; the reviewer edits the blocks in place and the fold runs after it returns.
 
 ### `speckit.companion.auto`
 
-Runs the whole pipeline hands-off — specify → plan → tasks → implement → completed — with no approval pauses. It rides on the same per-step commands above, so it cannot drift from them. After specify returns it reads the recorded size: on a `simple` verdict specify already wrote the lean `plan.md` and `tasks.md` and recorded both steps, so auto prints that it folded them and dispatches implement next instead of running plan and tasks again. It sets an `unattended` signal that project checkpoint hooks read: a hook that would normally stop and ask a person records the checkpoint and keeps going instead. On a one-shot terminal it degrades gracefully, running the first step and stopping.
+Runs the whole pipeline hands-off — specify → plan → tasks → implement → converge — with no approval pauses. It repeats implement and converge until a converge pass adds no task, three passes at most, then stops with a concern. It rides on the same per-step commands above, so it cannot drift from them. After specify returns it reads the recorded size: on a `simple` verdict specify already wrote the lean `plan.md` and `tasks.md` and recorded both steps, so auto prints that it folded them and dispatches implement next instead of running plan and tasks again. It sets an `unattended` signal that project checkpoint hooks read: a hook that would normally stop and ask a person records the checkpoint and keeps going instead. On a one-shot terminal it degrades gracefully, running the first step and stopping.
 
 ### `speckit.companion.classify`
 
@@ -239,13 +239,13 @@ Emits a `small | normal | oversized` size signal for the Companion workflow's ro
 
 ### `speckit.companion.mark-complete`
 
-The workflow's terminal step. Writes `status: completed` through `--mark-complete`, the one writer of that status, which every path below goes through:
+Marks a spec complete by hand; the workflow's last step is converge. Writes `status: completed` through `--mark-complete`, the one writer of that status, which every path below goes through:
 
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --mark-complete --by ai
 ```
 
-It refuses unless the spec is already `implemented` (or `implementing` with every task checked), and leaves an already-completed spec untouched. It never refuses for lack of verification: a spec with nothing verified and no concern explaining why completes with one `finished, unverified` concern and a `[companion] Warning:` line. Implement's own final node writes `completed` in a Companion run, and on a stock run the after-converge hook does: when converge added no task and every task is checked, `--hook finish --step converge` marks the spec completed, with no assistant involved. The page is left for marking a spec complete by hand.
+It refuses unless the spec is already `implemented` (or `implementing` with every task checked), and leaves an already-completed spec untouched. It never refuses for lack of verification: a spec with nothing verified and no concern explaining why completes with one `finished, unverified` concern and a `[companion] Warning:` line. A clean converge pass completes the spec in every run: when converge added no task and every task is checked, `--hook finish --step converge` marks the spec completed, with no assistant involved. This command is left for marking a spec complete by hand.
 
 ## Living-specs commands
 

@@ -128,7 +128,7 @@ All three need the [Companion Spec Kit extension](/docs/install) and work with a
 | I stopped halfway. How do I carry on? | `/speckit.companion.resume` | Finds the next step, carries the recorded decisions into scope and sends that step's command. In implement it continues at the next unchecked task. |
 | Did the run do what it says it did? | `/speckit.companion.doctor` | Recomputes what happened and reports problems. Read-only. |
 
-Resume is also the play button on a spec's row in the sidebar. On a spec that's already implemented, completed or archived, it reports that the run is complete and sends nothing.
+Resume is also the play button on a spec's row in the sidebar. On a spec that's implemented, it sends converge, which completes the spec or sends the work back to implement. On a spec that's already completed or archived, it reports that the run is complete and sends nothing.
 
 <Actions>
   <CodeLine command="/speckit.companion.doctor" prompt={false} />

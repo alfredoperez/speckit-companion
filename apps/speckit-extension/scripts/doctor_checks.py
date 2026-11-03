@@ -436,8 +436,8 @@ def check_completion(feature_dir: Path, ctx: dict, report=None) -> tuple:
         return settled([Finding(
             "completion", "note",
             "Every task is checked but completion was never attempted",
-            f"the spec sits at `{status}`; nothing tried to mark it complete, so this is "
-            f"a step that did not run rather than a write that failed",
+            f"the spec sits at `{status}`; a clean converge completes the spec, so run converge. "
+            f"Nothing tried to mark it complete: a step that did not run, not a write that failed",
             verdict,
         )])
 

@@ -1,17 +1,17 @@
 ---
 id: complete
-name: Mark the spec complete
+name: Close implement
 kind: control
 command: implement
 reads: []
 ---
-8. **Mark the spec complete.** Once every task in `tasks.md` is checked off and the work validates, finish the lifecycle so the spec lands at `completed` instead of stopping at `implemented`.
+8. **Close implement at `implemented`.** Once every task in `tasks.md` is checked off and the work validates, close the step. Implement ends at `implemented`; the next step, `converge`, is what completes the spec when it finds nothing left to build.
 
-   **"Validates" means the project's own checks ran and passed.** A spec MUST NOT be marked complete over a failing suite the run introduced: fix it, or leave the spec at `implemented` and say why. Where the checks genuinely could not be run, record that as a concern before completing, so the state reads "finished, unverified" instead of implying "finished, verified". Run from the repository root; the feature directory resolves on its own:
+   **"Validates" means the project's own checks ran and passed.** A spec MUST NOT be marked complete over a failing suite the run introduced: fix it, or leave the work open and say why. Where the checks genuinely could not be run, record that as a concern before closing, so the state reads "finished, unverified" instead of implying "finished, verified". Run from the repository root; the feature directory resolves on its own:
    ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --mark-complete --by ai --set workflow=companion
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --advance --by ai --set workflow=companion
    ```
-   The `--set` pins which workflow finished the spec in the same write, so a mid-run join keeps Companion dispatch. This is the only sanctioned writer of `completed`: it closes the implement step and promotes an `implemented` spec, or an `implementing` one whose tasks are all checked, straight to `completed`, keeping `currentStep` at `implement`. Best-effort and idempotent: if `python3` is unavailable, warn and skip without failing the host command, and a spec already `completed` is left untouched. Running it when the spec-kit workflow engine already called the same path is harmless.
+   The `--set` pins which workflow ran the spec in the same write, so a mid-run join keeps Companion dispatch. This closes the implement step and leaves the spec at `implemented`; it never writes `completed`. Best-effort and idempotent: if `python3` is unavailable, warn and skip without failing the host command.
 
    - **Account for every loaded capability first: a delta or an explicit skip, never silence.** Before folding, read `livingSpecs.loaded` in this feature's `.spec-context.json`. An absent key or an empty list means nothing was loaded and there is nothing to account for; skip to the fold. Go through **every** name in that list, and give each exactly one of two outcomes. For a loaded capability whose *behavior* this feature actually changed, append a delta block to this feature's `spec.md` capturing the real new or changed requirement, marked with that capability's name so the fold routes it to the right spec:
      ```markdown
@@ -36,7 +36,7 @@ reads: []
 
    - **Have the deltas reviewed before they fold.** A living spec is context every later run loads, so what folds into it is read by someone other than its author. Run `python3 .specify/extensions/companion/scripts/dispatch-briefs.py --feature-dir <feature_directory> --living` and do exactly what it prints.
 
-   - **Fold living-spec deltas (opt-in, best-effort).** After the completion write, fold the deltas you just authored into the durable living spec, OpenSpec's "archive" step:
+   - **Fold living-spec deltas (opt-in, best-effort).** After the close, fold the deltas you just authored into the durable living spec, OpenSpec's "archive" step:
      ```bash
      python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai
      ```

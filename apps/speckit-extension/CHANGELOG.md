@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Step times from the agent itself.** In an agent that reports spec-kit's runtime events, typing a step command now records its start at once, and the end of a turn closes the step only when its document was really written (and, for implement, every task is checked). No assistant call is involved, and a turn that ends on a question leaves the step open. Agents without events keep recording through the hooks. ([#939](https://github.com/alfredoperez/speckit-companion/pull/939)) <!-- area: run-record -->
 
 ### Changed
+- **Only a clean converge completes a spec.** Implement now stops at implemented and hands off to converge. A converge pass that adds no task completes the spec, and one that adds tasks sends the work back to implement. Auto repeats the two until a pass adds nothing, three passes at most, then stops with a concern. Converge on a completed spec is recorded and leaves it completed. ([#942](https://github.com/alfredoperez/speckit-companion/pull/942)) <!-- area: pipeline -->
 - **New specs are `spec.md`.** Companion now writes a new feature spec as `spec.md`, the name stock spec-kit uses, so stock converge, analyze and clarify find it without being pointed at a file. Specs written before keep their `<name>.spec.md` name and still open everywhere. ([#941](https://github.com/alfredoperez/speckit-companion/pull/941)) <!-- area: pipeline -->
 
 ### Fixed

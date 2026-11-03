@@ -44,6 +44,7 @@ STEP_COMMAND = {
     "plan": "speckit.plan",
     "tasks": "speckit.tasks",
     "implement": "speckit.implement",
+    "converge": "speckit.converge",
 }
 
 # Companion family — mirrors STEP_COMMAND's keys. Status reports and resume
@@ -54,6 +55,7 @@ COMPANION_STEP_COMMAND = {
     "plan": "speckit.companion.plan",
     "tasks": "speckit.companion.tasks",
     "implement": "speckit.companion.implement",
+    "converge": "speckit.converge",
 }
 
 def _is_companion(ctx: dict) -> bool:
@@ -201,8 +203,16 @@ def resolve(feature_dir: Path) -> dict:
     in_implement = current_step == "converge" or (current_step == "implement" and converge_ran)
     converge_open = in_implement and status not in CROSS_STEP_TERMINAL
 
-    # Terminal: implemented / completed / archived.
-    if status in TERMINAL_STATUSES and not converge_open:
+    # Implemented with every task checked is not finished: a converge pass completes it.
+    if status == "implemented" and _next_unchecked_task(feature_dir) is None:
+        resolution["nextStep"] = "converge"
+        resolution["nextCommand"] = _step_command("converge", companion)
+        resolution["nextActionLabel"] = "Converge"
+        return resolution
+
+    # Terminal: completed / archived.
+    open_at_implemented = status == "implemented" and _next_unchecked_task(feature_dir) is not None
+    if status in TERMINAL_STATUSES and not converge_open and not open_at_implemented:
         resolution["complete"] = True
         resolution["nextActionLabel"] = "Pipeline complete"
         return resolution
