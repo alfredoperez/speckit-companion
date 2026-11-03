@@ -326,6 +326,12 @@ describe('buildBugStory with a spec-kit run and report freshness', () => {
         expect(buildBugStory(texts(CART), undefined, { engine: { ...paused, steps: [], pausedAt: undefined } })?.engine).toBeUndefined();
     });
 
+    it('keeps the paused notice and resume command when the log gave no steps', () => {
+        const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: { ...paused, steps: [] } });
+        expect(story?.engine?.paused).toEqual({ gate: 'review', resume: 'specify workflow resume 3471d74b' });
+        expect(story?.engine?.steps).toEqual([]);
+    });
+
     it('marks old reports and sends the story back to a fix', () => {
         const story = buildBugStory(texts(CART), undefined, { freshness: { fix: 'stale', test: 'stale' } });
         expect(story?.lead).toBe('stale');

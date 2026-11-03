@@ -47,7 +47,7 @@ function readLines(filePath: string): unknown[] {
             try {
                 events.push(JSON.parse(line));
             } catch {
-                return [];
+                continue;
             }
         }
         return events;
@@ -71,7 +71,7 @@ function stamp(value: unknown): number | undefined {
 }
 
 function stepsOf(events: unknown[]): EngineStep[] {
-    const steps: EngineStep[] = [];
+    const steps = new Map<string, EngineStep>();
     const started = new Map<string, number>();
     for (const event of events) {
         const entry = asRecord(event);
@@ -80,32 +80,40 @@ function stepsOf(events: unknown[]): EngineStep[] {
         if (!entry || !id || at === undefined) continue;
         if (entry.event === 'step_started') {
             started.set(id, at);
-            steps.push({ id, state: 'running', gate: entry.type === 'gate' });
+            const step = steps.get(id) ?? { id, state: 'running' as EngineStepState, gate: entry.type === 'gate' };
+            step.state = 'running';
+            steps.set(id, step);
         } else if (entry.event === 'step_completed') {
             const begun = started.get(id);
-            const open = [...steps].reverse().find(step => step.id === id && step.state === 'running');
-            if (!open || begun === undefined) continue;
+            const step = steps.get(id);
+            if (!step || begun === undefined) continue;
             started.delete(id);
             const status = text(entry.status);
-            if (status === 'paused') {
-                open.state = 'paused';
-            } else if (status === 'completed') {
-                open.state = 'done';
-                open.seconds = Math.max(0, Math.round((at - begun) / 1000));
-            } else {
-                open.state = 'failed';
-                open.seconds = Math.max(0, Math.round((at - begun) / 1000));
+            step.state = status === 'paused' ? 'paused' : status === 'completed' ? 'done' : 'failed';
+            if (!step.gate && step.state !== 'paused') {
+                step.seconds = (step.seconds ?? 0) + Math.max(0, Math.round((at - begun) / 1000));
             }
         }
     }
-    return steps;
+    return [...steps.values()];
 }
 
-/** A run that paused and was resumed shows its gate once, as the latest attempt. */
-function latestPerStep(steps: EngineStep[]): EngineStep[] {
-    const latest = new Map<string, EngineStep>();
-    for (const step of steps) latest.set(step.id, step);
-    return [...latest.values()];
+const BUGFIX_WORKFLOW = 'bugfix';
+
+interface CachedRun {
+    key: string;
+    run: (EngineRun & { stamp: number }) | undefined;
+}
+
+const cache = new Map<string, CachedRun>();
+
+function fileKey(filePath: string): string {
+    try {
+        const stat = fs.statSync(filePath);
+        return `${Math.floor(stat.mtimeMs)}:${stat.size}`;
+    } catch {
+        return 'missing';
+    }
 }
 
 function readRun(runDirectory: string): (EngineRun & { stamp: number }) | undefined {
@@ -115,9 +123,9 @@ function readRun(runDirectory: string): (EngineRun & { stamp: number }) | undefi
     const slug = text(asRecord(inputs)?.slug);
     const workflowId = text(state.workflow_id);
     const status = text(state.status);
-    if (!slug || !workflowId || !status) return undefined;
+    if (!slug || workflowId !== BUGFIX_WORKFLOW || !status) return undefined;
 
-    const steps = latestPerStep(stepsOf(readLines(path.join(runDirectory, 'log.jsonl'))));
+    const steps = stepsOf(readLines(path.join(runDirectory, 'log.jsonl')));
     const workSeconds = steps.reduce((sum, step) => sum + (step.state === 'done' ? step.seconds ?? 0 : 0), 0);
     const run: EngineRun & { stamp: number } = {
         runId: text(state.run_id) ?? path.basename(runDirectory),
@@ -133,19 +141,40 @@ function readRun(runDirectory: string): (EngineRun & { stamp: number }) | undefi
     return run;
 }
 
-/** The newest engine run for each bug slug under `<workspaceRoot>/.specify/workflows/runs/`. A missing or unreadable run is left out. */
-export function readEngineRuns(workspaceRoot: string): Map<string, EngineRun> {
-    const found = new Map<string, EngineRun & { stamp: number }>();
+function slugOf(runDirectory: string): string | undefined {
+    return text(asRecord(asRecord(readJson(path.join(runDirectory, 'inputs.json')))?.inputs)?.slug);
+}
+
+function cachedRun(runDirectory: string): (EngineRun & { stamp: number }) | undefined {
+    const key = `${fileKey(path.join(runDirectory, 'state.json'))}|${fileKey(path.join(runDirectory, 'log.jsonl'))}|${fileKey(path.join(runDirectory, 'inputs.json'))}`;
+    const hit = cache.get(runDirectory);
+    if (hit?.key === key) return hit.run;
+    const run = readRun(runDirectory);
+    cache.set(runDirectory, { key, run });
+    return run;
+}
+
+/**
+ * The newest bugfix-workflow run for each bug slug under `<workspaceRoot>/.specify/workflows/runs/`.
+ * With `slugs`, runs for other slugs are skipped after their small inputs.json; a missing or unreadable run is left out.
+ */
+export function readEngineRuns(workspaceRoot: string, slugs?: ReadonlySet<string>): Map<string, EngineRun> {
+    const found = new Map<string, EngineRun & { stamp: number; folderTime: number }>();
     try {
         const root = path.join(workspaceRoot, WORKFLOW_RUNS_DIR);
         for (const name of fs.readdirSync(root)) {
             const directory = path.join(root, name);
             try {
-                if (!fs.lstatSync(directory).isDirectory()) continue;
-                const run = readRun(directory);
-                if (!run) continue;
+                const folder = fs.lstatSync(directory);
+                if (!folder.isDirectory()) continue;
+                const early = slugOf(directory);
+                if (slugs && early && !slugs.has(early)) continue;
+                const run = cachedRun(directory);
+                if (!run || (slugs && !slugs.has(run.slug))) continue;
                 const before = found.get(run.slug);
-                if (!before || run.stamp >= before.stamp) found.set(run.slug, run);
+                if (!before || run.stamp > before.stamp || (run.stamp === before.stamp && folder.mtimeMs >= before.folderTime)) {
+                    found.set(run.slug, { ...run, folderTime: folder.mtimeMs });
+                }
             } catch {
                 continue;
             }
@@ -154,7 +183,7 @@ export function readEngineRuns(workspaceRoot: string): Map<string, EngineRun> {
         return new Map();
     }
     const runs = new Map<string, EngineRun>();
-    for (const [slug, { stamp: _stamp, ...run }] of found) runs.set(slug, run);
+    for (const [slug, { stamp: _stamp, folderTime: _folderTime, ...run }] of found) runs.set(slug, run);
     return runs;
 }
 

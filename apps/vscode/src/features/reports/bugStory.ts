@@ -220,7 +220,7 @@ function build(texts: BugReportTexts, nextAction?: string, extras?: BugStoryExtr
     };
     const action = typeof nextAction === 'string' ? nextAction.trim() : '';
     if (action) story.nextAction = action;
-    if (extras?.engine && extras.engine.steps.length > 0) story.engine = engineView(extras.engine);
+    if (extras?.engine && (extras.engine.steps.length > 0 || extras.engine.pausedAt)) story.engine = engineView(extras.engine);
     if (stale.length > 0) story.stale = stale;
     if (stale.length === 0 && unknown.length > 0) story.unknownFreshness = unknown;
     return story;

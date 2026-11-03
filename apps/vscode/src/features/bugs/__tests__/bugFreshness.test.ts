@@ -38,12 +38,12 @@ describe('referenceFreshness', () => {
     const hash = assessmentHash(text);
 
     it('is current when the reference carries the hash of the assessment as it stands', () => {
-        expect(referenceFreshness(`./assessment.md#${hash.slice(0, 12)}`, text, '2026-11-03T08:00:00Z')).toBe('current');
+        expect(referenceFreshness(`./assessment.md (sha256:${hash.slice(0, 12)})`, text, '2026-11-03T08:00:00Z')).toBe('current');
         expect(referenceFreshness(`./assessment.md (sha256:${hash})`, text, undefined)).toBe('current');
     });
 
     it('is stale when the hash names an earlier assessment', () => {
-        expect(referenceFreshness('./assessment.md#0123456789ab', text, '2026-11-03T08:00:00Z')).toBe('stale');
+        expect(referenceFreshness('./assessment.md (sha256:0123456789ab)', text, '2026-11-03T08:00:00Z')).toBe('stale');
     });
 
     it('hashes the same through a CRLF checkout and trailing blank lines', () => {
@@ -54,6 +54,20 @@ describe('referenceFreshness', () => {
         expect(referenceFreshness('./assessment.md (created 2026-11-03T08:00:00Z)', text, '2026-11-03T08:00:00Z')).toBe('current');
         expect(referenceFreshness('./assessment.md (created 2026-11-03T07:00:00Z)', text, '2026-11-03T08:00:00Z')).toBe('stale');
     });
+
+    it.each(['2026-11-03T08:00:00+00:00', '2026-11-03T08:00:00.000Z', '2026-11-03T03:00:00-05:00'])(
+        'treats %s as the same instant as the assessment stamp',
+        stamp => {
+            expect(referenceFreshness(`./assessment.md (created ${stamp})`, text, '2026-11-03T08:00:00Z')).toBe('current');
+        },
+    );
+
+    it.each(['./assessment.md#12345678', './assessment.md#20261001', './assessment.md@deadbeef01'])(
+        'does not read %s as a hash',
+        reference => {
+            expect(referenceFreshness(reference, text, '2026-11-03')).toBe('unknown');
+        },
+    );
 
     it('is stale when the reference names another day than the assessment', () => {
         expect(referenceFreshness('./assessment.md (created 2026-10-01)', text, '2026-11-03')).toBe('stale');
@@ -72,7 +86,7 @@ describe('referenceFreshness', () => {
     });
 
     it('is unknown when the assessment could not be read', () => {
-        expect(referenceFreshness('./assessment.md#0123456789ab', undefined, '2026-11-03')).toBe('unknown');
+        expect(referenceFreshness('./assessment.md (sha256:0123456789ab)', undefined, '2026-11-03')).toBe('unknown');
     });
 
     it('takes the worst of several answers', () => {
@@ -130,7 +144,7 @@ describe('a bug that was assessed again after its fix and test', () => {
 describe('a bug whose reports carry the current key', () => {
     it('stays Verified', () => {
         const text = ASSESSMENT('2026-11-03T08:00:00Z');
-        const ref = `./assessment.md#${assessmentHash(text).slice(0, 12)}`;
+        const ref = `./assessment.md (sha256:${assessmentHash(text).slice(0, 12)})`;
         const root = workspaceWith(r => writeBug(r, { 'assessment.md': text, 'fix.md': FIX(ref), 'test.md': TEST(ref) }));
         const bug = readBugReports(root)[0];
         expect(bug.state).toBe('verified');

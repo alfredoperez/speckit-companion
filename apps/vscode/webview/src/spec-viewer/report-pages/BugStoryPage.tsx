@@ -179,7 +179,7 @@ export function BugStoryPage({ story }: { story: BugStory }) {
                     <Step key={step.id} step={step} nextAction={step === firstNext ? story.nextAction : undefined} />
                 ))}
             </ol>
-            {story.engine ? <RunLog engine={story.engine} /> : null}
+            {story.engine?.steps.length ? <RunLog engine={story.engine} /> : null}
             {risks.length ? (
                 <>
                     <h2 id="risks-and-open-questions">Risks and open questions</h2>

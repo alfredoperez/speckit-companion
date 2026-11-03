@@ -144,13 +144,14 @@ export function readBugReport(directory: string): BugReport | undefined {
     const folder = readReportFolder(BUG_SET, directory);
     if (!folder) return undefined;
     const root = path.resolve(directory, '..', '..', '..');
-    return toBugReport(folder, readEngineRuns(root).get(folder.slug));
+    return toBugReport(folder, readEngineRuns(root, new Set([folder.slug])).get(folder.slug));
 }
 
 /** Every bug report under `<workspaceRoot>/.specify/bugs/`, ordered by slug. Empty when the folder is absent. */
 export function readBugReports(workspaceRoot: string): BugReport[] {
-    const runs = readEngineRuns(workspaceRoot);
-    return readReportFolders(BUG_SET, workspaceRoot).map(folder => toBugReport(folder, runs.get(folder.slug)));
+    const folders = readReportFolders(BUG_SET, workspaceRoot);
+    const runs = readEngineRuns(workspaceRoot, new Set(folders.map(folder => folder.slug)));
+    return folders.map(folder => toBugReport(folder, runs.get(folder.slug)));
 }
 
 /** True for any path at or under a `.specify/bugs` folder, which no spec path ever is. */

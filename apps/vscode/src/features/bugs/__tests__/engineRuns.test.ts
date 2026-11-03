@@ -118,9 +118,74 @@ describe('readEngineRuns', () => {
         expect(readEngineRuns(root).get('star-crash')?.runId).toBe('new');
     });
 
+    it('keeps every good line when the last one is half written', () => {
+        const good = PAUSED_LOG.slice(0, 2).map(event => JSON.stringify(event)).join('\n');
+        const run = readEngineRuns(workspaceWith(r => writeRun(r, 'p1', { log: `${good}\n{"event": "step_sta` }))).get('star-crash');
+        expect(run?.steps).toEqual([{ id: 'assess', state: 'done', gate: false, seconds: 108 }]);
+    });
+
+    it('sums the seconds of every attempt of a looped step and gives a gate no duration', () => {
+        const log = [
+            { event: 'step_started', step_id: 'fix', type: 'command', timestamp: at('05:00:00') },
+            { event: 'step_completed', step_id: 'fix', status: 'completed', timestamp: at('05:01:00') },
+            { event: 'step_started', step_id: 'review', type: 'gate', timestamp: at('05:01:00') },
+            { event: 'step_completed', step_id: 'review', status: 'completed', timestamp: at('05:05:00') },
+            { event: 'step_started', step_id: 'fix', type: 'command', timestamp: at('05:05:00') },
+            { event: 'step_completed', step_id: 'fix', status: 'completed', timestamp: at('05:05:30') },
+        ];
+        const run = readEngineRuns(workspaceWith(r => writeRun(r, 'l1', { status: 'running', log }))).get('star-crash');
+        expect(run?.steps.find(step => step.id === 'fix')?.seconds).toBe(90);
+        expect(run?.steps.find(step => step.id === 'review')?.seconds).toBeUndefined();
+        expect(run?.workSeconds).toBe(90);
+    });
+
+    it('breaks a tie between runs with no updated_at by the newer run folder', () => {
+        const state = (status: string) => JSON.stringify({ run_id: 'x', workflow_id: 'bugfix', status, current_step_id: 'review-assessment', inputs: { slug: 'star-crash' } });
+        const root = workspaceWith(r => {
+            writeRun(r, 'aaa-old', { state: state('paused') });
+            writeRun(r, 'zzz-new', { state: state('completed') });
+        });
+        const runs = path.join(root, '.specify', 'workflows', 'runs');
+        fs.utimesSync(path.join(runs, 'aaa-old'), new Date('2026-01-01'), new Date('2026-01-01'));
+        fs.utimesSync(path.join(runs, 'zzz-new'), new Date('2026-06-01'), new Date('2026-06-01'));
+        const run = readEngineRuns(root).get('star-crash');
+        expect(run?.status).toBe('completed');
+        expect(run?.pausedAt).toBeUndefined();
+    });
+
+    it('ignores runs of any workflow but bugfix', () => {
+        const other = JSON.stringify({ run_id: 'o', workflow_id: 'speckit', status: 'paused', current_step_id: 'g', updated_at: at('23:00:00'), inputs: { slug: 'star-crash' } });
+        const root = workspaceWith(r => {
+            writeRun(r, 'mine', { status: 'completed', updated: at('01:00:00') });
+            writeRun(r, 'other', { state: other });
+        });
+        expect(readEngineRuns(root).get('star-crash')?.runId).toBe('mine');
+    });
+
+    it('does not load runs for slugs that are not bugs', () => {
+        const root = workspaceWith(r => {
+            writeRun(r, 'a', { slug: 'a-bug' });
+            writeRun(r, 'b', { slug: 'not-a-bug' });
+        });
+        expect([...readEngineRuns(root, new Set(['a-bug'])).keys()]).toEqual(['a-bug']);
+    });
+
+    it('re-reads a run when its log changes and reuses it when nothing changed', () => {
+        const root = workspaceWith(r => writeRun(r, 'c1'));
+        const dir = path.join(root, '.specify', 'workflows', 'runs', 'c1');
+        expect(readEngineRuns(root).get('star-crash')?.steps).toHaveLength(2);
+        const log = path.join(dir, 'log.jsonl');
+        const { mtime } = fs.statSync(log);
+        fs.writeFileSync(log, fs.readFileSync(log, 'utf-8').replace(/assess/g, 'assesz'));
+        fs.utimesSync(log, mtime, mtime);
+        expect(readEngineRuns(root).get('star-crash')?.steps[0].id).toBe('assess');
+        fs.writeFileSync(path.join(dir, 'log.jsonl'), PAUSED_LOG.slice(0, 2).map(event => JSON.stringify(event)).join('\n'));
+        expect(readEngineRuns(root).get('star-crash')?.steps).toHaveLength(1);
+    });
+
     describe('when the log cannot be read', () => {
         it.each([
-            ['is malformed', '{"event": "step_started", "step_id": \nnot json'],
+            ['is malformed', 'not json\nstill not json'],
             ['is empty', ''],
             ['holds events of another shape', '{"kind":"start","name":"assess","at":1}\n{"kind":"end","name":"assess","at":2}'],
         ])('keeps the run but shows no step times when the log %s', (_name, log) => {
