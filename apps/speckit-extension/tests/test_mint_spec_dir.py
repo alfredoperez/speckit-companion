@@ -65,7 +65,7 @@ class MintSpecDir(unittest.TestCase):
         self.assertEqual(self.run_mint("next"), "specs/009-next")
 
     def test_branches_claim_numbers_when_asked(self):
-        subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", "a"], cwd=self.root, check=True)
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "a"], cwd=self.root, check=True)
         subprocess.run(["git", "branch", "014-teammate"], cwd=self.root, check=True)
         self.assertEqual(mint_mod.mint(self.root, "mine", branches=True).name, "015-mine")
         self.assertEqual(mint_mod.mint(self.root, "plain").name, "016-plain")
