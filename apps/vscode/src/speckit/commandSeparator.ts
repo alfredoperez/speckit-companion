@@ -8,6 +8,9 @@ const AGENT_SKILL_DIRS: Record<string, string[]> = {
     copilot: ['.github/skills'],
 };
 
+/** Copilot's own command files, which spec-kit always spells with dots. */
+const COPILOT_DOT_FILES = ['.github/agents/speckit.specify.agent.md', '.github/prompts/speckit.specify.prompt.md'];
+
 function recordedSeparator(root: string, agent: string): CommandFormat | undefined {
     let data: unknown;
     try {
@@ -31,6 +34,12 @@ function separatorOnDisk(root: string, dirs: string[]): CommandFormat | undefine
     return undefined;
 }
 
+/** Copilot with no commands of its own still runs Claude's skills, since Copilot in VS Code reads that folder too. */
+function copilotFallback(root: string): CommandFormat | undefined {
+    if (COPILOT_DOT_FILES.some(file => fs.existsSync(path.join(root, file)))) return 'dot';
+    return separatorOnDisk(root, ['.claude/skills']);
+}
+
 /**
  * How this project spells commands for an agent: the separator spec-kit recorded in
  * `.specify/integration.json`, then the skills on disk; undefined when neither says.
@@ -41,7 +50,7 @@ export function projectCommandFormat(root: string | undefined, agent: string, sk
     const hit = cache.get(key);
     if (hit && Date.now() - hit.at < CACHE_MS) return hit.format;
     const dirs = [...(skillsDir ? [skillsDir] : []), ...(AGENT_SKILL_DIRS[agent] ?? [])];
-    const format = recordedSeparator(root, agent) ?? separatorOnDisk(root, dirs);
+    const format = recordedSeparator(root, agent) ?? separatorOnDisk(root, dirs) ?? (agent === 'copilot' ? copilotFallback(root) : undefined);
     cache.set(key, { at: Date.now(), format });
     return format;
 }
