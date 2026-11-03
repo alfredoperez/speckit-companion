@@ -53,8 +53,8 @@ upstreams:
       `--no-model-invocation`; the GitHub workflow step and composed workflows;
       `--json` on version, preset info and extension info; the experimental MCP
       server; MiniMax Code and catalog-installed agent adapters; `--script py`;
-      timestamp numbering and git `branch_template` in Companion's own folder and
-      branch creation; hook `priority` ordering in Companion's command bodies.
+      git `branch_template` in Companion's own branch creation; the
+      Copilot canvas still numbers its own folders; hook `priority` ordering in Companion's command bodies.
       Extension commands now register only for the default integration, so the
       codex and copilot fixtures no longer carry the git commands.
       The extension's install floor stays >=0.9.5 in

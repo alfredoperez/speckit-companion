@@ -52,6 +52,8 @@ RUNTIME_SCRIPTS = frozenset({
     # into "no findings" is not a gate, so it ships with the fold, not beside it.
     "living_validate.py",
     "status-context.py",
+    # Mints the next spec folder under a lock, so two runs never share a number.
+    "mint-spec-dir.py",
     "derive-from-files.py",
     "resolve-spec-paths.py",
     "record-living-specs.py",
