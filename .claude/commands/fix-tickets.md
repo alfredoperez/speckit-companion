@@ -189,7 +189,7 @@ Then write one result line for the ticket (PR, spec dir, summary, findings, suba
 
 Otherwise:
 ```bash
-tooling/scripts/merge-pr.sh <PR>      # merges once every check has passed: queued on GitHub when the repo allows auto-merge, otherwise it waits here
+tooling/scripts/merge-pr.sh <PR>      # waits here and merges once every check has passed (auto-merge would skip the test job, which is not required)
 ```
 When it queues the merge it returns at once: move to the next ticket and read the outcome with `gh pr view <PR> --json state` before the final report. Exit 3 means the pull request changes what a person sees and the owner has not looked: record "merged: NO — awaiting your review" and re-run with `--seen` only after they approve. Never merge around the script with `gh pr merge`.
 
