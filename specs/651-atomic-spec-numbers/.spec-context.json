@@ -1,0 +1,293 @@
+{
+  "workflow": "companion",
+  "specName": "Mint spec folders atomically and honour feature_numbering",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T12:51:47.290Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T12:53:50.469Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T12:53:50.626Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T12:53:50.627Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T12:53:50.628Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T12:53:50.629Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T12:53:50.727Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T12:53:50.859Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T12:53:50.970Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T12:53:51.083Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T12:57:24.587Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T12:57:24.614Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T13:07:54.136Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T13:08:02.831Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "One script picks the number and creates the folder under a lock",
+      "tests": [
+        "apps/speckit-extension/tests/test_mint_spec_dir.py::test_runs_started_together_never_share_a_number"
+      ]
+    },
+    "FR-002": {
+      "title": "Points feature.json at it and prints the path",
+      "tests": [
+        "apps/speckit-extension/tests/test_mint_spec_dir.py::test_it_takes_the_next_number_and_points_feature_json_at_it"
+      ]
+    },
+    "FR-003": {
+      "title": "Follows feature_numbering",
+      "tests": [
+        "apps/speckit-extension/tests/test_mint_spec_dir.py::test_timestamp_numbering_gives_timestamp_folders"
+      ]
+    },
+    "FR-004": {
+      "title": "Specify and auto call it"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 4,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "context": [
+    "area: apps/speckit-extension/nodes/{specify,auto}/resolve-dir.md",
+    "constraint: spec-kit create-new-feature-branch.sh skips timestamp dirs when counting"
+  ],
+  "intent": "Spec folders get unique numbers and follow the project numbering",
+  "source": "#929",
+  "approach": "mint-spec-dir.py scans and creates under a project lock, reads feature_numbering, writes the pointer; the resolve-dir nodes call it.",
+  "workingBranch": "651-atomic-spec-numbers",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "mint-spec-dir.py scans and creates under a project lock and reads feature_numbering; packed",
+      "files": [
+        "apps/speckit-extension/scripts/mint-spec-dir.py",
+        "apps/speckit-extension/scripts/package-manifest.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Specify and auto resolve-dir call the script; commands rebuilt",
+      "files": [
+        "apps/speckit-extension/nodes/specify/resolve-dir.md",
+        "apps/speckit-extension/nodes/auto/resolve-dir.md",
+        "apps/speckit-extension/commands/"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "4 tests: next number and pointer, six at once, timestamp, timestamps skipped",
+      "files": [
+        "apps/speckit-extension/tests/test_mint_spec_dir.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Changelog line, upstreams note; all gates pass",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md",
+        "upstreams.yml"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 116.0,
+      "result": "---------------------------------------------------------------------- · Ran 1836 tests in 115.772s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 7 bodies match parts"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 26 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "speckit.companion.mark-complete.md                 0       0      0      48 · speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19"
+    },
+    {
+      "what": "full jest",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 86.4,
+      "result": "Snapshots:   0 total · Time:        84.866 s · Ran all test suites."
+    },
+    {
+      "what": "speckit-extension python suite after review fixes",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 165.1,
+      "result": "---------------------------------------------------------------------- · Ran 1839 tests in 164.776s · OK (skipped=8)"
+    },
+    {
+      "what": "build check after review fixes",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "package manifest after review fixes",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 26 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "shape parity after review fixes",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 7 bodies match parts"
+    },
+    {
+      "what": "mint tests after round 2",
+      "command": "python3 -m unittest apps/speckit-extension/tests/test_mint_spec_dir.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.5,
+      "result": "---------------------------------------------------------------------- · Ran 7 tests in 0.468s · OK"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "A project lock around the scan and mkdir",
+      "why": "mkdir alone is atomic per name, but two runs with different names can still take one number",
+      "rejected": "mkdir without -p and retry alone"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "One script mints spec folders under a lock and follows feature_numbering"
+    }
+  },
+  "concerns": [
+    {
+      "note": "The Copilot canvas numbers its own spec folders in its prompt and still ignores feature_numbering"
+    }
+  ],
+  "convergeStartedAt": "2026-11-03T13:07:54.179Z"
+}
