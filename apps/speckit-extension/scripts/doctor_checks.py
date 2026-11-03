@@ -783,6 +783,87 @@ def check_built(feature_dir: Path, ctx: dict | None = None, root: Path | None = 
     return CheckStatus("built", "ran"), findings
 
 
+def _agent_layouts(manifest: dict) -> list:
+    """(folder, layout, Companion's specify entry) for each surface an agent has, from the stock files spec-kit installed."""
+    files = manifest.get("files")
+    found = []
+    for rel in (files if isinstance(files, (dict, list)) else []):
+        path = Path(str(rel).replace("\\", "/"))
+        if path.parent.name in ("speckit-specify", "speckit.specify") and path.name == "SKILL.md":
+            folder = path.parent.parent
+            found.append((folder.as_posix(), "skills", (folder / "speckit-companion-specify" / "SKILL.md").as_posix()))
+        elif path.name.startswith(("speckit.specify.", "speckit-specify.")):
+            sep = path.name[len("speckit")]
+            entry = path.name.replace(f"speckit{sep}specify", f"speckit{sep}companion{sep}specify", 1)
+            found.append((path.parent.as_posix(), "commands", (path.parent / entry).as_posix()))
+    return found
+
+
+def _installed_agents(root: Path) -> list | None:
+    """The agents spec-kit records as installed; None when integration.json names none."""
+    try:
+        record = json.loads((root / ".specify" / "integration.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(record, dict):
+        return None
+    if isinstance(record.get("installed_integrations"), list):
+        return [str(a) for a in record["installed_integrations"]]
+    named = record.get("integration") or record.get("default_integration")
+    return [str(named)] if named else None
+
+
+#: The check is about the project, not a spec, so a run over many specs reports it once.
+_AGENTS_REPORTED: set = set()
+
+
+def check_agents(root: Path) -> tuple:
+    """Is Companion installed for every agent the project set up, and can a headless dispatch find the CLI?"""
+    import shutil
+    root = Path(root).resolve()
+    if root in _AGENTS_REPORTED:
+        return CheckStatus("agents", "skipped", "reported with the first spec of this run"), []
+    manifests = sorted((root / ".specify" / "integrations").glob("*.manifest.json"))
+    installed = _installed_agents(root)
+    if installed is not None:
+        # A manifest an uninstalled agent left behind is not an agent this project uses.
+        manifests = [m for m in manifests if m.name.split(".")[0] in installed]
+    if not manifests:
+        return CheckStatus("agents", "not-applicable", "no Spec Kit integration recorded"), []
+    _AGENTS_REPORTED.add(root)
+    findings = []
+    layouts = []
+    companion_installed = (root / ".specify" / "extensions" / "companion").is_dir()
+    for path in manifests:
+        try:
+            manifest = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            findings.append(Finding("agents", "warning", f"Could not read {path.name}",
+                                    f"{path.relative_to(root)} did not parse ({exc}); that agent was not checked."))
+            continue
+        agent = str(manifest.get("integration") or path.name.split(".")[0])
+        surfaces = _agent_layouts(manifest)
+        if not surfaces:
+            findings.append(Finding("agents", "note", f"No specify command found for {agent}",
+                                    f"{path.relative_to(root)} lists no speckit specify entry, so its layout is unknown."))
+            continue
+        for folder, kind, companion_entry in surfaces:
+            layouts.append(f"{agent}: {kind} in {folder}")
+            if companion_installed and not (root / companion_entry).exists():
+                findings.append(Finding(
+                    "agents", "warning", f"Companion is not installed for {agent} in {folder}",
+                    f"Spec Kit set up {agent} in {folder}, but {companion_entry} is missing: Spec Kit registers an "
+                    f"extension's commands for the active integration only. Run `specify integration use {agent}`, "
+                    f"then add Companion again.", {"agent": agent, "folder": folder}))
+    if layouts:
+        findings.append(Finding("agents", "note", "Agent layout", "; ".join(layouts), {"layouts": layouts}))
+    if shutil.which("specify") is None:
+        findings.append(Finding(
+            "agents", "note", "The specify CLI is not on this shell's PATH",
+            "Headless dispatch and Spec Kit's hooks call `specify`; if they fail, install it or add it to their PATH."))
+    return CheckStatus("agents", "ran"), findings
+
+
 def check_template(feature_dir: Path) -> tuple:
     """Did the task list keep the shape it was generated with?"""
     tasks_md = Path(feature_dir) / "tasks.md"
