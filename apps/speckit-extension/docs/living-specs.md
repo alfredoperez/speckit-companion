@@ -70,9 +70,9 @@ This stays opt-in by presence and never blocks a run: with no registry or `enabl
 
 ## Folding feature deltas back into the living spec on completion
 
-A feature spec is a one-time proposal. When you finish a feature, the change it described should become part of the durable record. At completion, Companion asks the assistant to write a delta section for each capability the feature loaded **and** changed, and those deltas **fold into each capability's living spec** the moment you mark the spec complete. The feature spec was the proposal; the living spec becomes the record. (This is OpenSpec's "archive" step.) Because the deltas are written by the assistant into the feature's spec file (`<short-name>.spec.md`), they land in the feature's PR diff, so the change to the durable spec is reviewed alongside the code, not applied blindly.
+A feature spec is a one-time proposal. When you finish a feature, the change it described should become part of the durable record. At completion, Companion asks the assistant to write a delta section for each capability the feature loaded **and** changed, and those deltas **fold into each capability's living spec** the moment you mark the spec complete. The feature spec was the proposal; the living spec becomes the record. (This is OpenSpec's "archive" step.) Because the deltas are written by the assistant into the feature's spec file (`spec.md`), they land in the feature's PR diff, so the change to the durable spec is reviewed alongside the code, not applied blindly.
 
-The deltas are top-level sections in the feature's spec file (`<short-name>.spec.md`), using the requirement-and-scenario shape, one section per changed capability with a `<!-- capability: <name> -->` marker so each routes to the right spec:
+The deltas are top-level sections in the feature's spec file (`spec.md`), using the requirement-and-scenario shape, one section per changed capability with a `<!-- capability: <name> -->` marker so each routes to the right spec:
 
 ```markdown
 ## ADDED Requirements

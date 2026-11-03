@@ -213,7 +213,7 @@ The four step commands are the Companion pipeline itself. They mirror stock spec
 
 ### `speckit.companion.specify`
 
-Writes `<feature_directory>/<short-name>.spec.md` — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — plus `checklists/requirements.md`. It also **classifies the change's size** (`simple` / `normal` / `oversized`, against a 5-file / 10-task bar; a change that is hard to undo or hard to check is never `simple`) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
+Writes `<feature_directory>/spec.md` (older projects have `<short-name>.spec.md`, and every step still reads it) — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — plus `checklists/requirements.md`. It also **classifies the change's size** (`simple` / `normal` / `oversized`, against a 5-file / 10-task bar; a change that is hard to undo or hard to check is never `simple`) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
 
 ### `speckit.companion.plan`
 

@@ -722,6 +722,16 @@ class ArtifactManifestCheck(unittest.TestCase):
             status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
         self.assertEqual(findings, [], "the placeholder is a pattern, not a literal file name")
 
+    def test_a_declared_spec_md_is_met_by_either_spelling(self):
+        manifest = {"commands": {"specify": [
+            {"artifact": "spec.md", "node": "draft-spec", "conditional": False},
+            {"artifact": "checklists/requirements.md", "node": "quality-checklist", "conditional": False},
+        ]}}
+        for spec_file in ("spec.md", "coverage-badges.spec.md"):
+            with self._run(manifest, files=(spec_file, "checklists/requirements.md")) as (spec, path):
+                status, findings = dc.check_artifact(spec, self._closed(), manifest_path=path)
+            self.assertEqual(findings, [], spec_file)
+
     def test_the_shipped_manifest_is_where_the_doctor_looks_for_it(self):
         # The build writes it beside the command bodies; both the source tree and
         # an installed extension put scripts/ next to commands/. A moved file is a

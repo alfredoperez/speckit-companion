@@ -95,7 +95,7 @@ Produce a feature specification: prioritized user stories with acceptance scenar
 <!-- speckit-companion:node resolve-dir -->
 1. **Resolve the feature directory. Mint a fresh dir for new work.** `.specify/feature.json` is an **output** of this step, never an input: it points at the *previous* spec, so reusing it would clobber finished work. On a project's first run it is absent or zero-byte, which means the same thing. Pick the target:
    - If the request names a target path (or `SPECIFY_FEATURE_DIRECTORY` is set), use it.
-   - Otherwise create the next numbered dir: scan `specs/` for the highest `NNN-…` prefix, derive a 2–4 word short-name from the description, and use `specs/<NNN+1>-<short-name>/`. The spec file is `<feature_directory>/<short-name>.spec.md`. For a named target, `<short-name>` is its directory name without the numeric prefix. **Never write into a directory that already contains a feature spec (`*.spec.md`, or an older `spec.md`)**: that's a prior spec, not this one.
+   - Otherwise create the next numbered dir: scan `specs/` for the highest `NNN-…` prefix, derive a 2–4 word short-name from the description, and use `specs/<NNN+1>-<short-name>/`. The spec file is `<feature_directory>/spec.md`. **Never write into a directory that already contains a feature spec (`spec.md`, or an older `*.spec.md`)**: that's a prior spec, not this one.
    Create `<feature_directory>/`, then point `.specify/feature.json` at it by writing `{"feature_directory": "<feature_directory>"}`. Later capture calls resolve the spec through that exact key when they run without `--feature-dir`, so any other key silently drops those writes. Then stamp the **specify START** as the step-start instruction above directs: the directory exists now, so run it before any other work.
 <!-- /speckit-companion:node resolve-dir -->
 <!-- speckit-companion:node load-living-specs -->
@@ -123,7 +123,7 @@ Produce a feature specification: prioritized user stories with acceptance scenar
 <!-- speckit-companion:node draft-spec -->
 **Where the request names two or more code areas and you have a subagent tool, dispatch one read-only worker per area first**, each returning the files that area exposes and the conventions it follows, never file contents. Those findings are what you record as `context` below and what plan reads. One area, or no subagent tool: look yourself.
 
-2. Create `<feature_directory>/<short-name>.spec.md` with these sections, in order. Write for a business stakeholder: plain language, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
+2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder: plain language, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
 
    - **User Scenarios & Testing** *(mandatory)*: the heart of the spec. Capture the feature as **prioritized user stories**, each an independently testable slice that delivers value on its own:
      - `### User Story N - <short title> (Priority: P1|P2|P3)` followed by one plain-language paragraph describing the journey.
@@ -153,7 +153,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 3. Keep it business-readable. Every vague requirement should fail a "testable and unambiguous" check, so tighten it. Remove a section that genuinely does not apply rather than leaving it as "N/A". The one exception to "no implementation detail" is **Verbatim Constraints**: an exact value the *user* specified is a requirement, and dropping it is a defect.
 <!-- /speckit-companion:node draft-spec -->
 <!-- speckit-companion:node quality-checklist -->
-4. **Spec quality checklist.** Write `<feature_directory>/checklists/requirements.md` using the template below, then run a **single** self-check pass: grade each item pass/fail, fix obvious fails in `<short-name>.spec.md` in place, and leave any genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for the `clarify` step. Do **not** run a multi-iteration rewrite loop or prompt the user with option tables; Companion defers interactive clarification to `clarify`. Update the checklist to reflect the final pass/fail state.
+4. **Spec quality checklist.** Write `<feature_directory>/checklists/requirements.md` using the template below, then run a **single** self-check pass: grade each item pass/fail, fix obvious fails in `spec.md` in place, and leave any genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for the `clarify` step. Do **not** run a multi-iteration rewrite loop or prompt the user with option tables; Companion defers interactive clarification to `clarify`. Update the checklist to reflect the final pass/fail state.
 
    ```markdown
    # Specification Quality Checklist: [FEATURE NAME]
@@ -252,17 +252,17 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 7. **Branch on the verdict.**
 
    - **`simple`, minimal mode.** Write **three lean files** in this one pass so the file-driven views (top stepper, sidebar, implement progress) reconcile with the history-driven fold. Never a single combined spec file:
-     - Append an **Approach** section to the already-written `<short-name>.spec.md`: the files to touch and any dependencies, in a few bullets. This is the plan content, inline, and stays the plan source-of-truth.
-     - Write `<feature_directory>/plan.md` as a **short pointer** to the spec's Approach (say, a one-line blockquote linking `./<short-name>.spec.md#approach` and `./tasks.md`). Do **not** duplicate the approach bullets; `plan.md` references them.
+     - Append an **Approach** section to the already-written `spec.md`: the files to touch and any dependencies, in a few bullets. This is the plan content, inline, and stays the plan source-of-truth.
+     - Write `<feature_directory>/plan.md` as a **short pointer** to the spec's Approach (say, a one-line blockquote linking `./spec.md#approach` and `./tasks.md`). Do **not** duplicate the approach bullets; `plan.md` references them.
      - Write `<feature_directory>/tasks.md` carrying the **real task checklist**: a dependency-ordered list, one per line as `- [ ] **T001** [P?] <description> + <path>` (`[P]` marks tasks that can run in parallel). This MUST be the actual checklist, not a pointer: implement progress counts these checkboxes, so a pointer would read 0/0.
 
-     Put the task checklist **only** in `tasks.md`. A second copy in the spec would drift. `<short-name>.spec.md` keeps the Approach; `tasks.md` owns the tasks.
+     Put the task checklist **only** in `tasks.md`. A second copy in the spec would drift. `spec.md` keeps the Approach; `tasks.md` owns the tasks.
 
      Still write `<feature_directory>/checklists/requirements.md` as in step 4. Do **not** run `speckit.companion.plan` or `speckit.companion.tasks`: the three lean files plus the lifecycle fold below record those steps as satisfied.
-   - **`normal`, full pipeline.** Write `<short-name>.spec.md` only: no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold. Plan and tasks are produced and recorded by their own `speckit.companion.plan` and `speckit.companion.tasks` runs.
+   - **`normal`, full pipeline.** Write `spec.md` only: no appended Approach section, no `plan.md` / `tasks.md` here, no lifecycle fold. Plan and tasks are produced and recorded by their own `speckit.companion.plan` and `speckit.companion.tasks` runs.
 <!-- /speckit-companion:node branch -->
 <!-- speckit-companion:node finalize -->
-**Output**: `<feature_directory>/<short-name>.spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode the spec additionally carries an **Approach** section, and two lean files sit alongside it: `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in the spec). In **normal** mode the spec holds the four sections only, and no `plan.md` / `tasks.md` are written here.
+**Output**: `<feature_directory>/spec.md` + `<feature_directory>/checklists/requirements.md`. In **simple** mode the spec additionally carries an **Approach** section, and two lean files sit alongside it: `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in the spec). In **normal** mode the spec holds the four sections only, and no `plan.md` / `tasks.md` are written here.
 
 **Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the living specs loaded above, the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity.
 
@@ -278,7 +278,7 @@ Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context
 
 **On a `simple` run, add the approach to the same call.** A `simple` run writes its plan inline and never reaches `plan`, where a full run records it. So when `verdict == "simple"`, put `"approach": "<one-line summary of the Approach section>"` in the `set` map alongside the rest rather than paying a second call.
 
-**Record completion.** After `<short-name>.spec.md` is written, close the specify step. The extension stamps the real end, so do **not** hand-write an `ai` complete for specify:
+**Record completion.** After `spec.md` is written, close the specify step. The extension stamps the real end, so do **not** hand-write an `ai` complete for specify:
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specified --kind complete --by extension
 ```

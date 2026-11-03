@@ -22,7 +22,9 @@ import statistics
 import sys
 from pathlib import Path
 
-from check_report import Report
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from check_report import Report  # noqa: E402
+from spec_context import feature_spec_path  # noqa: E402
 
 PIPELINE_STEPS = ["specify", "plan", "tasks", "implement"]
 # Full lifecycle order — overlap handling must see clarify/analyze spans too,
@@ -106,7 +108,7 @@ def check_verbosity(r: Report, spec_dir: Path) -> None:
     """Only oversize is this eval's defect: a missing or tiny artifact (e.g. a
     fast-path pointer plan.md) is capture/completeness territory, not verbosity."""
     for name, (warn_l, fail_l, warn_c, fail_c) in BUDGETS.items():
-        path = spec_dir / name
+        path = feature_spec_path(spec_dir) if name == "spec.md" else spec_dir / name
         cid = f"verbosity-{name.removesuffix('.md')}"
         try:
             text = path.read_text(encoding="utf-8")

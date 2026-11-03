@@ -94,6 +94,10 @@ class DispatchBriefs(unittest.TestCase):
         self.assertIn("--checkin \"reader: 2\"", out)
         self.assertIn("`src/b`", out)
 
+    def test_with_no_spec_file_the_brief_names_spec_md(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertTrue(dispatch_briefs.spec_file(Path(tmp)).endswith("/spec.md"))
+
     def test_many_areas_share_four_readers(self):
         d = self._feature(context=[f"area: src/f{i}.ts" for i in range(8)])
         out = self._run(d).stdout
