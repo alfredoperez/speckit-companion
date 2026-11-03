@@ -1,0 +1,258 @@
+{
+  "workflow": "companion",
+  "specName": "Terminals the extension opens pin the spec",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:26:33.509Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:27:27.556Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:27:27.667Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:27:27.668Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:27:27.669Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:27:27.670Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:27:27.738Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:27:48.363Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:31:20.619Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:31:20.703Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:32:16.562Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:33:53.999Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:33:54.017Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:39:42.672Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:39:50.032Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Spec-scoped dispatch pins SPECIFY_FEATURE_DIRECTORY",
+      "tests": [
+        "apps/vscode/src/ai-providers/__tests__/terminalPinsSpec.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "No spec, no pin",
+      "tests": [
+        "apps/vscode/src/ai-providers/__tests__/terminalPinsSpec.test.ts",
+        "apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts"
+      ]
+    },
+    "FR-003": {
+      "title": "Viewer, step, command and converge dispatches pass their folder"
+    },
+    "FR-004": {
+      "title": "Non-terminal providers unchanged"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 5,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "Gemini and Wibey interactive terminals",
+    "SPECIFY_FEATURE_NO_PERSIST (no spec-scoped headless dispatch exists)"
+  ],
+  "context": [
+    "area: apps/vscode/src/ai-providers/cliTerminalProvider.ts runVisible",
+    "area: specViewerProvider executeInTerminal dep, specCommands dispatchStep",
+    "constraint: spec_context resolver reads SPECIFY_FEATURE_DIRECTORY above feature.json"
+  ],
+  "intent": "Every terminal the extension opens for a spec pins that spec",
+  "source": "#931",
+  "approach": "DispatchOptions.specDir sets SPECIFY_FEATURE_DIRECTORY on the provider terminal; the viewer and sidebar dispatches pass their folder.",
+  "workingBranch": "646-terminals-pin-spec",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "DispatchOptions.specDir pins SPECIFY_FEATURE_DIRECTORY on the provider terminal",
+      "files": [
+        "apps/vscode/src/ai-providers/aiProvider.ts",
+        "apps/vscode/src/ai-providers/cliTerminalProvider.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Viewer panel pins a spec folder; bug and idea report folders stay unpinned",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/specViewerProvider.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Step, sidebar command and converge dispatches pass their folder",
+      "files": [
+        "apps/vscode/src/features/specs/specCommands.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Provider test: a spec dispatch pins SPECIFY_FEATURE_DIRECTORY, a specless one sets no env",
+      "files": [
+        "apps/vscode/src/ai-providers/__tests__/terminalPinsSpec.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Changelog line; type-check and full Jest pass",
+      "files": [
+        "CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "host type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "full jest",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.5,
+      "result": "Snapshots:   0 total · Time:        69.815 s, estimated 73 s · Ran all test suites."
+    },
+    {
+      "what": "host type-check after review fixes",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "full jest after review fixes",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 74.4,
+      "result": "Snapshots:   0 total · Time:        73.823 s · Ran all test suites."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Pin only spec folders; bug and idea report panels stay unpinned",
+      "why": "the same panel serves .specify/assessments folders, which are not specs",
+      "rejected": "pinning every panel directory"
+    },
+    {
+      "decision": "No SPECIFY_FEATURE_NO_PERSIST",
+      "why": "no headless dispatch is spec-scoped today (steering only)",
+      "rejected": "setting it on every hidden terminal"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Gemini and Wibey open their own terminals and are not pinned",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Spec-scoped terminals pin SPECIFY_FEATURE_DIRECTORY; report panels and specless dispatches do not"
+    }
+  },
+  "convergeStartedAt": "2026-11-03T05:39:42.703Z"
+}

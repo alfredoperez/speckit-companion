@@ -5,7 +5,7 @@ import { getProjectRoot } from '../core/projectRoot';
 import { runInTerminal } from '../core/utils/terminalUtils';
 import { createTempFile } from '../core/utils/tempFileUtils';
 import { dispatchSlashCommandViaTempFile, buildPromptDispatchCommand, AIExecutionResult, toSlashCommand } from './aiProvider';
-import { CliTerminalProvider, DispatchContext, DispatchPlan } from './cliTerminalProvider';
+import { CliTerminalProvider, DispatchContext, DispatchOptions, DispatchPlan, specPinEnv } from './cliTerminalProvider';
 import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
 import { splitContextPreamble } from './promptBuilder';
 import { getPermissionFlagForProvider } from './permissionValidation';
@@ -103,6 +103,7 @@ export class ClaudeCodeProvider extends CliTerminalProvider {
         command: string,
         title: string = 'SpecKit - Claude Code',
         autoExecute: boolean = true,
+        options?: DispatchOptions,
     ): Promise<vscode.Terminal> {
         try {
             const slashCommand = toSlashCommand(command);
@@ -117,6 +118,7 @@ export class ClaudeCodeProvider extends CliTerminalProvider {
                 name: title,
                 cwd: getProjectRoot(),
                 location: { viewColumn: vscode.ViewColumn.Two },
+                ...specPinEnv(options?.specDir),
             });
             terminal.show();
 

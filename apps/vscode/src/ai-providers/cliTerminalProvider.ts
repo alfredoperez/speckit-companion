@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { ConfigManager } from '../core/utils/configManager';
@@ -42,6 +43,18 @@ export interface DispatchOptions {
     model?: string;
     /** Claude Code reasoning effort, emitted as `--effort <effort>`. */
     effort?: string;
+    /** The spec this dispatch works on; pinned as `SPECIFY_FEATURE_DIRECTORY` so the terminal never falls back to `.specify/feature.json`. */
+    specDir?: string;
+}
+
+/** Terminal env that pins the spec, as a workspace-relative forward-slash path every resolver accepts. */
+export function specPinEnv(specDir: string | undefined): { env?: Record<string, string> } {
+    if (!specDir) return {};
+    const root = getProjectRoot();
+    const rel = root && path.isAbsolute(specDir) ? path.relative(root, specDir) : specDir;
+    const inside = rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+    const pin = inside ? rel : specDir;
+    return pin && rel !== '' ? { env: { SPECIFY_FEATURE_DIRECTORY: pin.split(path.sep).join('/') } } : {};
 }
 
 export interface DispatchContext {
@@ -121,10 +134,10 @@ export abstract class CliTerminalProvider implements IAIProvider {
         return this.runVisible({ mode: 'terminal', prompt, slashCommand: null, dispatchOptions: options }, title ?? this.defaultTerminalTitle, true);
     }
 
-    async executeSlashCommand(command: string, title?: string, autoExecute: boolean = true): Promise<vscode.Terminal> {
+    async executeSlashCommand(command: string, title?: string, autoExecute: boolean = true, options?: DispatchOptions): Promise<vscode.Terminal> {
         const slashCommand = toSlashCommand(command);
         return this.runVisible(
-            { mode: 'slash', prompt: slashCommand, slashCommand },
+            { mode: 'slash', prompt: slashCommand, slashCommand, dispatchOptions: options },
             title ?? this.defaultTerminalTitle,
             autoExecute,
         );
@@ -218,6 +231,7 @@ export abstract class CliTerminalProvider implements IAIProvider {
                 name: title,
                 cwd: getProjectRoot(),
                 location: { viewColumn: vscode.ViewColumn.Two },
+                ...specPinEnv(ctx.dispatchOptions?.specDir),
             });
             terminal.show();
 
