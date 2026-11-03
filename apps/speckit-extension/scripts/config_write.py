@@ -1198,10 +1198,12 @@ def check_template_section(project_root: str, command: str, heading: str,
     name = tr.DEFAULT_TEMPLATE_BY_COMMAND.get(command)
     if not name:
         raise ConfigWriteError(f"{command} has no template to reshape")
-    source = os.path.join(project_root, ".specify", "templates", name)
-    if os.path.isfile(source):
-        with open(source, encoding="utf-8") as fh:
-            headings = [m.group(2).strip() for m in tr.SECTION_RE.finditer(fh.read())]
+    try:
+        text = tr.base_template(project_root, name)
+    except tr.TemplateError:
+        text = tr.core_template(project_root, name)
+    if text is not None:
+        headings = [m.group(2).strip() for m in tr.SECTION_RE.finditer(text)]
         cleaned = {tr._clean(h) for h in headings}
         if tr._clean(heading) not in cleaned:
             raise ConfigWriteError(

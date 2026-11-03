@@ -54,15 +54,15 @@ def _template(command: str, resolved, project_root: str, config: dict):
             else template_render.DEFAULT_TEMPLATE_BY_COMMAND.get(command))
     if not name:
         return None
-    source = os.path.join(project_root, ".specify", "templates", name)
-    available = []
-    if os.path.isfile(source):
-        with open(source, encoding="utf-8") as fh:
-            available = [
-                template_render._clean(m.group(2))
-                for m in template_render.SECTION_RE.finditer(fh.read())
-                if m.group(1) == "##"
-            ]
+    try:
+        text = template_render.base_template(project_root, name)
+    except template_render.TemplateError:
+        text = template_render.core_template(project_root, name)
+    available = [
+        template_render._clean(m.group(2))
+        for m in template_render.SECTION_RE.finditer(text or "")
+        if m.group(1) == "##"
+    ]
     return {
         "file": name,
         "sections": resolved[2] if resolved else [],

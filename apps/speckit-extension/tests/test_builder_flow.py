@@ -437,8 +437,8 @@ class PointingATemplateSectionAtAFragment(unittest.TestCase):
             "--template-section", "User Scenarios & Testing", "--fragment", fragment)
 
     def resolved(self) -> str:
-        path = (self.project.root / ".specify" / "extensions" / "companion"
-                / "templates" / "spec-template.md")
+        path = (self.project.root / ".specify" / "companion" / "built"
+                / "spec-template.md")
         return path.read_text(encoding="utf-8")
 
     def test_a_shipped_fragment_replaces_the_section(self):
@@ -485,7 +485,7 @@ class PointingATemplateSectionAtAFragment(unittest.TestCase):
         self.project.build_ok()
         body = self.project.body("specify")
         self.assertIn("reshaped what this step writes", body)
-        self.assertIn("templates/spec-template.md", body)
+        self.assertIn(".specify/companion/built/spec-template.md", body)
         self.assertIn("**User Scenarios & Testing**", body)
 
     def test_the_note_sits_with_the_node_that_writes_the_document(self):

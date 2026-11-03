@@ -27,6 +27,11 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from spec_context import BUILT_TEMPLATES_REL, STEP_TEMPLATES  # noqa: E402
 
 #: A markdown section header: `## Name`, optionally with trailing decoration
 #: (`*(mandatory)*`), which is part of the heading line but not of its name.
@@ -41,11 +46,7 @@ _FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?", re.S)
 SHIPPED_FRAGMENTS = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "fragments")
 
-DEFAULT_TEMPLATE_BY_COMMAND = {
-    "specify": "spec-template.md",
-    "plan": "plan-template.md",
-    "tasks": "tasks-template.md",
-}
+DEFAULT_TEMPLATE_BY_COMMAND = STEP_TEMPLATES
 
 
 class TemplateError(Exception):
@@ -96,11 +97,52 @@ def replace_section(text: str, name: str, replacement: str) -> str:
     )
 
 
-#: Where a build leaves a template it resolved, relative to the project root.
-RESOLVED_REL = os.path.join(".specify", "extensions", "companion", "templates")
+BUILT_REL = BUILT_TEMPLATES_REL
+#: Older builds' copies: still a spec-kit extension layer until a build removes them.
+LEGACY_BUILT_REL = os.path.join(".specify", "extensions", "companion", "templates")
+RESOLVER_REL = os.path.join(".specify", "scripts", "bash", "resolve-template.sh")
+CORE_REL = os.path.join(".specify", "templates")
 
 
-def render_shape_note(name: str, changed: list) -> str:
+def _read(path: str):
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def core_template(project_root: str, name: str):
+    """The stock file in `.specify/templates`, or None when the project has none."""
+    return _read(os.path.join(project_root, CORE_REL, name))
+
+
+def base_template(project_root: str, name: str):
+    """The template spec-kit's own resolver picks for `name`; raises when it fails."""
+    script = os.path.join(project_root, RESOLVER_REL)
+    core = core_template(project_root, name)
+    if not os.path.isfile(script):
+        return core
+    stem = name[:-3] if name.endswith(".md") else name
+    env = dict(os.environ, SPECIFY_INIT_DIR=project_root)
+    try:
+        run = subprocess.run(["bash", script, stem], cwd=project_root, env=env,
+                             capture_output=True, text=True, timeout=30)
+    except OSError:
+        return core
+    except subprocess.SubprocessError as err:
+        raise TemplateError(f"spec-kit could not resolve {stem}: {err}") from err
+    if run.returncode != 0 and core is None:
+        return None
+    if run.returncode != 0:
+        detail = (run.stderr or "").strip().splitlines()
+        raise TemplateError(
+            f"spec-kit could not resolve {stem}: {detail[-1] if detail else 'no reason given'}")
+    if run.stdout == _read(os.path.join(project_root, LEGACY_BUILT_REL, name)):
+        return core
+    return run.stdout
+
+
+def render_shape_note(name: str, changed: list, whole: bool = False) -> str:
     """The note spliced into a body when a project reshaped this step's document.
 
     Companion's authoring nodes carry their document's shape in their own
@@ -111,15 +153,23 @@ def render_shape_note(name: str, changed: list) -> str:
     Classic preset, was decoration.
 
     The note is what closes that. It is absent unless a project changed a
-    section, so a project that changed nothing gets a byte-identical body and the
-    shipped default keeps its own shape.
+    section or spec-kit's stack hands back a team template, so a project that
+    changed nothing gets a byte-identical body and the shipped default keeps its
+    own shape.
     """
+    path = os.path.join(BUILT_REL, name)
+    if whole:
+        return (
+            f"**This project shapes what this step writes with its own template.** "
+            f"Read `{path}` and follow its sections and their order in place of the "
+            f"shape described below. Every other instruction in this step still applies."
+        )
     if not changed:
         return ""
     sections = ", ".join(f"**{s}**" for s in changed)
     return (
         f"**This project has reshaped what this step writes.** Read "
-        f"`{os.path.join(RESOLVED_REL, name)}` and follow it for {sections} — "
+        f"`{path}` and follow it for {sections} — "
         f"its wording there replaces the shape described below for "
         f"{'that section' if len(changed) == 1 else 'those sections'}. Every "
         f"other instruction in this step still applies."
@@ -139,25 +189,27 @@ def template_config(config: dict, command: str) -> dict:
     return base
 
 
-def resolve(command: str, config: dict, templates_dir: str, fragments_dir: str) -> tuple:
-    """Return (template_name, resolved_text, changed_sections) for one command.
-
-    Returns `(None, None, [])` when the project asked for nothing — the command
-    keeps using the stock template and the build writes no copy.
-    """
+def resolve(command: str, config: dict, project_root: str, fragments_dir: str) -> tuple:
+    """(name, text, changed sections, whole); whole means a team template the step follows entirely."""
     settings = template_config(config, command)
     if not settings:
-        return None, None, []
+        name = DEFAULT_TEMPLATE_BY_COMMAND.get(command)
+        try:
+            winner = base_template(project_root, name) if name else None
+        except TemplateError:
+            winner = None
+        if winner is None or winner == core_template(project_root, name):
+            return None, None, [], False
+        return name, winner, [], True
 
     name = settings.get("file") or DEFAULT_TEMPLATE_BY_COMMAND.get(command)
     if not name:
         raise TemplateError(f"{command}: no template to resolve — name one with `file:`")
 
-    source = os.path.join(templates_dir, name)
-    if not os.path.isfile(source):
+    text = base_template(project_root, name)
+    if text is None:
         raise TemplateError(f"{command}: no template at {name}")
-    with open(source, encoding="utf-8") as fh:
-        text = fh.read()
+    team = text != core_template(project_root, name)
 
     changed = []
     for section, fragment_name in (settings.get("sections") or {}).items():
@@ -172,7 +224,7 @@ def resolve(command: str, config: dict, templates_dir: str, fragments_dir: str) 
         text = replace_section(text, section, replacement)
         changed.append(section)
 
-    return name, text, changed
+    return name, text, changed, team
 
 
 def find_fragment(name: str, fragments_dir: str):

@@ -34,8 +34,8 @@ const BUILD_INPUT_DIRS = [
     path.join('.specify', 'companion', 'fragments'),
 ];
 
-/** The templates a build reshapes are spec-kit's own, and only count once the project is configured. */
-const TEMPLATES_DIR = path.join('.specify', 'templates');
+/** The templates a build reshapes are spec-kit's own, overrides and presets included, and only count once the project is configured. */
+const TEMPLATE_DIRS = [path.join('.specify', 'templates'), path.join('.specify', 'presets')];
 
 export type PipelineBuildState =
     /** No configuration to build from — the project runs the shipped pipeline. */
@@ -114,7 +114,7 @@ export function readPipelineBuildState(workspaceRoot: string): PipelineBuildStat
     if (ownAt === null) {
         return { kind: 'unconfigured' };
     }
-    const templatesAt = newestInputTime(workspaceRoot, [TEMPLATES_DIR]);
+    const templatesAt = newestInputTime(workspaceRoot, TEMPLATE_DIRS);
     const configuredAt = Math.max(ownAt, templatesAt ?? ownAt);
 
     const builtAt = newestBuildTime(path.join(workspaceRoot, BUILT_COMMANDS_REL));

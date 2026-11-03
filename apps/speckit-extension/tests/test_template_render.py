@@ -91,7 +91,7 @@ class TemplateSettingsInherit(unittest.TestCase):
         self.assertEqual(tr.template_config(config, "specify")["file"], "shared.md")
 
     def test_a_command_that_asks_for_nothing_resolves_nothing(self):
-        name, text, changed = tr.resolve("plan", {}, "/nowhere", "/nowhere")
+        name, text, changed, whole = tr.resolve("plan", {}, "/nowhere", "/nowhere")
         self.assertIsNone(name)
         self.assertIsNone(text)
         self.assertEqual(changed, [])
@@ -117,7 +117,7 @@ class TheStockTemplateIsNeverEditedInPlace(unittest.TestCase):
         config = build.load_config(str(root))
         resolved = build.plan_templates(config, str(root))
 
-        name, text, changed = resolved["specify"]
+        name, text, changed, _whole = resolved["specify"]
         self.assertEqual(name, "spec-template.md")
         self.assertEqual(changed, ["User Scenarios & Testing"])
         self.assertIn("Describe the change as observable outcomes.", text)

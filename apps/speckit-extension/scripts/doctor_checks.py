@@ -29,7 +29,9 @@ from doctor import (  # noqa: E402
     run_window,
 )
 from spec_context import (  # noqa: E402
+    BUILT_TEMPLATES_REL,
     STEP_COMPLETED_STATUS,
+    STEP_TEMPLATES,
     STEP_ORDER,
     _entry_kind,
     _is_per_task,
@@ -744,6 +746,38 @@ _TOP_LEVEL_WAVE = re.compile(r"^##\s+Wave\s+\d+", re.MULTILINE)
 _WAVE_HEAD = re.compile(r"^\*\*Wave\s+\d+", re.MULTILINE)
 _JOIN_LINE = re.compile(r"⟶\s*Wait")
 _CHECKPOINT = re.compile(r"^\*\*Checkpoint\*\*", re.MULTILINE)
+
+
+def check_built(feature_dir: Path, ctx: dict | None = None, root: Path | None = None) -> tuple:
+    """Is there a team template (override or preset) the last pipeline build has not caught up with?"""
+    root = Path(root) if root is not None else feature_dir.parent.parent
+    templates = root / ".specify" / "templates"
+    presets = root / ".specify" / "presets"
+    findings = []
+    seen = False
+    for name in STEP_TEMPLATES.values():
+        core = templates / name
+        core_text = core.read_text(encoding="utf-8") if core.is_file() else None
+        sources = [p for p in [templates / "overrides" / name, *presets.glob(f"*/templates/{name}")]
+                   if p.is_file() and p.read_text(encoding="utf-8") != core_text]
+        if not sources:
+            continue
+        seen = True
+        copy = root / BUILT_TEMPLATES_REL / name
+        if not copy.is_file():
+            findings.append(Finding(
+                "built", "warning", f"Companion runs ignore this project's {name}",
+                f"An override or preset changes {name}, but {BUILT_TEMPLATES_REL}/{name} does not "
+                f"exist yet. Rebuild the pipeline so Companion follows it.",
+                {"template": name}))
+        elif copy.stat().st_mtime < max(p.stat().st_mtime for p in sources):
+            findings.append(Finding(
+                "built", "warning", f"Companion's copy of {name} is out of date",
+                f"{name} changed after {BUILT_TEMPLATES_REL}/{name} was built. Rebuild the pipeline.",
+                {"template": name}))
+    if not seen:
+        return CheckStatus("built", "not-applicable", "no override or preset changes a template"), []
+    return CheckStatus("built", "ran"), findings
 
 
 def check_template(feature_dir: Path) -> tuple:

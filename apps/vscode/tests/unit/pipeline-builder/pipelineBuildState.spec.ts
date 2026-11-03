@@ -80,6 +80,8 @@ describe('whether the built pipeline is still the one described', () => {
             // The templates a build reshapes are spec-kit's own. Watching a
             // Companion copy of them watched a directory nothing ever writes.
             '.specify/templates/spec-template.md',
+            '.specify/templates/overrides/plan-template.md',
+            '.specify/presets/team/templates/plan-template.md',
         ]) {
             const root = project();
             write(root, '.specify/companion.yml', EARLY);
