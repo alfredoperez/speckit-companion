@@ -44,7 +44,7 @@ import { registerSpecShapeDiagnostics } from './features/specs/specShapeDiagnost
 import { BUG_SET } from './features/bugs/bugReports';
 import { bugsPaneConfig } from './features/bugs/bugsPane';
 import { IDEA_SET } from './features/ideas/ideaReports';
-import { ideasPaneConfig } from './features/ideas/ideasPane';
+import { ideasPaneConfig, ideasViewDescription } from './features/ideas/ideasPane';
 import { ProcessPaneProvider } from './features/processes/processPaneProvider';
 import { registerProcessCommands } from './features/processes/processCommands';
 import { ProcessCreateProvider } from './features/process-create/processCreateProvider';
@@ -230,11 +230,25 @@ export async function activate(context: vscode.ExtensionContext) {
     // (initial-visible check + the visibility event; per-session de-dupe).
     context.subscriptions.push(trackPanelOpened(specsTreeView));
 
+    const ideasView = vscode.window.createTreeView(Views.ideas, { treeDataProvider: ideasPane });
+    const syncIdeasDescription = () => {
+        const root = getProjectRoot();
+        ideasView.description = root ? ideasViewDescription(root) : undefined;
+    };
+    syncIdeasDescription();
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(e => {
+            if (!e.affectsConfiguration(ConfigKeys.assessmentsDirectory)) return;
+            syncIdeasDescription();
+            ideasPane.refresh();
+        }),
+    );
+
     context.subscriptions.push(
         vscode.window.registerTreeDataProvider(Views.settings, overviewProvider),
         specsTreeView,
         vscode.window.registerTreeDataProvider(Views.bugs, bugsPane),
-        vscode.window.registerTreeDataProvider(Views.ideas, ideasPane),
+        ideasView,
         vscode.window.registerTreeDataProvider(Views.livingSpecs, livingSpecsExplorer),
         vscode.window.registerTreeDataProvider(Views.steering, steeringExplorer)
     );
@@ -439,19 +453,17 @@ export async function activate(context: vscode.ExtensionContext) {
             wiring.push(livingSpecsWatcher, refreshLivingSpecs);
 
             // Bug and idea reports sit outside the spec directories the tree and viewer watchers cover.
-            const watchReports = (set: ReportSet<string>, pane: { refresh(): void }): void => {
-                const folder = set.dir.split(path.sep).join('/');
-                const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, `{${folder},${folder}/**}`));
+            const watchReports = (set: ReportSet<string>, pane: { refresh(): void }, movable = false): void => {
                 const refreshPane = trailing(() => pane.refresh(), 150);
                 const changed = new Set<string>();
                 const refreshOpen = trailing(() => {
                     changed.forEach(item => void specViewer.refreshIfDisplaying(item));
                     changed.clear();
                 }, 300);
-                const setFolder = path.basename(set.dir);
                 const onChange = (uri: vscode.Uri) => {
                     refreshPane.call();
                     // A report, an item folder, or the set folder itself; stray files like .DS_Store redraw nothing.
+                    const setFolder = path.basename(set.dir);
                     const name = path.basename(uri.fsPath);
                     const isFolderEvent = name === setFolder || name === '.specify' || path.basename(path.dirname(uri.fsPath)) === setFolder;
                     const item = reportDirectoryOf(set, uri.fsPath) ?? (isFolderEvent ? uri.fsPath : undefined);
@@ -460,13 +472,27 @@ export async function activate(context: vscode.ExtensionContext) {
                         refreshOpen.call();
                     }
                 };
-                watcher.onDidCreate(onChange);
-                watcher.onDidChange(onChange);
-                watcher.onDidDelete(onChange);
-                wiring.push(watcher, refreshPane, refreshOpen);
+                const watch = (): vscode.FileSystemWatcher => {
+                    const folder = set.dir.split(path.sep).join('/');
+                    const created = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, `{${folder},${folder}/**}`));
+                    created.onDidCreate(onChange);
+                    created.onDidChange(onChange);
+                    created.onDidDelete(onChange);
+                    return created;
+                };
+                let watcher = watch();
+                wiring.push({ dispose: () => watcher.dispose() }, refreshPane, refreshOpen);
+                if (movable) {
+                    wiring.push(vscode.workspace.onDidChangeConfiguration(e => {
+                        if (!e.affectsConfiguration(ConfigKeys.assessmentsDirectory)) return;
+                        watcher.dispose();
+                        watcher = watch();
+                        void specViewer.refreshOpenPanels();
+                    }));
+                }
             };
             watchReports(BUG_SET, bugsPane);
-            watchReports(IDEA_SET, ideasPane);
+            watchReports(IDEA_SET, ideasPane, true);
 
             // Initialising or removing Spec Kit mid-session shows or hides the views gated on the detected key.
             const markerWatcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(root, '.specify'));
