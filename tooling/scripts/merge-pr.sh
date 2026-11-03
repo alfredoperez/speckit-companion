@@ -5,7 +5,7 @@
 # exit: 0 merged, 1 a check did not pass or none appeared within five minutes, 2 bad usage, 3 visual change not yet seen
 set -euo pipefail
 
-VISUAL='^(apps/website/src/(pages|components|layouts|styles)/|apps/vscode/webview/.*\.css$|apps/copilot-canvas/public/|content/media/|docs/screenshots/|assets/)'
+VISUAL='^(apps/website/src/(pages|components|layouts|styles)/|apps/vscode/webview/src/.*\.tsx$|apps/vscode/webview/.*\.css$|apps/vscode/src/features/.*(Pane|PaneProvider|Explorer|Provider)\.ts$|apps/copilot-canvas/public/|content/media/|docs/screenshots/|assets/)'
 
 pr="${1:-}"
 seen="${2:-}"
