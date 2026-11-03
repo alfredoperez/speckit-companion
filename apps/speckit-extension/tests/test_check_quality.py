@@ -84,6 +84,11 @@ class VerbosityTests(QualityEvalBase):
         self.assertEqual(r.failed, 0)
         self.assertEqual(self.statuses(r)["verbosity-plan"], "PASS")
 
+    def test_a_named_spec_file_is_scored_not_absent(self) -> None:
+        self.write_spec(history=_healthy_history())
+        (self.spec_dir / "spec.md").rename(self.spec_dir / "thing.spec.md")
+        self.assertEqual(self.statuses(self.run_report())["verbosity-spec"], "PASS")
+
     def test_ballooned_plan_fails(self) -> None:
         self.write_spec(history=_healthy_history(), plan_lines=350)
         r = self.run_report()

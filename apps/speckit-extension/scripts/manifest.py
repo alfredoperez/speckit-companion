@@ -101,7 +101,7 @@ def unproduced(manifest: dict, command: str, feature_dir: str) -> list:
         if entry.get("conditional"):
             continue
         target = os.path.join(feature_dir, entry["artifact"])
-        if entry["artifact"].endswith(".spec.md"):
+        if entry["artifact"] == "spec.md" or entry["artifact"].endswith(".spec.md"):
             target = str(feature_spec_path(Path(feature_dir)))
         if not os.path.isfile(target):
             missing.append(entry)

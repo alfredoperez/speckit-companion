@@ -1,7 +1,7 @@
 /**
- * Where a feature's spec lives. Companion writes `<short-name>.spec.md`
- * (`specs/001-offline-queue/offline-queue.spec.md`); stock spec-kit and older
- * projects wrote `spec.md`. Every reader resolves through here so both names work.
+ * Where a feature's spec lives. New specs are `spec.md`, as stock spec-kit writes them;
+ * older Companion projects wrote `<short-name>.spec.md`
+ * (`specs/001-offline-queue/offline-queue.spec.md`). Every reader resolves through here so both names work.
  */
 import * as fs from 'fs';
 import * as path from 'path';

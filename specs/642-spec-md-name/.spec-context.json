@@ -1,0 +1,499 @@
+{
+  "workflow": "companion",
+  "specName": "New specs are written as spec.md",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:37:23.216Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:39:45.920Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:39:46.147Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:39:46.241Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:39:46.489Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T03:39:46.672Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:39:51.633Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:40:46.583Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:40:46.786Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:40:46.872Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:41:32.657Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:41:32.942Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:41:33.058Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:41:33.174Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:41:33.412Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:41:33.518Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:41:33.582Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:01.944Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:02.009Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:02.081Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:25.945Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:26.011Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:26.080Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:26.147Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:26.223Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:26.616Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:42:26.708Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:44:20.540Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:44:20.559Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:44:20.642Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Specify and auto write a new feature spec as spec.md",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_manifest.py",
+        "apps/speckit-extension/tests/test_pipeline_graph.py"
+      ]
+    },
+    "FR-002": {
+      "title": "Spec loaders name spec.md first and still read <name>.spec.md",
+      "tasks": [
+        "T002"
+      ]
+    },
+    "FR-003": {
+      "title": "Artifact, doctor and quality checks accept either name",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor.py",
+        "apps/speckit-extension/tests/test_check_quality.py",
+        "apps/speckit-extension/tests/test_manifest.py"
+      ]
+    },
+    "FR-004": {
+      "title": "No step leaves both names in one folder",
+      "tasks": [
+        "T001"
+      ]
+    }
+  },
+  "size": "oversized",
+  "classification": {
+    "projectedFiles": 24,
+    "projectedTasks": 10,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "expectations": [
+    "converge as a Companion step (w2) and converge on a completed spec (w8) are slice 2",
+    "resolver order when a folder holds both names stays as is"
+  ],
+  "context": [
+    "area: apps/speckit-extension/nodes/ (specify resolve-dir, resolve-dir-git, draft-spec*, quality-checklist*, branch, finalize; auto/resolve-dir; plan/gather-context; tasks/tasks-doc; implement/implement-exec) — build.py rebuilds commands/",
+    "area: apps/speckit-extension/scripts/ (manifest.py:104 unproduced, doctor_checks.py:668 _artifact_exists, check_quality.py:41 literal spec.md, dispatch-briefs.py:50 fallback text)",
+    "constraint: readers in apps/vscode, the canvas and the mod already accept both names; living-spec files keep <name>.spec.md"
+  ],
+  "intent": "New Companion specs are spec.md so stock converge, analyze and clarify find them; old named folders keep working",
+  "workingBranch": "642-spec-md-name",
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/642-spec-md-name --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 1 call path, 3 lines. Every cited file and line checks out."
+    },
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 80.3,
+      "result": "---------------------------------------------------------------------- · Ran 1814 tests in 80.082s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 7 bodies match parts"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "quality gate",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  ✓ [PASS] never-prompts-on-prompt: no user-prompt instruction ·   ✓ [PASS] never-prompts-on-stop: no user-prompt instruction ·   → 16 pass / 0 warn / 0 fail / 0 info"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "type check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "speckit-extension python suite (after review)",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 79.5,
+      "result": "---------------------------------------------------------------------- · Ran 1814 tests in 79.337s · OK (skipped=8)"
+    },
+    {
+      "what": "package manifest (after review)",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    }
+  ],
+  "planBlocks": [
+    "calls"
+  ],
+  "decisions": [
+    {
+      "decision": "write spec.md, read both names",
+      "why": "stock scripts hard-code spec.md and 30-odd folders use the named form",
+      "rejected": "a Companion wrapper per stock command"
+    },
+    {
+      "decision": "checks resolve a declared spec.md through feature_spec_path",
+      "why": "one answer to where the spec is, for every check",
+      "rejected": "literal names in each check"
+    },
+    {
+      "decision": "resolver order stays named-first",
+      "why": "no step writes both names; three mirrors would have to move together",
+      "rejected": "flipping the order now"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "nodes write spec.md; manifest, doctor and quality checks resolve either name",
+      "key_finding": "the doctor artifact check and the quality check read the spec by a literal name and misreport one of the two layouts"
+    },
+    "tasks": {
+      "summary": "11 tasks: nodes phase (US1) and checks phase (US2) in parallel, polish"
+    },
+    "implement": {
+      "summary": "New specs are spec.md; checks accept either name"
+    }
+  },
+  "approach": "Nodes write and load spec.md, with <short-name>.spec.md as the legacy fallback; the manifest, the doctor and the quality check resolve a declared spec.md through feature_spec_path so either name passes.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Phase 3 T001: spec.md naming in nodes, commands rebuilt",
+      "files": [
+        "apps/speckit-extension/nodes",
+        "apps/speckit-extension/commands"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Phase 3 T002: spec.md naming in nodes, commands rebuilt",
+      "files": [
+        "apps/speckit-extension/nodes",
+        "apps/speckit-extension/commands"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Phase 3 T003: spec.md naming in nodes, commands rebuilt",
+      "files": [
+        "apps/speckit-extension/nodes",
+        "apps/speckit-extension/commands"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "tests expect spec.md and accept either spelling",
+      "files": [
+        "apps/speckit-extension/tests/test_manifest.py",
+        "apps/speckit-extension/tests/test_pipeline_graph.py",
+        "apps/speckit-extension/tests/test_doctor.py",
+        "apps/speckit-extension/tests/test_check_quality.py",
+        "apps/speckit-extension/tests/test_dispatch_briefs.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "unproduced resolves spec.md through feature_spec_path",
+      "files": [
+        "apps/speckit-extension/scripts/manifest.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "artifact check resolves spec.md through feature_spec_path",
+      "files": [
+        "apps/speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "verbosity reads the spec through feature_spec_path",
+      "files": [
+        "apps/speckit-extension/scripts/check_quality.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "no-spec fallback names spec.md",
+      "files": [
+        "apps/speckit-extension/scripts/dispatch-briefs.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "docs and the resolver comment name spec.md as the new form",
+      "files": [
+        "apps/speckit-extension/docs/commands.md",
+        "apps/speckit-extension/docs/install.md",
+        "apps/vscode/src/features/specs/featureSpecPath.ts"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Changelog line under Unreleased / Changed",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "suite, build check, parity, emissions, quality gate, manifest, tsc exit 0; stock check-prerequisites --require-spec --require-tasks exits 0 on a spec.md folder",
+      "files": [
+        "apps/speckit-extension/"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "A folder holding both names still resolves to the named file in all three resolvers; no Companion step creates one.",
+      "step": "implement"
+    }
+  ],
+  "last_action": "11/11 tasks, all gates green, stock prerequisite check passes"
+}

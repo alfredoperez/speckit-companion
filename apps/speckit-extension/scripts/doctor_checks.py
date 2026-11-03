@@ -34,6 +34,7 @@ from spec_context import (  # noqa: E402
     STEP_TEMPLATES,
     STEP_ORDER,
     _entry_kind,
+    feature_spec_path,
     _is_per_task,
     _is_step_level,
 )
@@ -669,6 +670,8 @@ def _artifact_exists(feature_dir, name: str) -> bool:
     """True when the declared file is on disk; a `<short-name>` placeholder matches whatever name the run chose."""
     if "<" in name:
         return any(Path(feature_dir).glob(re.sub(r"<[^>]+>", "*", name)))
+    if name == "spec.md":
+        return feature_spec_path(Path(feature_dir)).is_file()
     return (Path(feature_dir) / name).exists()
 
 def check_artifact(feature_dir: Path, ctx: dict, manifest_path=None) -> tuple:
