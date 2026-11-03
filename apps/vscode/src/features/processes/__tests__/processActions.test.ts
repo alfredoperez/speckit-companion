@@ -15,6 +15,31 @@ describe('the buttons on a bug page', () => {
         expect(labels(bugActions(bug as Parameters<typeof bugActions>[0]))).toEqual(expected);
     });
 
+    it('leads with Test again for a partial test and keeps Fix again second', () => {
+        const actions = bugActions({ state: 'to-fix', stages: ['assessment', 'fix', 'test'], testResult: 'partial' });
+        expect(labels(actions)).toEqual(['main: Test again', 'secondary: Fix again']);
+        expect(actions.map(action => action.id)).toEqual(['bug.test', 'bug.fix']);
+    });
+
+    it('still leads with Fix bug for a failed test', () => {
+        const actions = bugActions({ state: 'to-fix', stages: ['assessment', 'fix', 'test'], testResult: 'failed' });
+        expect(labels(actions)).toEqual(['main: Fix bug', 'secondary: Test again']);
+    });
+
+    it('leads with Fix again when the fix and test are stale', () => {
+        const actions = bugActions({
+            state: 'to-fix',
+            stages: ['assessment', 'fix', 'test'],
+            testResult: 'verified',
+            freshness: { fix: 'stale', test: 'stale' },
+        });
+        expect(labels(actions)).toEqual(['main: Fix again']);
+    });
+
+    it('offers only Assess again to a bug waiting at the review gate', () => {
+        expect(labels(bugActions({ state: 'in-review', stages: ['assessment'] }))).toEqual(['secondary: Assess again']);
+    });
+
     it('never offers two main buttons', () => {
         for (const state of ['to-fix', 'to-test', 'verified', 'closed'] as const) {
             const actions = bugActions({ state, stages: ['assessment', 'fix', 'test'] });
@@ -43,6 +68,28 @@ describe('the buttons on an idea page', () => {
     ])('follows the verdict %p once decided', (verdict, expected) => {
         const actions = ideaActions({ state: 'decided', latestStage: 'decision', verdict } as Parameters<typeof ideaActions>[0]);
         expect(labels(actions)).toEqual(expected);
+    });
+});
+
+describe('the button on an idea that needs clarification', () => {
+    const needs = (revisit?: Parameters<typeof ideaActions>[0]['revisit']) =>
+        ideaActions({ state: 'decided', latestStage: 'decision', verdict: 'needs-clarification', revisit });
+
+    it.each([
+        ['intake', 'idea.intake', 'main: Revisit intake'],
+        ['research', 'idea.research', 'main: Revisit research'],
+        ['problem', 'idea.define', 'main: Revisit the problem'],
+        ['concept', 'idea.shape', 'main: Revisit the concept'],
+        ['decision', 'idea.decide', 'main: Decide again'],
+    ] as const)('targets the %s stage named in Revisit stage', (revisit, id, label) => {
+        const actions = needs(revisit);
+        expect(actions.map(action => action.id)).toEqual([id]);
+        expect(labels(actions)).toEqual([label]);
+    });
+
+    it('keeps Continue assessment when the decision names no stage', () => {
+        expect(labels(needs())).toEqual(['main: Continue assessment']);
+        expect(needs()[0].id).toBe('idea.research');
     });
 });
 

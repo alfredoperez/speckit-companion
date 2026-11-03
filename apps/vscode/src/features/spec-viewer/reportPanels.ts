@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { BUG_SET, readBugReport } from '../bugs/bugReports';
+import { BUG_SET, readBugReport, staleReports } from '../bugs/bugReports';
 import { IDEA_SET, readIdeaReport } from '../ideas/ideaReports';
 import type { ReportFile, ReportSet } from '../reports/reportSet';
 import { buildBugStory } from '../reports/bugStory';
@@ -24,6 +24,8 @@ export interface ReportPanelItem {
     /** The document `page` stands for, and the page itself when it could be built. */
     pageDocument: string;
     page?: BugStory | IdeaDecision;
+    /** Report documents written for an assessment that has since changed. */
+    staleDocuments?: string[];
 }
 
 export const REPORT_SETS: Record<ReportSetId, ReportSet<string>> = { bugs: BUG_SET, ideas: IDEA_SET };
@@ -51,6 +53,7 @@ const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | unde
         const page = buildBugStory(
             { assessment: textOf(bug.reports.assessment), fix: textOf(bug.reports.fix), test: textOf(bug.reports.test) },
             actions.find(action => action.primary)?.label,
+            { engine: bug.engine, freshness: bug.freshness },
         );
         return {
             slug: bug.slug,
@@ -62,6 +65,7 @@ const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | unde
             defaultDocument: page ? 'story' : bug.stages[0] ?? 'assessment',
             pageDocument: 'story',
             page,
+            staleDocuments: staleReports(bug),
         };
     },
     ideas: directory => {

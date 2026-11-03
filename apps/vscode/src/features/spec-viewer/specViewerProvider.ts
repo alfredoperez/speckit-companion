@@ -44,6 +44,7 @@ import {
   NavState,
   SpecDocument,
   SpecStatus,
+  StalenessMap,
   SpecViewerState,
 } from "./types";
 import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
@@ -901,6 +902,15 @@ export class SpecViewerProvider {
     // The panel may have closed, or been replaced, while the report was read.
     if (this.panels.get(bugDirectory) !== instance) return;
 
+    const staleness: StalenessMap = {};
+    for (const kind of report?.staleDocuments ?? []) {
+      staleness[kind as DocumentType] = {
+        isStale: true,
+        staleReason: "Written for an earlier assessment",
+        newerUpstream: "Assessment",
+      };
+    }
+
     const title = report?.title ?? path.basename(bugDirectory);
     const badgeText = report?.badge?.toUpperCase() ?? set.fallbackBadge;
 
@@ -929,7 +939,7 @@ export class SpecViewerProvider {
       0,             // taskCompletionPercent
       SpecStatuses.ACTIVE,
       [],            // enhancementButtons
-      {},            // stalenessMap
+      staleness,
       null,          // activeStep
       badgeText,
       null,          // createdDate

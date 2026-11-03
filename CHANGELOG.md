@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **The Ideas pane reads the folder you choose.** A new `speckit.assessmentsDirectory` setting points the pane at ==your own assessments folder==, such as `docs/assessments`. ([#958](https://github.com/alfredoperez/speckit-companion/pull/958)) <!-- area: sidebar -->
 - **The viewer shows what converge found.** The overview draws each converge pass, ==the tasks it added== or a clean finish, with a matching footer action. ([#944](https://github.com/alfredoperez/speckit-companion/pull/944)) <!-- area: overview -->
+- **Bugs show their run times.** The Bugs pane and bug page ==read step times and a pause at review== from Spec Kit's bugfix workflow log. ([#960](https://github.com/alfredoperez/speckit-companion/pull/960)) <!-- area: sidebar -->
+
+### Fixed
+- **Re-assessed bugs show old reports.** A bug assessed again ==returns to To fix== with its earlier fix and test marked old. ([#960](https://github.com/alfredoperez/speckit-companion/pull/960)) <!-- area: sidebar -->
+- **Bug and idea pages read Spec Kit 1.2.5.** Skipped checks get their own chip, partial tests lead with Test again, and ==kill ideas show their closing==. ([#960](https://github.com/alfredoperez/speckit-companion/pull/960)) <!-- area: spec-viewer -->
 - **Spec Kit projects are offered Companion.** Opening a Spec Kit project without Companion's extension ==offers to add it==, until you say not for that project. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->
 
 ### Fixed

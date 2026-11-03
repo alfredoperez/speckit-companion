@@ -152,6 +152,14 @@ describe('IdeaDecisionPage', () => {
             );
             expect(container.textContent).not.toContain('Kill, for now');
         });
+
+        it('shows the closing text from the rationale when a kill has no revisit trigger', () => {
+            const container = renderPage(fixture('report-pages', 'dark-mode-export'));
+            expect(headingIds(container)).toEqual(['scorecard', 'why-it-stopped']);
+            expect(container.querySelector('h2#why-it-stopped')?.nextElementSibling?.textContent).toContain('there is nothing to theme');
+            expect(container.querySelector('.rp-lead')?.textContent).toBe('Kill. Nobody has asked for dark exports.');
+            expect(container.textContent?.match(/nothing to theme/g)).toHaveLength(1);
+        });
     });
 
     describe('a missing part', () => {

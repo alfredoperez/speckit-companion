@@ -19,6 +19,7 @@ import type { NavState, SpecDocument } from '../types';
 import { buildBugStory } from '../../../../src/features/reports/bugStory';
 import { buildIdeaDecision } from '../../../../src/features/reports/ideaDecision';
 import { knownValue, parseReportHeader } from '../../../../src/features/reports/reportValues';
+import type { EngineRun } from '../../../../src/features/bugs/engineRuns';
 import type { ReportNav } from '../../../../src/features/reports/reportPageModel';
 import { BUG_FIX_STATUSES, BUG_TEST_RESULTS, BUG_VERDICTS } from '../../../../src/features/bugs/bugValues';
 import { IDEA_STAGES, IDEA_VERDICTS } from '../../../../src/features/ideas/ideaValues';
@@ -46,12 +47,20 @@ import listsIntake from '../../../../tests/fixtures/idea-reports/.specify/assess
 import listsResearch from '../../../../tests/fixtures/idea-reports/.specify/assessments/shared-lists/research.md?raw';
 import listsProblem from '../../../../tests/fixtures/idea-reports/.specify/assessments/shared-lists/problem.md?raw';
 import listsConcept from '../../../../tests/fixtures/idea-reports/.specify/assessments/shared-lists/concept.md?raw';
+import searchAssessment from '../../../../tests/fixtures/report-pages/.specify/bugs/search-ignores-case/assessment.md?raw';
+import searchFix from '../../../../tests/fixtures/report-pages/.specify/bugs/search-ignores-case/fix.md?raw';
+import searchTest from '../../../../tests/fixtures/report-pages/.specify/bugs/search-ignores-case/test.md?raw';
+import darkExportDecision from '../../../../tests/fixtures/report-pages/.specify/assessments/dark-mode-export/decision.md?raw';
 import listsDecision from '../../../../tests/fixtures/idea-reports/.specify/assessments/shared-lists/decision.md?raw';
 
 export interface ReportFixture {
     set: 'bugs' | 'ideas';
     slug: string;
     texts: Record<string, string | undefined>;
+    /** A spec-kit workflow run for the bug, as the run-log reader would return it. */
+    engine?: EngineRun;
+    /** The freshness the reader would compute for the fix and test reports. */
+    freshness?: Partial<Record<'fix' | 'test', 'current' | 'stale' | 'unknown'>>;
 }
 
 interface SetShape {
@@ -116,14 +125,18 @@ function readPanel(fixture: ReportFixture): Panel {
         const fixStatus = knownValue(BUG_FIX_STATUSES, fields.fix?.get('status'));
         const testResult = knownValue(BUG_TEST_RESULTS, fields.test?.get('result'));
         const bugStages = stages as Parameters<typeof bugActions>[0]['stages'];
+        const stale = Object.values(fixture.freshness ?? {}).includes('stale');
         const state = verdict === 'invalid' ? 'closed'
+            : fixture.engine?.pausedAt ? 'in-review'
+            : stale ? 'to-fix'
             : stages.includes('test') ? (testResult === 'verified' ? 'verified' : 'to-fix')
             : stages.includes('fix') && fixStatus !== 'not-applied' ? 'to-test'
             : 'to-fix';
-        const actions = bugActions({ state, stages: bugStages });
+        const actions = bugActions({ state, stages: bugStages, testResult, freshness: fixture.freshness });
         const page = buildBugStory(
             { assessment: fixture.texts.assessment, fix: fixture.texts.fix, test: fixture.texts.test },
             actions.find(action => action.primary)?.label,
+            { engine: fixture.engine, freshness: fixture.freshness },
         );
         return {
             title,
@@ -320,6 +333,37 @@ const sharedLists: ReportFixture = {
     },
 };
 
+const pausedAtReview: ReportFixture = {
+    set: 'bugs',
+    slug: 'discount-applied-twice',
+    texts: { assessment: discountAssessment },
+    engine: {
+        runId: '3471d74b',
+        workflowId: 'bugfix',
+        slug: 'discount-applied-twice',
+        status: 'paused',
+        workSeconds: 108,
+        pausedAt: 'review-assessment',
+        steps: [
+            { id: 'assess', state: 'done', gate: false, seconds: 108 },
+            { id: 'review-assessment', state: 'paused', gate: true },
+        ],
+    },
+};
+
+const reassessed: ReportFixture = {
+    ...cartTotalSkipsFirst,
+    freshness: { fix: 'stale', test: 'stale' },
+};
+
+const partialTest: ReportFixture = {
+    set: 'bugs',
+    slug: 'search-ignores-case',
+    texts: { assessment: searchAssessment, fix: searchFix, test: searchTest },
+};
+
+const darkModeExport: ReportFixture = { set: 'ideas', slug: 'dark-mode-export', texts: { decision: darkExportDecision } };
+
 const meta: Meta = {
     title: 'VS Code Extension/Spec Viewer/Report pages',
     excludeStories: ['ReportViewer', 'cartTotalSkipsFirst'],
@@ -367,6 +411,21 @@ export const BugClosedInvalid: Story = {
     render: () => <ReportViewer fixture={exportDropsHeader} />,
 };
 
+export const BugPausedAtReview: Story = {
+    name: 'Bug paused at review',
+    render: () => <ReportViewer fixture={pausedAtReview} />,
+};
+
+export const BugReassessedOldReports: Story = {
+    name: 'Bug re-assessed, old reports',
+    render: () => <ReportViewer fixture={reassessed} />,
+};
+
+export const BugTestPartial: Story = {
+    name: 'Bug test partial',
+    render: () => <ReportViewer fixture={partialTest} />,
+};
+
 export const IdeaAssessing: Story = {
     name: 'Idea assessing',
     render: () => <ReportViewer fixture={offlineMode} />,
@@ -380,6 +439,11 @@ export const IdeaGo: Story = {
 export const IdeaNeedsClarification: Story = {
     name: 'Idea needs clarification',
     render: () => <ReportViewer fixture={bulkArchive} />,
+};
+
+export const IdeaKillFromRationale: Story = {
+    name: 'Idea kill, closing from the rationale',
+    render: () => <ReportViewer fixture={darkModeExport} />,
 };
 
 export const IdeaKill: Story = {

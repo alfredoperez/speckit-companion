@@ -293,3 +293,65 @@ describe('BugStoryPage', () => {
         });
     });
 });
+
+describe('BugStoryPage with a spec-kit run and report freshness', () => {
+    const SEARCH = path.join(FIXTURES, 'report-pages/.specify/bugs/search-ignores-case');
+
+    it('shows a skipped check as its own chip', () => {
+        const page = renderPage(storyOf(SEARCH));
+        const skipped = page.querySelector('.rp-tone--skipped');
+        expect(skipped?.textContent).toBe('skipped');
+        expect(page.querySelectorAll('.rp-tone--skipped')).toHaveLength(1);
+    });
+
+    it('explains a bug paused at review and shows the resume command as text', () => {
+        const story: BugStory = {
+            ...bare,
+            lead: 'in-review',
+            engine: {
+                runId: '3471d74b',
+                workflow: 'bugfix',
+                steps: [
+                    { label: 'Assess', detail: '1m 48s', state: 'done' },
+                    { label: 'Review', detail: 'Waiting for you', state: 'waiting' },
+                ],
+                paused: { gate: 'review', resume: 'specify workflow resume 3471d74b' },
+            },
+        };
+        const page = renderPage(story);
+        expect(page.querySelector('.rp-paused__title')?.textContent).toBe('Paused at review');
+        expect(page.querySelector('.rp-paused code')?.textContent).toBe('specify workflow resume 3471d74b');
+        expect(page.querySelector('.rp-paused button')).toBeNull();
+        expect(page.querySelector('.rp-meta')?.textContent).toBe("Times from spec-kit's run log, workflow bugfix, run 3471d74b");
+        expect(texts(page, '.rp-runlog li')).toEqual(['Assess1m 48s', 'ReviewWaiting for you']);
+    });
+
+    it('shows no run log for a bug without a run', () => {
+        const page = renderPage(bare);
+        expect(page.querySelector('.rp-runlog')).toBeNull();
+        expect(page.querySelector('.rp-paused')).toBeNull();
+    });
+
+    it('warns that old reports describe the earlier assessment and dims them', () => {
+        const story: BugStory = {
+            ...bare,
+            lead: 'stale',
+            stale: ['fix', 'test'],
+            steps: [
+                { id: 'wrong', state: 'done', body: 'It broke.' },
+                { id: 'changed', state: 'next', old: true, when: 'Oct 1, 2026', body: 'Fixed.' },
+                { id: 'verified', state: 'next', old: true, body: 'Verified.' },
+            ],
+        };
+        const page = renderPage(story);
+        expect(page.querySelector('.rp-notice__title')?.textContent).toBe('This fix and its test were written for the earlier assessment');
+        expect(page.querySelectorAll('.rp-step--old')).toHaveLength(2);
+        expect(texts(page, '.rp-step__when')).toEqual(['Fix · Oct 1, 2026 · old']);
+    });
+
+    it('says freshness is unknown rather than guessing', () => {
+        const page = renderPage({ ...bare, unknownFreshness: ['fix'] });
+        expect(page.querySelector('.rp-notice')).toBeNull();
+        expect(page.textContent).toContain('does not say which assessment it was written for');
+    });
+});

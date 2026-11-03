@@ -98,3 +98,15 @@ describe('idea paths', () => {
         expect(documents.map(d => d.exists)).toEqual([true, true, false, false, false]);
     });
 });
+
+describe('the stage a needs-clarification decision asks to revisit', () => {
+    const REPORT_PAGES = path.resolve(__dirname, '../../../../tests/fixtures/report-pages/.specify/assessments');
+
+    it('is read from the Revisit stage line of the decision', () => {
+        expect(readIdeaReport(path.join(REPORT_PAGES, 'bulk-archive'))?.revisit).toBe('research');
+    });
+
+    it('is absent for a decision that does not need clarification', () => {
+        expect(byslug('shared-lists').revisit).toBeUndefined();
+    });
+});

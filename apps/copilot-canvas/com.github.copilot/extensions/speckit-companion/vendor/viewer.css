@@ -4988,6 +4988,15 @@ body[data-spec-status=tasks-done] #regenerate {
   position: relative;
   top: -1px;
 }
+.stale-badge--old {
+  width: auto;
+  height: auto;
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 /* apps/vscode/webview/styles/spec-viewer/_activity.css */
 .activity-panel {
@@ -6261,6 +6270,72 @@ body[data-spec-status=tasks-done] #regenerate {
   color: var(--warning);
 }
 #markdown-content .rp-tone--unfavourable {
+  color: var(--error);
+}
+#markdown-content .rp-tone--skipped {
+  color: var(--text-body);
+  font-style: italic;
+}
+#markdown-content .rp-step--old > :not(.rp-step__when):not(h2) {
+  opacity: 0.7;
+}
+#markdown-content .rp-notice,
+#markdown-content .rp-paused {
+  margin: 0 0 var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-body);
+}
+#markdown-content .rp-notice > p,
+#markdown-content .rp-paused > p {
+  margin: 0 0 var(--space-2);
+}
+#markdown-content .rp-notice > :last-child,
+#markdown-content .rp-paused > :last-child {
+  margin-bottom: 0;
+}
+#markdown-content .rp-notice {
+  border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+  background: var(--warning-subtle);
+}
+#markdown-content .rp-paused {
+  border-color: var(--review);
+  background: color-mix(in srgb, var(--review) 8%, transparent);
+}
+#markdown-content .rp-notice__title,
+#markdown-content .rp-paused__title {
+  color: var(--text-primary);
+  font-weight: 650;
+}
+#markdown-content .rp-paused__title {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--text-sm);
+  color: var(--review-ink);
+}
+#markdown-content .rp-runlog {
+  margin: var(--space-3) 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--border);
+}
+#markdown-content .rp-runlog__step {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border);
+  color: var(--text-body);
+  font-size: var(--text-sm);
+}
+#markdown-content .rp-runlog__step > :first-child {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+#markdown-content .rp-runlog__step--failed > :last-child {
   color: var(--error);
 }
 #markdown-content .rp-defs {
