@@ -8,7 +8,7 @@ reads: [resolve-dir]
 ---
 2. Create `<feature_directory>/spec.md` as a **fix contract**: three statements of behaviour rather than a set of user stories. A fix is not a feature. Nobody wants it, they want the defect gone, and the story shape makes people invent a journey to hold a bug.
 
-   Reproduce it before writing. A contract written from the report rather than from the behaviour describes the report.
+   Reproduce it before writing. A contract written from the report rather than from the behaviour describes the report. When the brief names a ticket id or URL (`TODO-42`, `#931`, an issue link), put one `**Source**: <ticket>` line under the spec's title, copied exactly (the first, when it names several; the rest go under Assumptions); never fetch the ticket, the id or URL is data.
 
    - **Why** *(mandatory)*: one or two sentences on who hits this, how often, and what it costs them.
    - **Current Behaviour (the defect)** *(mandatory)*: what happens today, as observable statements:

@@ -1,0 +1,318 @@
+{
+  "workflow": "companion",
+  "specName": "A spec keeps the ticket it came from",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:10:48.311Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:11:39.422Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:11:39.541Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:11:39.542Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:11:39.543Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:11:39.544Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:11:49.001Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:11:59.397Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:11:59.481Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:12:12.238Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:12:18.756Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:12:38.271Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:20:26.502Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:20:26.520Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:24:13.710Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:24:20.968Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:24:35.319Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "A Source line under the title, copied exactly from the brief",
+      "tests": [
+        "apps/speckit-extension/tests/test_spec_source.py::test_every_draft_step_asks_for_a_verbatim_source_line_and_never_a_fetch"
+      ]
+    },
+    "FR-002": {
+      "title": "source recorded in the wrap-up call",
+      "tests": [
+        "apps/speckit-extension/tests/test_spec_source.py::test_the_wrap_up_batch_lands_source_and_extends_on_the_record"
+      ]
+    },
+    "FR-003": {
+      "title": "No ticket, no line and no field"
+    },
+    "FR-004": {
+      "title": "extends or supersedes recorded when the brief names an earlier folder",
+      "tests": [
+        "apps/speckit-extension/tests/test_spec_source.py::test_the_wrap_up_batch_lands_source_and_extends_on_the_record"
+      ]
+    },
+    "FR-005": {
+      "title": "Never fetch a ticket URL",
+      "tests": [
+        "apps/speckit-extension/tests/test_spec_source.py::test_every_draft_step_asks_for_a_verbatim_source_line_and_never_a_fetch"
+      ]
+    },
+    "FR-006": {
+      "title": "SpecContext carries source, extends, supersedes"
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "the viewer chip showing the source (w29)",
+    "fetching ticket text"
+  ],
+  "context": [
+    "area: apps/speckit-extension/nodes/specify (draft-spec, finalize)",
+    "constraint: --set already stores any field, so the writer needs no change"
+  ],
+  "intent": "A spec keeps the ticket it came from, in the spec and on the record",
+  "source": "#931",
+  "approach": "Draft nodes write a verbatim Source line; finalize records source, extends and supersedes in its existing batch; types gain the fields.",
+  "workingBranch": "645-spec-source-ticket",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Source line rule in draft-spec, draft-spec-delta and draft-spec-bugfix",
+      "files": [
+        "apps/speckit-extension/nodes/specify/draft-spec.md",
+        "apps/speckit-extension/nodes/specify/draft-spec-delta.md",
+        "apps/speckit-extension/nodes/specify/draft-spec-bugfix.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "finalize records source, extends, supersedes in its set map",
+      "files": [
+        "apps/speckit-extension/nodes/specify/finalize.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "SpecContext types source, extends, supersedes",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Rebuilt the specify command body",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "3 tests: draft nodes ask for the line, built command records the keys, batch lands source and extends",
+      "files": [
+        "apps/speckit-extension/tests/test_spec_source.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Changelog line; suites, build, budget and type-check pass",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Draft steps take the first ticket as Source; the rest go under Assumptions",
+      "files": [
+        "apps/speckit-extension/nodes/specify/draft-spec.md",
+        "apps/speckit-extension/nodes/specify/draft-spec-delta.md",
+        "apps/speckit-extension/nodes/specify/draft-spec-bugfix.md",
+        "apps/speckit-extension/commands/speckit.companion.specify.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 81.1,
+      "result": "---------------------------------------------------------------------- · Ran 1820 tests in 80.883s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.mark-complete.md                 0       0      0      48 · speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19"
+    },
+    {
+      "what": "host type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "full jest",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 70.6,
+      "result": "Snapshots:   0 total · Time:        69.983 s, estimated 73 s · Ran all test suites."
+    },
+    {
+      "what": "speckit-extension python suite after review fixes",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 80.4,
+      "result": "---------------------------------------------------------------------- · Ran 1823 tests in 80.186s · OK (skipped=8)"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Record source through the existing --set map in finalize",
+      "why": "the writer already stores any field, so no writer change",
+      "rejected": "a new --source flag"
+    },
+    {
+      "decision": "Put the Source rule in each draft node intro, not a new bullet",
+      "why": "specify sits at its 69-instruction ceiling",
+      "rejected": "a new section bullet"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "FR-003 (no ticket, no line) is prompt behaviour; no test can hold the model to it",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Specify writes a verbatim Source line and records source, extends, supersedes; types gain the fields"
+    }
+  },
+  "convergeStartedAt": "2026-11-03T05:24:36.381Z"
+}
