@@ -3,9 +3,9 @@ import * as path from 'path';
 
 export type CommandFormat = 'dot' | 'dash';
 
-/** Skill folders spec-kit writes for an agent that Companion's provider table does not list. */
+/** Skill folders an agent reads that Companion's provider table does not list; Copilot in VS Code also reads Claude's. */
 const AGENT_SKILL_DIRS: Record<string, string[]> = {
-    copilot: ['.github/skills'],
+    copilot: ['.github/skills', '.claude/skills'],
 };
 
 function recordedSeparator(root: string, agent: string): CommandFormat | undefined {

@@ -38,6 +38,14 @@ describe('how a project spells its commands', () => {
         expect(projectCommandFormat(project({ '.agents/skills/speckit.specify/SKILL.md': '' }), 'codex', '.agents/skills')).toBe('dot');
     });
 
+    it('gives IDE chat the dash skills of a Claude-only project, which Copilot in VS Code reads too', () => {
+        const claudeOnly = {
+            '.specify/integration.json': JSON.stringify({ installed_integrations: ['claude'], integration_settings: { claude: { invoke_separator: '-' } } }),
+            '.claude/skills/speckit-specify/SKILL.md': '',
+        };
+        expect(projectCommandFormat(project(claudeOnly), 'copilot')).toBe('dash');
+    });
+
     it('ignores settings left behind for an agent that is no longer installed', () => {
         const stale = { '.specify/integration.json': JSON.stringify({ installed_integrations: ['claude'], integration_settings: { copilot: { invoke_separator: '-' } } }) };
         expect(projectCommandFormat(project(stale), 'copilot')).toBeUndefined();

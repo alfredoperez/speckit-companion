@@ -1039,7 +1039,13 @@ describe('speckit.converge command handler', () => {
         (vscode.workspace as any).workspaceFolders = undefined;
     });
 
-    it('sends converge for the spec it was invoked on and records no step', async () => {
+    const { isCompanionInstalled } = jest.requireMock('../../settings/companionPresetReconciler');
+
+    beforeEach(() => (startStep as jest.Mock).mockClear());
+    afterEach(() => (isCompanionInstalled as jest.Mock).mockReturnValue(false));
+
+    it('sends converge for the spec it was invoked on and leaves timing to Companion\'s hooks', async () => {
+        (isCompanionInstalled as jest.Mock).mockReturnValue(true);
         const handler = captureCommandHandlers(createMockContext()).get('speckit.converge')!;
         await handler({ label: '041-foo', specPath: 'specs/041-foo' });
         const [prompt, title] = (getAIProvider().executeInTerminal as jest.Mock).mock.calls[0];
@@ -1047,5 +1053,11 @@ describe('speckit.converge command handler', () => {
         expect(prompt).toContain('stop and say so');
         expect(title).toBe('SpecKit - Converge');
         expect(startStep).not.toHaveBeenCalled();
+    });
+
+    it('times converge itself when Companion\'s spec-kit extension is not installed', async () => {
+        const handler = captureCommandHandlers(createMockContext()).get('speckit.converge')!;
+        await handler({ label: '041-foo', specPath: 'specs/041-foo' });
+        expect(startStep).toHaveBeenCalledWith(expect.stringContaining('041-foo'), 'converge', 'extension');
     });
 });

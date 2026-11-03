@@ -25,6 +25,7 @@ import { dispatchStep } from './dispatchStep';
 import { startStep, setStatus, forceStatus, reactivate } from './stepLifecycle';
 import { updateSelectionContextKeys } from './selectionContextKeys';
 import { track as trackTerminal } from './terminalStepTracker';
+import { isCompanionInstalled } from '../settings/companionPresetReconciler';
 import { watchStepDispatch } from './dispatchFailure';
 import { getSpecTerminal } from './specTerminals';
 import { noteSpecDispatch } from './specAssistant';
@@ -710,7 +711,7 @@ function registerPhaseCommands(
         );
     }
 
-    // Converge is sent and never recorded here: Spec Kit's own hooks time it.
+    // Companion's converge hooks time converge; without them the terminal's lifetime does.
     context.subscriptions.push(
         vscode.commands.registerCommand(Commands.converge, async (target?: SpecTreeItem | string) => {
             const targetDir = resolveSpecDirArg(target) || await getActiveSpecDir();
@@ -719,6 +720,9 @@ function registerPhaseCommands(
                 return;
             }
             outputChannel.appendLine(`[SpecKit] Converge command triggered for: ${targetDir}`);
+            const root = getProjectRoot();
+            const recordHere = !!root && !isCompanionInstalled(root);
+            if (recordHere) await startStep(targetDir, 'converge', 'extension');
             const assistant = getConfiguredProviderType();
             const terminal = await getAIProvider().executeInTerminal(
                 convergeCommandLine(formatCommandForProvider('speckit.converge'), targetDir),
@@ -726,6 +730,7 @@ function registerPhaseCommands(
                 { specDir: targetDir },
             );
             noteSpecDispatch(targetDir, terminal, assistant);
+            if (recordHere) trackTerminal(terminal, targetDir, 'converge');
         })
     );
 
