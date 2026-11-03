@@ -6,7 +6,7 @@ import { formatCommandForProvider, getConfiguredProviderType, getProviderDisplay
 import { getProjectRoot } from '../../core/projectRoot';
 import { CACHE_ROOT, ensureCacheFolder } from '../../core/companionCache';
 import { BUGS_DIR, readBugReports } from '../bugs/bugReports';
-import { IDEAS_DIR, readIdeaReports } from '../ideas/ideaReports';
+import { IDEAS_DIR, ideasDir, readIdeaReports } from '../ideas/ideaReports';
 import { generateNonce } from '../spec-viewer/utils';
 import {
     normaliseSlug,
@@ -39,6 +39,8 @@ interface KindCopy {
     existingSlugs: (root: string) => string[];
 }
 
+const posixDir = (dir: string): string => dir.split(path.sep).join('/');
+
 const KINDS: Record<ProcessCreateKind, KindCopy> = {
     bug: {
         title: 'New Bug',
@@ -68,11 +70,15 @@ const KINDS: Record<ProcessCreateKind, KindCopy> = {
         extraLabel: 'Who it is for',
         extraPlaceholder: 'The people who would use it.',
         extraIsTextarea: false,
-        slugPrefix: '.specify/assessments/',
+        get slugPrefix() {
+            return `${posixDir(ideasDir())}/`;
+        },
         next: 'Your assistant takes the idea through intake and writes it into this folder. The idea appears in the Ideas pane once the intake is written.',
         button: 'Assess idea',
         command: 'speckit.assess.intake',
-        directory: IDEAS_DIR,
+        get directory() {
+            return ideasDir();
+        },
         terminalTitle: 'SpecKit - New Idea',
         existingSlugs: root => readIdeaReports(root).map(idea => idea.slug),
     },
@@ -201,7 +207,9 @@ export class ProcessCreateProvider {
                 'utf8',
             );
 
-            const prompt = `/${formatCommandForProvider(copy.command)} slug=${slug} Read the ${copy.noun} in the file at ${relativePath} and treat that file as the text to assess.`;
+            const moved = kind === 'idea' && ideasDir(root) !== IDEAS_DIR;
+            const where = moved ? ` Write the ${copy.noun}'s reports into ${posixDir(ideasDir(root))}/${slug}/ instead of .specify/assessments/${slug}/.` : '';
+            const prompt = `/${formatCommandForProvider(copy.command)} slug=${slug} Read the ${copy.noun} in the file at ${relativePath} and treat that file as the text to assess.${where}`;
             await getAIProvider().executeInTerminal(prompt, copy.terminalTitle);
 
             post({ type: 'submissionComplete' });

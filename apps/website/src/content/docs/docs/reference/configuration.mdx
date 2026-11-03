@@ -31,6 +31,7 @@ Auto-approve adds `--permission-mode bypassPermissions` for the Claude Code CLI,
 | Setting | Type | Default | Description |
 | --- | --- | --- | --- |
 | `speckit.specDirectories` | string[] | `["specs", ".specify/specs"]` | Where specs are found. `specs` and `apps/*/specs` list their children as specs. A trailing wildcard, as in `openspec/changes/*`, makes each match a spec folder. |
+| `speckit.assessmentsDirectory` | string | `".specify/assessments"` | The folder, relative to the project, where the Ideas pane looks for assessments. A value that leaves the project falls back to the default. Spec Kit's assess commands still write to `.specify/assessments` unless your project overrides them. |
 | `speckit.projectFolder` | string | `""` | In a multi-root workspace, the folder treated as the Spec Kit project, by name or path. Empty picks the first folder with `.specify/`, then the first with `specs/`. |
 | `speckit.defaultWorkflow` | string | `"speckit"` | The workflow Create New Spec pre-selects: `"speckit"` or `"companion"`. While you haven't set it, installing the Companion extension for Spec Kit makes Companion the pre-selection. |
 | `speckit.customWorkflows` | object[] | `[]` | Your own workflows. See [Custom workflows and commands](/docs/customize/your-own-workflow). |

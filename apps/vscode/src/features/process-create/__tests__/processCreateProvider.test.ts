@@ -127,6 +127,35 @@ describe('opening the create screen', () => {
     });
 });
 
+describe('sending an idea into a configured assessments folder', () => {
+    afterEach(() => {
+        (vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
+            get: jest.fn().mockReturnValue(['specs']),
+            inspect: jest.fn().mockReturnValue(undefined),
+        });
+    });
+
+    it('names the configured folder in the prompt', async () => {
+        (vscode.workspace.getConfiguration as jest.Mock).mockReturnValue({
+            get: jest.fn((key: string) => (key === 'speckit.assessmentsDirectory' ? 'docs/assessments' : undefined)),
+        });
+        const panel = open('idea');
+        await panel.__receive({ type: 'submit', text: 'Dark mode', extra: '', slug: 'dark-mode' });
+
+        const [prompt] = executeInTerminal.mock.calls[0];
+        expect(prompt).toContain('slug=dark-mode');
+        expect(prompt).toContain('docs/assessments/dark-mode/');
+    });
+
+    it('leaves the prompt as it was when the folder is the default', async () => {
+        const panel = open('idea');
+        await panel.__receive({ type: 'submit', text: 'Dark mode', extra: '', slug: 'dark-mode' });
+
+        const [prompt] = executeInTerminal.mock.calls[0];
+        expect(prompt).not.toContain('instead of');
+    });
+});
+
 describe('sending a bug', () => {
     const hostile = 'It says "boom" and `rm -rf ~` then $(whoami)\nsecond line with $HOME';
 

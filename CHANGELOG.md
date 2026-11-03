@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **The Ideas pane reads the folder you choose.** A new `speckit.assessmentsDirectory` setting points the pane at ==your own assessments folder==, such as `docs/assessments`. ([#958](https://github.com/alfredoperez/speckit-companion/pull/958)) <!-- area: sidebar -->
 - **The viewer shows what converge found.** The overview draws each converge pass, ==the tasks it added== or a clean finish, with a matching footer action. ([#944](https://github.com/alfredoperez/speckit-companion/pull/944)) <!-- area: overview -->
 
 ### Fixed

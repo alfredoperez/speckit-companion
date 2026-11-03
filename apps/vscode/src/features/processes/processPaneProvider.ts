@@ -32,6 +32,8 @@ export interface ProcessPaneConfig<K extends string, T extends ProcessItem<K>> {
     extensionId: ProcessExtensionId;
     installLabel: string;
     emptyLabel(): string;
+    /** A row shown ahead of the groups, for a setting that moved the folder this pane reads. */
+    settingNote?(root: string): { label: string; tooltip: string; setting: string } | undefined;
 }
 
 export type ProcessRowKind =
@@ -40,7 +42,8 @@ export type ProcessRowKind =
     | 'process-report'
     | 'process-report-missing'
     | 'process-install'
-    | 'process-empty';
+    | 'process-empty'
+    | 'process-setting-note';
 
 export class ProcessRow extends vscode.TreeItem {
     constructor(
@@ -67,13 +70,26 @@ export class ProcessPaneProvider<K extends string, T extends ProcessItem<K>> ext
         const root = getProjectRoot();
         if (!root) return [];
 
+        const note = this.settingNoteRow(root);
         const items = this.config.read(root);
-        if (items.length === 0) return hasSpecKitMarker(root) ? [this.nothingToList(root)] : [];
+        if (items.length === 0) return hasSpecKitMarker(root) ? [...note, this.nothingToList(root)] : note;
 
-        return this.config.groups
+        return [...note, ...this.config.groups
             .map(group => ({ group, members: items.filter(item => this.config.groupOf(item) === group.id) }))
             .filter(({ members }) => members.length > 0)
-            .map(({ group, members }) => this.groupRow(group, members));
+            .map(({ group, members }) => this.groupRow(group, members))];
+    }
+
+    private settingNoteRow(root: string): ProcessRow[] {
+        const note = this.config.settingNote?.(root);
+        if (!note) return [];
+        const row = new ProcessRow(note.label, vscode.TreeItemCollapsibleState.None, 'process-setting-note');
+        row.id = `${this.config.set.id}:setting`;
+        row.iconPath = new vscode.ThemeIcon('settings-gear');
+        row.description = 'Open the setting';
+        row.tooltip = note.tooltip;
+        row.command = { command: 'workbench.action.openSettings', title: 'Open the setting', arguments: [note.setting] };
+        return [row];
     }
 
     private nothingToList(root: string): ProcessRow {
