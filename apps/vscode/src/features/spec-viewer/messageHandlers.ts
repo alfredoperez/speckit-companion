@@ -63,10 +63,10 @@ import type { CoreDocumentType } from "./types";
 import { isFeatureSpecFile } from "../specs/featureSpecPath";
 import { isSpecDocument } from "./utils";
 import { REPORT_SETS, readReportPanel } from "./reportPanels";
-import { commandForAction, commandForDocument, repeatsFromFolder } from "../processes/processActions";
+import { commandForAction, repeatsFromFolder } from "../processes/processActions";
 import { reportFile } from "../reports/reportSet";
 import { clarificationsIn } from "../reports/clarifications";
-import { stageReportAnswer } from "../reports/reportAnswers";
+import { buildAnswerPrompt, stageReportAnswer } from "../reports/reportAnswers";
 import type { ReviewComment, ReviewCommentDoc } from "../../core/types/specContext";
 import {
   DocumentType,
@@ -1052,8 +1052,6 @@ async function handleReportAnswer(
   }
   if (!clarificationsIn(text).includes(question)) return drop(`${report.fileName} does not ask that question`);
 
-  const command = commandForDocument(item.kind, document);
-  if (!command) return drop("no command is mapped to that document");
   const root = getProjectRoot();
   if (!root) return drop("no project folder is open");
 
@@ -1063,9 +1061,9 @@ async function handleReportAnswer(
   } catch {
     return drop("the answer could not be saved");
   }
-  await deps.executeInTerminal(
-    `/${formatCommandForProvider(command)} slug=${item.slug} Read the answers in the file at ${staged}, resolve each [NEEDS CLARIFICATION] marker whose question appears there, and rewrite ${document}.md in ${item.folder}.`,
-  );
+  const reviseDecision =
+    item.kind === "idea" && document !== "decision" && reportFile(set, state.specDirectory, "decision" as typeof document).exists;
+  await deps.executeInTerminal(buildAnswerPrompt({ kind: item.kind, folder: item.folder, document, staged, reviseDecision }));
 }
 
 /**

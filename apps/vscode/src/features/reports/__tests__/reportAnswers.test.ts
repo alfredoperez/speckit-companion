@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { stageReportAnswer } from '../reportAnswers';
+import { buildAnswerPrompt, stageReportAnswer } from '../reportAnswers';
 
 describe('stageReportAnswer', () => {
     let root: string;
@@ -59,5 +59,22 @@ describe('stageReportAnswer', () => {
         answer('Who asked?', 'Support.');
 
         expect(fs.readFileSync(ignore, 'utf8')).toBe('*\n!keep.md\n');
+    });
+});
+
+describe('buildAnswerPrompt', () => {
+    const target = { kind: 'idea', folder: '.specify/assessments/x', document: 'intake', staged: '.speckit-companion/report-answers/a.md', reviseDecision: true } as const;
+
+    it('names the document by its project-relative path and never starts a stage', () => {
+        const prompt = buildAnswerPrompt({ ...target, kind: 'bug' });
+
+        expect(prompt).toContain('Update .specify/assessments/x/intake.md');
+        expect(prompt).not.toMatch(/^\/|slug=/);
+        expect(prompt).not.toContain('decision.md');
+    });
+
+    it('asks an idea to revise decision.md only when it exists', () => {
+        expect(buildAnswerPrompt(target)).toContain('revise .specify/assessments/x/decision.md');
+        expect(buildAnswerPrompt({ ...target, reviseDecision: false })).not.toContain('decision.md');
     });
 });
