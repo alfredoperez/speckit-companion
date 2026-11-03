@@ -197,7 +197,7 @@ describe('SpecKitDetector', () => {
             it('runs Upgrade All with no agent flag after reinstalling the CLI', async () => {
                 await SpecKitDetector.getInstance().upgradeAll();
                 const sent = lastSentText();
-                expect(sent.endsWith('&& specify integration upgrade')).toBe(true);
+                expect(sent.endsWith('; specify init --here --force')).toBe(true);
                 expect(sent).not.toContain('windsurf');
             });
         });
@@ -256,21 +256,37 @@ describe('SpecKitDetector', () => {
             it('upgrades each recorded agent instead of re-running init', async () => {
                 mockProvider('claude');
                 await SpecKitDetector.getInstance().upgradeProject();
-                expect(lastSentText()).toBe('specify integration upgrade claude && specify integration upgrade copilot');
+                expect(lastSentText()).toBe('specify integration upgrade claude; specify integration upgrade copilot');
+            });
+
+            it('falls back to init when spec-kit recorded no agent, instead of upgrading nothing', async () => {
+                disk.readFileSync.mockImplementation(() => { throw new Error('ENOENT'); });
+                mockProvider('claude');
+                await SpecKitDetector.getInstance().upgradeProject();
+                expect(lastSentText()).toBe('specify init --here --force --integration claude');
             });
 
             it('re-adds Companion after the agents when it is installed', async () => {
                 disk.existsSync.mockImplementation((target: string) => target.endsWith('.specify/extensions/companion'));
                 await SpecKitDetector.getInstance().upgradeProject();
-                expect(lastSentText()).toMatch(/specify integration upgrade copilot && specify extension add companion.* --force$/);
+                expect(lastSentText()).toMatch(/specify integration upgrade copilot; specify extension add companion.* --force$/);
             });
 
             it('runs Upgrade All as self upgrade, the uv fallback, then each agent', async () => {
                 await SpecKitDetector.getInstance().upgradeAll();
                 expect(lastSentText()).toBe(
                     'specify self upgrade || uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git' +
-                    ' && specify integration upgrade claude && specify integration upgrade copilot'
+                    '; specify integration upgrade claude; specify integration upgrade copilot'
                 );
+            });
+
+            it('spells the uv fallback for PowerShell, which has no ||', async () => {
+                const env = vscode.env as { shell?: string };
+                const saved = env.shell;
+                env.shell = '/usr/local/bin/pwsh';
+                await SpecKitDetector.getInstance().upgradeCli();
+                env.shell = saved;
+                expect(lastSentText()).toMatch(/^specify self upgrade; if \(-not \$\?\) \{ uv tool install .* \}$/);
             });
 
             it('never passes an agent key that is not a plain name to the shell', async () => {

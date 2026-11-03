@@ -2,13 +2,24 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import type { Shell } from '../core/utils/shellDetection';
 
 const execAsync = promisify(exec);
 
 /** The uv command spec-kit's install page gives, for a CLI too old to have `specify self upgrade`. */
 export const UV_UPGRADE_COMMAND = 'uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git';
 
-export const CLI_UPGRADE_COMMAND = `specify self upgrade || ${UV_UPGRADE_COMMAND}`;
+/** `specify self upgrade`, falling back to uv only when it fails. Windows PowerShell 5.1 has no `||`. */
+export function cliUpgradeCommand(shell: Shell): string {
+    return shell === 'powershell'
+        ? `specify self upgrade; if (-not $?) { ${UV_UPGRADE_COMMAND} }`
+        : `specify self upgrade || ${UV_UPGRADE_COMMAND}`;
+}
+
+/** Runs every command whatever the last one returned, so one blocked step never skips the rest. */
+export function inSequence(commands: string[], shell: Shell): string {
+    return commands.join(shell === 'cmd' ? ' & ' : '; ');
+}
 
 // The keys come from a file the repository controls and end up in a shell command.
 const AGENT_KEY = /^[a-z0-9][a-z0-9-]*$/;
@@ -27,9 +38,8 @@ export function installedAgents(root: string): string[] {
     return keys.filter((key: unknown): key is string => typeof key === 'string' && AGENT_KEY.test(key));
 }
 
-/** One `specify integration upgrade` per agent; the bare form upgrades the current agent when none is recorded. */
 export function projectUpgradeCommands(agents: string[]): string[] {
-    return agents.length ? agents.map(agent => `specify integration upgrade ${agent}`) : ['specify integration upgrade'];
+    return agents.map(agent => `specify integration upgrade ${agent}`);
 }
 
 export interface SpecifyVersion {

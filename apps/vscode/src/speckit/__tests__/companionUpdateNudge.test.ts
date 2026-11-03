@@ -13,6 +13,7 @@ jest.mock('../specKitExtensionInstall', () => ({
     readInstallPromptEnabled: jest.fn().mockReturnValue(true),
     dismissInstallPrompt: jest.fn(),
     updateAlreadyAttempted: jest.fn().mockReturnValue(false),
+    isInstallPromptDismissed: (globalState: { get: (key: string) => unknown }) => globalState.get('speckit.installBannerDismissed') === true,
 }));
 
 jest.mock('../../core/projectRoot', () => ({ hasSpecKitMarker: jest.fn().mockReturnValue(true) }));
@@ -128,6 +129,12 @@ describe('companion update nudge', () => {
             _resetInstallOfferForTests();
             maybeOfferCompanionInstall(context, missing, '/ws');
             expect(vscode.window.showInformationMessage).toHaveBeenCalledTimes(1);
+        });
+
+        it('honours an install banner the user already dismissed', () => {
+            const { context } = createMockExtensionContext({ 'speckit.installBannerDismissed': true });
+            maybeOfferCompanionInstall(context, missing, '/ws');
+            expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
         });
 
         it('stays quiet when installed, opted out, or not a Spec Kit project', () => {

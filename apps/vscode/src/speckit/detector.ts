@@ -9,7 +9,8 @@ import { getConfiguredSpecKitAgent, specKitInitAgentArgs, SpecKitAgentFlag } fro
 import { runInTerminal } from '../core/utils/terminalUtils';
 import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
 import { buildInstallCommand } from './specKitExtensionInstall';
-import { CLI_UPGRADE_COMMAND, installedAgents, projectUpgradeCommands, specifyVersion } from './specKitUpgrade';
+import { cliUpgradeCommand, inSequence, installedAgents, projectUpgradeCommands, specifyVersion } from './specKitUpgrade';
+import { detectShell } from '../core/utils/shellDetection';
 
 const execAsync = promisify(exec);
 
@@ -202,7 +203,7 @@ export class SpecKitDetector {
     async upgradeCli(): Promise<void> {
         const terminal = vscode.window.createTerminal('Upgrade SpecKit CLI');
         terminal.show();
-        await runInTerminal(terminal, CLI_UPGRADE_COMMAND);
+        await runInTerminal(terminal, cliUpgradeCommand(detectShell()));
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading SpecKit CLI... Reload window after upgrade completes.',
@@ -230,14 +231,15 @@ export class SpecKitDetector {
 
     /**
      * Upgrade each agent's files with `specify integration upgrade`, then re-add Companion.
-     * A CLI without that command falls back to re-running init.
+     * A CLI without that command, or a project with no recorded agent, falls back to re-running init.
      */
     private async projectUpgradeSteps(root: string, cliHasIntegrationUpgrade: boolean): Promise<string[]> {
-        if (!cliHasIntegrationUpgrade) {
+        const agents = installedAgents(root);
+        if (!cliHasIntegrationUpgrade || agents.length === 0) {
             return [initCommand('specify init --here --force', await this.detectAgentFlag())];
         }
         const companion = isCompanionInstalled(root) ? [buildInstallCommand({ force: true })] : [];
-        return [...projectUpgradeCommands(installedAgents(root)), ...companion];
+        return [...projectUpgradeCommands(agents), ...companion];
     }
 
     async upgradeProject(): Promise<void> {
@@ -248,7 +250,7 @@ export class SpecKitDetector {
     async upgradeAll(): Promise<void> {
         // The upgraded CLI has `integration upgrade` whatever the installed one had.
         await this.runUpgrade('Upgrade SpecKit (All)', 'Upgrading SpecKit CLI and project files...', async root =>
-            [CLI_UPGRADE_COMMAND, ...(await this.projectUpgradeSteps(root, true))]);
+            [cliUpgradeCommand(detectShell()), ...(await this.projectUpgradeSteps(root, true))]);
     }
 
     private async runUpgrade(name: string, message: string, steps: (root: string) => Promise<string[]>): Promise<void> {
@@ -259,7 +261,7 @@ export class SpecKitDetector {
             return;
         }
 
-        const command = (await steps(root)).join(' && ');
+        const command = inSequence(await steps(root), detectShell());
         const terminal = vscode.window.createTerminal({ name, cwd: workspaceFolder });
         terminal.show();
         await runInTerminal(terminal, command);

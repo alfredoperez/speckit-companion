@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ConfigKeys } from '../core/constants';
 import { updateBannerText } from '../protocol/viewer';
 import type { CompanionGap } from './companionVersionGap';
-import { dismissInstallPrompt, readInstallPromptEnabled, updateAlreadyAttempted } from './specKitExtensionInstall';
+import { dismissInstallPrompt, isInstallPromptDismissed, readInstallPromptEnabled, updateAlreadyAttempted } from './specKitExtensionInstall';
 import { reportInstallPromptShown } from '../core/telemetry';
 import { hasSpecKitMarker } from '../core/projectRoot';
 
@@ -69,6 +69,7 @@ export function maybeOfferCompanionInstall(context: vscode.ExtensionContext, gap
             gap.state !== 'missing' ||
             offeredThisSession.has(root) ||
             !readInstallPromptEnabled() ||
+            isInstallPromptDismissed(context.globalState, { kind: 'install' }) ||
             !hasSpecKitMarker(root) ||
             context.workspaceState.get<boolean>(ConfigKeys.workspaceState.companionInstallDeclined)
         ) {
