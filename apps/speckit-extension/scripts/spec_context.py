@@ -406,10 +406,24 @@ def _lock_path(target: Path) -> Path:
     Mirrored by `specContextLockPath` in the extension's `specContextWriter.ts`;
     `tests/integration/crossProcessContextLock.spec.ts` pins the two together.
     """
+    return _lock_root() / f"{_path_key(target)}.lock"
+
+
+def pending_start_path(project_root: Path) -> Path:
+    """Where a stock specify start waits for its folder, keyed by project so two never share one."""
+    owner = os.getuid() if hasattr(os, "getuid") else os.environ.get("USERNAME", "")
+    return _lock_root() / f"{_path_key(project_root)}-{owner}.specify-start"
+
+
+def _path_key(path: Path) -> str:
     import hashlib
+
+    return hashlib.sha256(str(Path(path).resolve()).encode("utf-8")).hexdigest()[:32]
+
+
+def _lock_root() -> Path:
     import tempfile
 
-    key = hashlib.sha256(str(target.resolve()).encode("utf-8")).hexdigest()[:32]
     # `/tmp` on posix, not the temporary directory this process happens to have.
     # Both halves read the same environment variable, so they agree whenever
     # their environments do — and silently stop sharing a lock when they do not,
@@ -428,7 +442,7 @@ def _lock_path(target: Path) -> Path:
         root.chmod(0o1777)
     except OSError:
         pass
-    return root / f"{key}.lock"
+    return root
 
 
 def _warn_no_lock(target: Path, reason: object) -> None:

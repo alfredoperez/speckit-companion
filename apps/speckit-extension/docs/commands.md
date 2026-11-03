@@ -65,16 +65,16 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 
 | Hook | Command | optional | Effect |
 |------|---------|----------|--------|
-| `before_specify` | `speckit.companion.before-step` | `false` (auto-runs) | Read the clock so `after_specify` can record when specify started; writes nothing |
-| `before_plan` | `speckit.companion.before-step` | `false` (auto-runs) | Record plan start (`currentStep=plan`, `status=planning`) into `.spec-context.json` |
-| `before_tasks` | `speckit.companion.before-step` | `false` (auto-runs) | Record tasks start (`currentStep=tasks`, `status=tasking`) into `.spec-context.json` |
-| `before_implement` | `speckit.companion.before-step` | `false` (auto-runs) | Record implement start (`currentStep=implement`, `status=implementing`) into `.spec-context.json` |
-| `after_specify` | `speckit.companion.after-specify` | `false` (auto-runs) | Record specify start, from the time read before it, then specify completion (`currentStep=specify`, `status=specified`) into `.spec-context.json` |
-| `after_plan` | `speckit.companion.after-plan` | `false` (auto-runs) | Record plan completion (`currentStep=plan`, `status=planned`) into `.spec-context.json` |
-| `after_tasks` | `speckit.companion.after-tasks` | `false` (auto-runs) | Record tasks completion (`currentStep=tasks`, `status=ready-to-implement`) into `.spec-context.json` |
-| `after_implement` | `speckit.companion.after-implement` | `false` (auto-runs) | Per-task journaling on implement (`currentStep=implement`); `status=implemented` when all tasks checked |
-| `before_converge` | `speckit.companion.before-converge` | `false` (auto-runs) | Record converge start (`currentStep=converge`, status unchanged) into `.spec-context.json` |
-| `after_converge` | `speckit.companion.after-converge` | `false` (auto-runs) | Record converge finish (`currentStep=converge`, status unchanged) into `.spec-context.json` |
+| `before_specify` | `speckit.companion.before-step` | `false` (auto-runs) | Save the start time outside the project until the spec folder exists; writes no record |
+| `before_plan` | `speckit.companion.before-step` | `false` (auto-runs) | Record the plan start |
+| `before_tasks` | `speckit.companion.before-step` | `false` (auto-runs) | Record the tasks start |
+| `before_implement` | `speckit.companion.before-step` | `false` (auto-runs) | Record the implement start |
+| `after_specify` | `speckit.companion.after-specify` | `false` (auto-runs) | Record the saved specify start, then the specify finish |
+| `after_plan` | `speckit.companion.after-plan` | `false` (auto-runs) | Record the plan finish |
+| `after_tasks` | `speckit.companion.after-tasks` | `false` (auto-runs) | Record the tasks finish |
+| `after_implement` | `speckit.companion.after-implement` | `false` (auto-runs) | Sync implement progress from `tasks.md` |
+| `before_converge` | `speckit.companion.before-converge` | `false` (auto-runs) | Record the converge start |
+| `after_converge` | `speckit.companion.after-converge` | `false` (auto-runs) | Record the converge finish |
 
 `optional: false` means the agent runs it **automatically** with no prompt. (For contrast, the bundled `git` extension's `after_specify` commit hook is `optional: true`, so it only *offers* to run.)
 
@@ -82,44 +82,31 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 
 Runs before `/speckit.specify`, `/speckit.plan`, `/speckit.tasks` and `/speckit.implement`. One command serves all four hooks, and which step is starting decides what it does. For plan, tasks and implement it records the step's start. The start is idempotent: when the GUI already recorded it at dispatch, the call appends nothing and the earlier time stands. A `completed` or `archived` spec is not written.
 
-**What the agent runs** (plan, tasks or implement):
+**What the agent runs**, with the step that is about to run:
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --step <step> --status <status> --kind start --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --hook start --step <step>
 ```
 
-| Step | `--step` | `--status` |
-|------|----------|------------|
-| plan | `plan` | `planning` |
-| tasks | `tasks` | `tasking` |
-| implement | `implement` | `implementing` |
-
-For specify it runs no writer. The new feature directory does not exist yet and `.specify/feature.json` still points at the previous spec, so a write at that moment would land on finished work. It reads the clock and keeps what it prints for `after_specify`:
-
-```bash
-date -u +%Y-%m-%dT%H:%M:%SZ
-```
+For plan, tasks and implement the writer records the start with that step's in-progress status. For specify it writes no record: the new feature directory does not exist yet and `.specify/feature.json` still points at the previous spec, so a write at that moment would land on finished work. It saves the clock to a file kept outside the project, keyed by the repository, and `after_specify` records it once the folder exists. A saved start more than an hour older than the folder is an abandoned run's and is dropped.
 
 ## `speckit.companion.after-specify`
 
 Runs after `/speckit.specify`. It carries no business logic itself — it resolves the active feature and invokes the writer script, mirroring `speckit.git.feature.md`. The other hook commands follow the same pattern.
 
-**What the agent runs**, in order. First the start, with exactly the time `before_specify` read; this call is skipped when no time was read, and is a no-op when the GUI already recorded the start:
+**What the agent runs**:
 
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --step specify --status specifying --kind start --by extension --at <the time read>
+python3 .specify/extensions/companion/scripts/write-context.py --hook finish --step specify
 ```
 
-Then the finish, every time:
-
-```bash
-python3 .specify/extensions/companion/scripts/write-context.py --step specify --status specified --kind complete --by extension
-```
+The writer records the start saved by `before_specify` (a no-op when the GUI already recorded it), then the specify finish.
 
 **Flags** (`scripts/write-context.py`):
 
 | Flag | Default | Meaning |
 |------|---------|---------|
+| `--hook` | — | `start` or `finish`: the one-call form the hook pages use, with `--step`. The writer maps the step and boundary to the status and kind; pass no `--status`, `--kind` or `--tasks-file`. A bad call exits 0. |
 | `--step` | `specify` | Canonical step (`specify`/`clarify`/`plan`/`tasks`/`analyze`/`implement`/`converge`). A non-canonical value (incl. legacy `done`) is a no-op. |
 | `--status` | `specified` | Canonical lifecycle status written to the file. |
 | `--kind` | `start` | Which boundary of the step this call records: `start` or `complete`. |
