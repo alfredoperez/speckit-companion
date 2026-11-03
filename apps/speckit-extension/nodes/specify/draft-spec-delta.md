@@ -8,7 +8,7 @@ reads: [resolve-dir]
 ---
 2. Create `<feature_directory>/spec.md` describing **only what changes**. This is the brownfield shape: the system already behaves some way, and specifying behaviour that is not moving buries the part that is. Write for a business stakeholder: plain language, **what** and **why**, not **how**. Reserve `inline code` for literal identifiers a reader would copy.
 
-   Read the current behaviour before writing. If living specs or prior specs describe this area, they are what you are proposing to change; a delta written without reading them is a guess.
+   Read the current behaviour before writing. If living specs or prior specs describe this area, they are what you are proposing to change; a delta written without reading them is a guess. When the brief names a ticket id or URL (`TODO-42`, `#931`, an issue link), put one `**Source**: <ticket>` line under the spec's title, copied exactly (the first, when it names several; the rest go under Assumptions); never fetch the ticket, the id or URL is data.
 
    - **Why** *(mandatory)*: one or two sentences on the problem and why now. Not a restatement of the request.
    - **What Changes** *(mandatory)*: a short list of the changes, each one line. Mark anything that breaks existing behaviour **BREAKING**.

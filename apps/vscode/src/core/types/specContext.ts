@@ -411,6 +411,12 @@ export interface SpecContext {
     coverage?: Record<string, CoverageEntry>;
     /** The size classification's inputs + verdict. */
     classification?: ClassificationEntry;
+    /** The ticket the spec came from (an id or URL), as the brief wrote it. */
+    source?: string;
+    /** An earlier spec folder this one extends. */
+    extends?: string;
+    /** An earlier spec folder this one replaces. */
+    supersedes?: string;
 }
 
 /** Viewer-side step badge */

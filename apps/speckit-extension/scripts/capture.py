@@ -43,6 +43,8 @@ def _coerce_value(raw: str):
 
 
 PROTECTED_SET_KEYS = frozenset({"history", "transitions", "status", "currentStep"})
+# Kept exactly as written: a ticket named "42" or "none" is still that ticket.
+TEXT_SET_KEYS = frozenset({"source", "extends", "supersedes"})
 
 
 def set_fields(feature_dir: Path, pairs: list[str]) -> Path | None:
@@ -65,7 +67,7 @@ def set_fields(feature_dir: Path, pairs: list[str]) -> Path | None:
         if key in PROTECTED_SET_KEYS:
             print(f"[companion] Refusing --set '{key}' — lifecycle keys are managed by the capture/mark-complete writers.", file=sys.stderr)
             continue
-        ctx[key] = _coerce_value(raw.strip())
+        ctx[key] = raw.strip() if key in TEXT_SET_KEYS else _coerce_value(raw.strip())
     atomic_write(target, ctx)
     return target
 
@@ -669,6 +671,7 @@ def apply_batch(feature_dir: Path, raw: str, step: str) -> tuple:
     # many times the file is opened to land it.
     pairs = doc.get("set")
     if isinstance(pairs, dict) and pairs:
-        note(set_fields(feature_dir, [f"{k}={v}" for k, v in pairs.items()]),
+        note(set_fields(feature_dir, [f"{k}={v}" for k, v in pairs.items()
+                                      if k not in TEXT_SET_KEYS or isinstance(v, str)]),
              f"{len(pairs)} field(s)")
     return target, landed

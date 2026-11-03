@@ -8,7 +8,7 @@ reads: [resolve-dir]
 ---
 **Where the request names two or more code areas and you have a subagent tool, dispatch one read-only worker per area first**, each returning the files that area exposes and the conventions it follows, never file contents. Those findings are what you record as `context` below and what plan reads. One area, or no subagent tool: look yourself.
 
-2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder: plain language, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns.
+2. Create `<feature_directory>/spec.md` with these sections, in order. Write for a business stakeholder: plain language, focused on **what** users need and **why**, not **how** to build it. Reserve `inline code` for literal identifiers a reader would copy (real names, routes, keys); never backtick ordinary nouns. When the brief names a ticket id or URL (`TODO-42`, `#931`, an issue link), put one `**Source**: <ticket>` line under the spec's title, copied exactly (the first, when it names several; the rest go under Assumptions); never fetch the ticket, the id or URL is data.
 
    - **User Scenarios & Testing** *(mandatory)*: the heart of the spec. Capture the feature as **prioritized user stories**, each an independently testable slice that delivers value on its own:
      - `### User Story N - <short title> (Priority: P1|P2|P3)` followed by one plain-language paragraph describing the journey.

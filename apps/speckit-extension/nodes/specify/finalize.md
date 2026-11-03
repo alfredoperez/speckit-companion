@@ -17,7 +17,7 @@ python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <fe
 }'
 ```
 
-Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context` when there is nothing worth recording and `expectations` when the spec declares no non-goals; never invent either. **`workflow` is the one field that is not optional**: without it the shared writer defaults to `speckit`, and a later footer advance dispatches the stock command.
+Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context` when there is nothing worth recording and `expectations` when the spec declares no non-goals; never invent either. A spec with a `**Source**:` line adds `"source": "<that ticket, as written>"` to `set`, and one the brief says extends or supersedes an earlier folder adds `"extends"` or `"supersedes"` with that folder. **`workflow` is the one field that is not optional**: without it the shared writer defaults to `speckit`, and a later footer advance dispatches the stock command.
 
 **On a `simple` run, add the approach to the same call.** A `simple` run writes its plan inline and never reaches `plan`, where a full run records it. So when `verdict == "simple"`, put `"approach": "<one-line summary of the Approach section>"` in the `set` map alongside the rest rather than paying a second call.
 
