@@ -4,6 +4,7 @@ import { ClaudeCodeProvider } from '../claudeCodeProvider';
 import { specPinEnv } from '../cliTerminalProvider';
 
 jest.mock('../../core/projectRoot', () => ({ getProjectRoot: () => '/repo' }));
+jest.mock('../../core/utils/installUtils', () => ({ ensureCliInstalled: jest.fn().mockResolvedValue(undefined) }));
 
 jest.mock('../../core/utils/tempFileUtils', () => ({
     createTempFile: jest.fn().mockResolvedValue('/tmp/prompt.md'),

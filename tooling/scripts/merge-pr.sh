@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Queues a pull request to squash-merge once its checks pass. A pull request that changes what a person sees is refused until the owner has looked.
+# Squash-merges a pull request once every check has passed. A pull request that changes what a person sees is refused until the owner has looked.
 # usage: tooling/scripts/merge-pr.sh <PR> [--seen]
 #   --seen   the owner has looked at this change and said so in the conversation. Never pass it on your own judgement.
-# exit: 0 queued or merged, 1 a check did not pass or none appeared within five minutes, 2 bad usage, 3 visual change not yet seen
+# exit: 0 merged, 1 a check did not pass or none appeared within five minutes, 2 bad usage, 3 visual change not yet seen
 set -euo pipefail
 
 VISUAL='^(apps/website/src/(pages|components|layouts|styles)/|apps/vscode/webview/.*\.css$|apps/copilot-canvas/public/|content/media/|docs/screenshots/|assets/)'
@@ -22,12 +22,7 @@ if [ -n "$visual" ] && [ -z "$seen" ]; then
   exit 3
 fi
 
-if gh pr merge "$pr" --squash --auto 2>/dev/null; then
-  echo "#$pr merges by itself when its checks pass."
-  exit 0
-fi
-
-# Auto-merge is off for the repository: wait here, and merge only when every check has passed.
+# Wait here and merge only when every check has passed: auto-merge waits for required checks only, and the test job is not one.
 # Just after a push GitHub reports no checks at all, and an empty list must not read as all passed.
 for _ in $(seq 1 20); do
   [ -n "$(gh pr checks "$pr" 2>/dev/null)" ] && break
