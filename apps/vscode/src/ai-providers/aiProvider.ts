@@ -6,6 +6,10 @@ import { createTempFile } from '../core/utils/tempFileUtils';
 import { detectShell, formatPromptFileSubstitution, Shell } from '../core/utils/shellDetection';
 import { detectHostIde, HostIde } from '../core/utils/hostIde';
 import { validateProviderRegistry } from './providerRegistry';
+import { projectCommandFormat } from '../speckit/commandSeparator';
+import { resolveSpecKitAgent } from '../speckit/specKitAgent';
+import { detectHostIde as detectEditorHost } from './ideChatProvider';
+import { getProjectRoot } from '../core/projectRoot';
 
 const CMD_LINE_MAX = 8000;
 
@@ -513,9 +517,10 @@ export function formatCommandForProvider(command: string, providerType?: AIProvi
         return command;
     }
 
-    // auto — use provider default
+    // auto — what spec-kit recorded for the provider's agent, then the disk, then the table
     const type = providerType ?? getConfiguredProviderType();
-    const { commandFormat } = PROVIDER_PATHS[type];
+    const commandFormat = projectCommandFormat(getProjectRoot(), resolveSpecKitAgent(type, detectEditorHost()), PROVIDER_PATHS[type].skillsDir)
+        ?? PROVIDER_PATHS[type].commandFormat;
     if (commandFormat === 'dash') {
         return toDashCommand(command);
     }
