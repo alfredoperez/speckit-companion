@@ -371,7 +371,8 @@ export function registerSpecKitCommands(
             const terminal = await getAIProvider().executeSlashCommand(
                 `/speckit.companion.resume ${relativePath}`,
                 'SpecKit - Resume',
-                true
+                true,
+                { specDir: relativePath },
             );
             if (workspaceRoot) {
                 noteSpecDispatch(path.join(workspaceRoot, relativePath), terminal, assistant);
@@ -700,7 +701,7 @@ function registerPhaseCommands(
                     specDir: toWorkspaceRelative(targetDir),
                 });
                 const assistant = getConfiguredProviderType();
-                const terminal = await watch.run(() => getAIProvider().executeInTerminal(wrapped, `SpecKit - ${cmd.title}`));
+                const terminal = await watch.run(() => getAIProvider().executeInTerminal(wrapped, `SpecKit - ${cmd.title}`, { specDir: targetDir }));
                 noteSpecDispatch(targetDir, terminal, assistant);
                 if (shouldRecordStepStart(cmdPipeline, cmd.name)) {
                     trackTerminal(terminal, targetDir, cmd.name as StepName);
@@ -721,7 +722,8 @@ function registerPhaseCommands(
             const assistant = getConfiguredProviderType();
             const terminal = await getAIProvider().executeInTerminal(
                 convergeCommandLine(formatCommandForProvider('speckit.converge'), targetDir),
-                'SpecKit - Converge'
+                'SpecKit - Converge',
+                { specDir: targetDir },
             );
             noteSpecDispatch(targetDir, terminal, assistant);
         })
@@ -785,9 +787,11 @@ async function executeWorkflowStep(
 
     // Per-step model/effort (Claude Code only; other providers ignore it).
     const stepConfig = pipelineSteps.find(s => s.name === step);
-    const dispatchOptions = stepConfig && (stepConfig.model || stepConfig.effort)
-        ? { model: stepConfig.model, effort: stepConfig.effort }
-        : undefined;
+    const dispatchOptions = {
+        specDir: targetDir,
+        ...(stepConfig?.model ? { model: stepConfig.model } : {}),
+        ...(stepConfig?.effort ? { effort: stepConfig.effort } : {}),
+    };
 
     // The step's complete-on-advance + start-write is owned entirely by the
     // awaited `updateStepProgress` above (its lifecycle path completes the prior
@@ -924,7 +928,8 @@ function registerCustomCommand(
             const terminal = await getAIProvider().executeSlashCommand(
                 commandText,
                 `SpecKit - ${selectedCommand.label}`,
-                selectedCommand.autoExecute
+                selectedCommand.autoExecute,
+                targetDir ? { specDir: targetDir } : undefined,
             );
             if (targetDir) {
                 noteSpecDispatch(targetDir, terminal, assistant);

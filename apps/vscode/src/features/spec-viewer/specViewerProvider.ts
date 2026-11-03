@@ -692,7 +692,10 @@ export class SpecViewerProvider {
       resolveWorkflowSteps: () => this.resolveWorkflowSteps(specDirectory),
       executeInTerminal: async (prompt: string) => {
         const assistant = getConfiguredProviderType();
-        const terminal = await getAIProvider().executeInTerminal(prompt);
+        // A bug or idea report folder is not a spec, so only a spec pins the terminal.
+        const terminal = reportSetOfPath(specDirectory)
+          ? await getAIProvider().executeInTerminal(prompt)
+          : await getAIProvider().executeInTerminal(prompt, undefined, { specDir: specDirectory });
         noteSpecDispatch(specDirectory, terminal, assistant);
         return terminal;
       },

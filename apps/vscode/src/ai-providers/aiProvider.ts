@@ -130,12 +130,12 @@ export interface IAIProvider {
      * Execute a prompt in a visible terminal (split view)
      * @param prompt The prompt to send to the AI
      * @param title The terminal title
-     * @param options Optional per-step dispatch overrides (model/effort). Providers
-     *                that don't support them ignore it.
+     * @param options Optional per-step dispatch overrides (model/effort) and the spec
+     *                folder to pin. Providers that don't support them ignore it.
      * @returns The terminal instance, or undefined for providers that dispatch
      *          somewhere other than a terminal (e.g. the IDE Chat provider)
      */
-    executeInTerminal(prompt: string, title?: string, options?: { model?: string; effort?: string }): Promise<vscode.Terminal | undefined>;
+    executeInTerminal(prompt: string, title?: string, options?: { model?: string; effort?: string; specDir?: string }): Promise<vscode.Terminal | undefined>;
 
     /**
      * Execute a prompt in headless/background mode
@@ -150,7 +150,7 @@ export interface IAIProvider {
      * @param title Optional terminal title
      * @param autoExecute If false, shows command but waits for user to press Enter (default: true)
      */
-    executeSlashCommand(command: string, title?: string, autoExecute?: boolean): Promise<vscode.Terminal | undefined>;
+    executeSlashCommand(command: string, title?: string, autoExecute?: boolean, options?: { specDir?: string }): Promise<vscode.Terminal | undefined>;
 
     /**
      * Get the CLI permission flag for this provider based on the unified speckit.permissionMode setting.

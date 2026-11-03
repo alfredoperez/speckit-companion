@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **A step works on the spec you clicked.** Terminals Companion opens for a spec carry ==its folder==, so steps stop picking another spec from `feature.json`. ([#946](https://github.com/alfredoperez/speckit-companion/pull/946)) <!-- area: spec-viewer -->
+
 ## [0.37.0] - 2026-10-13
 
 A plan that draws what a change touches, and a Workflow Builder that works on plain Spec Kit.
