@@ -16,7 +16,10 @@ For each ticket, in strict sequence:
 2. **Auto** — confirm the bug still reproduces, then run `/speckit-companion-auto`. Its project hooks (`.specify/companion.yml`, after implement's `handoff`) do the self-review, one `/code-review` pass (`/codex:review` beside it only for the webview renderer, the run-record writer or a publish command), the commit, and the PR.
 3. **Merge** — squash-merge once every CI check has finished and passed.
 4. **Learnings** — log the review findings to the Review Ledger, route each kept lesson to where it fires, tick the ticket in the live queue.
-5. **Next ticket.**
+5. **Verify note** — one vault note per ticket with the steps to test it, Storybook screenshots of what changed on screen, and the files the run made.
+6. **Next ticket.**
+
+A **grouped issue** (a checklist of items in its body) runs steps 1 to 5 once per slice of that checklist, not once per issue. See [Grouped issues](#grouped-issues).
 
 After all tickets: one closing `/install-local`, then one **run report** (markdown, via the vault `obsidian` skill, flat in `Projects/speckit companion/` under a descriptive name; the vault has no `reports/` folder) of everything fixed, in plain language, the **new lessons** captured, and any **architecture/skill flags** worth promoting. It ends by pointing at `/release-qa`, which tests the whole batch once; this loop never desktop-tests a ticket. Use `/html-page` only to *export* it if it needs to leave the vault — HTML in the vault is unsearchable.
 
@@ -39,6 +42,16 @@ After all tickets: one closing `/install-local`, then one **run report** (markdo
 - `--light` — run **light mode** (below). Takes issue numbers *or* free-text task descriptions, since light mode files no issues.
 
 If `$ARGUMENTS` is empty, list open issues and ask which to run.
+
+## Grouped issues
+
+Some issues fold several drafts into one ticket: the body has an `## Items` checklist (each line a draft id and one sentence), an optional `## Later` list, and the ticket's acceptance. They come from a plan map in the vault (`Projects/speckit companion/plans/`), which the issue links.
+
+- **Slice the checklist.** A slice is one item, or a few items that touch the same files and ship as one change. Name the slices before the first one starts and list them in the ticket's task. `## Later` items are not sliced; they stay in the issue.
+- **One auto run per slice.** Each slice is a ticket for steps 1 to 5. Its PR body says `Part of #N` and names its item ids; the slice that ticks the last unchecked item says `Closes #N` instead. After each merge, tick the slice's items in the issue body.
+- **Ask a slice's open decision at its start.** An item marked `decision:` in the issue waits on a choice the plan left open. Ask it before the slice runs (Factory's Plan page when the chat has one, otherwise AskUserQuestion, recommended option first), record the pick in the issue, and never guess it to keep moving.
+- **Screen changes need a mock first.** An issue labelled `ui` needs an approved `/design` mock linked in its body before its first slice. Without one, the ticket is review-gated: post what needs designing and move to the next ticket.
+- **Blocked issues wait.** An issue whose body says `Blocked by #M` while #M is open is skipped, and the report says so.
 
 ---
 
@@ -158,11 +171,11 @@ The installed companion commands (`.specify/extensions/companion/`, `.claude/ski
 #### 2. Reproduce, then auto — main loop
 - **Read `.claude/review-checklist.md` first** (and the `CLAUDE.md` conventions it points to).
 - **Verify the bug reproduces on current `main`.** Backlog tickets go stale — they're frequently already fixed, duplicates, or already-correct paths (~3 of 8 in one batch). If it's already fixed, STOP this ticket, close the issue as resolved/dup with the evidence, and move on. Deliver only the genuinely-missing part.
-- Run `/speckit-companion-auto` with the issue as the feature description. Include `Issue #N: <title>` and the body, and say the PR body must carry `Closes #N`.
+- Run `/speckit-companion-auto` with the issue as the feature description. Include `Issue #N: <title>` and the body, and say the PR body must carry `Closes #N`. For a slice of a [grouped issue](#grouped-issues), pass only the slice's items plus the issue's acceptance, and the PR body carries `Part of #N` (or `Closes #N` on the last slice).
 - Auto runs specify → plan → tasks → implement unattended and ends at `completed`. Implement's hooks in `.specify/companion.yml` then self-review, run `/code-review` once (with `/codex:review` beside it only for the webview renderer, the run-record writer or a publish command; anything still open goes into the PR body as a gap), commit, and open the PR via `/create-pr`. It does not merge.
 - **Keep the review findings.** As auto's reviews return, note each finding: what it was, who found it (`code-review` / `codex` / `both`), severity, and whether it changed code. Steps 4a and 4b need them; the transcript won't be re-read.
 - **Check what auto left behind before merging:**
-  - `specs/<NNN>-<slug>/` is `completed`, all tasks checked, `specName` is the real name (not `[FEATURE NAME]`). **NEVER revert a Companion-built spec from `completed` back to `implemented`.**
+  - `specs/<NNN>-<slug>/` is `completed`, all tasks checked, `specName` is the real name (not `[FEATURE NAME]`). **NEVER revert a Companion-built spec from `completed` back to `implemented`.** Once converge is a Companion step, `completed` must follow a converge entry in `.spec-context.json` that added no tasks; a spec that reached `completed` without one is a finding for the report.
   - The PR does not carry regenerated `.specify/` artifacts (`feature.json`, registry files). **One exception:** if the PR adds or renames a command in `extension.yml`, `.specify/extensions/.registry` MUST stay in the diff — CI's `check-command-emissions.py` gate requires it.
   - The suites are green — **read that, don't re-run it.** Implement records every check it ran with `--verify-run`, so the answer is already in `specs/<NNN>-<slug>/.spec-context.json` under `verified`: find the compile and test entries and look at `exitCode`. Re-run `npm run compile && npm test` yourself only when there is no such entry, when one exited non-zero, or when a source file was written after the record was — compare the newest changed file against the modified time of `.spec-context.json`. If `apps/speckit-extension/**` changed, also `python3 apps/speckit-extension/scripts/check_shape_parity.py`. If capture/timing changed, run the capture eval.
   - Push any fixes to the PR branch.
@@ -192,7 +205,16 @@ If checks fail and can't be fixed on the branch, leave the PR open, record "merg
 - an **architecture / coverage gap** → a GitHub issue candidate (accumulate across the run, surface in the report)
 - If it can become a test or hook, propose that instead of prose.
 
-**c) Tick the ticket in the live queue.** `Current.md` is archived; the queue now lives in the command-center ticket `Projects/command-center/tickets/migrate-live-queue.md`. Tick the ticket there if it is listed; if the queue has no line for it, say so in the report rather than creating one.
+**c) Tick the ticket in the live queue.** `Current.md` is archived; the queue now lives in the command-center ticket `Projects/command-center/tickets/migrate-live-queue.md`. Tick the ticket there if it is listed; if the queue has no line for it, say so in the report rather than creating one. For a slice, tick its items in the issue body instead (`gh issue edit <N> --body-file`).
+
+#### 5. Verify note — main loop
+Write one note per ticket (per slice, for a grouped issue) via the vault `obsidian` skill, beside the run report in `~/dev/GitHub/obsidian-vault/Projects/speckit companion/`, named `Verify <ticket title>.md`, `lifespan: ephemeral`. It is what the owner reads to check the work by hand, so it carries:
+- **How to test**, numbered: what to open or run (a command, a sandbox from `/sandbox`, a viewer page and a click) and what they should see.
+- **Screenshots** of every changed component from its Storybook stories, saved next to the note. Never launch a real VS Code window per ticket; the real window is `/release-qa`'s job.
+- **The files the run made**, inline when they explain the change: the spec's `spec.md` summary, `tasks.md`, and the last entries of `.spec-context.json`. Link the full files rather than pasting long ones.
+- The PR link and what is not covered.
+
+Link each verify note from the ticket's result line, and from the issue in a comment.
 
 Mark the ticket task `completed` and loop to the next ticket.
 
@@ -209,13 +231,13 @@ Run `/install-local`, then `git restore package.json package-lock.json .specify/
 
 Write **one markdown run report** (via the vault `obsidian` skill) flat in `~/dev/GitHub/obsidian-vault/Projects/speckit companion/`, named for what the run did (no date prefix, no `reports/` folder: the date is a frontmatter field). **Never overwrite a prior report.** Concise and plain-language:
 
-- **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, merged / in-review / skipped / needs attention.
+- **Per ticket:** issue # + title, one-sentence "what was fixed," PR link, its verify note, merged / in-review / skipped / needs attention. A grouped issue lists its slices and which items are still open.
 - **🤖 Subagents** — one row per ticket and step from the tally: dispatched vs expected. Call out every gap in plain words (e.g. "plan expected 3 area workers, ran 0"), and any step that never dispatches in an auto run at all. This is how we know users actually get the fan-out the commands promise.
 - **🧠 Lessons captured this run** — review checks added to `.claude/review-checklist.md` and loop tweaks to this file, with where each landed.
 - **🏗️ Architecture / skill flags** — the promotion candidates from step 4b, each with a one-line "promote to `CLAUDE.md` / ADR / which skill?" suggestion.
 - **Needs attention** — skipped tickets and why, PRs left in review, CI gaps.
 - The final installed version.
-- **Next:** run `/release-qa` for the batch.
+- **Next:** run `/release-qa` for the batch. When the batch finishes a plan whose map has a verify ticket, point at that ticket instead: `/release-qa` on a fresh sandbox, then the stock against Companion bench (`/bench-experiment`).
 
 End the chat response with a tight summary: tickets processed, merged vs in-review vs skipped, subagents dispatched vs expected, the installed version, lessons-captured count, a pointer to the report, and `/release-qa` as the next step.
 
