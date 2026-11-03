@@ -90,16 +90,18 @@ describe('renderLifecyclePreamble — per-family split', () => {
 describe('renderLifecyclePreamble — unattended auto finishes to completed (no approval gate)', () => {
     const AUTO_MARKER = 'UNATTENDED AUTO RUN';
 
-    it('stock auto run is told to mark-complete itself', () => {
+    it('stock auto run is told to end on converge, whose hook completes it', () => {
         const auto = renderLifecyclePreamble(SPEC_DIR, DISPATCH, false, undefined, true);
         expect(auto).toContain(AUTO_MARKER);
-        expect(auto).toContain('--mark-complete --by ai');
+        expect(auto).toContain('speckit.converge');
+        expect(auto).toContain('--hook finish --step converge');
+        expect(auto).not.toContain('--mark-complete');
     });
 
     it('companion auto run also carries the finish clause (slim body + finish)', () => {
         const auto = renderLifecyclePreamble(SPEC_DIR, DISPATCH, true, undefined, true);
         expect(auto).toContain(AUTO_MARKER);
-        expect(auto).toContain('--mark-complete --by ai');
+        expect(auto).toContain('--hook finish --step converge');
     });
 
     it('a NON-auto (attended) run keeps the final gate — no self-complete instruction', () => {
