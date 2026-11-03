@@ -4,6 +4,7 @@ import { updateBannerText } from '../protocol/viewer';
 import type { CompanionGap } from './companionVersionGap';
 import { dismissInstallPrompt, readInstallPromptEnabled, updateAlreadyAttempted } from './specKitExtensionInstall';
 import { reportInstallPromptShown } from '../core/telemetry';
+import { hasSpecKitMarker } from '../core/projectRoot';
 
 /** The surface-tagged install trigger, so a conversion from the toast or the status bar is counted like a banner's. */
 const INSTALL_COMMAND = 'speckit.companion.installNudge';
@@ -57,6 +58,44 @@ export function maybeShowCompanionUpdateNudge(context: vscode.ExtensionContext, 
     } catch {
         /* the nudge must never block or fail activation */
     }
+}
+
+const offeredThisSession = new Set<string>();
+
+/** A Spec Kit project without Companion's spec-kit extension is offered it once per session, until the user declines for the project. Never throws. */
+export function maybeOfferCompanionInstall(context: vscode.ExtensionContext, gap: CompanionGap, root: string): void {
+    try {
+        if (
+            gap.state !== 'missing' ||
+            offeredThisSession.has(root) ||
+            !readInstallPromptEnabled() ||
+            !hasSpecKitMarker(root) ||
+            context.workspaceState.get<boolean>(ConfigKeys.workspaceState.companionInstallDeclined)
+        ) {
+            return;
+        }
+        offeredThisSession.add(root);
+        reportInstallPromptShown('activation');
+        const shown = vscode.window.showInformationMessage(
+            "This is a Spec Kit project without SpecKit Companion's spec-kit extension. Add it so every step records its time and the Companion pipeline is available?",
+            'Add to project',
+            'Not now',
+            "Don't ask for this project"
+        );
+        void shown.then(choice => {
+            if (choice === 'Add to project') {
+                void vscode.commands.executeCommand(INSTALL_COMMAND, 'activation');
+            } else if (choice === "Don't ask for this project") {
+                void context.workspaceState.update(ConfigKeys.workspaceState.companionInstallDeclined, true);
+            }
+        });
+    } catch {
+        /* the offer must never block or fail activation */
+    }
+}
+
+export function _resetInstallOfferForTests(): void {
+    offeredThisSession.clear();
 }
 
 /** Status-bar text for a gap, or `null` when the item should be hidden. */

@@ -7,8 +7,10 @@ All notable changes to this project will be documented in this file.
 ### Added
 - **The Ideas pane reads the folder you choose.** A new `speckit.assessmentsDirectory` setting points the pane at ==your own assessments folder==, such as `docs/assessments`. ([#958](https://github.com/alfredoperez/speckit-companion/pull/958)) <!-- area: sidebar -->
 - **The viewer shows what converge found.** The overview draws each converge pass, ==the tasks it added== or a clean finish, with a matching footer action. ([#944](https://github.com/alfredoperez/speckit-companion/pull/944)) <!-- area: overview -->
+- **Spec Kit projects are offered Companion.** Opening a Spec Kit project without Companion's extension ==offers to add it==, until you say not for that project. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->
 
 ### Fixed
+- **Upgrade follows Spec Kit's own steps.** Upgrade runs ==`specify self upgrade`, then each assistant's upgrade==, then re-adds Companion, so edited files survive. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->
 - **Answers refine the report in place.** Answering a question on a bug or idea ==edits that one report== instead of re-running the stage. ([#959](https://github.com/alfredoperez/speckit-companion/pull/959)) <!-- area: spec-viewer -->
 - **A reinstall keeps your pipeline.** Opening a project after a reinstall or update ==rebuilds its customised pipeline==, so the assistant never runs the shipped default. ([#950](https://github.com/alfredoperez/speckit-companion/pull/950)) <!-- area: pipeline -->
 - **Commands match what your project installed.** Companion spells each command ==the way Spec Kit recorded it== for your assistant, so Copilot projects get the dash names on disk. ([#948](https://github.com/alfredoperez/speckit-companion/pull/948), [#956](https://github.com/alfredoperez/speckit-companion/pull/956)) <!-- area: assistants -->

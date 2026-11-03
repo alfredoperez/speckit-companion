@@ -22,7 +22,7 @@ Two steps are the same wherever you work. The third depends on your tool.
   <CodeLine command="specify init --here --integration claude" />
 </Actions>
 
-The first command installs the GitHub build and changes your global `uv` tools. Don't use the PyPI `specify-cli`: it has no `extension` command, so step 2 fails with it.
+The first command installs the GitHub build and changes your global `uv` tools. Spec Kit's [installation guide](https://github.com/github/spec-kit/blob/main/docs/installation.md) lists the other channels, PyPI included. Any of them works as long as `specify extension --help` runs.
 
 <YouSee label="You should see">
 
@@ -186,19 +186,23 @@ Next: [the mod in Claude Code](/docs/claude-code).
 
 | Piece | How to update it |
 | --- | --- |
-| Spec Kit CLI | Run the `uv tool install` command again. `--force` replaces the build you have. |
-| Companion extension for Spec Kit | Run its `specify extension add` command again. The URL always serves the newest build, and `--force` refreshes in place. |
+| Spec Kit CLI | Run `specify self upgrade`. A CLI too old to have it takes the `uv tool install` command from step 1 again. |
+| Your assistant's Spec Kit files | Run `specify integration upgrade <assistant>` once per assistant. It stops when you edited a file it would replace, and `--force` replaces it anyway. Your constitution and specs are not touched. |
+| Companion extension for Spec Kit | Run the step 2 command again. `specify extension update` skips Companion, because the catalog lists it for discovery only, so the `--from` URL is the update. |
+| Two assistants in one project | Spec Kit adds an extension for the active assistant only. After adding Companion, run `specify integration use <other assistant>`. `/speckit.companion.doctor` names any assistant still missing it. |
 | VS Code extension | Your editor updates it like any other extension. |
 | Copilot board | Copy the folder again and commit it, then accept the update under **Repository trust**. |
 | Claude Code mod | Run `claude plugin update speckit-companion@speckit-companion`, then `/reload-plugins` in an open session. |
 
-The VS Code extension offers the Companion extension for Spec Kit when it is missing or out of date. Set `speckit.companion.installPrompt` to `false` to stop those prompts.
+In VS Code, **SpecKit: Upgrade…** runs these in order: the CLI, each assistant's files, then Companion. The extension also offers the Companion extension for Spec Kit when it is missing or out of date. Set `speckit.companion.installPrompt` to `false` to stop those prompts.
 
 ## Troubleshooting
 
 | What you see | What to do |
 | --- | --- |
-| `No such command 'extension'` | You have the PyPI build. Run the [step 1](#1-get-spec-kit) install command, then add the extension again. |
+| `No such command 'extension'` | Your Spec Kit CLI is older than 0.9.5. Upgrade it, see [Update](#update), then add the extension again. |
+| `specify extension update` skips Companion | That is expected. Run the [step 2](#2-add-the-companion-extension-for-spec-kit) command again. |
+| Companion's commands vanished from one assistant after an update | Spec Kit re-added Companion for the active assistant only. Run `specify integration use <that assistant>`. |
 | Stuck on an old build of the Companion extension | Run `specify extension remove companion`, then add it again. |
 | No `/speckit.companion.*` commands | Run `specify extension list` from the repo root, not your home directory. Then reload the window, or start a new session, so your assistant re-reads its commands. |
 | VS Code: Living Specs still asks you to install Companion | The install went somewhere other than this workspace. Run step 2 again from this project's root. |

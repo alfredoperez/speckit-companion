@@ -7,6 +7,9 @@ import { promisify } from 'util';
 import { CONTEXT_KEYS, setContextKey } from '../core/utils/contextKeys';
 import { getConfiguredSpecKitAgent, specKitInitAgentArgs, SpecKitAgentFlag } from './specKitAgent';
 import { runInTerminal } from '../core/utils/terminalUtils';
+import { isCompanionInstalled } from '../features/settings/companionPresetReconciler';
+import { buildInstallCommand } from './specKitExtensionInstall';
+import { CLI_UPGRADE_COMMAND, installedAgents, projectUpgradeCommands, specifyVersion } from './specKitUpgrade';
 
 const execAsync = promisify(exec);
 
@@ -194,12 +197,12 @@ export class SpecKitDetector {
     }
 
     /**
-     * Upgrade SpecKit CLI to latest version
+     * Upgrade SpecKit CLI the way spec-kit documents it
      */
     async upgradeCli(): Promise<void> {
         const terminal = vscode.window.createTerminal('Upgrade SpecKit CLI');
         terminal.show();
-        await runInTerminal(terminal, 'uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git');
+        await runInTerminal(terminal, CLI_UPGRADE_COMMAND);
 
         const selection = await vscode.window.showInformationMessage(
             'Upgrading SpecKit CLI... Reload window after upgrade completes.',
@@ -226,47 +229,43 @@ export class SpecKitDetector {
     }
 
     /**
-     * Upgrade project files to latest SpecKit version
+     * Upgrade each agent's files with `specify integration upgrade`, then re-add Companion.
+     * A CLI without that command falls back to re-running init.
      */
-    async upgradeProject(): Promise<void> {
-        const workspaceFolder = getProjectRootUri();
-        if (!workspaceFolder) {
-            vscode.window.showErrorMessage('No workspace folder open');
-            return;
+    private async projectUpgradeSteps(root: string, cliHasIntegrationUpgrade: boolean): Promise<string[]> {
+        if (!cliHasIntegrationUpgrade) {
+            return [initCommand('specify init --here --force', await this.detectAgentFlag())];
         }
-
-        const agentFlag = await this.detectAgentFlag();
-        const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit Project', cwd: workspaceFolder });
-        terminal.show();
-        await runInTerminal(terminal, initCommand('specify init --here --force', agentFlag));
-
-        const selection = await vscode.window.showInformationMessage(
-            'Upgrading project files... Reload window after upgrade completes.',
-            'Reload Window'
-        );
-
-        if (selection === 'Reload Window') {
-            vscode.commands.executeCommand('workbench.action.reloadWindow');
-        }
+        const companion = isCompanionInstalled(root) ? [buildInstallCommand({ force: true })] : [];
+        return [...projectUpgradeCommands(installedAgents(root)), ...companion];
     }
 
-    /**
-     * Upgrade both CLI and project files
-     */
+    async upgradeProject(): Promise<void> {
+        await this.runUpgrade('Upgrade SpecKit Project', 'Upgrading project files...', async root =>
+            this.projectUpgradeSteps(root, (await specifyVersion())?.integrationUpgrade === true));
+    }
+
     async upgradeAll(): Promise<void> {
+        // The upgraded CLI has `integration upgrade` whatever the installed one had.
+        await this.runUpgrade('Upgrade SpecKit (All)', 'Upgrading SpecKit CLI and project files...', async root =>
+            [CLI_UPGRADE_COMMAND, ...(await this.projectUpgradeSteps(root, true))]);
+    }
+
+    private async runUpgrade(name: string, message: string, steps: (root: string) => Promise<string[]>): Promise<void> {
         const workspaceFolder = getProjectRootUri();
-        if (!workspaceFolder) {
+        const root = getProjectRoot();
+        if (!workspaceFolder || !root) {
             vscode.window.showErrorMessage('No workspace folder open');
             return;
         }
 
-        const terminal = vscode.window.createTerminal({ name: 'Upgrade SpecKit (All)', cwd: workspaceFolder });
+        const command = (await steps(root)).join(' && ');
+        const terminal = vscode.window.createTerminal({ name, cwd: workspaceFolder });
         terminal.show();
-        await runInTerminal(terminal, 'uv tool install specify-cli --force --from git+https://github.com/github/spec-kit.git && ' +
-            initCommand('specify init --here --force', '--integration'));
+        await runInTerminal(terminal, command);
 
         const selection = await vscode.window.showInformationMessage(
-            'Upgrading SpecKit CLI and project files... Reload window after upgrade completes.',
+            `${message} Reload window after upgrade completes.`,
             'Reload Window'
         );
 

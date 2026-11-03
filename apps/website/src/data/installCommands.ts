@@ -10,5 +10,5 @@ export const OPEN_IN_VSCODE = 'vscode:extension/alfredoperez.speckit-companion';
 export const COMPANION_COMMAND =
   'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
 
-// The stock PyPI specify-cli has no `extension` command; this build does.
+// The GitHub build of specify-cli; PyPI is an official channel too.
 export const SOURCE_CLI = 'uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force';

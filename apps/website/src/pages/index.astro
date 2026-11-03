@@ -23,19 +23,11 @@ import CodeLine from '../components/CodeLine.astro';
 import CourseSignup from '../components/CourseSignup.astro';
 import SoonChip from '../components/SoonChip.astro';
 import manifest from '../../../../content/media/manifest.json';
+import { COMPANION_COMMAND as INSTALL_COMMAND, SOURCE_CLI } from '../data/installCommands';
 
 const MARKETPLACE = 'https://marketplace.visualstudio.com/items?itemName=alfredoperez.speckit-companion';
 const OPEN_IN_VSCODE = 'vscode:extension/alfredoperez.speckit-companion';
 const METHODOLOGY = '/docs/steps/#stock-or-companion-measured';
-
-// The full --from URL form, verbatim. The short catalog form does not work:
-// the extension is not listed in the spec-kit catalog.
-const INSTALL_COMMAND =
-  'specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force';
-
-// The stock PyPI specify-cli has no `extension` subsystem; this source build does.
-const SOURCE_CLI =
-  'uv tool install specify-cli --from git+https://github.com/github/spec-kit.git --force';
 
 type Feature = {
   id: string;
@@ -363,7 +355,7 @@ type InstallAction =
 type InstallStep = { title: string; optional?: boolean; sub: string; actions: InstallAction[] };
 
 const SPEC_KIT_SUB =
-  'GitHub’s toolkit for spec-driven development. The stock PyPI `specify-cli` has no `extension` command, so use this build.';
+  'GitHub’s toolkit for spec-driven development, installed from GitHub.';
 
 const companionStep: InstallStep = {
   title: 'Add the Companion extension for Spec Kit',

@@ -24,7 +24,7 @@ import { validateWorkflowsOnActivation, registerWorkflowConfigChangeListener } f
 
 // SpecKit CLI integration
 import { SpecKitDetector, UpdateChecker, registerCliCommands, registerUtilityCommands, registerSpecKitExtensionInstallCommands } from './speckit';
-import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge } from './speckit/companionUpdateNudge';
+import { createCompanionUpdateStatusBar, maybeShowCompanionUpdateNudge, maybeOfferCompanionInstall } from './speckit/companionUpdateNudge';
 import { refreshCompanionGap, type CompanionGap } from './speckit/companionVersionGap';
 import { noteInstallLanded, onDidDismissInstallPrompt } from './speckit/specKitExtensionInstall';
 import { isCompanionInstalled } from './features/settings/companionPresetReconciler';
@@ -395,6 +395,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const activationGap = onCompanionFilesChanged();
             if (activationGap) {
                 maybeShowCompanionUpdateNudge(context, activationGap);
+                maybeOfferCompanionInstall(context, activationGap, root);
             }
             // Change events only for the two version files: an install writes hundreds of files under `companion/**`.
             const companionRefresh = trailing(() => {
