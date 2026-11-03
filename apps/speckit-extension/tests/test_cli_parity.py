@@ -38,6 +38,7 @@ MATRIX: list[tuple[str, list[str]]] = [
     ("finish", ["--step", "plan", "--finish", "--by", "ai"]),
     ("finish-substep", ["--step", "plan", "--substep", "research", "--finish", "--by", "ai"]),
     ("advance", ["--step", "plan", "--advance", "--by", "ai"]),
+    ("fold", ["--fold", "plan,tasks", "--by", "extension"]),
     ("set-one", ["--set", "size=normal"]),
     ("set-many", ["--set", "size=normal", "--set", "intent=ship it"]),
     ("set-protected", ["--set", "status=completed"]),

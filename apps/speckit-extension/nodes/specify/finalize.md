@@ -32,11 +32,8 @@ python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-d
 ```
 You may also read the matched specs into context (best-effort), but the recorder is the reliable write. Same contract as the load step: a missing config, resolver, or spec file is a silent no-op that never blocks the fold.
 
-**Fast-path lifecycle fold (simple mode only).** When `verdict == "simple"`, record the folded `plan` and `tasks` steps so the history-driven panels read them as satisfied-by-fast-path and the spec lands ready for implement. These are real lifecycle boundaries, stamped like every other trusted step (**`--by extension`, step-level, no substep**). Run them **in order, after** the specify completion above. Do not hand-write them, and do not run them for a `normal` verdict:
+**Fast-path lifecycle fold (simple mode only).** When `verdict == "simple"`, record the folded `plan` and `tasks` steps so the history-driven panels read them as satisfied-by-fast-path and the spec lands ready for implement. One call, **after** the specify completion above, writes all four boundaries in order (plan start and complete, tasks start and complete) in a single write, so the fold lands whole or not at all. It is idempotent. Do not hand-write the boundaries, and do not run it for a `normal` verdict:
 ```bash
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step plan  --kind start    --by extension
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step plan  --kind complete --by extension
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --kind start    --by extension
-python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step tasks --kind complete --status ready-to-implement --by extension
+python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --fold plan,tasks --by extension
 ```
 After the fold, the spec sits at the **tasks** step with `status: ready-to-implement`; the developer triggers implement next. Do **not** write a `completed` status: the final completed gate stays a user action.

@@ -28,7 +28,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import sys
 from pathlib import Path
 
@@ -144,7 +144,7 @@ def _plain_step_write(args, capture_mode: bool) -> bool:
     return not (
         capture_mode or args.set_pairs or args.living_specs or args.living_spec_skips
         or args.fold_living_spec or args.tasks_file or args.task or args.close_task
-        or args.mark_complete or args.finish or args.advance or args.materialize
+        or args.mark_complete or args.finish or args.advance or args.materialize or args.fold
     )
 
 
@@ -157,6 +157,17 @@ def _unscoped_specify_on_finished_spec(args, feature_dir: Path, capture_mode: bo
         return False
     log = canonical_log(read_ctx(feature_dir / ".spec-context.json"))
     return _has_complete(log, "specify")
+
+
+def _note_working_branch(ctx: dict, feature_dir: Path) -> None:
+    # `branch` is frozen at the first write, which lands before the feature branch exists; a step start records where the work moved to.
+    # Asked of the spec's own folder, never the fallback repo: a spec outside git has no working branch to record.
+    checked_out = _git_branch(feature_dir)
+    if checked_out and checked_out != "HEAD":
+        if checked_out == ctx.get("branch"):
+            ctx.pop("workingBranch", None)
+        else:
+            ctx["workingBranch"] = checked_out
 
 
 def update_context(
@@ -185,14 +196,8 @@ def update_context(
 
     log = canonical_log(ctx)
     fill_required(ctx, feature_dir, branch)
-    # `branch` is frozen at the first write, which lands before the feature branch exists; a step start records where the work moved to.
-    # Asked of the spec's own folder, never the fallback repo: a spec outside git has no working branch to record.
-    checked_out = _git_branch(feature_dir) if kind == "start" else None
-    if checked_out and checked_out != "HEAD":
-        if checked_out == ctx.get("branch"):
-            ctx.pop("workingBranch", None)
-        else:
-            ctx["workingBranch"] = checked_out
+    if kind == "start":
+        _note_working_branch(ctx, feature_dir)
 
     # A start that lands after its step already finished is late, not a re-open.
     late_start = kind == "start" and substep is None and _has_complete(log, step)
@@ -304,6 +309,50 @@ def journal_advance(feature_dir: Path, step: str, by: str) -> Path | None:
         else:
             ctx["status"] = completed_status
             ctx["currentStep"] = step
+    commit_log(ctx, log)
+    atomic_write(target, ctx)
+    return target
+
+
+FOLD_BOUNDARIES = (("plan", "start"), ("plan", "complete"), ("tasks", "start"), ("tasks", "complete"))
+
+
+def fold_plan_tasks(feature_dir: Path, by: str) -> Path | None:
+    """Append the missing plan/tasks boundaries in order, 1 ms apart, in one write."""
+    target = feature_dir / ".spec-context.json"
+    opened = _open_ctx_or_none(feature_dir, "the plan/tasks fold")
+    if opened is None:
+        return None
+    ctx, log, _branch = opened
+    if _is_more_advanced(ctx, "tasks"):
+        print(
+            f"[companion] {target} already at currentStep={ctx.get('currentStep')} / "
+            f"status={ctx.get('status')}; not folding plan and tasks.",
+            file=sys.stderr,
+        )
+        return None
+    present = [
+        _has_step_start(log, step) if kind == "start" else _has_complete(log, step)
+        for step, kind in FOLD_BOUNDARIES
+    ]
+    if present != sorted(present, reverse=True):
+        print(
+            f"[companion] {target} holds plan/tasks boundaries out of order; not folding.",
+            file=sys.stderr,
+        )
+        return None
+    missing = [b for b, there in zip(FOLD_BOUNDARIES, present) if not there]
+    if not missing and (ctx.get("currentStep"), ctx.get("status")) == ("tasks", "ready-to-implement"):
+        return target
+    if missing and missing[0][1] == "start":
+        _note_working_branch(ctx, feature_dir)
+    stamp = datetime.now(timezone.utc)
+    for step, kind in missing:
+        at = stamp.strftime("%Y-%m-%dT%H:%M:%S.") + f"{stamp.microsecond // 1000:03d}Z"
+        log.append({"step": step, "substep": None, "kind": kind, "by": by, "at": at})
+        stamp += timedelta(milliseconds=1)
+    ctx["currentStep"] = "tasks"
+    ctx["status"] = "ready-to-implement"
     commit_log(ctx, log)
     atomic_write(target, ctx)
     return target
@@ -447,6 +496,11 @@ def _main() -> int:
              "clarify/analyze record only the finish (no status change).",
     )
     parser.add_argument(
+        "--fold", default=None, metavar="plan,tasks",
+        help="A simple spec's fast path: record plan start, plan complete, tasks start and "
+             "tasks complete (ready-to-implement) in order, in one write. Idempotent.",
+    )
+    parser.add_argument(
         "--did", default=None,
         help="With --task: a one-line summary of what the task did, written to "
              "task_summaries.<id>.did (the Activity panel's Tasks card).",
@@ -556,6 +610,12 @@ def _main() -> int:
     )
     args = parser.parse_args()
 
+    if args.fold is not None and args.fold != "plan,tasks":
+        msg = f"--fold takes exactly 'plan,tasks'; got {args.fold!r}."
+        print(f"[companion] {msg}", file=sys.stderr)
+        _record_outcome(False, msg)
+        return 2
+
     # Best-effort guard: a non-canonical step is a no-op, never a host failure.
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
@@ -567,7 +627,7 @@ def _main() -> int:
     # `--feature-dir` if it was given; the resolved one is not bound until later,
     # and a project's own steps are discoverable from either.
     steps_here = known_steps(args.feature_dir)
-    if not args.tasks_file and not args.task and not args.close_task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.living_spec_skips and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not capture_mode and (args.step == "done" or args.step not in steps_here):
+    if not args.tasks_file and not args.task and not args.close_task and not args.mark_complete and not args.set_pairs and not args.living_specs and not args.living_spec_skips and not args.fold_living_spec and not args.materialize and not args.finish and not args.advance and not args.fold and not capture_mode and (args.step == "done" or args.step not in steps_here):
         msg = (f"Skipping: '{args.step}' is not a step this project has "
                f"({', '.join(sorted(steps_here))}).")
         print(f"[companion] {msg}", file=sys.stderr)
@@ -631,7 +691,7 @@ def _main() -> int:
 
     # `--kind` defaults to "start", so gating on it alone let every lifecycle
     # flag past: --advance --at wrote nothing but exited 0.
-    _lifecycle_other = bool(args.advance or args.finish or args.materialize
+    _lifecycle_other = bool(args.advance or args.finish or args.fold or args.materialize
                             or args.mark_complete or args.tasks_file or args.task
                             or args.close_task)
     if args.at and (args.kind != "start" or _lifecycle_other):
@@ -765,7 +825,7 @@ def _main() -> int:
     # stops every handoff, and the call that completes the spec, paying a second
     # round-trip just to pin `workflow=companion`. Every OTHER capture flag still
     # wins, because those do write history and then the ordering would matter.
-    lifecycle = args.advance or args.finish or args.mark_complete
+    lifecycle = args.advance or args.finish or args.fold or args.mark_complete
     set_only = bool(args.set_pairs) and not (
         capture_mode or args.living_specs
         or args.living_spec_skips or args.fold_living_spec
@@ -781,7 +841,7 @@ def _main() -> int:
                 ("--tasks-file", args.tasks_file), ("--task", args.task),
                 ("--close-task", args.close_task),
                 ("--materialize", args.materialize), ("--mark-complete", args.mark_complete),
-                ("--finish", args.finish), ("--advance", args.advance),
+                ("--finish", args.finish), ("--advance", args.advance), ("--fold", args.fold),
             ) if given
         ]
         if skipped:
@@ -832,6 +892,8 @@ def _main() -> int:
             target = journal_finish(feature_dir, args.step, args.by, args.substep)
         elif args.advance:
             target = journal_advance(feature_dir, args.step, args.by)
+        elif args.fold:
+            target = fold_plan_tasks(feature_dir, args.by)
         elif args.materialize:
             target = materialize_log(feature_dir, args.by)
         elif args.close_task:
@@ -866,10 +928,10 @@ def _main() -> int:
     # from the trace file afterwards, which is the trace file's whole job.
     _record_outcome(target is not None, _DECLINED)
 
-    closes_plan = args.step == "plan" and not args.substep and (
+    closes_plan = bool(args.fold) or (args.step == "plan" and not args.substep and (
         args.finish or args.advance
         or not (args.mark_complete or args.materialize or args.close_task or args.task or args.tasks_file)
-        and args.kind == "complete")
+        and args.kind == "complete"))
     if target is not None and closes_plan:
         try:
             record_plan_check(feature_dir)
@@ -884,6 +946,8 @@ def _main() -> int:
             print(f"[companion] Journaled {_label} finish in {target} (by={args.by})")
         elif args.advance:
             print(f"[companion] Advanced {args.step} in {target} (by={args.by})")
+        elif args.fold:
+            print(f"[companion] Folded plan and tasks in {target} (status=ready-to-implement, by={args.by})")
         elif args.materialize:
             print(f"[companion] Materialized append-log into {target}")
         elif args.close_task:
@@ -916,6 +980,7 @@ _OP_FLAGS = (
     ("--fold-living-spec", "fold-living-spec"),
     ("--finish", "finish"),
     ("--advance", "advance"),
+    ("--fold", "fold"),
 )
 
 _CAPTURE_FLAGS = (
