@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Fixed
-- **A small spec's plan and tasks land together.** When specify fast-tracks a small change, plan and tasks are now recorded in one write instead of four separate steps, so a run can no longer stop halfway and leave plan started but never finished. <!-- area: run-record -->
+- **A small spec's plan and tasks land together.** When specify fast-tracks a small change, plan and tasks are now recorded in one write instead of four separate steps, so a run can no longer stop halfway and leave plan started but never finished. ([#936](https://github.com/alfredoperez/speckit-companion/pull/936)) <!-- area: run-record -->
 
 ## [0.25.0] - 2026-10-13
 
