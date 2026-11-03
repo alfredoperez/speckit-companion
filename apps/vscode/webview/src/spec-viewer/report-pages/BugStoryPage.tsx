@@ -6,6 +6,7 @@ const LEADS: Record<BugLead, string> = {
     'fixed-untested': 'Fixed, not tested yet.',
     verified: 'Fixed and verified.',
     'test-failed': 'The fix did not hold.',
+    'test-partial': 'Some checks could not run, so the fix is not confirmed yet.',
     'test-unclear': 'Tested, result unclear.',
     closed: 'Closed without a fix.',
     'in-review': 'Assessed, waiting for your review.',

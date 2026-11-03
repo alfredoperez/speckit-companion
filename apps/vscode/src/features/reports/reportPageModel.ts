@@ -8,6 +8,7 @@ export type BugLead =
     | 'verified'
     | 'fixed-untested'
     | 'test-failed'
+    | 'test-partial'
     | 'test-unclear'
     | 'assessed';
 
@@ -106,5 +107,7 @@ export interface IdeaDecision {
 
 export interface ReportNav {
     kind: 'bug' | 'idea';
+    /** Colours the header badge when the bug is waiting for review or back in To fix. */
+    badgeTone?: 'review' | 'to-fix';
     page?: BugStory | IdeaDecision;
 }

@@ -297,6 +297,12 @@ describe('BugStoryPage', () => {
 describe('BugStoryPage with a spec-kit run and report freshness', () => {
     const SEARCH = path.join(FIXTURES, 'report-pages/.specify/bugs/search-ignores-case');
 
+    it('headlines a partial test as unconfirmed, not as a failed fix', () => {
+        const lead = renderPage(storyOf(SEARCH)).querySelector('.rp-lead')?.textContent;
+        expect(lead).toBe('Some checks could not run, so the fix is not confirmed yet.');
+        expect(renderPage(storyOf(DISCOUNT)).querySelector('.rp-lead')?.textContent).toBe('The fix did not hold.');
+    });
+
     it('shows a skipped check as its own chip', () => {
         const page = renderPage(storyOf(SEARCH));
         const skipped = page.querySelector('.rp-tone--skipped');

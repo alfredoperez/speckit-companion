@@ -10,7 +10,7 @@ import {
     BugVerdict,
 } from '../bugs/bugValues';
 import { ReportDoc, fencedBlocks, findSection, parseItems, parseReportDoc, parseTable, sectionProse } from './reportDoc';
-import { EngineRun, formatSeconds, gateLabel } from '../bugs/engineRuns';
+import { EngineRun, formatSeconds, gateLabel } from '../bugs/engineFormat';
 import type { Freshness } from '../bugs/bugFreshness';
 import type { BugEngineView, BugLead, BugMeta, BugReportName, BugStep, BugStory, ChangedFile, CheckRow, DiffBlock, EngineStepView } from './reportPageModel';
 import { knownValue, parseReportHeader } from './reportValues';
@@ -144,6 +144,7 @@ function leadOf(
     if (stale) return 'stale';
     if (hasTest) {
         if (testResult === 'verified') return 'verified';
+        if (testResult === 'partial') return 'test-partial';
         return testResult ? 'test-failed' : 'test-unclear';
     }
     if (hasFix) return fixStatus === 'not-applied' ? 'assessed' : 'fixed-untested';

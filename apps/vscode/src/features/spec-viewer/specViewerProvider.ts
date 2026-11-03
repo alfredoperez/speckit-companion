@@ -962,7 +962,7 @@ export class SpecViewerProvider {
       undefined,     // assistantName
       false,         // hasTerminal
       report?.actions ?? [],
-      report ? { kind: report.kind, page } : { kind: reportSet === "ideas" ? "idea" : "bug" },
+      report ? { kind: report.kind, page, ...(report.badgeTone && { badgeTone: report.badgeTone }) } : { kind: reportSet === "ideas" ? "idea" : "bug" },
     );
 
     this.outputChannel.appendLine(

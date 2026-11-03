@@ -34,11 +34,11 @@ describe('buildBugStory', () => {
             expect(buildBugStory({ assessment, fix })?.lead).toBe('fixed-untested');
         });
 
-        it('is test-failed when the test report says failed or partial', () => {
+        it('is test-failed when the test report says failed, and test-partial when it says partial', () => {
             const discount = texts(DISCOUNT);
             expect(buildBugStory(discount)?.lead).toBe('test-failed');
             const partial = discount.test.replace('**Result**: failed', '**Result**: partial');
-            expect(buildBugStory({ ...discount, test: partial })?.lead).toBe('test-failed');
+            expect(buildBugStory({ ...discount, test: partial })?.lead).toBe('test-partial');
         });
 
         it('is test-unclear when the test result is not recognised', () => {
@@ -345,6 +345,11 @@ describe('buildBugStory with a spec-kit run and report freshness', () => {
         expect(story?.lead).toBe('verified');
         expect(story?.unknownFreshness).toEqual(['fix', 'test']);
         expect(story?.stale).toBeUndefined();
+    });
+
+    it('says a partial test is unconfirmed, and keeps the failed wording for a failed one', () => {
+        expect(buildBugStory(texts(SEARCH))?.lead).toBe('test-partial');
+        expect(buildBugStory(texts(DISCOUNT))?.lead).toBe('test-failed');
     });
 
     it('reads a skipped check as its own result', () => {

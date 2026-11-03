@@ -1,31 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import type { EngineRun, EngineStep, EngineStepState } from './engineFormat';
 
-export const WORKFLOW_RUNS_DIR = path.join('.specify', 'workflows', 'runs');
+export { formatSeconds, gateLabel } from './engineFormat';
+export type { EngineRun, EngineStep, EngineStepState } from './engineFormat';
+
+// A plain string: bugStory pulls this module into the webview bundle, where `path` is not Node's.
+export const WORKFLOW_RUNS_DIR = '.specify/workflows/runs';
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
-
-export type EngineStepState = 'done' | 'paused' | 'failed' | 'running';
-
-export interface EngineStep {
-    id: string;
-    state: EngineStepState;
-    gate: boolean;
-    /** Whole seconds between the step starting and finishing; absent while it runs or waits. */
-    seconds?: number;
-}
-
-export interface EngineRun {
-    runId: string;
-    workflowId: string;
-    slug: string;
-    status: string;
-    steps: EngineStep[];
-    /** Seconds the engine spent in steps that finished, not counting a wait at a gate. */
-    workSeconds: number;
-    /** The gate the run is waiting at, when it is paused. */
-    pausedAt?: string;
-}
 
 function readJson(filePath: string): unknown {
     try {
@@ -185,18 +168,4 @@ export function readEngineRuns(workspaceRoot: string, slugs?: ReadonlySet<string
     const runs = new Map<string, EngineRun>();
     for (const [slug, { stamp: _stamp, folderTime: _folderTime, ...run }] of found) runs.set(slug, run);
     return runs;
-}
-
-/** "39s", "1m 48s", "1h 02m". */
-export function formatSeconds(seconds: number): string {
-    const whole = Math.max(0, Math.round(seconds));
-    if (whole < 60) return `${whole}s`;
-    const minutes = Math.floor(whole / 60);
-    if (minutes < 60) return `${minutes}m ${String(whole % 60).padStart(2, '0')}s`;
-    return `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}m`;
-}
-
-/** "review" for `review-assessment`: the first word of the step id. */
-export function gateLabel(stepId: string): string {
-    return stepId.split(/[-_]/)[0] || stepId;
 }

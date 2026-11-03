@@ -518,6 +518,18 @@ body[data-spec-status="completed"] .spec-badge {
     font-weight: 700;
 }
 
+/* A bug waiting for review marks with the review hue; one back in To fix takes the warning wash. */
+.spec-badge--report-review {
+    background: color-mix(in srgb, var(--review) 12%, transparent);
+    color: var(--review-ink);
+    border-color: color-mix(in srgb, var(--review) 40%, transparent);
+}
+
+.spec-badge--report-to-fix {
+    background: var(--warning-subtle);
+    color: var(--warning);
+}
+
 /* Active — subtle accent hint so a live working spec reads distinct from
    the unstyled default / DRAFT / ARCHIVED neutrals, without competing with
    the in-progress tier. */

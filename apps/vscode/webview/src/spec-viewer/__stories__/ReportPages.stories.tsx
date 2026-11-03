@@ -100,6 +100,7 @@ const SETS: Record<ReportFixture['set'], SetShape> = {
 interface Panel {
     title: string;
     badge?: string;
+    badgeTone?: 'review' | 'to-fix';
     actions: ReportAction[];
     kind: ReportNav['kind'];
     defaultDocument: string;
@@ -140,7 +141,11 @@ function readPanel(fixture: ReportFixture): Panel {
         );
         return {
             title,
-            badge: testResult ?? fixStatus ?? verdict,
+            ...(state === 'in-review'
+                ? { badge: 'waiting for your review', badgeTone: 'review' as const }
+                : stale
+                  ? { badge: 'to fix', badgeTone: 'to-fix' as const }
+                  : { badge: testResult ?? fixStatus ?? verdict }),
             actions,
             kind: 'bug',
             defaultDocument: page ? 'story' : stages[0] ?? 'assessment',
@@ -208,7 +213,7 @@ function hostState(fixture: ReportFixture, documentType: string): { nav: NavStat
         activityPanelEnabled: false,
         landing: 'document',
         ...(panel.actions.length > 0 ? { reportActions: panel.actions } : {}),
-        report: { kind: panel.kind, page },
+        report: { kind: panel.kind, page, ...(panel.badgeTone && { badgeTone: panel.badgeTone }) },
     });
     return { nav, content: (doc.exists && fixture.texts[doc.type]) || '' };
 }
