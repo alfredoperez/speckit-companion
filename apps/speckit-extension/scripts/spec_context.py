@@ -18,6 +18,14 @@ import sys
 from pathlib import Path
 
 
+#: Where the pipeline build leaves resolved templates; the shipped doctor reads it too.
+BUILT_TEMPLATES_REL = os.path.join(".specify", "companion", "built")
+STEP_TEMPLATES = {
+    "specify": "spec-template.md",
+    "plan": "plan-template.md",
+    "tasks": "tasks-template.md",
+}
+
 # Canonical vocab (mirrors src/core/types/specContext.ts). Kept here only to
 # reject the legacy terminal step and to avoid regressing an advanced spec.
 CANONICAL_STEPS = {"specify", "clarify", "plan", "tasks", "analyze", "implement", "converge"}

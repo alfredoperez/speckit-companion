@@ -56,7 +56,6 @@ from _command_parts import (  # noqa: E402
 manifest_mod = importlib.import_module("manifest")
 
 CONFIG_REL = os.path.join(".specify", "companion.yml")
-TEMPLATES_REL = os.path.join(".specify", "templates")
 FRAGMENTS_REL = os.path.join(".specify", "companion", "fragments")
 #: A project's own node files, which a `type: node` hook may name by id.
 USER_NODES_REL = os.path.join(".specify", "companion", "nodes")
@@ -473,26 +472,38 @@ def plan_build(config: dict) -> tuple[dict, list]:
 
 
 def plan_templates(config: dict, project_root: str) -> dict:
-    """Resolve every template a project asked to change. `{command: (name, text, sections)}`.
+    """Resolve every template a project asked to change. `{command: (name, text, sections, whole)}`.
 
     Raises before anything is written when a section named in the configuration
     is not in the template, or names a fragment the project has not written — a
     template override that quietly does nothing is the same silence as a hook
     that never fires.
     """
-    templates_dir = os.path.join(project_root, TEMPLATES_REL)
     fragments_dir = os.path.join(project_root, FRAGMENTS_REL)
     resolved = {}
     for command in decomposed_commands():
         try:
-            name, text, changed = template_render.resolve(
-                command, config, templates_dir, fragments_dir
+            name, text, changed, whole = template_render.resolve(
+                command, config, project_root, fragments_dir
             )
         except template_render.TemplateError as err:
             raise BuildError(str(err)) from err
         if name and text is not None:
-            resolved[command] = (name, text, changed)
+            resolved[command] = (name, text, changed, whole)
     return resolved
+
+
+def _remove_legacy_copies(project: str) -> None:
+    legacy = os.path.join(project, template_render.LEGACY_BUILT_REL)
+    for name in template_render.DEFAULT_TEMPLATE_BY_COMMAND.values():
+        try:
+            os.remove(os.path.join(legacy, name))
+        except OSError:
+            pass
+    try:
+        os.rmdir(legacy)
+    except OSError:
+        pass
 
 
 def _description(command: str) -> str:
@@ -535,8 +546,8 @@ def render(command: str, entry: dict, template=None) -> str:
     # template sat on disk read by nothing. The note goes above the first node
     # that writes the document, where the shape is about to be used.
     if template:
-        name, _text, changed = template
-        shape = template_render.render_shape_note(name, changed)
+        name, _text, changed, whole = template
+        shape = template_render.render_shape_note(name, changed, whole)
         if shape:
             body = _above_first_writer(body, command, entry["order"], shape)
     return body
@@ -677,8 +688,9 @@ def main() -> int:
 
     if templates:
         print("[build] templates resolved:")
-        for command, (name, _, changed) in sorted(templates.items()):
-            detail = f"{', '.join(changed)} replaced" if changed else "used as-is"
+        for command, (name, _, changed, whole) in sorted(templates.items()):
+            detail = (f"{', '.join(changed)} replaced" if changed
+                      else "followed whole" if whole else "used as-is")
             print(f"  {command}: {name} — {detail}")
 
     manifest = manifest_mod.build(orders={c: e["order"] for c, e in plan.items()})
@@ -705,12 +717,17 @@ def main() -> int:
         target = os.path.join(out_dir, f"speckit.companion.{command}.md")
         with open(target, "w", encoding="utf-8") as fh:
             fh.write(body)
+    template_out = os.path.join(project, template_render.BUILT_REL)
     if templates:
-        template_out = os.path.join(os.path.dirname(out_dir), "templates")
         os.makedirs(template_out, exist_ok=True)
-        for _command, (name, text, _changed) in templates.items():
+        for _command, (name, text, _changed, _whole) in templates.items():
             with open(os.path.join(template_out, name), "w", encoding="utf-8") as fh:
                 fh.write(text)
+    written = {name for name, _text, _changed, _whole in templates.values()}
+    for name in set(template_render.DEFAULT_TEMPLATE_BY_COMMAND.values()) - written:
+        if os.path.isfile(os.path.join(template_out, name)):
+            os.remove(os.path.join(template_out, name))
+    _remove_legacy_copies(project)
 
     with open(os.path.join(out_dir, ".manifest.json"), "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, indent=2)

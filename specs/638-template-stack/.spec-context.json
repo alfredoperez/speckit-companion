@@ -1,0 +1,662 @@
+{
+  "workflow": "companion",
+  "specName": "Companion steps read spec-kit's template stack",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:18:47.764Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:19:03.678Z"
+    },
+    {
+      "step": "specify",
+      "substep": "load-living-specs",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:19:03.829Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:19:32.315Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:19:32.400Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:19:32.644Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T02:19:32.819Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:19:37.688Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:22:24.636Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:22:37.468Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:22:49.275Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:23:23.259Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:23:23.539Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:23:52.476Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:23:52.593Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:23:52.908Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:23:53.007Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T02:23:59.390Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:24:25.598Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:24:42.762Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:24:50.389Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:25:50.503Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:26:10.126Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:26:19.617Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:26:19.679Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:26:19.742Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:26:19.806Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:26:19.869Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:26:36.647Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:27:05.296Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:27:17.999Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:34:35.701Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:34:35.719Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T02:34:35.803Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "14/14 tasks, 1778 python tests + gates green",
+  "coverage": {
+    "FR-001": {
+      "title": "The build reads spec, plan and tasks templates through spec-kit's resolver",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_template_stack.py"
+      ]
+    },
+    "FR-002": {
+      "title": "Configured section swaps apply to the resolved template",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_template_stack.py"
+      ]
+    },
+    "FR-003": {
+      "title": "An override or preset with nothing configured is written and followed whole",
+      "tasks": [
+        "T002",
+        "T003",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_template_stack.py"
+      ]
+    },
+    "FR-004": {
+      "title": "No customisation means no copy and byte-identical bodies",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_template_stack.py"
+      ]
+    },
+    "FR-005": {
+      "title": "The built copy lives in a project-owned folder",
+      "tasks": [
+        "T003",
+        "T005",
+        "T008"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_template_stack.py",
+        "apps/speckit-extension/tests/test_builder_flow.py"
+      ]
+    },
+    "FR-006": {
+      "title": "No resolver script falls back to the core template",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_template_stack.py"
+      ]
+    },
+    "FR-007": {
+      "title": "A resolver failure stops the build before writing",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_template_stack.py"
+      ]
+    },
+    "FR-008": {
+      "title": "The doctor reports a missing or stale built copy for an override or preset",
+      "tasks": [
+        "T009",
+        "T010",
+        "T011"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor.py::BuiltCopyCheck"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 8,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "no new rebuild trigger",
+    "plan blocks as templates (w31) and preset rename (w33) stay in the Later list"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts/template_render.py",
+    "area: apps/speckit-extension/scripts/build-pipeline.py",
+    "area: apps/speckit-extension/scripts/doctor_checks.py",
+    "constraint: never overwrite spec-kit files; unchanged project gets byte-identical bodies; build resolves before writing"
+  ],
+  "intent": "Companion follows the same spec, plan and tasks templates spec-kit resolves, and keeps its built copy out of the extension layer",
+  "workingBranch": "638-template-stack",
+  "planBlocks": [
+    "calls"
+  ],
+  "planBlocksPicked": [
+    "calls"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/638-template-stack --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 3 call paths, 11 lines. Every cited file and line checks out."
+    },
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 73.0,
+      "result": "---------------------------------------------------------------------- · Ran 1778 tests in 72.825s · FAILED (failures=5, skipped=8)",
+      "warnings": [
+        "exited 1"
+      ]
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 7 bodies match parts"
+    },
+    {
+      "what": "type check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 0.1,
+      "result": "  ✗ needed but not packaged: instruction-budget.py — a shipped command reaches it, but it is not in RUNTIME_SCRIPTS, so a real install would break ·   ✗ needed but not packaged: manifest.py — a shipped command reaches it, but it is not in RUNTIME_SCRIPTS, so a real install would break ·   ✗ needed but not packaged: template_render.py — a shipped command reaches it, but it is not in RUNTIME_SCRIPTS, so a real install would break",
+      "warnings": [
+        "exited 1"
+      ]
+    },
+    {
+      "what": "speckit-extension python suite (final)",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 72.3,
+      "result": "---------------------------------------------------------------------- · Ran 1778 tests in 72.094s · OK (skipped=8)"
+    },
+    {
+      "what": "package manifest (final)",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "build check (final)",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "type check (final)",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "staleness jest",
+      "command": "npx jest apps/vscode/tests/unit/pipeline-builder",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.6,
+      "result": "Snapshots:   0 total · Time:        2.795 s · Ran all test suites matching /apps\\/vscode\\/tests\\/unit\\/pipeline-builder/i."
+    },
+    {
+      "what": "speckit-extension python suite (after review)",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 94.5,
+      "result": "---------------------------------------------------------------------- · Ran 1781 tests in 94.331s · OK (skipped=8)"
+    },
+    {
+      "what": "package manifest (after review)",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "type check (after review)",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.8,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "call spec-kit resolve-template.sh from the build",
+      "why": "Companion then agrees with stock runs as the stack order and preset composition change",
+      "rejected": "a Python port of the lookup order"
+    },
+    {
+      "decision": "no script or no bash falls back to core; a script that fails stops the build",
+      "why": "old installs keep working, real mismatches surface",
+      "rejected": "falling back on every failure"
+    },
+    {
+      "decision": "ignore Companion's own old extension-layer copy and delete it after a successful write",
+      "why": "spec-kit ranks it above core, so a new build would read its own stale output",
+      "rejected": "deleting before resolving, which breaks write-nothing-on-failure"
+    },
+    {
+      "decision": "doctor check named built",
+      "why": "template is taken by the tasks.md shape check",
+      "rejected": "templates"
+    },
+    {
+      "decision": "the doctor judges team templates by file layout and modified times, not by calling the resolver",
+      "why": "the doctor ships in the spec-kit extension and the template code and build do not; importing them broke the packaging gate",
+      "rejected": "importing template_render and build-pipeline into the doctor, or shipping them"
+    },
+    {
+      "decision": "BUILT_TEMPLATES_REL and STEP_TEMPLATES live in spec_context.py",
+      "why": "the shipped doctor and the build-only template code need one owner for the path and names",
+      "rejected": "a second copy of the path in the doctor"
+    },
+    {
+      "decision": "a resolver failure with no core template returns no template",
+      "why": "the real resolver exits 1 when no layer has the file, which is not a broken stack",
+      "rejected": "raising, which broke every project missing a core template"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "base_template() in template_render.py asks spec-kit which template wins; build, panel, settings writer and doctor share it",
+      "key_finding": "Companion's old built copy is itself an extension layer, so the first new build would otherwise read its own stale output"
+    },
+    "tasks": {
+      "summary": "14 tasks: foundational template_render, one build phase (US1+US2), one doctor phase (US3), polish"
+    },
+    "implement": {
+      "summary": "The build, panel and settings writer read templates through spec-kit's stack; copies live in .specify/companion/built; the doctor names a team template Companion has not caught up with"
+    }
+  },
+  "approach": "One function, base_template(), runs spec-kit's resolve-template.sh and is the only way any script reads a base template. The build swaps sections on top of it, writes an override or preset whole when nothing is configured, and writes every copy to .specify/companion/built/. A new doctor check, built, compares that copy with what the build would write now.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "base_template() asks spec-kit's resolver, falls back to core without script or bash, raises on a failing resolver, ignores Companion's old layer copy; BUILT_REL added",
+      "files": [
+        "apps/speckit-extension/scripts/template_render.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "resolve() takes the project root, swaps on base_template(), returns an override or preset whole when nothing is configured",
+      "files": [
+        "apps/speckit-extension/scripts/template_render.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "render_shape_note() points at BUILT_REL and has a whole-template wording",
+      "files": [
+        "apps/speckit-extension/scripts/template_render.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "check_built tests: missing, stale, current, uncustomised, failing resolver, registered",
+      "files": [
+        "apps/speckit-extension/tests/test_doctor.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "check_built compares what a build would write now with .specify/companion/built",
+      "files": [
+        "apps/speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added stack tests: override, preset append, swaps, no-op, fallback, failing resolver, legacy cleanup",
+      "files": [
+        "apps/speckit-extension/tests/test_template_stack.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Build resolves through the project root, writes to the built folder, retires legacy copies",
+      "files": [
+        "apps/speckit-extension/scripts/build-pipeline.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Graph lists sections from the stack winner",
+      "files": [
+        "apps/speckit-extension/scripts/pipeline-graph.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Section check reads the stack winner",
+      "files": [
+        "apps/speckit-extension/scripts/config_write.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Flow and preset tests read the built folder",
+      "files": [
+        "apps/speckit-extension/tests/test_builder_flow.py",
+        "apps/speckit-extension/tests/test_presets.py",
+        "apps/speckit-extension/tests/test_template_render.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Registered built in CHECKS and examine(); doctor command lists it",
+      "files": [
+        "apps/speckit-extension/scripts/doctor.py",
+        "apps/speckit-extension/commands/speckit.companion.doctor.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Staleness also counts .specify/presets; test covers an override and a preset",
+      "files": [
+        "apps/vscode/src/features/specs/pipelineBuild.ts",
+        "apps/vscode/tests/unit/pipeline-builder/pipelineBuildState.spec.ts"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Changelog line under Unreleased / Fixed",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Python suite 1778 OK, manifest gate, build check, tsc, pipeline-builder jest all exit 0",
+      "files": [
+        "apps/speckit-extension/"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "The doctor flags a stale copy by modified time, so a template touched without a content change reads as stale until the next build.",
+      "step": "implement"
+    },
+    {
+      "note": "The doctor does not see a configured section swap whose copy is missing; only overrides and presets.",
+      "step": "implement"
+    },
+    {
+      "note": "doctor: the Phase 3 worker journaled 5 tasks in one burst (history is append-only, cannot be repaired); TRACE failures are the test suite's --help trace leak (noted on 637) and one close-task call run from the wrong directory."
+    }
+  ]
+}

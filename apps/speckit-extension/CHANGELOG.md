@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Fixed
+- **Your team's templates shape Companion runs too.** A spec, plan or tasks template you override in `.specify/templates/overrides/`, or add to with a preset, now shapes what Companion writes, the same as on a stock run. Companion keeps its own built copy under `.specify/companion/built/`, so it no longer leaks into stock runs or disappears on a reinstall, and `doctor` tells you when a template changed since the last pipeline build. ([#937](https://github.com/alfredoperez/speckit-companion/pull/937)) <!-- area: pipeline -->
 - **A small spec's plan and tasks land together.** When specify fast-tracks a small change, plan and tasks are now recorded in one write instead of four separate steps, so a run can no longer stop halfway and leave plan started but never finished. ([#936](https://github.com/alfredoperez/speckit-companion/pull/936)) <!-- area: run-record -->
 
 ## [0.25.0] - 2026-10-13

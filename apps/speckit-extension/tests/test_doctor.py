@@ -731,3 +731,68 @@ class ArtifactManifestCheck(unittest.TestCase):
 
     def test_the_check_is_registered_so_the_report_actually_runs_it(self):
         self.assertIn("artifact", doctor.CHECKS)
+
+
+class BuiltCopyCheck(unittest.TestCase):
+    """A team template Companion has not built yet is named, not silently ignored."""
+
+    @contextlib.contextmanager
+    def _project(self, source=None, built_age=None):
+        import os
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            if source is not None:
+                team = root / source
+                team.parent.mkdir(parents=True)
+                team.write_text("# Plan\n\n## Rollout\n", encoding="utf-8")
+                os.utime(team, (1000, 1000))
+            if built_age is not None:
+                copy = root / ".specify" / "companion" / "built" / "plan-template.md"
+                copy.parent.mkdir(parents=True)
+                copy.write_text("# Plan\n", encoding="utf-8")
+                os.utime(copy, (1000 + built_age, 1000 + built_age))
+            spec = root / "specs" / "001-x"
+            spec.mkdir(parents=True)
+            yield spec, root
+
+    OVERRIDE = ".specify/templates/overrides/plan-template.md"
+    PRESET = ".specify/presets/team/templates/plan-template.md"
+
+    def test_an_override_with_no_built_copy_is_named(self):
+        with self._project(self.OVERRIDE) as (spec, root):
+            status, findings = dc.check_built(spec, root=root)
+        self.assertEqual(status.state, "ran")
+        self.assertEqual([f.severity for f in findings], ["warning"])
+        self.assertIn("ignore", findings[0].title)
+
+    def test_a_preset_counts_as_a_team_template(self):
+        with self._project(self.PRESET) as (spec, root):
+            status, findings = dc.check_built(spec, root=root)
+        self.assertEqual(len(findings), 1)
+
+    def test_a_copy_older_than_the_template_is_stale(self):
+        with self._project(self.OVERRIDE, built_age=-10) as (spec, root):
+            status, findings = dc.check_built(spec, root=root)
+        self.assertEqual(len(findings), 1)
+        self.assertIn("out of date", findings[0].title)
+
+    def test_a_copy_built_after_the_template_is_clean(self):
+        with self._project(self.OVERRIDE, built_age=10) as (spec, root):
+            status, findings = dc.check_built(spec, root=root)
+        self.assertEqual((status.state, findings), ("ran", []))
+
+    def test_an_uncustomised_project_has_nothing_to_judge(self):
+        with self._project() as (spec, root):
+            status, findings = dc.check_built(spec, root=root)
+        self.assertEqual((status.state, findings), ("not-applicable", []))
+
+    def test_an_override_identical_to_core_is_not_a_team_template(self):
+        with self._project(self.OVERRIDE) as (spec, root):
+            core = root / ".specify" / "templates" / "plan-template.md"
+            core.write_text("# Plan\n\n## Rollout\n", encoding="utf-8")
+            status, findings = dc.check_built(spec, root=root)
+        self.assertEqual((status.state, findings), ("not-applicable", []))
+
+    def test_the_check_is_registered_so_the_report_actually_runs_it(self):
+        self.assertIn("built", doctor.CHECKS)

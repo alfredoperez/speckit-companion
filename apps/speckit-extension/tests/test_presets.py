@@ -208,8 +208,7 @@ class WhatEachPresetChanges(unittest.TestCase):
 
     def resolved(self, project: Project, template: str) -> str:
         """A template after the preset's fragments were spliced into it."""
-        return (project.root / ".specify" / "extensions" / "companion" / "templates"
-                / template).read_text(encoding="utf-8")
+        return (project.root / ".specify" / "companion" / "built" / template).read_text(encoding="utf-8")
 
     def test_classic_uses_the_stock_story_shape(self):
         project = self.build_with("classic")
