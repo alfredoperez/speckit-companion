@@ -26,6 +26,7 @@ Stdlib only. Safe to run anywhere `python3` is available.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 from datetime import datetime, timedelta, timezone
@@ -63,6 +64,9 @@ from spec_context import (  # noqa: E402,F401
     canonical_log,
     commit_log,
     feature_dir_from_tasks_file,
+    STEP_TEMPLATES,
+    core_template_text,
+    feature_spec_path,
     fill_required,
     pending_start_path,
     read_ctx,
@@ -394,8 +398,94 @@ def _apply_hook(args):
     return None
 
 
+#: The steps a document can show finished; converge is left to its hooks.
+STEP_DOCUMENTS = {"plan": "plan.md", "tasks": "tasks.md", "implement": "tasks.md"}
+EVENT_STEPS = ("specify", *STEP_DOCUMENTS)
+_STEP_PROMPT = re.compile(r"^\s*/speckit(?:[-.]companion)?[-.](" + "|".join(EVENT_STEPS) + r")\b")
+#: Skipped when an event changed nothing, so a turn that is not a step leaves no trace line.
+_EVENT_NOOP = False
+
+
+def _epoch(stamp: str) -> float:
+    return datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+
+
+def _apply_event(args):
+    """A runtime event's payload as the `--hook` call it stands for; an int means the call is done."""
+    global _EVENT_NOOP
+    try:
+        payload = json.loads("" if sys.stdin.isatty() else sys.stdin.read() or "{}")
+    except (OSError, ValueError):
+        payload = {}
+    if not isinstance(payload, dict):
+        payload = {}
+    if args.event == "user_prompt_submit":
+        prompt = payload.get("prompt")
+        match = _STEP_PROMPT.match(prompt) if isinstance(prompt, str) else None
+        step = match.group(1) if match else None
+        feature_dir = None
+    else:
+        feature_dir = resolve_feature_dir(_repo_root(), None)
+        last = payload.get("last_assistant_message")
+        asked = isinstance(last, str) and last.rstrip().rstrip("*_`\"') ").endswith("?")
+        step = _finished_step(feature_dir) if feature_dir is not None and not asked else None
+    if step is None:
+        _EVENT_NOOP = True
+        _record_outcome(True, None)
+        return 0
+    args.hook, args.step = ("start" if args.event == "user_prompt_submit" else "finish"), step
+    if feature_dir is not None:
+        args.feature_dir = str(feature_dir)
+    return _apply_hook(args)
+
+
+def _step_document(feature_dir: Path, step: str):
+    if step == "specify":
+        return feature_spec_path(feature_dir)
+    name = STEP_DOCUMENTS.get(step)
+    return feature_dir / name if name else None
+
+
+def _finished_step(feature_dir: Path):
+    """The open step whose work is on disk, or None: a turn ending is not a step ending."""
+    ctx = read_ctx(feature_dir / ".spec-context.json")
+    if ctx.get("status") in TERMINAL_STATUSES:
+        return None
+    log = canonical_log(ctx)
+    starts = [e for e in log if _is_step_level(e) and _entry_kind(e) == "start"
+              and e.get("step") in EVENT_STEPS and not _has_complete(log, e.get("step"))]
+    if starts:
+        step, at = starts[-1]["step"], _utc_stamp(str(starts[-1].get("at") or ""))
+    elif not _has_complete(log, "specify"):
+        step, at = "specify", _read_pending(pending_start_path(_repo_root()))
+        if at is not None and _age_s(at) > PENDING_START_MAX_AGE_S:
+            return None
+    else:
+        return None
+    doc = _step_document(feature_dir, step)
+    if at is None or doc is None or not doc.is_file() or doc.stat().st_mtime <= _epoch(at):
+        return None
+    if not _written_past_template(doc, step):
+        return None
+    if step == "implement" and not _feature_tasks_at_100(feature_dir):
+        return None
+    return step
+
+
+def _written_past_template(doc: Path, step: str) -> bool:
+    """False while the document is still spec-kit's template copy, or a spec still waits on answers."""
+    try:
+        text = doc.read_text(encoding="utf-8")
+    except (OSError, ValueError):
+        return False
+    stub = core_template_text(_repo_root(), STEP_TEMPLATES.get(step, STEP_TEMPLATES["tasks"]))
+    if stub is not None and text.strip() == stub.strip():
+        return False
+    return not (step == "specify" and "[NEEDS CLARIFICATION" in text)
+
+
 def _age_s(stamp: str) -> float:
-    return datetime.now(timezone.utc).timestamp() - datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+    return datetime.now(timezone.utc).timestamp() - _epoch(stamp)
 
 
 def _record_pending_specify_start(args) -> None:
@@ -407,7 +497,7 @@ def _record_pending_specify_start(args) -> None:
     pending.unlink(missing_ok=True)
     if _has_complete(canonical_log(read_ctx(feature_dir / ".spec-context.json")), "specify"):
         return
-    started = datetime.fromisoformat(at.replace("Z", "+00:00")).timestamp()
+    started = _epoch(at)
     if started < _born(feature_dir) - PENDING_START_MAX_AGE_S:
         return
     update_context(feature_dir, "specify", "specifying", args.by, "start", None, at)
@@ -600,6 +690,11 @@ def _main() -> int:
              "writer picks. A specify start waits outside the project for its folder.",
     )
     parser.add_argument(
+        "--event", default=None, choices=["user_prompt_submit", "stop"],
+        help="A spec-kit runtime event handler: reads the agent's payload on stdin, records "
+             "the boundary it stands for, prints nothing and always exits 0.",
+    )
+    parser.add_argument(
         "--fold", default=None, metavar="plan,tasks",
         help="A simple spec's fast path: record plan start, plan complete, tasks start and "
              "tasks complete (ready-to-implement) in order, in one write. Idempotent.",
@@ -714,7 +809,11 @@ def _main() -> int:
     )
     args = parser.parse_args()
 
-    if args.hook:
+    if args.event:
+        handled = _apply_event(args)
+        if handled is not None:
+            return handled
+    elif args.hook:
         handled = _apply_hook(args)
         if handled is not None:
             return handled
@@ -1087,6 +1186,7 @@ _OP_FLAGS = (
     ("--advance", "advance"),
     ("--fold", "fold"),
     ("--hook", "hook"),
+    ("--event", "event"),
 )
 
 _CAPTURE_FLAGS = (
@@ -1211,8 +1311,13 @@ def main() -> int:
     started = time.monotonic()
     out_buf, err_buf = io.StringIO(), io.StringIO()
     real_out, real_err = sys.stdout, sys.stderr
-    sys.stdout, sys.stderr = _Tee(real_out, out_buf), _Tee(real_err, err_buf)
-    hook = _has_flag(argv, "--hook")
+    global _EVENT_NOOP
+    _EVENT_NOOP = False
+    event = _has_flag(argv, "--event")
+    hook = event or _has_flag(argv, "--hook")
+    # An event handler's stdout reaches the model and its stderr the person, so it keeps both to the trace.
+    sys.stdout, sys.stderr = ((out_buf, err_buf) if event
+                              else (_Tee(real_out, out_buf), _Tee(real_err, err_buf)))
     try:
         code = _main()
     except SystemExit as exc:
@@ -1226,8 +1331,9 @@ def main() -> int:
         code = 1
     finally:
         sys.stdout, sys.stderr = real_out, real_err
-        _trace_call(argv, out_buf.getvalue(), err_buf.getvalue(),
-                    int((time.monotonic() - started) * 1000))
+        if not _EVENT_NOOP:
+            _trace_call(argv, out_buf.getvalue(), err_buf.getvalue(),
+                        int((time.monotonic() - started) * 1000))
     # A lifecycle hook is bookkeeping: it never fails the spec-kit command that fired it.
     return 0 if hook else code
 
