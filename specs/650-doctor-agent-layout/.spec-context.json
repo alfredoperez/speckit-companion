@@ -1,0 +1,275 @@
+{
+  "workflow": "companion",
+  "specName": "The doctor diagnoses the real agent layout",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:18:09.846Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T06:19:22.714Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:19:22.829Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T06:19:22.830Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:19:22.831Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T06:19:22.832Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:19:22.904Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:19:23.002Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:19:23.085Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:19:23.168Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:21:03.427Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:21:03.445Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T12:50:09.806Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T12:50:19.113Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Name every installed agent missing Companion",
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor_agents.py::test_it_names_the_agent_missing_companion_in_a_two_agent_project"
+      ]
+    },
+    "FR-002": {
+      "title": "Note each agent layout and folder",
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor_agents.py::test_it_says_skills_or_commands_for_each_agent"
+      ]
+    },
+    "FR-003": {
+      "title": "Warn when specify is not on PATH",
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor_agents.py::test_it_reports_the_cli_missing_from_path"
+      ]
+    },
+    "FR-004": {
+      "title": "Only installed_integrations count",
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor_agents.py::test_a_manifest_an_uninstalled_agent_left_behind_is_ignored"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 4,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "VS Code install prompt offering integration use"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts/doctor_checks.py, doctor.py",
+    "constraint: emission_sync is build-only and not packaged, so the doctor cannot import it"
+  ],
+  "intent": "The doctor shows which agents have Companion and whether the CLI is reachable",
+  "source": "#929",
+  "approach": "check_agents reads the integration manifests for each installed agent, derives its folder and layout, and checks for Companion beside the stock specify entry.",
+  "workingBranch": "650-doctor-agent-layout",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "check_agents derives each installed agent's folder and layout from its manifest",
+      "files": [
+        "apps/speckit-extension/scripts/doctor_checks.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "agents check registered and described in the doctor command",
+      "files": [
+        "apps/speckit-extension/scripts/doctor.py",
+        "apps/speckit-extension/commands/speckit.companion.doctor.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "5 tests: two agents, layouts, stale manifest, CLI on PATH, nothing to judge",
+      "files": [
+        "apps/speckit-extension/tests/test_doctor_agents.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Changelog line; Python suite, emissions, manifest, budget and changelog gate pass",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 83.5,
+      "result": "---------------------------------------------------------------------- · Ran 1836 tests in 83.327s · OK (skipped=8)"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.mark-complete.md                 0       0      0      48 · speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19"
+    },
+    {
+      "what": "changelog gate",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 1.8,
+      "result": "Snapshots:   0 total · Time:        1.091 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i."
+    },
+    {
+      "what": "speckit-extension python suite after review fixes",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 132.3,
+      "result": "---------------------------------------------------------------------- · Ran 1840 tests in 132.055s · OK (skipped=8)"
+    },
+    {
+      "what": "instruction budget after review fixes",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "speckit.companion.mark-complete.md                 0       0      0      48 · speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Read the agent layout from Spec Kit integration manifests",
+      "why": "they list the stock files Spec Kit installed per agent, so the folder and layout come from the source",
+      "rejected": "importing emission_sync, which is build-only and not packaged"
+    },
+    {
+      "decision": "Read each agent layout from the integration manifests",
+      "why": "they list the stock files spec-kit installed per agent, so the folder and layout need no table",
+      "rejected": "a second agent-folder table in the doctor"
+    },
+    {
+      "decision": "Leave the VS Code integration-use offer to the first-open install slice",
+      "why": "it is a banner change with an approved mock",
+      "rejected": "a text-only prompt now"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "VS Code install prompt offering integration use is left for the first-open install slice",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "The doctor names each agent layout, an agent missing Companion and a missing specify CLI"
+    }
+  },
+  "convergeStartedAt": "2026-11-03T12:50:09.850Z"
+}
