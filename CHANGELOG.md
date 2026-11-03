@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **The viewer shows what converge found.** The overview draws each converge pass, ==the tasks it added== or a clean finish, with a matching footer action. ([#944](https://github.com/alfredoperez/speckit-companion/pull/944)) <!-- area: overview -->
+
 ### Fixed
 - **A reinstall keeps your pipeline.** Opening a project after a reinstall or update ==rebuilds its customised pipeline==, so the assistant never runs the shipped default. ([#950](https://github.com/alfredoperez/speckit-companion/pull/950)) <!-- area: pipeline -->
 - **Commands match what your project installed.** Companion spells each command ==the way Spec Kit recorded it== for your assistant, so Copilot projects get the dash names on disk. ([#948](https://github.com/alfredoperez/speckit-companion/pull/948)) <!-- area: assistants -->

@@ -430,3 +430,42 @@ describe('StepTab — converge in flight on the percent host', () => {
         }
     });
 });
+
+describe('the +N converge badge on the Tasks item', () => {
+    const badge = (props: Partial<StepTabProps>) => {
+        const c = renderTab(baseProps({ doc: doc('tasks', true, 'Tasks'), index: 2, ...props }));
+        try {
+            return c.querySelector('.step-tab__converge')?.textContent ?? null;
+        } finally {
+            cleanup(c);
+        }
+    };
+
+    it('shows the count of tasks converge added', () => {
+        expect(badge({ convergeAdded: 3 })).toBe('+3');
+    });
+
+    it('is hidden at zero and when absent', () => {
+        expect(badge({ convergeAdded: 0 })).toBeNull();
+        expect(badge({})).toBeNull();
+    });
+
+    it('stays off every document but tasks', () => {
+        expect(badge({ doc: doc('plan', true, 'Plan'), convergeAdded: 3 })).toBeNull();
+    });
+
+    it('coexists with the stale badge', () => {
+        const c = renderTab(baseProps({
+            doc: doc('tasks', true, 'Tasks'),
+            index: 2,
+            convergeAdded: 2,
+            stalenessMap: { tasks: { isStale: true, staleReason: 'old', newerUpstream: 'plan' } },
+        }));
+        try {
+            expect(c.querySelector('.step-tab__converge')?.textContent).toBe('+2');
+            expect(c.querySelector('.stale-badge')).not.toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+});

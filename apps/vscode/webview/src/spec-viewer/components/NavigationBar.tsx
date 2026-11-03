@@ -1,5 +1,5 @@
 import type { VSCodeApi, SpecDocument } from '../types';
-import { navState, overviewAvailable, showingOverview, viewerMode } from '../signals';
+import { navState, overviewAvailable, showingOverview, viewerMode, viewerState } from '../signals';
 import { StepTab } from './StepTab';
 
 declare const vscode: VSCodeApi;
@@ -164,6 +164,7 @@ export function NavigationBar() {
                                     hasRelatedChildren={children.length > 0}
                                     runningStepIndex={runningStepIndex}
                                     isPercentHost={doc.type === percentHostType}
+                                    convergeAdded={doc.type === 'tasks' ? viewerState.value?.converge?.openAdded : undefined}
                                     onClick={handleClick}
                                 />
                                 {children.length > 0 && (

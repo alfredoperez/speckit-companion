@@ -311,3 +311,34 @@ export const LivingUndoPending: Story = {
         return <FooterActions initialSpecStatus="active" />;
     },
 };
+
+export const ConvergeFoundGaps: Story = {
+    name: 'Converge found gaps',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'implemented' });
+        viewerState.value = baseViewerState('implemented', 'converge', [
+            { id: 'archive', label: 'Archive', scope: 'spec', tooltip: 'Archive this spec' },
+            { id: 'converge', label: 'Converge', scope: 'spec', tooltip: 'Check the code against this spec' },
+            { id: 'implement-gaps', label: 'Implement 3 new tasks', scope: 'spec', tooltip: 'Build the tasks converge added to tasks.md' },
+            { id: 'open-tasks', label: 'Open tasks', scope: 'spec', tooltip: 'Read the tasks converge added' },
+        ], {
+            converge: { outcome: 'gaps', passCount: 1, passes: [{ index: 1, outcome: 'gaps', addedIds: ['T013', 'T014', 'T015'] }], addedTasks: [], openAdded: 3 },
+        });
+        return <FooterActions initialSpecStatus="implemented" />;
+    },
+};
+
+export const CompletedByCleanConverge: Story = {
+    name: 'Completed by a clean converge',
+    render: () => {
+        navState.value = mockNavState({ specStatus: 'completed' });
+        viewerState.value = baseViewerState('completed', 'converge', [
+            { id: 'archive', label: 'Archive', scope: 'spec', tooltip: 'Archive this spec' },
+            { id: 'reactivate', label: 'Reactivate', scope: 'spec', tooltip: 'Reactivate archived spec' },
+            { id: 'converge', label: 'Converge again', scope: 'spec', tooltip: 'Check the code against this spec' },
+        ], {
+            converge: { outcome: 'clean', passCount: 2, passes: [], addedTasks: [], openAdded: 0 },
+        });
+        return <FooterActions initialSpecStatus="completed" />;
+    },
+};

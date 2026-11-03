@@ -37,6 +37,7 @@ function foldAnchor(phases: string[], stepHistory: ViewerState['stepHistory'], i
 export function OverviewTiming({ state }: { state: ViewerState }) {
     const phases = phaseNames(state);
     if (phases.length === 0) return null;
+    const round = waitingRound(state.converge);
 
     const timing = state.timing;
     const complete = timing?.complete === true && timing.elapsedMs !== undefined;
@@ -55,6 +56,23 @@ export function OverviewTiming({ state }: { state: ViewerState }) {
             <div class="dossier-timing__phases" role="list">
                 {phases.map((phase, index) => {
                     const entry = state.stepHistory[phase];
+                    const pill = phase === 'converge' ? convergePill(state.converge) : null;
+                    if (pill) {
+                        return (
+                            <div
+                                key={phase}
+                                role="listitem"
+                                class={`dossier-timing__phase dossier-timing__converge is-${pill.tone}`}
+                            >
+                                {index > 0 && <span class="dossier-timing__connector" aria-hidden="true" />}
+                                <span class="dossier-timing__pill">
+                                    <LoopIcon />
+                                    <span class="dossier-timing__name">Converge</span>
+                                    <span class="dossier-timing__duration">{pill.label}</span>
+                                </span>
+                            </div>
+                        );
+                    }
                     const inFlight = entry.completedAt === null;
                     const folded = entry.folded === true;
                     const anchor = folded ? foldAnchor(phases, state.stepHistory, index) : null;
@@ -79,9 +97,130 @@ export function OverviewTiming({ state }: { state: ViewerState }) {
                         </div>
                     );
                 })}
+                {round && (
+                    <div key="implement-round" role="listitem" class="dossier-timing__phase is-waiting">
+                        <span class="dossier-timing__connector" aria-hidden="true" />
+                        <span class="dossier-timing__dot" aria-hidden="true" />
+                        <span class="dossier-timing__name">Implement</span>
+                        <span class="dossier-timing__duration">{round}</span>
+                    </div>
+                )}
             </div>
         </section>
     );
+}
+
+function plural(n: number, word: string): string {
+    return `${n} ${word}${n === 1 ? '' : 's'}`;
+}
+
+function LoopIcon() {
+    return (
+        <svg class="dossier-timing__loop" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <path d="M13 8a5 5 0 1 1-1.5-3.6" />
+            <path d="M13 2.5v2.5h-2.5" />
+        </svg>
+    );
+}
+
+type Converge = NonNullable<ViewerState['converge']>;
+
+function convergePill(c: ViewerState['converge']): { tone: 'gaps' | 'clean'; label: string } | null {
+    if (!c) return null;
+    const latest = c.passes[c.passes.length - 1];
+    if (c.outcome === 'gaps') {
+        const gaps = plural(latest.addedIds.length, 'gap');
+        return { tone: 'gaps', label: latest.durationMs !== undefined ? `${formatElapsed(latest.durationMs)} · ${gaps}` : gaps };
+    }
+    if (c.outcome === 'clean') {
+        return { tone: 'clean', label: c.passCount > 1 ? `${c.passCount} passes · clean` : 'clean' };
+    }
+    return null;
+}
+
+/** The implement round converge sent the spec back to, while its added tasks are open. */
+function waitingRound(c: ViewerState['converge']): string | null {
+    if (!c || c.outcome !== 'gaps' || c.openAdded === 0) return null;
+    const round = c.passes.filter(p => p.outcome === 'gaps').length + 1;
+    const done = c.addedTasks.length - c.openAdded;
+    return done === 0 ? `round ${round}, waiting` : `round ${round}, ${done} of ${c.addedTasks.length}`;
+}
+
+const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth'];
+
+function addedRange(ids: string[]): string {
+    if (ids.length <= 1) return ids[0] ?? '';
+    if (ids.length === 2) return `${ids[0]} and ${ids[1]}`;
+    return `${ids[0]} to ${ids[ids.length - 1]}`;
+}
+
+function passLine(p: Converge['passes'][number]): string {
+    if (p.outcome === 'gaps') return `${plural(p.addedIds.length, 'gap')}, added as ${addedRange(p.addedIds)}`;
+    if (p.outcome === 'clean') return 'nothing added';
+    if (p.outcome === 'running') return 'running';
+    return 'not recorded';
+}
+
+function completedLine(at: string, by: string): string {
+    const d = new Date(at);
+    if (Number.isNaN(d.getTime())) return `written by the ${by}`;
+    const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    return `${date} at ${time}, written by the ${by}`;
+}
+
+/** What the latest converge pass found: the tasks it added, or a clean finish. */
+export function ConvergeCard({ state }: { state: ViewerState }) {
+    const c = state.converge;
+    if (!c) return null;
+
+    if (c.outcome === 'gaps' && c.addedTasks.length > 0) {
+        const n = c.addedTasks.length;
+        return (
+            <section class="dossier-converge dossier-converge--gaps" aria-label="Converge result">
+                <p class="dossier-kicker">{`CONVERGE FOUND ${n} GAP${n === 1 ? '' : 'S'}`}</p>
+                <p class="dossier-converge__lead">
+                    Converge checked the code against the spec, plan and tasks, and added these to the end of tasks.md. The spec did not change. Implement them, and converge runs again.
+                </p>
+                <ul class="dossier-converge__tasks">
+                    {c.addedTasks.map(t => (
+                        <li key={t.id} class={t.checked ? 'is-done' : undefined}>
+                            <code>{t.id}</code>
+                            <span>{t.title}</span>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+        );
+    }
+
+    if (c.outcome === 'clean' && state.status === 'completed') {
+        const which = c.passCount > 1 ? `The ${ORDINALS[c.passCount - 1] ?? 'last'} converge pass` : 'Converge';
+        return (
+            <section class="dossier-converge dossier-converge--clean" aria-label="Converge result">
+                <p class="dossier-kicker">DONE, BY A CLEAN CONVERGE</p>
+                <p class="dossier-converge__lead">
+                    {`${which} found nothing missing, so the spec is completed.`}
+                </p>
+                <dl class="dossier-converge__passes">
+                    {c.passes.map(p => (
+                        <div key={p.index}>
+                            <dt>{`PASS ${p.index}`}</dt>
+                            <dd>{passLine(p)}</dd>
+                        </div>
+                    ))}
+                    {c.completedBy && (
+                        <div>
+                            <dt>COMPLETED</dt>
+                            <dd>{completedLine(c.completedBy.at, c.completedBy.by)}</dd>
+                        </div>
+                    )}
+                </dl>
+            </section>
+        );
+    }
+
+    return null;
 }
 
 function sizingLine(c: NonNullable<ViewerState['classification']>): string {
@@ -125,6 +264,7 @@ export function IntentSection({ state }: { state: ViewerState }) {
             {hasIntentContent && <p class="dossier-kicker">Intent</p>}
             {intent && <p class="dossier-intent__statement">{intent}</p>}
             <OverviewTiming state={state} />
+            <ConvergeCard state={state} />
             {(approach || area || classification || livingSpecsCount > 0) && (
                 <div class="dossier-intent__meta">
                     {(approach || (livingSpecs && livingSpecsCount > 0)) && (

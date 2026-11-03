@@ -402,6 +402,60 @@ export const DossierWithConverge: Story = {
     },
 };
 
+const convergeHistory: ViewerState['stepHistory'] = {
+    specify: { startedAt: '2026-11-03T10:00:00.000Z', completedAt: '2026-11-03T10:01:12.000Z', durationTrusted: true },
+    plan: { startedAt: '2026-11-03T10:01:12.000Z', completedAt: '2026-11-03T10:06:02.000Z', durationTrusted: true },
+    tasks: { startedAt: '2026-11-03T10:06:02.000Z', completedAt: '2026-11-03T10:06:24.000Z', durationTrusted: true },
+    implement: { startedAt: '2026-11-03T10:06:24.000Z', completedAt: '2026-11-03T10:24:28.000Z', durationTrusted: true },
+    converge: { startedAt: '2026-11-03T10:25:00.000Z', completedAt: '2026-11-03T10:27:31.000Z', durationTrusted: true },
+};
+
+export const DossierConvergeFoundGaps: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            status: 'implemented',
+            stepHistory: convergeHistory,
+            converge: {
+                outcome: 'gaps',
+                passCount: 1,
+                passes: [{ index: 1, outcome: 'gaps', addedIds: ['T013', 'T014', 'T015'], durationMs: 151_000 }],
+                addedTasks: [
+                    { id: 'T013', title: 'Saved filter names must be unique per user (FR-004 has no check)', checked: false },
+                    { id: 'T014', title: 'Deleting a filter that is applied clears it from the list view', checked: false },
+                    { id: 'T015', title: 'Test for SC-002: a saved filter loads in under one second', checked: false },
+                ],
+                openAdded: 3,
+            },
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
+export const DossierCleanConverge: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            status: 'completed',
+            stepHistory: convergeHistory,
+            converge: {
+                outcome: 'clean',
+                passCount: 2,
+                passes: [
+                    { index: 1, outcome: 'gaps', addedIds: ['T013', 'T014', 'T015'], durationMs: 151_000 },
+                    { index: 2, outcome: 'clean', addedIds: [], durationMs: 64_000 },
+                ],
+                addedTasks: [],
+                openAdded: 0,
+                completedBy: { at: '2026-11-03T15:42:00.000Z', by: 'extension' },
+            },
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // Log-only payload: no durable-context fields at all — the dossier renders
 // nothing above the collapsed "Run log" disclosure, which carries the work.
 export const DossierLogOnly: Story = {

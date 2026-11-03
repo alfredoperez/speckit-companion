@@ -115,6 +115,118 @@
     font-variant-numeric: normal;
 }
 
+.dossier-timing__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 999px;
+}
+
+.dossier-timing__converge.is-gaps .dossier-timing__pill {
+    background: var(--warning-subtle);
+}
+
+.dossier-timing__converge.is-clean .dossier-timing__pill {
+    background: var(--success-subtle);
+}
+
+.dossier-timing__loop {
+    flex: none;
+}
+
+.dossier-timing__converge.is-gaps .dossier-timing__loop {
+    color: var(--warning);
+}
+
+.dossier-timing__converge.is-clean .dossier-timing__loop {
+    color: var(--success);
+}
+
+.dossier-timing__phase.is-waiting .dossier-timing__dot {
+    background: transparent;
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* ── Converge result — what the latest pass found ── */
+
+.dossier-converge {
+    max-width: 72ch;
+    margin: 0 0 var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.dossier-converge--gaps .dossier-kicker {
+    color: var(--warning);
+}
+
+.dossier-converge--clean .dossier-kicker {
+    color: var(--success);
+}
+
+.dossier-converge__lead {
+    margin: var(--space-2) 0 var(--space-3);
+    color: var(--text-body);
+    line-height: 1.5;
+}
+
+.dossier-converge__tasks {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dossier-converge__tasks li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--border);
+    color: var(--text-primary);
+}
+
+.dossier-converge__tasks li.is-done span {
+    color: var(--text-body);
+    text-decoration: line-through;
+}
+
+.dossier-converge__tasks code {
+    flex: none;
+    padding: 1px 5px;
+    color: var(--text-body);
+    background: var(--bg-elevated);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.dossier-converge__passes {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+}
+
+.dossier-converge__passes > div {
+    display: contents;
+}
+
+.dossier-converge__passes dt {
+    color: var(--text-label);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+}
+
+.dossier-converge__passes dd {
+    margin: 0;
+    color: var(--text-body);
+}
+
 /* ── Intent — the reason the spec exists, set as the page's thesis ── */
 
 .dossier-intent {

@@ -24,7 +24,7 @@ function actionVariant(id: string): ButtonVariant {
     if (id === 'refine') return 'enhancement';
     // `start` is forward motion like `approve` (FORWARD_MOTION_IDS, the context
     // line) — it must carry the same emphasis, not read as a secondary action.
-    if (id === 'approve' || id === 'start' || id === 'complete' || id === 'reactivate') return 'primary';
+    if (id === 'approve' || id === 'start' || id === 'complete' || id === 'reactivate' || id === 'implement-gaps') return 'primary';
     return 'secondary';
 }
 
@@ -59,12 +59,12 @@ export function CatalogFooter({ vs, isActive, stepInFlight = false, enhancementB
     const [menuOpen, setMenuOpen] = useState(false);
 
     const visible = vs.footer;
-    const LEFT_IDS = new Set(['regenerate', 'converge']);
-    const RIGHT_IDS = new Set(['refine', 'approve', 'reactivate', 'archive', 'complete', 'start']);
+    const LEFT_IDS = new Set(['regenerate', 'converge', 'open-tasks']);
+    const RIGHT_IDS = new Set(['refine', 'approve', 'reactivate', 'archive', 'complete', 'start', 'implement-gaps']);
     // While the current step is in flight, drop the forward-motion buttons
     // (Approve / next-step `start`) — the step hasn't settled. Closure/refine
     // actions (archive / complete / reactivate / refine) are unaffected.
-    const FORWARD_MOTION_IDS = new Set(['approve', 'start']);
+    const FORWARD_MOTION_IDS = new Set(['approve', 'start', 'implement-gaps']);
     const leftActions = visible.filter((a) => LEFT_IDS.has(a.id));
     const rightActions = visible.filter(
         (a) => RIGHT_IDS.has(a.id) && !(stepInFlight && FORWARD_MOTION_IDS.has(a.id)),
@@ -92,8 +92,10 @@ export function CatalogFooter({ vs, isActive, stepInFlight = false, enhancementB
         (a) => a.id === 'approve' || a.id === 'start' || a.id === 'complete',
     );
     const settled = vs.status === 'completed' || vs.status === 'archived';
+    const openAdded = vs.converge?.openAdded ?? 0;
     let context = '';
     if (stepInFlight) context = 'Step running, actions unlock when it settles';
+    else if (openAdded > 0) context = `Converge added ${openAdded} task${openAdded === 1 ? '' : 's'}`;
     else if (settled) context = vs.status === 'archived' ? 'Archived, read-only' : 'Run complete';
     else if (forward) context = `Next: ${forward.label}`;
 

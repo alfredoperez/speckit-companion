@@ -25,6 +25,21 @@ export interface TaskCounts {
 
 /** The document's lines with fenced code blocks dropped and inline code spans blanked out. */
 export function* proseLines(content: string): Generator<string> {
+    for (const { prose } of proseLinePairs(content)) yield prose;
+}
+
+/** Each task list item with its id, checked state and title from the raw line. */
+export function taskEntries(content: string): Array<{ id: string; checked: boolean; title: string }> {
+    const out: Array<{ id: string; checked: boolean; title: string }> = [];
+    for (const { prose, raw } of proseLinePairs(content)) {
+        const id = taskId(prose);
+        if (!id) continue;
+        out.push({ id, checked: taskCheckboxMarker(prose) !== ' ', title: taskTitle(raw) ?? '' });
+    }
+    return out;
+}
+
+function* proseLinePairs(content: string): Generator<{ prose: string; raw: string }> {
     let openFence: string | null = null;
 
     for (const rawLine of content.split('\n')) {
@@ -37,7 +52,7 @@ export function* proseLines(content: string): Generator<string> {
             openFence = fence;
             continue;
         }
-        yield rawLine.replace(INLINE_CODE_PATTERN, '');
+        yield { prose: rawLine.replace(INLINE_CODE_PATTERN, ''), raw: rawLine };
     }
 }
 
@@ -49,6 +64,19 @@ export function taskCheckboxMarker(proseLine: string): string | null {
 /** The task id of a task list item (`T001`), or null when the line is not one. */
 export function taskId(proseLine: string): string | null {
     return proseLine.match(TASK_LINE_PATTERN)?.[2] ?? null;
+}
+
+/** The human description of a task list item, without id, markers or the trailing path; null when the line is not a task. */
+export function taskTitle(rawLine: string): string | null {
+    const m = rawLine.match(/^\s*[-*+]\s*\[[ xX]\]\s*(?:\*\*)?T\d+\b(?:\*\*)?(.*)$/);
+    if (!m) return null;
+    const title = m[1]
+        .replace(/\s+·\s+[^·\s]*[/.][^·]*$/, '')
+        .replace(/\[(?:P|US\d+)\]/g, '')
+        .replace(/^\s*\*\*\s*/, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    return title || null;
 }
 
 export function countTaskCheckboxes(content: string): TaskCounts {

@@ -140,6 +140,8 @@ const FOOTER_ACTION_HANDLERS: Record<
   [FooterActionIds.CONVERGE]: async (dir, deps) => {
     await vscode.commands.executeCommand(Commands.converge, deps.getInstance(dir)?.state.changeRoot || dir);
   },
+  [FooterActionIds.IMPLEMENT_GAPS]: (dir, deps) => handleImplementGaps(dir, deps),
+  [FooterActionIds.OPEN_TASKS]: (dir, deps) => handleSwitchDocument(dir, "tasks", deps),
 };
 
 /**
@@ -438,6 +440,28 @@ async function handleRegenerate(
     await deps.updateContent(specDirectory, instance.state.currentDocument);
     await executeStepInTerminal(stepDef, specDirectory, deps, watch);
   }
+}
+
+/** Build the tasks converge added: dispatches the implement step, whatever step is current. */
+async function handleImplementGaps(
+  specDirectory: string,
+  deps: MessageHandlerDependencies,
+): Promise<void> {
+  const instance = deps.getInstance(specDirectory);
+  if (!instance) return;
+  const steps = await deps.resolveWorkflowSteps();
+  const stepDef = steps.find((s) => s.name === "implement");
+  if (!stepDef) {
+    deps.outputChannel.appendLine("[implement-gaps] No implement step in the workflow, nothing dispatched");
+    return;
+  }
+  const watch = watchStepDispatch({ specDir: specDirectory, step: stepDef.name, label: stepDef.label, outputChannel: deps.outputChannel });
+  if (shouldRecordStepStart(steps, stepDef.name)) {
+    await startStep(specDirectory, stepDef.name as StepName, "extension");
+  }
+  watch.started();
+  await deps.updateContent(specDirectory, instance.state.currentDocument);
+  await executeStepInTerminal(stepDef, specDirectory, deps, watch);
 }
 
 /**

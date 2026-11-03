@@ -320,6 +320,8 @@ export const FooterActionIds = {
     REGENERATE: 'regenerate',
     APPROVE: 'approve',
     CONVERGE: 'converge',
+    IMPLEMENT_GAPS: 'implement-gaps',
+    OPEN_TASKS: 'open-tasks',
 } as const;
 
 /**

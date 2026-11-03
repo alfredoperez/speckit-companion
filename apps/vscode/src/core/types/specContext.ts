@@ -337,6 +337,43 @@ export interface CapabilityContentView {
     delta?: { added?: number; modified?: number; removed?: number; renamed?: number };
 }
 
+/** One row of the converge result: a pass and what it added. */
+export interface ConvergePassRow {
+    index: number;
+    outcome: ConvergeOutcome;
+    addedIds: string[];
+    durationMs?: number;
+}
+
+/** A task the latest converge pass added, as tasks.md holds it now. */
+export interface ConvergeAddedTask {
+    id: string;
+    title: string;
+    checked: boolean;
+}
+
+export type ConvergeOutcome = 'running' | 'gaps' | 'clean' | 'unknown';
+
+/** What the viewer shows for converge; absent when converge never ran. */
+export interface ConvergeResult {
+    outcome: ConvergeOutcome;
+    passCount: number;
+    passes: ConvergePassRow[];
+    addedTasks: ConvergeAddedTask[];
+    openAdded: number;
+    completedBy?: { at: string; by: string };
+}
+
+/** One converge pass as the writer records it. */
+export interface ConvergePass {
+    startedAt: string;
+    by: 'extension' | 'ai';
+    before?: string[];
+    finishedAt?: string;
+    added?: string[];
+    completed?: boolean;
+}
+
 /**
  * Canonical `.spec-context.json` document. Unknown top-level fields MUST be
  * preserved across writes (FR-013).
@@ -417,6 +454,8 @@ export interface SpecContext {
     extends?: string;
     /** An earlier spec folder this one replaces. */
     supersedes?: string;
+    /** Converge passes, appended by the converge start and finish hooks. */
+    convergePasses?: ConvergePass[];
 }
 
 /** Viewer-side step badge */
@@ -536,6 +575,8 @@ export interface ViewerState {
     reviewComments?: ReviewComment[];
     /** Living specs loaded/synced for this feature (LS·7). Absent when none. */
     livingSpecs?: LivingSpecsView;
+    /** Converge result; absent when converge never ran. */
+    converge?: ConvergeResult;
 }
 
 /** Canonical list of substep names used by Companion prompts. */

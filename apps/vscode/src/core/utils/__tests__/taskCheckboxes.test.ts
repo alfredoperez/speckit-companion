@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { countTaskCheckboxes, taskId, proseLines, taskCheckboxMarker } from '../taskCheckboxes';
+import { countTaskCheckboxes, taskId, proseLines, taskCheckboxMarker, taskTitle } from '../taskCheckboxes';
 
 describe('countTaskCheckboxes', () => {
     it('counts line-leading task items, checked and unchecked', () => {
@@ -103,5 +103,23 @@ describe('the shared task-grammar fixture', () => {
         }
         expect(all).toEqual(expected.allTaskIds);
         expect(done).toEqual(expected.completedTaskIds);
+    });
+});
+
+describe('taskTitle', () => {
+    it('keeps the description and drops id, markers and the trailing path', () => {
+        expect(taskTitle('- [ ] **T013** [P] [US1] Saved filter names must be unique · src/x.ts')).toBe('Saved filter names must be unique');
+    });
+
+    it('keeps backticked text', () => {
+        expect(taskTitle('- [x] T002 Add `taskTitle(rawLine)` beside `taskId`')).toBe('Add `taskTitle(rawLine)` beside `taskId`');
+    });
+
+    it('is null for a line that is not a task', () => {
+        expect(taskTitle('- a note')).toBeNull();
+    });
+
+    it('keeps a middle dot that is not followed by a path', () => {
+        expect(taskTitle('- [ ] **T020** Wire retry · backoff for the sync call')).toBe('Wire retry · backoff for the sync call');
     });
 });

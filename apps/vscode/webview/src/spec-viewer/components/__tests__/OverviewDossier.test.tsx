@@ -3,6 +3,8 @@ import { h, render } from 'preact';
 import { IntentSection, OverviewTiming, CoverageSection } from '../OverviewDossier';
 import type { HistoryEntry, ViewerState } from '../../types';
 import { deriveStepHistory, deriveTimingSummary } from '../../../../../src/features/specs/stepHistoryDerivation';
+import { deriveConvergeResult } from '../../../../../src/features/spec-viewer/convergeResult';
+import type { SpecContext } from '../../../../../src/core/types/specContext';
 
 const base = (overrides: Partial<ViewerState>): ViewerState => ({
     status: 'specified',
@@ -342,5 +344,107 @@ describe('CoverageSection', () => {
             }),
         }), host);
         expect(host.textContent).toContain('1 of 2 found');
+    });
+});
+
+describe('converge in the overview', () => {
+    const at = (minute: number, second = 0) =>
+        `2026-11-03T10:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}.000Z`;
+    const pair = (step: HistoryEntry['step'], start: number, end: number): HistoryEntry[] => [
+        { step, substep: null, kind: 'start', by: 'extension', at: at(start) },
+        { step, substep: null, kind: 'complete', by: 'extension', at: at(end) },
+    ];
+    const record: HistoryEntry[] = [
+        ...pair('specify', 0, 1), ...pair('plan', 2, 6), ...pair('tasks', 7, 8),
+        ...pair('implement', 9, 27), ...pair('converge', 28, 30),
+    ];
+    const TASKS = [
+        '- [x] **T001** done',
+        '- [ ] **T013** Saved filter names must be unique per user',
+        '- [ ] **T014** Deleting a filter that is applied clears it',
+        '- [ ] **T015** <b>Test</b> for SC-002',
+    ].join('\n');
+    const gapsPass = { startedAt: at(28), by: 'extension', finishedAt: at(30, 31), added: ['T013', 'T014', 'T015'] };
+    const cleanPass = { startedAt: at(40), by: 'extension', finishedAt: at(41), added: [], completed: true };
+
+    const renderWith = (convergePasses: unknown[], tasks = TASKS, status: ViewerState['status'] = 'implemented') => {
+        const stepHistory = deriveStepHistory(record, 'converge', status as 'implemented');
+        const converge = deriveConvergeResult({ convergePasses } as unknown as SpecContext, tasks);
+        const host = document.createElement('div');
+        render(h(IntentSection, {
+            state: base({ status, history: record, stepHistory, timing: deriveTimingSummary(stepHistory), converge }),
+        }), host);
+        return host;
+    };
+    const pill = (host: HTMLElement) => host.querySelector('.dossier-timing__converge');
+
+    it('draws an amber pill with its time and gaps, then a waiting implement round', () => {
+        const host = renderWith([gapsPass]);
+        expect(pill(host)?.classList.contains('is-gaps')).toBe(true);
+        expect(pill(host)?.textContent).toBe('Converge2m 31s · 3 gaps');
+        const waiting = host.querySelector('.dossier-timing__phase.is-waiting');
+        expect(waiting?.textContent).toBe('Implementround 2, waiting');
+    });
+
+    it('lists the added tasks with their titles under CONVERGE FOUND 3 GAPS', () => {
+        const host = renderWith([gapsPass]);
+        const card = host.querySelector('.dossier-converge--gaps')!;
+        expect(card.querySelector('.dossier-kicker')?.textContent).toBe('CONVERGE FOUND 3 GAPS');
+        expect(card.textContent).toContain('added these to the end of tasks.md. The spec did not change.');
+        expect(Array.from(card.querySelectorAll('li code')).map(n => n.textContent)).toEqual(['T013', 'T014', 'T015']);
+        expect(card.textContent).toContain('Saved filter names must be unique per user');
+    });
+
+    it('says GAP in the singular for one added task', () => {
+        const host = renderWith([{ ...gapsPass, added: ['T013'] }]);
+        expect(host.querySelector('.dossier-converge .dossier-kicker')?.textContent).toBe('CONVERGE FOUND 1 GAP');
+        expect(pill(host)?.textContent).toContain('1 gap');
+    });
+
+    it('shows a task title holding markup as text', () => {
+        const host = renderWith([gapsPass]);
+        expect(host.querySelector('.dossier-converge b')).toBeNull();
+        expect(host.textContent).toContain('<b>Test</b> for SC-002');
+    });
+
+    it('draws a green pill and the clean card after a clean second pass', () => {
+        const done = TASKS.replace(/- \[ \]/g, '- [x]');
+        const host = renderWith([gapsPass, cleanPass], done, 'completed');
+        expect(pill(host)?.classList.contains('is-clean')).toBe(true);
+        expect(pill(host)?.textContent).toBe('Converge2 passes · clean');
+        expect(host.querySelector('.dossier-timing__phase.is-waiting')).toBeNull();
+        const card = host.querySelector('.dossier-converge--clean')!;
+        expect(card.querySelector('.dossier-kicker')?.textContent).toBe('DONE, BY A CLEAN CONVERGE');
+        expect(card.textContent).toContain('The second converge pass found nothing missing, so the spec is completed.');
+        const rows = Array.from(card.querySelectorAll('dt')).map(dt => `${dt.textContent}: ${dt.nextElementSibling?.textContent}`);
+        expect(rows[0]).toBe('PASS 1: 3 gaps, added as T013 to T015');
+        expect(rows[1]).toBe('PASS 2: nothing added');
+        expect(rows[2]).toMatch(/^COMPLETED: Nov 3, 2026 at \d\d:\d\d, written by the extension$/);
+    });
+
+    it('reads one clean pass as clean with no pass count', () => {
+        const host = renderWith([cleanPass], TASKS.replace(/- \[ \]/g, '- [x]'), 'completed');
+        expect(pill(host)?.textContent).toBe('Convergeclean');
+    });
+
+    it('shows no DONE card for a clean pass on a spec that is not completed', () => {
+        const host = renderWith([cleanPass]);
+        expect(pill(host)?.textContent).toBe('Convergeclean');
+        expect(host.querySelector('.dossier-converge--clean')).toBeNull();
+    });
+
+    it('stays amber on a completed spec whose last pass added tasks', () => {
+        const host = renderWith([cleanPass, { ...gapsPass, startedAt: at(50), finishedAt: at(51), added: ['T015'] }], TASKS, 'completed');
+        expect(pill(host)?.classList.contains('is-gaps')).toBe(true);
+        expect(host.querySelector('.dossier-converge--clean')).toBeNull();
+    });
+
+    it('draws nothing about converge when it never ran', () => {
+        const stepHistory = deriveStepHistory(record.slice(0, -2), 'implement', 'implemented');
+        const host = document.createElement('div');
+        render(h(IntentSection, { state: base({ status: 'implemented', stepHistory, timing: deriveTimingSummary(stepHistory) }) }), host);
+        expect(pill(host)).toBeNull();
+        expect(host.querySelector('.dossier-converge')).toBeNull();
+        expect(host.querySelector('.is-waiting')).toBeNull();
     });
 });

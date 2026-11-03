@@ -28,6 +28,7 @@ import {
     CheckpointStatus,
     ReviewComment,
     LivingSpecsView,
+    ConvergeResult,
     DEFAULT_PIPELINE_STEPS,
 } from '../../core/types/specContext';
 import { getFooterActions } from './footerActions';
@@ -370,7 +371,8 @@ export function deriveActiveSubstep(
 export function deriveViewerState(
     ctx: SpecContext,
     activeStep: StepName = ctx.currentStep,
-    workflowSteps?: WorkflowStepConfig[]
+    workflowSteps?: WorkflowStepConfig[],
+    converge?: ConvergeResult
 ): ViewerState {
     // Derive stepHistory once from the canonical history[] sequence and reuse
     // it across all the per-step derivations below.
@@ -386,7 +388,7 @@ export function deriveViewerState(
         pulse: derivePulse(ctx, stepHistory),
         highlights: deriveHighlights(ctx, stepHistory),
         activeSubstep: deriveActiveSubstep(ctx, stepHistory),
-        footer: getFooterActions(ctx, activeStep, workflowSteps),
+        footer: getFooterActions(ctx, activeStep, workflowSteps, undefined, converge),
         history: ctx.history ?? [],
         stepHistory,
         timing: deriveTimingSummary(stepHistory, expectedTimingPhases),
@@ -408,5 +410,6 @@ export function deriveViewerState(
         verified: pickVerified(ctx),
         coverage: pickCoverage(ctx),
         classification: pickClassification(ctx),
+        converge,
     };
 }
