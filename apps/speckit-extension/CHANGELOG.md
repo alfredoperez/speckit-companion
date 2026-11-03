@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
-- **The doctor checks every agent.** It names each agent's layout, an agent ==missing Companion's commands==, and a `specify` CLI missing from PATH. ([#951](https://github.com/alfredoperez/speckit-companion/pull/951)) <!-- area: doctor -->
+- **The doctor checks every agent.** It names each agent's layout, an agent ==missing Companion's commands==, and a `specify` CLI missing from PATH. ([#951](https://github.com/alfredoperez/speckit-companion/pull/951)) <!-- area: install -->
 - **A spec keeps the ticket it came from.** Specify writes a Source line and ==records the ticket== on the run record, copied exactly from the brief. ([#945](https://github.com/alfredoperez/speckit-companion/pull/945)) <!-- area: pipeline -->
 - **A clean converge finishes the spec.** On a stock run, a converge that finds nothing left marks the spec completed, with no assistant step to skip. ([#940](https://github.com/alfredoperez/speckit-companion/pull/940)) <!-- area: run-record -->
 - **Step times from the agent itself.** Typing a step command records its start, and a turn closes the step only when its document is really written. ([#939](https://github.com/alfredoperez/speckit-companion/pull/939)) <!-- area: run-record -->
