@@ -26,6 +26,15 @@ STEP_TEMPLATES = {
     "tasks": "tasks-template.md",
 }
 
+
+def core_template_text(project_root, name: str):
+    """The stock template in `.specify/templates`, or None when the project has none."""
+    path = Path(project_root) / ".specify" / "templates" / name
+    try:
+        return path.read_text(encoding="utf-8") if path.is_file() else None
+    except (OSError, ValueError):
+        return None
+
 # Canonical vocab (mirrors src/core/types/specContext.ts). Kept here only to
 # reject the legacy terminal step and to avoid regressing an advanced spec.
 CANONICAL_STEPS = {"specify", "clarify", "plan", "tasks", "analyze", "implement", "converge"}

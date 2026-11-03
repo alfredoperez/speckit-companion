@@ -31,7 +31,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from spec_context import BUILT_TEMPLATES_REL, STEP_TEMPLATES  # noqa: E402
+from spec_context import BUILT_TEMPLATES_REL, STEP_TEMPLATES, core_template_text  # noqa: E402
 
 #: A markdown section header: `## Name`, optionally with trailing decoration
 #: (`*(mandatory)*`), which is part of the heading line but not of its name.
@@ -101,7 +101,6 @@ BUILT_REL = BUILT_TEMPLATES_REL
 #: Older builds' copies: still a spec-kit extension layer until a build removes them.
 LEGACY_BUILT_REL = os.path.join(".specify", "extensions", "companion", "templates")
 RESOLVER_REL = os.path.join(".specify", "scripts", "bash", "resolve-template.sh")
-CORE_REL = os.path.join(".specify", "templates")
 
 
 def _read(path: str):
@@ -111,9 +110,7 @@ def _read(path: str):
         return fh.read()
 
 
-def core_template(project_root: str, name: str):
-    """The stock file in `.specify/templates`, or None when the project has none."""
-    return _read(os.path.join(project_root, CORE_REL, name))
+core_template = core_template_text
 
 
 def base_template(project_root: str, name: str):

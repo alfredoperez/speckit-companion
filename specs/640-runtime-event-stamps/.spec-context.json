@@ -1,0 +1,540 @@
+{
+  "workflow": "companion",
+  "specName": "Step boundaries from runtime events",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:07:58.911Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:08:50.554Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:08:50.825Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:08:50.911Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:08:51.156Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T03:08:51.334Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:09:00.582Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:11:54.907Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:11:55.106Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:11:55.189Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:12:39.321Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:12:39.627Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:12:39.754Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:12:39.888Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:12:40.184Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:12:40.284Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:12:40.345Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:13:49.946Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:13:50.044Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:13:50.132Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:14:17.769Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:14:40.523Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:14:40.594Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:14:40.658Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:14:40.722Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:14:40.792Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:16:59.774Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:16:59.792Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:16:59.876Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Handlers declared for prompt-submitted and stop events",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_event_mode.py"
+      ]
+    },
+    "FR-002": {
+      "title": "Each handler is told its event by name",
+      "tasks": [
+        "T001",
+        "T005"
+      ]
+    },
+    "FR-003": {
+      "title": "A step-command prompt records that start; others write nothing",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_event_mode.py"
+      ]
+    },
+    "FR-004": {
+      "title": "Stop closes the open step only when its document changed and implement tasks are all checked",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_event_mode.py"
+      ]
+    },
+    "FR-005": {
+      "title": "A recorded boundary is not recorded again",
+      "tasks": [
+        "T001",
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_event_mode.py"
+      ]
+    },
+    "FR-006": {
+      "title": "Handlers print nothing and exit 0",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_event_mode.py"
+      ]
+    },
+    "FR-007": {
+      "title": "Lifecycle hooks keep working",
+      "tasks": [
+        "T004"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 8,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "session_start last-active field",
+    "the interactive spike measuring per-turn Stop",
+    "mark-complete as a script (w45) is slice 3"
+  ],
+  "context": [
+    "area: spec-kit events dispatcher (specify_cli/events/__init__.py): extension.yml events:{event:{command,timeout,matcher}}; command frontmatter scripts: py: path relative to .specify/extensions/<id>/, confined to the project; payload on stdin, cwd = project root, empty argv; stdout is emitted back to the agent",
+    "area: apps/speckit-extension/scripts/write-context.py (--hook start|finish from #938)",
+    "area: apps/speckit-extension/extension.yml provides.commands + events",
+    "constraint: a new command must be in provides.commands and .specify/extensions/.registry stays in the diff (check-command-emissions.py)"
+  ],
+  "intent": "Spec-kit runtime events stamp a typed step command's start and close a step at a stop only when its work is really done",
+  "workingBranch": "640-runtime-event-stamps",
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/640-runtime-event-stamps --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  WARNING plan.md:34  `_apply_event` is not within 8 lines of `apps/speckit-extension/scripts/write-context.py:442` (symbol-not-near) ·   WARNING plan.md:37  `apps/speckit-extension/scripts/task_sync.py` has no `:line`, so it is unverified (no-line) ·   0 error(s), 4 warning(s)"
+    },
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 76.2,
+      "result": "---------------------------------------------------------------------- · Ran 1799 tests in 76.044s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "quality gate",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  ✓ [PASS] never-prompts-on-prompt: no user-prompt instruction ·   ✓ [PASS] never-prompts-on-stop: no user-prompt instruction ·   → 16 pass / 0 warn / 0 fail / 0 info"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "type check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "speckit-extension python suite (after review)",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 76.9,
+      "result": "---------------------------------------------------------------------- · Ran 1803 tests in 76.769s · OK (skipped=8)"
+    },
+    {
+      "what": "build check (after review)",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "command emissions (after review)",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "quality gate (after review)",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  ✓ [PASS] never-prompts-on-prompt: no user-prompt instruction ·   ✓ [PASS] never-prompts-on-stop: no user-prompt instruction ·   → 16 pass / 0 warn / 0 fail / 0 info"
+    },
+    {
+      "what": "package manifest (after review)",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    }
+  ],
+  "planBlocks": [
+    "calls"
+  ],
+  "decisions": [
+    {
+      "decision": "handlers run write-context.py --event, no new script",
+      "why": "the --hook rewrite owns every boundary; no packing-list churn",
+      "rejected": "a dedicated on-event.py"
+    },
+    {
+      "decision": "event mode buffers both streams and always exits 0",
+      "why": "stdout reaches the model and exit 2 blocks the agent",
+      "rejected": "removing prints one by one"
+    },
+    {
+      "decision": "a stop closes only when the step document changed after its start (and implement is at 100%)",
+      "why": "Stop fires on every turn, including a clarifying question",
+      "rejected": "closing on any stop"
+    },
+    {
+      "decision": "registry edited to add only the two commands and skills",
+      "why": "a --dev reinstall empties registered_skills, which must not ship",
+      "rejected": "committing the regenerated registry"
+    },
+    {
+      "decision": "no .claude/settings.json or .specify/events.py in the PR",
+      "why": "they would turn on event hooks for every contributor in this repo",
+      "rejected": "committing the install wiring"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "--event mode in the writer, two one-line handler commands, events: in extension.yml",
+      "key_finding": "a handler exit of 2 erases the prompt or forces the agent on, so event mode must swallow everything"
+    },
+    "tasks": {
+      "summary": "10 tasks: writer event mode (foundational), handler wiring (US1-3), polish"
+    },
+    "implement": {
+      "summary": "write-context.py --event plus two handler commands record starts from typed prompts and close steps at a stop only on evidence"
+    }
+  },
+  "approach": "write-context.py --event user_prompt_submit|stop reads the payload on stdin and reuses the --hook rewrite; two handler commands carry scripts: py: lines; the writer is silent and exits 0 in event mode.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "--event user_prompt_submit: a step-command prompt becomes --hook start",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "--event stop: closes the newest open step only when its document changed after its start (implement at 100%)",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "event mode buffers both streams, exits 0, skips the trace on a no-op",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Changelog line under Unreleased / Added",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Phase 3 T004 done",
+      "files": [
+        "tests/test_event_mode.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Phase 3 T005 done",
+      "files": [
+        "commands on-prompt/on-stop"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Phase 3 T006 done",
+      "files": [
+        "extension.yml"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Phase 3 T007 done",
+      "files": [
+        "check_quality.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Phase 3 T008 done",
+      "files": [
+        "README.md",
+        "docs/commands.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "suite, build check, emissions, quality gate, manifest, tsc all exit 0",
+      "files": [
+        "apps/speckit-extension/",
+        ".specify/extensions/.registry"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "The interactive spike measuring per-turn Stop in a real session was not run; tests use synthetic payloads.",
+      "step": "implement"
+    },
+    {
+      "note": "session_start last-active is out of scope: no field exists in the record or viewer.",
+      "step": "implement"
+    },
+    {
+      "note": "An older spec-kit ignores the events: key, so its projects keep only the hooks; the version floor is #929 w25.",
+      "step": "implement"
+    }
+  ],
+  "last_action": "10/10 tasks, all gates green"
+}

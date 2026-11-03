@@ -67,6 +67,8 @@ NEVER_PROMPT = [
     "speckit.companion.status.md",
     "speckit.companion.resume.md",
     "speckit.companion.classify.md",
+    "speckit.companion.on-prompt.md",
+    "speckit.companion.on-stop.md",
 ]
 
 # Word-bounded phrases only — a bare "ask" would match "tasks"; the article is

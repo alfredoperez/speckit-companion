@@ -101,6 +101,12 @@ provides:
     - name: speckit.companion.living-sync
       file: commands/speckit.companion.living-sync.md
       description: "Sync living specs from your current changes — group working-tree changes (uncommitted included) by capability and update every affected spec in one pass (opt-in, update-not-regenerate, never halts)"
+    - name: speckit.companion.on-prompt
+      file: commands/speckit.companion.on-prompt.md
+      description: "Record a step's start from spec-kit's prompt-submitted event"
+    - name: speckit.companion.on-stop
+      file: commands/speckit.companion.on-stop.md
+      description: "Record a step's finish from spec-kit's turn-ended event"
 
 hooks:
   before_specify:
@@ -143,6 +149,14 @@ hooks:
     command: speckit.companion.after-converge
     optional: false
     description: "Record the converge finish"
+
+events:
+  user_prompt_submit:
+    command: speckit.companion.on-prompt
+    timeout: 10
+  stop:
+    command: speckit.companion.on-stop
+    timeout: 10
 
 # Catalog `category` (process) and `effect` (read-write) live only in the
 # community catalog entry — there is no field for them here.

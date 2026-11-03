@@ -17,7 +17,7 @@ Everything the extension declares, by family. The README's [Commands](../README.
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
 | [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
 | [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-show`, `speckit.companion.living-validate`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
-| [Hooks](#lifecycle-hooks) | `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge` |
+| [Hooks](#lifecycle-hooks) | `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge`, `speckit.companion.on-prompt`, `speckit.companion.on-stop` |
 
 ## Diagnostics
 
@@ -77,6 +77,8 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 | `after_converge` | `speckit.companion.after-converge` | `false` (auto-runs) | Record the converge finish |
 
 `optional: false` means the agent runs it **automatically** with no prompt. (For contrast, the bundled `git` extension's `after_specify` commit hook is `optional: true`, so it only *offers* to run.)
+
+`speckit.companion.on-prompt` and `speckit.companion.on-stop` are not hooks. spec-kit runs them from its runtime events (a prompt submitted, a turn ended) and they record step starts and finishes with no model in the loop. Agents without events keep the hooks above.
 
 ## `speckit.companion.before-step`
 
