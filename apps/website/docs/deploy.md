@@ -11,9 +11,11 @@ Set these on the Vercel project. `vercel.json` in this folder carries the same v
 | Install Command | `npm ci` |
 | Build Command | `npm run build` |
 | Output Directory | *(leave empty)* |
-| Ignored Build Step | the `ignoreCommand` in `vercel.json` |
+| Ignored Build Step | the `ignoreCommand` in `vercel.json`, which runs `scripts/vercel-ignore.sh` |
 
 **Output Directory is deliberately empty.** The Vercel adapter writes the Build Output API tree to `.vercel/output`, not `dist`. A leftover `dist` in the dashboard overrides `vercel.json` and the deploy serves nothing useful.
+
+**The ignored build step lives in a script.** Vercel caps `ignoreCommand` at 256 characters, and it fails the deploy on any exit other than 0 (skip) or 1 (build). The script builds on any git error, such as a last deployed commit deeper than Vercel's shallow clone.
 
 **Only `main` deploys.** `git.deploymentEnabled` in `vercel.json` turns every other branch off, and the ignored build step skips any ref that is not `main`.
 
