@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
-- **Step times from the agent itself.** In an agent that reports spec-kit's runtime events, typing a step command now records its start at once, and the end of a turn closes the step only when its document was really written (and, for implement, every task is checked). No assistant call is involved, and a turn that ends on a question leaves the step open. Agents without events keep recording through the hooks. <!-- area: run-record -->
+- **Step times from the agent itself.** In an agent that reports spec-kit's runtime events, typing a step command now records its start at once, and the end of a turn closes the step only when its document was really written (and, for implement, every task is checked). No assistant call is involved, and a turn that ends on a question leaves the step open. Agents without events keep recording through the hooks. ([#939](https://github.com/alfredoperez/speckit-companion/pull/939)) <!-- area: run-record -->
 
 ### Fixed
 - **Stock runs record their steps with less for the assistant to get wrong.** Each Companion hook that records a plain spec-kit step is now one line that runs one command, instead of a page of instructions. The specify start no longer depends on the assistant remembering a time between two hooks. A broken `.specify/extensions.yml` is now reported instead of skipped quietly, the same as stock spec-kit does. ([#938](https://github.com/alfredoperez/speckit-companion/pull/938)) <!-- area: run-record -->
