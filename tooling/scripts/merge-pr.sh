@@ -2,7 +2,7 @@
 # Queues a pull request to squash-merge once its checks pass. A pull request that changes what a person sees is refused until the owner has looked.
 # usage: tooling/scripts/merge-pr.sh <PR> [--seen]
 #   --seen   the owner has looked at this change and said so in the conversation. Never pass it on your own judgement.
-# exit: 0 queued or merged, 1 a check did not pass, 2 bad usage, 3 visual change not yet seen
+# exit: 0 queued or merged, 1 a check did not pass or none appeared within five minutes, 2 bad usage, 3 visual change not yet seen
 set -euo pipefail
 
 VISUAL='^(apps/website/src/(pages|components|layouts|styles)/|apps/vscode/webview/.*\.css$|apps/copilot-canvas/public/|content/media/|docs/screenshots/|assets/)'
@@ -28,10 +28,17 @@ if gh pr merge "$pr" --squash --auto 2>/dev/null; then
 fi
 
 # Auto-merge is off for the repository: wait here, and merge only when every check has passed.
+# Just after a push GitHub reports no checks at all, and an empty list must not read as all passed.
+for _ in $(seq 1 20); do
+  [ -n "$(gh pr checks "$pr" 2>/dev/null)" ] && break
+  sleep 15
+done
+sleep 30
 gh pr checks "$pr" --watch --interval 30 >/dev/null 2>&1 || true
-if gh pr checks "$pr" | grep -qv $'\tpass\t'; then
-  echo "Not merged: #$pr has a check that did not pass." >&2
-  gh pr checks "$pr" | grep -v $'\tpass\t' >&2
+checks="$(gh pr checks "$pr" 2>/dev/null || true)"
+if [ -z "$checks" ] || echo "$checks" | grep -qv $'\tpass\t'; then
+  echo "Not merged: #$pr has no checks yet or a check that did not pass." >&2
+  echo "$checks" | grep -v $'\tpass\t' >&2 || true
   exit 1
 fi
 branch="$(gh pr view "$pr" --json headRefName --jq .headRefName)"
