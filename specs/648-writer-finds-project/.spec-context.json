@@ -1,0 +1,251 @@
+{
+  "workflow": "companion",
+  "specName": "The record writer finds the project and spec the way spec-kit does",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:56:11.506Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:58:18.272Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:58:18.381Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:58:18.382Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:58:18.383Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T05:58:18.384Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T05:58:18.452Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:58:53.278Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:58:53.365Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T05:58:53.449Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:00:37.525Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T06:00:37.545Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T06:03:50.086Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T06:03:58.037Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Project from SPECIFY_INIT_DIR when it holds .specify",
+      "tests": [
+        "apps/speckit-extension/tests/test_project_root.py::test_specify_init_dir_names_the_project_from_anywhere"
+      ]
+    },
+    "FR-002": {
+      "title": "Strict: an init dir without .specify records nothing",
+      "tests": [
+        "apps/speckit-extension/tests/test_project_root.py::test_an_init_dir_without_specify_records_nothing_and_says_why"
+      ]
+    },
+    "FR-003": {
+      "title": "Else nearest .specify above cwd, then git",
+      "tests": [
+        "apps/speckit-extension/tests/test_project_root.py::test_a_monorepo_member_records_when_run_from_its_folder"
+      ]
+    },
+    "FR-004": {
+      "title": "feature.json outranks SPECIFY_FEATURE",
+      "tests": [
+        "apps/speckit-extension/tests/test_project_root.py::test_the_pointer_outranks_the_feature_label"
+      ]
+    },
+    "FR-005": {
+      "title": "Using the label prints one line",
+      "tests": [
+        "apps/speckit-extension/tests/test_project_root.py::test_the_label_is_used_without_a_pointer_and_says_so"
+      ]
+    }
+  },
+  "size": "simple",
+  "classification": {
+    "projectedFiles": 3,
+    "projectedTasks": 4,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "expectations": [
+    "VS Code getProjectRoot for a repo-root window with a nested .specify"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts/spec_context.py _repo_root, resolve_feature_dir",
+    "constraint: spec-kit common.sh get_repo_root: SPECIFY_INIT_DIR strict, then find_specify_root, then script location"
+  ],
+  "intent": "The writer finds the project and the spec the way spec-kit does",
+  "source": "#929",
+  "approach": "_repo_root resolves SPECIFY_INIT_DIR strictly, then the nearest .specify, then git; the label rung drops below feature.json with a log line.",
+  "workingBranch": "648-writer-finds-project",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Root from SPECIFY_INIT_DIR (strict), then the nearest .specify, then git",
+      "files": [
+        "apps/speckit-extension/scripts/spec_context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Label rung below the pointer, logged once when used",
+      "files": [
+        "apps/speckit-extension/scripts/spec_context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "6 tests: monorepo, init dir, strict init dir, pointer over label, label alone, explicit wins",
+      "files": [
+        "apps/speckit-extension/tests/test_project_root.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Changelog line; Python suite, build, manifest and changelog gate pass",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 74.2,
+      "result": "---------------------------------------------------------------------- · Ran 1829 tests in 74.038s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "changelog voice gate",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 1.7,
+      "result": "Snapshots:   0 total · Time:        1.061 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "A bad SPECIFY_INIT_DIR records nothing",
+      "why": "spec-kit is strict there: a fallback could write into another project",
+      "rejected": "warning and falling back to the walk"
+    },
+    {
+      "decision": "Walk up to the filesystem root for .specify",
+      "why": "matches spec-kit find_specify_root",
+      "rejected": "stopping at the git toplevel"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "VS Code getProjectRoot for a window opened on the repo root with only a nested .specify is unchanged",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "The writer finds the project like spec-kit and the pointer outranks the label"
+    }
+  },
+  "convergeStartedAt": "2026-11-03T06:03:50.117Z"
+}

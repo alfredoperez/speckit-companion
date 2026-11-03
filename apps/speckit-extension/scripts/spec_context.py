@@ -123,16 +123,33 @@ def _now_iso() -> str:
 
 
 def _repo_root() -> Path:
+    """The project root, found the way spec-kit finds it: SPECIFY_INIT_DIR when it holds
+    `.specify/`, then the nearest `.specify/` above the working directory, then git."""
+    init_dir = os.environ.get("SPECIFY_INIT_DIR")
+    if init_dir:
+        if not (Path(init_dir) / ".specify").is_dir():
+            # Strict like spec-kit: falling back could write into another project.
+            print(f"[companion] SPECIFY_INIT_DIR={init_dir} is not a Spec Kit project (no .specify/); nothing recorded.",
+                  file=sys.stderr)
+        return Path(init_dir).resolve()
+    git_top = None
     try:
         out = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
             capture_output=True, text=True, check=True,
         ).stdout.strip()
         if out:
-            return Path(out)
+            git_top = Path(out).resolve()
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
-    return Path.cwd()
+    here = Path.cwd().resolve()
+    for folder in (here, *here.parents):
+        if (folder / ".specify").is_dir():
+            return folder
+        # Inside a repository the walk stops at its top, so a `.specify/` in the home folder is never the project.
+        if folder == git_top:
+            break
+    return git_top or Path.cwd()
 
 
 def _repo_root_for(path: Path) -> Path:
@@ -229,6 +246,9 @@ def feature_dir_from_tasks_file(root: Path, tasks_file: str) -> Path:
     return p.parent
 
 
+_LABEL_NOTED: set[Path] = set()
+
+
 def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
     """spec-kit resolution precedence, most-specific first."""
     specs_dir = root / "specs"
@@ -238,20 +258,17 @@ def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
         p = Path(explicit)
         return p if p.is_absolute() else root / p
 
+    # A SPECIFY_INIT_DIR that is not a Spec Kit project names nothing to record against.
+    if os.environ.get("SPECIFY_INIT_DIR") and not (root / ".specify").is_dir():
+        return None
+
     # 2. SPECIFY_FEATURE_DIRECTORY env (a path)
     env_dir = os.environ.get("SPECIFY_FEATURE_DIRECTORY")
     if env_dir:
         p = Path(env_dir)
         return p if p.is_absolute() else root / p
 
-    # 3. SPECIFY_FEATURE env (a feature name)
-    env_feature = os.environ.get("SPECIFY_FEATURE")
-    if env_feature:
-        hit = _match_by_prefix(specs_dir, env_feature)
-        if hit:
-            return hit
-
-    # 4. .specify/feature.json -> feature directory. Accept both the canonical
+    # 3. .specify/feature.json -> feature directory. Accept both the canonical
     #    `feature_directory` key and stock spec-kit's `FEATURE_DIR` (the upstream
     #    create-new-feature.sh shape) so a pointer written either way resolves —
     #    otherwise a bare call (e.g. --mark-complete with no --feature-dir) fails
@@ -288,6 +305,17 @@ def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
                     f"found {sorted(data) if isinstance(data, dict) else type(data).__name__}.")
         except (json.JSONDecodeError, OSError) as exc:
             _pointer_complaint(f"{feature_json} could not be read ({exc}).")
+
+    # 4. SPECIFY_FEATURE env (a feature name), below the pointer as spec-kit ranks it
+    env_feature = os.environ.get("SPECIFY_FEATURE")
+    if env_feature:
+        hit = _match_by_prefix(specs_dir, env_feature)
+        if hit:
+            if hit not in _LABEL_NOTED:
+                _LABEL_NOTED.add(hit)
+                print(f"[companion] Using SPECIFY_FEATURE={env_feature} to pick {hit.name}: no .specify/feature.json pointer.",
+                      file=sys.stderr)
+            return hit
 
     # 5. git current branch -> numeric-prefix match
     branch = _git_branch(root)
