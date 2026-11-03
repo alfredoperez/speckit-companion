@@ -547,6 +547,19 @@ def fold_plan_tasks(feature_dir: Path, by: str) -> Path | None:
     return target
 
 
+def _complete_after_clean_converge(feature_dir: Path, by: str) -> Path | None:
+    """Complete a spec whose converge added no task and left every task checked."""
+    ctx = read_ctx(feature_dir / ".spec-context.json")
+    if not _feature_tasks_at_100(feature_dir):
+        return None
+    starts = [e for e in canonical_log(ctx)
+              if e.get("step") == "converge" and _is_step_level(e) and _entry_kind(e) == "start"]
+    at = _utc_stamp(str(ctx.get("convergeStartedAt") or (starts[-1].get("at") if starts else "")))
+    if at is None or (feature_dir / "tasks.md").stat().st_mtime > _epoch(at):
+        return None
+    return mark_spec_complete(feature_dir, by)
+
+
 UNVERIFIED_NOTE = "finished, unverified"
 
 
@@ -1141,6 +1154,18 @@ def _main() -> int:
             record_plan_check(feature_dir)
         except Exception as exc:  # noqa: BLE001 - the close already landed
             print(f"[companion] Warning: skipped the plan blocks check: {exc}", file=sys.stderr)
+
+    if target is not None and args.hook == "start" and args.step == "converge":
+        # History keeps only the first converge start, so each run's own window is kept beside it.
+        try:
+            set_fields(feature_dir, [f"convergeStartedAt={_now_iso()}"])
+        except Exception as exc:  # noqa: BLE001 - the converge start already landed
+            print(f"[companion] Warning: skipped noting this converge run's start: {exc}", file=sys.stderr)
+    if target is not None and args.hook == "finish" and args.step == "converge":
+        try:
+            _complete_after_clean_converge(feature_dir, args.by)
+        except Exception as exc:  # noqa: BLE001 - the converge close already landed
+            print(f"[companion] Warning: skipped completing after converge: {exc}", file=sys.stderr)
 
     if target is not None and not args.tasks_file:
         if args.mark_complete:

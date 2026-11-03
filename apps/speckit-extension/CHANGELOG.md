@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
+- **A clean converge finishes the spec.** On a plain spec-kit run, when converge finds nothing left to do and every task is checked, the spec now lands at completed on its own, with no assistant step to skip. A converge that adds tasks leaves it open. The mark-complete command stays for marking a spec complete by hand. <!-- area: run-record -->
 - **Step times from the agent itself.** In an agent that reports spec-kit's runtime events, typing a step command now records its start at once, and the end of a turn closes the step only when its document was really written (and, for implement, every task is checked). No assistant call is involved, and a turn that ends on a question leaves the step open. Agents without events keep recording through the hooks. ([#939](https://github.com/alfredoperez/speckit-companion/pull/939)) <!-- area: run-record -->
 
 ### Fixed

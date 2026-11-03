@@ -239,13 +239,13 @@ Emits a `small | normal | oversized` size signal for the Companion workflow's ro
 
 ### `speckit.companion.mark-complete`
 
-The workflow's terminal step. Writes `status: completed` — and it is the **only** sanctioned writer of that status:
+The workflow's terminal step. Writes `status: completed` through `--mark-complete`, the one writer of that status, which every path below goes through:
 
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --mark-complete --by ai
 ```
 
-It refuses unless the spec is already `implemented` (or `implementing` with every task checked), leaves an already-completed spec untouched, and keeps `currentStep` at `implement`. It never refuses for lack of verification: a spec with nothing verified and no concern explaining why completes with one `finished, unverified` concern and a `[companion] Warning:` line. When living specs are on, completion is also where a feature spec's `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` deltas fold back into the durable living spec.
+It refuses unless the spec is already `implemented` (or `implementing` with every task checked), and leaves an already-completed spec untouched. It never refuses for lack of verification: a spec with nothing verified and no concern explaining why completes with one `finished, unverified` concern and a `[companion] Warning:` line. Implement's own final node writes `completed` in a Companion run, and on a stock run the after-converge hook does: when converge added no task and every task is checked, `--hook finish --step converge` marks the spec completed, with no assistant involved. The page is left for marking a spec complete by hand.
 
 ## Living-specs commands
 

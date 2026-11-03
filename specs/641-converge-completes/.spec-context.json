@@ -1,0 +1,424 @@
+{
+  "workflow": "companion",
+  "specName": "A clean converge completes the spec",
+  "branch": "HEAD",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:25:05.535Z"
+    },
+    {
+      "step": "specify",
+      "substep": "resolve-dir",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:25:27.923Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:25:28.141Z"
+    },
+    {
+      "step": "specify",
+      "substep": "quality-checklist",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:25:28.227Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:25:28.471Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-03T03:25:28.651Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:25:28.733Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:26:35.268Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:26:35.464Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:26:35.547Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:27:08.301Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:27:08.602Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:27:08.724Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:27:08.864Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:27:09.121Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:27:09.234Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-03T03:27:09.301Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:27:32.939Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:27:51.865Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:28:24.283Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:28:24.368Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:28:24.455Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:28:24.538Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:29:51.687Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:29:51.706Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-03T03:29:51.789Z"
+    }
+  ],
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "Converge finish completes an implemented spec when the task list is unchanged and all checked",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_converge_completes.py"
+      ]
+    },
+    "FR-002": {
+      "title": "A converge that changed the task list leaves the spec implemented",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_converge_completes.py"
+      ]
+    },
+    "FR-003": {
+      "title": "Completion written by the extension through the one completion writer",
+      "tasks": [
+        "T001"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_converge_completes.py"
+      ]
+    },
+    "FR-004": {
+      "title": "The mark-complete page is one sentence and one command",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "converge as a Companion pipeline step is #926 w2"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts/write-context.py (mark_spec_complete, _apply_hook converge finish)",
+    "area: apps/speckit-extension/commands/speckit.companion.mark-complete.md (99 lines)",
+    "constraint: one writer of completed; status never moves backward"
+  ],
+  "intent": "The after-converge hook completes a spec whose converge found nothing, with no model call",
+  "workingBranch": "641-converge-completes",
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/641-converge-completes --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  WARNING plan.md:24  `_main` is not within 8 lines of `apps/speckit-extension/scripts/write-context.py:442` (symbol-not-near) ·   WARNING plan.md:25  `update_context` is not within 8 lines of `apps/speckit-extension/scripts/write-context.py:161` (symbol-not-near) ·   0 error(s), 2 warning(s)"
+    },
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 78.5,
+      "result": "---------------------------------------------------------------------- · Ran 1808 tests in 78.309s · OK (skipped=8)"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: <short-name>.spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "quality gate",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  ✓ [PASS] never-prompts-on-prompt: no user-prompt instruction ·   ✓ [PASS] never-prompts-on-stop: no user-prompt instruction ·   → 16 pass / 0 warn / 0 fail / 0 info"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 25 runtime scripts, closure matches the declared list"
+    },
+    {
+      "what": "speckit-extension python suite (after review)",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 81.8,
+      "result": "---------------------------------------------------------------------- · Ran 1810 tests in 81.674s · OK (skipped=8)"
+    },
+    {
+      "what": "quality gate (after review)",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  ✓ [PASS] never-prompts-on-prompt: no user-prompt instruction ·   ✓ [PASS] never-prompts-on-stop: no user-prompt instruction ·   → 16 pass / 0 warn / 0 fail / 0 info"
+    },
+    {
+      "what": "command emissions (after review)",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    }
+  ],
+  "planBlocks": [
+    "calls"
+  ],
+  "decisions": [
+    {
+      "decision": "clean converge = tasks.md unmodified since converge start",
+      "why": "converge records findings only by appending tasks",
+      "rejected": "storing a task count at start"
+    },
+    {
+      "decision": "gate in the converge hook, write through mark_spec_complete",
+      "why": "one writer of completed; it does not re-check tasks on an implemented spec",
+      "rejected": "a second completion path"
+    },
+    {
+      "decision": "mark-complete page is one line",
+      "why": "implement's final node owns living-spec accounting and completion",
+      "rejected": "keeping the accounting on the page"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "converge finish hook chains a gated mark_spec_complete; one-line mark-complete page",
+      "key_finding": "mark_spec_complete does not re-check tasks when the spec is already implemented"
+    },
+    "tasks": {
+      "summary": "7 tasks: writer gate, tests, one-line page, polish"
+    },
+    "implement": {
+      "summary": "The after-converge hook completes a clean implemented spec through mark_spec_complete; the mark-complete page is one line"
+    }
+  },
+  "approach": "After the converge finish is recorded, the writer completes an implemented spec whose tasks are all checked and whose tasks.md did not change since converge started, through mark_spec_complete by extension. The mark-complete page becomes one line.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "converge finish completes an implemented spec when every task is checked and tasks.md is unchanged since converge started",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Tests: clean converge completes by extension; added tasks, unchecked task, implementing and completed specs stay put",
+      "files": [
+        "apps/speckit-extension/tests/test_converge_completes.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "mark-complete page is one sentence and one call",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.mark-complete.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "extension.yml description already matches the page; no change needed",
+      "files": [
+        "apps/speckit-extension/extension.yml"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "docs say the converge hook completes a clean spec",
+      "files": [
+        "apps/speckit-extension/docs/commands.md"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Changelog line under Unreleased / Added",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "suite, build check, emissions, quality gate, manifest all exit 0",
+      "files": [
+        "apps/speckit-extension/"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "A converge re-run reuses the first converge start (starts are recorded once), so a second converge window is judged from the first start.",
+      "step": "implement"
+    },
+    {
+      "note": "A hook-driven completion skips living-spec accounting; on a stock run nothing loaded living specs to account for.",
+      "step": "implement"
+    }
+  ],
+  "last_action": "7/7 tasks, all gates green"
+}
