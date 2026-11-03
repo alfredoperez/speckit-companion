@@ -1,0 +1,11 @@
+{
+  "name": "launch-tour",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.193 preview",
+    "check": "npx --yes hyperframes@0.8.193 check",
+    "render": "npx --yes hyperframes@0.8.193 render",
+    "publish": "npx --yes hyperframes@0.8.193 publish"
+  }
+}

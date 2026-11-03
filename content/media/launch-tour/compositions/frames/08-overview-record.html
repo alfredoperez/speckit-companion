@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /></head>
+<body>
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f08 { position:absolute; inset:0; overflow:hidden; background:#0a0913; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f08 .bg { position:absolute; inset:0; background-color:#0a0913; background-image:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f08 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f08 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f08 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:0 50%; }
+#f08 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f08 .h i { font-style:normal; color:#a78bfa; }
+#f08 .h span { display:inline-block; }
+#f08 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f08 .f08-world { position:absolute; left:0; top:0; width:1500px; height:957px; transform-origin:40px 270px; }
+#f08 .win img, #f08 .win video { position:absolute; display:block; }
+#f08 .f08-mark { position:absolute; top:318px; height:4px; border-radius:2px; background:#8b5cf6; transform-origin:0 50%; }
+#f08 .lbl { position:absolute; font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.1em; text-transform:uppercase; color:#b6b0d2; }
+</style>
+<div id="f08" data-composition-id="f08" data-width="1920" data-height="1080" data-duration="3.5">
+<div id="f08-bg" class="bg clip" data-start="0" data-duration="3.5" data-track-index="0"></div><div id="f08-dots" class="dots clip" data-start="0" data-duration="3.5" data-track-index="1"></div>
+
+<div style="position:absolute;left:96px;top:70px;width:1700px"><div class="kicker" id="f08-kicker">The Overview</div><div class="rule" id="f08-rule"></div><div class="h" style="font-size:64px;margin-top:22px"><span class="f08-w">When</span> <span class="f08-w">it</span> <span class="f08-w">finishes,</span> <span class="f08-w f08-w2">it</span> <span class="f08-w f08-w2">leaves</span> <span class="f08-w f08-w2">a</span> <span class="f08-w f08-w2"><i>record</i>.</span></div></div>
+<div class="win" id="f08-win" style="left:210px;top:260px;width:1500px;height:790px;">
+  <div class="f08-world" id="f08-world" data-layout-allow-overflow>
+    <img src="assets/tall-overview-intent.png" alt="" style="left:0px;top:0px;width:1500px" />
+    <div class="f08-mark" id="f08-m1" style="left:164px;width:82px"></div>
+    <div class="f08-mark" id="f08-m2" style="left:422px;width:82px"></div>
+    <div class="f08-mark" id="f08-m3" style="left:940px;width:95px"></div>
+  </div>
+</div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  // Scene 1 (0.0–0.6s): kicker, headline, window rise
+  tl.fromTo("#f08-kicker", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0);
+  tl.fromTo("#f08-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 0.08);
+  tl.fromTo("#f08 .f08-w:not(.f08-w2)", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.06 }, 0.1);
+  tl.fromTo("#f08-win", { opacity: 0, y: 70, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "power3.out" }, 0.02);
+
+  // "it leaves a record" lands on the second VO phrase
+  tl.fromTo("#f08 .f08-w2", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.07 }, 1.05);
+
+  // Scene 2 (0.6–2.6s): gentle push toward the RUN OVERVIEW row
+  tl.fromTo("#f08-world", { scale: 1 }, { scale: 1.28, duration: 2.0, ease: "power2.inOut" }, 0.6);
+
+  // run times underline one by one
+  tl.fromTo("#f08-m1", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 1.3);
+  tl.fromTo("#f08-m2", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 1.65);
+  tl.fromTo("#f08-m3", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 2.0);
+
+  // Scene 3 (2.6–3.5s): settle and hold
+  tl.to("#f08-world", { y: -4, duration: 0.9, ease: "sine.out" }, 2.6);
+
+  window.__timelines["f08"] = tl;
+</script>
+</template>
+</body></html>

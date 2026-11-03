@@ -3,7 +3,7 @@
   "specName": "Plan cards that respond on the Copilot app board",
   "branch": "main",
   "currentStep": "implement",
-  "status": "completed",
+  "status": "implemented",
   "history": [
     {
       "step": "specify",
@@ -212,6 +212,20 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-10-11T21:22:38.548Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "user",
+      "at": "2026-10-28T15:37:38.492Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-28T15:38:28.590Z"
     }
   ],
   "unattended": true,
@@ -320,7 +334,7 @@
       "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/636-board-states-card --strict",
       "source": "derived",
       "exitCode": 0,
-      "durationSeconds": 0.0,
+      "durationSeconds": 0,
       "result": "[plan-check] plan.md: 1 call path, 3 lines ·   WARNING plan.md:31  `apps/copilot-canvas/public/app.js` has no `:line`, so it is unverified (no-line) ·   0 error(s), 1 warning(s)"
     },
     {
@@ -524,5 +538,6 @@
       ]
     }
   },
-  "last_action": "12/12 tasks done; 171 board tests and 4697 unit tests pass"
+  "last_action": "12/12 tasks done; 171 board tests and 4697 unit tests pass",
+  "telemetryInstanceId": "47735156-dc6e-41bf-85a8-28eca317b240"
 }

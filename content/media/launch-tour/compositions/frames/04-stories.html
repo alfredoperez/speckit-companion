@@ -1,0 +1,48 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /></head>
+<body>
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f04 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f04 .f04-bg { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%), #0a0913; }
+#f04 .f04-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f04 .f04-kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f04 .f04-rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:left center; }
+#f04 .f04-h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f04 .f04-h i { font-style:normal; color:#a78bfa; }
+#f04 .f04-h span { display:inline-block; }
+#f04 .f04-win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f04 .f04-win img { position:absolute; display:block; }
+</style>
+<div id="f04" data-composition-id="f04" data-width="1920" data-height="1080" data-duration="4">
+<div id="f04-bg" class="f04-bg clip" data-start="0" data-duration="4" data-track-index="0"></div>
+<div id="f04-dots" class="f04-dots clip" data-start="0" data-duration="4" data-track-index="0"></div>
+
+<div id="f04-head" style="position:absolute;left:96px;top:70px;width:1700px"><div id="f04-kicker" class="f04-kicker">The viewer</div><div id="f04-rule" class="f04-rule"></div><div class="f04-h" style="font-size:64px;margin-top:22px"><span id="f04-h1">Stories become <i>cards</i>.</span> <span id="f04-h2">Scenarios in colour.</span></div></div>
+<div id="f04-win" class="f04-win" style="left:230px;top:260px;width:1460px;height:790px;"><img id="f04-shot" data-layout-allow-overflow src="assets/tall-viewer.png" alt="" style="left:0px;top:-330px;width:1460px" /></div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  // Scene 1: kicker + headline enter top-left, window rises in below
+  tl.fromTo("#f04-kicker", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 0);
+  tl.fromTo("#f04-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 0.08);
+  tl.fromTo("#f04-h1", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.12);
+  tl.fromTo("#f04-win", { opacity: 0, y: 90, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "power2.out" }, 0);
+
+  // Scene 2: steady pan from the US-1 card down into Given/When/Then
+  tl.fromTo("#f04-shot", { y: 0 }, { y: -350, duration: 3.0, ease: "none" }, 0.6);
+  // second voiceover cue: "Scenarios in colour."
+  tl.fromTo("#f04-h2", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 1.9);
+
+  // Scene 3: pan eases out on the coloured scenarios and holds
+  tl.fromTo("#f04-shot", { y: -350 }, { y: -373, duration: 0.4, ease: "power2.out", immediateRender: false }, 3.6);
+
+  window.__timelines["f04"] = tl;
+</script>
+</template>
+</body></html>

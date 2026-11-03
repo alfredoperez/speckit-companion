@@ -1,0 +1,60 @@
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f13 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f13 .bg { position:absolute; inset:0; background-color:#0a0913; background-image:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f13 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f13 .f13-world { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0; }
+#f13 .f13-scrim { position:absolute; left:0; top:0; width:1920px; height:330px; background:linear-gradient(180deg, rgba(10,9,19,.96) 0%, rgba(10,9,19,.88) 62%, rgba(10,9,19,0) 100%); }
+#f13 .f13-copy { position:absolute; left:96px; top:70px; width:1700px; }
+#f13 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f13 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; }
+#f13 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f13 .h i { font-style:normal; color:#a78bfa; }
+#f13 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f13 .win img { position:absolute; display:block; }
+#f13 .f13-halo { position:absolute; left:753px; top:536px; width:24px; height:24px; border-radius:50%; border:2px solid rgb(176,124,40); }
+</style>
+<div id="f13" data-composition-id="f13" data-width="1920" data-height="1080" data-duration="4">
+<div id="f13-bg" class="bg clip" data-start="0" data-duration="4" data-track-index="0"></div>
+<div id="f13-dots" class="dots clip" data-start="0" data-duration="4" data-track-index="1"></div>
+
+<div id="f13-world" class="f13-world">
+  <div id="f13-win" class="win" style="left:210px;top:260px;width:1500px;height:790px;"><img src="assets/living-drift-window.png" alt="" style="left:0px;top:0px;width:1500px" /></div>
+  <div id="f13-halo-a" class="f13-halo"></div>
+  <div id="f13-halo-b" class="f13-halo"></div>
+</div>
+
+<div id="f13-scrim" class="f13-scrim"></div>
+
+<div class="f13-copy">
+  <div id="f13-kicker" class="kicker">Living specs</div><div id="f13-rule" class="rule"></div>
+  <div id="f13-head" class="h" style="font-size:64px;margin-top:22px">Specs that say when the code <i>drifted</i>.</div>
+</div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  // Scene 1 (0.0–1.2s): tight on the Drifted requirement, focus resolves, the badge pulses
+  tl.fromTo("#f13-world",
+    { x: -1547, y: -791.5, scale: 2.3, filter: "blur(6px)" },
+    { x: -1547, y: -791.5, scale: 2.3, filter: "blur(0px)", duration: 0.5, ease: "power2.out" }, 0);
+  tl.fromTo("#f13-kicker", { opacity: 0, x: -36 }, { opacity: 1, x: 0, duration: 0.3, ease: "expo.out" }, 0.1);
+  tl.fromTo("#f13-rule", { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.32, ease: "expo.out" }, 0.16);
+  tl.fromTo("#f13-head", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.22);
+  tl.fromTo("#f13-halo-a", { scale: 0.6, opacity: 0.9 }, { scale: 2.6, opacity: 0, duration: 0.7, ease: "power2.out" }, 0.35);
+  tl.fromTo("#f13-halo-b", { scale: 0.6, opacity: 0.9 }, { scale: 2.6, opacity: 0, duration: 0.7, ease: "power2.out" }, 0.75);
+
+  // Scene 2 (1.2–3.4s): one continuous decelerating zoom-out to the whole window
+  tl.fromTo("#f13-world",
+    { x: -1547, y: -791.5, scale: 2.3 },
+    { x: 0, y: 0, scale: 1, duration: 2.2, ease: "power4.out", immediateRender: false }, 1.2);
+  tl.fromTo("#f13-scrim", { opacity: 1 }, { opacity: 0, duration: 1.4, ease: "power2.out", immediateRender: false }, 1.2);
+
+  // Scene 3 (3.4–4.0s): locked wide, hold
+  window.__timelines["f13"] = tl;
+</script>
+</template>

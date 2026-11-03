@@ -1,0 +1,33 @@
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f02 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f02 .f02-ground { position:absolute; inset:0; background:#0a0913; }
+#f02 .f02-bg { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f02 .f02-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f02 .f02-h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f02 .f02-stack { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:34px; }
+#f02 .f02-lockup { display:flex; align-items:center; gap:28px; }
+#f02 .f02-mark { width:120px; height:120px; }
+#f02 .f02-tag { font-size:46px; font-weight:600; color:#b6b0d2; }
+</style>
+<div id="f02" data-composition-id="f02" data-width="1920" data-height="1080" data-duration="3.2">
+  <div id="f02-ground" class="clip f02-ground" data-start="0" data-duration="3.2" data-track-index="0">
+    <div class="f02-bg"></div><div class="f02-dots"></div>
+  </div>
+  <div id="f02-stack" class="clip f02-stack" data-start="0" data-duration="3.2" data-track-index="1">
+    <div id="f02-lockup" class="f02-lockup"><img class="f02-mark" src="assets/moss.svg" alt="" /><div class="f02-h" style="font-size:132px">SpecKit Companion</div></div>
+    <div id="f02-tag" class="f02-tag">See and steer everything your AI builds.</div>
+  </div>
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#f02-lockup", { y: 46, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 0.05);
+  tl.fromTo("#f02-tag", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, 0.9);
+  tl.fromTo("#f02-stack", { scale: 1 }, { scale: 1.015, duration: 2.5, ease: "none" }, 0);
+  window.__timelines["f02"] = tl;
+</script>
+</template>

@@ -1,0 +1,250 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 2,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "overlapping_gsap_tweens",
+        "severity": "warning",
+        "message": "GSAP tweens overlap on \"#f15-cur\" for x, y between 1.40s and 1.45s.",
+        "selector": "#f15-cur",
+        "dataAttributes": {},
+        "sourceFile": "/Users/alfredoperez/dev/GitHub/speckit-companion/content/media/demo-tour/compositions/frames/15-comment-refine.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Shorten the earlier tween, move the later tween, or add `overwrite: \"auto\"`."
+      },
+      {
+        "code": "overlapping_gsap_tweens",
+        "severity": "warning",
+        "message": "GSAP tweens overlap on \"#f15-ring\" for scale, opacity between 2.00s and 2.10s.",
+        "selector": "#f15-ring",
+        "dataAttributes": {},
+        "sourceFile": "/Users/alfredoperez/dev/GitHub/speckit-companion/content/media/demo-tour/compositions/frames/15-comment-refine.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Shorten the earlier tween, move the later tween, or add `overwrite: \"auto\"`."
+      }
+    ],
+    "filesScanned": 24
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 2,
+    "findings": [
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 22.1,
+        "selector": "#f08-cam",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 520,
+          "top": 133,
+          "right": 1678.34,
+          "bottom": 1344,
+          "width": 1158.34,
+          "height": 1211
+        },
+        "containerSelector": "#f08-win",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 520,
+          "top": 133,
+          "right": 1400,
+          "bottom": 1053,
+          "width": 880,
+          "height": 920
+        },
+        "overflow": {
+          "right": 278.34,
+          "bottom": 291
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/08-sidebar.html",
+        "bbox": {
+          "x": 520,
+          "y": 133,
+          "width": 1158.34,
+          "height": 1211
+        },
+        "firstSeen": 22.1,
+        "lastSeen": 22.1,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          22.1
+        ]
+      },
+      {
+        "code": "escaped_container",
+        "severity": "info",
+        "time": 22.1,
+        "selector": "#v08",
+        "message": "Positioned element renders far outside its offset parent — its coordinates were likely computed in a different frame (canvas/viewport pixels).",
+        "rect": {
+          "left": 520,
+          "top": 133,
+          "right": 4382.02,
+          "bottom": 2554.99,
+          "width": 3862.02,
+          "height": 2421.99
+        },
+        "containerSelector": "#f08-cam",
+        "text": "",
+        "fixHint": "Compute left/top in the offset parent's frame (subtract its rect), or mark intentional placement with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 520,
+          "top": 133,
+          "right": 1678.34,
+          "bottom": 1344,
+          "width": 1158.34,
+          "height": 1211
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "v08",
+          "data-start": "0",
+          "data-duration": "6",
+          "data-media-start": "2.5",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/08-sidebar.html",
+        "bbox": {
+          "x": 520,
+          "y": 133,
+          "width": 3862.02,
+          "height": 2421.99
+        },
+        "firstSeen": 22.1,
+        "lastSeen": 22.1,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          22.1
+        ]
+      }
+    ],
+    "duration": 132.6,
+    "samples": [
+      7.367,
+      22.1,
+      36.833,
+      51.567,
+      66.3,
+      81.033,
+      95.767,
+      110.5,
+      125.233
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 2,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      7.367,
+      36.833,
+      66.3,
+      95.767,
+      125.233
+    ],
+    "checked": 15,
+    "passed": 15
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 2,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "film_silent",
+        "severity": "warning",
+        "message": "This 133 s film has no sound source (no <audio>, no <video> with sound): add a music bed and sounds on the visible actions unless the person asked for silence; see references/sound.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "\"The GUI for GitHub Spec Kit, in VS Code.\" (9 words) is on screen 2.37 s (±0.01 s), under its 2.40 s floor: hold it about 0.5 s + 0.3 s a word (3.20 s here) before it leaves or changes; see references/motion.md.",
+        "text": "The GUI for GitHub Spec Kit, in VS Code.",
+        "selector": "#f07-body > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/07-hook-title.html",
+        "bbox": {
+          "x": 657.14,
+          "y": 558.48,
+          "width": 735.59,
+          "height": 48
+        },
+        "time": 15.246,
+        "words": 9,
+        "seconds": 2.366,
+        "floorSeconds": 2.4
+      }
+    ],
+    "enabled": true,
+    "step": 0.22100000000000364,
+    "samples": 599
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

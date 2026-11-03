@@ -1,0 +1,69 @@
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f11 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f11 .bg { position:absolute; inset:0; background:#0a0913; background-image:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f11 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f11 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f11 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:0 50%; }
+#f11 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f11 .h span { display:inline-block; }
+#f11 .h i { font-style:normal; color:#a78bfa; display:inline-block; }
+#f11 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f11 .world { position:absolute; left:0; top:0; width:1500px; height:1390px; transform-origin:0 0; }
+#f11 .world img { position:absolute; display:block; }
+#f11 .ring { position:absolute; border:2px solid #8b5cf6; border-radius:10px; background:rgba(139,92,246,.06); }
+</style>
+<div id="f11" data-composition-id="f11" data-width="1920" data-height="1080" data-duration="3">
+<div id="f11-bg" class="bg clip" data-start="0" data-duration="3" data-track-index="0"></div>
+<div id="f11-dots" class="dots clip" data-start="0" data-duration="3" data-track-index="0"></div>
+
+<div style="position:absolute;left:96px;top:70px;width:1700px">
+  <div id="f11-kicker" class="kicker">Coverage</div>
+  <div id="f11-rule" class="rule"></div>
+  <div class="h" style="font-size:64px;margin-top:22px"><span id="f11-h1">Requirement,</span> <span id="f11-h2">task,</span> <i id="f11-h3">test</i><span id="f11-h4">.</span></div>
+</div>
+<div id="f11-win" class="win" style="left:210px;top:260px;width:1500px;height:790px;">
+  <div id="f11-world" class="world" data-layout-allow-overflow>
+    <img src="assets/tall-overview-coverage.png" alt="" style="left:0px;top:0px;width:1500px" />
+    <div id="f11-ring-id" class="ring" style="left:38px;top:263px;width:118px;height:50px;"></div>
+    <div id="f11-ring-tasks" class="ring" style="left:44px;top:330px;width:246px;height:56px;"></div>
+    <div id="f11-ring-test" class="ring" style="left:1250px;top:333px;width:212px;height:54px;"></div>
+  </div>
+</div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  // Scene 1 (0.0–0.5s): kicker + headline enter; the coverage window rises in.
+  tl.fromTo("#f11-kicker", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 0);
+  tl.fromTo("#f11-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 0.08);
+  tl.fromTo("#f11-h1", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.1);
+  tl.fromTo("#f11-win", { opacity: 0, y: 70, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power3.out" }, 0.05);
+
+  // Scene 2 (0.5–2.4s): camera dives onto the FR id, eases down to the task chips, then travels the row to the evidence column.
+  tl.to("#f11-world", { x: -6, y: -145, scale: 1.8, duration: 0.55, ease: "power4.out" }, 0.5);
+  tl.fromTo("#f11-ring-id", { opacity: 0, scale: 1.12 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power3.out" }, 0.75);
+
+  tl.to("#f11-world", { x: -48, y: -260.5, scale: 1.9, duration: 0.4, ease: "power2.inOut" }, 1.05);
+  tl.fromTo("#f11-h2", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 1.05);
+  tl.to("#f11-ring-id", { opacity: 0.3, duration: 0.25, ease: "power1.out" }, 1.15);
+  tl.fromTo("#f11-ring-tasks", { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power3.out" }, 1.15);
+
+  tl.to("#f11-world", { x: -1320, y: -217, scale: 1.8, duration: 0.9, ease: "power2.inOut" }, 1.45);
+  tl.fromTo("#f11-world", { filter: "blur(0px)" }, { filter: "blur(2.5px)", duration: 0.45, ease: "power2.in" }, 1.45);
+  tl.to("#f11-world", { filter: "blur(0px)", duration: 0.45, ease: "power2.out" }, 1.9);
+  tl.to("#f11-ring-tasks", { opacity: 0.3, duration: 0.25, ease: "power1.out" }, 1.9);
+
+  // Scene 3 (2.4–3.0s): lands on the evidence column; the "test" beat lands and the camera drifts at rest.
+  tl.fromTo("#f11-h3", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 1.95);
+  tl.fromTo("#f11-h4", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 2.05);
+  tl.fromTo("#f11-ring-test", { opacity: 0, scale: 1.12 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power3.out" }, 2.15);
+  tl.to("#f11-world", { x: -1407.6, y: -246.7, scale: 1.86, duration: 0.65, ease: "sine.out" }, 2.35);
+
+  window.__timelines["f11"] = tl;
+</script>
+</template>

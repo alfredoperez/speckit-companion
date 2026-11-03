@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>SpecKit Companion tour: one run, four places to read it</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-style:normal; font-display:block; }
+      @font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-style:normal; font-display:block; }
+
+      * { margin:0; padding:0; box-sizing:border-box; }
+
+      /* Constellation, from THEME.md. One accent, violet. The greens belong to the mascot. */
+      :root {
+        --ground:#0a0913; --panel:#0d0b1a; --rule:#1d1930;
+        --text:#edeaf6; --body:#b6b0d2; --muted:#9d97bd; --dim:#6f6994;
+        --accent:#a78bfa; --accent-solid:#8b5cf6;
+        --font:"Figtree","Helvetica Neue",Arial,sans-serif;
+        --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+      }
+
+      body { background:var(--ground); color:var(--text); font-family:var(--font); }
+      #root { position:relative; width:100%; height:100%; overflow:hidden; background:var(--ground); }
+      .clip { position:absolute; inset:0; }
+
+      /* ground: dot grid and two glows, on for the whole film */
+      .grid { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+      .glow { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.13), transparent 70%); }
+
+      /* a beat: a framed picture on top, a caption band under it */
+      .beat { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:62px 120px 0; }
+      .frame { position:relative; width:1480px; height:780px; border-radius:26px; overflow:hidden; background:var(--panel);
+               box-shadow:0 0 0 2px #7c5cf0, 0 34px 80px rgba(0,0,0,.6); }
+      .frame > video, .frame > img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top; display:block; }
+      .frame.split { display:flex; gap:0; background:transparent; box-shadow:none; overflow:visible; border-radius:0; }
+      .frame.split .half { position:relative; flex:1; height:100%; border-radius:26px; overflow:hidden; background:var(--panel);
+               box-shadow:0 0 0 2px #7c5cf0, 0 34px 80px rgba(0,0,0,.6); }
+      .frame.split .half + .half { margin-left:36px; }
+      .frame.split .half > video, .frame.split .half > img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top left; display:block; }
+      .frame.pan > img { object-fit:cover; object-position:top; height:auto; width:100%; }
+      .frame.fit > img { object-fit:cover; object-position:top left; }
+      .frame.wide { width:1680px; }
+
+      .band { position:absolute; left:0; right:0; bottom:0; height:238px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 160px; text-align:center; }
+      .kicker { font-family:var(--mono); font-size:19px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+      .cap { font-size:54px; font-weight:800; letter-spacing:-.025em; line-height:1.12; max-width:1500px; text-wrap:balance; }
+      .cap i { font-style:italic; font-weight:600; color:var(--accent); }
+      .cap .word { display:inline-block; }
+
+      /* opening and closing cards */
+      .card { display:flex; align-items:center; justify-content:center; padding:0 160px; text-align:center; }
+      .title { font-size:112px; font-weight:800; letter-spacing:-.03em; line-height:1.02; max-width:1500px; text-wrap:balance; }
+      .title i { font-style:italic; font-weight:600; color:var(--accent); }
+      .close { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px; padding-top:60px; }
+      .close .mascot { width:300px; height:300px; object-fit:contain; filter:drop-shadow(0 0 60px rgba(124,201,138,.28)); }
+      .close .wordmark { display:flex; align-items:center; gap:18px; font-size:72px; font-weight:800; letter-spacing:-.03em; }
+      .close .wordmark img { width:72px; height:72px; }
+      .close .url { font-family:var(--mono); font-size:34px; color:var(--accent); letter-spacing:.02em; }
+      .close .chips { display:flex; gap:18px; margin-top:8px; }
+      .chip { padding:14px 26px; border:1.5px solid rgba(167,139,250,.5); border-radius:999px; font-size:26px; font-weight:600; color:var(--body); background:rgba(139,92,246,.10); }
+      .close .foot { font-size:28px; color:var(--muted); margin-top:4px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="tour" data-start="0" data-width="1920" data-height="1080" data-duration="76">
+
+      <div id="ground" class="clip" data-start="0" data-duration="76" data-track-index="0">
+        <div class="grid"></div><div class="glow"></div>
+      </div>
+
+      <!-- 1. the pain: a raw spec in a plain editor -->
+      <section id="b1" class="clip beat" data-start="0" data-duration="7" data-track-index="1">
+        <div class="frame" id="b1-frame"><img id="b1-img" src="assets/img/raw-spec.png" alt="" /></div>
+        <div class="band"><div class="kicker">GitHub spec-kit</div><div class="cap" id="b1-cap">You wrote the spec. Then nobody opened it again.</div></div>
+      </section>
+
+      <!-- 2. the viewer -->
+      <section id="b2" class="beat"><div class="frame fit" id="b2-frame"><img id="b2-img" src="assets/img/rich-spec-scenarios.png" alt="" /></div>
+        <div class="band"><div class="kicker">SpecKit Companion</div><div class="cap" id="b2-cap">It gives spec-kit a <i>face</i>.</div></div>
+      </section>
+
+      <!-- 3. stories and tasks -->
+      <section id="b3" class="clip beat" data-start="15" data-duration="7" data-track-index="1">
+        <div class="frame pan" id="b3-frame"><img id="b3-img" src="assets/img/tall-tasks.png" alt="" /></div>
+        <div class="band"><div class="kicker">The viewer</div><div class="cap" id="b3-cap">Stories you can test. Tasks you can <i>click</i>.</div></div>
+      </section>
+
+      <!-- 4. comments and refine -->
+      <section id="b4" class="beat"><div class="frame fit" id="b4-frame"><img id="b4-img" src="assets/img/comment-editor.png" alt="" /></div>
+        <div class="band"><div class="kicker">Review</div><div class="cap" id="b4-cap">Leave a note. <i>Refine</i> sends it back to the AI.</div></div>
+      </section>
+
+      <!-- 5. the overview -->
+      <section id="b5" class="beat"><div class="frame pan" id="b5-frame"><img id="b5-img" src="assets/img/tall-overview-verified.png" alt="" /></div>
+        <div class="band"><div class="kicker">The Overview</div><div class="cap" id="b5-cap">When it finishes, it leaves a <i>record</i> of the run.</div></div>
+      </section>
+
+      <!-- 6. living specs -->
+      <section id="b6" class="beat"><div class="frame fit" id="b6-frame"><img id="b6-img" src="assets/img/living-drift-window.png" alt="" /></div>
+        <div class="band"><div class="kicker">Living specs</div><div class="cap" id="b6-cap">Specs that live next to the code, and say when it <i>drifts</i>.</div></div>
+      </section>
+
+      <!-- 7. plan components: states, then calls, then code -->
+      <section id="b7" class="beat">
+        <div class="frame split wide" id="b7-frame">
+          <div class="half"><video id="b7-v1" src="assets/clips/plan-blocks-states-clicks.mp4" muted playsinline data-start="48" data-duration="10"></video></div>
+          <div class="half"><video id="b7-v2" src="assets/clips/plan-blocks-calls-strike.mp4" muted playsinline data-start="48" data-duration="10"></video></div>
+        </div>
+        <div class="band"><div class="kicker">New in the plan</div><div class="cap" id="b7-cap">Four plan components: <i>states</i>, <i>calls</i>, <i>screens</i> and <i>code</i>.</div></div>
+      </section>
+
+      <!-- 8. workflow builder -->
+      <section id="b8" class="beat"><div class="frame fit" id="b8-frame"><img id="b8-img" src="assets/img/builder.png" alt="" /></div>
+        <div class="band"><div class="kicker">Workflow builder</div><div class="cap" id="b8-cap">The pipeline as <i>nodes</i>. Rearrange it.</div></div>
+      </section>
+
+      <!-- 9. the other apps -->
+      <section id="b9" class="beat">
+        <div class="frame split wide" id="b9-frame">
+          <div class="half"><video id="b9-v" src="assets/clips/board-story.mp4" muted playsinline data-start="65" data-duration="7" data-media-start="8" style="object-position:center 30%; transform:scale(1.08)"></video></div>
+          <div class="half"><img id="b9-img" src="assets/img/mod-steps-timed-pane.png" alt="" /></div>
+        </div>
+        <div class="band"><div class="kicker">The other apps</div><div class="cap" id="b9-cap">The same run in <i>Copilot</i>, and beside <i>Claude Code</i>.</div></div>
+      </section>
+
+      <!-- 10. close -->
+      <section id="b10" class="clip close" data-start="72" data-duration="4" data-track-index="1">
+        <img class="mascot" id="b10-mascot" src="assets/img/mascot.png" alt="" />
+        <div class="wordmark" id="b10-wordmark"><img src="assets/img/moss.svg" alt="" />SpecKit Companion</div>
+        <div class="url" id="b10-url">speckit-companion.dev</div>
+        <div class="chips" id="b10-chips"><span class="chip">VS Code</span><span class="chip">spec-kit extension</span><span class="chip">Copilot app</span><span class="chip">Claude Code mod</span></div>
+        <div class="foot" id="b10-foot">Free and open source. Works with Claude, Copilot, Gemini, Codex and more.</div>
+      </section>
+    </div>
+
+    <script>
+      const beats = [
+        ["#b1", 0, 7], ["#b2", 7, 8], ["#b3", 15, 7], ["#b4", 22, 8], ["#b5", 30, 10],
+        ["#b6", 40, 8], ["#b7", 48, 10], ["#b8", 58, 7], ["#b9", 65, 7],
+      ];
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      for (const [id, start, dur] of beats) {
+        const frame = `${id}-frame`, cap = `${id} .cap`, kick = `${id} .kicker`;
+        if (!document.querySelector(id).classList.contains("clip")) {
+          tl.set(id, { autoAlpha: 0 }, 0);
+          tl.set(id, { autoAlpha: 1 }, start);
+          tl.set(id, { autoAlpha: 0 }, start + dur);
+        }
+        tl.fromTo(frame, { y: 36, opacity: 0, scale: 0.985 }, { y: 0, opacity: 1, scale: 1, duration: 0.55, ease: "power3.out" }, start);
+        tl.fromTo(kick, { opacity: 0 }, { opacity: 1, duration: 0.4 }, start + 0.25);
+        tl.fromTo(cap, { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.55, ease: "power3.out" }, start + 0.35);
+        tl.to([frame, cap, kick], { opacity: 0, duration: 0.35, ease: "power2.in" }, start + dur - 0.35);
+      }
+      // slow pan down the tall tasks capture
+      tl.fromTo("#b3-img", { y: 0 }, { y: -560, duration: 6.4, ease: "none" }, 15.3);
+      tl.fromTo("#b2-img", { scale: 1.06, transformOrigin: "40% 30%" }, { scale: 1.0, duration: 7.4, ease: "none" }, 7.3);
+      tl.fromTo("#b4-img", { scale: 1.0, transformOrigin: "50% 60%" }, { scale: 1.08, duration: 7.4, ease: "none" }, 22.3);
+      tl.fromTo("#b5-img", { y: 0 }, { y: -420, duration: 9.4, ease: "none" }, 30.3);
+      tl.fromTo("#b6-img", { scale: 1.45, transformOrigin: "46% 22%" }, { scale: 1.5, duration: 7.4, ease: "none" }, 40.3);
+      tl.fromTo("#b8-img", { x: 0, scale: 1.65, transformOrigin: "0% 0%" }, { x: -700, scale: 1.65, duration: 6.4, ease: "none" }, 58.3);
+      // close: everything rises in, mascot first
+      tl.fromTo("#b10-mascot", { y: 40, opacity: 0, scale: 0.9 }, { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.4)" }, 72);
+      tl.fromTo(["#b10-wordmark", "#b10-url", "#b10-chips", "#b10-foot"], { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out", stagger: 0.12 }, 72.3);
+      window.__timelines["tour"] = tl;
+    </script>
+  </body>
+</html>

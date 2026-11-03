@@ -1,0 +1,56 @@
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f13 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f13-ground { position:absolute; inset:0; background:#0a0913; }
+#f13-glow { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f13-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f13-head { position:absolute; left:96px; top:22px; right:96px; display:flex; align-items:baseline; gap:28px; }
+#f13-kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; white-space:nowrap; }
+#f13-title { font-weight:800; font-size:52px; letter-spacing:-.03em; line-height:1.15; }
+#f13-title i { font-style:normal; color:#a78bfa; }
+#f13-win { position:absolute; overflow:hidden; border-radius:16px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f13-win.full { border-radius:0; box-shadow:none; }
+#f13-shade { position:absolute; left:0; right:0; bottom:0; height:420px; background:linear-gradient(0deg, rgba(10,9,19,.94) 0%, rgba(10,9,19,.78) 45%, rgba(10,9,19,0) 100%); }
+#f13-cap { position:absolute; left:96px; bottom:84px; right:96px; }
+#f13-cap .k { font-family:"JetBrains Mono",monospace; font-size:30px; letter-spacing:.14em; text-transform:uppercase; color:#c4b5fd; }
+#f13-cap .t { font-weight:800; font-size:92px; letter-spacing:-.035em; line-height:1.02; margin-top:14px; }
+#f13-cap .t i { font-style:normal; color:#a78bfa; }
+</style>
+<div id="f13" data-composition-id="f13" data-width="1920" data-height="1080" data-duration="9">
+    <div id="f13-ground" class="clip" data-start="0" data-duration="9" data-track-index="0"></div>
+  <div id="f13-glow"></div><div id="f13-dots"></div>
+  <div id="f13-win" class="" style="left:398px;top:133px;width:1123px;height:920px"><div id="f13-cam" style="position:absolute;left:0;top:0;width:1123px;height:920px;transform-origin:0 0"><video id="v13" src="assets/tour-comment.mp4" muted playsinline data-start="0" data-duration="9" data-media-start="0.5" style="position:absolute;left:-471px;top:-193px;width:1811px;height:1136px;object-fit:fill"></video><div id="f13-ring" style="position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:3px solid #8b5cf6;opacity:0"></div><div id="f13-cur" style="position:absolute;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:rgba(139,92,246,.85);border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0"></div></div></div>
+  <div id="f13-head"><div id="f13-kicker">Talk back to the spec</div><div id="f13-title">Hover a line. Write a <i>note</i>.</div></div>
+</div>
+<script>
+    window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo('#f13-kicker', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0);
+  tl.fromTo('#f13-title', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' }, 0.12);
+  tl.fromTo('#f13-win', { opacity: 0, y: 36, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'power3.out' }, 0.25);
+  tl.set('#f13-cam', { scale: 1, x: 0, y: 0 }, 0);
+  tl.set('#f13-cur', { x: 561, y: 880 }, 0);
+  tl.set('#f13-ring', { opacity: 0 }, 0);
+  tl.to('#f13-cur', { opacity: 1, duration: 0.3 }, 1.1);
+  // hover the line
+  tl.to('#f13-cur', { x: 419, y: 123, duration: 0.55, ease: 'power2.inOut' }, 1.4);
+  tl.to('#f13-cam', { scale: 1.15, x: 0, y: 0, duration: 0.8, ease: 'power2.inOut' }, 1.5);
+  tl.set('#f13-ring', { x: 419, y: 123, scale: 0.4, opacity: 0.9 }, 2.0);
+  tl.to('#f13-ring', { scale: 1.6, opacity: 0, duration: 0.6, ease: 'power2.out' }, 2.0);
+  // open a comment
+  tl.to('#f13-cur', { x: 855, y: 122, duration: 0.55, ease: 'power2.inOut' }, 2.9);
+  tl.to('#f13-cam', { scale: 1.15, x: -168.4, y: 0, duration: 0.8, ease: 'power2.inOut' }, 3.0);
+  tl.set('#f13-ring', { x: 855, y: 122, scale: 0.4, opacity: 0.9 }, 3.5);
+  tl.to('#f13-ring', { scale: 1.6, opacity: 0, duration: 0.6, ease: 'power2.out' }, 3.5);
+  // type the note
+  tl.to('#f13-cur', { x: 399, y: 236, duration: 0.55, ease: 'power2.inOut' }, 3.9);
+  tl.to('#f13-cam', { scale: 1.15, x: 0, y: 0, duration: 0.8, ease: 'power2.inOut' }, 4.0);
+  tl.set('#f13-ring', { x: 399, y: 236, scale: 0.4, opacity: 0.9 }, 4.5);
+  tl.to('#f13-ring', { scale: 1.6, opacity: 0, duration: 0.6, ease: 'power2.out' }, 4.5);
+  tl.to('#f13-cam', { scale: 1, x: 0, y: 0, duration: 0.7, ease: 'power2.inOut' }, 5.9);
+  tl.to('#f13-glow', { opacity: 0.75, duration: 9, ease: 'sine.inOut' }, 0);
+  window.__timelines["f13"] = tl;
+</script>
+</template>

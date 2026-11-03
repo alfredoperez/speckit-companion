@@ -1,0 +1,35 @@
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f21 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f21-ground { position:absolute; inset:0; background:#0a0913; }
+#f21-glow { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f21-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f21-head { position:absolute; left:96px; top:22px; right:96px; display:flex; align-items:baseline; gap:28px; }
+#f21-kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; white-space:nowrap; }
+#f21-title { font-weight:800; font-size:52px; letter-spacing:-.03em; line-height:1.15; }
+#f21-title i { font-style:normal; color:#a78bfa; }
+#f21-win { position:absolute; overflow:hidden; border-radius:16px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f21-win.full { border-radius:0; box-shadow:none; }
+#f21-shade { position:absolute; left:0; right:0; bottom:0; height:420px; background:linear-gradient(0deg, rgba(10,9,19,.94) 0%, rgba(10,9,19,.78) 45%, rgba(10,9,19,0) 100%); }
+#f21-cap { position:absolute; left:96px; bottom:84px; right:96px; }
+#f21-cap .k { font-family:"JetBrains Mono",monospace; font-size:30px; letter-spacing:.14em; text-transform:uppercase; color:#c4b5fd; }
+#f21-cap .t { font-weight:800; font-size:92px; letter-spacing:-.035em; line-height:1.02; margin-top:14px; }
+#f21-cap .t i { font-style:normal; color:#a78bfa; }
+</style>
+<div id="f21" data-composition-id="f21" data-width="1920" data-height="1080" data-duration="2">
+    <div id="f21-ground" class="clip" data-start="0" data-duration="2" data-track-index="0"></div>
+  <div id="f21-glow"></div><div id="f21-dots"></div>
+  <div id="f21-body"><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:30px;letter-spacing:.14em;color:#a78bfa">WORK IN PROGRESS</div>
+  <div style="font-weight:800;font-size:150px;letter-spacing:-.04em;margin-top:24px">Coming <span style="color:#a78bfa">next</span>.</div></div></div>
+</div>
+<script>
+    window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  tl.from('#f21-body > div > *', { opacity: 0, y: 26, duration: 0.5, ease: 'power3.out', stagger: 0.1 }, 0.05);
+  tl.to('#f21-glow', { opacity: 0.75, duration: 2, ease: 'sine.inOut' }, 0);
+  window.__timelines["f21"] = tl;
+</script>
+</template>

@@ -15,7 +15,7 @@ Pictures and footage of the real product, and the scripted checks that take them
 
 - **Never take a screenshot by hand.** Every product picture comes from a script step, so it can be retaken. When no crop shows the surface, add a step.
 - **Reuse first.** Look in `.shots/` and at `npm run shots:place -- --list` before opening a window, and open one once for everything missing.
-- **Quiet Light is the theme** for docs, changelog and review pictures. It is the scripts' default; `--theme dark` gives Dark Modern.
+- **Quiet Light is the theme** for docs, changelog and review pictures. It is the scripts' default; `--theme dark` gives Dark Modern, and `--theme bearded` gives Bearded Theme Light, copied from the installed extension, for brochures and decks.
 - **A placed copy is a published filename.** READMEs and the Marketplace resolve images against current `main`, so add new files and never rename or delete one.
 - **Look at every crop before using it.** Open `_sheet.png` first, and retake a crop that is clipped, blank, still loading or covered.
 - **Concept pictures are diagrams**, an SVG with a 2x PNG beside it. Never a video still, never a caption burned into the picture.
@@ -64,6 +64,9 @@ Pictures and footage of the real product, and the scripted checks that take them
 | `overview-living-specs`, `overview-living-specs-window` | The Overview's living specs region, alone and in the whole window |
 | `overview-intent`, `overview-timing`, `overview-expectations`, `overview-verified`, `overview-decisions`, `overview-coverage`, `overview-run-log` | Each other region of a finished run's Overview |
 | `sidebar-hover`, `sidebar-more-actions` | A spec row hovered, and its More Actions menu open |
+| `plan-blocks-window`, `plan-blocks-calls`, `plan-blocks-states-picked`, `plan-blocks-screen`, `plan-blocks-code-pin`, `plan-blocks-state-shows-screen` | Plan block cards from three real Conduit plans (`apps/vscode/tests/fixtures/plan-blocks/`), one card per crop, each with a `_full-` whole-window capture. Step `shot-plan-blocks`; shot dark for the blog (`--theme dark`) |
+| `rich-spec-stories`, `rich-spec-scenarios`, `rich-spec-tasks`, `rich-overview`, `rich-overview-verified`, `rich-sidebar-specs`, `rich-sidebar-bugs-ideas` | A finished spec copied from this repository (`634-stock-hooks-only`), with five more completed ones beside it: the story card, its acceptance scenarios, the tasks with their files, the Overview's intent and Verified regions, and the side bar's Specs pane and its Bugs and Ideas panes. Step `shot-rich-specs` |
+| `tall-viewer`, `tall-tasks`, `tall-overview-intent`, `tall-overview-expectations`, `tall-overview-verified`, `tall-overview-decisions`, `tall-overview-coverage`, `tall-block-states`, `tall-block-calls`, `tall-block-screen`, `tall-block-code` | Portrait crops for a carousel or brochure: the window as tall as the screen with about 860px of editor, the page header, rail and footer hidden, each Overview region and each plan block with its heading. Step `shot-tall` |
 
 ## Adding a step or a crop
 
@@ -133,6 +136,7 @@ Each writes `.record/<name>/` (gitignored): a numbered sequence of PNG frames pl
 | `board-tasks-read` | `board-shots.mjs` | A run's whole task list on the Copilot board, scrolled |
 | `board-run-steps` | `board-shots.mjs` | Implement sent from the board's button, the rail turning to Running, tasks ticking, the rail reaching done |
 | `board-spec-journey` | `board-shots.mjs` | One spec from the list through Specify, Plan, Tasks and Implement, each sent from the board's button |
+| `plan-states`, `plan-calls`, `plan-state-screen` | `desktop-check.mjs` | Plan block cards clicked through: states picked one by one, a call struck and another commented, a state showing its screen. Frames are cut to the card; `events.json` holds each beat's frame and card box. `node tooling/scripts/frames-to-video.mjs <folder> <out.mp4\|out.gif>` makes the MP4 or a GIF preview |
 
 `mod-tick-task` and the two board run films use the same spec (`tooling/scripts/lib/teamboard-run.mjs`), so terminal and board footage cut together. `board-spec-journey` also writes `events.json`, the frame number and second of each beat; a `done` mark sits a few frames ahead of the tick on screen.
 

@@ -1,0 +1,1393 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 20
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 9,
+    "findings": [
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 10.583,
+        "selector": "#slot-04 > div:nth-of-type(1) > div:nth-of-type(4) > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 230,
+          "top": -70,
+          "right": 1690,
+          "bottom": 1656.53,
+          "width": 1460,
+          "height": 1726.53
+        },
+        "containerSelector": "#slot-04 > div:nth-of-type(1) > div:nth-of-type(4)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 230,
+          "top": 260,
+          "right": 1690,
+          "bottom": 1050,
+          "width": 1460,
+          "height": 790
+        },
+        "overflow": {
+          "top": 330,
+          "bottom": 606.53
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-4",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/04-stories.html",
+        "bbox": {
+          "x": 230,
+          "y": -70,
+          "width": 1460,
+          "height": 1726.53
+        },
+        "firstSeen": 10.583,
+        "lastSeen": 10.583,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          10.583
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 24.694,
+        "selector": "#slot-08 > div:nth-of-type(1) > div:nth-of-type(4) > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 210,
+          "top": 260,
+          "right": 1710,
+          "bottom": 1216.3,
+          "width": 1500,
+          "height": 956.3
+        },
+        "containerSelector": "#slot-08 > div:nth-of-type(1) > div:nth-of-type(4)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 210,
+          "top": 260,
+          "right": 1710,
+          "bottom": 1050,
+          "width": 1500,
+          "height": 790
+        },
+        "overflow": {
+          "bottom": 166.3
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-11",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/08-overview-record.html",
+        "bbox": {
+          "x": 210,
+          "y": 260,
+          "width": 1500,
+          "height": 956.3
+        },
+        "firstSeen": 24.694,
+        "lastSeen": 24.694,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          24.694
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 31.75,
+        "selector": "#slot-10 > div:nth-of-type(1) > div:nth-of-type(4) > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 66,
+          "top": 280,
+          "right": 1046,
+          "bottom": 1008.06,
+          "width": 980,
+          "height": 728.06
+        },
+        "containerSelector": "#slot-10 > div:nth-of-type(1) > div:nth-of-type(4)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 96,
+          "top": 280,
+          "right": 946,
+          "bottom": 1040,
+          "width": 850,
+          "height": 760
+        },
+        "overflow": {
+          "left": 30,
+          "right": 100
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-13",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/10-overview-fence.html",
+        "bbox": {
+          "x": 66,
+          "y": 280,
+          "width": 980,
+          "height": 728.06
+        },
+        "firstSeen": 31.75,
+        "lastSeen": 31.75,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          31.75
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 31.75,
+        "selector": "#slot-10 > div:nth-of-type(1) > div:nth-of-type(5) > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 944,
+          "top": 280,
+          "right": 1924,
+          "bottom": 961.45,
+          "width": 980,
+          "height": 681.45
+        },
+        "containerSelector": "#slot-10 > div:nth-of-type(1) > div:nth-of-type(5)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 974,
+          "top": 280,
+          "right": 1824,
+          "bottom": 1040,
+          "width": 850,
+          "height": 760
+        },
+        "overflow": {
+          "left": 30,
+          "right": 100
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-14",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/10-overview-fence.html",
+        "bbox": {
+          "x": 944,
+          "y": 280,
+          "width": 980,
+          "height": 681.45
+        },
+        "firstSeen": 31.75,
+        "lastSeen": 31.75,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          31.75
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 45.861,
+        "selector": "#slot-15 > div:nth-of-type(1) > div:nth-of-type(4) > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 210,
+          "top": 260,
+          "right": 2410,
+          "bottom": 1642.05,
+          "width": 2200,
+          "height": 1382.05
+        },
+        "containerSelector": "#slot-15 > div:nth-of-type(1) > div:nth-of-type(4)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 210,
+          "top": 260,
+          "right": 1710,
+          "bottom": 1050,
+          "width": 1500,
+          "height": 790
+        },
+        "overflow": {
+          "right": 700,
+          "bottom": 592.05
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-22",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/15-builder.html",
+        "bbox": {
+          "x": 210,
+          "y": 260,
+          "width": 2200,
+          "height": 1382.05
+        },
+        "firstSeen": 45.861,
+        "lastSeen": 45.861,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          45.861
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 52.917,
+        "selector": "#v-plan-blocks-states-clicks-mp4",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 96,
+          "top": 290,
+          "right": 956,
+          "bottom": 904.78,
+          "width": 860,
+          "height": 614.78
+        },
+        "containerSelector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(5)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 96,
+          "top": 290,
+          "right": 946,
+          "bottom": 630,
+          "width": 850,
+          "height": 340
+        },
+        "overflow": {
+          "right": 10,
+          "bottom": 274.78
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "v-plan-blocks-states-clicks-mp4",
+          "data-start": "0",
+          "data-duration": "4.5",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/16-plan-components.html",
+        "bbox": {
+          "x": 96,
+          "y": 290,
+          "width": 860,
+          "height": 614.78
+        },
+        "firstSeen": 52.917,
+        "lastSeen": 52.917,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          52.917
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 52.917,
+        "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(7) > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 974,
+          "top": 290,
+          "right": 1834,
+          "bottom": 615.61,
+          "width": 860,
+          "height": 325.61
+        },
+        "containerSelector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(7)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 974,
+          "top": 290,
+          "right": 1824,
+          "bottom": 630,
+          "width": 850,
+          "height": 340
+        },
+        "overflow": {
+          "right": 10
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-24",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/16-plan-components.html",
+        "bbox": {
+          "x": 974,
+          "y": 290,
+          "width": 860,
+          "height": 325.61
+        },
+        "firstSeen": 52.917,
+        "lastSeen": 52.917,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          52.917
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 52.917,
+        "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(9) > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 96,
+          "top": 682,
+          "right": 956,
+          "bottom": 981.52,
+          "width": 860,
+          "height": 299.52
+        },
+        "containerSelector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(9)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 96,
+          "top": 682,
+          "right": 946,
+          "bottom": 1022,
+          "width": 850,
+          "height": 340
+        },
+        "overflow": {
+          "right": 10
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-25",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/16-plan-components.html",
+        "bbox": {
+          "x": 96,
+          "y": 682,
+          "width": 860,
+          "height": 299.52
+        },
+        "firstSeen": 52.917,
+        "lastSeen": 52.917,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          52.917
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 52.917,
+        "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(11) > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 974,
+          "top": 252,
+          "right": 1834,
+          "bottom": 682,
+          "width": 860,
+          "height": 430
+        },
+        "containerSelector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(11)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 974,
+          "top": 682,
+          "right": 1824,
+          "bottom": 1022,
+          "width": 850,
+          "height": 340
+        },
+        "overflow": {
+          "right": 10,
+          "top": 430
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-26",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/16-plan-components.html",
+        "bbox": {
+          "x": 974,
+          "y": 252,
+          "width": 860,
+          "height": 430
+        },
+        "firstSeen": 52.917,
+        "lastSeen": 52.917,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          52.917
+        ]
+      }
+    ],
+    "duration": 63.5,
+    "samples": [
+      3.528,
+      10.583,
+      17.639,
+      24.694,
+      31.75,
+      38.806,
+      45.861,
+      52.917,
+      59.972
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 9,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      3.528,
+      17.639,
+      31.75,
+      45.861,
+      59.972
+    ],
+    "checked": 18,
+    "passed": 18
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 28,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"GitHub Spec Kit\" renders at 20 px for 3.00 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "GitHub Spec Kit",
+        "selector": "#slot-01 > div:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/01-hook.html",
+        "bbox": {
+          "x": 120,
+          "y": 330,
+          "width": 228,
+          "height": 26
+        },
+        "time": 0,
+        "times": [
+          0
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3,
+        "elements": [
+          {
+            "selector": "#slot-01 > div:nth-of-type(1) > div:nth-of-type(5) > div:nth-of-type(1)",
+            "text": "GitHub Spec Kit",
+            "fontPx": 20,
+            "time": 0,
+            "seconds": 3
+          }
+        ]
+      },
+      {
+        "code": "film_silent",
+        "severity": "warning",
+        "message": "This 64 s film has no sound source (no <audio>, no <video> with sound): add a music bed and sounds on the visible actions unless the person asked for silence; see references/sound.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 3 text elements stay under it for 0.5 s or more, the smallest \"Before: spec.md\" at 18 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Before: spec.md",
+        "selector": "#slot-03 > div:nth-of-type(1) > div:nth-of-type(4)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/03-before-after.html",
+        "bbox": {
+          "x": 96,
+          "y": 300,
+          "width": 199.81,
+          "height": 23
+        },
+        "time": 5.5,
+        "times": [
+          5.5,
+          5.5,
+          5.5
+        ],
+        "fontPx": 18,
+        "floorPx": 28,
+        "seconds": 3,
+        "elements": [
+          {
+            "selector": "#slot-03 > div:nth-of-type(1) > div:nth-of-type(4)",
+            "text": "Before: spec.md",
+            "fontPx": 18,
+            "time": 5.5,
+            "seconds": 3
+          },
+          {
+            "selector": "#slot-03 > div:nth-of-type(1) > div:nth-of-type(5)",
+            "text": "After: SpecKit Companion",
+            "fontPx": 18,
+            "time": 5.5,
+            "seconds": 3
+          },
+          {
+            "selector": "#slot-03 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Same spec",
+            "fontPx": 20,
+            "time": 5.5,
+            "seconds": 3
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.88 s (8.50–12.38 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 8.5,
+        "seconds": 3.875,
+        "floorSeconds": 3,
+        "until": 12.375
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"The viewer\" renders at 20 px for 4.00 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "The viewer",
+        "selector": "#slot-04 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/04-stories.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 152,
+          "height": 26
+        },
+        "time": 8.5,
+        "times": [
+          8.5
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 4,
+        "elements": [
+          {
+            "selector": "#slot-04 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "The viewer",
+            "fontPx": 20,
+            "time": 8.5,
+            "seconds": 4
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.38 s (12.50–15.88 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 12.5,
+        "seconds": 3.375,
+        "floorSeconds": 3,
+        "until": 15.875
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Tasks\" renders at 20 px for 3.50 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Tasks",
+        "selector": "#slot-05 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/05-tasks.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 76,
+          "height": 26
+        },
+        "time": 12.5,
+        "times": [
+          12.5
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-05 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Tasks",
+            "fontPx": 20,
+            "time": 12.5,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.38 s (16.00–19.38 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 16,
+        "seconds": 3.375,
+        "floorSeconds": 3,
+        "until": 19.375
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 5 text elements stay under it for 0.5 s or more, the smallest \"Before the plan\" at 18 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Before the plan",
+        "selector": "#slot-06 > div:nth-of-type(1) > div:nth-of-type(4)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/06-footer.html",
+        "bbox": {
+          "x": 180,
+          "y": 330,
+          "width": 199.81,
+          "height": 23
+        },
+        "time": 16,
+        "times": [
+          16,
+          16,
+          16,
+          16,
+          16
+        ],
+        "fontPx": 18,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-06 > div:nth-of-type(1) > div:nth-of-type(4)",
+            "text": "Before the plan",
+            "fontPx": 18,
+            "time": 16,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-06 > div:nth-of-type(1) > div:nth-of-type(6)",
+            "text": "While a step runs",
+            "fontPx": 18,
+            "time": 16,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-06 > div:nth-of-type(1) > div:nth-of-type(8)",
+            "text": "When the run is complete",
+            "fontPx": 18,
+            "time": 16,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-06 > div:nth-of-type(1) > div:nth-of-type(10)",
+            "text": "With a pending comment",
+            "fontPx": 18,
+            "time": 16,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-06 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "The footer runs spec-kit",
+            "fontPx": 20,
+            "time": 16,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.38 s (19.50–22.88 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 19.5,
+        "seconds": 3.375,
+        "floorSeconds": 3,
+        "until": 22.875
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Review\" renders at 20 px for 3.50 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Review",
+        "selector": "#slot-07 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/07-comments.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 91.2,
+          "height": 26
+        },
+        "time": 19.5,
+        "times": [
+          19.5
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-07 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Review",
+            "fontPx": 20,
+            "time": 19.5,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.38 s (23.00–26.38 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 23,
+        "seconds": 3.375,
+        "floorSeconds": 3,
+        "until": 26.375
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"The Overview\" renders at 20 px for 3.50 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "The Overview",
+        "selector": "#slot-08 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/08-overview-record.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 182.41,
+          "height": 26
+        },
+        "time": 23,
+        "times": [
+          23
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-08 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "The Overview",
+            "fontPx": 20,
+            "time": 23,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.38 s (26.50–29.88 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 26.5,
+        "seconds": 3.375,
+        "floorSeconds": 3,
+        "until": 29.875
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Verified\" renders at 20 px for 3.50 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Verified",
+        "selector": "#slot-09 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/09-overview-proof.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 121.61,
+          "height": 26
+        },
+        "time": 26.5,
+        "times": [
+          26.5
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-09 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Verified",
+            "fontPx": 20,
+            "time": 26.5,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Expectations and decisions\" renders at 20 px for 3.00 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Expectations and decisions",
+        "selector": "#slot-10 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/10-overview-fence.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 395.2,
+          "height": 26
+        },
+        "time": 30,
+        "times": [
+          30
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3,
+        "elements": [
+          {
+            "selector": "#slot-10 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Expectations and decisions",
+            "fontPx": 20,
+            "time": 30,
+            "seconds": 3
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Coverage\" renders at 20 px for 3.00 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Coverage",
+        "selector": "#slot-11 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/11-overview-coverage.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 121.61,
+          "height": 26
+        },
+        "time": 33,
+        "times": [
+          33
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3,
+        "elements": [
+          {
+            "selector": "#slot-11 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Coverage",
+            "fontPx": 20,
+            "time": 33,
+            "seconds": 3
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.38 s (36.00–39.38 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 36,
+        "seconds": 3.375,
+        "floorSeconds": 3,
+        "until": 39.375
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 6 text elements stay under it for 0.5 s or more, the smallest \"Specs\" at 18 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Specs",
+        "selector": "#slot-12 > div:nth-of-type(1) > div:nth-of-type(4)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/12-sidebar.html",
+        "bbox": {
+          "x": 76,
+          "y": 300,
+          "width": 66.61,
+          "height": 23
+        },
+        "time": 36,
+        "times": [
+          36,
+          36,
+          36,
+          36,
+          36,
+          36
+        ],
+        "fontPx": 18,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-12 > div:nth-of-type(1) > div:nth-of-type(4)",
+            "text": "Specs",
+            "fontPx": 18,
+            "time": 36,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-12 > div:nth-of-type(1) > div:nth-of-type(6)",
+            "text": "Bugs",
+            "fontPx": 18,
+            "time": 36,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-12 > div:nth-of-type(1) > div:nth-of-type(8)",
+            "text": "Ideas",
+            "fontPx": 18,
+            "time": 36,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-12 > div:nth-of-type(1) > div:nth-of-type(10)",
+            "text": "Living specs",
+            "fontPx": 18,
+            "time": 36,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-12 > div:nth-of-type(1) > div:nth-of-type(12)",
+            "text": "Steering",
+            "fontPx": 18,
+            "time": 36,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-12 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "The sidebar",
+            "fontPx": 20,
+            "time": 36,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.88 s (39.50–43.38 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 39.5,
+        "seconds": 3.875,
+        "floorSeconds": 3,
+        "until": 43.375
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Living specs\" renders at 20 px for 4.00 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Living specs",
+        "selector": "#slot-13 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/13-living-specs.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 182.41,
+          "height": 26
+        },
+        "time": 39.5,
+        "times": [
+          39.5
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 4,
+        "elements": [
+          {
+            "selector": "#slot-13 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Living specs",
+            "fontPx": 20,
+            "time": 39.5,
+            "seconds": 4
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Work in progress\" renders at 20 px for 1.50 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Work in progress",
+        "selector": "#slot-14 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/14-coming-next.html",
+        "bbox": {
+          "x": 838.39,
+          "y": 425.5,
+          "width": 243.2,
+          "height": 26
+        },
+        "time": 43.5,
+        "times": [
+          43.5
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 1.5,
+        "elements": [
+          {
+            "selector": "#slot-14 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Work in progress",
+            "fontPx": 20,
+            "time": 43.5,
+            "seconds": 1.5
+          }
+        ]
+      },
+      {
+        "code": "dead_stretch",
+        "severity": "warning",
+        "message": "Nothing on screen changes for 3.38 s (45.00–48.38 s): start the next move within 3 s, or put data-hold on the element whose stillness is deliberate; see references/motion.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 45,
+        "seconds": 3.375,
+        "floorSeconds": 3,
+        "until": 48.375
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Workflow builder\" renders at 20 px for 3.50 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Workflow builder",
+        "selector": "#slot-15 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/15-builder.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 243.2,
+          "height": 26
+        },
+        "time": 45,
+        "times": [
+          45
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-15 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Workflow builder",
+            "fontPx": 20,
+            "time": 45,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 5 text elements stay under it for 0.5 s or more, the smallest \"States\" at 18 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "States",
+        "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(4)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/16-plan-components.html",
+        "bbox": {
+          "x": 96,
+          "y": 256,
+          "width": 79.92,
+          "height": 23
+        },
+        "time": 48.5,
+        "times": [
+          48.5,
+          48.5,
+          48.5,
+          48.5,
+          48.5
+        ],
+        "fontPx": 18,
+        "floorPx": 28,
+        "seconds": 4.5,
+        "elements": [
+          {
+            "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(4)",
+            "text": "States",
+            "fontPx": 18,
+            "time": 48.5,
+            "seconds": 4.5
+          },
+          {
+            "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(6)",
+            "text": "Calls",
+            "fontPx": 18,
+            "time": 48.5,
+            "seconds": 4.5
+          },
+          {
+            "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(8)",
+            "text": "Screen",
+            "fontPx": 18,
+            "time": 48.5,
+            "seconds": 4.5
+          },
+          {
+            "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(10)",
+            "text": "Code",
+            "fontPx": 18,
+            "time": 48.5,
+            "seconds": 4.5
+          },
+          {
+            "selector": "#slot-16 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "New in the plan",
+            "fontPx": 20,
+            "time": 48.5,
+            "seconds": 4.5
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"GitHub Copilot app\" renders at 20 px for 3.50 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "GitHub Copilot app",
+        "selector": "#slot-17 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/17-copilot.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 273.61,
+          "height": 26
+        },
+        "time": 53,
+        "times": [
+          53
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-17 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "GitHub Copilot app",
+            "fontPx": 20,
+            "time": 53,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and \"Claude Code mod\" renders at 20 px for 3.50 s: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Claude Code mod",
+        "selector": "#slot-18 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/18-claude-code.html",
+        "bbox": {
+          "x": 96,
+          "y": 70,
+          "width": 228,
+          "height": 26
+        },
+        "time": 56.5,
+        "times": [
+          56.5
+        ],
+        "fontPx": 20,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-18 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(1)",
+            "text": "Claude Code mod",
+            "fontPx": 20,
+            "time": 56.5,
+            "seconds": 3.5
+          }
+        ]
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 4 text elements stay under it for 0.5 s or more, the smallest \"VS Code\" at 26 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "VS Code",
+        "selector": "#slot-19 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > span:nth-of-type(1)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/19-cta.html",
+        "bbox": {
+          "x": 524.73,
+          "y": 778.67,
+          "width": 104.22,
+          "height": 32
+        },
+        "time": 60,
+        "times": [
+          60,
+          60,
+          60,
+          60
+        ],
+        "fontPx": 26,
+        "floorPx": 28,
+        "seconds": 3.5,
+        "elements": [
+          {
+            "selector": "#slot-19 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > span:nth-of-type(1)",
+            "text": "VS Code",
+            "fontPx": 26,
+            "time": 60,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-19 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > span:nth-of-type(2)",
+            "text": "spec-kit extension",
+            "fontPx": 26,
+            "time": 60,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-19 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > span:nth-of-type(3)",
+            "text": "Copilot app",
+            "fontPx": 26,
+            "time": 60,
+            "seconds": 3.5
+          },
+          {
+            "selector": "#slot-19 > div:nth-of-type(1) > div:nth-of-type(3) > div:nth-of-type(3) > span:nth-of-type(4)",
+            "text": "Claude Code mod",
+            "fontPx": 26,
+            "time": 60,
+            "seconds": 3.5
+          }
+        ]
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 508
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

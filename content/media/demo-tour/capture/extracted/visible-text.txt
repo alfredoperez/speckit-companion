@@ -1,0 +1,12 @@
+SpecKit Companion: the GUI for GitHub Spec Kit in VS Code. Read your spec, then talk back to it.
+The sidebar lists every spec with its status, when it last moved and which assistant ran it. A spec opens into its documents.
+A spec opens on its Overview, then the rail walks every document the run wrote: specification, requirements, plan, data model, research, tasks.
+A file chip on a task opens the real file in an editor beside the spec.
+Tasks tick off as the assistant works.
+Comments: hover a line, write a note, add it. Add another. Refine sends them all back to the assistant, and they flip to applied.
+The Overview keeps the record of a finished run: intent, timing, expectations, verified checks with their commands, decisions, coverage.
+Living specs stay next to the code and say when it drifted.
+Four plan components: states, calls, screens and code.
+Coming next: the workflow builder, the pipeline as nodes.
+The same run in the GitHub Copilot app, and beside Claude Code.
+Free and open source. speckit-companion.dev

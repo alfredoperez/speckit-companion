@@ -1,0 +1,70 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /></head>
+<body>
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f10 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f10 .bg { position:absolute; inset:0; background-color:#0a0913; background-image:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f10 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f10 .f10-glow { position:absolute; inset:0; background-image:radial-gradient(640px 520px at 30% 62%, rgba(139,92,246,.16), transparent 70%), radial-gradient(640px 520px at 70% 62%, rgba(167,139,250,.14), transparent 70%); }
+#f10 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f10 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; }
+#f10 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f10 .h i { font-style:normal; color:#a78bfa; }
+#f10 .f10-wing { position:absolute; }
+#f10 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; }
+#f10 .f10-left .win { box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 28px 40px 90px rgba(0,0,0,.6); }
+#f10 .f10-right .win { box-shadow:0 0 0 1.5px rgba(167,139,250,.7), -28px 40px 90px rgba(0,0,0,.6); }
+#f10 .win img, #f10 .win video { position:absolute; display:block; }
+#f10 .lbl { position:absolute; font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.1em; text-transform:uppercase; color:#b6b0d2; }
+</style>
+<div id="f10" data-composition-id="f10" data-width="1920" data-height="1080" data-duration="3">
+<div id="f10-bg" class="bg clip" data-start="0" data-duration="3" data-track-index="0"></div>
+<div id="f10-dots" class="dots clip" data-start="0" data-duration="3" data-track-index="1"></div>
+<div id="f10-glow" class="f10-glow clip" data-start="0" data-duration="3" data-track-index="2"></div>
+
+<div style="position:absolute;left:96px;top:70px;width:1700px">
+  <div id="f10-kicker" class="kicker">Expectations and decisions</div><div id="f10-rule" class="rule"></div>
+  <div id="f10-head" class="h" style="font-size:64px;margin-top:22px">What stayed true. What it <i>rejected</i>.</div>
+</div>
+
+<div id="f10-wing-l" class="f10-wing f10-left" style="left:96px;top:280px;width:850px;height:760px;">
+  <div id="f10-card-l" class="win" style="left:0px;top:0px;width:850px;height:760px;"><img src="assets/tall-overview-expectations.png" alt="" style="left:-30px;top:0px;width:980px" /></div>
+</div>
+<div id="f10-wing-r" class="f10-wing f10-right" style="left:974px;top:280px;width:850px;height:760px;">
+  <div id="f10-card-r" class="win" style="left:0px;top:0px;width:850px;height:760px;"><img src="assets/tall-overview-decisions.png" alt="" style="left:-30px;top:0px;width:980px" /></div>
+</div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  // Ambient: the two side glows bloom softly under the whole shot
+  tl.fromTo("#f10-glow", { opacity: 0 }, { opacity: 1, duration: 2.4, ease: "sine.out" }, 0);
+
+  // Scene 1 (0.0–0.5s): kicker, rule, then the headline slides down into place
+  tl.fromTo("#f10-kicker", { opacity: 0, x: -36 }, { opacity: 1, x: 0, duration: 0.22, ease: "expo.out" }, 0.02);
+  tl.fromTo("#f10-rule", { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.26, ease: "expo.out" }, 0.08);
+  tl.fromTo("#f10-head", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" }, 0.1);
+
+  // Scene 2 (0.5–1.4s): Expectations swings in from the left wing, book-open tilt facing right
+  tl.fromTo("#f10-wing-l",
+    { opacity: 0, x: -560, scale: 0.85, rotationY: 30, transformPerspective: 2200, transformOrigin: "50% 50%" },
+    { opacity: 1, x: 0, scale: 1, rotationY: 4, transformPerspective: 2200, duration: 0.8, ease: "power3.out" }, 0.5);
+
+  // Scene 3 (1.4–3.0s): Decisions swings in from the right wing, tilt mirrored, then both hold
+  tl.fromTo("#f10-wing-r",
+    { opacity: 0, x: 560, scale: 0.85, rotationY: -30, transformPerspective: 2200, transformOrigin: "50% 50%" },
+    { opacity: 1, x: 0, scale: 1, rotationY: -4, transformPerspective: 2200, duration: 0.8, ease: "power3.out" }, 1.4);
+
+  // Hold: phase-opposed low-amplitude float on the inner layer, so it never collides with the entry
+  tl.fromTo("#f10-card-l", { y: 0 }, { y: -7, duration: 1.7, ease: "sine.inOut" }, 1.3);
+  tl.fromTo("#f10-card-r", { y: 0 }, { y: 6, duration: 0.8, ease: "sine.inOut" }, 2.2);
+
+  window.__timelines["f10"] = tl;
+</script>
+</template>
+</body></html>

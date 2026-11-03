@@ -1,0 +1,232 @@
+[
+ {
+  "num": 1,
+  "slug": "hook-viewer",
+  "dur": 2.8,
+  "start": 0.0,
+  "kicker": "SpecKit Companion",
+  "title": "The GUI for <i>GitHub Spec Kit</i>.",
+  "video": "tour-rail.mp4",
+  "media": 8.5
+ },
+ {
+  "num": 2,
+  "slug": "hook-overview",
+  "dur": 2.6,
+  "start": 2.8,
+  "kicker": "The Overview",
+  "title": "See what the AI did, and <i>proved</i>.",
+  "video": "tour-overview.mp4",
+  "media": 0.3
+ },
+ {
+  "num": 3,
+  "slug": "hook-comment",
+  "dur": 3.0,
+  "start": 5.4,
+  "kicker": "Comments",
+  "title": "Talk back to the <i>spec</i>.",
+  "video": "tour-comment.mp4",
+  "media": 5.4
+ },
+ {
+  "num": 4,
+  "slug": "hook-refine",
+  "dur": 3.0,
+  "start": 8.4,
+  "kicker": "Refine",
+  "title": "Send it to the <i>AI</i>.",
+  "video": "tour-comment.mp4",
+  "media": 20.6
+ },
+ {
+  "num": 5,
+  "slug": "hook-plan",
+  "dur": 1.8,
+  "start": 11.4,
+  "kicker": "Plans",
+  "title": "Plans you can <i>click</i> through.",
+  "video": "plan-states.mp4",
+  "media": 3.2
+ },
+ {
+  "num": 6,
+  "slug": "hook-apps",
+  "dur": 1.8,
+  "start": 13.2,
+  "kicker": "Everywhere",
+  "title": "In <i>Copilot</i> and <i>Claude Code</i> too.",
+  "video": "board-run-steps.mp4",
+  "media": 6.0
+ },
+ {
+  "num": 7,
+  "slug": "hook-title",
+  "dur": 2.6,
+  "start": 15.0,
+  "kicker": "",
+  "title": "",
+  "video": null,
+  "media": 0
+ },
+ {
+  "num": 8,
+  "slug": "sidebar",
+  "dur": 6,
+  "start": 17.6,
+  "kicker": "The sidebar",
+  "title": "Every spec, with its status and its documents.",
+  "video": "tour-sidebar.mp4",
+  "media": 2.5
+ },
+ {
+  "num": 9,
+  "slug": "viewer-spec",
+  "dur": 7,
+  "start": 23.6,
+  "kicker": "The viewer",
+  "title": "A spec reads like a <i>document</i>.",
+  "video": "tour-rail.mp4",
+  "media": 5.0
+ },
+ {
+  "num": 10,
+  "slug": "viewer-plan",
+  "dur": 6,
+  "start": 30.6,
+  "kicker": "The viewer",
+  "title": "Every document the run wrote, <i>one click</i> away.",
+  "video": "tour-rail.mp4",
+  "media": 17.0
+ },
+ {
+  "num": 11,
+  "slug": "file-link",
+  "dur": 8,
+  "start": 36.6,
+  "kicker": "File links",
+  "title": "A file on a task opens the <i>real code</i>.",
+  "video": "tour-file-link.mp4",
+  "media": 1.5
+ },
+ {
+  "num": 12,
+  "slug": "overview",
+  "dur": 14,
+  "start": 44.6,
+  "kicker": "The Overview",
+  "title": "When it finishes, it keeps the <i>record</i>: checks, decisions, tests.",
+  "video": "tour-overview.mp4",
+  "media": 1.0
+ },
+ {
+  "num": 13,
+  "slug": "comment-write",
+  "dur": 9,
+  "start": 58.6,
+  "kicker": "Talk back to the spec",
+  "title": "Hover a line. Write a <i>note</i>.",
+  "video": "tour-comment.mp4",
+  "media": 0.5
+ },
+ {
+  "num": 14,
+  "slug": "comment-second",
+  "dur": 8,
+  "start": 67.6,
+  "kicker": "Talk back to the spec",
+  "title": "Add as many as you need.",
+  "video": "tour-comment.mp4",
+  "media": 10.8
+ },
+ {
+  "num": 15,
+  "slug": "comment-refine",
+  "dur": 8,
+  "start": 75.6,
+  "kicker": "Talk back to the spec",
+  "title": "<i>Refine</i> sends them to the assistant.",
+  "video": "tour-comment.mp4",
+  "media": 19.3
+ },
+ {
+  "num": 16,
+  "slug": "comment-plan",
+  "dur": 8,
+  "start": 83.6,
+  "kicker": "Talk back to the plan",
+  "title": "Comment on the <i>plan</i> too, line by line.",
+  "video": "plan-calls.mp4",
+  "media": 0.5
+ },
+ {
+  "num": 17,
+  "slug": "plan-states",
+  "dur": 6,
+  "start": 91.6,
+  "kicker": "Plan components",
+  "title": "<i>States</i> you click through.",
+  "video": "plan-states.mp4",
+  "media": 1.0
+ },
+ {
+  "num": 18,
+  "slug": "plan-screen",
+  "dur": 5,
+  "start": 97.6,
+  "kicker": "Plan components",
+  "title": "A state can show its <i>screen</i>.",
+  "video": "plan-state-screen.mp4",
+  "media": 0.5
+ },
+ {
+  "num": 19,
+  "slug": "copilot",
+  "dur": 7,
+  "start": 102.6,
+  "kicker": "GitHub Copilot app",
+  "title": "The same run, as a <i>board</i> in Copilot.",
+  "video": "board-run-steps.mp4",
+  "media": 3.0
+ },
+ {
+  "num": 20,
+  "slug": "claude-code",
+  "dur": 7,
+  "start": 109.6,
+  "kicker": "Claude Code mod",
+  "title": "And right beside <i>Claude Code</i>.",
+  "video": "mod-session-start.mp4",
+  "media": 4.0
+ },
+ {
+  "num": 21,
+  "slug": "coming-next",
+  "dur": 2,
+  "start": 116.6,
+  "kicker": "",
+  "title": "",
+  "video": null,
+  "media": 0
+ },
+ {
+  "num": 22,
+  "slug": "builder",
+  "dur": 8,
+  "start": 118.6,
+  "kicker": "Workflow builder",
+  "title": "The pipeline as <i>nodes</i>. Rearrange it.",
+  "video": "tour-builder.mp4",
+  "media": 2.0
+ },
+ {
+  "num": 23,
+  "slug": "close",
+  "dur": 6,
+  "start": 126.6,
+  "kicker": "",
+  "title": "",
+  "video": null,
+  "media": 0
+ }
+]

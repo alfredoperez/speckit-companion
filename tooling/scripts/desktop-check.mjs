@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Drives a real VS Code window with this extension and a throwaway project (or an existing one, --sandbox), and saves a screenshot per step.
-// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet] [--record <dir>]
+// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark|bearded] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet] [--record <dir>]
 // --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
 // --sheet also writes every picture of the run onto one reduced sheet (_sheet.png), the file to look at first.
 // --record also runs the recording steps, each saving its frames and one JSON of facts under <dir>/<name>/.
@@ -8,7 +8,7 @@
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tickTask, writeTeamboardRun } from './lib/teamboard-run.mjs';
@@ -22,6 +22,13 @@ const arg = (name, fallback) => {
 const EXTENSION = resolve(arg('extension', join(HERE, '..', '..')));
 const OUT = resolve(arg('out', join(EXTENSION, '.desktop-check')));
 const THEME = arg('theme', 'light');
+// A theme from an installed extension is copied into the window's own extensions folder, so the fresh profile can use it.
+const THEMES = {
+    light: { label: 'Quiet Light' },
+    dark: { label: 'Default Dark Modern' },
+    bearded: { label: 'Bearded Theme Light', extension: 'beardedbear.beardedtheme' },
+};
+const THEME_LABEL = THEMES[THEME]?.label ?? THEME;
 const ONLY = arg('only', '').split(',').filter(Boolean);
 const SANDBOX = arg('sandbox') ? resolve(arg('sandbox')) : undefined;
 const SHOTS = arg('shots') ? resolve(arg('shots')) : undefined;
@@ -173,6 +180,13 @@ function buildProject({ provider = 'claude' } = {}) {
         }
         addLivingSpecs(project, fixtures);
     }
+    const theme = THEMES[THEME];
+    if (theme?.extension) {
+        const installed = join(homedir(), '.vscode', 'extensions');
+        const folder = existsSync(installed) ? readdirSync(installed).filter(name => name.toLowerCase().startsWith(`${theme.extension}-`)).sort().pop() : undefined;
+        if (!folder) throw new Error(`the ${theme.label} theme is not installed under ${installed}`);
+        cpSync(join(installed, folder), join(root, 'extensions', folder), { recursive: true });
+    }
     // Whatever a step sends goes to this stand-in, so nothing real runs and the terminal shows what was sent.
     const bin = join(root, 'bin');
     mkdirSync(bin);
@@ -184,7 +198,7 @@ function buildProject({ provider = 'claude' } = {}) {
     const user = join(root, 'user');
     mkdirSync(join(user, 'User'), { recursive: true });
     writeFileSync(join(user, 'User', 'settings.json'), JSON.stringify({
-        'workbench.colorTheme': THEME === 'dark' ? 'Default Dark Modern' : 'Quiet Light',
+        'workbench.colorTheme': THEME_LABEL,
         'workbench.startupEditor': 'none',
         'workbench.secondarySideBar.defaultVisibility': 'hidden',
         'chat.commandCenter.enabled': false,
@@ -245,12 +259,18 @@ async function launch({ root, project, user, bin }) {
     if (FILM_WINDOW) await resize(SHOT_WINDOW);
 }
 
-async function resize({ width, height }) {
+async function resize({ width, height, maximize = false }) {
     await app.evaluate(({ BrowserWindow }, size) => {
         const window = BrowserWindow.getAllWindows()[0];
         if (window.isMaximized()) window.unmaximize();
+        if (size.maximize) {
+            // The whole screen: moved to its corner first, so the window never hangs off an edge.
+            window.setPosition(0, 0);
+            window.maximize();
+            return;
+        }
         window.setSize(size.width, size.height);
-    }, { width, height });
+    }, { width, height, maximize });
     await page.waitForTimeout(500);
 }
 
@@ -422,15 +442,21 @@ async function scrollTo(locator, block = 'start', lower = 0) {
     }, [block, lower]);
 }
 
-/** Records the whole window while `body` drives it, as <record dir>/<name>/. The frames bracket the move with a still at each end, so a cut has somewhere to land. */
-async function film(name, what, body) {
+/**
+ * Records the whole window while `body` drives it, as <record dir>/<name>/. The frames bracket the move with a still at each end, so a cut has somewhere to land.
+ * clip: a function returning the box ({ x, y, width, height }, window pixels) every frame is cut to, measured once the banner is gone.
+ */
+async function film(name, what, body, { clip } = {}) {
+    let box;
     const recording = startRecording(RECORD, name, {
-        surface: `A real VS Code window running the extension, ${THEME === 'dark' ? 'Dark Modern' : 'Quiet Light'} theme`,
+        surface: `A real VS Code window running the extension, ${THEME_LABEL} theme`,
         what,
-        grab: file => page.screenshot({ path: file }),
+        grab: file => page.screenshot({ path: file, ...(box ? { clip: box } : {}) }),
     });
     await dismissInstallBanner();
     await page.mouse.move(2, 2);
+    if (clip) box = await clip();
+    recording.clip = box;
     await recording.hold();
     await body(recording);
     await recording.hold();
@@ -732,6 +758,93 @@ try {
         }, { needs: 'fixtures', shots: true });
     }
 
+    await step('shot-rich-specs', 'Finished specs from this repository: the stories as cards, the tasks with their files, the Overview, and a fuller sidebar', async () => {
+        for (const spec of ['597-activation-funnel', '599-pipeline-doctor', '606-living-spec-validation', '609-living-spec-navigation', '620-converge-step', '634-stock-hooks-only']) {
+            cpSync(join(EXTENSION, 'specs', spec), join(built.project, 'specs', spec), { recursive: true });
+        }
+        await clear();
+        const completed = await row('Specs', 'Completed');
+        if ((await completed.getAttribute('aria-expanded')) === 'false') await completed.click();
+        await (await row('Specs', 'Capture Plain SpecKit Runs')).click();
+        const open = async (tab) => {
+            await webview().locator(tab === 'Overview' ? '.rail-overview' : '.step-tab', { hasText: tab }).first().click();
+            await webview().locator('[aria-current="page"]', { hasText: tab }).first().waitFor({ timeout: 15000 });
+            await page.waitForTimeout(1200);
+        };
+        await open('Specification');
+        await scrollTo(webview().locator('h2', { hasText: /User Scenarios/ }), 'start', 24);
+        await page.waitForTimeout(300);
+        await capture('rich-spec-stories', { target: 'editor', ratio: 16 / 9 });
+        await scrollTo(webview().locator('p', { hasText: /^Acceptance Scenarios/ }), 'start', 130);
+        await page.waitForTimeout(300);
+        await capture('rich-spec-scenarios', { target: 'editor', ratio: 16 / 9 });
+        await open('Tasks');
+        await scrollTo(webview().locator('.phase-header[data-phase="1"]'), 'start', 24);
+        await page.waitForTimeout(300);
+        await capture('rich-spec-tasks', { target: 'editor', ratio: 16 / 9 });
+        await open('Overview');
+        await scrollTo(webview().locator('.dossier-intent'), 'start', 60);
+        await page.waitForTimeout(300);
+        await capture('rich-overview', { target: 'editor', ratio: 16 / 9 });
+        const verified = webview().locator('.dossier-section[aria-label="Verified"]').first();
+        if (await verified.isVisible().catch(() => false)) {
+            await scrollTo(verified, 'start', 24);
+            await page.waitForTimeout(300);
+            await capture('rich-overview-verified', { target: 'editor', ratio: 16 / 9 });
+        }
+        // The side bar is too short for every pane's rows at once, so each pane goes in its own picture, all at one width.
+        const settings = join(built.user, 'User', 'settings.json');
+        const before = readFileSync(settings, 'utf8');
+        const constitution = join(built.project, '.specify', 'memory', 'constitution.md');
+        if (!existsSync(constitution)) {
+            mkdirSync(dirname(constitution), { recursive: true });
+            writeFileSync(constitution, '# Teamboard Constitution\n\n## Core Principles\n\n### I. Tests come first\nEvery change ships with a test that fails without it.\n');
+        }
+        // The Steering pane lists what a real project carries: spec-kit's templates and scripts, the provider's steering file and its skills.
+        for (const folder of ['templates', 'scripts']) cpSync(join(EXTENSION, '.specify', folder), join(built.project, '.specify', folder), { recursive: true });
+        writeFileSync(join(built.project, 'CLAUDE.md'), '# Teamboard\n\nRun the tests before every commit.\n');
+        for (const skill of ['speckit-specify', 'speckit-plan', 'speckit-tasks', 'speckit-implement']) {
+            if (existsSync(join(EXTENSION, '.claude', 'skills', skill))) cpSync(join(EXTENSION, '.claude', 'skills', skill), join(built.project, '.claude', 'skills', skill), { recursive: true });
+        }
+        writeFileSync(settings, JSON.stringify({ ...JSON.parse(before), 'speckit.views.steering.visible': true }, null, 2));
+        const width = (await page.locator('.part.sidebar').boundingBox()).width;
+        try {
+            await pane('Steering').waitFor({ timeout: 15000 });
+            await sidebarWidth(400);
+            const panes = ['Specs', 'Bugs', 'Ideas', 'Living Specs', 'Steering'];
+            const alone = async (title, name) => {
+                await setPanes(panes.filter(other => other !== title), false);
+                await setPanes([title], true);
+                await capture(name, { target: [pane(title).locator('.pane-header'), pane(title).locator('.monaco-list-row').last()] });
+            };
+            await alone('Specs', 'rich-sidebar-specs');
+            await alone('Bugs', 'rich-sidebar-bugs');
+            await alone('Ideas', 'rich-sidebar-ideas');
+            await setPanes(['Steering'], false);
+            await showLivingSpecs();
+            await capture('rich-sidebar-living', { target: [pane('Living Specs').locator('.pane-header'), pane('Living Specs').locator('.monaco-list-row').last()] });
+            await setPanes(panes.filter(other => other !== 'Steering'), false);
+            await setPanes(['Steering'], true);
+            // Open the groups a reader cares about; the User group stays shut because it reads the real home folder.
+            for (const label of ['Companion', 'Claude Code', 'Project', 'Skills', 'SpecKit Project Files', 'Templates']) {
+                const item = pane('Steering').locator('.monaco-list-row', { has: page.locator(`.label-name:text-is("${label}")`) }).first();
+                if (!(await item.isVisible().catch(() => false))) continue;
+                if ((await item.getAttribute('aria-expanded')) === 'false') {
+                    await item.click();
+                    await page.keyboard.press('ArrowRight');
+                    await page.waitForTimeout(600);
+                }
+            }
+            await capture('rich-sidebar-steering', { target: [pane('Steering').locator('.pane-header'), pane('Steering').locator('.monaco-list-row').last()] });
+        } finally {
+            await setPanes(['Living Specs', 'Steering'], false).catch(() => undefined);
+            await setPanes(['Specs', 'Bugs', 'Ideas'], true).catch(() => undefined);
+            await sidebarWidth(width);
+            writeFileSync(settings, before);
+        }
+        return 'rich-spec-stories, rich-spec-scenarios, rich-spec-tasks, rich-overview, rich-overview-verified, rich-sidebar-specs, rich-sidebar-bugs, rich-sidebar-ideas, rich-sidebar-living, rich-sidebar-steering';
+    }, { needs: 'fixtures', shots: true });
+
     await step('overview-living-specs', 'A finished run names the living specs it updated and the ones it only read', async () => {
         await clear();
         const completed = await row('Specs', 'Completed');
@@ -851,11 +964,11 @@ try {
     }, { needs: 'fixtures' });
 
     await step('film-living-spec', 'A capability\'s page read top to bottom, from its counts down to the requirement in drift', async () => {
-        await openLivingSpec('Photo Storage', /7\/9 covered/);
+        await openLivingSpec('Photo Storage', /9 requirements/);
         await sidebarWidth(LIVING_SIDEBAR);
-        await webview().locator('.living-req-card').first().waitFor({ timeout: 15000 });
+        await webview().getByText('Requirements', { exact: true }).first().waitFor({ timeout: 15000 });
         return film('living-spec-read', 'A living spec for photo storage, scrolled slowly from the top of the page to the end. It opens on the counts and the paths the capability covers, then walks every requirement with its scenario and the tests behind it, and passes the one marked Drifted, where the code changed after the spec did.', async (recording) => {
-            await recordScroll(recording, webview().locator('#markdown-content'));
+            await recordScroll(recording, webview().locator('main.content-area > *').first());
         });
     }, { needs: 'fixtures', record: true });
 
@@ -908,6 +1021,599 @@ try {
         });
     }, { needs: 'fixtures', record: true });
 
+    // Plan blocks: three real plans from the Conduit runs (apps/vscode/tests/fixtures/plan-blocks), each card shot on its own, then three short films of a reader clicking through them.
+    const PLAN_SPECS = { favorites: ['001-offline-favorites', 'Offline Favorites'], drafts: ['002-article-drafts', 'Article Drafts and Review'], race: ['003-feed-tag-race', 'Feed always matches the selected tag'] };
+    // Wide and tall enough that the tallest card (a state with its screen under it) fits above the footer.
+    const PLAN_WINDOW = { width: 1440, height: 1000 };
+    let planSpecsAdded = false;
+    const sidebarShown = () => page.locator('.part.sidebar').isVisible();
+    /** Opens one of the plan-block specs on its Plan tab, with the side bar closed so the viewer has the window. */
+    const openPlan = async (which) => {
+        const [folder, title] = PLAN_SPECS[which];
+        if (!planSpecsAdded) {
+            for (const [name] of Object.values(PLAN_SPECS)) cpSync(join(EXTENSION, 'apps', 'vscode', 'tests', 'fixtures', 'plan-blocks', name), join(built.project, 'specs', name), { recursive: true });
+            planSpecsAdded = true;
+            await page.waitForTimeout(2500);
+        }
+        await clear();
+        if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+        await (await row('Specs', title)).click();
+        await webview().locator('.step-tab', { hasText: 'Plan' }).first().click();
+        await webview().locator('.step-tab[aria-current="page"]', { hasText: 'Plan' }).waitFor({ timeout: 15000 });
+        await webview().locator('#markdown-content h2').first().waitFor({ timeout: 15000 });
+        if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+        await resize(PLAN_WINDOW);
+        await page.waitForTimeout(1200);
+    };
+    /** Puts the window back the way every later step expects it. */
+    const closePlan = async () => {
+        await resize(SHOT_WINDOW);
+        if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+    };
+    const planCard = (kind, text) => webview().locator(`#markdown-content .${kind}-card`, { hasText: text }).first();
+    // The pointer leaving the window does not reach the webview, so a line keeps its hover (and its comment button) unless the pointer rests on the header first.
+    const restPointer = async () => {
+        await webview().locator('.spec-header').first().hover({ position: { x: 4, y: 4 } });
+        await page.mouse.move(2, 2);
+    };
+    /** A card scrolled to the top of the page, ready to shoot or film. */
+    const showCard = async (card) => {
+        await card.waitFor({ timeout: 15000 }).catch(() => { throw new Error(`no card on the page: ${card}`); });
+        await scrollTo(card, 'start', 24);
+        await restPointer();
+        await page.waitForTimeout(500);
+    };
+    /** A card's crop: its own box with a little of the page around it, never under the footer. */
+    const cardShot = async (name, card, padding = 16) => {
+        await capture(`_full-${name}`, { target: 'window' });
+        const footer = await webview().locator('footer.actions').boundingBox().catch(() => null);
+        const box = await card.boundingBox();
+        if (footer && box.y + box.height + 16 > footer.y) throw new Error(`the ${name} card runs under the footer`);
+        await capture(name, { target: card, padding });
+    };
+    const pickState = async (card, name) => {
+        await card.locator('.states-state', { has: webview().locator(`.states-name:text-is("${name}")`) }).click();
+        await restPointer();
+        await card.locator('.states-caption strong', { hasText: name }).waitFor({ timeout: 5000 });
+    };
+
+    await step('shot-plan-blocks', 'Each plan block draws as its card: the calls, the states with one picked, the screen, a code pin, and a state that shows its screen', async () => {
+        try {
+            await openPlan('favorites');
+            const calls = planCard('calls', 'Offline favorite');
+            await showCard(calls);
+            await cardShot('plan-blocks-calls', calls, 12);
+            const states = planCard('states', 'Waiting change');
+            await showCard(states);
+            await pickState(states, 'Sending');
+            await cardShot('plan-blocks-states-picked', states);
+            await capture('plan-blocks-window', { target: 'window' });
+            const screen = planCard('screen', 'Header');
+            await showCard(screen);
+            await cardShot('plan-blocks-screen', screen);
+
+            await openPlan('race');
+            const code = planCard('code', 'article.api.ts');
+            await showCard(code);
+            await expectText(code.locator('.code-pin'), /keeps the old key/);
+            // The calls card above sits close, so a tighter margin keeps its edge out.
+            await cardShot('plan-blocks-code-pin', code, 10);
+
+            await openPlan('drafts');
+            const status = planCard('states', 'article status');
+            await showCard(status);
+            await pickState(status, 'InReview');
+            await status.locator('.states-shown').waitFor({ timeout: 5000 });
+            await cardShot('plan-blocks-state-shows-screen', status);
+            return 'six pictures';
+        } finally {
+            await closePlan();
+        }
+    }, { needs: 'fixtures', shots: true });
+
+    await step('shot-tall', 'In a narrow window as tall as the screen: the viewer, the tasks, each Overview region and each plan block, without the page\'s top bar', async () => {
+        for (const spec of ['597-activation-funnel', '599-pipeline-doctor', '606-living-spec-validation', '609-living-spec-navigation', '620-converge-step', '634-stock-hooks-only']) {
+            cpSync(join(EXTENSION, 'specs', spec), join(built.project, 'specs', spec), { recursive: true });
+            // The tests a run's coverage names exist, so the Coverage region reads as it did in this repository.
+            const context = JSON.parse(readFileSync(join(built.project, 'specs', spec, '.spec-context.json'), 'utf8'));
+            for (const file of new Set(Object.values(context.coverage ?? {}).flatMap(entry => entry.tests ?? []).map(test => String(test).split('::')[0]))) {
+                mkdirSync(dirname(join(built.project, file)), { recursive: true });
+                if (!existsSync(join(built.project, file))) writeFileSync(join(built.project, file), '');
+            }
+        }
+        const area = await app.evaluate(({ screen }) => screen.getPrimaryDisplay().workAreaSize);
+        // About 860px of editor: narrow enough for a portrait page, wide enough that the Overview keeps its two columns.
+        const tall = async () => {
+            await resize({ width: 920, height: area.height });
+            await page.waitForTimeout(800);
+            const editor = await page.locator('.part.editor').boundingBox();
+            if (Math.abs(editor.width - 860) > 20) await resize({ width: Math.min(area.width, 920 + 860 - Math.round(editor.width)), height: area.height });
+            await page.waitForTimeout(800);
+        };
+        // The header, the document rail and the floating footer go, so the page shows only the document.
+        const bare = (hidden) => webview().locator('main.content-area').evaluate((main, hide) => {
+            for (const el of document.querySelectorAll('header.page-chrome, .spec-header, nav.doc-rail, footer.actions, .compact-nav')) el.style.display = hide ? 'none' : '';
+        }, hidden);
+        const frame = page.locator('iframe.webview.ready').last();
+        const names = [];
+        try {
+            await clear();
+            if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+            const completed = await row('Specs', 'Completed');
+            if ((await completed.getAttribute('aria-expanded')) === 'false') await completed.click();
+            await (await row('Specs', 'Capture Plain SpecKit Runs')).click();
+            await tall();
+            const open = async (tab) => {
+                await webview().locator(tab === 'Overview' ? '.rail-overview' : '.step-tab', { hasText: tab }).first().click();
+                await webview().locator('[aria-current="page"]', { hasText: tab }).first().waitFor({ timeout: 15000 });
+                await page.waitForTimeout(1200);
+            };
+            await open('Specification');
+            await scrollTo(webview().locator('h2', { hasText: /User Scenarios/ }), 'start', 24);
+            await page.waitForTimeout(300);
+            await capture('tall-viewer', { target: 'editor' });
+            names.push('tall-viewer');
+
+            await open('Tasks');
+            await bare(true);
+            await scrollTo(webview().locator('.phase-header[data-phase="1"]'), 'start', 16);
+            await page.waitForTimeout(300);
+            await capture('tall-tasks', { target: frame });
+            names.push('tall-tasks');
+            await bare(false);
+
+            await open('Overview');
+            await bare(true);
+            const regions = {
+                'tall-overview-intent': ['.dossier-intent', '.dossier-timing'],
+                'tall-overview-expectations': ['.dossier-section[aria-label="Expectations"]'],
+                'tall-overview-verified': ['.dossier-section[aria-label="Verified"]'],
+                'tall-overview-decisions': ['.dossier-section[aria-label="Decisions"]'],
+                'tall-overview-coverage': ['.dossier-section[aria-label="Coverage"]'],
+            };
+            for (const [name, selectors] of Object.entries(regions)) {
+                const parts = selectors.map(selector => webview().locator(selector).first());
+                if (!(await parts[0].isVisible().catch(() => false))) continue;
+                await scrollTo(parts[0], 'start', 24);
+                await page.waitForTimeout(300);
+                await capture(name, { target: parts, padding: 16, within: 'editor' });
+                names.push(name);
+            }
+            await bare(false);
+
+            // Each plan block with the heading it sits under, when that heading is close enough to share the screen.
+            const blocks = [['favorites', 'states', 'Waiting change', 'tall-block-states', 'Sending'], ['favorites', 'calls', 'Offline favorite', 'tall-block-calls'], ['favorites', 'screen', 'Header', 'tall-block-screen'], ['race', 'code', 'article.api.ts', 'tall-block-code']];
+            for (const [plan, kind, text, name, state] of blocks) {
+                await openPlan(plan);
+                await tall();
+                const card = planCard(kind, text);
+                await card.waitFor({ timeout: 15000 });
+                if (state) {
+                    await showCard(card);
+                    await pickState(card, state);
+                }
+                await bare(true);
+                const reach = await card.evaluate((el, room) => {
+                    document.querySelectorAll('[data-shot-head]').forEach(node => node.removeAttribute('data-shot-head'));
+                    for (let node = el; node && node !== document.body; node = node.parentElement) {
+                        for (let before = node.previousElementSibling; before; before = before.previousElementSibling) {
+                            if (/^H[2-4]$/.test(before.tagName)) {
+                                const gap = el.getBoundingClientRect().bottom - before.getBoundingClientRect().top;
+                                if (gap > room) return 0;
+                                before.setAttribute('data-shot-head', '');
+                                return gap;
+                            }
+                        }
+                    }
+                    return 0;
+                }, area.height * 0.8);
+                const head = webview().locator('[data-shot-head]');
+                const parts = reach ? [head, card] : [card];
+                await scrollTo(parts[0], 'start', 24);
+                await page.mouse.move(2, 2);
+                await page.waitForTimeout(500);
+                await capture(name, { target: parts, padding: 16, within: 'editor' });
+                names.push(name);
+                await bare(false);
+            }
+        } finally {
+            await closePlan();
+        }
+        return names.join(', ');
+    }, { needs: 'fixtures', shots: true });
+
+    // The scripted demo tour: one real window walked through slowly, with a beat logged for every click so the video can push in on it.
+    // The tour fills the screen: VS Code maximised, so the extension has the room a person gives it.
+    const TOUR_WINDOW = { ...(await app.evaluate(({ screen }) => screen.getPrimaryDisplay().workAreaSize)), maximize: true };
+    const TOUR_SPECS = ['597-activation-funnel', '599-pipeline-doctor', '606-living-spec-validation', '609-living-spec-navigation', '620-converge-step', '634-stock-hooks-only'];
+    let tourReady = false;
+    /** The finished specs from this repository, and a copy of every file a 634 task names, so a file chip opens real code. */
+    const tourFixture = async () => {
+        if (tourReady) return;
+        for (const spec of TOUR_SPECS) cpSync(join(EXTENSION, 'specs', spec), join(built.project, 'specs', spec), { recursive: true });
+        const named = new Set([...readFileSync(join(EXTENSION, 'specs', '634-stock-hooks-only', 'tasks.md'), 'utf8').matchAll(/`((?:apps|\.specify)\/[A-Za-z0-9_./-]+\.[a-z]+)`/g)].map(m => m[1]));
+        for (const file of named) {
+            const from = join(EXTENSION, file);
+            if (!existsSync(from)) continue;
+            mkdirSync(dirname(join(built.project, file)), { recursive: true });
+            cpSync(from, join(built.project, file));
+        }
+        tourReady = true;
+        await page.waitForTimeout(2500);
+    };
+    /** A film whose body logs beats: what was clicked, when, and where on the window (as fractions), written to events.json beside the frames. */
+    const tourFilm = (name, what, body) => film(name, what, async (recording) => {
+        const beats = [];
+        const view = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+        const beat = async (label, locator) => {
+            const box = locator ? await locator.first().boundingBox().catch(() => null) : null;
+            beats.push({ beat: label, frame: recording.frames, second: Math.round((recording.frames / 12) * 10) / 10,
+                ...(box ? { x: +((box.x + box.width / 2) / view.width).toFixed(4), y: +((box.y + box.height / 2) / view.height).toFixed(4) } : {}) });
+        };
+        await body(recording, beat);
+        writeFileSync(join(RECORD, name, 'events.json'), `${JSON.stringify(beats, null, 2)}\n`);
+    // The capture box is the window at the first frame, so a split or a panel opening later never changes the frame size.
+    }, { clip: async () => { const v = await page.evaluate(() => ({ width: innerWidth, height: innerHeight })); return { x: 0, y: 0, width: v.width, height: v.height }; } });
+    /** Hover, let the hover state show, log the beat, click, then hold on the result. */
+    const tourClick = async (recording, beat, locator, label, hold = 2) => {
+        await locator.first().hover();
+        await recording.hold(0.5);
+        await beat(label, locator);
+        await locator.first().click();
+        await recording.hold(hold);
+    };
+    /** Scrolls the page under the locator for a fixed number of frames at the recorded speed. */
+    const tourScroll = async (recording, inside, frames) => {
+        for (let k = 0; k < frames; k++) {
+            const left = await inside.first().evaluate((element, by) => {
+                let scroller = element.parentElement;
+                while (scroller && !(scroller.scrollHeight > scroller.clientHeight && /auto|scroll/.test(getComputedStyle(scroller).overflowY))) scroller = scroller.parentElement;
+                scroller ??= document.scrollingElement;
+                scroller.scrollBy({ top: by, behavior: 'instant' });
+                return Math.round(scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop);
+            }, SCROLL_PX_PER_FRAME);
+            await recording.frame();
+            if (left <= 0) return;
+        }
+    };
+    /** Types a line the way a person would, two characters a frame. */
+    const tourType = async (recording, field, text) => {
+        await field.first().click();
+        for (let k = 0; k < text.length; k += 2) {
+            await page.keyboard.type(text.slice(k, k + 2));
+            await recording.frame();
+        }
+    };
+    /** A rail entry by its exact label: the Overview, a step tab, or one of a step's files. */
+    const railEntry = (name) => name === 'Overview'
+        ? webview().locator('.rail-overview').first()
+        : webview().locator(`.step-tab:has(.step-label:text-is("${name}")), .step-child:text-is("${name}")`).first();
+    const tourSpec = 'Capture Plain SpecKit Runs';
+    const tourWindow = async () => {
+        await tourFixture();
+        await clear();
+        if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+        await resize(TOUR_WINDOW);
+        await setPanes(['Bugs', 'Ideas', 'Living Specs'], false);
+        await setPanes(['Specs'], true);
+        await sidebarWidth(360);
+        const completed = await row('Specs', 'Completed');
+        if ((await completed.getAttribute('aria-expanded')) === 'false') await completed.click();
+        await page.waitForTimeout(800);
+    };
+    const tourDone = async () => {
+        await resize(SHOT_WINDOW);
+        await setPanes(['Specs', 'Bugs', 'Ideas'], true).catch(() => undefined);
+    };
+
+    await step('film-tour-sidebar', 'Tour: the Specs pane lists every spec with its status, and a spec opens into its documents', async () => {
+        await tourWindow();
+        try {
+            return await tourFilm('tour-sidebar', 'The SpecKit side bar in VS Code: the Specs pane lists active and completed specs, each with when it last moved and which assistant ran it. One completed spec is hovered, then opened into its documents: Specification, Plan, Tasks and the files under them.', async (recording, beat) => {
+                await recording.hold(2);
+                const spec = await row('Specs', tourSpec);
+                await spec.hover();
+                await beat('hover a completed spec', spec);
+                await recording.hold(2.5);
+                await beat('expand it', spec.locator('.monaco-tl-twistie'));
+                await spec.locator('.monaco-tl-twistie').click();
+                await recording.hold(3);
+            });
+        } finally {
+            await tourDone();
+        }
+    }, { needs: 'fixtures', record: true });
+
+    await step('film-tour-rail', 'Tour: a spec opens on its Overview, then the rail walks every document it wrote', async () => {
+        await tourWindow();
+        try {
+            return await tourFilm('tour-rail', 'A finished spec opened from the side bar. It lands on its Overview, then the rail on the left walks every document the run wrote: the specification with its user stories, the requirements checklist, the plan, the data model, the research notes and the tasks, each scrolled a little to show what it holds.', async (recording, beat) => {
+                await recording.hold(1);
+                const spec = await row('Specs', tourSpec);
+                await beat('open the spec', spec);
+                await spec.click();
+                await webview().locator('.dossier-intent').first().waitFor({ timeout: 15000 });
+                await recording.hold(3);
+                const content = webview().locator('#markdown-content');
+                for (const [name, frames] of [['Specification', 70], ['Requirements', 30], ['Plan', 60], ['Data Model', 30], ['Research', 30], ['Tasks', 36]]) {
+                    const entry = railEntry(name);
+                    if (!(await entry.isVisible().catch(() => false))) continue;
+                    await tourClick(recording, beat, entry, `open ${name}`, 1.5);
+                    await tourScroll(recording, content, frames);
+                    await recording.hold(1);
+                }
+            });
+        } finally {
+            await tourDone();
+        }
+    }, { needs: 'fixtures', record: true });
+
+    await step('film-tour-file-link', 'Tour: a file chip on a task opens that file in an editor beside the spec', async () => {
+        await tourWindow();
+        try {
+            await (await row('Specs', tourSpec)).click();
+            await railEntry('Tasks').click();
+            await webview().locator('.phase-header').first().waitFor({ timeout: 15000 });
+            if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+            await page.waitForTimeout(800);
+            return await tourFilm('tour-file-link', 'The Tasks page of a finished spec. A file chip under a task is clicked and the real file opens in a VS Code editor tab next to the spec, then the spec tab is picked again.', async (recording, beat) => {
+                await recording.hold(1.5);
+                const chip = webview().locator('.file-ref[data-filename*="before-step"]').first();
+                await tourClick(recording, beat, chip, 'open the file the task changed', 0.8);
+                const groups = page.locator('.editor-group-container');
+                if ((await groups.count()) > 1) {
+                    const first = await groups.first().boundingBox();
+                    const second = await groups.nth(1).boundingBox();
+                    const y = first.y + first.height / 2;
+                    await drag({ x: second.x, y }, { x: first.x + first.width * 0.5, y });
+                }
+                await recording.hold(3.5);
+                const back = page.locator('.tab', { hasText: 'Spec:' }).first();
+                await beat('back to the spec', back);
+                await back.click();
+                await recording.hold(2);
+            });
+        } finally {
+            await clear();
+            if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+            await tourDone();
+        }
+    }, { needs: 'fixtures', record: true });
+
+    await step('film-tour-comment', 'Tour: write a note on a line, add it, write a second, then Refine sends both to the assistant', async () => {
+        if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+        await setPanes(['Specs'], true);
+        await openWalk('specified', 'Specification');
+        if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+        await resize(TOUR_WINDOW);
+        await command('View: Zoom In');
+        await page.waitForTimeout(1200);
+        try {
+            const heading = webview().locator('h2', { hasText: 'Why this exists' }).first();
+            await scrollTo(heading, 'start', 40);
+            await page.waitForTimeout(600);
+            return await tourFilm('tour-comment', 'A spec open in the viewer, zoomed in so the words read. A line is hovered, its plus button opens a comment box, a note is typed and added, and it lands under the line as Pending. A second note goes on the next line the same way. The footer then reads Refine (2); Refine is clicked and the notes are sent to the assistant in the terminal below.', async (recording, beat) => {
+                await recording.hold(1.5);
+                const notes = [
+                    ['Teamboard shows a grey placeholder', 'Say where: the directory, the profile page, or both.'],
+                    ['Members want to put their own photo there', 'Name who approves a photo, or say nobody does.'],
+                ];
+                for (const [where, note] of notes) {
+                    const line = webview().locator('.line', { hasText: where }).first();
+                    await line.hover();
+                    await beat('hover the line', line);
+                    await recording.hold(1);
+                    await tourClick(recording, beat, line.locator('.line-add-btn'), 'open a comment', 1);
+                    const editor = webview().locator('.inline-editor').first();
+                    await editor.waitFor({ timeout: 10000 });
+                    await beat('type the note', editor.locator('.editor-textarea'));
+                    await tourType(recording, editor.locator('.editor-textarea'), note);
+                    await recording.hold(1);
+                    await tourClick(recording, beat, editor.locator('.editor-add'), 'add the comment', 2.5);
+                }
+                const refine = webview().locator('#refine-submit-btn');
+                await refine.waitFor({ timeout: 10000 });
+                await refine.hover();
+                await recording.hold(1.2);
+                await beat('refine sends both notes', refine);
+                await refine.click();
+                await recording.hold(0.6);
+                // The assistant opens as an editor beside the spec; give it half the window so its lines read.
+                await page.locator('.xterm-rows').last().waitFor({ timeout: 15000 }).catch(() => undefined);
+                await page.waitForTimeout(600);
+                const groups = page.locator('.editor-group-container');
+                if ((await groups.count()) > 1) {
+                    const first = await groups.first().boundingBox();
+                    const second = await groups.nth(1).boundingBox();
+                    const y = first.y + first.height / 2;
+                    await drag({ x: second.x, y }, { x: first.x + first.width * 0.52, y });
+                }
+                await beat('sent to the assistant', page.locator('.xterm-rows').last());
+                await recording.hold(4.5);
+            });
+        } finally {
+            await command('View: Reset Zoom');
+            await clear();
+            if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+            await tourDone();
+        }
+    }, { needs: 'fixtures', record: true });
+
+    await step('film-tour-overview', 'Tour: a finished run\'s Overview read from top to bottom', async () => {
+        await tourWindow();
+        try {
+            await (await row('Specs', tourSpec)).click();
+            await webview().locator('.dossier-intent').first().waitFor({ timeout: 15000 });
+            if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+            // The Overview's own no-rail layout, so the content column takes the editor; the chrome above and the footer go too.
+            await webview().locator('.shell-grid').first().evaluate(grid => {
+                grid.classList.add('shell-grid--no-rail');
+                for (const el of document.querySelectorAll('header.page-chrome, .spec-header, nav.doc-rail, footer.actions, .compact-nav')) el.style.setProperty('display', 'none', 'important');
+            });
+            await page.waitForTimeout(800);
+            return await tourFilm('tour-overview', 'The Overview of a finished run, scrolled from top to bottom: what was asked, how long each step took, the approach and size, the fence around the work, every check with the command it ran, the decisions with what they rejected, and the requirement to task to test coverage.', async (recording, beat) => {
+                await recording.hold(2);
+                await beat('read the run', webview().locator('.dossier-intent'));
+                await recordScroll(recording, webview().locator('#markdown-content, .dossier').first());
+                await recording.hold(2.5);
+            });
+        } finally {
+            await webview().locator('.shell-grid').first().evaluate(grid => {
+                grid.classList.remove('shell-grid--no-rail');
+                for (const el of document.querySelectorAll('header.page-chrome, .spec-header, nav.doc-rail, footer.actions, .compact-nav')) el.style.removeProperty('display');
+            }).catch(() => undefined);
+            await tourDone();
+        }
+    }, { needs: 'fixtures', record: true });
+
+    await step('film-tour-builder', 'Tour: the Workflow Builder shows the pipeline as nodes and opens a phase menu', async () => {
+        await clear();
+        await resize(TOUR_WINDOW);
+        if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+        try {
+            await command('Open Workflow Builder');
+            await webview().locator('.pb-step').first().waitFor({ timeout: 20000 });
+            await page.waitForTimeout(1200);
+            return await tourFilm('tour-builder', 'The Workflow Builder: the spec-kit pipeline laid out as columns of nodes, specify to implement, with the hooks around them. A phase menu is opened to show what can be added there, then closed, and one node is picked to show its settings.', async (recording, beat) => {
+                await recording.hold(2.5);
+                const menu = webview().locator('button.pb-phase-add[aria-haspopup="menu"]').first();
+                await tourClick(recording, beat, menu, 'open a phase menu', 2.5);
+                await page.keyboard.press('Escape');
+                await recording.hold(1);
+                const node = webview().locator('.pb-step').nth(2);
+                await tourClick(recording, beat, node, 'pick a node', 3);
+            });
+        } finally {
+            await clear();
+            if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+            await tourDone();
+        }
+    }, { needs: 'fixtures', record: true });
+
+    /** Films one card, cut to the card and the room it grows into, and writes each beat's frame and card box (frame pixels) to events.json. */
+    const filmCard = async (name, what, card, grow, body) => {
+        const events = [];
+        let recording;
+        const note = async (beat) => {
+            const box = await card.boundingBox();
+            const clip = recording.clip;
+            const scale = 2;
+            events.push({ beat, frame: recording.frames, second: Math.round((recording.frames / 12) * 10) / 10, card: { x: Math.round((box.x - clip.x) * scale), y: Math.round((box.y - clip.y) * scale), width: Math.round(box.width * scale), height: Math.round(box.height * scale) } });
+        };
+        const facts = await film(name, what, async (r) => {
+            recording = r;
+            await body(r, note);
+        }, {
+            clip: async () => {
+                const box = await card.boundingBox();
+                const footer = await webview().locator('footer.actions').boundingBox().catch(() => null);
+                const pad = 16;
+                // A short margin under the card, so the next block on the page stays out of the frame.
+                const bottom = Math.min(box.y + box.height + grow + pad / 2, footer ? footer.y - 4 : Infinity);
+                return { x: Math.round(box.x - pad), y: Math.round(box.y - pad), width: Math.round(box.width + pad * 2), height: Math.round(bottom - (box.y - pad)) };
+            },
+        });
+        writeFileSync(join(RECORD, name, 'events.json'), `${JSON.stringify(events, null, 2)}\n`);
+        return facts;
+    };
+
+    await step('film-plan-states', 'A reader clicks through the Waiting change states, and each one shows its sentence and its ways out', async () => {
+        try {
+            await openPlan('favorites');
+            const states = planCard('states', 'Waiting change');
+            await showCard(states);
+            // Each state's ways out make the card a different height, so the frame is sized to the tallest and the pick goes back to the start.
+            const picks = ['Queued', 'Sending', 'Sent', 'Dropped'];
+            const heights = [];
+            for (const name of picks) {
+                await pickState(states, name);
+                heights.push((await states.boundingBox()).height);
+            }
+            await pickState(states, 'Queued');
+            const grow = Math.max(...heights) - (await states.boundingBox()).height;
+            return await filmCard('plan-states', 'The states card from a real plan for offline favorites. A reader picks Queued, then Sending, then Sent, then Dropped; each pick highlights the box and its outgoing arrows, and the sentence under the diagram changes to say what that state means and where it can go next.', states, grow, async (recording, note) => {
+                await note('Queued, the start state, picked');
+                await recording.hold(0.5);
+                for (const name of picks) {
+                    await pickState(states, name);
+                    await note(`${name} picked`);
+                    await recording.hold(name === 'Sending' ? 2.6 : 2);
+                }
+            });
+        } finally {
+            await closePlan();
+        }
+    }, { needs: 'fixtures', record: true });
+
+    await step('film-plan-calls', 'A reader strikes one call from the Offline favorite card and leaves a comment on another', async () => {
+        try {
+            await openPlan('favorites');
+            const calls = planCard('calls', 'Offline favorite');
+            await showCard(calls);
+            const rowOf = name => calls.locator('.calls-row', { has: webview().locator(`.calls-name:text-is("${name}")`) }).first();
+            return await filmCard('plan-calls', 'The calls card from a real plan for offline favorites. A reader strikes the enqueue call, which turns the row struck through, then opens a comment on the isNetworkError row, types a short question and adds it, so the comment sits under that row.', calls, 190, async (recording, note) => {
+                await note('the card as written');
+                await recording.hold(1.5);
+                const enqueue = rowOf('enqueue()');
+                await enqueue.hover();
+                await recording.hold(0.6);
+                await enqueue.locator('.calls-strike').click();
+                await calls.locator('.calls-row--struck').waitFor({ timeout: 5000 });
+                await restPointer();
+                await note('enqueue struck');
+                await recording.hold(2);
+                const network = rowOf('isNetworkError()');
+                const line = network.locator('xpath=ancestor::div[contains(@class,"line")][1]');
+                await network.hover();
+                await recording.hold(0.6);
+                await line.locator('.line-add-btn').click();
+                const box = line.locator('.editor-textarea');
+                await box.waitFor({ timeout: 5000 });
+                await note('comment box open');
+                await recording.hold(0.8);
+                // Two letters a frame: a quick typist, and the film stays short.
+                const words = 'Which errors count as no response?';
+                for (let at = 0; at < words.length; at += 2) {
+                    await page.keyboard.type(words.slice(at, at + 2));
+                    await recording.frame();
+                }
+                await recording.hold(0.8);
+                await line.locator('.editor-add').click();
+                await restPointer();
+                await page.waitForTimeout(300);
+                await note('comment added');
+                await recording.hold(2.4);
+            });
+        } finally {
+            await closePlan();
+        }
+    }, { needs: 'fixtures', record: true });
+
+    await step('film-plan-state-screen', 'On the drafts plan, picking a state shows its screen under the card, and picking another takes it away', async () => {
+        try {
+            await openPlan('drafts');
+            const status = planCard('states', 'article status');
+            await showCard(status);
+            // Measured with the screen showing, so the film's frame holds the card at its tallest.
+            await pickState(status, 'InReview');
+            const tall = (await status.boundingBox()).height;
+            await pickState(status, 'Draft');
+            const short = (await status.boundingBox()).height;
+            return await filmCard('plan-state-screen', 'The states card for an article\'s status, from a real plan for drafts and review. A reader picks Draft, then InReview, and the Edit article screen for that state appears under the diagram; picking Approved takes the screen away again.', status, tall - short, async (recording, note) => {
+                await note('Draft picked');
+                await recording.hold(1.5);
+                for (const name of ['InReview', 'Approved']) {
+                    await pickState(status, name);
+                    await page.waitForTimeout(150);
+                    await note(`${name} picked`);
+                    await recording.hold(name === 'InReview' ? 3 : 2);
+                }
+            });
+        } finally {
+            await closePlan();
+        }
+    }, { needs: 'fixtures', record: true });
+
     await step('shot-review-comments','A spec with one pending and one applied comment shows both cards and Refine (1) in the footer', async () => {
         const at = new Date(Date.now() - 60000).toISOString();
         const comment = (id, line, blockText, text, status) => ({ id, doc: 'spec', anchor: { heading: 'Why this exists', blockText, line }, comment: text, status, createdAt: at });
@@ -919,6 +1625,16 @@ try {
         await capture('review-comments', { target: 'editor', ratio: 16 / 9 });
         const text = await expectText(webview().locator('#refine-submit-btn'), /Refine \(1\)/);
         await capture('footer-refine', { target: webview().locator('footer.actions'), padding: 10 });
+        // A third comment half written: the editor that the line's + button opens, left unsaved.
+        const line = webview().locator('.line', { hasText: 'Members want to put their own photo there' }).first();
+        await line.hover();
+        await line.locator('.line-add-btn').first().click();
+        const editor = webview().locator('.inline-editor').first();
+        await editor.waitFor({ timeout: 10000 });
+        await editor.locator('.editor-textarea').fill('Say what happens to the old photo when a member uploads a new one.');
+        await page.waitForTimeout(400);
+        await capture('comment-editor', { target: [webview().locator('h2', { hasText: 'Why this exists' }).first(), editor], padding: 16, within: 'editor', keepPointer: true });
+        await page.keyboard.press('Escape');
         return text;
     }, { needs: 'fixtures', shots: true });
 

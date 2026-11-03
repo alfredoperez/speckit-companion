@@ -1,0 +1,123 @@
+{
+  "ok": false,
+  "strict": false,
+  "browserSkipped": true,
+  "lint": {
+    "ok": false,
+    "errorCount": 3,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "media_missing_data_start",
+        "severity": "error",
+        "message": "<video> has src but no data-start. HyperFrames cannot own playback for untimed media, so preview and render behavior can diverge.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/alfredoperez/dev/GitHub/speckit-companion/content/media/launch-tour/compositions/frames/16-plan-components.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add data-start=\"0\" (or the intended start time) and data-duration if the clip should stop before the source ends."
+      },
+      {
+        "code": "media_missing_data_start",
+        "severity": "error",
+        "message": "<video> has src but no data-start. HyperFrames cannot own playback for untimed media, so preview and render behavior can diverge.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/alfredoperez/dev/GitHub/speckit-companion/content/media/launch-tour/compositions/frames/17-copilot.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add data-start=\"0\" (or the intended start time) and data-duration if the clip should stop before the source ends."
+      },
+      {
+        "code": "media_missing_data_start",
+        "severity": "error",
+        "message": "<video> has src but no data-start. HyperFrames cannot own playback for untimed media, so preview and render behavior can diverge.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "/Users/alfredoperez/dev/GitHub/speckit-companion/content/media/launch-tour/compositions/frames/18-claude-code.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0,
+        "fixHint": "Add data-start=\"0\" (or the intended start time) and data-duration if the clip should stop before the source ends."
+      }
+    ],
+    "filesScanned": 20
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "duration": 0,
+    "samples": [],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 0,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [],
+    "checked": 0,
+    "passed": 0
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "step": 0,
+    "samples": 0
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

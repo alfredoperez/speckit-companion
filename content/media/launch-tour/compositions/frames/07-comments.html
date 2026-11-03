@@ -1,0 +1,66 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /></head>
+<body>
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f07 { position:absolute; inset:0; overflow:hidden; background:#0a0913; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f07 .bg { position:absolute; inset:0; background-color:#0a0913; background-image:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f07 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f07 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f07 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:0 50%; }
+#f07 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f07 .h i { font-style:normal; color:#a78bfa; }
+#f07 .h span { display:inline-block; }
+#f07 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f07 .win img, #f07 .win video { position:absolute; display:block; }
+#f07 .f07-world { position:absolute; left:0; top:0; width:1520px; height:700px; transform-origin:0 0; }
+#f07 .f07-ring { position:absolute; border:3px solid #8b5cf6; border-radius:8px; box-shadow:0 0 0 6px rgba(139,92,246,.18); }
+#f07 .lbl { position:absolute; font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.1em; text-transform:uppercase; color:#b6b0d2; }
+</style>
+<div id="f07" data-composition-id="f07" data-width="1920" data-height="1080" data-duration="3.5">
+<div class="bg clip" id="f07-bg" data-start="0" data-duration="3.5" data-track-index="0"></div><div class="dots"></div>
+
+<div style="position:absolute;left:96px;top:70px;width:1700px"><div class="kicker" id="f07-kicker">Review</div><div class="rule" id="f07-rule"></div><div class="h" style="font-size:64px;margin-top:22px"><span id="f07-h1">Leave a note on a line.</span> <span id="f07-h2"><i>Refine</i> sends it back.</span></div></div>
+<div class="win" id="f07-win" style="left:200px;top:290px;width:1520px;height:700px;">
+  <div class="f07-world" id="f07-world" data-layout-allow-overflow>
+    <img src="assets/comment-editor.png" alt="" style="left:0px;top:0px;width:1520px" />
+    <div class="f07-ring" id="f07-ring-applied" style="left:30px;top:184px;width:1390px;height:54px"></div>
+    <div class="f07-ring" id="f07-ring-pending" style="left:30px;top:299px;width:1390px;height:54px"></div>
+  </div>
+</div>
+
+</div>
+<script>
+  (function () {
+    const W = 1520, H = 700;
+    const cam = (s, cx, cy) => ({ scale: s, x: W / 2 - s * cx, y: H / 2 - s * cy });
+    const clampY = (c, s) => { c.y = Math.min(0, Math.max(H - s * H, c.y)); return c; };
+    const editor = clampY(cam(1.6, 560, 515), 1.6);
+    const editorDrift = clampY(cam(1.64, 560, 515), 1.64);
+    const cards = clampY(cam(1.2, 745, 262), 1.2);
+    const whole = { scale: 1, x: 0, y: 0 };
+
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo("#f07-kicker", { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0);
+    tl.fromTo("#f07-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 0.05);
+    tl.fromTo("#f07-h1", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.1);
+    tl.fromTo("#f07-win", { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: 0.55, ease: "power3.out" }, 0.05);
+
+    tl.fromTo("#f07-world", { scale: editor.scale, x: editor.x, y: editor.y }, { scale: editorDrift.scale, x: editorDrift.x, y: editorDrift.y, duration: 0.6, ease: "none" }, 0);
+    tl.fromTo("#f07-world", { scale: editorDrift.scale, x: editorDrift.x, y: editorDrift.y }, { scale: cards.scale, x: cards.x, y: cards.y, duration: 2.0, ease: "power3.out", immediateRender: false }, 0.6);
+
+    tl.fromTo("#f07-h2", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 1.55);
+    tl.fromTo("#f07-ring-applied", { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power2.out" }, 1.7);
+    tl.fromTo("#f07-ring-pending", { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.35, ease: "power2.out" }, 2.0);
+
+    tl.fromTo("#f07-world", { scale: cards.scale, x: cards.x, y: cards.y }, { scale: whole.scale, x: whole.x, y: whole.y, duration: 0.75, ease: "power2.inOut", immediateRender: false }, 2.6);
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines["f07"] = tl;
+  })();
+</script>
+</template>
+</body></html>

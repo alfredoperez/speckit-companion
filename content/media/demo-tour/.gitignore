@@ -1,0 +1,6 @@
+assets/*.png
+assets/*.mp4
+assets/*.svg
+capture/assets/
+renders/
+snapshots/

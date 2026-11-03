@@ -341,5 +341,60 @@
     {
       "to": "docs/screenshots/live-run-log.png"
     }
+  ],
+  "plan-blocks-window": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/plan-blocks-window.png"
+    }
+  ],
+  "plan-blocks-calls": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/plan-blocks-calls.png"
+    }
+  ],
+  "plan-blocks-states-picked": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/plan-blocks-states-picked.png"
+    }
+  ],
+  "plan-blocks-screen": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/plan-blocks-screen.png"
+    }
+  ],
+  "plan-blocks-code-pin": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/plan-blocks-code-pin.png"
+    }
+  ],
+  "plan-blocks-state-shows-screen": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/plan-blocks-state-shows-screen.png"
+    }
+  ],
+  "_full-plan-blocks-calls": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/_full-plan-blocks-calls.png"
+    }
+  ],
+  "_full-plan-blocks-states-picked": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/_full-plan-blocks-states-picked.png"
+    }
+  ],
+  "_full-plan-blocks-screen": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/_full-plan-blocks-screen.png"
+    }
+  ],
+  "_full-plan-blocks-code-pin": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/_full-plan-blocks-code-pin.png"
+    }
+  ],
+  "_full-plan-blocks-state-shows-screen": [
+    {
+      "to": "../alfredo-perez.dev/apps/web/docs/plans/series-screenshots/raw/27-plans-you-can-see/_full-plan-blocks-state-shows-screen.png"
+    }
   ]
 }

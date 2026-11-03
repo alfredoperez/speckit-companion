@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>SpecKit Companion launch tour</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      html, body { margin:0; width:1920px; height:1080px; overflow:hidden; background:#0a0913; }
+      #root { position:relative; width:100%; height:100%; background:#0a0913; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="63.5" data-width="1920" data-height="1080">
+      <div id="slot-01" data-composition-id="f01" data-composition-src="compositions/frames/01-hook.html" data-start="0" data-duration="3" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-02" data-composition-id="f02" data-composition-src="compositions/frames/02-intro.html" data-start="3" data-duration="2.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-03" data-composition-id="f03" data-composition-src="compositions/frames/03-before-after.html" data-start="5.5" data-duration="3" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-04" data-composition-id="f04" data-composition-src="compositions/frames/04-stories.html" data-start="8.5" data-duration="4" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-05" data-composition-id="f05" data-composition-src="compositions/frames/05-tasks.html" data-start="12.5" data-duration="3.5" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-06" data-composition-id="f06" data-composition-src="compositions/frames/06-footer.html" data-start="16" data-duration="3.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-07" data-composition-id="f07" data-composition-src="compositions/frames/07-comments.html" data-start="19.5" data-duration="3.5" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-08" data-composition-id="f08" data-composition-src="compositions/frames/08-overview-record.html" data-start="23" data-duration="3.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-09" data-composition-id="f09" data-composition-src="compositions/frames/09-overview-proof.html" data-start="26.5" data-duration="3.5" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-10" data-composition-id="f10" data-composition-src="compositions/frames/10-overview-fence.html" data-start="30" data-duration="3" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-11" data-composition-id="f11" data-composition-src="compositions/frames/11-overview-coverage.html" data-start="33" data-duration="3" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-12" data-composition-id="f12" data-composition-src="compositions/frames/12-sidebar.html" data-start="36" data-duration="3.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-13" data-composition-id="f13" data-composition-src="compositions/frames/13-living-specs.html" data-start="39.5" data-duration="4" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-14" data-composition-id="f14" data-composition-src="compositions/frames/14-coming-next.html" data-start="43.5" data-duration="1.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-15" data-composition-id="f15" data-composition-src="compositions/frames/15-builder.html" data-start="45" data-duration="3.5" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-16" data-composition-id="f16" data-composition-src="compositions/frames/16-plan-components.html" data-start="48.5" data-duration="4.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-17" data-composition-id="f17" data-composition-src="compositions/frames/17-copilot.html" data-start="53" data-duration="3.5" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-18" data-composition-id="f18" data-composition-src="compositions/frames/18-claude-code.html" data-start="56.5" data-duration="3.5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-19" data-composition-id="f19" data-composition-src="compositions/frames/19-cta.html" data-start="60" data-duration="3.5" data-track-index="2" data-width="1920" data-height="1080"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

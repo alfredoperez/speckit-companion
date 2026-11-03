@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>SpecKit Companion walkthrough</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      html, body { margin:0; width:1920px; height:1080px; overflow:hidden; background:#0a0913; }
+      #root { position:relative; width:100%; height:100%; background:#0a0913; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="132.6" data-width="1920" data-height="1080">
+      <div id="slot-01" data-composition-id="f01" data-composition-src="compositions/frames/01-hook-viewer.html" data-start="0" data-duration="2.8" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-02" data-composition-id="f02" data-composition-src="compositions/frames/02-hook-overview.html" data-start="2.8" data-duration="2.6" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-03" data-composition-id="f03" data-composition-src="compositions/frames/03-hook-comment.html" data-start="5.4" data-duration="3" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-04" data-composition-id="f04" data-composition-src="compositions/frames/04-hook-refine.html" data-start="8.4" data-duration="3" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-05" data-composition-id="f05" data-composition-src="compositions/frames/05-hook-plan.html" data-start="11.4" data-duration="1.8" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-06" data-composition-id="f06" data-composition-src="compositions/frames/06-hook-apps.html" data-start="13.2" data-duration="1.8" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-07" data-composition-id="f07" data-composition-src="compositions/frames/07-hook-title.html" data-start="15" data-duration="2.6" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-08" data-composition-id="f08" data-composition-src="compositions/frames/08-sidebar.html" data-start="17.6" data-duration="6" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-09" data-composition-id="f09" data-composition-src="compositions/frames/09-viewer-spec.html" data-start="23.6" data-duration="7" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-10" data-composition-id="f10" data-composition-src="compositions/frames/10-viewer-plan.html" data-start="30.6" data-duration="6" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-11" data-composition-id="f11" data-composition-src="compositions/frames/11-file-link.html" data-start="36.6" data-duration="8" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-12" data-composition-id="f12" data-composition-src="compositions/frames/12-overview.html" data-start="44.6" data-duration="14" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-13" data-composition-id="f13" data-composition-src="compositions/frames/13-comment-write.html" data-start="58.6" data-duration="9" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-14" data-composition-id="f14" data-composition-src="compositions/frames/14-comment-second.html" data-start="67.6" data-duration="8" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-15" data-composition-id="f15" data-composition-src="compositions/frames/15-comment-refine.html" data-start="75.6" data-duration="8" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-16" data-composition-id="f16" data-composition-src="compositions/frames/16-comment-plan.html" data-start="83.6" data-duration="8" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-17" data-composition-id="f17" data-composition-src="compositions/frames/17-plan-states.html" data-start="91.6" data-duration="6" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-18" data-composition-id="f18" data-composition-src="compositions/frames/18-plan-screen.html" data-start="97.6" data-duration="5" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-19" data-composition-id="f19" data-composition-src="compositions/frames/19-copilot.html" data-start="102.6" data-duration="7" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-20" data-composition-id="f20" data-composition-src="compositions/frames/20-claude-code.html" data-start="109.6" data-duration="7" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-21" data-composition-id="f21" data-composition-src="compositions/frames/21-coming-next.html" data-start="116.6" data-duration="2" data-track-index="2" data-width="1920" data-height="1080"></div>
+      <div id="slot-22" data-composition-id="f22" data-composition-src="compositions/frames/22-builder.html" data-start="118.6" data-duration="8" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="slot-23" data-composition-id="f23" data-composition-src="compositions/frames/23-close.html" data-start="126.6" data-duration="6" data-track-index="2" data-width="1920" data-height="1080"></div>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

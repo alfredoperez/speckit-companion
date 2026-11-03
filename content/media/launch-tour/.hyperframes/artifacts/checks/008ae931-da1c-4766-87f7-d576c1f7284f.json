@@ -1,0 +1,688 @@
+{
+  "ok": true,
+  "strict": false,
+  "browserSkipped": false,
+  "lint": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "filesScanned": 20
+  },
+  "runtime": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": []
+  },
+  "layout": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 10,
+    "findings": [
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 3.528,
+        "selector": "#f02-stack",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": -2.88,
+          "top": -1.62,
+          "right": 1922.88,
+          "bottom": 1081.62,
+          "width": 1925.76,
+          "height": 1083.24
+        },
+        "containerSelector": "#slot-02 > div:nth-of-type(1)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "left": 2.88,
+          "right": 2.88
+        },
+        "dataAttributes": {
+          "data-start": "0",
+          "data-duration": "2.5",
+          "data-track-index": "1"
+        },
+        "sourceFile": "compositions/frames/02-intro.html",
+        "bbox": {
+          "x": -2.88,
+          "y": -1.62,
+          "width": 1925.76,
+          "height": 1083.24
+        },
+        "firstSeen": 3.528,
+        "lastSeen": 3.528,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          3.528
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 17.639,
+        "selector": "#f06-win3",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 1150,
+          "top": 660,
+          "right": 1954,
+          "bottom": 796,
+          "width": 804,
+          "height": 136
+        },
+        "containerSelector": "#slot-06 > div:nth-of-type(1)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "right": 34
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/06-footer.html",
+        "bbox": {
+          "x": 1150,
+          "y": 660,
+          "width": 804,
+          "height": 136
+        },
+        "firstSeen": 17.639,
+        "lastSeen": 17.639,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          17.639
+        ]
+      },
+      {
+        "code": "panel_out_of_canvas",
+        "severity": "info",
+        "time": 17.639,
+        "selector": "#f06-win3",
+        "message": "Painted panel extends outside the composition canvas.",
+        "rect": {
+          "left": 1150,
+          "top": 660,
+          "right": 1954,
+          "bottom": 796,
+          "width": 804,
+          "height": 136
+        },
+        "containerSelector": "#root",
+        "text": "",
+        "fixHint": "Move the panel inward, or mark intentional off-canvas animation with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "right": 34
+        },
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/06-footer.html",
+        "bbox": {
+          "x": 1150,
+          "y": 660,
+          "width": 804,
+          "height": 136
+        },
+        "firstSeen": 17.639,
+        "lastSeen": 17.639,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          17.639
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 31.75,
+        "selector": "#f10-card-l > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 60.46,
+          "top": 273.36,
+          "right": 1036.15,
+          "bottom": 1012.08,
+          "width": 975.68,
+          "height": 738.72
+        },
+        "containerSelector": "#f10-card-l",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 91.24,
+          "top": 273.73,
+          "right": 939.33,
+          "bottom": 1044.11,
+          "width": 848.08,
+          "height": 770.38
+        },
+        "overflow": {
+          "left": 30.78,
+          "right": 96.82
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-13",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/10-overview-fence.html",
+        "bbox": {
+          "x": 60.46,
+          "y": 273.36,
+          "width": 975.68,
+          "height": 738.72
+        },
+        "firstSeen": 31.75,
+        "lastSeen": 31.75,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          31.75
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 31.75,
+        "selector": "#f10-card-r > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 1029.27,
+          "top": 275.61,
+          "right": 1992.85,
+          "bottom": 964.93,
+          "width": 963.57,
+          "height": 689.32
+        },
+        "containerSelector": "#f10-card-r",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 1057.28,
+          "top": 277.76,
+          "right": 1889.69,
+          "bottom": 1042.24,
+          "width": 832.42,
+          "height": 764.49
+        },
+        "overflow": {
+          "left": 28.01,
+          "right": 103.16,
+          "top": 2.15
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-14",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/10-overview-fence.html",
+        "bbox": {
+          "x": 1029.27,
+          "y": 275.61,
+          "width": 963.57,
+          "height": 689.32
+        },
+        "firstSeen": 31.75,
+        "lastSeen": 31.75,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          31.75
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 38.806,
+        "selector": "#f12-stage",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": -11.52,
+          "top": -5.18,
+          "right": 1931.52,
+          "bottom": 1087.78,
+          "width": 1943.04,
+          "height": 1092.96
+        },
+        "containerSelector": "#slot-12 > div:nth-of-type(1)",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 0,
+          "top": 0,
+          "right": 1920,
+          "bottom": 1080,
+          "width": 1920,
+          "height": 1080
+        },
+        "overflow": {
+          "left": 11.52,
+          "right": 11.52,
+          "top": 5.18,
+          "bottom": 7.78
+        },
+        "dataAttributes": {
+          "data-start": "0",
+          "data-duration": "3.5",
+          "data-track-index": "1"
+        },
+        "sourceFile": "compositions/frames/12-sidebar.html",
+        "bbox": {
+          "x": -11.52,
+          "y": -5.18,
+          "width": 1943.04,
+          "height": 1092.96
+        },
+        "firstSeen": 38.806,
+        "lastSeen": 38.806,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          38.806
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 45.861,
+        "selector": "#v-plan-blocks-states-clicks-mp4",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 96,
+          "top": 290,
+          "right": 956,
+          "bottom": 904.78,
+          "width": 860,
+          "height": 614.78
+        },
+        "containerSelector": "#f14-win-states",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 96,
+          "top": 290,
+          "right": 946,
+          "bottom": 630,
+          "width": 850,
+          "height": 340
+        },
+        "overflow": {
+          "right": 10,
+          "bottom": 274.78
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "v-plan-blocks-states-clicks-mp4",
+          "data-start": "0",
+          "data-duration": "4.5",
+          "data-track-index": "2",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/14-plan-components.html",
+        "bbox": {
+          "x": 96,
+          "y": 290,
+          "width": 860,
+          "height": 614.78
+        },
+        "firstSeen": 45.861,
+        "lastSeen": 45.861,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          45.861
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 45.861,
+        "selector": "#f14-win-calls > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 974,
+          "top": 290,
+          "right": 1834,
+          "bottom": 615.61,
+          "width": 860,
+          "height": 325.61
+        },
+        "containerSelector": "#f14-win-calls",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 974,
+          "top": 290,
+          "right": 1824,
+          "bottom": 630,
+          "width": 850,
+          "height": 340
+        },
+        "overflow": {
+          "right": 10
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-23",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/14-plan-components.html",
+        "bbox": {
+          "x": 974,
+          "y": 290,
+          "width": 860,
+          "height": 325.61
+        },
+        "firstSeen": 45.861,
+        "lastSeen": 45.861,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          45.861
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 45.861,
+        "selector": "#f14-win-screen > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 96,
+          "top": 682,
+          "right": 956,
+          "bottom": 981.52,
+          "width": 860,
+          "height": 299.52
+        },
+        "containerSelector": "#f14-win-screen",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 96,
+          "top": 682,
+          "right": 946,
+          "bottom": 1022,
+          "width": 850,
+          "height": 340
+        },
+        "overflow": {
+          "right": 10
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-24",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/14-plan-components.html",
+        "bbox": {
+          "x": 96,
+          "y": 682,
+          "width": 860,
+          "height": 299.52
+        },
+        "firstSeen": 45.861,
+        "lastSeen": 45.861,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          45.861
+        ]
+      },
+      {
+        "code": "container_overflow",
+        "severity": "info",
+        "time": 45.861,
+        "selector": "#f14-win-code > img:nth-of-type(1)",
+        "message": "Element extends outside a clipping layout container.",
+        "rect": {
+          "left": 974,
+          "top": 406,
+          "right": 1834,
+          "bottom": 836,
+          "width": 860,
+          "height": 430
+        },
+        "containerSelector": "#f14-win-code",
+        "fixHint": "Resize/reposition the child or container, or mark intentional overflow with data-layout-allow-overflow.",
+        "containerRect": {
+          "left": 974,
+          "top": 682,
+          "right": 1824,
+          "bottom": 1022,
+          "width": 850,
+          "height": 340
+        },
+        "overflow": {
+          "right": 10,
+          "top": 276
+        },
+        "dataAttributes": {
+          "data-hf-render-id": "hf-media-25",
+          "data-hf-authored-opacity": ""
+        },
+        "sourceFile": "compositions/frames/14-plan-components.html",
+        "bbox": {
+          "x": 974,
+          "y": 406,
+          "width": 860,
+          "height": 430
+        },
+        "firstSeen": 45.861,
+        "lastSeen": 45.861,
+        "occurrences": 1,
+        "heldMs": 0,
+        "times": [
+          45.861
+        ]
+      }
+    ],
+    "duration": 63.5,
+    "samples": [
+      3.528,
+      10.583,
+      17.639,
+      24.694,
+      31.75,
+      38.806,
+      45.861,
+      52.917,
+      59.972
+    ],
+    "transitionSamples": [],
+    "transitionSamplesDropped": 0,
+    "tolerance": 2,
+    "totalIssueCount": 10,
+    "truncated": false
+  },
+  "motion": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": false,
+    "samples": 0
+  },
+  "contrast": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 0,
+    "infoCount": 0,
+    "findings": [],
+    "enabled": true,
+    "samples": [
+      3.528,
+      17.639,
+      31.75,
+      45.861,
+      59.972
+    ],
+    "checked": 24,
+    "passed": 24
+  },
+  "craft": {
+    "ok": true,
+    "errorCount": 0,
+    "warningCount": 5,
+    "infoCount": 0,
+    "findings": [
+      {
+        "code": "film_silent",
+        "severity": "warning",
+        "message": "This 64 s film has no sound source (no <audio>, no <video> with sound): add a music bed and sounds on the visible actions unless the person asked for silence; see references/sound.md.",
+        "selector": "[data-composition-id]",
+        "dataAttributes": {},
+        "sourceFile": "index.html",
+        "bbox": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0
+        },
+        "time": 0
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "\"See and steer everything your AI builds.\" (7 words) is on screen 1.46 s (±0.01 s), under its 1.95 s floor: hold it about 0.5 s + 0.3 s a word (2.60 s here) before it leaves or changes; see references/motion.md.",
+        "text": "See and steer everything your AI builds.",
+        "selector": "#f02-tag",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/02-intro.html",
+        "bbox": {
+          "x": 542.86,
+          "y": 605.16,
+          "width": 834.2799999999999,
+          "height": 56.370000000000005
+        },
+        "time": 4.039,
+        "words": 7,
+        "seconds": 1.461,
+        "floorSeconds": 1.95
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "\"When the run is complete\" (5 words) is on screen 0.66 s (±0.01 s), under its 1.50 s floor: hold it about 0.5 s + 0.3 s a word (2.00 s here) before it leaves or changes; see references/motion.md.",
+        "text": "When the run is complete",
+        "selector": "#f06-lbl4",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/06-footer.html",
+        "bbox": {
+          "x": 180,
+          "y": 850,
+          "width": 470.4100000000001,
+          "height": 37
+        },
+        "time": 18.836,
+        "words": 5,
+        "seconds": 0.664,
+        "floorSeconds": 1.5
+      },
+      {
+        "code": "text_below_floor",
+        "severity": "warning",
+        "message": "Type floor is 28 px (2.6% of the 1080 px short side, what a phone can read) and 4 text elements stay under it for 0.5 s or more, the smallest \"Copilot app\" at 25 px: set reading text to at least 28 px, or put data-layout-ignore on text that is texture rather than reading; see references/look.md.",
+        "text": "Copilot app",
+        "selector": "div.f19-chips > span:nth-of-type(3)",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/19-cta.html",
+        "bbox": {
+          "x": 981.74,
+          "y": 790.76,
+          "width": 133.47,
+          "height": 30.88
+        },
+        "time": 61.375,
+        "times": [
+          61.25,
+          61.375,
+          61.375,
+          61.5
+        ],
+        "fontPx": 25.09,
+        "floorPx": 28,
+        "seconds": 2.125,
+        "elements": [
+          {
+            "selector": "div.f19-chips > span:nth-of-type(3)",
+            "text": "Copilot app",
+            "fontPx": 25.09,
+            "time": 61.375,
+            "seconds": 2.125
+          },
+          {
+            "selector": "div.f19-chips > span:nth-of-type(1)",
+            "text": "VS Code",
+            "fontPx": 25.57,
+            "time": 61.25,
+            "seconds": 2.25
+          },
+          {
+            "selector": "div.f19-chips > span:nth-of-type(4)",
+            "text": "Claude Code mod",
+            "fontPx": 25.95,
+            "time": 61.5,
+            "seconds": 2
+          },
+          {
+            "selector": "div.f19-chips > span:nth-of-type(2)",
+            "text": "spec-kit extension",
+            "fontPx": 26.14,
+            "time": 61.375,
+            "seconds": 2.125
+          }
+        ]
+      },
+      {
+        "code": "line_unread",
+        "severity": "warning",
+        "message": "The film's last line \"Free and open source. Works with Claude, Copilot, Gemini,...\" (12 words) is on screen 1.67 s (±0.01 s), under the 3.07 s a closing line needs: hold it about 0.5 s + 0.3 s a word and at least 2 s before the film ends; see references/motion.md.",
+        "text": "Free and open source. Works with Claude, Copilot, Gemini, Codex and more.",
+        "selector": "#f19-line",
+        "dataAttributes": {},
+        "sourceFile": "compositions/frames/19-cta.html",
+        "bbox": {
+          "x": 447.41,
+          "y": 857.72,
+          "width": 1025.18,
+          "height": 36.23000000000002
+        },
+        "time": 61.836,
+        "words": 12,
+        "seconds": 1.668,
+        "floorSeconds": 3.075
+      }
+    ],
+    "enabled": true,
+    "step": 0.125,
+    "samples": 508
+  },
+  "hdr": {
+    "autoPromotion": null,
+    "inspection": "available"
+  },
+  "snapshots": {
+    "enabled": false,
+    "files": [],
+    "times": [],
+    "findingFiles": []
+  }
+}

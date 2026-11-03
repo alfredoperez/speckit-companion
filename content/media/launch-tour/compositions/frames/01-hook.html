@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /></head>
+<body>
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f01 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f01 .bg { position:absolute; inset:0; background-color:#0a0913; background-image:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f01 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f01 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f01 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; }
+#f01 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f01 .h i { font-style:normal; color:#a78bfa; }
+#f01 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f01 .win img, #f01 .win video { position:absolute; display:block; }
+#f01 .lbl { position:absolute; font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.1em; text-transform:uppercase; color:#b6b0d2; }
+#f01 .line { transform-origin:0% 60%; }
+</style>
+<div id="f01" data-composition-id="f01" data-width="1920" data-height="1080" data-duration="3">
+<div id="f01-ground" class="bg clip" data-start="0" data-duration="3" data-track-index="0"></div>
+<div id="f01-dots" class="dots clip" data-start="0" data-duration="3" data-track-index="1"></div>
+
+<div id="f01-spec-win" class="win clip" data-start="0" data-duration="3" data-track-index="2" style="left:0px;top:0px;width:1920px;height:1080px;border-radius:0;box-shadow:none;opacity:.22"><img id="f01-spec" src="assets/raw-spec.png" alt="" style="left:0px;top:-40px;width:1920px" /></div>
+<div id="f01-scrim" class="clip" data-start="0" data-duration="3" data-track-index="3" style="position:absolute;inset:0;background:linear-gradient(90deg,#0a0913 0%,rgba(10,9,19,.86) 55%,rgba(10,9,19,.55) 100%)"></div>
+<div style="position:absolute;left:120px;top:330px;width:1500px">
+  <div id="f01-kicker" class="kicker">GitHub Spec Kit</div><div id="f01-rule" class="rule"></div>
+  <div id="f01-line1" class="h line" style="font-size:132px;margin-top:30px">You wrote the spec.</div>
+  <div id="f01-line2" class="h line" style="font-size:132px;color:#a78bfa">Then nobody read it.</div>
+</div>
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  // Scene 1+2 underlay: raw markdown scrolls upward the whole shot, then holds
+  tl.fromTo("#f01-spec", { y: 40 }, { y: -56, duration: 2.7, ease: "power1.inOut" }, 0);
+
+  // Scene 1 (0.0–1.4s): kicker + rule, then line one slams in
+  tl.fromTo("#f01-kicker", { opacity: 0, x: -36 }, { opacity: 1, x: 0, duration: 0.2, ease: "expo.out" }, 0.04);
+  tl.fromTo("#f01-rule", { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.24, ease: "expo.out" }, 0.1);
+  tl.fromTo("#f01-line1", { opacity: 0, scale: 1.14, filter: "blur(10px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.24, ease: "power4.out" }, 0.16);
+
+  // Scene 2 (1.4–3.0s): line two hard-cuts in under it in the accent colour
+  tl.fromTo("#f01-line2", { opacity: 0 }, { opacity: 1, duration: 0.001 }, 1.4);
+  tl.fromTo("#f01-line2", { scale: 1.06 }, { scale: 1, duration: 0.3, ease: "power3.out" }, 1.4);
+
+  window.__timelines["f01"] = tl;
+</script>
+</template>
+</body></html>

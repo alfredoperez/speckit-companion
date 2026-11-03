@@ -1,0 +1,73 @@
+<!doctype html>
+<html><head><meta charset="UTF-8" /></head>
+<body>
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f06 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f06 .bg { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%), #0a0913; }
+#f06 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f06 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f06 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:left center; }
+#f06 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f06 .h i { font-style:normal; color:#a78bfa; }
+#f06 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); transform-origin:left center; }
+#f06 .win img, #f06 .win video { position:absolute; display:block; }
+#f06 .lbl { position:absolute; font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.1em; text-transform:uppercase; color:#b6b0d2; }
+</style>
+<div id="f06" data-composition-id="f06" data-width="1920" data-height="1080" data-duration="4.2">
+<div id="f06-bg" class="clip bg" data-start="0" data-duration="4.2" data-track-index="0"></div><div class="dots"></div>
+
+<div style="position:absolute;left:96px;top:70px;width:1700px"><div id="f06-kicker" class="kicker">The footer runs spec-kit</div><div id="f06-rule" class="rule"></div><div id="f06-head" class="h" style="font-size:64px;margin-top:22px">One button, always the <i>next step</i>.</div></div>
+<div id="f06-lbl1" class="lbl" style="left:180px;top:330px">Before the plan</div>
+<div id="f06-win1" class="win" style="left:180px;top:370px;width:873px;height:204px;"><img src="assets/footer-next-plan.png" alt="" style="left:0px;top:0px;width:873px" /></div>
+<div id="f06-lbl2" class="lbl" style="left:180px;top:620px">While a step runs</div>
+<div id="f06-win2" class="win" style="left:180px;top:660px;width:1048px;height:136px;opacity:.55"><img src="assets/footer-step-running.png" alt="" style="left:-16px;top:0px;width:1064px" /></div>
+<div id="f06-lbl4" class="lbl" style="left:180px;top:850px">When the run is complete</div>
+<div id="f06-win4" class="win" style="left:180px;top:890px;width:842px;height:136px;opacity:.55"><img src="assets/footer-converge.png" alt="" style="left:0px;top:0px;width:842px" /></div>
+<div id="f06-lbl3" class="lbl" style="left:1130px;top:330px">With a pending comment</div>
+<div id="f06-win3" class="win" style="left:1130px;top:370px;width:690px;height:100px;opacity:.55"><img src="assets/footer-refine.png" alt="" style="left:0px;top:-17px;width:690px" /></div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  const LBL_DIM = "#b6b0d2", LBL_ON = "#edeaf6";
+
+  // Scene 1 (0.0-0.5s): kicker, rule and headline enter top-left
+  tl.fromTo("#f06-kicker", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 0);
+  tl.fromTo("#f06-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.3, ease: "power2.out" }, 0.08);
+  tl.fromTo("#f06-head", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0.12);
+
+  // The other three slots wait dim in their posed places
+  tl.fromTo(["#f06-win2", "#f06-win3", "#f06-win4"], { opacity: 0 }, { opacity: 0.22, duration: 0.3, ease: "power1.out", stagger: 0.06 }, 0.2);
+  tl.fromTo(["#f06-lbl2", "#f06-lbl3", "#f06-lbl4"], { opacity: 0 }, { opacity: 0.4, duration: 0.3, ease: "power1.out", stagger: 0.06 }, 0.2);
+
+  // Scene 2 (0.5-1.3s): "Before the plan" pops in bright with its label
+  tl.fromTo("#f06-lbl1", { opacity: 0, x: -14, color: LBL_DIM }, { opacity: 1, x: 0, color: LBL_ON, duration: 0.3, ease: "power2.out" }, 0.42);
+  tl.fromTo("#f06-win1", { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 0.45);
+
+  // Each next state lights up; the previous one dims slightly
+  function step(prev, next, at) {
+    tl.to("#f06-win" + prev, { opacity: 0.6, duration: 0.18, ease: "power1.out" }, at);
+    tl.to("#f06-lbl" + prev, { opacity: 0.7, color: LBL_DIM, duration: 0.18, ease: "power1.out" }, at);
+    tl.fromTo("#f06-win" + next, { opacity: 0.22, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.32, ease: "back.out(1.5)", immediateRender: false }, at);
+    tl.fromTo("#f06-lbl" + next, { opacity: 0.4, color: LBL_DIM }, { opacity: 1, color: LBL_ON, duration: 0.18, ease: "power1.out", immediateRender: false }, at);
+  }
+
+  // Scene 3 (1.3-2.1s): "While a step runs"
+  step(1, 2, 1.3);
+  // Scene 4 (2.1-2.8s): "With a pending comment" (Refine (1))
+  step(2, 3, 2.1);
+  // Scene 5 (2.8-3.5s): "When the run is complete", then all four hold
+  step(3, 4, 2.8);
+  tl.to(["#f06-win1", "#f06-win2", "#f06-win3"], { opacity: 0.8, duration: 0.3, ease: "power1.out" }, 3.08);
+  tl.to(["#f06-lbl1", "#f06-lbl2", "#f06-lbl3"], { opacity: 0.9, duration: 0.3, ease: "power1.out" }, 3.08);
+  tl.set({}, {}, 3.5);
+
+  window.__timelines["f06"] = tl;
+</script>
+</template>
+</body></html>

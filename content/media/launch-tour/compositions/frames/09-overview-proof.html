@@ -1,0 +1,48 @@
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f09 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f09 .bg { position:absolute; inset:0; background:#0a0913; background-image:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f09 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f09 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f09 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:0 50%; }
+#f09 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f09 .h span { display:inline-block; }
+#f09 .h i { font-style:normal; color:#a78bfa; display:inline-block; }
+#f09 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f09 .win img { position:absolute; display:block; }
+</style>
+<div id="f09" data-composition-id="f09" data-width="1920" data-height="1080" data-duration="3.5">
+<div id="f09-bg" class="bg clip" data-start="0" data-duration="3.5" data-track-index="0"></div>
+<div id="f09-dots" class="dots clip" data-start="0" data-duration="3.5" data-track-index="0"></div>
+
+<div style="position:absolute;left:96px;top:70px;width:1700px">
+  <div id="f09-kicker" class="kicker">Verified</div>
+  <div id="f09-rule" class="rule"></div>
+  <div class="h" style="font-size:64px;margin-top:22px"><span id="f09-h1">Every check it ran, and</span> <i id="f09-h2">what came back</i>.</div>
+</div>
+<div id="f09-win" class="win" style="left:210px;top:260px;width:1500px;height:790px;">
+  <img id="f09-page" src="assets/tall-overview-verified.png" alt="" data-layout-allow-overflow style="left:0px;top:-120px;width:1500px" />
+</div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  // Scene 1 (0.0–0.6s): kicker + headline enter; the Verified window rises in.
+  tl.fromTo("#f09-kicker", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 0);
+  tl.fromTo("#f09-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 0.08);
+  tl.fromTo("#f09-h1", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.1);
+  tl.fromTo("#f09-win", { opacity: 0, y: 70, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" }, 0.05);
+
+  // Scene 2 (0.6–3.5s): the checks scroll up at reading speed, easing to a stop.
+  tl.fromTo("#f09-page", { y: 0 }, { y: -900, duration: 2.8, ease: "power2.inOut" }, 0.6);
+
+  // Voiceover cue "and what came back": the payoff clause lands.
+  tl.fromTo("#f09-h2", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 1.55);
+
+  window.__timelines["f09"] = tl;
+</script>
+</template>

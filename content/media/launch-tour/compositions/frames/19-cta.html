@@ -1,0 +1,49 @@
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f19 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f19 .f19-ground { position:absolute; inset:0; background:#0a0913; }
+#f19 .f19-bg { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f19 .f19-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f19 .f19-h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f19 .f19-stack { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding-top:20px; }
+#f19 .f19-mascot { height:330px; display:block; }
+#f19 .f19-lockup { display:flex; align-items:center; gap:20px; }
+#f19 .f19-mark { width:72px; height:72px; display:block; }
+#f19 .f19-url { font-family:"JetBrains Mono",monospace; font-size:38px; color:#a78bfa; }
+#f19 .f19-chips { display:flex; gap:16px; margin-top:6px; }
+#f19 .f19-chip { display:inline-block; padding:12px 24px; border:1.5px solid rgba(167,139,250,.5); border-radius:999px; font-size:28px; font-weight:600; color:#b6b0d2; }
+#f19 .f19-line { font-size:30px; color:#9d97bd; }
+</style>
+<div id="f19" data-composition-id="f19" data-width="1920" data-height="1080" data-duration="5.0">
+  <div id="f19-ground" class="clip f19-ground" data-start="0" data-duration="5.0" data-track-index="0">
+    <div class="f19-bg"></div><div class="f19-dots"></div>
+  </div>
+  <div id="f19-stack" class="clip f19-stack" data-start="0" data-duration="5.0" data-track-index="1">
+    <img id="f19-mascot" class="f19-mascot" src="assets/mascot.png" alt="" />
+    <div id="f19-lockup" class="f19-lockup"><img id="f19-mark" class="f19-mark" src="assets/moss.svg" alt="" /><div id="f19-word" class="f19-h" style="font-size:84px">SpecKit Companion</div></div>
+    <div id="f19-url" class="f19-url">speckit-companion.dev</div>
+    <div class="f19-chips">
+      <span class="f19-chip">VS Code</span>
+      <span class="f19-chip">spec-kit extension</span>
+      <span class="f19-chip">Copilot app</span>
+      <span class="f19-chip">Claude Code mod</span>
+    </div>
+    <div id="f19-line" class="f19-line">Free and open source. Works with Claude, Copilot, Gemini, Codex and more.</div>
+  </div>
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#f19-mascot", { y: 70, scale: 0.86, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: "back.out(1.6)" }, 0.0);
+  tl.fromTo("#f19-mark", { scale: 0, rotation: -25, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: 0.45, ease: "back.out(2)" }, 0.6);
+  tl.fromTo("#f19-word", { x: -28, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 0.68);
+  tl.fromTo("#f19-url", { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 0.95);
+  tl.fromTo("#f19 .f19-chip", { y: 26, scale: 0.9, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.35, ease: "back.out(1.7)", stagger: 0.08 }, 1.15);
+  tl.fromTo("#f19-line", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }, 1.7);
+  tl.fromTo("#f19-stack", { scale: 1 }, { scale: 1.012, duration: 3.5, ease: "none" }, 0);
+  window.__timelines["f19"] = tl;
+</script>
+</template>
