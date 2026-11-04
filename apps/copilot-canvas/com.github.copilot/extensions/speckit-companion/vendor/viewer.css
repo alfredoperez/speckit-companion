@@ -1446,6 +1446,15 @@ body[data-spec-status=completed] .spec-badge {
   color: var(--success);
   font-weight: 700;
 }
+.spec-badge--report-review {
+  background: color-mix(in srgb, var(--review) 12%, transparent);
+  color: var(--review-ink);
+  border-color: color-mix(in srgb, var(--review) 40%, transparent);
+}
+.spec-badge--report-to-fix {
+  background: var(--warning-subtle);
+  color: var(--warning);
+}
 .spec-badge--active {
   background: var(--accent-subtle);
   color: var(--text-primary);
