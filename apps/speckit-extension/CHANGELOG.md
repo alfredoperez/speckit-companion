@@ -11,15 +11,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ### Added
 - **The doctor checks every agent.** It names each agent's layout, an agent ==missing Companion's commands==, and a `specify` CLI missing from PATH. ([#951](https://github.com/alfredoperez/speckit-companion/pull/951)) <!-- area: install -->
 - **A spec keeps the ticket it came from.** Specify writes a Source line and ==records the ticket== on the run record, copied exactly from the brief. ([#945](https://github.com/alfredoperez/speckit-companion/pull/945)) <!-- area: pipeline -->
-- **A clean converge finishes the spec.** A converge pass that adds no task completes the spec, and ==every pass records the tasks it added==. ([#940](https://github.com/alfredoperez/speckit-companion/pull/940), [#944](https://github.com/alfredoperez/speckit-companion/pull/944)) <!-- area: run-record -->
 - **Step times from the agent itself.** Typing a step command records its start, and a turn closes the step only when its document is really written. ([#939](https://github.com/alfredoperez/speckit-companion/pull/939)) <!-- area: run-record -->
 
 ### Changed
-- **Only a clean converge completes a spec.** Implement stops at implemented, and a converge pass that adds no task completes the spec; auto repeats both, up to three passes. ([#942](https://github.com/alfredoperez/speckit-companion/pull/942)) <!-- area: pipeline -->
+- **Only a clean converge completes a spec.** A converge that adds no task completes the spec, ==each pass records the tasks it added==, and auto stops after three. ([#940](https://github.com/alfredoperez/speckit-companion/pull/940), [#942](https://github.com/alfredoperez/speckit-companion/pull/942), [#944](https://github.com/alfredoperez/speckit-companion/pull/944)) <!-- area: pipeline -->
 - **New specs are `spec.md`.** Companion writes new specs as `spec.md`, so stock converge, analyze and clarify find them, and older named specs still open. ([#941](https://github.com/alfredoperez/speckit-companion/pull/941)) <!-- area: pipeline -->
 
 ### Fixed
-- **No stray `.gitignore` when the trace is already ignored.** The run trace writes its per-spec `.gitignore` only when ==no existing git rule== covers `.trace.jsonl`, as its docstring said. ([#962](https://github.com/alfredoperez/speckit-companion/pull/962)) <!-- area: run-record -->
+- **No stray `.gitignore` when the trace is ignored.** The run trace writes its per-spec `.gitignore` only when ==no existing git rule== covers `.trace.jsonl`, as its docstring said. ([#962](https://github.com/alfredoperez/speckit-companion/pull/962)) <!-- area: run-record -->
 - **Two specs never share a number.** One step picks the next folder ==under a lock== and follows your `feature_numbering`, timestamp or sequential. ([#954](https://github.com/alfredoperez/speckit-companion/pull/954)) <!-- area: pipeline -->
 - **Copilot gets the built pipeline.** A build refreshes the skills ==in `.github/skills/`== too, so Copilot runs the project's pipeline. ([#950](https://github.com/alfredoperez/speckit-companion/pull/950)) <!-- area: pipeline -->
 - **Monorepo projects record their runs.** The writer finds the project ==the way Spec Kit does==, from the nearest `.specify/` up, and the feature pointer outranks the label. ([#949](https://github.com/alfredoperez/speckit-companion/pull/949)) <!-- area: run-record -->
