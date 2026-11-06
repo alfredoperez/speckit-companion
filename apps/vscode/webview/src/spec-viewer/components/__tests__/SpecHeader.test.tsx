@@ -446,3 +446,18 @@ describe('the Show terminal button', () => {
         cleanup(container);
     });
 });
+
+describe('the badge of a bug page', () => {
+    it.each([
+        ['review', 'WAITING FOR YOUR REVIEW', 'spec-badge--report-review'],
+        ['to-fix', 'TO FIX', 'spec-badge--report-to-fix'],
+    ] as const)('takes the %s tone', (badgeTone, badgeText, tone) => {
+        navState.value = mockNavState({ badgeText, specStatus: 'active', report: { kind: 'bug', badgeTone } });
+        const container = renderInto();
+        const badge = container.querySelector('.spec-badge');
+        expect(badge?.textContent).toBe(badgeText);
+        expect(badge?.classList.contains(tone)).toBe(true);
+        expect(badge?.classList.contains('spec-badge--active')).toBe(false);
+        cleanup(container);
+    });
+});

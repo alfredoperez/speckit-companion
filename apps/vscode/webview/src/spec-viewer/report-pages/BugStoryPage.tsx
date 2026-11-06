@@ -1,4 +1,4 @@
-import type { BugLead, BugMeta, BugStep, BugStepId, BugStory } from '../../../../src/features/reports/reportPageModel';
+import type { BugEngineView, BugLead, BugMeta, BugReportName, BugStep, BugStepId, BugStory } from '../../../../src/features/reports/reportPageModel';
 import { Inline, Prose } from './fragments';
 
 const LEADS: Record<BugLead, string> = {
@@ -6,8 +6,11 @@ const LEADS: Record<BugLead, string> = {
     'fixed-untested': 'Fixed, not tested yet.',
     verified: 'Fixed and verified.',
     'test-failed': 'The fix did not hold.',
+    'test-partial': 'Some checks could not run, so the fix is not confirmed yet.',
     'test-unclear': 'Tested, result unclear.',
     closed: 'Closed without a fix.',
+    'in-review': 'Assessed, waiting for your review.',
+    stale: 'Assessed again since the fix.',
 };
 
 const STEPS: Record<BugStepId, { anchor: string; title: string; stage: string; missing?: string }> = {
@@ -17,7 +20,7 @@ const STEPS: Record<BugStepId, { anchor: string; title: string; stage: string; m
 };
 
 const FIX_STATUS = { applied: 'fix applied', partial: 'fix partly applied', 'not-applied': 'fix not applied' } as const;
-const CHECK_RESULT = { pass: 'pass', fail: 'fail', 'not-run': 'not run' } as const;
+const CHECK_RESULT = { pass: 'pass', fail: 'fail', 'not-run': 'not run', skipped: 'skipped' } as const;
 
 function metaFacts(meta: BugMeta): string[] {
     const facts: string[] = [];
@@ -39,7 +42,11 @@ function FilePath({ path }: { path: string }) {
     return quoted ? <code>{quoted[1]}</code> : <span>{path}</span>;
 }
 
-const CHECK_TONE: Record<string, string | undefined> = { pass: 'rp-tone--favourable', fail: 'rp-tone--unfavourable' };
+const CHECK_TONE: Record<string, string | undefined> = {
+    pass: 'rp-tone--favourable',
+    fail: 'rp-tone--unfavourable',
+    skipped: 'rp-tone--skipped',
+};
 
 function Row({ name, path, word, tone, note }: { name?: string; path?: string; word?: string; tone?: string; note?: string }) {
     return (
@@ -56,10 +63,10 @@ function Step({ step, nextAction }: { step: BugStep; nextAction?: string }) {
     const next = step.state === 'next';
 
     return (
-        <li class={`rp-step rp-step--${next ? 'next' : 'done'}`}>
+        <li class={`rp-step rp-step--${next ? 'next' : 'done'}${step.old ? ' rp-step--old' : ''}`}>
             <span class="rp-step__mark" aria-hidden="true" />
             <span class="sr-only">{next ? 'Next:' : 'Done:'}</span>
-            {step.when ? <p class="rp-step__when">{`${stage} · ${step.when}`}</p> : null}
+            {step.when ? <p class="rp-step__when">{`${stage} · ${step.when}${step.old ? ' · old' : ''}`}</p> : null}
             <h2 id={anchor}>{title}</h2>
             {next && isEmpty(step) && missing ? (
                 <p class="rp-next">
@@ -96,6 +103,59 @@ function Step({ step, nextAction }: { step: BugStep; nextAction?: string }) {
     );
 }
 
+const REPORT_WORDS: Record<string, { title: string; subject: string }> = {
+    fix: { title: 'This fix was written for the earlier assessment', subject: 'This fix describes' },
+    test: { title: 'This test was written for the earlier assessment', subject: 'This test describes' },
+    'fix,test': { title: 'This fix and its test were written for the earlier assessment', subject: 'This fix and its test describe' },
+};
+
+function StaleNotice({ stale }: { stale: BugReportName[] }) {
+    const words = REPORT_WORDS[stale.join(',')] ?? REPORT_WORDS.fix;
+    return (
+        <div class="rp-notice" role="note">
+            <p class="rp-notice__title">{words.title}</p>
+            <p>
+                The bug was assessed again. {words.subject} the old diagnosis, so the bug is back in To fix. Run the fix again to replace
+                {stale.length > 1 ? ' them' : ' it'}.
+            </p>
+        </div>
+    );
+}
+
+function PausedNotice({ paused }: { paused: NonNullable<BugEngineView['paused']> }) {
+    return (
+        <div class="rp-paused" role="note">
+            <p class="rp-paused__title">{`Paused at ${paused.gate}`}</p>
+            <p>
+                Spec-kit's bug workflow stopped after the assessment so a person checks the diagnosis before any code changes. Read the
+                assessment, then approve it to start the fix, or reject it to stop here.
+            </p>
+            {paused.resume ? (
+                <p>
+                    To continue, run <code>{paused.resume}</code> in a terminal.
+                </p>
+            ) : null}
+        </div>
+    );
+}
+
+function RunLog({ engine }: { engine: BugEngineView }) {
+    return (
+        <>
+            <h2 id="run-log">Run log</h2>
+            <p class="rp-meta">{`Times from spec-kit's run log, workflow ${engine.workflow}, run ${engine.runId}`}</p>
+            <ol class="rp-runlog">
+                {engine.steps.map((step, index) => (
+                    <li key={index} class={`rp-runlog__step rp-runlog__step--${step.state}`}>
+                        <span>{step.label}</span>
+                        <span>{step.detail}</span>
+                    </li>
+                ))}
+            </ol>
+        </>
+    );
+}
+
 export function BugStoryPage({ story }: { story: BugStory }) {
     const facts = metaFacts(story.meta ?? {});
     const steps = story.lead === 'closed' ? story.steps.slice(0, 1) : story.steps;
@@ -107,12 +167,20 @@ export function BugStoryPage({ story }: { story: BugStory }) {
             <p class="rp-lead">
                 <strong>{LEADS[story.lead]}</strong>
             </p>
+            {story.engine?.paused ? <PausedNotice paused={story.engine.paused} /> : null}
+            {story.stale?.length ? <StaleNotice stale={story.stale} /> : null}
             {facts.length ? <p class="rp-meta">{facts.join(' · ')}</p> : null}
+            {story.unknownFreshness?.length ? (
+                <p class="rp-meta">
+                    {`The ${story.unknownFreshness.join(' and ')} report does not say which assessment it was written for, so it may be out of date.`}
+                </p>
+            ) : null}
             <ol class="rp-line">
                 {steps.map(step => (
                     <Step key={step.id} step={step} nextAction={step === firstNext ? story.nextAction : undefined} />
                 ))}
             </ol>
+            {story.engine?.steps.length ? <RunLog engine={story.engine} /> : null}
             {risks.length ? (
                 <>
                     <h2 id="risks-and-open-questions">Risks and open questions</h2>

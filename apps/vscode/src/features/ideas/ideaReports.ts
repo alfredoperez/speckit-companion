@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { ConfigKeys } from '../../core/constants';
@@ -11,6 +12,7 @@ import {
     readReportFolders,
     reportDirectoryOf,
 } from '../reports/reportSet';
+import { buildIdeaDecision } from '../reports/ideaDecision';
 import { IDEA_STAGES, IDEA_VERDICTS, IdeaStage, IdeaVerdict } from './ideaValues';
 
 export { IDEA_RATINGS, IDEA_RATING_TONES, IDEA_STAGES, IDEA_VERDICTS } from './ideaValues';
@@ -70,11 +72,24 @@ export interface IdeaReport {
     /** The furthest stage written so far. */
     latestStage: IdeaStage;
     verdict?: IdeaVerdict;
+    /** The stage the decision asks to revisit, when it needs clarification. */
+    revisit?: IdeaStage;
     state: IdeaState;
+}
+
+function revisitOf(report: IdeaReportFile): IdeaStage | undefined {
+    try {
+        const closing = buildIdeaDecision(fs.readFileSync(report.path, 'utf-8'))?.closing;
+        return closing?.verdict === 'needs-clarification' ? closing.revisit : undefined;
+    } catch {
+        return undefined;
+    }
 }
 
 function toIdeaReport(folder: ReportFolder<IdeaStage>): IdeaReport {
     const { slug, directory, title, reports, stages } = folder;
+    const verdict = knownValue(IDEA_VERDICTS, folder.fields.decision.get('verdict'));
+    const revisit = verdict === 'needs-clarification' ? revisitOf(reports.decision) : undefined;
     return {
         slug,
         directory,
@@ -82,7 +97,8 @@ function toIdeaReport(folder: ReportFolder<IdeaStage>): IdeaReport {
         reports,
         stages,
         latestStage: stages[stages.length - 1],
-        verdict: knownValue(IDEA_VERDICTS, folder.fields.decision.get('verdict')),
+        verdict,
+        ...(revisit && { revisit }),
         state: stages.includes('decision') ? 'decided' : 'assessing',
     };
 }

@@ -49,6 +49,14 @@ function Closing({ closing }: { closing: IdeaClosing }) {
         );
     }
     if (!closing.trigger.trim()) return null;
+    if (closing.fromRationale) {
+        return (
+            <>
+                <h2 id="why-it-stopped">Why it stopped</h2>
+                <Prose md={closing.trigger} />
+            </>
+        );
+    }
     return (
         <>
             <h2 id="revisit-trigger">Revisit trigger</h2>

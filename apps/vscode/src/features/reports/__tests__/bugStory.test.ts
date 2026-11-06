@@ -34,11 +34,11 @@ describe('buildBugStory', () => {
             expect(buildBugStory({ assessment, fix })?.lead).toBe('fixed-untested');
         });
 
-        it('is test-failed when the test report says failed or partial', () => {
+        it('is test-failed when the test report says failed, and test-partial when it says partial', () => {
             const discount = texts(DISCOUNT);
             expect(buildBugStory(discount)?.lead).toBe('test-failed');
             const partial = discount.test.replace('**Result**: failed', '**Result**: partial');
-            expect(buildBugStory({ ...discount, test: partial })?.lead).toBe('test-failed');
+            expect(buildBugStory({ ...discount, test: partial })?.lead).toBe('test-partial');
         });
 
         it('is test-unclear when the test result is not recognised', () => {
@@ -284,5 +284,76 @@ describe('buildBugStory', () => {
                 expect(() => buildBugStory(input as never)).not.toThrow();
             }
         });
+    });
+});
+
+describe('buildBugStory with a spec-kit run and report freshness', () => {
+    const SEARCH = path.join(FIXTURES, 'report-pages/.specify/bugs/search-ignores-case');
+    const paused = {
+        runId: '3471d74b',
+        workflowId: 'bugfix',
+        slug: 'cart',
+        status: 'paused',
+        workSeconds: 108,
+        pausedAt: 'review-assessment',
+        steps: [
+            { id: 'assess', state: 'done' as const, gate: false, seconds: 108 },
+            { id: 'review-assessment', state: 'paused' as const, gate: true },
+        ],
+    };
+
+    it('words the run log and the paused gate for the page', () => {
+        const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: paused });
+        expect(story?.lead).toBe('in-review');
+        expect(story?.engine).toEqual({
+            runId: '3471d74b',
+            workflow: 'bugfix',
+            steps: [
+                { label: 'Assess', detail: '1m 48s', state: 'done' },
+                { label: 'Review', detail: 'Waiting for you', state: 'waiting' },
+            ],
+            paused: { gate: 'review', resume: 'specify workflow resume 3471d74b' },
+        });
+    });
+
+    it('leaves out the resume command when the run id is not a plain id', () => {
+        const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: { ...paused, runId: 'x; echo hi' } });
+        expect(story?.engine?.paused).toEqual({ gate: 'review' });
+    });
+
+    it('has no run log for a bug typed in chat, and none when the log held no steps', () => {
+        expect(buildBugStory(texts(CART))?.engine).toBeUndefined();
+        expect(buildBugStory(texts(CART), undefined, { engine: { ...paused, steps: [], pausedAt: undefined } })?.engine).toBeUndefined();
+    });
+
+    it('keeps the paused notice and resume command when the log gave no steps', () => {
+        const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: { ...paused, steps: [] } });
+        expect(story?.engine?.paused).toEqual({ gate: 'review', resume: 'specify workflow resume 3471d74b' });
+        expect(story?.engine?.steps).toEqual([]);
+    });
+
+    it('marks old reports and sends the story back to a fix', () => {
+        const story = buildBugStory(texts(CART), undefined, { freshness: { fix: 'stale', test: 'stale' } });
+        expect(story?.lead).toBe('stale');
+        expect(story?.stale).toEqual(['fix', 'test']);
+        expect(story?.steps[1]).toMatchObject({ id: 'changed', state: 'next', old: true });
+        expect(story?.steps[2]).toMatchObject({ id: 'verified', state: 'next', old: true });
+    });
+
+    it('lists reports of unknown freshness without marking them old', () => {
+        const story = buildBugStory(texts(CART), undefined, { freshness: { fix: 'unknown', test: 'unknown' } });
+        expect(story?.lead).toBe('verified');
+        expect(story?.unknownFreshness).toEqual(['fix', 'test']);
+        expect(story?.stale).toBeUndefined();
+    });
+
+    it('says a partial test is unconfirmed, and keeps the failed wording for a failed one', () => {
+        expect(buildBugStory(texts(SEARCH))?.lead).toBe('test-partial');
+        expect(buildBugStory(texts(DISCOUNT))?.lead).toBe('test-failed');
+    });
+
+    it('reads a skipped check as its own result', () => {
+        const checks = buildBugStory(texts(SEARCH))?.steps[2].checks;
+        expect(checks?.map(check => check.result)).toEqual(['pass', 'skipped', 'not-run']);
     });
 });

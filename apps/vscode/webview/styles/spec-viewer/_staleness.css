@@ -71,3 +71,13 @@
     position: relative;
     top: -1px;
 }
+
+.stale-badge--old {
+    width: auto;
+    height: auto;
+    padding: 2px 5px;
+    border-radius: var(--radius-sm);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}

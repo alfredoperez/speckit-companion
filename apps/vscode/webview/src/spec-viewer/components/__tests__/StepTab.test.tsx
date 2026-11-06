@@ -12,7 +12,7 @@
 
 import { render } from 'preact';
 import { StepTab, type StepTabProps } from '../StepTab';
-import { viewerState } from '../../signals';
+import { navState, viewerState } from '../../signals';
 import type { SpecDocument } from '../../types';
 
 (globalThis as { vscode?: { postMessage: (m: unknown) => void } }).vscode = {
@@ -464,6 +464,34 @@ describe('the +N converge badge on the Tasks item', () => {
         try {
             expect(c.querySelector('.step-tab__converge')?.textContent).toBe('+2');
             expect(c.querySelector('.stale-badge')).not.toBeNull();
+        } finally {
+            cleanup(c);
+        }
+    });
+});
+
+describe('StepTab — a report tab written for an earlier assessment', () => {
+    afterEach(() => {
+        navState.value = null;
+    });
+
+    const stale = { fix: { isStale: true, staleReason: 'Written for an earlier assessment', newerUpstream: 'Assessment' } } as StepTabProps['stalenessMap'];
+
+    it('reads OLD on a bug report tab', () => {
+        navState.value = { report: { kind: 'bug' } } as unknown as typeof navState.value;
+        const c = renderTab(baseProps({ doc: doc('fix', true, 'Fix'), stalenessMap: stale }));
+        try {
+            expect(c.querySelector('.stale-badge--old')?.textContent).toBe('old');
+        } finally {
+            cleanup(c);
+        }
+    });
+
+    it('keeps the exclamation mark on a spec tab', () => {
+        const c = renderTab(baseProps({ doc: doc('fix', true, 'Fix'), stalenessMap: stale }));
+        try {
+            expect(c.querySelector('.stale-badge')?.textContent).toBe('!');
+            expect(c.querySelector('.stale-badge--old')).toBeNull();
         } finally {
             cleanup(c);
         }

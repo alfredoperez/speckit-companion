@@ -169,7 +169,9 @@ export function StepTab(props: StepTabProps) {
                     +{convergeAdded}
                 </span>
             )}
-            {isStale && <span class="stale-badge">!</span>}
+            {isStale && (navState.value?.report
+                ? <span class="stale-badge stale-badge--old" title={stalenessMap?.[phase]?.staleReason}>old</span>
+                : <span class="stale-badge">!</span>)}
         </button>
     );
 }

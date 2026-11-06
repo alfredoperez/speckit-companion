@@ -1,7 +1,16 @@
 import type { BugCheckResult, BugFixStatus, BugSeverity, BugVerdict } from '../bugs/bugValues';
 import type { IdeaRating, IdeaStage, IdeaTone, IdeaVerdict } from '../ideas/ideaValues';
 
-export type BugLead = 'closed' | 'verified' | 'fixed-untested' | 'test-failed' | 'test-unclear' | 'assessed';
+export type BugLead =
+    | 'closed'
+    | 'in-review'
+    | 'stale'
+    | 'verified'
+    | 'fixed-untested'
+    | 'test-failed'
+    | 'test-partial'
+    | 'test-unclear'
+    | 'assessed';
 
 export interface BugMeta {
     reported?: string;
@@ -33,6 +42,8 @@ export type BugStepId = 'wrong' | 'changed' | 'verified';
 export interface BugStep {
     id: BugStepId;
     state: 'done' | 'next';
+    /** Written for an assessment that has since changed. */
+    old?: boolean;
     when?: string;
     body?: string;
     files?: ChangedFile[];
@@ -40,12 +51,33 @@ export interface BugStep {
     checks?: CheckRow[];
 }
 
+export interface EngineStepView {
+    label: string;
+    detail: string;
+    state: 'done' | 'waiting' | 'failed' | 'running';
+}
+
+/** What spec-kit's run log says about the bug, already worded for the page. */
+export interface BugEngineView {
+    runId: string;
+    workflow: string;
+    steps: EngineStepView[];
+    paused?: { gate: string; resume?: string };
+}
+
+export type BugReportName = 'fix' | 'test';
+
 export interface BugStory {
     lead: BugLead;
     meta: BugMeta;
     steps: [BugStep, BugStep, BugStep];
     risks: string[];
     nextAction?: string;
+    engine?: BugEngineView;
+    /** Reports written for an earlier assessment. */
+    stale?: BugReportName[];
+    /** Reports that do not say which assessment they were written for. */
+    unknownFreshness?: BugReportName[];
 }
 
 export interface ScoreRow {
@@ -63,7 +95,7 @@ export interface HandoffField {
 export type IdeaClosing =
     | { verdict: 'go'; fields: HandoffField[] }
     | { verdict: 'needs-clarification'; questions: string[]; revisit?: IdeaStage }
-    | { verdict: 'kill'; trigger: string };
+    | { verdict: 'kill'; trigger: string; fromRationale?: boolean };
 
 export interface IdeaDecision {
     verdict: IdeaVerdict;
@@ -75,5 +107,7 @@ export interface IdeaDecision {
 
 export interface ReportNav {
     kind: 'bug' | 'idea';
+    /** Colours the header badge when the bug is waiting for review or back in To fix. */
+    badgeTone?: 'review' | 'to-fix';
     page?: BugStory | IdeaDecision;
 }
