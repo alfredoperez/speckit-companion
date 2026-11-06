@@ -9,10 +9,12 @@ recording behavior.
 import json
 import os
 import stat
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -70,6 +72,19 @@ class TraceWriterTests(unittest.TestCase):
         run_trace.record("write-context", "set", True, ms=1, feature_dir=self.dir)
         body = (self.dir / run_trace.IGNORE_NAME).read_text(encoding="utf-8")
         self.assertEqual(body.count(run_trace.TRACE_NAME), 1)
+
+    def test_a_rule_that_already_covers_the_trace_writes_no_sibling(self):
+        subprocess.run(["git", "init", "-q", str(self.dir)], check=True)
+        (self.dir / ".gitignore").write_text(f"{run_trace.TRACE_NAME}\n", encoding="utf-8")
+        spec = self.dir / "specs" / "001-x"
+        spec.mkdir(parents=True)
+        run_trace.record("write-context", "set", True, ms=1, feature_dir=spec)
+        self.assertTrue((spec / run_trace.TRACE_NAME).is_file())
+        self.assertFalse((spec / run_trace.IGNORE_NAME).exists())
+
+    def test_a_missing_git_binary_counts_as_not_ignored(self):
+        with mock.patch("subprocess.run", side_effect=FileNotFoundError("git")):
+            self.assertFalse(run_trace._already_ignored(self.dir / run_trace.TRACE_NAME))
 
     def test_the_cap_rolls_old_entries_off_and_records_how_many(self):
         original = run_trace.MAX_BYTES
