@@ -204,7 +204,6 @@ function build(texts: BugReportTexts, nextAction?: string, extras?: BugStoryExtr
     const residual = riskItems([[test, 'Residual Risks']]);
     const named = (value: Freshness) => (['fix', 'test'] as const).filter(kind => extras?.freshness?.[kind] === value);
     const stale = named('stale');
-    const unknown = named('unknown');
     for (const kind of stale) {
         const step = kind === 'fix' ? changed : verified;
         step.state = 'next';
@@ -223,7 +222,6 @@ function build(texts: BugReportTexts, nextAction?: string, extras?: BugStoryExtr
     if (action) story.nextAction = action;
     if (extras?.engine && (extras.engine.steps.length > 0 || extras.engine.pausedAt)) story.engine = engineView(extras.engine);
     if (stale.length > 0) story.stale = stale;
-    if (stale.length === 0 && unknown.length > 0) story.unknownFreshness = unknown;
     return story;
 }
 

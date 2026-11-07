@@ -170,11 +170,6 @@ export function BugStoryPage({ story }: { story: BugStory }) {
             {story.engine?.paused ? <PausedNotice paused={story.engine.paused} /> : null}
             {story.stale?.length ? <StaleNotice stale={story.stale} /> : null}
             {facts.length ? <p class="rp-meta">{facts.join(' · ')}</p> : null}
-            {story.unknownFreshness?.length ? (
-                <p class="rp-meta">
-                    {`The ${story.unknownFreshness.join(' and ')} report does not say which assessment it was written for, so it may be out of date.`}
-                </p>
-            ) : null}
             <ol class="rp-line">
                 {steps.map(step => (
                     <Step key={step.id} step={step} nextAction={step === firstNext ? story.nextAction : undefined} />

@@ -354,10 +354,4 @@ describe('BugStoryPage with a spec-kit run and report freshness', () => {
         expect(page.querySelectorAll('.rp-step--old')).toHaveLength(2);
         expect(texts(page, '.rp-step__when')).toEqual(['Fix · Oct 1, 2026 · old']);
     });
-
-    it('says freshness is unknown rather than guessing', () => {
-        const page = renderPage({ ...bare, unknownFreshness: ['fix'] });
-        expect(page.querySelector('.rp-notice')).toBeNull();
-        expect(page.textContent).toContain('does not say which assessment it was written for');
-    });
 });

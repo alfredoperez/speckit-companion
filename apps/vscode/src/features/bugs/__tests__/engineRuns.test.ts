@@ -173,9 +173,11 @@ describe('readEngineRuns', () => {
     it('re-reads a run when its log changes and reuses it when nothing changed', () => {
         const root = workspaceWith(r => writeRun(r, 'c1'));
         const dir = path.join(root, '.specify', 'workflows', 'runs', 'c1');
-        expect(readEngineRuns(root).get('star-crash')?.steps).toHaveLength(2);
         const log = path.join(dir, 'log.jsonl');
-        const { mtime } = fs.statSync(log);
+        // A whole second survives the round trip through utimes exactly.
+        const mtime = Math.floor(Date.now() / 1000) - 60;
+        fs.utimesSync(log, mtime, mtime);
+        expect(readEngineRuns(root).get('star-crash')?.steps).toHaveLength(2);
         fs.writeFileSync(log, fs.readFileSync(log, 'utf-8').replace(/assess/g, 'assesz'));
         fs.utimesSync(log, mtime, mtime);
         expect(readEngineRuns(root).get('star-crash')?.steps[0].id).toBe('assess');

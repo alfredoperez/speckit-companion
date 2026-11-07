@@ -76,8 +76,6 @@ export interface BugStory {
     engine?: BugEngineView;
     /** Reports written for an earlier assessment. */
     stale?: BugReportName[];
-    /** Reports that do not say which assessment they were written for. */
-    unknownFreshness?: BugReportName[];
 }
 
 export interface ScoreRow {

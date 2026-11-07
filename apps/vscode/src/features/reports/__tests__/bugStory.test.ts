@@ -340,11 +340,11 @@ describe('buildBugStory with a spec-kit run and report freshness', () => {
         expect(story?.steps[2]).toMatchObject({ id: 'verified', state: 'next', old: true });
     });
 
-    it('lists reports of unknown freshness without marking them old', () => {
+    it('stays quiet about reports of unknown freshness', () => {
         const story = buildBugStory(texts(CART), undefined, { freshness: { fix: 'unknown', test: 'unknown' } });
         expect(story?.lead).toBe('verified');
-        expect(story?.unknownFreshness).toEqual(['fix', 'test']);
         expect(story?.stale).toBeUndefined();
+        expect(story?.steps[1].old).toBeUndefined();
     });
 
     it('says a partial test is unconfirmed, and keeps the failed wording for a failed one', () => {
