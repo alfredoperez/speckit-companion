@@ -154,7 +154,7 @@ export function SpecHeader() {
     const badgeText = meta
         ? (ns.badgeText === 'DRAFT' ? 'DRAFT' : null)
         : (vs ? formatStatusLabel(vs.status) : ns.badgeText);
-    const statusClass = vs?.status ?? ns.specStatus ?? null;
+    const statusClass = ns.report?.badgeTone ? `report-${ns.report.badgeTone}` : vs?.status ?? ns.specStatus ?? null;
 
     const assistantName = meta ? undefined : ns.assistantName;
     const hasTerminal = !meta && !!ns.hasTerminal;

@@ -158,8 +158,30 @@ describe('buildIdeaDecision', () => {
             expect(trigger.startsWith('Reopen from `/speckit-assess-intake` if a real requester appears')).toBe(true);
         });
 
-        it('has no closing without a revisit trigger section', () => {
+        it('has no closing when the rationale is a single sentence the lead already shows', () => {
             expect(buildIdeaDecision(decision('kill', '## Verdict & Rationale\n\n**Kill.** No demand.'))?.closing).toBeUndefined();
+        });
+
+        describe('without a revisit trigger section', () => {
+            const built = buildIdeaDecision(fixture('report-pages', 'dark-mode-export'));
+
+            it('takes its closing text from Verdict & Rationale', () => {
+                expect(built?.closing).toEqual({
+                    verdict: 'kill',
+                    trigger: 'Exports are plain CSV files, so there is nothing to theme. The only real ask behind the idea is a dark viewer, which already exists.',
+                    fromRationale: true,
+                });
+            });
+
+            it('says the rationale once, in the closing, and keeps the lead', () => {
+                expect(built?.lead).toBe('Nobody has asked for dark exports.');
+                expect(built?.rationale).toBeUndefined();
+            });
+        });
+
+        it('prefers a revisit trigger section when there is one', () => {
+            expect(built?.closing).not.toHaveProperty('fromRationale');
+            expect(built?.rationale).toBeDefined();
         });
     });
 

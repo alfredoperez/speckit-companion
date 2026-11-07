@@ -44,8 +44,11 @@ export function repeatsFromFolder(id: ReportActionId): boolean {
 const main = (id: ReportActionId, label: string): ReportAction => ({ id, label, primary: true });
 const secondary = (id: ReportActionId, label: string): ReportAction => ({ id, label, primary: false });
 
-export function bugActions(bug: Pick<BugReport, 'state' | 'stages'>): ReportAction[] {
+export function bugActions(bug: Pick<BugReport, 'state' | 'stages'> & Partial<Pick<BugReport, 'testResult' | 'freshness'>>): ReportAction[] {
+    const old = Object.values(bug.freshness ?? {}).includes('stale');
     switch (bug.state) {
+        case 'in-review':
+            return [secondary('bug.assess', 'Assess again')];
         case 'closed':
             return [secondary('bug.assess', 'Assess again')];
         case 'verified':
@@ -53,9 +56,11 @@ export function bugActions(bug: Pick<BugReport, 'state' | 'stages'>): ReportActi
         case 'to-test':
             return [main('bug.test', 'Test fix'), secondary('bug.fix', 'Fix again')];
         default:
-            return bug.stages.includes('test')
-                ? [main('bug.fix', 'Fix bug'), secondary('bug.test', 'Test again')]
-                : [main('bug.fix', 'Fix bug')];
+            if (old) return [main('bug.fix', 'Fix again')];
+            if (!bug.stages.includes('test')) return [main('bug.fix', 'Fix bug')];
+            return bug.testResult === 'partial'
+                ? [main('bug.test', 'Test again'), secondary('bug.fix', 'Fix again')]
+                : [main('bug.fix', 'Fix bug'), secondary('bug.test', 'Test again')];
     }
 }
 
@@ -66,7 +71,15 @@ const NEXT_STAGE: Record<Exclude<IdeaStage, 'decision'>, ReportAction> = {
     concept: main('idea.decide', 'Decide'),
 };
 
-export function ideaActions(idea: Pick<IdeaReport, 'state' | 'latestStage' | 'verdict'>): ReportAction[] {
+const REVISIT: Record<IdeaStage, ReportAction> = {
+    intake: main('idea.intake', 'Revisit intake'),
+    research: main('idea.research', 'Revisit research'),
+    problem: main('idea.define', 'Revisit the problem'),
+    concept: main('idea.shape', 'Revisit the concept'),
+    decision: main('idea.decide', 'Decide again'),
+};
+
+export function ideaActions(idea: Pick<IdeaReport, 'state' | 'latestStage' | 'verdict'> & Partial<Pick<IdeaReport, 'revisit'>>): ReportAction[] {
     if (idea.state === 'assessing') {
         return idea.latestStage === 'decision' ? [main('idea.decide', 'Decide')] : [NEXT_STAGE[idea.latestStage]];
     }
@@ -74,7 +87,7 @@ export function ideaActions(idea: Pick<IdeaReport, 'state' | 'latestStage' | 've
         case 'go':
             return [main('idea.createSpec', 'Create spec from this idea')];
         case 'needs-clarification':
-            return [main('idea.research', 'Continue assessment')];
+            return [idea.revisit ? REVISIT[idea.revisit] : main('idea.research', 'Continue assessment')];
         case 'kill':
             return [secondary('idea.intake', 'Reopen from intake')];
         default:

@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { BUG_SET, readBugReport } from '../bugs/bugReports';
+import { BUG_SET, readBugReport, staleReports, type BugReport } from '../bugs/bugReports';
 import { IDEA_SET, readIdeaReport } from '../ideas/ideaReports';
 import type { ReportFile, ReportSet } from '../reports/reportSet';
 import { buildBugStory } from '../reports/bugStory';
@@ -14,6 +14,7 @@ export interface ReportPanelItem {
     slug: string;
     title: string;
     badge?: string;
+    badgeTone?: 'review' | 'to-fix';
     /** Workspace-relative folder, always with forward slashes. */
     folder: string;
     actions: ReportAction[];
@@ -24,6 +25,8 @@ export interface ReportPanelItem {
     /** The document `page` stands for, and the page itself when it could be built. */
     pageDocument: string;
     page?: BugStory | IdeaDecision;
+    /** Report documents written for an assessment that has since changed. */
+    staleDocuments?: string[];
 }
 
 export const REPORT_SETS: Record<ReportSetId, ReportSet<string>> = { bugs: BUG_SET, ideas: IDEA_SET };
@@ -43,6 +46,13 @@ function textOf(report: ReportFile<string>): string | undefined {
     }
 }
 
+/** The header badge follows the bug's state, not its latest report. */
+export function bugBadge(bug: Pick<BugReport, 'state' | 'outcome' | 'freshness'>): Pick<ReportPanelItem, 'badge' | 'badgeTone'> {
+    if (bug.state === 'in-review') return { badge: 'waiting for your review', badgeTone: 'review' };
+    if (bug.state === 'to-fix' && staleReports(bug).length > 0) return { badge: 'to fix', badgeTone: 'to-fix' };
+    return { badge: bug.outcome };
+}
+
 const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | undefined> = {
     bugs: directory => {
         const bug = readBugReport(directory);
@@ -51,17 +61,19 @@ const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | unde
         const page = buildBugStory(
             { assessment: textOf(bug.reports.assessment), fix: textOf(bug.reports.fix), test: textOf(bug.reports.test) },
             actions.find(action => action.primary)?.label,
+            { engine: bug.engine, freshness: bug.freshness },
         );
         return {
             slug: bug.slug,
             title: bug.title,
-            badge: bug.outcome,
+            ...bugBadge(bug),
             folder: folderOf(BUG_SET.dir, bug.slug),
             actions,
             kind: 'bug',
             defaultDocument: page ? 'story' : bug.stages[0] ?? 'assessment',
             pageDocument: 'story',
             page,
+            staleDocuments: staleReports(bug),
         };
     },
     ideas: directory => {

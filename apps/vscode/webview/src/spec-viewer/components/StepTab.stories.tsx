@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { StepTab } from './StepTab';
-import { viewerState } from '../signals';
+import { navState, viewerState } from '../signals';
 import type { ViewerState } from '../types';
 import { mockDoc } from './__stories__/mockData';
 
@@ -19,6 +19,7 @@ const meta: Meta<typeof StepTab> = {
     decorators: [(Story) => {
         // Reset: a status seeded by one story would otherwise decide the next one's.
         viewerState.value = null;
+        navState.value = null;
         return <div class="compact-nav"><div class="nav-primary"><div class="step-tabs"><Story /></div></div></div>;
     }],
 };
@@ -155,6 +156,20 @@ export const Locked: Story = {
 
 export const CurrentStale: Story = {
     args: { ...base, doc: mockDoc('spec', true, 'Specification'), currentDoc: 'spec', stalenessMap: staleMap('spec') },
+};
+
+// A re-assessed bug: its fix report was written for the earlier assessment.
+export const OldReport: Story = {
+    decorators: [(Story) => {
+        navState.value = { report: { kind: 'bug' } } as unknown as typeof navState.value;
+        return <Story />;
+    }],
+    args: {
+        ...base,
+        doc: mockDoc('fix', true, 'Fix'),
+        currentDoc: 'fix',
+        stalenessMap: { fix: { isStale: true, staleReason: 'Written for an earlier assessment', newerUpstream: 'Assessment' } },
+    },
 };
 
 export const DoneStale: Story = {

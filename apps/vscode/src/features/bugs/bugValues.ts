@@ -2,7 +2,7 @@ export const BUG_VERDICTS = ['valid', 'likely valid, needs reproduction', 'inval
 export const BUG_SEVERITIES = ['critical', 'high', 'medium', 'low'] as const;
 export const BUG_FIX_STATUSES = ['applied', 'partial', 'not-applied'] as const;
 export const BUG_TEST_RESULTS = ['verified', 'partial', 'failed'] as const;
-export const BUG_CHECK_RESULTS = ['pass', 'fail', 'not-run'] as const;
+export const BUG_CHECK_RESULTS = ['pass', 'fail', 'not-run', 'skipped'] as const;
 
 export type BugVerdict = typeof BUG_VERDICTS[number];
 export type BugSeverity = typeof BUG_SEVERITIES[number];

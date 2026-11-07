@@ -104,7 +104,7 @@ function revisitStage(text: string): IdeaStage | undefined {
     return stage ? STAGE_ALIASES[stage] ?? (stage as IdeaStage) : undefined;
 }
 
-function closingFor(doc: ReportDoc, verdict: IdeaVerdict): IdeaClosing | undefined {
+function closingFor(doc: ReportDoc, verdict: IdeaVerdict, rationale?: string): IdeaClosing | undefined {
     if (verdict === 'go') {
         const section = findSection(doc, 'If go');
         const fields: HandoffField[] = (section ? parseFields(section.body) : [])
@@ -124,7 +124,8 @@ function closingFor(doc: ReportDoc, verdict: IdeaVerdict): IdeaClosing | undefin
     }
     const section = findSection(doc, 'Revisit trigger');
     const trigger = section ? filled(sectionProse(section.body)) : '';
-    return trigger ? { verdict, trigger } : undefined;
+    if (trigger) return { verdict: 'kill', trigger };
+    return rationale ? { verdict: 'kill', trigger: rationale, fromRationale: true } : undefined;
 }
 
 export function buildIdeaDecision(text: string): IdeaDecision | undefined {
@@ -147,9 +148,12 @@ export function buildIdeaDecision(text: string): IdeaDecision | undefined {
         if (rationale) {
             decision.rationale = rationale;
         }
-        const closing = closingFor(doc, verdict);
+        const closing = closingFor(doc, verdict, rationale);
         if (closing) {
             decision.closing = closing;
+            if (closing.verdict === 'kill' && closing.fromRationale) {
+                delete decision.rationale;
+            }
         }
         return decision;
     } catch {
