@@ -11,7 +11,7 @@ reads: [implement-exec]
      "verified":   [{"what": "<check>", "command": "<cmd>", "result": "<outcome>", "warnings": ["<seen-and-dismissed>"]}],
      "decisions":  [{"decision": "<implementation choice>", "why": "<why>", "rejected": "<alternative>"}],
      "concerns":   [{"note": "<friction, residual risk, or a `// simplified:` ceiling you left in the code>", "step": "implement"}],
-     "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case,other.test.ts>"}],
+     "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case,other.test.ts>"}, {"req": "FR-004", "assumes": "<what it relies on without a test>"}],
      "step_summary": {"summary": "<what shipped in one line>"},
      "last_action": "<final breadcrumb, e.g. all tasks done, 18/18 tests pass>"
    }'
@@ -21,5 +21,5 @@ reads: [implement-exec]
 
    Record a check that can be run with `--verify-run "<what>::<command>"`: it runs the command and keeps the exit code, rather than taking your word for it. Every suite, build, lint and script goes that way. `--verified` stays for what genuinely cannot be run — a manual pass, a judgement — and reads in the viewer as your account rather than as evidence, which is what it is. Never write a `--verified` describing a command you ran: that is the case `--verify-run` exists for, and a typed result is indistinguishable from an imagined one. If a check could not be run at all, record that as a `--concern` naming what was skipped and why, and do **not** record a `--verified` for it.
 
-   One `--verify-run` per runnable check and one `--verified` per judgement (a manual pass, a warning you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction; on a clean run record none.
+   One `--verify-run` per runnable check and one `--verified` per judgement (a manual pass, a warning you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--assumes <req> "<what>"` per requirement the code relies on something no test checks (a library, the clock, the database), one `--decision` per genuine implementation choice. Record `--concern` only for real friction; on a clean run record none.
 

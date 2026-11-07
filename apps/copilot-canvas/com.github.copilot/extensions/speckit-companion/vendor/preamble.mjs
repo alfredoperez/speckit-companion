@@ -172,7 +172,7 @@ function captureBlock(step, featureDir, writerPath) {
     ],
     implement: [
       `- One \`${base} --verified '{"what": "<check>", "command": "<cmd>", "result": "<outcome>"}'\` per real check (tests, build, manual pass).`,
-      `- \`${base} --coverage-req FR-NNN --tests "<test file or evidence>"\` per requirement a check covers.`,
+      `- \`${base} --coverage-req FR-NNN --tests "<test file or evidence>"\` per covered requirement, else \`--assumes FR-NNN "<what it rests on>"\`.`,
       `- \`${base} --step implement --step-summary '{"summary": "<what shipped in one line>"}'\`.`
     ]
   };

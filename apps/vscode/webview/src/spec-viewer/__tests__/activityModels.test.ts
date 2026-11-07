@@ -15,6 +15,18 @@ const base = (overrides: Partial<ViewerState> = {}): ViewerState => ({
 });
 
 describe('heroStats', () => {
+    it('counts an assumed row as covered', () => {
+        const stats = heroStats(base({
+            coverage: [
+                { req: 'FR-001', tasks: [], tests: [], assumes: 'relies on the index' },
+                { req: 'FR-002', tasks: [], tests: [] },
+            ],
+        }));
+        expect(stats.covered).toBe(1);
+        expect(stats.assumed).toBe(1);
+        expect(stats.coverageTotal).toBe(2);
+    });
+
     it('derives counts and omits absent sources (no fabricated zeros)', () => {
         const stats = heroStats(base({
             taskSummaries: { T001: { status: 'DONE' }, T002: { status: 'IN_PROGRESS' } },

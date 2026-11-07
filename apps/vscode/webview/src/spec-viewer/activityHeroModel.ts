@@ -1,4 +1,5 @@
 import type { ViewerState } from './types';
+import { coverageState, isTraced } from './coverageState';
 
 /**
  * Hero-strip stats derived from ViewerState. Pure functions; every count is
@@ -8,6 +9,8 @@ import type { ViewerState } from './types';
 
 export interface HeroStats {
     covered?: number;
+    /** Traced only by an assumption, so no test protects them. */
+    assumed?: number;
     coverageTotal?: number;
     checks?: number;
     concerns?: number;
@@ -20,7 +23,8 @@ export function heroStats(state: ViewerState): HeroStats {
 
     if (state.coverage && state.coverage.length > 0) {
         stats.coverageTotal = state.coverage.length;
-        stats.covered = state.coverage.filter(r => r.tests.length > 0).length;
+        stats.covered = state.coverage.filter(isTraced).length;
+        stats.assumed = state.coverage.filter(row => coverageState(row) === 'assumed').length;
     }
 
     if (state.verified && state.verified.length > 0) {

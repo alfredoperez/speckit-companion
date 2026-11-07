@@ -310,6 +310,8 @@ export interface VerificationEntry {
 export interface CoverageEntry {
     tasks?: string[];
     tests?: string[];
+    /** What the requirement relies on without a test: a library, the clock, the database. */
+    assumes?: string;
 }
 
 /** The size decision's inputs, not just its verdict (mirrors the scalar `size`). */
@@ -567,6 +569,8 @@ export interface ViewerCoverageRow {
      * is different from "checked and found nothing" and must render differently.
      */
     missingTests?: string[];
+    /** What the requirement relies on without a test, when one was recorded. */
+    assumes?: string;
 }
 
 export interface ViewerState {

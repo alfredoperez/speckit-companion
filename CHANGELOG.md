@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 - **The viewer shows what converge found.** The overview draws each converge pass, ==the tasks it added== or a clean finish, with a matching footer action. ([#944](https://github.com/alfredoperez/speckit-companion/pull/944)) <!-- area: overview -->
 - **The Bugs pane reads Spec Kit's bugfix runs.** Bugs show ==step times and a review pause==, re-assessed bugs mark old reports, and pages follow Spec Kit 1.2.5. ([#961](https://github.com/alfredoperez/speckit-companion/pull/961)) <!-- area: sidebar -->
 - **Spec Kit projects are offered Companion.** Opening a Spec Kit project without Companion's extension ==offers to add it==, until you say not for that project. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->
-- **The Overview keeps your words and who decided.** Intent quotes ==your request word for word==, and each decision says who answered, when, and any earlier answer. ([#964](https://github.com/alfredoperez/speckit-companion/pull/964)) <!-- area: spec-viewer -->
+- **The Overview shows what backs each claim.** Intent quotes ==your request word for word==, decisions say who answered and when, and coverage marks assumed requirements. ([#964](https://github.com/alfredoperez/speckit-companion/pull/964), [#965](https://github.com/alfredoperez/speckit-companion/pull/965)) <!-- area: spec-viewer -->
 
 ### Fixed
 - **Upgrade follows Spec Kit's own steps.** Upgrade runs ==`specify self upgrade`, then each assistant's upgrade==, then re-adds Companion, so edited files survive. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->

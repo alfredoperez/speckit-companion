@@ -684,6 +684,20 @@
 .dossier-coverage__state.is-traced { color: var(--success); }
 .dossier-coverage__state.is-untraced { color: var(--warning); }
 
+.dossier-coverage__state.is-assumed { color: var(--info); }
+
+.dossier-coverage__state.is-assumed i {
+    box-shadow: 0 0 0 2px var(--bg-primary, transparent), 0 0 0 3px currentColor;
+}
+
+.dossier-coverage__req .dossier-coverage__assumes {
+    display: block;
+    grid-column: 2;
+    margin-top: 2px;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
 /* A named test that is not on disk. Distinct from "no test linked" on purpose:
    a link that resolves to nothing is worse than an honest gap, because it reads
    as coverage that exists. The dot is hollow so the difference survives a

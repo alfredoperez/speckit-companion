@@ -33,7 +33,7 @@ export function RunStrip() {
         facts.push({
             key: 'traced',
             value: `${stats.covered}/${stats.coverageTotal} traced`,
-            warning: stats.covered !== stats.coverageTotal,
+            warning: stats.covered !== stats.coverageTotal || (stats.assumed ?? 0) > 0,
         });
     }
     if (stats.concerns !== undefined) {
