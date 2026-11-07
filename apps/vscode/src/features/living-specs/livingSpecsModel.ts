@@ -1071,15 +1071,16 @@ export function requirementLinks(workspaceRoot: string, capability: string): Map
 const TEST_REF_RE = /(\.test\.|\.spec\.|(^|[\s`(])tests\/|::)/;
 
 /** Injectable git runner so tests never need a real repository. */
-type GitRunner = (args: string[], cwd: string) => Promise<string>;
+export type GitRunner = (args: string[], cwd: string, env?: Record<string, string>) => Promise<string>;
 
 /** Default runner factory: the process timeout matches the caller's timeoutMs,
  * so a timed-out race never leaves git running in the background. */
-function makeDefaultGitRunner(timeoutMs: number): GitRunner {
-    return (args: string[], cwd: string): Promise<string> => {
+export function makeDefaultGitRunner(timeoutMs: number): GitRunner {
+    return (args: string[], cwd: string, env?: Record<string, string>): Promise<string> => {
         const { execFile } = require('child_process');
         return new Promise((resolve, reject) => {
-            execFile('git', args, { cwd, timeout: timeoutMs }, (err: Error | null, stdout: string) => {
+            const options = { cwd, timeout: timeoutMs, maxBuffer: 8 * 1024 * 1024, env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', ...env } };
+            execFile('git', args, options, (err: Error | null, stdout: string) => {
                 if (err) {
                     reject(err);
                 } else {

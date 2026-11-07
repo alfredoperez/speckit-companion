@@ -350,6 +350,23 @@ export const DossierAssumedCoverage: Story = {
     },
 };
 
+// Verified ledger with a current check, one whose code moved on, and a reported one.
+export const DossierStaleCheck: Story = {
+    render: () => {
+        const tree = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678';
+        viewerState.value = {
+            ...richReasoningState,
+            verified: [
+                { what: 'Jest suite', command: 'npm test', result: 'passed', source: 'derived', exitCode: 0, commit: '4f2c9a1', tree, changedSince: 0 },
+                { what: 'TypeScript compile', command: 'npx tsc --noEmit', result: 'clean', source: 'derived', exitCode: 0, commit: '1b07e3c', tree, changedSince: 2 },
+                { what: 'Checked the empty state by hand', result: 'looked fine' },
+            ],
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // Fully covered, no concerns: the coverage count pill reads as success and
 // no warning treatments render anywhere.
 export const DossierAllTraced: Story = {

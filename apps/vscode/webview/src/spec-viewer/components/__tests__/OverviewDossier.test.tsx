@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { h, render } from 'preact';
-import { IntentSection, OverviewTiming, CoverageSection, DecisionsSection } from '../OverviewDossier';
+import { IntentSection, OverviewTiming, CoverageSection, DecisionsSection, VerifiedSection } from '../OverviewDossier';
 import type { HistoryEntry, ViewerState } from '../../types';
 import { deriveStepHistory, deriveTimingSummary } from '../../../../../src/features/specs/stepHistoryDerivation';
 import { deriveConvergeResult } from '../../../../../src/features/spec-viewer/convergeResult';
@@ -571,5 +571,51 @@ describe('request and decision provenance', () => {
         expect(host.querySelector('.dossier-decision__earlier')).toBeNull();
         expect(host.querySelector('.dossier-decision__head')).toBeNull();
         expect(host.querySelector('h3')?.textContent).toBe('Old');
+    });
+});
+
+describe('VerifiedSection', () => {
+    const mount = (verified: NonNullable<ViewerState['verified']>) => {
+        const host = document.createElement('div');
+        render(h(VerifiedSection, { state: base({ verified }) }), host);
+        return host;
+    };
+
+    it('says which commit a derived check ran at', () => {
+        const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '4f2c9a1', changedSince: 0 }]);
+        expect(host.querySelector('.dossier-evidence__at')?.textContent).toBe('at 4f2c9a1');
+        expect(host.querySelector('.dossier-evidence__stale')).toBeNull();
+    });
+
+    it('marks a check out of date and counts the files', () => {
+        const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '1b07e3c', changedSince: 2 }]);
+        expect(host.querySelector('.dossier-evidence__stale')?.textContent).toBe('OUT OF DATE');
+        expect(host.querySelector('.dossier-evidence__row--stale')).not.toBeNull();
+        expect(host.querySelector('.dossier-evidence__at')?.textContent).toBe('at 1b07e3c, 2 files changed since');
+    });
+
+    it('uses the singular for one file', () => {
+        const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '1b07e3c', changedSince: 1 }]);
+        expect(host.querySelector('.dossier-evidence__at')?.textContent).toContain('1 file changed since');
+    });
+
+    it('turns the section tone to warn when a check is stale', () => {
+        const stale = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '1b07e3c', changedSince: 2 }]);
+        const fresh = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '1b07e3c', changedSince: 0 }]);
+        expect(stale.innerHTML).not.toBe(fresh.innerHTML);
+        expect(stale.querySelector('[class*="warn"]')).not.toBeNull();
+        expect(fresh.querySelector('.dossier-section [class*="--warn"]:not(.dossier-check)')).toBeNull();
+    });
+
+    it('shows no commit line for a derived check recorded before commits were kept', () => {
+        const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0 }]);
+        expect(host.querySelector('.dossier-evidence__at')).toBeNull();
+    });
+
+    it('leaves a reported row as it was', () => {
+        const host = mount([{ what: 'By hand', result: 'looked fine' }]);
+        expect(host.querySelector('.dossier-evidence__at')).toBeNull();
+        expect(host.querySelector('.dossier-evidence__stale')).toBeNull();
+        expect(host.querySelector('.dossier-evidence__row--claimed')).not.toBeNull();
     });
 });

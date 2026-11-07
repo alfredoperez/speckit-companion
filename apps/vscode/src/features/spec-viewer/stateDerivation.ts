@@ -136,6 +136,10 @@ function pickDecisions(ctx: SpecContext): ViewerDecision[] | undefined {
     });
 }
 
+function hexSha(v: unknown): string | undefined {
+    return typeof v === 'string' && /^[0-9a-f]{7,64}$/.test(v) ? v : undefined;
+}
+
 function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
     const raw = pickEntryList<Record<string, unknown>>(ctx.verified, 'what');
     return raw?.map(e => {
@@ -153,6 +157,8 @@ function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
             exitCode: derived && typeof e.exitCode === 'number' ? e.exitCode : undefined,
             durationSeconds:
                 derived && typeof e.durationSeconds === 'number' ? e.durationSeconds : undefined,
+            commit: derived ? hexSha(e.commit) : undefined,
+            tree: derived ? hexSha(e.tree) : undefined,
         };
     });
 }
@@ -428,4 +434,14 @@ export function deriveViewerState(
         classification: pickClassification(ctx),
         converge,
     };
+}
+
+export function markStaleChecks(
+    verified: ViewerVerification[] | undefined,
+    counts: ReadonlyMap<string, number | undefined>
+): ViewerVerification[] | undefined {
+    if (!verified) { return verified; }
+    return verified.map(v =>
+        v.source === 'derived' && v.tree ? { ...v, changedSince: counts.get(v.tree) } : v
+    );
 }
