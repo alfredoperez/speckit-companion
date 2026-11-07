@@ -1,0 +1,669 @@
+{
+  "workflow": "companion",
+  "specName": "Keep the request verbatim, and say who decided what",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T18:55:20.794Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-07T18:56:34.814Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T18:56:39.397Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T18:59:53.472Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:00:27.447Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:00:28.005Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T19:00:38.494Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:01:09.020Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:01:09.569Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T19:01:15.660Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:01:47.105Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:02:06.669Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:02:06.881Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:03:07.284Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:03:27.130Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:04:13.986Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:04:14.155Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:04:58.491Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:04:58.667Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:05:24.345Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:05:30.399Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:05:30.642Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:05:34.326Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:05:34.534Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:05:34.693Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:05:34.837Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:05:35.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:06:11.367Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:06:11.561Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:06:11.741Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:11:10.914Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T19:11:10.944Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T19:13:34.526Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-07T19:13:47.290Z"
+    }
+  ],
+  "unattended": true,
+  "last_action": "21/21 tasks, test:all and five checks exit 0",
+  "coverage": {
+    "FR-001": {
+      "title": "The run record stores the original request word for word, written once, never overwritten",
+      "tasks": [
+        "T001",
+        "T004",
+        "T006",
+        "T008",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_request_and_decisions.py::RequestTests"
+      ]
+    },
+    "FR-002": {
+      "title": "The Overview shows the request under Intent as plain wrapping text",
+      "tasks": [
+        "T013",
+        "T014",
+        "T017"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "FR-003": {
+      "title": "The plan step reads the stored request rather than a paraphrase",
+      "tasks": [
+        "T011"
+      ]
+    },
+    "FR-004": {
+      "title": "Every new decision carries who answered and when; the writer fills both when omitted",
+      "tasks": [
+        "T001",
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_request_and_decisions.py::DecisionTests"
+      ]
+    },
+    "FR-005": {
+      "title": "Reopening a decision by id keeps every earlier answer",
+      "tasks": [
+        "T001",
+        "T006"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_request_and_decisions.py::test_reopening_keeps_every_earlier_answer_oldest_first"
+      ]
+    },
+    "FR-006": {
+      "title": "The Overview shows answered by and earlier answers struck through",
+      "tasks": [
+        "T005",
+        "T013",
+        "T016",
+        "T017"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx",
+        "apps/vscode/src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Older records render as today",
+      "tasks": [
+        "T005",
+        "T007",
+        "T017"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "FR-008": {
+      "title": "When a Companion step stops to ask a person, their answer is recorded as a decision authored by them",
+      "tasks": [
+        "T012"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 14,
+    "projectedTasks": 14,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "PR receipts, check commits, assumed coverage, mutation check and risk tier (r1-r4, r7) are later slices"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts (capture.py, write-context.py)",
+    "area: apps/speckit-extension/nodes (specify, clarify, plan)",
+    "area: apps/vscode/src/features/spec-viewer/stateDerivation.ts",
+    "area: apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx",
+    "constraint: history only grows, writes merge, one lock, never-fail",
+    "constraint: repository text reaches the panel as text only"
+  ],
+  "intent": "Keep the original request word for word and record who answered each decision and when, keeping earlier answers when one is reopened",
+  "source": "#963",
+  "workingBranch": "652-verbatim-request-decisions",
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/652-verbatim-request-decisions --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 3 call paths, 10 lines, 1 screen, 9 parts ·   WARNING plan.md:57  `request` is not within 8 lines of `apps/vscode/src/features/spec-viewer/stateDerivation.ts:407` (symbol-not-near) ·   0 error(s), 1 warning(s)"
+    },
+    {
+      "what": "Type check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.6,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./"
+    },
+    {
+      "what": "Full suite (jest, canvas, speckit-extension python)",
+      "command": "npm run test:all",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 276.7,
+      "result": "---------------------------------------------------------------------- · Ran 1872 tests in 152.538s · OK (skipped=8)"
+    },
+    {
+      "what": "Command bodies match their nodes",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)"
+    },
+    {
+      "what": "Instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "speckit.companion.mark-complete.md                 0       0      0      48 · speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19"
+    },
+    {
+      "what": "Command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents"
+    },
+    {
+      "what": "Package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 26 runtime scripts, closure matches the declared list"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "A --request flag reads the request from a file or stdin, write-once",
+      "why": "A quoted heredoc passes quotes and line breaks untouched; --set strips, coerces and overwrites",
+      "rejected": "--set request=… or a batch key"
+    },
+    {
+      "decision": "Auto and specify both store the request at resolve-dir; the first write wins",
+      "why": "Auto hands specify a restatement, so only auto has the original words",
+      "rejected": "Storing it in specify finalize"
+    },
+    {
+      "decision": "Decisions get their own writer keyed on an optional id; a new answer replaces in place and the old one moves into earlier",
+      "why": "History only grows and numbering stays stable; verified and concerns keep the shared appender",
+      "rejected": "A flat list with reopens pointers, or a separate decisionHistory field"
+    },
+    {
+      "decision": "A person who answers is recorded as you, never a guessed name",
+      "why": "The step does not know the name; git user.name names the committer",
+      "rejected": "git config user.name"
+    },
+    {
+      "decision": "The request lines are plain prose, not bold lead-ins",
+      "why": "Specify sat at its instruction ceiling; a bold lead-in counts as one more instruction",
+      "rejected": "Moving the request step into a shared part"
+    },
+    {
+      "decision": "The Overview fixture stays unchanged; a new story carries the request and reopened decisions",
+      "why": "Existing captures stay identical",
+      "rejected": "Adding the fields to the teamboard fixture and recapturing every Overview clip"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: write-once --request via heredoc, id-keyed decisions with by/at/earlier, one derivation in pickDecisions, Overview renders both",
+      "key_finding": "Auto restates the request to specify, so auto must be the one that stores it"
+    },
+    "tasks": {
+      "summary": "21 tasks: foundational writer, types and derivation in 3 waves; request nodes; attribution node; Overview in 2 waves; polish"
+    },
+    "implement": {
+      "summary": "Write-once request from stdin, attributed and reopenable decisions, both shown in the Overview"
+    }
+  },
+  "approach": "A --request flag stores the request once from stdin, written at auto and specify resolve-dir. Decisions get a writer that stamps by and at and reopens by id into an earlier list. The viewer derives the new fields once and the Overview renders them.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "set_request (write-once) and append_decisions (by, at, id-keyed earlier) in capture.py; batch decisions routed to it",
+      "files": [
+        "apps/speckit-extension/scripts/capture.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "request on SpecContext and ViewerState; id, by, at, earlier on decisions",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Schema declares request and decision id, by, at, earlier",
+      "files": [
+        "apps/vscode/src/core/types/spec-context.schema.json"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "--request PATH|- flag (stdin or file, write-once) and --decision routed to append_decisions",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Derive request and decision id/by/at/earlier once, dropping blank or unreadable values",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/stateDerivation.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "13 writer tests: request round-trip, write-once, blank, missing file; decisions stamped, reopen keeps earlier, same answer no-op, order, batch",
+      "files": [
+        "apps/speckit-extension/tests/test_request_and_decisions.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Derivation tests for decision by/at/earlier, malformed values, request pass-through and blank",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Auto stores its own input with --request - and a quoted heredoc after the start stamp",
+      "files": [
+        "apps/speckit-extension/nodes/auto/resolve-dir.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Specify stores its input the same way; a request auto stored stands",
+      "files": [
+        "apps/speckit-extension/nodes/specify/resolve-dir.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Git variant of specify resolve-dir stores the request the same way",
+      "files": [
+        "apps/speckit-extension/nodes/specify/resolve-dir-git.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Plan's gather-context reads the stored request beside the spec",
+      "files": [
+        "apps/speckit-extension/nodes/plan/gather-context.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "The blocking checklist records each answer as a decision by you, keyed by its row",
+      "files": [
+        "apps/speckit-extension/nodes/specify/quality-checklist-blocking.md"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Overview shows the verbatim request and decision provenance",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx",
+        "apps/vscode/webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Styled request block, decision meta and earlier list",
+      "files": [
+        "apps/vscode/webview/styles/spec-viewer/_overview-dossier.css"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Harness passes request through",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/__stories__/viewerHarness.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Added request and decisions story",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/ActivityPanel.stories.tsx"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Tests for request text and decision provenance",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Rebuilt auto, specify and plan command bodies; build --check and instruction budget pass",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.auto.md",
+        "apps/speckit-extension/commands/speckit.companion.specify.md",
+        "apps/speckit-extension/commands/speckit.companion.plan.md"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Regenerated canvas vendor viewer.css",
+      "files": [
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor/viewer.css"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Root Added line for the Overview; speckit-ext ticket line widened to cover the request and decisions",
+      "files": [
+        "CHANGELOG.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "tsc, test:all, build --check, budget, emissions, manifest all exit 0",
+      "files": [
+        "-"
+      ]
+    }
+  },
+  "request": "Issue #963: feat: show what is proven, tested, assumed or only claimed for each spec — slice 1 of 6, items r5 and r6 only. PR body must say `Part of #963` (r5, r6), never Closes.\n\nr5 · Keep the request verbatim: the run record stores the original request word for word, and specify hands off by reference rather than paraphrase.\nr6 · Decisions carry who answered and when, and reopening one keeps the earlier answer.",
+  "concerns": [
+    {
+      "note": "FR-003 and FR-008 change command text only; no test runs a model through plan or the blocking checklist",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 10 task finishes landed in two bursts (the Overview worker appended five as it finished, and the node edits closed together), so those durations are not real",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor TRACE: two failed capture calls in this spec trace came from the python suite exercising bad --fold input while feature.json pointed here; the tests leak trace entries into the active spec",
+      "step": "implement"
+    },
+    {
+      "note": "The converge start was stamped by hand with --status converging, a status nothing else writes, so the first converge finish could not complete the spec; implemented was restored and converge ran its own start and finish. The writer accepts any --status value",
+      "step": "converge"
+    }
+  ],
+  "convergeStartedAt": "2026-11-07T19:14:37.685Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-07T19:14:37.747Z",
+      "by": "extension",
+      "finishedAt": "2026-11-07T19:14:38.005Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

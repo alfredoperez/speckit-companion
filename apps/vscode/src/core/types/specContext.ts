@@ -269,6 +269,22 @@ export interface DecisionEntry {
     decision: string;
     why?: string;
     rejected?: string;
+    /** Stable key: a later answer under the same id reopens this decision. */
+    id?: string;
+    /** Who answered: `agent`, or the person who did. */
+    by?: string;
+    /** When it was answered (ISO-8601). */
+    at?: string;
+    /** Answers this decision had before it was reopened, oldest first. */
+    earlier?: EarlierAnswer[];
+}
+
+export interface EarlierAnswer {
+    decision: string;
+    why?: string;
+    rejected?: string;
+    by?: string;
+    at?: string;
 }
 
 /** Proof a step's work is sound: what was checked, how, and the outcome. */
@@ -432,6 +448,8 @@ export interface SpecContext {
     // Reasoning-trail capture — all additive and optional.
     /** The distilled goal, recorded at specify complete. */
     intent?: string;
+    /** The request the run started from, word for word, written once. */
+    request?: string;
     /** Explicit non-goals / out-of-scope items, de-duped append. */
     expectations?: string[];
     /** What the run worked from: living specs loaded, areas investigated, constraints (ICE's C). */
@@ -512,6 +530,16 @@ export interface ViewerDecision {
     decision: string;
     why?: string;
     rejected?: string;
+    id?: string;
+    by?: string;
+    at?: string;
+    earlier?: ViewerEarlierAnswer[];
+}
+
+export interface ViewerEarlierAnswer {
+    decision: string;
+    by?: string;
+    at?: string;
 }
 
 export interface ViewerVerification {
@@ -566,6 +594,7 @@ export interface ViewerState {
     stepSummaries?: Record<string, Record<string, unknown>>;
     /** Reasoning-trail capture, normalized for rendering. */
     intent?: string;
+    request?: string;
     expectations?: string[];
     context?: string[];
     verified?: ViewerVerification[];

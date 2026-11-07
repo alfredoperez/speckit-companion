@@ -90,12 +90,14 @@ from capture import (  # noqa: E402,F401
     _parsed_batch,
     _parsed_classification,
     append_capture_entries,
+    append_decisions,
     apply_batch,
     append_string_list,
     append_verification_runs,
     record_plan_check,
     set_classification,
     set_fields,
+    set_request,
     set_living_specs_loaded,
     set_living_specs_skipped,
     set_living_specs_synced,
@@ -825,8 +827,15 @@ def _main() -> int:
     )
     parser.add_argument(
         "--decision", dest="decisions", action="append", default=None, metavar="JSON|TEXT",
-        help="Append a decision to decisions[] (de-duped on the decision text). "
-             "JSON object with a 'decision' key (plus why/rejected), or bare text. Repeatable.",
+        help="Append a decision to decisions[], stamped with who answered (by, default "
+             "agent) and when (at). JSON object with a 'decision' key (plus why/rejected/id/by/at), "
+             "or bare text. A new answer under a stored id reopens it and keeps the old one in "
+             "earlier[]; without an id, de-duped on the text. Repeatable.",
+    )
+    parser.add_argument(
+        "--request", dest="request", default=None, metavar="PATH|-",
+        help="Store the request the run started from, word for word, read from PATH or stdin "
+             "(-). Written once: a stored request is never replaced.",
     )
     parser.add_argument(
         "--verified", dest="verified", action="append", default=None, metavar="JSON|TEXT",
@@ -917,7 +926,7 @@ def _main() -> int:
     capture_mode = bool(
         args.decisions or args.verified or args.verify_runs or args.concerns or args.expectations
         or args.coverage_req or args.step_summary or args.classification or args.context_entries
-        or args.batch
+        or args.batch or args.request
     )
     # `--feature-dir` if it was given; the resolved one is not bound until later,
     # and a project's own steps are discoverable from either.
@@ -1032,8 +1041,25 @@ def _main() -> int:
             target, landed = apply_batch(feature_dir, args.batch, args.step)
             if target is not None:
                 captured.append(f"[companion] Batched capture ({'; '.join(landed)}) in {target}")
+        if args.request:
+            try:
+                if args.request == "-":
+                    text = "" if sys.stdin is None or sys.stdin.isatty() else sys.stdin.read()
+                else:
+                    text = Path(args.request).read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError) as exc:
+                text = None
+                declined.append(f"the request was not stored: {exc}")
+            if text is not None:
+                target, wrote = set_request(feature_dir, text)
+                if wrote:
+                    captured.append(f"[companion] Stored the request in {target}")
+                elif target is not None:
+                    captured.append(f"[companion] Kept the request already stored in {target}")
+                else:
+                    declined.append("the request was not stored: it is blank")
         if args.decisions:
-            target = append_capture_entries(feature_dir, "decisions", "decision", args.decisions)
+            target = append_decisions(feature_dir, args.decisions)
             captured.append(f"[companion] Recorded {len(args.decisions)} decision(s) in {target}")
         if args.verified:
             target = append_capture_entries(feature_dir, "verified", "what", args.verified)
@@ -1293,7 +1319,7 @@ _CAPTURE_FLAGS = (
     "--batch",
     "--decision", "--verified", "--concern", "--expectation", "--context",
     "--coverage-req", "--step-summary", "--classification", "--living-specs",
-    "--living-spec-skip",
+    "--living-spec-skip", "--request",
 )
 
 _OP_FILE = {

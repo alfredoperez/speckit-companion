@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 import re
 from pathlib import Path
 
 from spec_context import (
     CANONICAL_STEPS,
     _git_branch,
+    _now_iso,
     _repo_root_for,
     atomic_write,
     fill_required,
@@ -42,7 +44,8 @@ def _coerce_value(raw: str):
     return raw
 
 
-PROTECTED_SET_KEYS = frozenset({"history", "transitions", "status", "currentStep"})
+# `request` is write-once, so only `set_request` may write it.
+PROTECTED_SET_KEYS = frozenset({"history", "transitions", "status", "currentStep", "request"})
 # Kept exactly as written: a ticket named "42" or "none" is still that ticket.
 TEXT_SET_KEYS = frozenset({"source", "extends", "supersedes"})
 
@@ -443,6 +446,97 @@ def append_capture_entries(
     return target
 
 
+def _filled(value) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _readable_time(value) -> bool:
+    if not _filled(value) or "T" not in value:
+        return False
+    try:
+        datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
+def _answer(entry: dict) -> dict:
+    """What an earlier answer keeps of the decision it was."""
+    return {k: entry[k] for k in ("decision", "why", "rejected", "by", "at") if k in entry}
+
+
+def append_decisions(feature_dir: Path, raws: list[str]) -> Path | None:
+    """Decisions, each stamped with who answered and when.
+
+    An entry whose `id` is already stored with a different answer takes its place,
+    and the stored answer moves to the end of its `earlier` list, so a reopened
+    decision keeps every answer it had. Entries without an `id` de-dup on their
+    text, as they always have."""
+    entries = [e for e in (_coerce_entry(r, "decision") for r in raws) if e]
+    if not entries:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    prior = ctx.get("decisions")
+    merged = list(prior) if isinstance(prior, list) else []
+    now = _now_iso()
+    changed = False
+    for entry in entries:
+        entry.pop("earlier", None)
+        if not _filled(entry.get("by")):
+            entry["by"] = "agent"
+        if not _readable_time(entry.get("at")):
+            entry["at"] = now
+        answer = entry["decision"].strip()
+        ident = entry.get("id")
+        stored_at = next(
+            (i for i, item in enumerate(merged)
+             if _filled(ident) and isinstance(item, dict) and item.get("id") == ident),
+            None,
+        )
+        if stored_at is not None:
+            stored = merged[stored_at]
+            if str(stored.get("decision", "")).strip() == answer:
+                continue
+            earlier = stored.get("earlier")
+            earlier = [e for e in earlier if isinstance(e, dict)] if isinstance(earlier, list) else []
+            entry["earlier"] = earlier + [_answer(stored)]
+            merged[stored_at] = entry
+            changed = True
+            continue
+        if not _filled(ident) and any(_entry_identity(item, "decision") == answer for item in merged):
+            continue
+        merged.append(entry)
+        changed = True
+    if not changed:
+        return target
+    ctx["decisions"] = merged
+    atomic_write(target, ctx)
+    return target
+
+
+def set_request(feature_dir: Path, text: str) -> tuple[Path | None, bool]:
+    """Store the request the run started from, word for word, once.
+
+    Only outer blank space is trimmed. A stored request is never replaced, so the
+    first entry point to record it wins and later steps cannot paraphrase it.
+    Returns the record and whether this call wrote it; a blank request is (None, False)."""
+    request = text.strip()
+    if not request:
+        return None, False
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    if _filled(ctx.get("request")):
+        return target, False
+    fill_required(ctx, feature_dir, branch)
+    ctx["request"] = request
+    atomic_write(target, ctx)
+    return target, True
+
+
 def append_string_list(feature_dir: Path, field: str, values: list[str]) -> Path | None:
     """De-duped additive append of plain strings onto ctx[field] (expectations)."""
     cleaned = [v.strip() for v in values if v and v.strip()]
@@ -636,8 +730,10 @@ def apply_batch(feature_dir: Path, raw: str, step: str) -> tuple:
             target = result
             landed.append(label)
 
+    decisions = doc.get("decisions")
+    if decisions:
+        note(append_decisions(feature_dir, _as_raw(decisions)), f"{len(decisions)} decisions")
     for field, key, identity in (
-        ("decisions", "decisions", "decision"),
         ("verified", "verified", "what"),
         ("concerns", "concerns", "note"),
     ):

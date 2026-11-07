@@ -147,6 +147,7 @@ export function vsFromContext(
         taskSummaries: ctx.task_summaries,
         decisions: ctx.decisions,
         intent: ctx.intent,
+        request: ctx.request,
         expectations: ctx.expectations,
         context: ctx.context,
         verified: ctx.verified,

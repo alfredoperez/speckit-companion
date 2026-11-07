@@ -21,4 +21,12 @@ reads: []
 
    Then stamp the **specify START** as the step-start instruction above directs: the directory exists now, so run it before any other work.
 
+   Right after the stamp, store the request word for word: the user input this command received, exactly as given, never a summary. Pass it on stdin so quotes and line breaks survive:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --request - <<'COMPANION_REQUEST'
+   <the user input, unchanged>
+   COMPANION_REQUEST
+   ```
+   The record keeps the first request it is given, so when auto started this run and stored its own, this call changes nothing.
+
    If the branch already exists, check it out rather than creating a second one, and say so. If the working tree has uncommitted changes that would be carried onto a new branch, stop and say what they are.

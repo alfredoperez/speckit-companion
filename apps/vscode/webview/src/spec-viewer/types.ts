@@ -161,6 +161,7 @@ export interface ViewerState {
     livingSpecs?: LivingSpecsView;
     /** Reasoning-trail capture, normalized for rendering. */
     intent?: string;
+    request?: string;
     expectations?: string[];
     context?: string[];
     verified?: ViewerVerification[];

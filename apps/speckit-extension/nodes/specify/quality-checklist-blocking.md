@@ -16,6 +16,11 @@ reads: [draft-spec]
 
    **Your choice**: _[wait for the user's response]_
 
+   Record each answer the moment it arrives, as a decision the person made, keyed by its row so a later change of mind reopens it instead of adding a second:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --decision '{"decision": "<the option they chose, in their terms>", "id": "spec-question-<row number>", "by": "you"}'
+   ```
+
    Do not proceed to the next step on an unanswered table. The advisory checklist records what it could not settle and moves on, deferring to `clarify`; this one holds the step until the spec is clean. Pick it when a wrong spec is more expensive than a slow one.
 
    ```markdown

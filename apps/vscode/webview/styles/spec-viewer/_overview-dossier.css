@@ -238,10 +238,26 @@
     color: var(--purple);
 }
 
+.dossier-intent__request-block {
+    max-width: 72ch;
+    margin: 0 0 var(--space-4);
+}
+
+.dossier-intent__request {
+    margin: 6px 0 0;
+    padding-left: var(--space-3);
+    border-left: 3px solid var(--border-hover);
+    color: var(--text-body);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-height: 18em;
+    overflow-y: auto;
+}
+
 .dossier-intent__statement {
     max-width: 72ch;
     margin: var(--space-3) 0 var(--space-4);
-    font-size: clamp(16px, 1.5cqi, 19px);
+    font-size: clamp(16px, 1.5vw, 19px);
     font-weight: 500;
     line-height: 1.45;
     color: var(--text-body);
@@ -542,6 +558,43 @@
     max-width: 72ch;
 }
 
+.dossier-decision__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2px var(--space-3);
+}
+
+.dossier-decision__meta {
+    margin-left: auto;
+    color: var(--text-label);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.dossier-decision__earlier {
+    list-style: none;
+    margin: var(--space-2) 0 0;
+    padding: 0 0 0 var(--space-3);
+    border-left: 1px solid var(--border);
+}
+
+.dossier-decision__earlier li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 4px 0;
+}
+
+.dossier-decision__earlier s {
+    color: var(--text-body);
+}
+
+.dossier-decision__earlier .dossier-decision__meta {
+    margin-left: 0;
+}
+
 .dossier-decision p {
     margin: 3px 0;
     color: var(--text-body);
@@ -710,7 +763,12 @@
 
 /* ── Narrow panes: single-column fences, stacked ledger/coverage rows ── */
 
-@container viewer (max-width: 900px) {
+/* The Overview sizes off its own width, so a split pane, Storybook and the canvas collapse it alike. */
+.dossier {
+    container: dossier / inline-size;
+}
+
+@container dossier (max-width: 560px) {
     .dossier-intent__meta {
         grid-template-columns: 1fr;
     }
@@ -744,9 +802,18 @@
     .dossier-coverage__req {
         grid-column: 1 / -1;
     }
+
+    .dossier-decision__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dossier-decision__meta {
+        margin-left: 0;
+    }
 }
 
-@container viewer (max-width: 560px) {
+@container dossier (max-width: 440px) {
     .dossier-timing__head {
         align-items: flex-start;
         flex-direction: column;
@@ -759,7 +826,9 @@
     }
 
     .dossier-section__head {
+        flex-direction: column;
         align-items: flex-start;
+        gap: var(--space-2);
     }
 
     .dossier-coverage__row {

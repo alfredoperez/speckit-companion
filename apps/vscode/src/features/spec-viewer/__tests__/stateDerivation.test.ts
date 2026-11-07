@@ -427,6 +427,38 @@ describe('reasoning-trail normalization', () => {
                 { decision: 'structured', why: 'w' },
             ]);
         });
+
+        it('keeps who answered, when, and the earlier answers of a reopened decision', () => {
+            const state = deriveViewerState(makeContext({
+                decisions: [{
+                    decision: 'Settings table', id: 'store', by: 'agent', at: '2026-11-03T10:12:00Z',
+                    earlier: [{ decision: 'A new table', by: 'you', at: '2026-11-03T09:58:00Z', why: 'w' }],
+                }],
+            } as never));
+            expect(state.decisions).toEqual([{
+                decision: 'Settings table', id: 'store', by: 'agent', at: '2026-11-03T10:12:00Z',
+                earlier: [{ decision: 'A new table', by: 'you', at: '2026-11-03T09:58:00Z' }],
+            }]);
+        });
+
+        it('drops a malformed author, an unreadable time and a broken earlier list', () => {
+            const state = deriveViewerState(makeContext({
+                decisions: [{ decision: 'd', by: 7, at: 'yesterday', earlier: 'nope' }],
+            } as never));
+            expect(state.decisions).toEqual([{ decision: 'd' }]);
+        });
+    });
+
+    describe('request', () => {
+        it('passes the request through word for word', () => {
+            const request = '  keep "this" <b>as is</b>\nsecond line';
+            expect(deriveViewerState(makeContext({ request } as never)).request).toBe(request);
+        });
+
+        it('drops a blank request, and is absent on older records', () => {
+            expect(deriveViewerState(makeContext({ request: '  \n' } as never)).request).toBeUndefined();
+            expect(deriveViewerState(makeContext()).request).toBeUndefined();
+        });
     });
 
     describe('verified', () => {
