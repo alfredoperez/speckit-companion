@@ -480,7 +480,7 @@ async function recordScroll(recording, inside, { most = 900 } = {}) {
     throw new Error(`the page under "${recording.name}" never reached its end`);
 }
 
-/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. `shots: true` marks a capture-only step, which runs under --shots alone; `record: true` a recording step, which runs under --record alone; `check: true` a release QA step, left out of a --shots or --record run. */
+/** `needs: 'fixtures'` marks a step that reads the built-in project's own specs, bugs or ideas; --sandbox skips those. `needs: 'talk-sandbox'` marks a step that reads the Conduit talk sandbox (one with .talk/state.mjs); every other run skips those. `shots: true` marks a capture-only step, which runs under --shots alone; `record: true` a recording step, which runs under --record alone; `check: true` a release QA step, left out of a --shots or --record run. */
 async function step(name, what, run, { needs, shots, record, check } = {}) {
     if (ONLY.length && !ONLY.includes(name)) return;
     if (check && FILM_WINDOW) return;
@@ -489,6 +489,11 @@ async function step(name, what, run, { needs, shots, record, check } = {}) {
     if (SANDBOX && needs === 'fixtures') {
         results.push({ name, what, ok: true, skipped: true, note: 'skipped: needs the built-in project' });
         console.log(`skip ${name}: ${what} (skipped: needs the built-in project)`);
+        return;
+    }
+    if (needs === 'talk-sandbox' && !(SANDBOX && existsSync(join(SANDBOX, '.talk', 'state.mjs')))) {
+        results.push({ name, what, ok: true, skipped: true, note: 'skipped: needs the talk sandbox' });
+        console.log(`skip ${name}: ${what} (skipped: needs the talk sandbox)`);
         return;
     }
     const result = { name, what, ok: false };
@@ -1652,6 +1657,340 @@ try {
         await capture('new-spec-actions', { target: actions, padding: 10 });
         return text.replace(/\s+/g, ' ');
     }, { needs: 'fixtures', shots: true });
+
+    // Talk pictures: the Conduit talk sandbox (speckit-sandboxes, recipe conduit) seeded with three real Companion runs.
+    // Its .talk/state.mjs puts the Article Draft Autosave spec at any step of its recorded run.
+    const AUTOSAVE = 'Article Draft Autosave';
+    const autosaveFolder = () => join(built.project, 'specs', '003-article-draft-autosave');
+    const talkState = (state) => execFileSync('node', [join(built.project, '.talk', 'state.mjs'), state], { stdio: 'pipe' });
+    /** Opens a spec from the Specs pane, opening any closed lifecycle group first, then the tab asked for. */
+    const openTalkSpec = async (title, tab) => {
+        await clear();
+        await setPanes(['Specs'], true);
+        for (let tries = 0; tries < 6; tries++) {
+            const closed = pane('Specs').locator('.monaco-list-row[aria-expanded="false"]');
+            if (!(await closed.count())) break;
+            await closed.first().click();
+            await page.waitForTimeout(300);
+        }
+        await (await row('Specs', title)).click();
+        const entry = tab === 'Overview' ? webview().locator('.rail-overview') : webview().locator('.step-tab', { hasText: tab });
+        await entry.first().click();
+        await webview().locator('[aria-current="page"]', { hasText: tab }).first().waitFor({ timeout: 15000 });
+        await page.waitForTimeout(1500);
+    };
+    /** Puts the autosave spec at a step and waits for the sidebar to pick it up. */
+    const walkAutosave = async (state, extra) => {
+        await clear();
+        talkState(state);
+        if (extra) extra(autosaveFolder());
+        await page.waitForTimeout(2500);
+    };
+    const resetTalk = () => {
+        talkState('completed');
+        execFileSync('git', ['-C', built.project, 'checkout', '--', 'specs'], { stdio: 'pipe' });
+    };
+    const withComments = (comments) => (folder) => {
+        const file = join(folder, '.spec-context.json');
+        const context = JSON.parse(readFileSync(file, 'utf8'));
+        context.reviewComments = comments;
+        writeFileSync(file, JSON.stringify(context, null, 2));
+    };
+    // The viewer anchors a comment only when its block's first line equals the rendered line, so the text is read from plan.md as it stands.
+    const planComments = (folder, status) => {
+        const lines = readFileSync(join(folder, 'plan.md'), 'utf8').split('\n');
+        const at = new Date(Date.now() - 60000).toISOString();
+        return PLAN_NOTES.map(([id, starts, heading, text]) => {
+            const index = lines.findIndex(line => line.startsWith(starts));
+            if (index < 0) throw new Error(`plan.md has no line starting "${starts}"`);
+            return { id, doc: 'plan', anchor: { heading, blockText: lines[index], line: index + 1 }, comment: text, status, createdAt: at };
+        });
+    };
+    const PLAN_NOTES = [
+        ['talk-1', 'The editor autosaves title, description, body, and tags', 'Summary', 'Two tabs open on the same article: say which draft wins.'],
+        ['talk-2', 'No violations; Complexity Tracking is omitted.', 'Constitution Check', 'Name the test that proves a draft never lands in another article.'],
+        ['talk-3', '**Structure Decision**: One new entity slice', 'Project Structure', 'Say what happens when localStorage is full.'],
+    ];
+    /** What Refine leaves behind, written in place: each answer under its block, each comment marked applied. */
+    const refinePlan = (folder) => {
+        const file = join(folder, 'plan.md');
+        let text = readFileSync(file, 'utf8');
+        for (const [after, sentence] of PLAN_ANSWERS) {
+            if (!text.includes(after)) throw new Error(`plan.md has no "${after.slice(0, 40)}"`);
+            text = text.replace(after, after + sentence);
+        }
+        writeFileSync(file, text);
+        withComments(planComments(folder, 'applied'))(folder);
+    };
+    const talkWindow = async () => {
+        await resize({ maximize: true });
+        if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
+    };
+    /** One picture per commented line: the line with its comment card under it. */
+    const commentShots = async (prefix) => {
+        const lines = webview().locator('.line.has-refinement');
+        const count = await lines.count();
+        for (let i = 0; i < count; i++) {
+            await scrollTo(lines.nth(i), 'center');
+            await page.waitForTimeout(400);
+            await capture(`${prefix}-${i + 1}`, { target: lines.nth(i), padding: 20, within: 'editor' });
+        }
+        return count;
+    };
+    // What the assistant wrote back after Refine: one sentence under each commented block.
+    const PLAN_ANSWERS = [
+        ['the persistence the request asks for is a property the existing store already has.', ' With two tabs open on the same article, the last write wins; drafts are never merged.'],
+        ['No violations; Complexity Tracking is omitted.', ' Isolation is proven in `update-article.test.tsx`: a draft saved for one slug never appears under another.'],
+        ['no new pages, widgets, or API endpoints.', ' When `localStorage` is full, the save fails quietly and the form keeps working; nothing is lost on screen.'],
+    ];
+
+    await step('talk-new-spec', 'Talk: New Spec with the autosave request typed in, on the Conduit sandbox', async () => {
+        await talkWindow();
+        await clear();
+        await pane('Specs').locator('.pane-header').hover();
+        await pane('Specs').locator('.pane-header a.action-label[aria-label^="New Spec"]').click();
+        await webview().locator('#specContent').waitFor({ timeout: 15000 });
+        await webview().locator('#specContent').fill('Stop the article editor from losing work when the writer navigates away. Save the title, description, body and tags as they change, restore them on return, offer a Discard draft control, and clear the draft once the article is published or updated.');
+        await page.waitForTimeout(800);
+        await capture('talk-new-spec-window', { target: 'window' });
+        await capture('talk-new-spec', { target: 'editor', ratio: 16 / 9 });
+        return 'talk-new-spec, talk-new-spec-window';
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-spec', 'Talk: the autosave spec after specify, its stories and scenarios as the viewer draws them', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('specified');
+            await openTalkSpec(AUTOSAVE, 'Specification');
+            await capture('talk-spec-window', { target: 'window' });
+            await capture('talk-spec', { target: 'editor', ratio: 16 / 9 });
+            await scrollTo(webview().locator('h2', { hasText: /User Scenarios/ }), 'start', 24);
+            await capture('talk-spec-stories', { target: 'editor', ratio: 16 / 9 });
+            await scrollTo(webview().locator('p', { hasText: /^Acceptance Scenarios/ }), 'start', 130);
+            await capture('talk-spec-scenarios', { target: 'editor', ratio: 16 / 9 });
+            const footer = webview().locator('footer.actions');
+            if (await footer.first().isVisible().catch(() => false)) await capture('talk-footer-next-plan', { target: footer, padding: 10 });
+            return 'talk-spec, talk-spec-stories, talk-spec-scenarios';
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-plan-comments', 'Talk: three review comments on the autosave plan, and Refine (3) in the footer', async () => {
+        await talkWindow();
+        try {
+            await talkWindow();
+            await walkAutosave('planned', (folder) => withComments(planComments(folder, 'pending'))(folder));
+            await openTalkSpec(AUTOSAVE, 'Plan');
+            await capture('talk-plan-comments-window', { target: 'window' });
+            const shown = await commentShots('talk-plan-comment');
+            if (shown !== 3) throw new Error(`${shown} of 3 comments sit on their lines`);
+            const text = await expectText(webview().locator('#refine-submit-btn'), /Refine \(3\)/);
+            await capture('talk-footer-refine', { target: webview().locator('footer.actions'), padding: 10 });
+            return text;
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-plan-refined', 'Talk: the same plan after Refine, each comment applied and answered in the plan', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('planned', refinePlan);
+            await talkWindow();
+            await openTalkSpec(AUTOSAVE, 'Plan');
+            await capture('talk-plan-refined-window', { target: 'window' });
+            const shown = await commentShots('talk-plan-refined');
+            if (shown !== 3) throw new Error(`${shown} of 3 applied comments sit on their lines`);
+            return `${shown} applied comments, each with its answer`;
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-run', 'Talk: the autosave run at tasks and mid-implement, three of eight tasks ticked', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('tasked');
+            await openTalkSpec(AUTOSAVE, 'Tasks');
+            await capture('talk-tasks', { target: 'editor', ratio: 16 / 9 });
+            await capture('talk-footer-next-implement', { target: webview().locator('footer.actions'), padding: 10 });
+            await walkAutosave('implementing');
+            await openTalkSpec(AUTOSAVE, 'Tasks');
+            await capture('talk-implementing-window', { target: 'window' });
+            await capture('talk-implementing', { target: 'editor', ratio: 16 / 9 });
+            const text = await expectText(webview().locator('footer.actions'), /Step running|running/i);
+            await capture('talk-footer-running', { target: webview().locator('footer.actions'), padding: 10 });
+            return text.replace(/\s+/g, ' ');
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-overview', 'Talk: each region of the finished autosave run\'s Overview, and the Reading Time run sized simple', async () => {
+        await talkWindow();
+        await openTalkSpec(AUTOSAVE, 'Overview');
+        await capture('talk-overview-window', { target: 'window' });
+        await capture('talk-overview', { target: 'editor', ratio: 16 / 9 });
+        const regions = {
+            'talk-overview-intent': '.dossier-intent',
+            'talk-overview-timing': '.dossier-timing',
+            'talk-overview-expectations': '.dossier-section[aria-label="Expectations"]',
+            'talk-overview-verified': '.dossier-section[aria-label="Verified"]',
+            'talk-overview-decisions': '.dossier-section[aria-label="Decisions"]',
+            'talk-overview-coverage': '.dossier-section[aria-label="Coverage"]',
+            'talk-overview-run-log': '.dossier-log',
+        };
+        const footer = webview().locator('footer.actions').first();
+        await footer.evaluate(element => { element.style.visibility = 'hidden'; });
+        const missing = [];
+        for (const [name, selector] of Object.entries(regions)) {
+            const region = webview().locator(selector).first();
+            if (!(await region.isVisible().catch(() => false))) { missing.push(name); continue; }
+            if (name === 'talk-overview-run-log') await region.locator('summary').first().click();
+            await scrollTo(region, 'start', 24);
+            await page.waitForTimeout(300);
+            const target = name === 'talk-overview-run-log' ? [region.locator('summary').first(), region.locator('.phases-events__group .timeline-entry').nth(5)] : region;
+            await capture(name, { target, padding: 16, within: 'editor' });
+        }
+        await footer.evaluate(element => { element.style.visibility = ''; });
+        await openTalkSpec('Reading Time', 'Overview');
+        await capture('talk-simple-overview', { target: 'editor', ratio: 16 / 9 });
+        await openTalkSpec('Reading Time', 'Plan');
+        await capture('talk-simple-plan', { target: 'editor', ratio: 16 / 9 });
+        return missing.length ? `no region for ${missing.join(', ')}` : 'every region';
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-plan-blocks', 'Talk: the Offline Queue plan draws its call paths, its states with one picked, and its screen', async () => {
+        await talkWindow();
+        try {
+            await openTalkSpec('Offline queue', 'Plan');
+            if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+            await resize({ maximize: true });
+            await page.waitForTimeout(1200);
+            const calls = planCard('calls', 'Offline favorite');
+            await showCard(calls);
+            await cardShot('talk-plan-calls', calls, 12);
+            await capture('talk-plan-blocks-window', { target: 'window' });
+            const states = planCard('states', 'Waiting change');
+            await showCard(states);
+            await pickState(states, 'Sending');
+            await cardShot('talk-plan-states', states);
+            const screen = planCard('screen', 'Header');
+            await showCard(screen);
+            await cardShot('talk-plan-screen', screen);
+            return 'talk-plan-calls, talk-plan-states, talk-plan-screen';
+        } finally {
+            await talkWindow();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-sidebar', 'Talk: the Specs pane on Conduit, and a spec\'s More Actions menu', async () => {
+        await talkWindow();
+        await clear();
+        await setPanes(['Specs'], true);
+        for (let tries = 0; tries < 6; tries++) {
+            const closed = pane('Specs').locator('.monaco-list-row[aria-expanded="false"]');
+            if (!(await closed.count())) break;
+            await closed.first().click();
+            await page.waitForTimeout(300);
+        }
+        const specs = [pane('Specs').locator('.pane-header'), pane('Specs').locator('.monaco-list-row').last()];
+        await capture('talk-sidebar', { target: specs, padding: 8 });
+        const item = await row('Specs', AUTOSAVE);
+        await item.hover();
+        const more = item.locator('a.action-label[aria-label^="More Actions"]');
+        await more.waitFor({ timeout: 5000 });
+        await more.click();
+        try {
+            const menu = page.locator('.context-view .monaco-menu').first();
+            await menu.waitFor({ timeout: 5000 });
+            await capture('talk-more-actions', { target: [...specs, menu], padding: 8, hover: menu.locator('.action-label').first() });
+            return (await menu.locator('.action-label').allInnerTexts()).map(text => text.trim()).filter(Boolean).join(', ');
+        } finally {
+            await page.keyboard.press('Escape');
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-film-ticking', 'Talk film: the autosave run mid-implement, T004 to T008 ticking one at a time until 8 of 8', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('implementing');
+            await openTalkSpec(AUTOSAVE, 'Tasks');
+            if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+            await page.waitForTimeout(1200);
+            const tasks = join(autosaveFolder(), 'tasks.md');
+            const content = webview().locator('#markdown-content').first();
+            return await tourFilm('talk-tasks-ticking', 'The Tasks tab of the Article Draft Autosave run while implement runs: three tasks are done, then T004 to T008 tick one at a time while the header count climbs to 8 of 8, with nobody touching the window.', async (recording, beat) => {
+                await recording.hold(1.5);
+                for (const id of ['T004', 'T005', 'T006', 'T007', 'T008']) {
+                    const item = webview().locator('li, .task-item', { hasText: id }).first();
+                    await item.evaluate(element => element.scrollIntoView({ block: 'center', behavior: 'instant' })).catch(() => undefined);
+                    await recording.hold(0.6);
+                    tickTask(tasks, id);
+                    await beat(`${id} done`, item);
+                    await recording.hold(1.4);
+                }
+                await content.evaluate(element => element.scrollIntoView({ block: 'start', behavior: 'instant' }));
+                await recording.hold(2.5);
+            });
+        } finally {
+            resetTalk();
+            await talkWindow();
+        }
+    }, { needs: 'talk-sandbox', record: true });
+
+    await step('talk-film-refine', 'Talk film: three comments on the plan, Refine sends them, and the plan comes back answered', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('planned', (folder) => withComments(planComments(folder, 'pending'))(folder));
+            await openTalkSpec(AUTOSAVE, 'Plan');
+            if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+            await page.waitForTimeout(1200);
+            const first = webview().locator('.line.has-refinement').first();
+            await scrollTo(first, 'center', -120);
+            return await tourFilm('talk-refine', 'The autosave plan with three pending review comments. The page scrolls past each one, Refine (3) is clicked and the comments go to the assistant, then the plan is rewritten in place: an answer appears under each commented block and each comment turns Applied.', async (recording, beat) => {
+                await recording.hold(1.5);
+                await beat('three comments pending', first);
+                await tourScroll(recording, first, 40);
+                await recording.hold(1);
+                const refine = webview().locator('#refine-submit-btn');
+                await tourClick(recording, beat, refine, 'Refine (3) sends the comments', 1.5);
+                // The stand-in assistant only prints; the plan it would write is put in place here, as Refine leaves it.
+                await page.locator('.xterm-rows').last().waitFor({ timeout: 15000 }).catch(() => undefined);
+                await recording.hold(2);
+                await beat('sent to the assistant', page.locator('.xterm-rows').last());
+                refinePlan(autosaveFolder());
+                await webview().locator('.line.has-refinement', { hasText: 'APPLIED' }).first().waitFor({ timeout: 15000 }).catch(() => undefined);
+                await scrollTo(webview().locator('.line.has-refinement').first(), 'center', -120);
+                await recording.hold(1.5);
+                await beat('answered and applied', webview().locator('.line.has-refinement').first());
+                await tourScroll(recording, webview().locator('.line.has-refinement').first(), 40);
+                await recording.hold(2.5);
+            });
+        } finally {
+            resetTalk();
+            await talkWindow();
+        }
+    }, { needs: 'talk-sandbox', record: true });
+
+    await step('talk-builder','Talk: the Workflow Builder board for the Conduit project', async () => {
+        await talkWindow();
+        await clear();
+        if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+        await resize({ maximize: true });
+        try {
+            await command('Open Workflow Builder');
+            await webview().locator('.pb-step').first().waitFor({ timeout: 20000 });
+            await page.waitForTimeout(1500);
+            await capture('talk-builder', { target: 'editor' });
+            await capture('talk-builder-window', { target: 'window' });
+            return `${await webview().locator('.pb-step').count()} nodes`;
+        } finally {
+            await clear();
+            await talkWindow();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
 
     await step('shot-steering-constitution', 'With a written constitution, the Steering view lists it under SpecKit Project Files', async () => {
         await clear();
