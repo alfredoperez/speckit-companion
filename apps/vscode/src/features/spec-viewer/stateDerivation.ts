@@ -113,13 +113,27 @@ function optString(v: unknown): string | undefined {
     return typeof v === 'string' && v.trim().length > 0 ? v : undefined;
 }
 
+/** A timestamp the view can format, or nothing: an unreadable one must not render as "Invalid Date". */
+function optTime(v: unknown): string | undefined {
+    const s = optString(v);
+    return s && !Number.isNaN(Date.parse(s)) ? s : undefined;
+}
+
 function pickDecisions(ctx: SpecContext): ViewerDecision[] | undefined {
     const raw = pickEntryList<Record<string, unknown>>(ctx.decisions, 'decision');
-    return raw?.map(e => ({
-        decision: e.decision as string,
-        why: optString(e.why),
-        rejected: optString(e.rejected),
-    }));
+    return raw?.map(e => {
+        const earlier = (pickEntryList<Record<string, unknown>>(e.earlier, 'decision') ?? [])
+            .map(a => ({ decision: a.decision as string, by: optString(a.by), at: optTime(a.at) }));
+        return {
+            decision: e.decision as string,
+            why: optString(e.why),
+            rejected: optString(e.rejected),
+            id: optString(e.id),
+            by: optString(e.by),
+            at: optTime(e.at),
+            earlier: earlier.length > 0 ? earlier : undefined,
+        };
+    });
 }
 
 function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
@@ -405,6 +419,7 @@ export function deriveViewerState(
         reviewComments: pickReviewComments(ctx),
         livingSpecs: pickLivingSpecs(ctx),
         intent: asString(ctx.intent),
+        request: optString(ctx.request),
         expectations: asStringArray(ctx.expectations),
         context: asStringArray(ctx.context),
         verified: pickVerified(ctx),

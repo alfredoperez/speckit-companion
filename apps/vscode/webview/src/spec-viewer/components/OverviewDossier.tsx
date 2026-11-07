@@ -1,5 +1,5 @@
 import type { ViewerState, ViewerCoverageRow, ViewerVerification } from '../types';
-import { formatElapsed } from '../relativeTime';
+import { formatElapsed, formatAbsolute } from '../relativeTime';
 import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
 import { STEP_NAMES } from '../../../../src/core/types/specContext';
 
@@ -251,18 +251,24 @@ function SectionHead({ kicker, title, count, tone }: {
 }
 
 export function IntentSection({ state }: { state: ViewerState }) {
-    const { intent, approach, context, classification } = state;
+    const { intent, request, approach, context, classification } = state;
     const area = context?.find(item => item.startsWith(AREA_PREFIX))?.slice(AREA_PREFIX.length);
     const livingSpecs = state.livingSpecs;
     const livingSpecsCount = livingSpecs ? livingSpecChips(livingSpecs).length : 0;
     const hasTiming = phaseNames(state).length > 0;
-    const hasIntentContent = Boolean(intent || approach || area || classification || livingSpecsCount > 0);
+    const hasIntentContent = Boolean(intent || request || approach || area || classification || livingSpecsCount > 0);
     if (!hasIntentContent && !hasTiming) return null;
 
     return (
         <section class="dossier-intent" aria-label={hasIntentContent ? 'Intent' : 'Run overview'}>
             {hasIntentContent && <p class="dossier-kicker">Intent</p>}
             {intent && <p class="dossier-intent__statement">{intent}</p>}
+            {request && (
+                <div class="dossier-intent__request-block">
+                    <span class="dossier-meta-label">Your request, word for word</span>
+                    <p class="dossier-intent__request" tabIndex={0}>{request}</p>
+                </div>
+            )}
             <OverviewTiming state={state} />
             <ConvergeCard state={state} />
             {(approach || area || classification || livingSpecsCount > 0) && (
@@ -410,16 +416,40 @@ function EvidenceRows({ items }: { items: ViewerVerification[] }) {
 
 const DECISIONS_SHOWN = 3;
 
+function whoWhen(by?: string, at?: string): string[] {
+    const when = at ? formatAbsolute(at) : '';
+    return [by, when && when !== 'unknown' ? when : undefined].filter((x): x is string => Boolean(x));
+}
+
 function Decision({ d, num }: { d: NonNullable<ViewerState['decisions']>[number]; num: number }) {
+    const answered = d.by ? whoWhen(d.by, d.at) : [];
+    const heading = <h3>{d.decision}</h3>;
     return (
         <article class="dossier-decision">
             <span class="dossier-decision__num" aria-hidden="true">
                 {String(num).padStart(2, '0')}
             </span>
             <div>
-                <h3>{d.decision}</h3>
+                {answered.length > 0 ? (
+                    <div class="dossier-decision__head">
+                        {heading}
+                        <span class="dossier-decision__meta">answered by {answered.join(' · ')}</span>
+                    </div>
+                ) : heading}
                 {d.why && <p><b>Why</b> {d.why}</p>}
                 {d.rejected && <p class="dossier-decision__rejected"><b>Rejected</b> {d.rejected}</p>}
+                {d.earlier && d.earlier.length > 0 && (
+                    <ul class="dossier-decision__earlier">
+                        {d.earlier.map((e, i) => (
+                            <li key={i}>
+                                <s>{e.decision}</s>
+                                <span class="dossier-decision__meta">
+                                    {['earlier answer', ...whoWhen(e.by, e.at), 'reopened'].join(' · ')}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
         </article>
     );

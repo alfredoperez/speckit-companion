@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { h, render } from 'preact';
-import { IntentSection, OverviewTiming, CoverageSection } from '../OverviewDossier';
+import { IntentSection, OverviewTiming, CoverageSection, DecisionsSection } from '../OverviewDossier';
 import type { HistoryEntry, ViewerState } from '../../types';
 import { deriveStepHistory, deriveTimingSummary } from '../../../../../src/features/specs/stepHistoryDerivation';
 import { deriveConvergeResult } from '../../../../../src/features/spec-viewer/convergeResult';
@@ -446,5 +446,66 @@ describe('converge in the overview', () => {
         expect(pill(host)).toBeNull();
         expect(host.querySelector('.dossier-converge')).toBeNull();
         expect(host.querySelector('.is-waiting')).toBeNull();
+    });
+});
+
+describe('request and decision provenance', () => {
+    const mount = (state: ViewerState, C: typeof IntentSection = IntentSection) => {
+        const host = document.createElement('div');
+        render(h(C, { state }), host);
+        return host;
+    };
+
+    it('shows the request as text with markup escaped', () => {
+        const host = mount(base({ intent: 'Do it.', request: 'Make <b>bold</b> "quotes"\nline two' }));
+        const el = host.querySelector('.dossier-intent__request');
+        expect(host.textContent).toContain('Your request, word for word');
+        expect(el?.textContent).toBe('Make <b>bold</b> "quotes"\nline two');
+        expect(host.querySelector('b')).toBeNull();
+    });
+
+    it('omits the request block without a request', () => {
+        const host = mount(base({ intent: 'Do it.' }));
+        expect(host.querySelector('.dossier-intent__request')).toBeNull();
+    });
+
+    it('shows answered-by meta whenever the author is known', () => {
+        const host = mount(base({
+            decisions: [
+                { decision: 'A', by: 'you', at: '2026-07-21T10:04:00Z' },
+                { decision: 'B', by: 'you' },
+                { decision: 'C', at: '2026-07-21T10:04:00Z' },
+            ],
+        }), DecisionsSection);
+        const metas = host.querySelectorAll('.dossier-decision__meta');
+        expect(metas).toHaveLength(2);
+        expect(metas[0].textContent).toMatch(/^answered by you · /);
+        expect(metas[1].textContent).toBe('answered by you');
+    });
+
+    it('lists earlier answers in order with reopened meta', () => {
+        const host = mount(base({
+            decisions: [{
+                id: 'x',
+                decision: 'Final',
+                earlier: [
+                    { decision: 'First', by: 'agent' },
+                    { decision: 'Second', by: 'you', at: '2026-07-21T10:04:00Z' },
+                ],
+            }],
+        }), DecisionsSection);
+        const items = Array.from(host.querySelectorAll('.dossier-decision__earlier li'));
+        expect(items.map(li => li.querySelector('s')?.textContent)).toEqual(['First', 'Second']);
+        expect(items[0].textContent).toContain('earlier answer · agent · reopened');
+        expect(items[1].textContent).toMatch(/earlier answer · you · .+ · reopened/);
+        expect(host.textContent).not.toContain('undefined');
+    });
+
+    it('renders a legacy decision without meta', () => {
+        const host = mount(base({ decisions: [{ decision: 'Old', why: 'Because' }] }), DecisionsSection);
+        expect(host.querySelector('.dossier-decision__meta')).toBeNull();
+        expect(host.querySelector('.dossier-decision__earlier')).toBeNull();
+        expect(host.querySelector('.dossier-decision__head')).toBeNull();
+        expect(host.querySelector('h3')?.textContent).toBe('Old');
     });
 });

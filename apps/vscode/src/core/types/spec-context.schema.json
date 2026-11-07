@@ -38,6 +38,7 @@
     "task_summaries": { "type": "object" },
     "step_summaries": { "type": "object" },
     "intent": { "type": "string" },
+    "request": { "type": "string" },
     "approach": { "type": "string" },
     "expectations": {
       "type": "array",
@@ -58,7 +59,24 @@
             "properties": {
               "decision": { "type": "string", "minLength": 1 },
               "why": { "type": "string" },
-              "rejected": { "type": "string" }
+              "rejected": { "type": "string" },
+              "id": { "type": "string" },
+              "by": { "type": "string" },
+              "at": { "type": "string", "format": "date-time" },
+              "earlier": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["decision"],
+                  "properties": {
+                    "decision": { "type": "string", "minLength": 1 },
+                    "why": { "type": "string" },
+                    "rejected": { "type": "string" },
+                    "by": { "type": "string" },
+                    "at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
             }
           }
         ]

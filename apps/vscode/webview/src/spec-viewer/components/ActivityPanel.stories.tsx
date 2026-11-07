@@ -307,6 +307,32 @@ export const DossierRich: Story = {
     },
 };
 
+// The verbatim request plus decisions: an agent's, a person's, and one reopened twice.
+export const DossierRequestAndDecisions: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            request: 'Add "dark mode" to settings.\nIt must keep <b>my</b> choice after a reload.',
+            decisions: [
+                { id: 'd1', decision: 'Store the choice in workspace state', why: 'It survives reloads.', by: 'agent', at: '2026-07-21T10:04:00Z' },
+                { id: 'd2', decision: 'Follow the editor theme by default', by: 'you', at: '2026-07-21T10:10:00Z' },
+                {
+                    id: 'd3',
+                    decision: 'Ship a toggle, no auto mode',
+                    by: 'you',
+                    at: '2026-07-22T09:00:00Z',
+                    earlier: [
+                        { decision: 'Ship auto mode only', by: 'agent', at: '2026-07-21T10:20:00Z' },
+                        { decision: 'Ship a three-way picker', by: 'you', at: '2026-07-21T15:00:00Z' },
+                    ],
+                },
+            ],
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // Fully covered, no concerns: the coverage count pill reads as success and
 // no warning treatments render anywhere.
 export const DossierAllTraced: Story = {

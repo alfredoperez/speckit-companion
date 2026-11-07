@@ -98,6 +98,14 @@ Produce a feature specification: prioritized user stories with acceptance scenar
    - Otherwise derive a 2–4 word short-name from the description and run `python3 .specify/extensions/companion/scripts/mint-spec-dir.py --short-name "<short-name>"`. It creates the next folder, numbered the way this project's `feature_numbering` says and safe against a run started at the same time, points `.specify/feature.json` at it, and prints its path. Never pick the number yourself. The spec file is `<feature_directory>/spec.md`. **Never write into a directory that already contains a feature spec (`spec.md`, or an older `*.spec.md`)**: that's a prior spec, not this one.
    For a named target, create `<feature_directory>/` and point `.specify/feature.json` at it by writing `{"feature_directory": "<feature_directory>"}`. Later capture calls resolve the spec through that exact key when they run without `--feature-dir`, so any other key silently drops those writes.
    Then stamp the **specify START** as the step-start instruction above directs: the directory exists now, so run it before any other work.
+
+   Right after the stamp, store the request word for word: the user input this command received, exactly as given, never a summary. Pass it on stdin so quotes and line breaks survive:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --request - <<'COMPANION_REQUEST'
+   <the user input, unchanged>
+   COMPANION_REQUEST
+   ```
+   The record keeps the first request it is given, so when auto started this run and stored its own, this call changes nothing.
 <!-- /speckit-companion:node resolve-dir -->
 <!-- speckit-companion:node load-living-specs -->
 **Load living specs, so you arrive pre-briefed (best-effort, opt-in, read-only).** Before drafting, check whether this project keeps **living specs** for the areas this change touches, and fold them into your context. On any miss (no config, feature off, no resolver, no spec file) skip silently and draft as usual: this step must **never** fail or slow the command. It is strictly **read-only**. Never create or edit a `capabilities/<name>/<name>.spec.md` from here.
