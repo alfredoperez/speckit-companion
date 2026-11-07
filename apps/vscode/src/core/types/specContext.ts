@@ -553,6 +553,12 @@ export interface ViewerVerification {
     source?: 'derived';
     exitCode?: number;
     durationSeconds?: number;
+    /** Short commit the run check ran on. */
+    commit?: string;
+    /** Snapshot tree of the working files the run check ran on. */
+    tree?: string;
+    /** Files changed since `tree`, outside the spec folders; undefined when it cannot be compared. */
+    changedSince?: number;
 }
 
 export interface ViewerCoverageRow {

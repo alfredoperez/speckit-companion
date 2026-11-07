@@ -281,7 +281,41 @@ def _coerce_entry(raw: str, identity_key: str) -> dict | None:
     return {identity_key: text}
 
 
-def run_verification(what: str, command: str, timeout: int = 900) -> dict:
+def _code_at(path: Path) -> dict:
+    """The short commit and a snapshot tree of the working files of the repo holding `path`.
+
+    The snapshot goes through a copy of the index, so the user's staging is never touched;
+    gitignored files stay out. Any failure leaves the field out rather than failing the check."""
+    import os
+    import shutil
+    import subprocess
+    import tempfile
+
+    def git(*args, env=None):
+        return subprocess.run(["git", "-C", str(path), *args], capture_output=True, text=True,
+                              check=True, timeout=20, env=env).stdout.strip()
+
+    found: dict = {}
+    try:
+        found["commit"] = git("rev-parse", "--short", "HEAD")
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        index = Path(git("rev-parse", "--git-path", "index"))
+        index = index if index.is_absolute() else Path(path) / index
+        with tempfile.TemporaryDirectory() as tmp:
+            scratch = Path(tmp) / "index"
+            if index.is_file():
+                shutil.copyfile(index, scratch)
+            env = {**os.environ, "GIT_INDEX_FILE": str(scratch), "GIT_OPTIONAL_LOCKS": "0"}
+            git("add", "-A", env=env)
+            found["tree"] = git("write-tree", env=env)
+    except Exception:  # noqa: BLE001
+        pass
+    return found
+
+
+def run_verification(what: str, command: str, timeout: int = 900, at: Path | None = None) -> dict:
     """Run a command and record what actually happened, rather than what anyone says did.
 
     This is the whole difference between a receipt and a claim. Everything in `verified[]`
@@ -295,6 +329,8 @@ def run_verification(what: str, command: str, timeout: int = 900) -> dict:
     import subprocess
     import time
 
+    # Before the command, so a file changed while a long check runs makes it stale rather than current.
+    code_at = _code_at(at) if at is not None else {}
     started = time.monotonic()
     try:
         proc = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=timeout)
@@ -318,6 +354,7 @@ def run_verification(what: str, command: str, timeout: int = 900) -> dict:
     # a run that could not prove its work should say so where the reader looks.
     if code != 0:
         entry["warnings"] = [f"exited {code}"]
+    entry.update(code_at)
     return entry
 
 
@@ -329,7 +366,7 @@ def append_verification_runs(feature_dir: Path, specs: list[str]) -> tuple[Path 
         if not sep or not command.strip():
             skipped.append(spec)
             continue
-        entries.append(json.dumps(run_verification(what.strip(), command.strip())))
+        entries.append(json.dumps(run_verification(what.strip(), command.strip(), at=feature_dir)))
     target = append_capture_entries(feature_dir, "verified", "what", entries, replace=True) if entries else None
     return target, skipped
 

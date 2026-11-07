@@ -60,7 +60,7 @@ import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from ".
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
 import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft, livingSpecHeading, livingPurposeBody, appendLivingRemoval } from "../living-specs/livingDocs";
-import { requirementKey, requirementLinks, requirementSlices } from "../living-specs/livingSpecsModel";
+import { makeDefaultGitRunner, requirementKey, requirementLinks, requirementSlices } from "../living-specs/livingSpecsModel";
 import { buildLivingHeaderMeta, resolveLivingHealth } from "../living-specs/livingHeaderMeta";
 import type { LivingHeaderMeta } from "./types";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
@@ -69,7 +69,8 @@ import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { resolveInstallPrompt, type InstallPrompt } from "../../speckit/specKitExtensionInstall";
 import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
-import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests } from "./stateDerivation";
+import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests, markStaleChecks } from "./stateDerivation";
+import { FRESHNESS_TIMEOUT_MS, staleCounts } from "./checkFreshness";
 import { deriveConvergeResult } from "./convergeResult";
 import { enrichLivingSpecs } from "../living-specs/livingSpecsContent";
 import { bugDirectoryOf } from "../bugs/bugReports";
@@ -1559,6 +1560,15 @@ export class SpecViewerProvider {
             derivedVs.coverage = markMissingTests(derivedVs.coverage, rel =>
               fs.existsSync(path.isAbsolute(rel) ? rel : path.join(wsRoot, rel))
             );
+          }
+        }
+        {
+          const trees = [...new Set((derivedVs.verified ?? []).flatMap(v => (v.source === 'derived' && v.tree ? [v.tree] : [])))];
+          const wsRoot = getProjectRoot();
+          if (trees.length > 0 && wsRoot) {
+            try {
+              derivedVs.verified = markStaleChecks(derivedVs.verified, await staleCounts(wsRoot, trees, makeDefaultGitRunner(FRESHNESS_TIMEOUT_MS)));
+            } catch { /* leave verified unchanged */ }
           }
         }
         // Living-specs content is filesystem-derived, so it's enriched here at

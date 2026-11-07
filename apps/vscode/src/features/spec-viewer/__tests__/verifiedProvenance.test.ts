@@ -57,3 +57,23 @@ describe('where a verification came from', () => {
         expect(v.exitCode).toBeUndefined();
     });
 });
+
+describe('which commit a check ran against', () => {
+    it('keeps the commit and tree of a derived entry', () => {
+        const [v] = verified(ctx([{ what: 'x', source: 'derived', commit: '4f2c9a1', tree: 'a1b2c3d4e5f6' }]));
+        expect(v.commit).toBe('4f2c9a1');
+        expect(v.tree).toBe('a1b2c3d4e5f6');
+    });
+
+    it('drops a commit written on a reported entry', () => {
+        const [v] = verified(ctx([{ what: 'x', commit: '4f2c9a1', tree: 'a1b2c3d4e5f6' }]));
+        expect(v.commit).toBeUndefined();
+        expect(v.tree).toBeUndefined();
+    });
+
+    it('drops values that are not hex shas', () => {
+        const [v] = verified(ctx([{ what: 'x', source: 'derived', commit: 'main; ls', tree: 'XYZ' }]));
+        expect(v.commit).toBeUndefined();
+        expect(v.tree).toBeUndefined();
+    });
+});

@@ -357,6 +357,7 @@ export function VerifiedSection({ state }: { state: ViewerState }) {
     const checked = items.filter(v => v.source === 'derived');
     const reported = items.filter(v => v.source !== 'derived');
     const failed = checked.filter(v => v.exitCode !== undefined && v.exitCode !== 0).length;
+    const stale = checked.some(v => (v.changedSince ?? 0) > 0);
     const count = reported.length === 0
         ? `${checked.length} checked`
         : `${checked.length} checked · ${reported.length} reported`;
@@ -367,7 +368,7 @@ export function VerifiedSection({ state }: { state: ViewerState }) {
                 kicker="Verified"
                 title="What was checked, and what happened"
                 count={count}
-                tone={failed > 0 ? 'warn' : checked.length > 0 ? 'good' : undefined}
+                tone={failed > 0 || stale ? 'warn' : checked.length > 0 ? 'good' : undefined}
             />
             {checked.length > 0 && <EvidenceRows items={checked} />}
             {reported.length > 0 && (
@@ -389,9 +390,18 @@ function EvidenceRows({ items }: { items: ViewerVerification[] }) {
                 const hasWarnings = !!(v.warnings && v.warnings.length > 0);
                 const claimed = v.source !== 'derived';
                 const mark = hasWarnings ? '⚠' : claimed ? '\u201D' : '✓';
+                const changed = !claimed ? v.changedSince ?? 0 : 0;
+                const isStale = changed > 0;
+                const atLine = !claimed && v.commit
+                    ? isStale
+                        ? `at ${v.commit}, ${changed} ${changed === 1 ? 'file' : 'files'} changed since`
+                        : `at ${v.commit}`
+                    : undefined;
                 const rowClass = claimed
                     ? 'dossier-evidence__row dossier-evidence__row--claimed'
-                    : 'dossier-evidence__row';
+                    : isStale
+                        ? 'dossier-evidence__row dossier-evidence__row--stale'
+                        : 'dossier-evidence__row';
                 const checkClass = hasWarnings
                     ? 'dossier-check dossier-check--warn'
                     : claimed
@@ -401,11 +411,15 @@ function EvidenceRows({ items }: { items: ViewerVerification[] }) {
                     <article class={rowClass} key={i}>
                         <span class={checkClass} aria-hidden="true">{mark}</span>
                         <div class="dossier-evidence__body">
-                            <h3>{v.what}</h3>
+                            <h3>
+                                {v.what}
+                                {isStale && <span class="dossier-evidence__stale">OUT OF DATE</span>}
+                            </h3>
                             {v.result && <p>{v.result}</p>}
                             {hasWarnings && (
                                 <p class="dossier-evidence__warnings">{v.warnings!.join('; ')}</p>
                             )}
+                            {atLine && <p class="dossier-evidence__at">{atLine}</p>}
                         </div>
                         {v.command && <code>{v.command}</code>}
                     </article>
