@@ -126,19 +126,43 @@ class CaptureFieldTests(unittest.TestCase):
                            "speckit-extension/tests/test_living_validate.py,"
                            "src/features/specs/__tests__/requirementSlices.test.ts",
                            written["FR-003"]["title"])
+        wc.upsert_coverage(self.fd, "FR-004", written["FR-004"]["tasks"], None,
+                           assumes=written["FR-004"]["assumes"])
         rows = json.loads((fixtures / "expected-rows.json").read_text(encoding="utf-8"))
         produced = _ctx(self.fd)["coverage"]
         for row in rows:
             entry = produced[row["req"]]
             self.assertEqual(entry.get("title"), row.get("title"))
             self.assertEqual(entry["tasks"], row["tasks"])
-            self.assertEqual(entry["tests"], row["tests"])
+            self.assertEqual(entry.get("tests", []), row["tests"])
+            self.assertEqual(entry.get("assumes"), row.get("assumes"))
 
     def test_the_typescript_half_reads_the_same_fixture(self) -> None:
         twin = (Path(__file__).resolve().parents[3] / "apps" / "vscode" / "src" / "features" / "spec-viewer"
                 / "__tests__" / "stateDerivation.test.ts").read_text(encoding="utf-8")
         self.assertIn("coverage-shape", twin)
         self.assertIn("expected-rows.json", twin)
+
+    def test_an_assumption_alone_creates_the_entry(self) -> None:
+        wc.upsert_coverage(self.fd, "FR-004", None, None, assumes="  the clock, in UTC  ")
+        self.assertEqual(_ctx(self.fd)["coverage"]["FR-004"], {"assumes": "the clock, in UTC"})
+
+    def test_an_assumption_keeps_the_title_tasks_and_tests(self) -> None:
+        wc.upsert_coverage(self.fd, "FR-001", ["T001"], ["a.test.ts"], "Saves filters")
+        wc.upsert_coverage(self.fd, "FR-001", None, None, assumes="the orders index")
+        wc.upsert_coverage(self.fd, "FR-001", None, None, assumes="the orders index, warm")
+        self.assertEqual(_ctx(self.fd)["coverage"]["FR-001"], {
+            "title": "Saves filters", "tasks": ["T001"], "tests": ["a.test.ts"],
+            "assumes": "the orders index, warm",
+        })
+
+    def test_a_blank_or_non_text_assumption_writes_nothing(self) -> None:
+        self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", None, None, assumes="   "))
+        self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", None, None, assumes=["a list"]))
+
+    def test_the_batch_lands_an_assumption_like_the_flag(self) -> None:
+        wc.apply_batch(self.fd, json.dumps({"coverage": [{"req": "FR-002", "tasks": "T003", "assumes": "the database"}]}), "implement")
+        self.assertEqual(_ctx(self.fd)["coverage"]["FR-002"], {"tasks": ["T003"], "assumes": "the database"})
 
     def test_coverage_upsert_keeps_other_requirements(self) -> None:
         wc.upsert_coverage(self.fd, "FR-001", ["T001"], None)

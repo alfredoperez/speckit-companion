@@ -568,11 +568,12 @@ def _as_name_list(value) -> list | None:
 
 def upsert_coverage(
     feature_dir: Path, req: str, tasks: list[str] | None, tests: list[str] | None,
-    title: str | None = None,
+    title: str | None = None, assumes: str | None = None,
 ) -> Path | None:
     """Upsert ctx["coverage"][req] non-destructively (clone of _upsert_task_summary):
     only a supplied value replaces its slot, so the tasks-complete write (title +
-    tasks) and the implement-close write (tests) compose without erasing each other."""
+    tasks), the implement-close write (tests) and an assumption (what the
+    requirement relies on without a test) compose without erasing each other."""
     req = req.strip()
     if not req:
         return None
@@ -582,7 +583,8 @@ def upsert_coverage(
     tasks = _as_name_list(tasks)
     tests = _as_name_list(tests)
     title = title.strip() if title else None
-    if not tasks and not tests and not title:
+    assumes = assumes.strip() if isinstance(assumes, str) else None
+    if not tasks and not tests and not title and not assumes:
         # Nothing to record — writing {} would fake a coverage entry.
         return None
     target = feature_dir / ".spec-context.json"
@@ -600,6 +602,8 @@ def upsert_coverage(
         entry["tasks"] = tasks
     if tests:
         entry["tests"] = tests
+    if assumes:
+        entry["assumes"] = assumes
     coverage[req] = entry
     ctx["coverage"] = coverage
     atomic_write(target, ctx)
@@ -748,7 +752,7 @@ def apply_batch(feature_dir: Path, raw: str, step: str) -> tuple:
                  f"{len(items)} {field}")
     for item in doc.get("coverage") or []:
         note(upsert_coverage(feature_dir, item["req"], item.get("tasks"),
-                             item.get("tests"), item.get("title")),
+                             item.get("tests"), item.get("title"), item.get("assumes")),
              f"coverage {item['req']}")
     summary = doc.get("step_summary")
     if summary:

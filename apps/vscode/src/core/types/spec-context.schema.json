@@ -123,8 +123,10 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
+          "title": { "type": "string" },
           "tasks": { "type": "array", "items": { "type": "string" } },
-          "tests": { "type": "array", "items": { "type": "string" } }
+          "tests": { "type": "array", "items": { "type": "string" } },
+          "assumes": { "type": "string" }
         }
       }
     },

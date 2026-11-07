@@ -881,6 +881,12 @@ def _main() -> int:
              "are captured as readable content, not just ids.",
     )
     parser.add_argument(
+        "--assumes", dest="assumes", nargs=2, default=None, metavar=("REQ_ID", "TEXT"),
+        help="Record what a requirement relies on without a test (a library, the clock, "
+             "the database) on coverage.<REQ_ID>. Replaces an earlier assumption; keeps "
+             "its title, tasks and tests.",
+    )
+    parser.add_argument(
         "--step-summary", dest="step_summary", default=None, metavar="JSON|TEXT",
         help="Upsert step_summaries.<--step> from a JSON object with a 'summary' key "
              "(plus key_finding/risks) or bare text.",
@@ -888,7 +894,8 @@ def _main() -> int:
     parser.add_argument(
         "--batch", dest="batch", default=None, metavar="JSON",
         help="Apply the whole end-of-step capture volley in one call — a JSON object with "
-             "any of verified/decisions/concerns/expectations/context/coverage/step_summary/"
+             "any of verified/decisions/concerns/expectations/context/coverage (with tasks/tests/"
+             "title/assumes)/step_summary/"
              "last_action, written through the same additive writers. Collapses the volley "
              "to one invocation; each writer still performs its own atomic write.",
     )
@@ -925,7 +932,7 @@ def _main() -> int:
     # mode, which always operates on the implement step.
     capture_mode = bool(
         args.decisions or args.verified or args.verify_runs or args.concerns or args.expectations
-        or args.coverage_req or args.step_summary or args.classification or args.context_entries
+        or args.coverage_req or args.assumes or args.step_summary or args.classification or args.context_entries
         or args.batch or args.request
     )
     # `--feature-dir` if it was given; the resolved one is not bound until later,
@@ -1098,6 +1105,14 @@ def _main() -> int:
                                 f"(no coverage entry could be resolved in {feature_dir})")
             else:
                 captured.append(f"[companion] Upserted coverage for {args.coverage_req} in {target}")
+        if args.assumes:
+            req, text = args.assumes
+            target = upsert_coverage(feature_dir, req, None, None, None, text)
+            if target is None:
+                declined.append(f"the assumption for {req.strip() or 'a blank requirement'} was not "
+                                f"written: the requirement or the text is blank")
+            else:
+                captured.append(f"[companion] Recorded what {req.strip()} assumes in {target}")
         if args.step_summary:
             target = upsert_step_summary(feature_dir, args.step, args.step_summary)
             captured.append(f"[companion] Recorded {args.step} step summary in {target}")
@@ -1319,7 +1334,7 @@ _CAPTURE_FLAGS = (
     "--batch",
     "--decision", "--verified", "--concern", "--expectation", "--context",
     "--coverage-req", "--step-summary", "--classification", "--living-specs",
-    "--living-spec-skip", "--request",
+    "--living-spec-skip", "--request", "--assumes",
 )
 
 _OP_FILE = {

@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Added
 - **The doctor checks every agent.** It names each agent's layout, an agent ==missing Companion's commands==, and a `specify` CLI missing from PATH. ([#951](https://github.com/alfredoperez/speckit-companion/pull/951)) <!-- area: install -->
-- **A spec keeps its ticket and your words.** Specify writes a Source line, records the ticket and ==stores your request word for word==, and decisions record who answered and when. ([#945](https://github.com/alfredoperez/speckit-companion/pull/945), [#964](https://github.com/alfredoperez/speckit-companion/pull/964)) <!-- area: run-record -->
+- **A spec keeps its ticket, request and assumptions.** Specify records the ticket and ==stores your request word for word==, decisions record who answered, and implement records what goes untested. ([#945](https://github.com/alfredoperez/speckit-companion/pull/945), [#964](https://github.com/alfredoperez/speckit-companion/pull/964), [#965](https://github.com/alfredoperez/speckit-companion/pull/965)) <!-- area: run-record -->
 - **Step times from the agent itself.** Typing a step command records its start, and a turn closes the step only when its document is really written. ([#939](https://github.com/alfredoperez/speckit-companion/pull/939)) <!-- area: run-record -->
 
 ### Changed

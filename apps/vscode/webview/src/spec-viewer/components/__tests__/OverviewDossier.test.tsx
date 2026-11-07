@@ -280,6 +280,70 @@ describe('OverviewTiming', () => {
 });
 
 describe('CoverageSection', () => {
+    const renderRows = (coverage: unknown[]) => {
+        const host = document.createElement('div');
+        render(h(CoverageSection, { state: base({ coverage } as never) }), host);
+        return host;
+    };
+
+    it('labels an assumed row and shows its assumption', () => {
+        const host = renderRows([{ req: 'FR-4', tasks: ['T4'], tests: [], assumes: 'relies on the index' }]);
+        expect(host.querySelector('.dossier-coverage__state.is-assumed')?.textContent).toContain('Assumed');
+        expect(host.querySelector('.dossier-coverage__assumes')?.textContent).toBe('relies on the index');
+    });
+
+    it('keeps the test count and shows the assumption on a tested row', () => {
+        const host = renderRows([{ req: 'FR-3', tasks: ['T3'], tests: ['a.test.ts'], assumes: 'relies on reload' }]);
+        expect(host.querySelector('.dossier-coverage__state.is-traced')?.textContent).toContain('1 test');
+        expect(host.querySelector('.dossier-coverage__assumes')?.textContent).toBe('relies on reload');
+    });
+
+    it('keeps a missing test marked missing even with an assumption', () => {
+        const host = renderRows([{ req: 'FR-1', tasks: ['T1'], tests: ['a.test.ts'], missingTests: ['a.test.ts'], assumes: 'x' }]);
+        expect(host.querySelector('.dossier-coverage__state.is-missing')).not.toBeNull();
+        expect(host.querySelector('.is-assumed')).toBeNull();
+    });
+
+    it('counts assumed rows as traced', () => {
+        const host = renderRows([
+            { req: 'FR-1', tasks: [], tests: ['a'] },
+            { req: 'FR-2', tasks: [], tests: [] },
+            { req: 'FR-3', tasks: [], tests: ['b'], assumes: 'x' },
+            { req: 'FR-4', tasks: [], tests: [], assumes: 'y' },
+        ]);
+        expect(host.textContent).toContain('3/4 traced');
+    });
+
+    it('stays a warning when every row is traced but some only by an assumption', () => {
+        const host = renderRows([
+            { req: 'FR-1', tasks: [], tests: ['a'] },
+            { req: 'FR-2', tasks: [], tests: [], assumes: 'y' },
+        ]);
+        expect(host.textContent).toContain('2/2 traced');
+        expect(host.querySelector('.dossier-count--warn')).not.toBeNull();
+    });
+
+    it('lists untraced rows first and assumed second', () => {
+        const host = renderRows([
+            { req: 'FR-1', tasks: [], tests: ['a'] },
+            { req: 'FR-2', tasks: [], tests: [], assumes: 'y' },
+            { req: 'FR-3', tasks: [], tests: [] },
+        ]);
+        const order = Array.from(host.querySelectorAll('.dossier-coverage__req b')).map(b => b.textContent);
+        expect(order).toEqual(['FR-3', 'FR-2', 'FR-1']);
+    });
+
+    it('renders no assumption line for a row without one', () => {
+        const host = renderRows([{ req: 'FR-1', tasks: ['T1'], tests: ['a'] }]);
+        expect(host.querySelector('.dossier-coverage__assumes')).toBeNull();
+    });
+
+    it('renders assumption markup as text', () => {
+        const host = renderRows([{ req: 'FR-1', tasks: [], tests: [], assumes: '<b>x</b>' }]);
+        expect(host.querySelector('.dossier-coverage__assumes b')).toBeNull();
+        expect(host.querySelector('.dossier-coverage__assumes')?.textContent).toBe('<b>x</b>');
+    });
+
     it('renders when at least one requirement has a linked test', () => {
         const host = document.createElement('div');
         render(h(CoverageSection, {

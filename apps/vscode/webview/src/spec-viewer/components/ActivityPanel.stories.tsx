@@ -333,6 +333,23 @@ export const DossierRequestAndDecisions: Story = {
     },
 };
 
+// Coverage with an assumed requirement: tested, untraced, tested-with-assumption, assumed only.
+export const DossierAssumedCoverage: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            coverage: [
+                { req: 'FR-001', title: 'Persist the theme choice', tasks: ['T001'], tests: ['theme.test.ts'] },
+                { req: 'FR-002', title: 'Follow the editor theme', tasks: ['T002'], tests: [] },
+                { req: 'FR-003', title: 'Keep the choice after a reload', tasks: ['T003'], tests: ['reload.test.ts'], assumes: 'relies on VS Code workspace state surviving a reload' },
+                { req: 'FR-004', title: 'Load orders quickly', tasks: ['T040'], tests: [], assumes: 'relies on the orders index; not timed' },
+            ],
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // Fully covered, no concerns: the coverage count pill reads as success and
 // no warning treatments render anywhere.
 export const DossierAllTraced: Story = {

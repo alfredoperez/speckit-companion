@@ -1,6 +1,7 @@
 import type { ViewerState, ViewerCoverageRow, ViewerVerification } from '../types';
 import { formatElapsed, formatAbsolute } from '../relativeTime';
 import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
+import { coverageState, isTraced } from '../coverageState';
 import { STEP_NAMES } from '../../../../src/core/types/specContext';
 
 /**
@@ -489,12 +490,12 @@ export function DecisionsSection({ state }: { state: ViewerState }) {
 const COVERAGE_SHOWN = 6;
 
 function CoverageRow({ row }: { row: NonNullable<ViewerState['coverage']>[number] }) {
-    const tested = row.tests.length > 0;
     return (
         <article class="dossier-coverage__row">
             <div class="dossier-coverage__req">
                 <b>{row.req}</b>
                 {row.title && <span>{row.title}</span>}
+                {row.assumes && <span class="dossier-coverage__assumes">{row.assumes}</span>}
             </div>
             <div class="dossier-coverage__tasks">
                 {row.tasks.map(task => <code key={task}>{task}</code>)}
@@ -512,13 +513,11 @@ function CoverageRow({ row }: { row: NonNullable<ViewerState['coverage']>[number
  * because it reads as coverage that exists.
  */
 function coverageStateClass(row: ViewerCoverageRow): string {
-    if (row.missingTests?.length) { return 'dossier-coverage__state is-missing'; }
-    return row.tests.length > 0
-        ? 'dossier-coverage__state is-traced'
-        : 'dossier-coverage__state is-untraced';
+    return `dossier-coverage__state is-${{ missing: 'missing', tested: 'traced', assumed: 'assumed', untraced: 'untraced' }[coverageState(row)]}`;
 }
 
 function coverageStateLabel(row: ViewerCoverageRow): string {
+    if (coverageState(row) === 'assumed') { return 'Assumed'; }
     const missing = row.missingTests?.length ?? 0;
     if (missing) {
         return missing === row.tests.length
@@ -534,7 +533,7 @@ export function CoverageSection({ state }: { state: ViewerState }) {
     const rows = state.coverage;
     if (!rows || rows.length === 0) return null;
 
-    const traced = rows.filter(r => r.tests.length > 0).length;
+    const traced = rows.filter(isTraced).length;
     // The section used to hide itself when nothing was traced, on the reasoning
     // that a bare zero reads as failure when the pipeline simply never mapped
     // tests. But the header strip goes on showing "0 of N traced" two inches
@@ -542,7 +541,11 @@ export function CoverageSection({ state }: { state: ViewerState }) {
     // requirements traced is not an unknown — it is the most important finding
     // the page can carry, so it is stated.
     // Untraced requirements lead — the gaps are the signal.
-    const ordered = [...rows.filter(r => r.tests.length === 0), ...rows.filter(r => r.tests.length > 0)];
+    const ordered = [
+        ...rows.filter(r => coverageState(r) === 'untraced'),
+        ...rows.filter(r => coverageState(r) === 'assumed'),
+        ...rows.filter(r => { const k = coverageState(r); return k === 'tested' || k === 'missing'; }),
+    ];
     const rest = ordered.slice(COVERAGE_SHOWN);
 
     return (
@@ -551,7 +554,7 @@ export function CoverageSection({ state }: { state: ViewerState }) {
                 kicker="Coverage"
                 title="Requirement → task → test"
                 count={`${traced}/${rows.length} traced`}
-                tone={traced === rows.length ? 'good' : 'warn'}
+                tone={rows.every(r => coverageState(r) === 'tested') ? 'good' : 'warn'}
             />
             <div class="dossier-coverage__head" aria-hidden="true">
                 <span>Requirement</span><span>Delivery</span><span>Evidence</span>

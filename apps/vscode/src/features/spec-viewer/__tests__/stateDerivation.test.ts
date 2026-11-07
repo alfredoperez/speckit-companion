@@ -505,9 +505,20 @@ describe('reasoning-trail normalization', () => {
             const state = deriveViewerState(makeContext({ coverage: read('written.json') } as never));
             expect(state.coverage).toEqual(
                 read('expected-rows.json').map((row: Record<string, unknown>) => ({
-                    req: row.req, title: row.title, tasks: row.tasks, tests: row.tests,
+                    req: row.req, title: row.title, tasks: row.tasks, tests: row.tests, assumes: row.assumes,
                 })),
             );
+        });
+
+        it('drops a blank assumption and trims a padded one', () => {
+            const state = deriveViewerState(makeContext({
+                coverage: {
+                    'FR-001': { tasks: ['T001'], tests: [], assumes: '   ' },
+                    'FR-002': { tasks: ['T002'], tests: [], assumes: '  relies on the index  ' },
+                },
+            } as never));
+            expect(state.coverage?.[0].assumes).toBeUndefined();
+            expect(state.coverage?.[1].assumes).toBe('relies on the index');
         });
 
         it('skips malformed entries and yields absent for an empty map', () => {
