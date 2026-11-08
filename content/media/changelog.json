@@ -1,5 +1,84 @@
 {
   "_readme": "Screenshots for the site's /changelog page, keyed by release (<product>@<version>, product vscode or speckit) then by the media id a highlight names in its <!-- area: …; pr: …; media: … --> comment. file is a repo-relative PNG under apps/website/public/ or docs/screenshots/generated/. alt is required. highlight is optional, in the image's own pixels, and is drawn over the image by the page. The site build fails on an unknown id, a missing alt or file, an unused shot, or a key that matches no release. See apps/website/src/components/changelog/releaseMedia.ts.",
+  "vscode@0.38.0": {
+    "request-verbatim": {
+      "file": "apps/website/public/changelog/vscode-0.38.0-request-verbatim.png",
+      "alt": "The Overview's Request block quoting the developer's words exactly, above the spec summary.",
+      "caption": "Your request, quoted word for word.",
+      "highlight": {
+        "x": 144,
+        "y": 308,
+        "w": 1240,
+        "h": 164
+      }
+    },
+    "decision-authors": {
+      "file": "apps/website/public/changelog/vscode-0.38.0-decision-authors.png",
+      "alt": "Decisions on the Overview, each tagged with who made it: the developer, the agent or a default.",
+      "caption": "Every decision says who made it.",
+      "highlight": {
+        "x": 144,
+        "y": 226,
+        "w": 1280,
+        "h": 350
+      }
+    },
+    "assumed-weak": {
+      "file": "apps/website/public/changelog/vscode-0.38.0-assumed-weak.png",
+      "alt": "The requirements table with rows marked Assumed and Weak beside the tested ones.",
+      "caption": "Assumed and weakly tested requirements stand out.",
+      "highlight": {
+        "x": 144,
+        "y": 230,
+        "w": 1280,
+        "h": 342
+      }
+    },
+    "stale-check": {
+      "file": "apps/website/public/changelog/vscode-0.38.0-stale-check.png",
+      "alt": "The Verified section: a passed check, and one tinted amber and marked Out of date because files changed since it ran.",
+      "caption": "A check reads Out of date once the code moves past it.",
+      "highlight": {
+        "x": 216,
+        "y": 238,
+        "w": 884,
+        "h": 163
+      }
+    },
+    "review-depth": {
+      "file": "apps/website/public/changelog/vscode-0.38.0-review-depth.png",
+      "alt": "A review depth line on the Overview, raised by the agent with its one-line reason.",
+      "caption": "How deep the review went, and why.",
+      "highlight": {
+        "x": 144,
+        "y": 280,
+        "w": 945,
+        "h": 79
+      }
+    },
+    "source-ticket": {
+      "file": "apps/website/public/changelog/vscode-0.38.0-source-ticket.png",
+      "alt": "The Overview's header naming the ticket the spec came from and the spec it extends.",
+      "caption": "The ticket a spec came from.",
+      "highlight": {
+        "x": 844,
+        "y": 266,
+        "w": 372,
+        "h": 107
+      }
+    },
+    "bug-times": {
+      "file": "apps/website/public/changelog/vscode-0.38.0-bug-times.png",
+      "alt": "A bug page with step times for assess, fix and test, and a review pause between them.",
+      "caption": "Bug runs with real step times.",
+      "highlight": {
+        "x": 224,
+        "y": 363,
+        "w": 1456,
+        "h": 176
+      }
+    }
+  },
   "vscode@0.37.0": {
     "plan-calls": {
       "file": "apps/website/public/changelog/vscode-0.37.0-plan-calls.png",
