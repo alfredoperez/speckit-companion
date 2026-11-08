@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Drives a real VS Code window with this extension and a throwaway project (or an existing one, --sandbox), and saves a screenshot per step.
-// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark|bearded] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet] [--record <dir>]
+// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark|bearded|anthracite] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet] [--record <dir>]
 // --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
 // --sheet also writes every picture of the run onto one reduced sheet (_sheet.png), the file to look at first.
 // --record also runs the recording steps, each saving its frames and one JSON of facts under <dir>/<name>/.
@@ -27,6 +27,7 @@ const THEMES = {
     light: { label: 'Quiet Light' },
     dark: { label: 'Default Dark Modern' },
     bearded: { label: 'Bearded Theme Light', extension: 'beardedbear.beardedtheme' },
+    anthracite: { label: 'Bearded Theme Anthracite', extension: 'beardedbear.beardedtheme' },
 };
 const THEME_LABEL = THEMES[THEME]?.label ?? THEME;
 const ONLY = arg('only', '').split(',').filter(Boolean);
