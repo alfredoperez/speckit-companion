@@ -307,6 +307,28 @@ export const DossierRich: Story = {
     },
 };
 
+// Where the work came from: a ticket URL as a link, and the earlier spec it extends.
+export const DossierSourceAndLineage: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            source: 'https://github.com/acme/app/issues/42',
+            extends: 'specs/041-saved-filters',
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
+// A plain ticket id stays text.
+export const DossierSourceId: Story = {
+    render: () => {
+        viewerState.value = { ...richReasoningState, source: 'TODO-42', supersedes: 'specs/030-old-filters' };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // The verbatim request plus decisions: an agent's, a person's, and one reopened twice.
 export const DossierRequestAndDecisions: Story = {
     render: () => {

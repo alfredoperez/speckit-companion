@@ -1196,6 +1196,19 @@ describe('SpecExplorerProvider', () => {
             expect(specs.map(s => s.label)).toEqual(['Design — Tighten Safety']);
         });
 
+        it('matches by the source ticket', async () => {
+            seedThreeSpecs();
+            (readSpecContextSyncSafe as jest.Mock).mockImplementation((specPath: string) => {
+                if (specPath.includes('071-')) return { status: 'active', specName: 'Tree group counts', source: 'TODO-42' };
+                return { status: 'active', specName: 'Other' };
+            });
+            const filteredProvider = new SpecExplorerProvider(context, outputChannel, buildFilterState('TODO-42'));
+
+            const groups = await filteredProvider.getChildren();
+            const specs = await filteredProvider.getChildren(groups[0]);
+            expect(specs.map(s => s.label)).toEqual(['Tree Group Counts']);
+        });
+
         it('returns empty root when filter matches zero specs', async () => {
             seedThreeSpecs();
             const filterState = buildFilterState('zzz');

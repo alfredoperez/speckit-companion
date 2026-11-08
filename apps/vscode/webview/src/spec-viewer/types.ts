@@ -164,6 +164,12 @@ export interface ViewerState {
     /** Reasoning-trail capture, normalized for rendering. */
     intent?: string;
     request?: string;
+    /** The ticket the spec came from, an id or a URL. */
+    source?: string;
+    /** An earlier spec folder this one extends. */
+    extends?: string;
+    /** An earlier spec folder this one replaces. */
+    supersedes?: string;
     expectations?: string[];
     context?: string[];
     verified?: ViewerVerification[];
