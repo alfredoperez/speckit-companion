@@ -59,6 +59,11 @@ apps/vscode/webview/**
 .pytest_cache/**
 # Screenshot output from `npm run canvas:shots`; gitignored, so only this file keeps it out of the .vsix.
 .canvas-shots/**
+# The same for the real-window shots, recordings and terminal and desktop checks.
+.shots/**
+.record/**
+.terminal-check/**
+.desktop-check/**
 .impeccable/**
 .sdd.json
 tsconfig.webview.json
