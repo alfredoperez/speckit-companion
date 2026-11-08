@@ -815,6 +815,32 @@ def _installed_agents(root: Path) -> list | None:
 
 #: The check is about the project, not a spec, so a run over many specs reports it once.
 _AGENTS_REPORTED: set = set()
+_NUMBERS_REPORTED: set = set()
+#: A sequential prefix: a few digits, then a dash. Eight or more digits is a date or timestamp.
+_SEQ_PREFIX = re.compile(r"^(\d{1,7})-")
+
+
+def check_numbering(feature_dir: Path) -> tuple:
+    """Do two feature folders share a sequential number? Reported once per specs folder per run."""
+    specs = Path(feature_dir).resolve().parent
+    if specs in _NUMBERS_REPORTED:
+        return CheckStatus("numbering", "skipped", "reported with the first spec of this run"), []
+    by_number: dict = {}
+    for child in sorted(specs.iterdir()) if specs.is_dir() else []:
+        match = _SEQ_PREFIX.match(child.name)
+        if child.is_dir() and match:
+            by_number.setdefault(int(match.group(1)), []).append(child.name)
+    _NUMBERS_REPORTED.add(specs)
+    shared = {n: names for n, names in sorted(by_number.items()) if len(names) > 1}
+    if not by_number:
+        return CheckStatus("numbering", "not-applicable", "no sequentially numbered spec folders"), []
+    return CheckStatus("numbering", "ran"), [
+        Finding("numbering", "warning", f"{len(names)} spec folders share the number {names[0].split('-')[0]}",
+                f"{', '.join(names)} start with the same number, usually because two runs started together. "
+                f"Renumber all but one so links and commands name a single spec.",
+                {"number": n, "folders": names})
+        for n, names in shared.items()
+    ]
 
 
 def check_agents(root: Path) -> tuple:
