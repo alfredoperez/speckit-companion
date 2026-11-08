@@ -26,6 +26,9 @@ The Overview is the first tab in the viewer's rail. It reads the run record, a `
 | A checked row in Verified | A command the recorder ran, with its exit code | Measured |
 | A reported row in Verified, marked with a quote | The assistant's account of something that couldn't be run | Nothing was run for you |
 | Evidence in Coverage | The viewer checks that each named test file is on disk | Nothing runs the test |
+| "Out of date" on a check | The viewer compares the files the check ran on with the files now | Measured |
+| Review depth | Computed from the files the change touched; the assistant can only raise it, with a reason | Computed, then the assistant's raise |
+| Weak in Coverage | Your mutation tool's report, when you turned the check on | Measured by that tool |
 | Intent, Expectations, Decisions | The assistant writes them during the run | As good as the run that wrote them |
 
 The Companion Spec Kit extension writes the record and the VS Code extension only reads it. The log only grows: a write that would publish a shorter history is rejected. Commit the file and the record travels with the branch.
@@ -36,7 +39,7 @@ A region with nothing recorded doesn't render, so a thin page means a thin recor
 
 ### Intent and Run overview
 
-The one sentence the run answers to, then the time each phase took, then a card with the approach, the living specs the run updated or read, the working area and a sizing line such as `Sized simple: 6 files, 6 tasks projected`. If the sentence doesn't match what you asked for, stop there.
+The one sentence the run answers to, then your request word for word, then the time each phase took, then a card with the approach, the living specs the run updated or read, the working area and a sizing line such as `Sized simple: 6 files, 6 tasks projected`. If the sentence doesn't match what you asked for, stop there: the quote under it is what you actually typed, stored once when the run started.
 
 <DocFigure
   src="live-run-intent.png"
@@ -62,6 +65,8 @@ One card holds what must stay true and the other what was left out on purpose. W
 
 Each check with its command and outcome. The count reads `3 checked`, or `2 checked · 1 reported`. A count of `0 checked · 5 reported`, as below, means no command was run, so use the list to learn which commands to run yourself.
 
+A checked row reads `at 4f2c9a1`, the commit it ran on. When files outside the spec folders changed after it ran, the row turns amber and reads OUT OF DATE with the number of files changed since: rerun it before trusting it. Under the heading, **Review depth** says how hard the work was reviewed: low, normal or high, computed from the files the change touched, and when the assistant raised it, why. With the [mutation check](/docs/customize/workflow-builder) on, a Mutation check row says how many planted bugs the tests caught.
+
 <DocFigure
   src="live-run-verified.png"
   alt="The Verified region, titled What was checked, and what happened. The count reads 0 checked, 5 reported. The first four rows show, each with a quote mark, what was checked, the word pass, and the command."
@@ -70,7 +75,7 @@ Each check with its command and outcome. The count reads `3 checked`, or `2 chec
 
 ### Decisions
 
-Each decision keeps the choice, the reason and what was rejected. The first three show and the rest sit behind "Show N more decisions". [Review with comments](/docs/steps/review-with-comments) is how you say one is wrong.
+Each decision keeps the choice, the reason, what was rejected, and who answered it and when: the assistant, or you when a step stopped to ask. A decision answered again keeps its earlier answer, struck through beneath it. The first three show and the rest sit behind "Show N more decisions". [Review with comments](/docs/steps/review-with-comments) is how you say one is wrong.
 
 <DocFigure
   src="live-run-decisions.png"
@@ -94,6 +99,10 @@ Each requirement, the tasks that delivered it and the tests that exercise it. Un
 | "No test linked" | The requirement names no test |
 | "N tests not found" | It names N tests, and none of the files is on disk |
 | "K of N found" | It names N tests, and only K of the files are on disk |
+| "Assumed" | No test, but the run recorded what it relies on instead, shown under the requirement |
+| "Weak" | Its tests faced bugs the mutation check planted and caught none of them |
+
+Assumed and weak rows count as traced, but the count stays a warning until every requirement has a test that bites.
 
 ### Run log
 
@@ -104,6 +113,14 @@ Collapsed until you open it: the latest activity, when each phase started and en
   alt="The Run log opened: implement completed, the three latest activity lines with their times, the phases with start, active and end times, and the first task lines, each marked AI with the time it was recorded."
   caption="The Run log, opened. Each task line says who recorded it and when."
 />
+
+## Receipts in the pull request
+
+When the run opens a pull request, its body carries a **Receipts** section built from this record, not typed by the assistant: each check with its command and exit code, `claimed by the agent, not run` for reported ones, `out of date` for checks the code moved past, the mutation result, the review depth and the requirements that rest on an assumption. `receipts.py` prints it, and you can run it yourself:
+
+```bash
+python3 .specify/extensions/companion/scripts/receipts.py --feature-dir specs/042-saved-filters
+```
 
 ## When there's no Overview
 

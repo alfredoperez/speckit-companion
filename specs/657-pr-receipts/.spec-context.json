@@ -1,0 +1,420 @@
+{
+  "workflow": "companion",
+  "specName": "The pull request carries the receipts",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T00:53:15.898Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T00:54:00.149Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T00:54:00.377Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:55:01.446Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:55:01.574Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:55:01.979Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T00:55:02.093Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:55:02.246Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:55:02.672Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T00:55:02.774Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:56:20.138Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:56:20.255Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:56:20.374Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:56:20.489Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:56:20.601Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:57:40.148Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:57:52.878Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:16:42.761Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:16:42.784Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T10:19:31.975Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T10:22:00.543Z"
+    }
+  ],
+  "request": "Issue #963: feat: show what is proven, tested, assumed or only claimed for each spec — slice 6 of 6, item r1. PR body must say `Closes #963`.\n\nr1 · The PR carries the receipts: the PR body lists the run's checks with their exit codes, and claimed ones are labelled as claimed. Acceptance: a PR opened by the Companion pipeline lists every recorded check with its exit code and marks claimed ones.",
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "A read-only script prints a Markdown Receipts section and never fails",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_receipts.py::test_an_empty_record_says_so_and_succeeds"
+      ]
+    },
+    "FR-002": {
+      "title": "Run checks show command and exit code; stale ones read out of date",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_receipts.py::test_a_run_check_shows_its_command_and_exit_code",
+        "apps/speckit-extension/tests/test_receipts.py::test_a_check_goes_out_of_date_when_code_changes_and_not_for_spec_edits"
+      ]
+    },
+    "FR-003": {
+      "title": "Reported checks read claimed by the agent, not run",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_receipts.py::test_a_claimed_check_is_labelled"
+      ]
+    },
+    "FR-004": {
+      "title": "Mutation result, review depth and assumed requirements are listed",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_receipts.py::test_mutation_review_depth_and_assumptions_are_listed"
+      ]
+    },
+    "FR-005": {
+      "title": "Implement tells the agent to paste the receipts into the PR body",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "assumes": "the built implement command carries the receipts line, and build.py --check keeps it in sync"
+    },
+    "FR-006": {
+      "title": "Table cells escape what would break the table",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_receipts.py::test_table_breaking_characters_are_escaped"
+      ]
+    },
+    "FR-007": {
+      "title": "The Overview docs page explains every #963 addition and the receipts",
+      "tasks": [
+        "T006"
+      ],
+      "assumes": "the docs page was checked by reading; prose has no test"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "Opening the PR itself, which the project hook does"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts (new receipts.py; capture.py _code_at; status-context.py read pattern)",
+    "area: apps/speckit-extension/scripts/package-manifest.py RUNTIME_SCRIPTS and .vscodeignore",
+    "area: apps/speckit-extension/nodes/implement/record-verified.md",
+    "area: apps/website/src/content/docs/docs/results/the-overview.mdx",
+    "constraint: a new capture script goes on two packing lists"
+  ],
+  "intent": "Print a Receipts section from the run record for the pull request: checks with exit codes, claimed ones labelled, stale ones flagged, mutation, review depth and assumptions",
+  "source": "#963",
+  "workingBranch": "657-pr-receipts",
+  "decisions": [
+    {
+      "decision": "Receipts come from a separate read-only script",
+      "why": "The writer takes the lock; printing receipts must not",
+      "rejected": "A write-context flag",
+      "by": "agent",
+      "at": "2026-11-08T00:55:01.686Z"
+    },
+    {
+      "decision": "Staleness is computed when the receipts are printed",
+      "why": "The PR should reflect the code being merged",
+      "rejected": "Printing the stored commit only",
+      "by": "agent",
+      "at": "2026-11-08T00:55:01.686Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: receipts.py prints the table from the record; implement and the PR hook paste it; the Overview page explains #963"
+    },
+    "tasks": {
+      "summary": "8 tasks: receipts script, packaging, tests, implement node, PR hook, docs, polish"
+    }
+  },
+  "approach": "A read-only receipts.py prints a Receipts section from the run record with exit codes, claimed rows, stale checks, mutation, review depth and assumptions. Implement and the PR hook paste it into the PR.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "receipts.py prints the table, claimed and stale rows, mutation, review depth, assumptions; escapes cells; never fails",
+      "files": [
+        "apps/speckit-extension/scripts/receipts.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Shipped: RUNTIME_SCRIPTS, VSIX_ROOTS, a ! rule; package-manifest --check OK",
+      "files": [
+        "apps/speckit-extension/scripts/package-manifest.py",
+        ".vscodeignore"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Six receipts tests in a real git sandbox",
+      "files": [
+        "apps/speckit-extension/tests/test_receipts.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Record node: paste the receipts into the PR body unedited; body rebuilt",
+      "files": [
+        "apps/speckit-extension/nodes/implement/record-verified.md",
+        "apps/speckit-extension/commands/speckit.companion.implement.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "This repo's PR hook pastes the receipts",
+      "files": [
+        ".specify/companion.yml"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Overview page explains the request quote, decision authors, assumed, weak, stale checks, review depth and receipts",
+      "files": [
+        "apps/website/src/content/docs/docs/results/the-overview.mdx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Changelog line for PR receipts",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Python suite 1913 OK; build, budget, emissions, parity, manifest, tsc green",
+      "files": [
+        "specs/657-pr-receipts/tasks.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Receipts tests",
+      "command": "python3 -m unittest apps/speckit-extension/tests/test_receipts.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 4.9,
+      "result": "---------------------------------------------------------------------- · Ran 13 tests in 4.830s · OK",
+      "commit": "78e9b15b",
+      "tree": "364ef5518605c45ea2be09634cf30e4c47a8d121"
+    },
+    {
+      "what": "Command bodies match their nodes",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "78e9b15b",
+      "tree": "f7e8687cc35c09ce94fc68f00fc2c9ded2f7666d"
+    },
+    {
+      "what": "Runtime scripts packed",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 27 runtime scripts, closure matches the declared list",
+      "commit": "78e9b15b",
+      "tree": "217e2f025489dae30a8facb6464ac4dfdc0451a9"
+    },
+    {
+      "what": "Instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "speckit.companion.mark-complete.md                 0       0      0      48 · speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19",
+      "commit": "17c8ccbf",
+      "tree": "9288f72c6773922962e0d47936c6d970c6ac28ad"
+    },
+    {
+      "what": "Type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.9,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "78e9b15b",
+      "tree": "e6f12252404e0b63a3fa52e9e5f7c7d3f4a7512d"
+    },
+    {
+      "what": "Spec-kit extension suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 139.2,
+      "result": "---------------------------------------------------------------------- · Ran 1920 tests in 138.903s · OK (skipped=8)",
+      "commit": "78e9b15b",
+      "tree": "98e6eddf2771395937d6c5dc2024d49a7711e096"
+    }
+  ],
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "9 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-08T10:19:32.018Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-08T10:19:32.065Z",
+      "by": "extension",
+      "finishedAt": "2026-11-08T10:22:00.624Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

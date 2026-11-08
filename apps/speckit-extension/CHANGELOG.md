@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ### Added
 - **The doctor checks every agent.** It names each agent's layout, an agent ==missing Companion's commands==, and a `specify` CLI missing from PATH. ([#951](https://github.com/alfredoperez/speckit-companion/pull/951)) <!-- area: install -->
 - **A spec keeps its ticket, request and assumptions.** It stores ==your request verbatim==, decision authors, untested assumptions, each check's commit, a risk tier, and opt-in mutation results. ([#945](https://github.com/alfredoperez/speckit-companion/pull/945), [#964](https://github.com/alfredoperez/speckit-companion/pull/964), [#965](https://github.com/alfredoperez/speckit-companion/pull/965), [#966](https://github.com/alfredoperez/speckit-companion/pull/966), [#967](https://github.com/alfredoperez/speckit-companion/pull/967), [#968](https://github.com/alfredoperez/speckit-companion/pull/968)) <!-- area: run-record -->
+- **Pull requests carry receipts.** The PR body lists each check's ==command and exit code==, marks claimed and stale checks, and names assumptions. ([#969](https://github.com/alfredoperez/speckit-companion/pull/969)) <!-- area: run-record -->
 - **Step times from the agent itself.** Typing a step command records its start, and a turn closes the step only when its document is really written. ([#939](https://github.com/alfredoperez/speckit-companion/pull/939)) <!-- area: run-record -->
 
 ### Changed

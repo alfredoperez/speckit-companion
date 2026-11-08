@@ -76,6 +76,8 @@ RUNTIME_SCRIPTS = frozenset({
     "check_plan.py",
     # Named by the plan step's `pick-blocks` node.
     "plan-blocks.py",
+    # Implement's record node names it; the pull request carries its output.
+    "receipts.py",
 })
 
 BUILD_ONLY = frozenset({
@@ -245,6 +247,7 @@ VSIX_ROOTS = frozenset({
     "config_repair.py",
     # The plan step's `pick-blocks` node names it, and nodes ship in the .vsix.
     "plan-blocks.py",
+    "receipts.py",
 })
 
 

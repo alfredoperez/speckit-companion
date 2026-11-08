@@ -119,6 +119,7 @@ speckit-extension/**
 # install path, so a project building off the bundled extension needs it in the .vsix.
 !apps/speckit-extension/scripts/check_plan.py
 !apps/speckit-extension/scripts/plan-blocks.py
+!apps/speckit-extension/scripts/receipts.py
 # …and the sources they assemble from.
 !apps/speckit-extension/nodes/**
 !apps/speckit-extension/presets/_parts/**
