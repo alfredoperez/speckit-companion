@@ -357,3 +357,46 @@ describe('buildBugStory with a spec-kit run and report freshness', () => {
         expect(checks?.map(check => check.result)).toEqual(['pass', 'skipped', 'not-run']);
     });
 });
+
+describe('step times from file writes', () => {
+    // Noon local time on the header's day, so the file times fall on Oct 1 in any time zone.
+    const base = new Date(2026, 9, 1, 12, 0, 0).getTime();
+    const steps = (story: ReturnType<typeof buildBugStory>) => story?.steps.map(step => step.when);
+
+    it('shows a time and how long each step took when the headers carry only a day', () => {
+        const story = buildBugStory(texts(CART), undefined, {
+            writtenAt: { assessment: base, fix: base + 39_000, test: base + 99_000 },
+        });
+        const [wrong, changed, verified] = steps(story) ?? [];
+        expect(wrong).toMatch(/^Oct 1, 2026, \d{1,2}:\d{2}\s?[AP]M · time from this machine$/);
+        expect(changed).toContain('39s later');
+        expect(verified).toContain('1m 00s later');
+        expect(changed).toContain('time from this machine');
+    });
+
+    it('prefers a full timestamp in the header over the file time', () => {
+        const cart = texts(CART);
+        const assessment = cart.assessment.replace('**Created**: 2026-10-01', '**Created**: 2026-10-01T09:30:00Z');
+        const story = buildBugStory({ ...cart, assessment }, undefined, { writtenAt: { assessment: base } });
+        const at = new Date('2026-10-01T09:30:00Z');
+        const expected = `${at.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}, ${at.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+        expect(steps(story)?.[0]).toBe(expected);
+    });
+
+    it('never measures across a step with no date', () => {
+        const cart = texts(CART);
+        const fix = cart.fix.replace('- **Fixed**: 2026-10-01\n', '');
+        const story = buildBugStory({ ...cart, fix }, undefined, { writtenAt: { assessment: base, fix: base + 1, test: base + 600_000 } });
+        expect(steps(story)?.[2]).not.toContain('later');
+    });
+
+    it('ignores a file time from another day, as after a checkout', () => {
+        const later = new Date(2026, 10, 8, 16, 12).getTime();
+        const story = buildBugStory(texts(CART), undefined, { writtenAt: { assessment: later, fix: later, test: later } });
+        expect(steps(story)).toEqual(['Oct 1, 2026', 'Oct 1, 2026', 'Oct 1, 2026']);
+    });
+
+    it('keeps the day alone when there is no time to show', () => {
+        expect(steps(buildBugStory(texts(CART)))).toEqual(['Oct 1, 2026', 'Oct 1, 2026', 'Oct 1, 2026']);
+    });
+});

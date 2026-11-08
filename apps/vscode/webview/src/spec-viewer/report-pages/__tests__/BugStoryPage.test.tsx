@@ -355,3 +355,33 @@ describe('BugStoryPage with a spec-kit run and report freshness', () => {
         expect(texts(page, '.rp-step__when')).toEqual(['Fix · Oct 1, 2026 · old']);
     });
 });
+
+describe('the tracker link', () => {
+    const story = (source: string): BugStory => ({
+        lead: 'verified',
+        meta: { reported: 'Oct 1, 2026', source },
+        steps: [
+            { id: 'wrong', state: 'done', body: 'It breaks.' },
+            { id: 'changed', state: 'next' },
+            { id: 'verified', state: 'next' },
+        ],
+        risks: [],
+    });
+
+    it('links a Source that is a URL', () => {
+        const container = document.createElement('div');
+        render(<BugStoryPage story={story('https://github.com/acme/shop/issues/88')} />, container);
+        const link = container.querySelector<HTMLAnchorElement>('.rp-meta a');
+        expect(link?.getAttribute('href')).toBe('https://github.com/acme/shop/issues/88');
+        expect(container.querySelector('.rp-meta')?.textContent).toBe('Reported Oct 1, 2026 · Tracker');
+    });
+
+    it('keeps any other Source as text, and never links a script URL', () => {
+        for (const source of ['pasted text', 'javascript:alert(1)', 'https://x.test/1 (Jira)']) {
+            const container = document.createElement('div');
+            render(<BugStoryPage story={story(source)} />, container);
+            expect(container.querySelector('.rp-meta a')).toBeNull();
+            expect(container.querySelector('.rp-meta')?.textContent).toBe(`Reported Oct 1, 2026 from ${source}`);
+        }
+    });
+});

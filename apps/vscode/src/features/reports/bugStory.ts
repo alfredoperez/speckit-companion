@@ -23,6 +23,8 @@ export interface BugReportTexts {
 
 export interface BugStoryExtras {
     engine?: EngineRun;
+    /** When each report file was last written on this machine, in ms. Used only when its header has a day and no time. */
+    writtenAt?: Partial<Record<'assessment' | BugReportName, number>>;
     freshness?: Partial<Record<BugReportName, Freshness>>;
 }
 
@@ -183,10 +185,31 @@ function build(texts: BugReportTexts, nextAction?: string, extras?: BugStoryExtr
         [changed, fix?.fields.get('fixed')],
         [verified, test?.fields.get('tested')],
     ];
-    for (const [step, raw] of whens) {
+    const kinds = ['assessment', 'fix', 'test'] as const;
+    let previous: number | undefined;
+    whens.forEach(([step, raw], index) => {
         const when = formatReportDate(raw);
-        if (when) step.when = when;
-    }
+        if (!when) {
+            previous = undefined;
+            return;
+        }
+        const timed = raw && /\d{1,2}:\d{2}/.test(raw) ? Date.parse(raw) : NaN;
+        const written = extras?.writtenAt?.[kinds[index]];
+        // A file time counts only on the day the header names: a checkout or a later edit moves it.
+        const fileTime = written !== undefined && Number.isFinite(written) && localDay(written) === when ? written : undefined;
+        const at = Number.isFinite(timed) ? timed : fileTime;
+        if (at === undefined) {
+            step.when = when;
+            previous = undefined;
+            return;
+        }
+        const clock = new Date(at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        const parts = [`${Number.isFinite(timed) ? localDay(at) : when}, ${clock}`];
+        if (previous !== undefined && at >= previous) parts.push(`${formatSeconds((at - previous) / 1000)} later`);
+        if (!Number.isFinite(timed)) parts.push('time from this machine');
+        step.when = parts.join(' · ');
+        if (previous === undefined || at >= previous) previous = at;
+    });
 
     const changedBody = prose(fix, 'Summary');
     const files = changedFiles(fix);
@@ -223,6 +246,11 @@ function build(texts: BugReportTexts, nextAction?: string, extras?: BugStoryExtr
     if (extras?.engine && (extras.engine.steps.length > 0 || extras.engine.pausedAt)) story.engine = engineView(extras.engine);
     if (stale.length > 0) story.stale = stale;
     return story;
+}
+
+/** "Oct 1, 2026" for an instant, on this machine's calendar. */
+function localDay(at: number): string {
+    return new Date(at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 export function buildBugStory(texts: BugReportTexts, nextAction?: string, extras?: BugStoryExtras): BugStory | undefined {

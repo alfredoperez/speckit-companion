@@ -1,5 +1,6 @@
 import type { BugEngineView, BugLead, BugMeta, BugReportName, BugStep, BugStepId, BugStory } from '../../../../src/features/reports/reportPageModel';
 import { Inline, Prose } from './fragments';
+import { safeUrl } from '../markdown/inline';
 
 const LEADS: Record<BugLead, string> = {
     assessed: 'Assessed, not fixed yet.',
@@ -22,11 +23,18 @@ const STEPS: Record<BugStepId, { anchor: string; title: string; stage: string; m
 const FIX_STATUS = { applied: 'fix applied', partial: 'fix partly applied', 'not-applied': 'fix not applied' } as const;
 const CHECK_RESULT = { pass: 'pass', fail: 'fail', 'not-run': 'not run', skipped: 'skipped' } as const;
 
+/** A Source that is a tracker URL, safe to link. */
+function trackerUrl(source: string | undefined): string | undefined {
+    const url = source?.trim();
+    return url && /^https?:\/\/\S+$/i.test(url) && safeUrl(url) !== '#' ? url : undefined;
+}
+
 function metaFacts(meta: BugMeta): string[] {
     const facts: string[] = [];
-    if (meta.reported && meta.source) facts.push(`Reported ${meta.reported} from ${meta.source}`);
+    const source = trackerUrl(meta.source) ? undefined : meta.source;
+    if (meta.reported && source) facts.push(`Reported ${meta.reported} from ${source}`);
     else if (meta.reported) facts.push(`Reported ${meta.reported}`);
-    else if (meta.source) facts.push(`Reported from ${meta.source}`);
+    else if (source) facts.push(`Reported from ${source}`);
     if (meta.verdict) facts.push(meta.verdict);
     if (meta.severity) facts.push(`${meta.severity} severity`);
     if (meta.fixStatus) facts.push(FIX_STATUS[meta.fixStatus]);
@@ -158,6 +166,7 @@ function RunLog({ engine }: { engine: BugEngineView }) {
 
 export function BugStoryPage({ story }: { story: BugStory }) {
     const facts = metaFacts(story.meta ?? {});
+    const tracker = trackerUrl(story.meta?.source);
     const steps = story.lead === 'closed' ? story.steps.slice(0, 1) : story.steps;
     const firstNext = steps.find(step => step.state === 'next');
     const risks = story.risks ?? [];
@@ -169,7 +178,17 @@ export function BugStoryPage({ story }: { story: BugStory }) {
             </p>
             {story.engine?.paused ? <PausedNotice paused={story.engine.paused} /> : null}
             {story.stale?.length ? <StaleNotice stale={story.stale} /> : null}
-            {facts.length ? <p class="rp-meta">{facts.join(' · ')}</p> : null}
+            {facts.length || tracker ? (
+                <p class="rp-meta">
+                    {facts.join(' · ')}
+                    {tracker ? (
+                        <>
+                            {facts.length ? ' · ' : ''}
+                            <a class="rp-meta__link" href={tracker} title={tracker}>Tracker</a>
+                        </>
+                    ) : null}
+                </p>
+            ) : null}
             <ol class="rp-line">
                 {steps.map(step => (
                     <Step key={step.id} step={step} nextAction={step === firstNext ? story.nextAction : undefined} />

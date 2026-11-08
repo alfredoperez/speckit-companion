@@ -61,6 +61,8 @@ export interface ReportFixture {
     engine?: EngineRun;
     /** The freshness the reader would compute for the fix and test reports. */
     freshness?: Partial<Record<'fix' | 'test', 'current' | 'stale' | 'unknown'>>;
+    /** When each report was written on this machine, for headers that carry only a day. */
+    writtenAt?: Partial<Record<'assessment' | 'fix' | 'test', number>>;
 }
 
 interface SetShape {
@@ -137,7 +139,7 @@ function readPanel(fixture: ReportFixture): Panel {
         const page = buildBugStory(
             { assessment: fixture.texts.assessment, fix: fixture.texts.fix, test: fixture.texts.test },
             actions.find(action => action.primary)?.label,
-            { engine: fixture.engine, freshness: fixture.freshness },
+            { engine: fixture.engine, freshness: fixture.freshness, writtenAt: fixture.writtenAt },
         );
         return {
             title,
@@ -394,6 +396,21 @@ export const BugAssessedOnly: Story = {
 export const BugFixedNotTested: Story = {
     name: 'Bug fixed, not tested',
     render: () => <ReportViewer fixture={cartFixedNotTested} />,
+};
+
+const trackedAt = new Date(2026, 9, 1, 10, 4).getTime();
+const cartTracked: ReportFixture = {
+    ...cartTotalSkipsFirst,
+    texts: {
+        ...cartTotalSkipsFirst.texts,
+        assessment: cartAssessment.replace('**Source**: pasted text', '**Source**: https://github.com/acme/shop/issues/88'),
+    },
+    writtenAt: { assessment: trackedAt, fix: trackedAt + 39_000, test: trackedAt + 2 * 60_000 },
+};
+
+export const BugTrackerAndTimes: Story = {
+    name: 'Bug with a tracker link and file times',
+    render: () => <ReportViewer fixture={cartTracked} />,
 };
 
 export const BugVerified: Story = {

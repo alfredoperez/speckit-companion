@@ -1,0 +1,263 @@
+{
+  "workflow": "speckit",
+  "specName": "The bug page shows the whole folder and real times",
+  "branch": "663-bug-page-extras",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:28:56.233Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:32:31.423Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:32:31.554Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:32:31.927Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:32:32.103Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:32:32.575Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:32:32.709Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:32:32.897Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:32:33.059Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:32:33.226Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:40:42.889Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:40:42.917Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:40:43.032Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T13:41:12.470Z"
+    }
+  ],
+  "request": "#930 w40 · show the rest of a bug folder (P3). A bug folder is no longer just assessment, fix and test: the logreduce extension writes evidence.md before assess, agents can write extra reports, and a Source field may hold a tracker URL. Proposed: in apps/vscode/src/features/reports/reportSet.ts, show evidence.md and any other .md in the bug folder as extra tabs, and render a Source URL as a tracker link through safeUrl.\n#930 w38 · bug Story uses file write times when headers carry dates only (P3). Bug report headers carry day-only dates, so the Story says Reported, Fixed and Tested on one day for a repair that took 39 seconds. Proposed: in apps/vscode/src/features/reports/bugStory.ts, fed through reportMeta.ts, when a header has a date only, use the report's write time and show the duration, labelled as written on this machine.\nOwner picked option 2: build the four small P3s before the release.",
+  "size": "simple",
+  "decisions": [
+    {
+      "decision": "Extra tabs for bug folders only",
+      "why": "idea folders have a fixed stage list",
+      "rejected": "extra tabs for both sets",
+      "by": "agent",
+      "at": "2026-11-08T13:32:31.768Z"
+    },
+    {
+      "decision": "Label machine times",
+      "why": "git drops file times on clone",
+      "rejected": "showing file times as if they were report times",
+      "by": "agent",
+      "at": "2026-11-08T13:32:31.768Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Other reports in a bug folder are tabs",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/reportSet.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "A URL Source is a Tracker link",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx"
+      ]
+    },
+    "FR-003": {
+      "title": "Day-only headers fall back to labelled file times",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts"
+      ]
+    }
+  },
+  "step_summaries": {
+    "tasks": {
+      "summary": "4 tasks"
+    }
+  },
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "extra report tabs",
+      "files": [
+        "apps/vscode/src/features/reports/reportSet.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "tracker link",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "write times and durations",
+      "files": [
+        "apps/vscode/src/features/reports/bugStory.ts",
+        "apps/vscode/src/features/spec-viewer/reportPanels.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Tests, story, changelog, docs; full suite green",
+      "files": [
+        "CHANGELOG.md",
+        "apps/website/src/content/docs/docs/ide/bugs-and-ideas.mdx"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Related Jest suites",
+      "command": "npx jest apps/vscode/src/features/reports/__tests__/bugStory.test.ts apps/vscode/src/features/reports/__tests__/reportSet.test.ts apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts apps/vscode/src/features/reports/__tests__/reportMeta.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 5.5,
+      "result": "Snapshots:   0 total · Time:        4.747 s · Ran all test suites matching /apps\\/vscode\\/src\\/features\\/reports\\/__tests__\\/bugStory.test.ts|apps\\/vscode\\/src\\/features\\/reports\\/__tests__\\/reportSet.test.ts|apps\\/vscode\\/webview\\/src\\/spec-viewer\\/report-pages\\/__tests__\\/BugStoryPage.test.tsx|apps\\/vscode\\/src\\/features\\/spec-viewer\\/__tests__\\/ideaPanel.test.ts|apps\\/vscode\\/src\\/features\\/reports\\/__tests__\\/reportMeta.test.ts/i.",
+      "commit": "1fe56354",
+      "tree": "0c867d8fd55bb674bcb3608d2a93906057063e06"
+    },
+    {
+      "what": "Type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "1fe56354",
+      "tree": "aeac5c9d01e9c482312b094b46421c68478b4423"
+    },
+    {
+      "what": "Webview build",
+      "command": "npm run --silent package-web",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 23.0,
+      "result": "    [webpack-cli] Compiler starting...  ·     [webpack-cli] Compiler is using config: '/Users/alfredoperez/dev/GitHub/speckit-companion/webpack.config.js' ·     [webpack-cli] Compiler finished",
+      "commit": "1fe56354",
+      "tree": "1f0cf721136ff6d6d10d912dba5a5ecf3c87afcb"
+    },
+    {
+      "what": "Docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.8,
+      "result": "Snapshots:   0 total · Time:        1.609 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "1fe56354",
+      "tree": "1ffeb28936ddd890c06b6c1f156d00c9516ab3e2"
+    },
+    {
+      "what": "Storybook bug page with a tracker link and file times",
+      "command": "ReportPages / Bug with a tracker link and file times",
+      "result": "Tracker link at the end of the facts; steps show 10:04 AM, 39s later, time from this machine"
+    }
+  ],
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/vscode/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx, apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx, apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx"
+    ]
+  },
+  "convergeStartedAt": "2026-11-08T13:40:43.074Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-08T13:40:43.122Z",
+      "by": "extension",
+      "finishedAt": "2026-11-08T13:41:12.565Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}
