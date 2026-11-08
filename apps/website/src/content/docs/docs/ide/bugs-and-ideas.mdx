@@ -50,7 +50,7 @@ An open question shows **Needs an answer** with an **Answer** button, on a bug's
 
 A full pass looks like `/speckit.bug.assess https://github.com/example/repo/issues/1234 slug=callback-token`, then `/speckit.bug.fix slug=callback-token`, then `/speckit.bug.test slug=callback-token`.
 
-A bug opens on **Story**, which puts all three reports on one page. It starts with one sentence saying where the bug stands, such as "Fixed, not tested yet." or "The fix did not hold.", and one line of facts. Then a timeline runs through **What was wrong**, **What changed** and **How it was verified**, and **Risks and open questions** closes the page. A bug closed as invalid shows only the first step. The badge shows the latest outcome, or **BUG** when there's none.
+A bug opens on **Story**, which puts all three reports on one page. It starts with one sentence saying where the bug stands, such as "Fixed, not tested yet." or "The fix did not hold.", and one line of facts. Then a timeline runs through **What was wrong**, **What changed** and **How it was verified**, and **Risks and open questions** closes the page. A bug closed as invalid shows only the first step. When a report's header gives only a day, each step shows the time its file was written on this machine and how long it took after the one before, labelled as a machine time. A **Source** that is a URL becomes a **Tracker** link, and any other report in the bug folder, such as `evidence.md`, gets its own tab after Test. The badge shows the latest outcome, or **BUG** when there's none.
 
 <DocFigure
   src="live-bug-story.png"

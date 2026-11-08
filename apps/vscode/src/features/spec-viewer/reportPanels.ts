@@ -49,6 +49,20 @@ function textOf(report: ReportFile<string>): string | undefined {
     }
 }
 
+function writtenAt(reports: Partial<Record<string, ReportFile<string>>>): Partial<Record<'assessment' | 'fix' | 'test', number>> {
+    const times: Partial<Record<'assessment' | 'fix' | 'test', number>> = {};
+    for (const kind of ['assessment', 'fix', 'test'] as const) {
+        const report = reports[kind];
+        if (!report?.exists) continue;
+        try {
+            times[kind] = fs.statSync(report.path).mtimeMs;
+        } catch {
+            continue;
+        }
+    }
+    return times;
+}
+
 /** The header badge follows the bug's state, not its latest report. */
 export function bugBadge(bug: Pick<BugReport, 'state' | 'outcome' | 'freshness'>): Pick<ReportPanelItem, 'badge' | 'badgeTone'> {
     if (bug.state === 'in-review') return { badge: 'waiting for your review', badgeTone: 'review' };
@@ -64,7 +78,7 @@ const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | unde
         const page = buildBugStory(
             { assessment: textOf(bug.reports.assessment), fix: textOf(bug.reports.fix), test: textOf(bug.reports.test) },
             actions.find(action => action.primary)?.label,
-            { engine: bug.engine, freshness: bug.freshness },
+            { engine: bug.engine, freshness: bug.freshness, writtenAt: writtenAt(bug.reports) },
         );
         return {
             slug: bug.slug,
