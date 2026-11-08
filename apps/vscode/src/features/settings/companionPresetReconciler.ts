@@ -105,7 +105,9 @@ async function removeOnce(workspaceRoot: string, deps: ReconcileDeps): Promise<P
     }
     const cli = await (deps.cliVersion ?? (async () => (await specifyVersion())?.cli))();
     if (!cliAtLeast(cli, PRESET_REMOVE_MIN_CLI)) {
-        log(`[companion] leftover preset kept: specify ${cli || '(unknown version)'} is older than ${PRESET_REMOVE_MIN_CLI}, which removes presets safely. Run "specify self upgrade", then reload.`);
+        log(cli
+            ? `[companion] leftover preset kept: specify ${cli} is older than ${PRESET_REMOVE_MIN_CLI}, which removes presets safely. Run "specify self upgrade", then reload.`
+            : '[companion] leftover preset kept: could not read the specify version, so removal waits for the next start.');
         return [];
     }
     for (const op of ops) {

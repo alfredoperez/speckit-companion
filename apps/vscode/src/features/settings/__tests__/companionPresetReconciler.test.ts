@@ -134,12 +134,14 @@ describe('companionPresetReconciler', () => {
             install('companion-standard');
             mockCli.version = undefined;
             const { calls, run } = recorder();
+            const logs: string[] = [];
             try {
-                await removeLeftoverPresets(root, { run });
+                await removeLeftoverPresets(root, { run, log: m => logs.push(m) });
             } finally {
                 mockCli.version = '1.2.5';
             }
             expect(calls).toEqual([]);
+            expect(logs.join('\n')).toMatch(/could not read the specify version/);
         });
 
         it('runs nothing when no leftover is installed', async () => {
