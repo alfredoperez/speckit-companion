@@ -343,6 +343,7 @@ export const DossierAssumedCoverage: Story = {
                 { req: 'FR-002', title: 'Follow the editor theme', tasks: ['T002'], tests: [] },
                 { req: 'FR-003', title: 'Keep the choice after a reload', tasks: ['T003'], tests: ['reload.test.ts'], assumes: 'relies on VS Code workspace state surviving a reload' },
                 { req: 'FR-004', title: 'Load orders quickly', tasks: ['T040'], tests: [], assumes: 'relies on the orders index; not timed' },
+                { req: 'FR-005', title: 'A filter name is unique per user', tasks: ['T009'], tests: ['src/filters.test.ts'], weak: true },
             ],
         };
         navState.value = { installPrompt: null } as NavState;

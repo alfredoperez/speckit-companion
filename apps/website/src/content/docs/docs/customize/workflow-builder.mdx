@@ -197,7 +197,7 @@ A workflow is a whole named configuration. Switching swaps node order, hooks, te
 | `.specify/companion/fragments/<name>.md` | A document section you wrote | No |
 | `.specify/extensions/companion/commands/` | What a build produces. Don't edit it by hand. | On build |
 
-`companion.yml` has six keys:
+`companion.yml` has eight keys:
 
 | Key | What it does |
 | --- | --- |
@@ -207,6 +207,8 @@ A workflow is a whole named configuration. Switching swaps node order, hooks, te
 | `commands.<step>.hooks` | [Hooks](#hooks), by side and anchor |
 | `commands.<step>.decisions` | [Routing](#where-a-verdict-routes), by node and answer |
 | `commands.<step>.template.sections` | Maps a template heading to the fragment that replaces it |
+| `risk.high`, `risk.low` | Paths that make a change high or low risk, on top of the defaults. The tier sets how deep implement reviews the work. |
+| `mutation.enabled` | `true` runs a mutation check at the end of implement and marks requirements whose tests catch no planted bug as weak. Off by default; it adds minutes. |
 
 ## On a stock Spec Kit project
 

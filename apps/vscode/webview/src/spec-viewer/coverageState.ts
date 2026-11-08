@@ -1,10 +1,11 @@
 import type { ViewerCoverageRow } from './types';
 
-export type CoverageState = 'missing' | 'tested' | 'assumed' | 'untraced';
+export type CoverageState = 'missing' | 'weak' | 'tested' | 'assumed' | 'untraced';
 
-/** Tests win over an assumption, and a named test that is not on disk stays missing. */
+/** Missing beats weak, weak beats tested, and tests win over an assumption, and a named test that is not on disk stays missing. */
 export function coverageState(row: ViewerCoverageRow): CoverageState {
     if (row.missingTests?.length) return 'missing';
+    if (row.weak) return 'weak';
     if (row.tests.length > 0) return 'tested';
     return row.assumes ? 'assumed' : 'untraced';
 }

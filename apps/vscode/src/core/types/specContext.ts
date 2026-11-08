@@ -312,6 +312,8 @@ export interface CoverageEntry {
     tests?: string[];
     /** What the requirement relies on without a test: a library, the clock, the database. */
     assumes?: string;
+    /** A planted bug in the code under this requirement's tests went unnoticed. */
+    weak?: boolean;
 }
 
 /** The size decision's inputs, not just its verdict (mirrors the scalar `size`). */
@@ -586,6 +588,8 @@ export interface ViewerCoverageRow {
     missingTests?: string[];
     /** What the requirement relies on without a test, when one was recorded. */
     assumes?: string;
+    /** The tests passed against a planted bug, so they do not really cover it. */
+    weak?: boolean;
 }
 
 export interface ViewerState {

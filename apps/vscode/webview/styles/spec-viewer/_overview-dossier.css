@@ -736,6 +736,13 @@
     box-shadow: 0 0 0 2px var(--bg-primary, transparent), 0 0 0 3px currentColor;
 }
 
+.dossier-coverage__state.is-weak { color: var(--warning); }
+
+.dossier-coverage__state.is-weak i {
+    background: linear-gradient(90deg, currentColor 50%, transparent 50%);
+    box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
 .dossier-coverage__req .dossier-coverage__assumes {
     display: block;
     grid-column: 2;

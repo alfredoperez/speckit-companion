@@ -521,6 +521,17 @@ describe('reasoning-trail normalization', () => {
             expect(state.coverage?.[1].assumes).toBe('relies on the index');
         });
 
+        it('keeps weak only when it is exactly true', () => {
+            const state = deriveViewerState(makeContext({
+                coverage: {
+                    'FR-001': { tasks: ['T001'], tests: ['a'], weak: true },
+                    'FR-002': { tasks: ['T002'], tests: ['b'], weak: 'true' },
+                    'FR-003': { tasks: ['T003'], tests: ['c'], weak: false },
+                },
+            } as never));
+            expect(state.coverage?.map(r => r.weak)).toEqual([true, undefined, undefined]);
+        });
+
         it('skips malformed entries and yields absent for an empty map', () => {
             expect(deriveViewerState(makeContext({ coverage: {} } as never)).coverage).toBeUndefined();
             const state = deriveViewerState(makeContext({ coverage: { 'FR-001': 'not-an-object' } } as never));
