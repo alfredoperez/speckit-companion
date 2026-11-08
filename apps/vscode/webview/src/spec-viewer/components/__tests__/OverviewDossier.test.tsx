@@ -575,11 +575,38 @@ describe('request and decision provenance', () => {
 });
 
 describe('VerifiedSection', () => {
-    const mount = (verified: NonNullable<ViewerState['verified']>) => {
+    const mount = (verified: NonNullable<ViewerState['verified']>, extra: Partial<ViewerState> = {}) => {
         const host = document.createElement('div');
-        render(h(VerifiedSection, { state: base({ verified }) }), host);
+        render(h(VerifiedSection, { state: base({ verified, ...extra }) }), host);
         return host;
     };
+
+    it('shows the computed review depth', () => {
+        const host = mount([{ what: 'By hand', result: 'ok' }], { risk: { tier: 'normal', computed: 'normal', reasons: ['4 files'] } });
+        const pill = host.querySelector('.dossier-depth');
+        expect(pill?.textContent).toBe('Review depth: normal');
+        expect(pill?.getAttribute('title')).toBe('4 files');
+        expect(pill?.classList.contains('dossier-depth--high')).toBe(false);
+    });
+
+    it('says who raised the depth and why, in the amber style', () => {
+        const host = mount([{ what: 'By hand', result: 'ok' }], {
+            risk: { tier: 'high', computed: 'normal', reasons: [], raised: { tier: 'high', reason: 'touches the orders query', by: 'ai', at: '2026-11-07T10:00:00Z' } },
+        });
+        const pill = host.querySelector('.dossier-depth');
+        expect(pill?.textContent).toBe('Review depth: high · raised by the agent: "touches the orders query"');
+        expect(pill?.classList.contains('dossier-depth--high')).toBe(true);
+    });
+
+    it('stays hidden with a risk but nothing checked, so the depth does not read as verification', () => {
+        const host = mount([], { risk: { tier: 'low', computed: 'low', reasons: [] } });
+        expect(host.querySelector('.dossier-depth')).toBeNull();
+    });
+
+    it('shows no pill without a risk', () => {
+        const host = mount([{ what: 'By hand', result: 'ok' }]);
+        expect(host.querySelector('.dossier-depth')).toBeNull();
+    });
 
     it('says which commit a derived check ran at', () => {
         const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '4f2c9a1', changedSince: 0 }]);

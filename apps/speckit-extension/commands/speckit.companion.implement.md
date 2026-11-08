@@ -152,11 +152,16 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
 
    One `--verify-run` per runnable check and one `--verified` per judgement (a manual pass, a warning you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--assumes <req> "<what>"` per requirement the code relies on something no test checks (a library, the clock, the database), one `--decision` per genuine implementation choice. Record `--concern` only for real friction; on a clean run record none.
 
+8. **Set the review depth from the risk tier**, once validation ends:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --risk
+   ```
+   It prints the tier the changed files call for. If you know something the files do not show, raise it with `--risk-raise <normal|high> "<reason>"`; it never goes down. Review the work before it is committed at that depth: low is your own careful read of the diff, normal is one independent review, high is two independent reviewers.
 <!-- /speckit-companion:node record-verified -->
 <!-- /speckit-companion:phase execute -->
 <!-- speckit-companion:phase wrap-up -->
 <!-- speckit-companion:node complete -->
-8. **Close implement at `implemented`.** Once every task in `tasks.md` is checked off and the work validates, close the step. Implement ends at `implemented`; the next step, `converge`, is what completes the spec when it finds nothing left to build.
+9. **Close implement at `implemented`.** Once every task in `tasks.md` is checked off and the work validates, close the step. Implement ends at `implemented`; the next step, `converge`, is what completes the spec when it finds nothing left to build.
 
    **"Validates" means the project's own checks ran and passed.** A spec MUST NOT be marked complete over a failing suite the run introduced: fix it, or leave the work open and say why. Where the checks genuinely could not be run, record that as a concern before closing, so the state reads "finished, unverified" instead of implying "finished, verified". Run from the repository root; the feature directory resolves on its own:
    ```bash

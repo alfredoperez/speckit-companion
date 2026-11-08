@@ -98,6 +98,8 @@ from capture import (  # noqa: E402,F401
     set_classification,
     set_fields,
     set_request,
+    set_risk,
+    raise_risk,
     set_living_specs_loaded,
     set_living_specs_skipped,
     set_living_specs_synced,
@@ -887,6 +889,15 @@ def _main() -> int:
              "its title, tasks and tests.",
     )
     parser.add_argument(
+        "--risk", dest="risk", action="store_true",
+        help="Compute the change's risk tier (low, normal, high) from the files it touches and "
+             "record it with the reasons; a standing raise above it is kept.",
+    )
+    parser.add_argument(
+        "--risk-raise", dest="risk_raise", nargs=2, default=None, metavar=("TIER", "REASON"),
+        help="Raise the risk tier with a reason. A lower or equal tier, or no reason, is refused.",
+    )
+    parser.add_argument(
         "--step-summary", dest="step_summary", default=None, metavar="JSON|TEXT",
         help="Upsert step_summaries.<--step> from a JSON object with a 'summary' key "
              "(plus key_finding/risks) or bare text.",
@@ -932,7 +943,7 @@ def _main() -> int:
     # mode, which always operates on the implement step.
     capture_mode = bool(
         args.decisions or args.verified or args.verify_runs or args.concerns or args.expectations
-        or args.coverage_req or args.assumes or args.step_summary or args.classification or args.context_entries
+        or args.coverage_req or args.assumes or args.risk or args.risk_raise or args.step_summary or args.classification or args.context_entries
         or args.batch or args.request
     )
     # `--feature-dir` if it was given; the resolved one is not bound until later,
@@ -1105,6 +1116,16 @@ def _main() -> int:
                                 f"(no coverage entry could be resolved in {feature_dir})")
             else:
                 captured.append(f"[companion] Upserted coverage for {args.coverage_req} in {target}")
+        if args.risk:
+            target, risk = set_risk(feature_dir)
+            captured.append(f"[companion] Review depth: {risk['tier']} ({'; '.join(risk['reasons'])}) in {target}")
+        if args.risk_raise:
+            tier, reason = args.risk_raise
+            target, refused = raise_risk(feature_dir, tier, reason)
+            if target is None:
+                declined.append(f"the risk tier was not raised: {refused}")
+            else:
+                captured.append(f"[companion] Raised the review depth to {tier.strip().lower()} in {target}")
         if args.assumes:
             req, text = args.assumes
             target = upsert_coverage(feature_dir, req, None, None, None, text)
@@ -1334,7 +1355,7 @@ _CAPTURE_FLAGS = (
     "--batch",
     "--decision", "--verified", "--concern", "--expectation", "--context",
     "--coverage-req", "--step-summary", "--classification", "--living-specs",
-    "--living-spec-skip", "--request", "--assumes",
+    "--living-spec-skip", "--request", "--assumes", "--risk", "--risk-raise",
 )
 
 _OP_FILE = {

@@ -349,8 +349,10 @@ export function ExpectationsSection({ state }: { state: ViewerState }) {
 }
 
 export function VerifiedSection({ state }: { state: ViewerState }) {
-    const items = state.verified;
-    if (!items || items.length === 0) return null;
+    const items = state.verified ?? [];
+    const risk = state.risk;
+    // A depth line alone would read as verification, so the section waits for a check.
+    if (items.length === 0) return null;
     // Derived means something other than the agent produced the outcome. Everything written
     // before that field existed was the agent's own account, so an absent source is a claim
     // rather than an unknown, and rendering the two alike is what let a sentence wear a check.
@@ -361,6 +363,16 @@ export function VerifiedSection({ state }: { state: ViewerState }) {
     const count = reported.length === 0
         ? `${checked.length} checked`
         : `${checked.length} checked · ${reported.length} reported`;
+    const raisedBy = risk?.raised && (risk.raised.by === 'ai' || risk.raised.by === 'agent' ? 'the agent' : risk.raised.by);
+    const depth = risk && (risk.raised
+        ? `Review depth: ${risk.tier} · raised by ${raisedBy}: "${risk.raised.reason}"`
+        : `Review depth: ${risk.tier}`);
+    const depthLine = risk && (
+        <p
+            class={`dossier-depth dossier-depth--${risk.tier}`}
+            title={risk.reasons.length > 0 ? risk.reasons.join('; ') : undefined}
+        >{depth}</p>
+    );
 
     return (
         <section class="dossier-section" aria-label="Verified">
@@ -370,6 +382,7 @@ export function VerifiedSection({ state }: { state: ViewerState }) {
                 count={count}
                 tone={failed > 0 || stale ? 'warn' : checked.length > 0 ? 'good' : undefined}
             />
+            {depthLine}
             {checked.length > 0 && <EvidenceRows items={checked} />}
             {reported.length > 0 && (
                 <>

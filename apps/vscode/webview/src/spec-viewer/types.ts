@@ -30,6 +30,7 @@ export type {
     CapabilityContentView,
     CheckpointStatus,
     ClassificationEntry,
+    RiskEntry,
     ConcernEntry,
     FooterScope,
     HistoryEntry,
@@ -53,6 +54,7 @@ import type {
     FooterScope,
     ReviewCommentStatus,
     ClassificationEntry,
+    RiskEntry,
     ConcernEntry,
     HistoryEntry,
     LivingSpecsView,
@@ -167,6 +169,7 @@ export interface ViewerState {
     verified?: ViewerVerification[];
     coverage?: ViewerCoverageRow[];
     classification?: ClassificationEntry;
+    risk?: RiskEntry;
     /** Converge result; absent when converge never ran. */
     converge?: ConvergeResult;
 }

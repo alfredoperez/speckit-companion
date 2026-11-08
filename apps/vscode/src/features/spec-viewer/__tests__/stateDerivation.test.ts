@@ -545,6 +545,21 @@ describe('reasoning-trail normalization', () => {
             const bad = deriveViewerState(makeContext({ classification: { projectedFiles: 9 } } as never));
             expect(bad.classification).toBeUndefined();
         });
+
+        it('keeps risk only when it carries a known tier, and the raise only when whole', () => {
+            const good = deriveViewerState(makeContext({
+                risk: { tier: 'high', computed: 'normal', reasons: ['12 files'], raised: { tier: 'high', reason: 'touches orders', by: 'ai', at: '2026-11-07T10:00:00Z' } },
+            } as never));
+            expect(good.risk?.tier).toBe('high');
+            expect(good.risk?.reasons).toEqual(['12 files']);
+            expect(good.risk?.raised?.reason).toBe('touches orders');
+            const partial = deriveViewerState(makeContext({
+                risk: { tier: 'low', computed: 'low', reasons: [], raised: { tier: 'high' } },
+            } as never));
+            expect(partial.risk?.raised).toBeUndefined();
+            const bad = deriveViewerState(makeContext({ risk: { tier: 'extreme' } } as never));
+            expect(bad.risk).toBeUndefined();
+        });
     });
 
     it('a pre-capture context yields every new field absent (legacy identical)', () => {
@@ -555,6 +570,7 @@ describe('reasoning-trail normalization', () => {
         expect(state.intent).toBeUndefined();
         expect(state.expectations).toBeUndefined();
         expect(state.classification).toBeUndefined();
+        expect(state.risk).toBeUndefined();
     });
 });
 

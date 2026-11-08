@@ -692,6 +692,142 @@ def _parsed_classification(raw: str) -> dict:
     return obj
 
 
+RISK_TIERS = ("low", "normal", "high")
+RISK_HIGH_DEFAULT = ("**/migrations/**", "**/*.sql", "**/auth*/**", "**/auth*.*", ".github/workflows/**")
+RISK_LOW_DEFAULT = ("**/*.md", "docs/**", "**/__tests__/**", "**/tests/**", "**/*.test.*", "**/*.spec.*")
+RISK_MANY_FILES = 20
+
+
+def _changed_files(root: Path) -> list[str] | None:
+    """Files the change touches: the merge base with the default branch against the working tree,
+    plus untracked files, outside the spec folders. None when git cannot say."""
+    import subprocess
+
+    def git(*args):
+        return subprocess.run(["git", "-C", str(root), *args], capture_output=True, text=True,
+                              check=True, timeout=20).stdout
+
+    bases = ["origin/main", "main", "origin/master", "master"]
+    try:
+        bases.insert(0, git("symbolic-ref", "--short", "refs/remotes/origin/HEAD").strip())
+    except Exception:  # noqa: BLE001
+        pass
+    for base in bases:
+        try:
+            mb = git("merge-base", base, "HEAD").strip()
+        except Exception:  # noqa: BLE001
+            continue
+        if not mb:
+            continue
+        try:
+            scope = ["--", ":(top)", ":(top,exclude)specs", ":(top,exclude).specify"]
+            names = git("diff", "--name-only", "--no-renames", "-z", mb, *scope).split("\0")
+            names += git("ls-files", "-z", "--others", "--exclude-standard", *scope).split("\0")
+        except Exception:  # noqa: BLE001
+            return None
+        return sorted({n for n in names if n})
+    return None
+
+
+def _risk_globs(root: Path) -> tuple[list[str], list[str]]:
+    high, low = list(RISK_HIGH_DEFAULT), list(RISK_LOW_DEFAULT)
+    try:
+        import companion_config
+        cfg, _warnings = companion_config.load_config(str(root / companion_config.CONFIG_REL))
+        risk = cfg.get("risk") if isinstance(cfg, dict) else None
+        if isinstance(risk, dict):
+            high += [g for g in risk.get("high") or [] if isinstance(g, str)]
+            low += [g for g in risk.get("low") or [] if isinstance(g, str)]
+    except Exception:  # noqa: BLE001
+        pass
+    return high, low
+
+
+_GLOB_MATCHES = None
+
+
+def _glob_matcher():
+    """The resolver's `**`-aware matcher, loaded once and compared case-insensitively."""
+    global _GLOB_MATCHES
+    if _GLOB_MATCHES is None:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("resolve_spec_paths", Path(__file__).with_name("resolve-spec-paths.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _GLOB_MATCHES = lambda pattern, path: module._glob_matches(pattern.lower(), path.lower())  # noqa: E731
+    return _GLOB_MATCHES
+
+
+def compute_risk(feature_dir: Path) -> tuple[str, list[str]]:
+    """The tier the change's files call for, and why."""
+    root = _repo_root_for(feature_dir)
+    files = _changed_files(root)
+    if files is None:
+        return "normal", ["the change could not be read"]
+    if not files:
+        return "normal", ["no changes against the base branch"]
+    high, low = _risk_globs(root)
+    try:
+        matches = _glob_matcher()
+    except Exception:  # noqa: BLE001
+        return "normal", ["the risk rules could not be loaded"]
+    risky = [f for f in files if any(matches(g, f) for g in high)]
+    if risky:
+        shown = ", ".join(risky[:3]) + (f" and {len(risky) - 3} more" if len(risky) > 3 else "")
+        return "high", [f"touches {shown}"]
+    if len(files) > RISK_MANY_FILES:
+        return "high", [f"{len(files)} files changed"]
+    if all(any(matches(g, f) for g in low) for f in files):
+        return "low", ["only docs and tests changed"]
+    return "normal", [f"{len(files)} file{'s' if len(files) != 1 else ''} changed"]
+
+
+def _tier_rank(tier) -> int:
+    return RISK_TIERS.index(tier) if tier in RISK_TIERS else -1
+
+
+def set_risk(feature_dir: Path) -> tuple[Path, dict]:
+    """Compute and store the tier; a standing raise above the computed tier is kept."""
+    computed, reasons = compute_risk(feature_dir)
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    prior = ctx.get("risk") if isinstance(ctx.get("risk"), dict) else {}
+    risk = {"tier": computed, "computed": computed, "reasons": reasons}
+    raised = prior.get("raised")
+    if isinstance(raised, dict) and _tier_rank(raised.get("tier")) >= 0:
+        risk["raised"] = raised
+        if _tier_rank(raised["tier"]) > _tier_rank(computed):
+            risk["tier"] = raised["tier"]
+    ctx["risk"] = risk
+    atomic_write(target, ctx)
+    return target, risk
+
+
+def raise_risk(feature_dir: Path, tier: str, reason: str, by: str = "ai") -> tuple[Path | None, str]:
+    """Raise the tier with a reason. Returns (target, "") on success, or (None, why it was refused)."""
+    tier, reason = (tier or "").strip().lower(), (reason or "").strip()
+    if tier not in RISK_TIERS:
+        return None, f"'{tier}' is not a tier (low, normal, high)"
+    if not reason:
+        return None, "a raise needs a reason"
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    risk = ctx.get("risk") if isinstance(ctx.get("risk"), dict) else None
+    if risk is None or _tier_rank(risk.get("tier")) < 0:
+        computed, reasons = compute_risk(feature_dir)
+        risk = {"tier": computed, "computed": computed, "reasons": reasons}
+    if _tier_rank(tier) <= _tier_rank(risk.get("tier")):
+        return None, f"the tier is already {risk.get('tier')}; it can only be raised"
+    fill_required(ctx, feature_dir, branch)
+    risk = {**risk, "tier": tier, "raised": {"tier": tier, "reason": reason, "by": by, "at": _now_iso()}}
+    ctx["risk"] = risk
+    atomic_write(target, ctx)
+    return target, ""
+
+
 def set_classification(feature_dir: Path, raw: str) -> Path:
     """Store the size classification's inputs + verdict as one object."""
     obj = _parsed_classification(raw)

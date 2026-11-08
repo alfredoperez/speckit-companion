@@ -361,6 +361,7 @@ export const DossierStaleCheck: Story = {
                 { what: 'TypeScript compile', command: 'npx tsc --noEmit', result: 'clean', source: 'derived', exitCode: 0, commit: '1b07e3c', tree, changedSince: 2 },
                 { what: 'Checked the empty state by hand', result: 'looked fine' },
             ],
+            risk: { tier: 'high', computed: 'normal', reasons: ['12 files'], raised: { tier: 'high', reason: 'touches the orders query', by: 'ai', at: '2026-11-07T10:00:00Z' } },
         };
         navState.value = { installPrompt: null } as NavState;
         return <div style="max-width: 900px;"><ActivityPanel /></div>;

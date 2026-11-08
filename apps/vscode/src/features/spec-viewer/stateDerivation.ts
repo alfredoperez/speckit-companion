@@ -23,6 +23,7 @@ import {
     ViewerVerification,
     ViewerCoverageRow,
     ClassificationEntry,
+    RiskEntry,
     TaskSummary,
     ConcernEntry,
     CheckpointStatus,
@@ -237,6 +238,23 @@ function pickClassification(ctx: SpecContext): ClassificationEntry | undefined {
     return e as unknown as ClassificationEntry;
 }
 
+const RISK_TIERS = ['low', 'normal', 'high'];
+
+function pickRisk(ctx: SpecContext): RiskEntry | undefined {
+    const v: unknown = ctx.risk;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const e = v as Record<string, unknown>;
+    if (typeof e.tier !== 'string' || !RISK_TIERS.includes(e.tier)) return undefined;
+    const computed = typeof e.computed === 'string' && RISK_TIERS.includes(e.computed) ? e.computed : e.tier;
+    const out = { tier: e.tier, computed, reasons: asStringArray(e.reasons) ?? [] } as RiskEntry;
+    const r = e.raised as Record<string, unknown> | undefined;
+    if (r && typeof r === 'object' && typeof r.tier === 'string' && RISK_TIERS.includes(r.tier)
+        && typeof r.reason === 'string' && typeof r.by === 'string' && typeof r.at === 'string') {
+        out.raised = r as unknown as NonNullable<RiskEntry['raised']>;
+    }
+    return out;
+}
+
 function pickConcerns(ctx: SpecContext): ConcernEntry[] | undefined {
     const v: unknown = ctx.concerns;
     if (!Array.isArray(v) || v.length === 0) return undefined;
@@ -432,6 +450,7 @@ export function deriveViewerState(
         verified: pickVerified(ctx),
         coverage: pickCoverage(ctx),
         classification: pickClassification(ctx),
+        risk: pickRisk(ctx),
         converge,
     };
 }

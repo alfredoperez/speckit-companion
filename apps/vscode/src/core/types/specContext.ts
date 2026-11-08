@@ -322,6 +322,14 @@ export interface ClassificationEntry {
     verdict: 'simple' | 'normal' | 'oversized';
 }
 
+/** How closely a change should be reviewed: the computed tier and any raise by the agent. */
+export interface RiskEntry {
+    tier: 'low' | 'normal' | 'high';
+    computed: 'low' | 'normal' | 'high';
+    reasons: string[];
+    raised?: { tier: 'low' | 'normal' | 'high'; reason: string; by: string; at: string };
+}
+
 /** A per-step rollup written at that step's close. */
 export interface StepSummaryEntry {
     summary: string;
@@ -468,6 +476,7 @@ export interface SpecContext {
     coverage?: Record<string, CoverageEntry>;
     /** The size classification's inputs + verdict. */
     classification?: ClassificationEntry;
+    risk?: RiskEntry;
     /** The ticket the spec came from (an id or URL), as the brief wrote it. */
     source?: string;
     /** An earlier spec folder this one extends. */
@@ -610,6 +619,7 @@ export interface ViewerState {
     verified?: ViewerVerification[];
     coverage?: ViewerCoverageRow[];
     classification?: ClassificationEntry;
+    risk?: RiskEntry;
     /** Persisted inline review comments, surfaced for restore + Activity. */
     reviewComments?: ReviewComment[];
     /** Living specs loaded/synced for this feature (LS·7). Absent when none. */
