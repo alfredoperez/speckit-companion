@@ -1,0 +1,353 @@
+{
+  "workflow": "speckit",
+  "specName": "The run record keeps its promises",
+  "branch": "658-record-guards",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T10:29:16.756Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:29:33.137Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T10:29:33.257Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:29:52.707Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T10:29:52.828Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:29:53.286Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T10:29:53.409Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:31:46.188Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:31:46.338Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:36:13.434Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:36:13.571Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:36:41.780Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:36:41.940Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:40:21.512Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T10:40:21.537Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T10:51:05.457Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T10:55:05.535Z"
+    }
+  ],
+  "request": "#963 slice 7 (r8, r9, r10):\nr8 · A status never moves backward within a step: `--step plan --status planned` then `--step plan --status planning` currently regresses it, because the guard compares steps only (`spec_context.py` around line 397) and status is set unconditionally (`write-context.py` around line 224)\nr9 · A damaged `.spec-context.json` is kept aside, never silently replaced: today a truncated or unparseable record reads as empty and the next write starts fresh history (`spec_context.py` `read_ctx`, around lines 686-701 and 732). Quarantine it the way a non-list `history` already is, and say so in the run's output\nr10 · Property tests for the record writer's promises (history only grows, writes merge, status never backward, parallel writers lose nothing, damaged records kept): Hypothesis, about a minute, marked slow. Start from `speckit-sandboxes/evidence/2026-11-07-pdd-lite/properties_test.py`\nAcceptance: A same-step status write that would move backward is refused, and a damaged record is kept aside with a message. The property tests run in the suite (slow lane) and pass.",
+  "size": "simple",
+  "coverage": {
+    "FR-001": {
+      "title": "A same-step write never moves status backward",
+      "tasks": [
+        "T001",
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_record_guards.py::test_a_same_step_write_never_moves_status_back",
+        "apps/speckit-extension/tests/test_record_properties.py::test_status_never_moves_backward"
+      ]
+    },
+    "FR-002": {
+      "title": "A writer keeps a damaged record aside and names the copy",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_record_guards.py::test_damaged_records_are_kept_aside_by_a_writer",
+        "apps/speckit-extension/tests/test_record_properties.py::test_a_damaged_record_is_kept_aside"
+      ]
+    },
+    "FR-003": {
+      "title": "A reader never moves a damaged record",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_record_guards.py::test_a_reader_moves_nothing"
+      ]
+    },
+    "FR-004": {
+      "title": "Property tests cover the five promises",
+      "tasks": [
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_record_properties.py"
+      ]
+    },
+    "FR-005": {
+      "title": "Property tests skip without Hypothesis; CI runs them in their own step",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "assumes": "CI runs the property file in its own step; the skip path ran locally"
+    }
+  },
+  "step_summaries": {
+    "tasks": {
+      "summary": "7 tasks: 2 guards, 2 test files, CI step, changelog, validate"
+    }
+  },
+  "decisions": [
+    {
+      "decision": "Refuse only the backward status, keep the write",
+      "why": "a late start still belongs in history",
+      "rejected": "refusing the whole write",
+      "by": "agent",
+      "at": "2026-11-08T10:29:57.490Z"
+    },
+    {
+      "decision": "Keep the damaged file aside in read_ctx, writers only",
+      "why": "every writer reads there first, and the lock flag tells writer from reader",
+      "rejected": "doing it in _guard_append_only after the fresh record is built",
+      "by": "agent",
+      "at": "2026-11-08T10:29:57.490Z"
+    },
+    {
+      "decision": "Slow lane is a separate CI step that installs Hypothesis",
+      "why": "the capture suite is stdlib only",
+      "rejected": "adding Hypothesis to the main suite",
+      "by": "agent",
+      "at": "2026-11-08T10:29:57.490Z"
+    }
+  ],
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "status_moves_back and the damaged-record copy in read_ctx",
+      "files": [
+        "apps/speckit-extension/scripts/spec_context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Refuse a backward same-step status and say so",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Unit tests for the backward status and damaged records",
+      "files": [
+        "apps/speckit-extension/tests/test_record_guards.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Property tests: 6 properties, 57 s, fail on main's old code",
+      "files": [
+        "apps/speckit-extension/tests/test_record_properties.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "CI step installs Hypothesis and runs the property file",
+      "files": [
+        ".github/workflows/ci.yml"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Folded into the run-record fixed line",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Guard tests, property tests (57 s), suite, build, docs consistency green",
+      "files": [
+        "specs/658-record-guards/tasks.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Record guard tests",
+      "command": "python3 -m unittest apps/speckit-extension/tests/test_record_guards.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.3,
+      "result": "---------------------------------------------------------------------- · Ran 7 tests in 2.278s · OK",
+      "commit": "b01c7133",
+      "tree": "5cba6f65bf9419fb7e0520daa935c3d92868c7df"
+    },
+    {
+      "what": "Property tests (slow lane)",
+      "command": "env COMPANION_SLOW=1 /private/tmp/claude-501/-Users-alfredoperez-dev-GitHub-speckit-companion/cdb70acf-bdb6-48f8-9b66-476650aa9a60/scratchpad/hyp/bin/python -m unittest apps/speckit-extension/tests/test_record_properties.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 62.8,
+      "result": "---------------------------------------------------------------------- · Ran 6 tests in 62.589s · OK",
+      "commit": "b01c7133",
+      "tree": "794cad9931c503bd5043120cb79db921b9992f0f"
+    },
+    {
+      "what": "Spec-kit extension suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 167.2,
+      "result": "---------------------------------------------------------------------- · Ran 1933 tests in 166.909s · OK (skipped=14)",
+      "commit": "b01c7133",
+      "tree": "941653418340937c50210a50d72c71407780c6ae"
+    },
+    {
+      "what": "Command bodies match their nodes",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "b01c7133",
+      "tree": "90cf9fb8791f5aa2c6123c0a2a55e3ee059e2604"
+    },
+    {
+      "what": "Docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "Snapshots:   0 total · Time:        1.595 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "b01c7133",
+      "tree": "7d219a8b4d39067b1d7524a8df41e9ae11077b60"
+    },
+    {
+      "what": "Property tests bite",
+      "command": "same file against main@b01c7133 scripts",
+      "result": "status and damaged-record properties fail on the old code"
+    },
+    {
+      "what": "Type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.1,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "b01c7133",
+      "tree": "4128a9da37c38be88953976b75a671c7b79f9868"
+    }
+  ],
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches .github/workflows/ci.yml, apps/speckit-extension/scripts/spec_context.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-08T10:51:05.500Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-08T10:51:05.551Z",
+      "by": "extension",
+      "finishedAt": "2026-11-08T10:55:05.624Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

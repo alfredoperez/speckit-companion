@@ -44,7 +44,7 @@ def _load_schema() -> dict | None:
                 continue
             try:
                 return json.loads(cand.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
+            except (ValueError, OSError):
                 return None
     return None
 
@@ -132,7 +132,7 @@ def run_checks(spec_dir: Path) -> Report:
         return r
     try:
         ctx = json.loads(target.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError) as exc:
+    except (ValueError, OSError) as exc:
         r.add(False, "valid-json", f"could not parse: {exc}")
         return r
     r.add(True, "valid-json", "parses")

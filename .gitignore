@@ -124,3 +124,9 @@ assets/mascot/explore/
 
 # Recorded frames from `npm run record` and its siblings
 .record/
+
+# Hypothesis example cache from the record property tests
+.hypothesis/
+
+# A damaged run record the writer kept aside before starting a fresh one
+.spec-context.damaged-*.json
