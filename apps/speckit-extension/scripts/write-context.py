@@ -50,6 +50,7 @@ from spec_context import (  # noqa: E402,F401
     _has_complete,
     _has_step_start,
     _is_more_advanced,
+    status_moves_back,
     _is_per_task,
     _is_step_level,
     _journaled_tasks,
@@ -217,6 +218,9 @@ def update_context(
     late_start = kind == "start" and substep is None and _has_complete(log, step)
     if converge_on_completed:
         late_start, status = True, None
+    if status is not None and not late_start and status_moves_back(ctx, step, status):
+        print(f"[companion] {step} is already {ctx.get('status')}; not moving it back to {status}.", file=sys.stderr)
+        status = None
     if not late_start:
         ctx["currentStep"] = step
     # A start carries the step forward and leaves status alone. `--status` used to
@@ -1337,6 +1341,10 @@ def _main() -> int:
             print(f"[companion] Journaled finish for task {args.task} in {target} (by={args.by})")
         else:
             _shown = args.status if args.status is not None else "unchanged"
+            try:
+                _shown = json.loads(target.read_text(encoding="utf-8")).get("status") or _shown
+            except (OSError, ValueError, AttributeError):
+                pass
             print(f"[companion] Updated {target} (currentStep={args.step}, status={_shown}, kind={args.kind}, by={args.by})")
     return 0
 

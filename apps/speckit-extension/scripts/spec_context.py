@@ -303,7 +303,7 @@ def resolve_feature_dir(root: Path, explicit: str | None) -> Path | None:
                     f"{feature_json} has no recognised key — expected "
                     f"'feature_directory' (or stock spec-kit's 'FEATURE_DIR'), "
                     f"found {sorted(data) if isinstance(data, dict) else type(data).__name__}.")
-        except (json.JSONDecodeError, OSError) as exc:
+        except (ValueError, OSError) as exc:
             _pointer_complaint(f"{feature_json} could not be read ({exc}).")
 
     # 4. SPECIFY_FEATURE env (a feature name), below the pointer as spec-kit ranks it
@@ -696,9 +696,49 @@ def read_ctx(target: Path) -> dict:
             ctx = json.loads(target.read_text(encoding="utf-8"))
             if isinstance(ctx, dict):
                 return ctx
-        except (json.JSONDecodeError, OSError):
+        except (OSError, ValueError):
             pass
     return {}
+
+
+def _keep_if_damaged(target: Path) -> None:
+    """Before a publish replaces a record that is not a JSON object, copy it aside once."""
+    try:
+        raw = target.read_bytes()
+    except OSError:
+        return
+    if not raw.strip():
+        return
+    try:
+        if isinstance(json.loads(raw.decode("utf-8")), dict):
+            return
+    except ValueError:
+        pass
+    for kept in target.parent.glob(".spec-context.damaged-*.json"):
+        try:
+            if kept.read_bytes() == raw:
+                return
+        except OSError:
+            continue
+    stamp = datetime.datetime.now().strftime("%Y%m%dT%H%M%S%f")
+    copy = target.with_name(f".spec-context.damaged-{stamp}.json")
+    try:
+        copy.write_bytes(raw)
+    except OSError as exc:
+        print(f"[companion] Warning: {target} is damaged and could not be copied aside ({exc}).", file=sys.stderr)
+        return
+    print(
+        f"[companion] Warning: {target} could not be read as a record. Kept it as {copy.name} "
+        f"and started a fresh one.",
+        file=sys.stderr,
+    )
+
+
+def status_moves_back(ctx: dict, step: str, status: str) -> bool:
+    """True when a write for the step already current would set an earlier status."""
+    cur = ctx.get("status")
+    return (ctx.get("currentStep") == step and cur in STATUS_ORDER and status in STATUS_ORDER
+            and STATUS_ORDER.index(status) < STATUS_ORDER.index(cur))
 
 
 def _entry_key(e) -> tuple:
@@ -729,7 +769,7 @@ def _guard_append_only(target: Path, ctx: dict) -> None:
         if not target.is_file():
             return
         on_disk = json.loads(target.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, ValueError):
         return
     existing = on_disk.get("history") if isinstance(on_disk, dict) else None
     if existing is not None and not isinstance(existing, list):
@@ -771,6 +811,7 @@ def atomic_write(target: Path, ctx: dict) -> None:
     again), so releasing here would open the middle of the sequence the lock
     exists to close. The hold ends when the writer process exits.
     """
+    _keep_if_damaged(target)
     _guard_append_only(target, ctx)
     try:
         import companion_config as cc

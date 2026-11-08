@@ -31,7 +31,7 @@ The Overview is the first tab in the viewer's rail. It reads the run record, a `
 | Weak in Coverage | Your mutation tool's report, when you turned the check on | Measured by that tool |
 | Intent, Expectations, Decisions | The assistant writes them during the run | As good as the run that wrote them |
 
-The Companion Spec Kit extension writes the record and the VS Code extension only reads it. The log only grows: a write that would publish a shorter history is rejected. Commit the file and the record travels with the branch.
+The Companion Spec Kit extension writes the record and the VS Code extension only reads it. The log only grows: a write that would publish a shorter history is rejected, and a status never moves back within a step. A record that can't be read is copied to `.spec-context.damaged-<time>.json` before a fresh one starts, and the run says so. Commit the file and the record travels with the branch.
 
 ## The regions
 

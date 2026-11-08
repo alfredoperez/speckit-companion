@@ -182,6 +182,14 @@ jobs:
         if: needs.changes.outputs.capture == 'true'
         run: python3 -m unittest discover -s apps/speckit-extension/tests -p "test_*.py"
 
+      - name: Property tests for the record writer (slow lane, about a minute)
+        if: needs.changes.outputs.capture == 'true'
+        env:
+          COMPANION_SLOW: "1"
+        run: |
+          python3 -m pip install --quiet hypothesis==6.112.2
+          python3 -m unittest apps/speckit-extension/tests/test_record_properties.py
+
       # build.py --check runs the shape-parity sweep itself, so it is not a
       # separate step.
       - name: Check command bodies (part fills, node-assembly parity against the committed bodies)
