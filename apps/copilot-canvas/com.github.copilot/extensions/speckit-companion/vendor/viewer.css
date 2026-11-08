@@ -5727,6 +5727,16 @@ body[data-spec-status=tasks-done] #regenerate {
 .dossier-intent__context .dossier-meta-label {
   color: var(--accent);
 }
+.dossier-intent__context p {
+  overflow-wrap: anywhere;
+}
+.dossier-intent__source-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+.dossier-intent__source-link:hover {
+  text-decoration: underline;
+}
 .dossier-intent__meta > div:only-child {
   grid-column: 1 / -1;
 }
