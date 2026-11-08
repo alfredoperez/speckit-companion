@@ -3,6 +3,7 @@ import { formatElapsed, formatAbsolute } from '../relativeTime';
 import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
 import { coverageState, isTraced } from '../coverageState';
 import { STEP_NAMES } from '../../../../src/core/types/specContext';
+import { safeUrl } from '../markdown/inline';
 
 /**
  * The Overview's sections, ordered by what a future session needs:
@@ -232,6 +233,15 @@ function sizingLine(c: NonNullable<ViewerState['classification']>): string {
     return inputs ? `Sized ${c.verdict}: ${inputs} projected` : `Sized ${c.verdict}`;
 }
 
+/** A ticket URL becomes a link; an id such as TODO-42 stays text. */
+function SourceValue({ source }: { source: string }) {
+    const url = source.trim();
+    if (/^https?:\/\//i.test(url) && safeUrl(url) !== '#') {
+        return <a class="dossier-intent__source-link" href={url} title={url}>{url}</a>;
+    }
+    return <>{source}</>;
+}
+
 function SectionHead({ kicker, title, count, tone }: {
     kicker: string;
     title: string;
@@ -252,12 +262,14 @@ function SectionHead({ kicker, title, count, tone }: {
 }
 
 export function IntentSection({ state }: { state: ViewerState }) {
-    const { intent, request, approach, context, classification } = state;
+    const { intent, request, approach, context, classification, source, supersedes } = state;
+    const extendsFolder = state.extends;
     const area = context?.find(item => item.startsWith(AREA_PREFIX))?.slice(AREA_PREFIX.length);
     const livingSpecs = state.livingSpecs;
     const livingSpecsCount = livingSpecs ? livingSpecChips(livingSpecs).length : 0;
     const hasTiming = phaseNames(state).length > 0;
-    const hasIntentContent = Boolean(intent || request || approach || area || classification || livingSpecsCount > 0);
+    const lineage = Boolean(source || extendsFolder || supersedes);
+    const hasIntentContent = Boolean(intent || request || approach || area || classification || lineage || livingSpecsCount > 0);
     if (!hasIntentContent && !hasTiming) return null;
 
     return (
@@ -272,7 +284,7 @@ export function IntentSection({ state }: { state: ViewerState }) {
             )}
             <OverviewTiming state={state} />
             <ConvergeCard state={state} />
-            {(approach || area || classification || livingSpecsCount > 0) && (
+            {(approach || area || classification || lineage || livingSpecsCount > 0) && (
                 <div class="dossier-intent__meta">
                     {(approach || (livingSpecs && livingSpecsCount > 0)) && (
                         <div class="dossier-intent__approach">
@@ -290,8 +302,26 @@ export function IntentSection({ state }: { state: ViewerState }) {
                             )}
                         </div>
                     )}
-                    {(area || classification) && (
+                    {(area || classification || lineage) && (
                         <div class="dossier-intent__context">
+                            {source && (
+                                <>
+                                    <span class="dossier-meta-label">Source</span>
+                                    <p><SourceValue source={source} /></p>
+                                </>
+                            )}
+                            {extendsFolder && (
+                                <>
+                                    <span class="dossier-meta-label">Extends</span>
+                                    <p>{extendsFolder}</p>
+                                </>
+                            )}
+                            {supersedes && (
+                                <>
+                                    <span class="dossier-meta-label">Replaces</span>
+                                    <p>{supersedes}</p>
+                                </>
+                            )}
                             {area && (
                                 <>
                                     <span class="dossier-meta-label">Working area</span>

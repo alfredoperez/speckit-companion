@@ -542,6 +542,43 @@ describe('converge in the overview', () => {
     });
 });
 
+describe('source ticket and lineage', () => {
+    const mount = (state: ViewerState) => {
+        const host = document.createElement('div');
+        render(h(IntentSection, { state }), host);
+        return host;
+    };
+    const row = (host: HTMLElement, label: string) => {
+        const el = Array.from(host.querySelectorAll('.dossier-meta-label')).find(l => l.textContent === label);
+        return el?.nextElementSibling as HTMLElement | undefined;
+    };
+
+    it('shows a plain ticket id as text', () => {
+        const value = row(mount(base({ source: 'TODO-42' })), 'Source');
+        expect(value?.textContent).toBe('TODO-42');
+        expect(value?.querySelector('a')).toBeNull();
+    });
+
+    it('links a ticket URL', () => {
+        const url = 'https://github.com/acme/app/issues/42';
+        const link = row(mount(base({ source: url })), 'Source')?.querySelector('a');
+        expect(link?.getAttribute('href')).toBe(url);
+    });
+
+    it('never links a script URL, and keeps markup as text', () => {
+        const value = row(mount(base({ source: 'javascript:alert(1)<b>x</b>' })), 'Source');
+        expect(value?.querySelector('a')).toBeNull();
+        expect(value?.querySelector('b')).toBeNull();
+        expect(value?.textContent).toBe('javascript:alert(1)<b>x</b>');
+    });
+
+    it('shows the folder a spec extends and the one it replaces', () => {
+        const host = mount(base({ extends: 'specs/041-saved-filters', supersedes: 'specs/030-old' }));
+        expect(row(host, 'Extends')?.textContent).toBe('specs/041-saved-filters');
+        expect(row(host, 'Replaces')?.textContent).toBe('specs/030-old');
+    });
+});
+
 describe('request and decision provenance', () => {
     const mount = (state: ViewerState, C: typeof IntentSection = IntentSection) => {
         const host = document.createElement('div');

@@ -461,6 +461,21 @@ describe('reasoning-trail normalization', () => {
         });
     });
 
+    describe('source and lineage', () => {
+        it('passes the ticket and the folders it extends or replaces through', () => {
+            const state = deriveViewerState(makeContext({ source: 'TODO-42', extends: 'specs/041-saved-filters', supersedes: 'specs/030-old' } as never));
+            expect(state.source).toBe('TODO-42');
+            expect(state.extends).toBe('specs/041-saved-filters');
+            expect(state.supersedes).toBe('specs/030-old');
+        });
+
+        it('is absent on older records', () => {
+            const state = deriveViewerState(makeContext());
+            expect(state.source).toBeUndefined();
+            expect(state.extends).toBeUndefined();
+        });
+    });
+
     describe('verified', () => {
         it('normalizes strings and keeps structured entries with warnings', () => {
             const state = deriveViewerState(makeContext({

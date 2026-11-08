@@ -197,6 +197,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
             const completedSpecs: SpecInfo[] = [];
             const archivedSpecs: SpecInfo[] = [];
             const specNameByPath = new Map<string, string | undefined>();
+            const sourceByPath = new Map<string, string | undefined>();
             const statusByPath = new Map<string, string | undefined>();
 
             for (const spec of specs) {
@@ -204,6 +205,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 const context = readSpecContextSyncSafe(specFullPath) ?? undefined;
                 const status = context?.status || SpecStatuses.ACTIVE;
                 specNameByPath.set(spec.path, context?.specName);
+                sourceByPath.set(spec.path, typeof context?.source === 'string' ? context.source : undefined);
                 statusByPath.set(spec.path, context?.currentStep);
                 if (status === SpecStatuses.COMPLETED) {
                     completedSpecs.push(spec);
@@ -214,14 +216,15 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
                 }
             }
 
-            // Apply fuzzy filter across slug + specName when a query is active.
+            // Apply fuzzy filter across slug, specName and the source ticket when a query is active.
             const query = this.filterState?.getQuery() ?? '';
             let filteredActive = activeSpecs;
             let filteredCompleted = completedSpecs;
             let filteredArchived = archivedSpecs;
             if (query.length > 0) {
                 const matches = (spec: SpecInfo) =>
-                    fuzzyMatch(query, spec.name, specNameByPath.get(spec.path));
+                    fuzzyMatch(query, spec.name, specNameByPath.get(spec.path))
+                    || fuzzyMatch(query, sourceByPath.get(spec.path));
                 filteredActive = activeSpecs.filter(matches);
                 filteredCompleted = completedSpecs.filter(matches);
                 filteredArchived = archivedSpecs.filter(matches);

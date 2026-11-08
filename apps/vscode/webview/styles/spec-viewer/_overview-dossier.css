@@ -287,6 +287,17 @@
     color: var(--accent);
 }
 
+.dossier-intent__context p {
+    overflow-wrap: anywhere;
+}
+
+.dossier-intent__source-link {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.dossier-intent__source-link:hover { text-decoration: underline; }
+
 /* Approach-only / area-only metadata is one editorial block, not half a grid
    with a phantom empty pane. */
 .dossier-intent__meta > div:only-child {
