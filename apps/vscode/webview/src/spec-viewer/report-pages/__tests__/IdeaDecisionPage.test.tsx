@@ -219,3 +219,27 @@ describe('IdeaDecisionPage', () => {
         });
     });
 });
+
+describe('specs made from this idea', () => {
+    afterEach(() => {
+        delete (globalThis as { vscode?: unknown }).vscode;
+    });
+
+    it('lists each spec and opens it on click', () => {
+        const postMessage = jest.fn();
+        (globalThis as { vscode?: unknown }).vscode = { postMessage };
+        const container = document.createElement('div');
+        render(<IdeaDecisionPage decision={{ verdict: 'go', scorecard: [] }} specs={[{ name: 'Saved filters', path: '/w/specs/042-saved-filters/spec.md' }]} />, container);
+        expect(container.querySelector('h2#specs-from-this-idea')?.textContent).toBe('Specs made from this idea');
+        const link = container.querySelector<HTMLButtonElement>('.rp-specs__link');
+        expect(link?.textContent).toBe('Saved filters');
+        link?.click();
+        expect(postMessage).toHaveBeenCalledWith({ type: 'openFile', filename: '/w/specs/042-saved-filters/spec.md' });
+    });
+
+    it('says nothing when no spec came from the idea', () => {
+        const container = document.createElement('div');
+        render(<IdeaDecisionPage decision={{ verdict: 'go', scorecard: [] }} />, container);
+        expect(container.querySelector('#specs-from-this-idea')).toBeNull();
+    });
+});

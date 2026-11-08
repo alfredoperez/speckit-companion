@@ -633,8 +633,8 @@ describe('Idea report panel', () => {
             expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
                 'speckit.openSpecEditor',
                 'Member status badges\n\n' +
-                    '**Go.** Three requesters, a small change, and no constitution conflict.\n\n' +
-                    'Assessment: .specify/assessments/member-badges/',
+                    'Three requesters, a small change, and no constitution conflict.\n\n' +
+                    'Source: .specify/assessments/member-badges/',
             );
             expect(executeInTerminal).not.toHaveBeenCalled();
         });
@@ -648,7 +648,7 @@ describe('Idea report panel', () => {
 
             expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
                 'speckit.openSpecEditor',
-                'Dark mode\n\nAssessment: .specify/assessments/dark-mode/',
+                'Dark mode\n\nSource: .specify/assessments/dark-mode/',
             );
         });
 

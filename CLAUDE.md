@@ -51,6 +51,7 @@ A few changes carry a follow-on that is easy to miss:
 - **Webview UI, styling, tokens, capture stories or fixtures** → `npm run clips:capture`, then commit what it regenerates, including `content/media/web/` (tracked on purpose: a deploy cannot rebuild it).
 - **A webview component with a sibling `*.stories.tsx`** → update the stories in the same change.
 - **`spec-rules.mjs` in the Copilot canvas** → `npm run mod:build` and commit the bundle the Claude Code mod reads.
+- **Viewer CSS or its markdown renderer** → `npm run canvas:build` and commit the canvas's vendored copy; CI fails on a stale one.
 - **A new command in `apps/speckit-extension/`** → add it to `extension.yml` `provides.commands`, or the installer skips it.
 - **A new surface** (an app, a panel, a provider, a top-level feature path) → add its path glob to `.claude/skills/release-qa/surface-map.yml`.
 - **The Get Started walkthrough** → keep its step copy consistent with `contributes.viewsWelcome`.

@@ -20,7 +20,7 @@ import { buildBugStory } from '../../../../src/features/reports/bugStory';
 import { buildIdeaDecision } from '../../../../src/features/reports/ideaDecision';
 import { knownValue, parseReportHeader } from '../../../../src/features/reports/reportValues';
 import type { EngineRun } from '../../../../src/features/bugs/engineRuns';
-import type { ReportNav } from '../../../../src/features/reports/reportPageModel';
+import type { ReportNav, LinkedSpec } from '../../../../src/features/reports/reportPageModel';
 import { BUG_FIX_STATUSES, BUG_TEST_RESULTS, BUG_VERDICTS } from '../../../../src/features/bugs/bugValues';
 import { IDEA_STAGES, IDEA_VERDICTS } from '../../../../src/features/ideas/ideaValues';
 import { bugActions, ideaActions, type ReportAction } from '../../../../src/features/processes/processActions';
@@ -184,7 +184,7 @@ function documentsOf(fixture: ReportFixture): SpecDocument[] {
     })));
 }
 
-function hostState(fixture: ReportFixture, documentType: string): { nav: NavState; content: string } {
+function hostState(fixture: ReportFixture, documentType: string, specs?: LinkedSpec[]): { nav: NavState; content: string } {
     const panel = readPanel(fixture);
     const documents = documentsOf(fixture);
     const reports = documents.filter(d => d.filePath);
@@ -213,14 +213,14 @@ function hostState(fixture: ReportFixture, documentType: string): { nav: NavStat
         activityPanelEnabled: false,
         landing: 'document',
         ...(panel.actions.length > 0 ? { reportActions: panel.actions } : {}),
-        report: { kind: panel.kind, page, ...(panel.badgeTone && { badgeTone: panel.badgeTone }) },
+        report: { kind: panel.kind, page, ...(panel.badgeTone && { badgeTone: panel.badgeTone }), ...(specs && { specs }) },
     });
     return { nav, content: (doc.exists && fixture.texts[doc.type]) || '' };
 }
 
-export function ReportViewer({ fixture, initialDocument }: { fixture: ReportFixture; initialDocument?: string }) {
+export function ReportViewer({ fixture, initialDocument, specs }: { fixture: ReportFixture; initialDocument?: string; specs?: LinkedSpec[] }) {
     const [doc, setDoc] = useState(() => initialDocument ?? readPanel(fixture).defaultDocument);
-    const { nav, content } = hostState(fixture, doc);
+    const { nav, content } = hostState(fixture, doc, specs);
 
     useEffect(() => {
         document.body.dataset.readOnly = 'true';
@@ -439,6 +439,17 @@ export const IdeaAssessing: Story = {
 export const IdeaGo: Story = {
     name: 'Idea go',
     render: () => <ReportViewer fixture={savedFilters} />,
+};
+
+export const IdeaGoWithSpec: Story = {
+    name: 'Idea go, with the spec made from it',
+    render: () => (
+        <ReportViewer
+            fixture={savedFilters}
+            initialDocument="decision"
+            specs={[{ name: 'Saved filters stay after a reload', path: '/workspace/specs/042-saved-filters/spec.md' }]}
+        />
+    ),
 };
 
 export const IdeaNeedsClarification: Story = {

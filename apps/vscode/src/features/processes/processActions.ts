@@ -1,5 +1,6 @@
 import type { BugReport } from '../bugs/bugReports';
 import type { IdeaReport, IdeaStage } from '../ideas/ideaReports';
+import type { IdeaDecision } from '../reports/reportPageModel';
 
 export type ReportActionId =
     | 'bug.assess'
@@ -93,4 +94,21 @@ export function ideaActions(idea: Pick<IdeaReport, 'state' | 'latestStage' | 've
         default:
             return [main('idea.decide', 'Decide')];
     }
+}
+
+/**
+ * What Create spec sends to specify for a go idea: the title, the rationale, every handoff field
+ * the decision wrote for this step, and a Source line naming the idea folder so the spec's record
+ * keeps it.
+ */
+export function ideaSpecDescription(idea: { title: string; folder: string; rationale?: string; decision?: IdeaDecision }): string {
+    const handoff = idea.decision?.closing?.verdict === 'go' ? idea.decision.closing.fields : [];
+    return [
+        idea.title,
+        idea.rationale ?? '',
+        handoff.length ? ['Handoff:', ...handoff.map(f => `- ${f.term}: ${f.text}`)].join('\n') : '',
+        `Source: ${idea.folder}`,
+    ]
+        .filter(part => part.trim() !== '')
+        .join('\n\n');
 }

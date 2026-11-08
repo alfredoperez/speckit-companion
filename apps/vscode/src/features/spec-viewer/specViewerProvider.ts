@@ -51,6 +51,7 @@ import { getDocumentTypeFromPath, getSpecDirectoryFromPath } from "./utils";
 import { customCommandButtons, optionalCommandButtonsForTab } from "./optionalCommands";
 import { ConfigKeys, SpecStatuses } from "../../core/constants";
 import { getProjectRoot } from "../../core/projectRoot";
+import { readSpecContextSyncSafe } from "../specs/specContextReader";
 import { coerceLegacyBoolean } from "../../core/settingsMigration";
 import { hasOverview } from "../../core/utils/overviewAvailability";
 import type { CustomCommandConfig } from "../../core/types/config";
@@ -74,9 +75,9 @@ import { FRESHNESS_TIMEOUT_MS, staleCounts } from "./checkFreshness";
 import { deriveConvergeResult } from "./convergeResult";
 import { enrichLivingSpecs } from "../living-specs/livingSpecsContent";
 import { bugDirectoryOf } from "../bugs/bugReports";
-import { ideaDirectoryOf } from "../ideas/ideaReports";
+import { ideaDirectoryOf, ideaPageFile } from "../ideas/ideaReports";
 import { isReportPath, reportDirectoryOf, reportDocuments, type ReportSet } from "../reports/reportSet";
-import { REPORT_SETS, readReportPanel, type ReportSetId } from "./reportPanels";
+import { REPORT_SETS, readReportPanel, specsFromIdea, type ReportSetId } from "./reportPanels";
 import { withHeaderLine } from "../reports/reportMeta";
 import { featureSpecPath } from "../specs/featureSpecPath";
 import { noteSpecDispatch, resolveSpecAssistant } from "../specs/specAssistant";
@@ -410,6 +411,19 @@ export class SpecViewerProvider {
         await this.updateReportContent(key, (this.awaitingOverview.has(key) && reportSet.overview?.type as DocumentType) || this.panels.get(key)!.state.currentDocument);
       }
       return;
+    }
+    const root = getProjectRoot();
+    if (root && path.basename(filePath) === ".spec-context.json") {
+      const source = readSpecContextSyncSafe(path.dirname(filePath))?.source;
+      const idea = typeof source === "string" ? path.resolve(root, source.trim()) : undefined;
+      const panel = idea && [...this.panels].find(([key, inst]) => inst.state.bug && inst.state.reportSet === "ideas" && path.resolve(key) === idea);
+      if (panel) {
+        try {
+          await this.updateReportContent(panel[0], panel[1].state.currentDocument);
+        } catch (error) {
+          this.outputChannel.appendLine(`[SpecViewer] Idea page refresh failed: ${String(error)}`);
+        }
+      }
     }
     const livingKey = path.dirname(filePath);
     const living = this.panels.get(livingKey);
@@ -879,6 +893,8 @@ export class SpecViewerProvider {
     const reportSet = instance.state.reportSet ?? "bugs";
     const set = REPORT_SETS[reportSet];
     const report = readReportPanel(reportSet, bugDirectory);
+    const projectRoot = getProjectRoot();
+    const specs = report?.kind === "idea" && projectRoot ? await specsFromIdea(report.folder, projectRoot) : [];
     const documents = reportDocuments(set, bugDirectory);
     // The overview has no file: it exists only when its page could be built.
     for (const d of documents) if (!d.filePath) d.exists = !!report?.page;
@@ -963,7 +979,7 @@ export class SpecViewerProvider {
       undefined,     // assistantName
       false,         // hasTerminal
       report?.actions ?? [],
-      report ? { kind: report.kind, page, ...(report.badgeTone && { badgeTone: report.badgeTone }) } : { kind: reportSet === "ideas" ? "idea" : "bug" },
+      report ? { kind: report.kind, page, ...(report.badgeTone && { badgeTone: report.badgeTone }), ...(specs.length > 0 && { specs }) } : { kind: reportSet === "ideas" ? "idea" : "bug" },
     );
 
     this.outputChannel.appendLine(
@@ -1561,6 +1577,11 @@ export class SpecViewerProvider {
               fs.existsSync(path.isAbsolute(rel) ? rel : path.join(wsRoot, rel))
             );
           }
+        }
+        if (derivedVs.source) {
+          const wsRoot = getProjectRoot();
+          const source = derivedVs.source.trim();
+          derivedVs.sourceIsIdea = Boolean(wsRoot && ideaPageFile(wsRoot, source));
         }
         {
           const trees = [...new Set((derivedVs.verified ?? []).flatMap(v => (v.source === 'derived' && v.tree ? [v.tree] : [])))];

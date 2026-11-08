@@ -4,6 +4,9 @@ import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
 import { coverageState, isTraced } from '../coverageState';
 import { STEP_NAMES } from '../../../../src/core/types/specContext';
 import { safeUrl } from '../markdown/inline';
+import type { VSCodeApi } from '../types';
+
+declare const vscode: VSCodeApi;
 
 /**
  * The Overview's sections, ordered by what a future session needs:
@@ -233,11 +236,18 @@ function sizingLine(c: NonNullable<ViewerState['classification']>): string {
     return inputs ? `Sized ${c.verdict}: ${inputs} projected` : `Sized ${c.verdict}`;
 }
 
-/** A ticket URL becomes a link; an id such as TODO-42 stays text. */
-function SourceValue({ source }: { source: string }) {
+/** A ticket URL becomes a link, a folder path opens that idea's page, and an id such as TODO-42 stays text. */
+function SourceValue({ source, isIdea }: { source: string; isIdea?: boolean }) {
     const url = source.trim();
     if (/^https?:\/\//i.test(url) && safeUrl(url) !== '#') {
         return <a class="dossier-intent__source-link" href={url} title={url}>{url}</a>;
+    }
+    if (isIdea) {
+        return (
+            <button type="button" class="dossier-intent__source-link" onClick={() => vscode.postMessage({ type: 'openIdea', folder: url })}>
+                {url}
+            </button>
+        );
     }
     return <>{source}</>;
 }
@@ -307,7 +317,7 @@ export function IntentSection({ state }: { state: ViewerState }) {
                             {source && (
                                 <>
                                     <span class="dossier-meta-label">Source</span>
-                                    <p><SourceValue source={source} /></p>
+                                    <p><SourceValue source={source} isIdea={state.sourceIsIdea} /></p>
                                 </>
                             )}
                             {extendsFolder && (
