@@ -213,6 +213,18 @@ const tabs = [
     link: { label: 'Read the Overview guide', href: '/docs/results/the-overview/' },
   },
   {
+    id: 'proof',
+    label: 'Proof',
+    window: 'Overview · what was checked, and what happened',
+    heading: 'What was proven, and what was only claimed',
+    body: 'Every spec quotes your request, shows which requirements are tested, assumed or weak, and marks a check Out of date once the code moves past it. The PR lists every check with its exit code.',
+    still: {
+      src: '/landing/proof-verified.png',
+      alt: 'The Verified section of a spec Overview: a review depth line raised by the agent with its reason, a passed check, a check tinted amber and marked Out of date because two files changed since it ran, and one check the agent only reported.',
+    },
+    link: { label: 'Read what the Overview shows', href: '/docs/results/the-overview/' },
+  },
+  {
     id: 'customize',
     label: 'Customize',
     window: 'Custom workflows · the one you wrote, at every step',
@@ -303,34 +315,6 @@ const builder = {
     {
       title: 'Build when you are ready',
       body: 'Add a step, or start a workflow from a preset. Nothing takes effect until you press Build, and a failed build changes nothing.',
-    },
-  ],
-};
-
-const proof = {
-  shot: {
-    src: '/landing/proof-verified.png',
-    width: 1312,
-    height: 1076,
-    alt: 'The Verified section of a spec Overview: a review depth line raised by the agent with its reason, a passed check, a check tinted amber and marked Out of date because two files changed since it ran, and one check the agent only reported.',
-    caption: 'Checks with the commit they ran on, and the ones the code has moved past',
-  },
-  points: [
-    {
-      title: 'Your request, word for word',
-      body: 'The Overview quotes what you typed, and every decision says who answered it and when.',
-    },
-    {
-      title: 'Tested, assumed or weak',
-      body: 'Each requirement shows its tests, what it relies on without one, or, with the mutation check on, tests that let a planted bug through.',
-    },
-    {
-      title: 'Checks that go stale',
-      body: 'A check keeps the code it ran on. Change the code and it reads Out of date until you run it again.',
-    },
-    {
-      title: 'Receipts in the pull request',
-      body: 'The PR body lists every check with its exit code, built from the run record, and marks what the agent only claimed.',
     },
   ],
 };
@@ -875,7 +859,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       </div>
 
       <p class="demo-caption">
-        Every picture is the extension itself. The first four are short clips.
+        Every picture is the extension itself. Four of them are short clips.
       </p>
     </div>
   </section>
@@ -1013,47 +997,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           extension for Spec Kit.
         </span>
         <a class="qs-full" href="/docs/customize/workflow-builder/">Read the Workflow Builder guide</a>
-      </p>
-    </div>
-  </section>
-
-  <section class="section section--builder" id="proof">
-    <div class="inner pb">
-      <div class="qs-say">
-        <h2>What was proven, and what was only claimed</h2>
-        <p>
-          Every spec says what a run actually checked, what it assumed, and what the agent only
-          reported. The evidence comes from the run record, not from the assistant's summary.
-        </p>
-      </div>
-
-      <div class="qs-sheet pb-sheet" data-reveal>
-        <figure class="qs-shot pb-shot">
-          <img
-            src={proof.shot.src}
-            alt={proof.shot.alt}
-            width={proof.shot.width}
-            height={proof.shot.height}
-            loading="lazy"
-            decoding="async"
-          />
-          <figcaption>{proof.shot.caption}</figcaption>
-        </figure>
-        <ul class="pb-points" aria-label="What a spec proves">
-          {
-            proof.points.map((point) => (
-              <li>
-                <p class="pb-point-title">{point.title}</p>
-                <p class="pb-point-body">{point.body}</p>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-
-      <p class="pb-note">
-        <span>It all reads from the spec's run record, so it travels with the branch.</span>
-        <a class="qs-full" href="/docs/results/the-overview/">Read what the Overview shows</a>
       </p>
     </div>
   </section>
