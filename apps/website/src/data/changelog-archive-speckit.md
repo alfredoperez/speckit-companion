@@ -2,6 +2,24 @@
 
 This holds the SpecKit Companion spec-kit extension release notes for every release but the two latest, moved out of `apps/speckit-extension/CHANGELOG.md` to keep that file to recent history; the two latest releases, plus Unreleased, live there.
 
+## [0.24.0] - 2026-10-03
+
+Spec Kit's converge step now lands in the run record, and a hook moves in one write.
+
+### Highlights
+
+#### Spec Kit's converge step is recorded
+Running `/speckit.converge` used to leave no trace in the run record, because converge was not a step it knew. Two new hooks now record when converge starts and finishes, so its time shows beside the other steps. Converge never changes the spec's status, a spec that ran it can still be marked complete, and the status command points at the next task when converge added some.
+<!-- area: run-record; pr: 813 -->
+
+### Added
+- **A hook moves in one write.** The configuration writer can now move a hook to another place, or up and down among the hooks at one place, as a single change. The hook keeps the text it was written with, every other line of the file stays as it was, and a move to a node or phase the step does not have is refused with nothing written. Before this a move was a removal and then an addition, so an addition that was refused left the hook gone. ([#818](https://github.com/alfredoperez/speckit-companion/pull/818)) <!-- area: pipeline-builder -->
+
+### Fixed
+- **The capture and quality evals time a step to its own finish.** They measured a step up to the next step's start, so a spec left idle for an hour between specify and plan reported the wait as specify's time. The step timing line now lists each step's own duration, or says it was not measured, and a finish recorded more than once counts only the first trusted one. A step the editor started and the assistant finished through the recorder now counts as measured. ([#804](https://github.com/alfredoperez/speckit-companion/pull/804)) <!-- area: run-record -->
+
+Older releases are archived in [`apps/website/src/data/changelog-archive-speckit.md`](../website/src/data/changelog-archive-speckit.md), and the full history reads at [speckit-companion.dev/changelog](https://speckit-companion.dev/changelog).
+
 ## [0.23.0] - 2026-09-30
 
 ### Added

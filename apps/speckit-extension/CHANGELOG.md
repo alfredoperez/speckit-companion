@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-11-08
+
+Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.
+
 ### Added
 - **Doctor checks agents and numbers; status is scripted.** It flags ==missing Companion commands==, a missing `specify` CLI and shared spec numbers, and status prints the record on any console. ([#951](https://github.com/alfredoperez/speckit-companion/pull/951), [#971](https://github.com/alfredoperez/speckit-companion/pull/971), [#975](https://github.com/alfredoperez/speckit-companion/pull/975)) <!-- area: install -->
 - **A spec keeps its ticket, request and assumptions.** It keeps ==your request verbatim==, decision authors, assumptions, each check's commit, a risk tier, mutation results, and PR receipts. ([#945](https://github.com/alfredoperez/speckit-companion/pull/945), [#964](https://github.com/alfredoperez/speckit-companion/pull/964), [#965](https://github.com/alfredoperez/speckit-companion/pull/965), [#966](https://github.com/alfredoperez/speckit-companion/pull/966), [#967](https://github.com/alfredoperez/speckit-companion/pull/967), [#968](https://github.com/alfredoperez/speckit-companion/pull/968), [#969](https://github.com/alfredoperez/speckit-companion/pull/969)) <!-- area: run-record -->
@@ -55,21 +59,3 @@ Stock runs are recorded through spec-kit's own hooks, so the `/speckit.*` comman
 - **A registry rewrite keeps the chosen layout.** Registering a capability re-emits the registry, which dropped `layout` and sent ==every later adoption back to asking==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
 - **The manual check records its result.** The brownfield preset's click-through step called the recorder with `--concerns`, a flag that does not exist, so the result was dropped. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: run-record -->
 - **A completed spec names no current task.** Marking a spec complete clears the current task, which had kept naming the last one finished. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: run-record -->
-
-## [0.24.0] - 2026-10-03
-
-Spec Kit's converge step now lands in the run record, and a hook moves in one write.
-
-### Highlights
-
-#### Spec Kit's converge step is recorded
-Running `/speckit.converge` used to leave no trace in the run record, because converge was not a step it knew. Two new hooks now record when converge starts and finishes, so its time shows beside the other steps. Converge never changes the spec's status, a spec that ran it can still be marked complete, and the status command points at the next task when converge added some.
-<!-- area: run-record; pr: 813 -->
-
-### Added
-- **A hook moves in one write.** The configuration writer can now move a hook to another place, or up and down among the hooks at one place, as a single change. The hook keeps the text it was written with, every other line of the file stays as it was, and a move to a node or phase the step does not have is refused with nothing written. Before this a move was a removal and then an addition, so an addition that was refused left the hook gone. ([#818](https://github.com/alfredoperez/speckit-companion/pull/818)) <!-- area: pipeline-builder -->
-
-### Fixed
-- **The capture and quality evals time a step to its own finish.** They measured a step up to the next step's start, so a spec left idle for an hour between specify and plan reported the wait as specify's time. The step timing line now lists each step's own duration, or says it was not measured, and a finish recorded more than once counts only the first trusted one. A step the editor started and the assistant finished through the recorder now counts as measured. ([#804](https://github.com/alfredoperez/speckit-companion/pull/804)) <!-- area: run-record -->
-
-Older releases are archived in [`apps/website/src/data/changelog-archive-speckit.md`](../website/src/data/changelog-archive-speckit.md), and the full history reads at [speckit-companion.dev/changelog](https://speckit-companion.dev/changelog).
