@@ -522,6 +522,7 @@ function CoverageRow({ row }: { row: NonNullable<ViewerState['coverage']>[number
             <div class="dossier-coverage__req">
                 <b>{row.req}</b>
                 {row.title && <span>{row.title}</span>}
+                {row.weak && <span class="dossier-coverage__assumes">tested, but a planted bug passed</span>}
                 {row.assumes && <span class="dossier-coverage__assumes">{row.assumes}</span>}
             </div>
             <div class="dossier-coverage__tasks">
@@ -540,11 +541,12 @@ function CoverageRow({ row }: { row: NonNullable<ViewerState['coverage']>[number
  * because it reads as coverage that exists.
  */
 function coverageStateClass(row: ViewerCoverageRow): string {
-    return `dossier-coverage__state is-${{ missing: 'missing', tested: 'traced', assumed: 'assumed', untraced: 'untraced' }[coverageState(row)]}`;
+    return `dossier-coverage__state is-${{ missing: 'missing', weak: 'weak', tested: 'traced', assumed: 'assumed', untraced: 'untraced' }[coverageState(row)]}`;
 }
 
 function coverageStateLabel(row: ViewerCoverageRow): string {
     if (coverageState(row) === 'assumed') { return 'Assumed'; }
+    if (coverageState(row) === 'weak') { return 'Weak'; }
     const missing = row.missingTests?.length ?? 0;
     if (missing) {
         return missing === row.tests.length
@@ -570,6 +572,7 @@ export function CoverageSection({ state }: { state: ViewerState }) {
     // Untraced requirements lead — the gaps are the signal.
     const ordered = [
         ...rows.filter(r => coverageState(r) === 'untraced'),
+        ...rows.filter(r => coverageState(r) === 'weak'),
         ...rows.filter(r => coverageState(r) === 'assumed'),
         ...rows.filter(r => { const k = coverageState(r); return k === 'tested' || k === 'missing'; }),
     ];

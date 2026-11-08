@@ -187,6 +187,7 @@ function pickCoverage(ctx: SpecContext): ViewerCoverageRow[] | undefined {
             tasks: coverageNames(e.tasks),
             tests: coverageNames(e.tests),
             assumes: typeof e.assumes === 'string' && e.assumes.trim() ? e.assumes.trim() : undefined,
+            weak: e.weak === true ? true : undefined,
         });
     }
     if (rows.length === 0) return undefined;

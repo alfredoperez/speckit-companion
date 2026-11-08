@@ -638,6 +638,8 @@ def upsert_coverage(
     if tasks:
         entry["tasks"] = tasks
     if tests:
+        if tests != entry.get("tests"):
+            entry.pop("weak", None)
         entry["tests"] = tests
     if assumes:
         entry["assumes"] = assumes
@@ -826,6 +828,135 @@ def raise_risk(feature_dir: Path, tier: str, reason: str, by: str = "ai") -> tup
     ctx["risk"] = risk
     atomic_write(target, ctx)
     return target, ""
+
+
+MUTANT_CAUGHT = ("Killed", "Timeout")
+MUTANT_UNCOUNTED = ("Ignored", "CompileError", "RuntimeError", "Pending")
+
+
+def _read_mutation_report(path: Path) -> dict:
+    """Killed and total counts, the tool, and for Stryker which test files faced a mutant and
+    which killed one. Raises ValueError for anything it cannot read as a report."""
+    try:
+        doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError, RecursionError) as exc:
+        raise ValueError(f"cannot read {path}: {exc}") from exc
+    try:
+        report = _parse_mutation_report(doc)
+    except (TypeError, AttributeError, KeyError, OverflowError) as exc:
+        raise ValueError(f"{path} has an unexpected shape: {exc}") from exc
+    if report is None:
+        raise ValueError(f"{path} is neither a Stryker report nor a mutmut summary")
+    if report["total"] <= 0:
+        raise ValueError(f"{path} holds no mutants")
+    return report
+
+
+def _parse_mutation_report(doc) -> dict | None:
+    if not isinstance(doc, dict):
+        return None
+    if isinstance(doc.get("files"), dict) and isinstance(doc.get("schemaVersion"), str):
+        test_file_of = {}
+        for file, entry in (doc.get("testFiles") or {}).items():
+            for test in (entry or {}).get("tests") or []:
+                if isinstance(test, dict) and "id" in test:
+                    test_file_of[str(test["id"])] = file
+        killed = total = 0
+        killers: set = set()
+        ran: set = set()
+        for entry in doc["files"].values():
+            for mutant in (entry or {}).get("mutants") or []:
+                status = mutant.get("status") if isinstance(mutant, dict) else None
+                if status in MUTANT_UNCOUNTED or not isinstance(status, str):
+                    continue
+                total += 1
+                faced = [str(t) for t in list(mutant.get("coveredBy") or []) + list(mutant.get("killedBy") or [])]
+                ran.update(test_file_of[t] for t in faced if t in test_file_of)
+                if status in MUTANT_CAUGHT:
+                    killed += 1
+                    killers.update(test_file_of[str(t)] for t in mutant.get("killedBy") or [] if str(t) in test_file_of)
+        return {"tool": "stryker", "killed": killed, "total": total, "killers": killers, "ran": ran,
+                "root": doc.get("projectRoot") if isinstance(doc.get("projectRoot"), str) else None}
+    if "killed" in doc and ("total" in doc or "survived" in doc):
+        killed = int(doc.get("killed") or 0) + int(doc.get("timeout") or 0)
+        outcomes = ("survived", "no_tests", "suspicious", "segfault")
+        if doc.get("total"):
+            total = int(doc["total"]) - int(doc.get("skipped") or 0)
+        else:
+            total = killed + sum(int(doc.get(k) or 0) for k in outcomes)
+        return {"tool": "mutmut", "killed": killed, "total": total, "killers": set(), "ran": set(), "root": None}
+    return None
+
+
+def _rel(path: str, root: str | None = None) -> str:
+    path = path.strip().replace("\\", "/")
+    if root:
+        prefix = root.replace("\\", "/").rstrip("/") + "/"
+        if path.startswith(prefix):
+            path = path[len(prefix):]
+    while path.startswith("./"):
+        path = path[2:]
+    return path
+
+
+def _test_file(ref: str) -> str:
+    return _rel(ref.split("::", 1)[0])
+
+
+def _same_file(ref: str, key: str) -> bool:
+    """A coverage ref (repo-relative) and a report key (relative to where the tool ran) name one file."""
+    return ref == key or ref.endswith("/" + key) or key.endswith("/" + ref)
+
+
+def apply_mutation_report(feature_dir: Path, path: Path) -> tuple[Path, dict]:
+    """Record the mutation check and mark weak each requirement whose test files faced the
+    mutants and caught none. Only requirements this report judged have their marks replaced."""
+    report = _read_mutation_report(path)
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    coverage = ctx.get("coverage") if isinstance(ctx.get("coverage"), dict) else {}
+    ran = {_rel(f, report["root"]) for f in report["ran"]}
+    killers = {_rel(f, report["root"]) for f in report["killers"]}
+    weak, judged_any = [], False
+    for req, entry in coverage.items():
+        if not isinstance(entry, dict):
+            continue
+        files = {_test_file(t) for t in _as_name_list(entry.get("tests")) or []}
+        faced = {k for k in ran if any(_same_file(f, k) for f in files)}
+        if not faced:
+            continue
+        judged_any = True
+        entry.pop("weak", None)
+        if not (faced & killers):
+            entry["weak"] = True
+            weak.append(req)
+    ctx["coverage"] = coverage
+    row = {
+        "what": "Mutation check",
+        "command": report["tool"],
+        "source": "derived",
+        "result": f"{report['killed']} of {report['total']} caught",
+    }
+    warnings = []
+    if weak:
+        warnings.append(f"weak: {', '.join(sorted(weak))}")
+    if report["tool"] == "stryker" and not judged_any:
+        warnings.append("no requirement's tests matched the report, so none was judged")
+    if warnings:
+        row["warnings"] = warnings
+    verified, placed = [], False
+    for v in ctx.get("verified") or []:
+        if (v.get("what") if isinstance(v, dict) else v) == "Mutation check":
+            if not placed:
+                verified.append(row)
+                placed = True
+            continue
+        verified.append(v)
+    ctx["verified"] = verified if placed else verified + [row]
+    atomic_write(target, ctx)
+    return target, {**report, "weak": sorted(weak)}
 
 
 def set_classification(feature_dir: Path, raw: str) -> Path:

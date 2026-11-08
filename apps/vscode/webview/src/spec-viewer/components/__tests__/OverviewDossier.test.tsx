@@ -333,6 +333,35 @@ describe('CoverageSection', () => {
         expect(order).toEqual(['FR-3', 'FR-2', 'FR-1']);
     });
 
+    it('labels a weak row and says a planted bug passed', () => {
+        const host = renderRows([{ req: 'FR-5', tasks: ['T5'], tests: ['a.test.ts'], weak: true }]);
+        expect(host.querySelector('.dossier-coverage__state.is-weak')?.textContent).toContain('Weak');
+        expect(host.querySelector('.dossier-coverage__assumes')?.textContent).toBe('tested, but a planted bug passed');
+    });
+
+    it('keeps the assumption line on a weak row', () => {
+        const host = renderRows([{ req: 'FR-5', tasks: [], tests: ['a'], weak: true, assumes: 'relies on the clock' }]);
+        const lines = Array.from(host.querySelectorAll('.dossier-coverage__assumes')).map(l => l.textContent);
+        expect(lines).toEqual(['tested, but a planted bug passed', 'relies on the clock']);
+    });
+
+    it('lets a missing test beat weak', () => {
+        const host = renderRows([{ req: 'FR-5', tasks: [], tests: ['a'], missingTests: ['a'], weak: true }]);
+        expect(host.querySelector('.is-missing')).not.toBeNull();
+        expect(host.querySelector('.is-weak')).toBeNull();
+    });
+
+    it('lists weak rows after untraced and before assumed', () => {
+        const host = renderRows([
+            { req: 'FR-1', tasks: [], tests: ['a'] },
+            { req: 'FR-2', tasks: [], tests: [], assumes: 'y' },
+            { req: 'FR-3', tasks: [], tests: ['c'], weak: true },
+            { req: 'FR-4', tasks: [], tests: [] },
+        ]);
+        const order = Array.from(host.querySelectorAll('.dossier-coverage__req b')).map(b => b.textContent);
+        expect(order).toEqual(['FR-4', 'FR-3', 'FR-2', 'FR-1']);
+    });
+
     it('renders no assumption line for a row without one', () => {
         const host = renderRows([{ req: 'FR-1', tasks: ['T1'], tests: ['a'] }]);
         expect(host.querySelector('.dossier-coverage__assumes')).toBeNull();

@@ -28,3 +28,9 @@ reads: [implement-exec]
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --risk
    ```
    It prints the tier the changed files call for. If you know something the files do not show, raise it with `--risk-raise <normal|high> "<reason>"`; it never goes down. Review the work before it is committed at that depth: low is your own careful read of the diff, normal is one independent review, high is two independent reviewers.
+
+9. **Run the mutation check, only when the project turned it on.** If `.specify/companion.yml` sets `mutation: { enabled: true }`, run the project's mutation tool on the files this change touched (Stryker for JavaScript and TypeScript with the JSON reporter, mutmut for Python, then `mutmut export-cicd-stats`), and hand the report to the writer:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --mutation-report <reports/mutation/mutation.json or mutants/mutmut-cicd-stats.json>
+   ```
+   It records the caught count and marks weak each requirement whose tests caught no planted bug. Without the setting, skip this step.
