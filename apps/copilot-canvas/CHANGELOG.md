@@ -4,6 +4,8 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-08
+
 ### Fixed
 
 - **New spec keeps a project's timestamp numbering.** The board reads the `feature_numbering` setting newer Spec Kit writes, so the agent gets no sequential folder number. <!-- area: copilot-app -->
