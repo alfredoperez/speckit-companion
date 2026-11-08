@@ -915,6 +915,66 @@ describe('messageHandlers - overviewChosen', () => {
     });
 });
 
+describe('messageHandlers - openIdea', () => {
+    let root: string;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'open-idea-'));
+        (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(root), name: 'ws', index: 0 }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = undefined;
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('opens the idea page at its latest report', async () => {
+        const dir = path.join(root, '.specify', 'assessments', 'saved-filters');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'intake.md'), '# Intake');
+        fs.writeFileSync(path.join(dir, 'decision.md'), '# Decision');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openIdea', folder: '.specify/assessments/saved-filters/' } as any);
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+            'speckit.viewSpecDocument', path.join(dir, 'decision.md'), { report: 'ideas', landing: true });
+    });
+
+    it('refuses an idea folder that links outside the project', async () => {
+        const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'outside-idea-'));
+        fs.writeFileSync(path.join(outside, 'decision.md'), '# Decision');
+        fs.mkdirSync(path.join(root, '.specify', 'assessments'), { recursive: true });
+        fs.symlinkSync(outside, path.join(root, '.specify', 'assessments', 'escape'));
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openIdea', folder: '.specify/assessments/escape/' } as any);
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.viewSpecDocument', expect.anything(), expect.anything());
+        fs.rmSync(outside, { recursive: true, force: true });
+    });
+
+    it('says so for a folder that is not an idea, and never leaves the project', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        const notIdea = path.join(root, 'specs', '042-x');
+        fs.mkdirSync(notIdea, { recursive: true });
+        fs.writeFileSync(path.join(notIdea, 'decision.md'), '# Not an idea');
+        const above = path.join(path.dirname(root), 'assessments-above');
+        fs.mkdirSync(above, { recursive: true });
+        fs.writeFileSync(path.join(above, 'decision.md'), '# Outside');
+
+        await handler({ type: 'openIdea', folder: `../${path.basename(above)}/` } as any);
+        await handler({ type: 'openIdea', folder: 'specs/042-x/' } as any);
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.viewSpecDocument', expect.anything(), expect.anything());
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(`No idea page found at ../${path.basename(above)}/.`);
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith('No idea page found at specs/042-x/.');
+        fs.rmSync(above, { recursive: true, force: true });
+    });
+});
+
 describe('messageHandlers - openFile', () => {
     let root: string;
 

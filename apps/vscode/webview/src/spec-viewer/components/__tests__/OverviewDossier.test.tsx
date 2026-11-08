@@ -572,6 +572,25 @@ describe('source ticket and lineage', () => {
         expect(value?.textContent).toBe('javascript:alert(1)<b>x</b>');
     });
 
+    it('opens the idea page when the source is an idea folder', () => {
+        const postMessage = jest.fn();
+        (globalThis as { vscode?: unknown }).vscode = { postMessage };
+        try {
+            const button = row(mount(base({ source: '.specify/assessments/saved-filters/', sourceIsIdea: true })), 'Source')?.querySelector('button');
+            expect(button?.textContent).toBe('.specify/assessments/saved-filters/');
+            button?.click();
+            expect(postMessage).toHaveBeenCalledWith({ type: 'openIdea', folder: '.specify/assessments/saved-filters/' });
+        } finally {
+            delete (globalThis as { vscode?: unknown }).vscode;
+        }
+    });
+
+    it('keeps a path-like ticket that is not an idea as text', () => {
+        const value = row(mount(base({ source: 'ENG/42' })), 'Source');
+        expect(value?.querySelector('button, a')).toBeNull();
+        expect(value?.textContent).toBe('ENG/42');
+    });
+
     it('shows the folder a spec extends and the one it replaces', () => {
         const host = mount(base({ extends: 'specs/041-saved-filters', supersedes: 'specs/030-old' }));
         expect(row(host, 'Extends')?.textContent).toBe('specs/041-saved-filters');

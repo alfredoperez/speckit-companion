@@ -608,6 +608,11 @@ export type ViewerToExtensionMessage =
           answer: string;
           document: string;
       }
+    // A spec's Source row that names an idea folder
+    | {
+          type: 'openIdea';
+          folder: string;
+      }
     // File reference click
     | {
           type: 'openFile';

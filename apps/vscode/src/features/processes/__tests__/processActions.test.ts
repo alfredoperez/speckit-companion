@@ -1,4 +1,4 @@
-import { bugActions, commandForAction, ideaActions, repeatsFromFolder, ReportActionId } from '../processActions';
+import { bugActions, commandForAction, ideaActions, ideaSpecDescription, repeatsFromFolder, ReportActionId } from '../processActions';
 
 const labels = (actions: { label: string; primary: boolean }[]) =>
     actions.map(action => `${action.primary ? 'main' : 'secondary'}: ${action.label}`);
@@ -118,5 +118,32 @@ describe('the command an action sends', () => {
         expect(repeatsFromFolder('bug.assess')).toBe(true);
         expect(repeatsFromFolder('idea.intake')).toBe(true);
         expect(repeatsFromFolder('bug.fix')).toBe(false);
+    });
+});
+
+describe('what Create spec sends for a go idea', () => {
+    const fields = [
+        { term: 'Problem', text: 'Members lose saved filters on reload.' },
+        { term: 'Chosen approach', text: 'Store them per workspace.' },
+        { term: 'In scope / out of scope', text: 'Saved filters in; sharing out.' },
+        { term: 'Success metrics', text: 'No support tickets about lost filters.' },
+        { term: 'Carried-forward open questions', text: 'Do filters sync across devices?' },
+    ];
+
+    it('carries the title, rationale, every handoff field and a Source line naming the idea folder', () => {
+        const text = ideaSpecDescription({
+            title: 'Saved filters',
+            folder: '.specify/assessments/saved-filters/',
+            rationale: 'Strong evidence and a small change.',
+            decision: { verdict: 'go', scorecard: [], closing: { verdict: 'go', fields } },
+        });
+        expect(text.startsWith('Saved filters\n\nStrong evidence and a small change.')).toBe(true);
+        for (const field of fields) expect(text).toContain(`- ${field.term}: ${field.text}`);
+        expect(text.endsWith('Source: .specify/assessments/saved-filters/')).toBe(true);
+    });
+
+    it('leaves out the handoff when the decision has none', () => {
+        const text = ideaSpecDescription({ title: 'X', folder: '.specify/assessments/x/' });
+        expect(text).toBe('X\n\nSource: .specify/assessments/x/');
     });
 });

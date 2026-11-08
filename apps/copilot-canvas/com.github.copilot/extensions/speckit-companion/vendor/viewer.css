@@ -5733,6 +5733,12 @@ body[data-spec-status=tasks-done] #regenerate {
 .dossier-intent__source-link {
   color: var(--accent);
   text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 .dossier-intent__source-link:hover {
   text-decoration: underline;
@@ -6564,6 +6570,25 @@ body[data-spec-status=tasks-done] #regenerate {
 }
 #markdown-content .rp-answer-slot {
   margin: var(--space-2) 0;
+}
+#markdown-content .rp-specs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#markdown-content .rp-specs__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+#markdown-content .rp-specs__link:hover,
+#markdown-content .rp-specs__link:focus-visible {
+  text-decoration: underline;
 }
 
 /* apps/vscode/webview/styles/spec-viewer/_install-banner.css */

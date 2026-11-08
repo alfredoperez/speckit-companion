@@ -1,4 +1,5 @@
-import type { IdeaClosing, IdeaDecision } from '../../../../src/features/reports/reportPageModel';
+import type { IdeaClosing, IdeaDecision, LinkedSpec } from '../../../../src/features/reports/reportPageModel';
+import type { VSCodeApi } from '../types';
 import { Inline, Prose } from './fragments';
 
 const VERDICT_SENTENCE: Record<IdeaDecision['verdict'], string> = {
@@ -65,7 +66,30 @@ function Closing({ closing }: { closing: IdeaClosing }) {
     );
 }
 
-export function IdeaDecisionPage({ decision }: { decision: IdeaDecision }) {
+declare const vscode: VSCodeApi;
+
+function SpecsFromIdea({ specs }: { specs: LinkedSpec[] }) {
+    return (
+        <>
+            <h2 id="specs-from-this-idea">Specs made from this idea</h2>
+            <ul class="rp-specs">
+                {specs.map(spec => (
+                    <li key={spec.path}>
+                        <button
+                            type="button"
+                            class="rp-specs__link"
+                            onClick={() => vscode.postMessage({ type: 'openFile', filename: spec.path })}
+                        >
+                            {spec.name}
+                        </button>
+                    </li>
+                ))}
+            </ul>
+        </>
+    );
+}
+
+export function IdeaDecisionPage({ decision, specs }: { decision: IdeaDecision; specs?: LinkedSpec[] }) {
     return (
         <>
             <p class="rp-lead">
@@ -93,6 +117,7 @@ export function IdeaDecisionPage({ decision }: { decision: IdeaDecision }) {
                 </>
             )}
             {decision.closing && <Closing closing={decision.closing} />}
+            {specs && specs.length > 0 && <SpecsFromIdea specs={specs} />}
         </>
     );
 }

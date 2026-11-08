@@ -63,8 +63,10 @@ import type { CoreDocumentType } from "./types";
 import { isFeatureSpecFile } from "../specs/featureSpecPath";
 import { isSpecDocument } from "./utils";
 import { REPORT_SETS, readReportPanel } from "./reportPanels";
-import { commandForAction, repeatsFromFolder } from "../processes/processActions";
+import { commandForAction, ideaSpecDescription, repeatsFromFolder } from "../processes/processActions";
 import { reportFile } from "../reports/reportSet";
+import { ideaPageFile } from "../ideas/ideaReports";
+import type { IdeaDecision } from "../reports/reportPageModel";
 import { clarificationsIn } from "../reports/clarifications";
 import { buildAnswerPrompt, stageReportAnswer } from "../reports/reportAnswers";
 import type { ReviewComment, ReviewCommentDoc } from "../../core/types/specContext";
@@ -239,6 +241,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     reportAction: (msg, dir, deps) => handleReportAction(dir, msg.id, deps),
     reportAnswer: (msg, dir, deps) => handleReportAnswer(dir, msg, deps),
     openFile: (msg, dir, deps) => handleOpenFile(dir, msg.filename, deps, validLine(msg.line)),
+    openIdea: msg => handleOpenIdea(msg.folder),
     openLivingSpec: (msg, _dir, deps) =>
       handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps, msg.requirement),
     webviewError: async (msg, _dir, deps) => {
@@ -816,6 +819,18 @@ function validLine(line: unknown): number | undefined {
   return typeof line === "number" && Number.isInteger(line) && line > 0 ? line : undefined;
 }
 
+/** A spec's Source row names an idea folder: open that idea's page, latest report first. */
+async function handleOpenIdea(folder: unknown): Promise<void> {
+  const root = getProjectRoot();
+  if (typeof folder !== "string" || !root) return;
+  const doc = ideaPageFile(root, folder);
+  if (!doc) {
+    void vscode.window.showWarningMessage(`No idea page found at ${folder}.`);
+    return;
+  }
+  await vscode.commands.executeCommand("speckit.viewSpecDocument", doc, { report: "ideas", landing: true });
+}
+
 function isInsideRoot(root: string, candidate: string): boolean {
   const rel = path.relative(root, candidate);
   return rel !== ".." && !rel.startsWith(".." + path.sep) && !path.isAbsolute(rel);
@@ -990,9 +1005,13 @@ async function handleReportAction(
   }
 
   if (action.id === "idea.createSpec") {
-    const description = [item.title, firstRationaleParagraph(item.decisionPath), `Assessment: ${item.folder}`]
-      .filter(part => part !== "")
-      .join("\n\n");
+    const decision = item.kind === "idea" ? (item.page as IdeaDecision | undefined) : undefined;
+    const description = ideaSpecDescription({
+      title: item.title,
+      folder: item.folder,
+      rationale: [decision?.lead, decision?.rationale].filter(Boolean).join(" ") || firstRationaleParagraph(item.decisionPath),
+      decision,
+    });
     await vscode.commands.executeCommand("speckit.openSpecEditor", description);
     return;
   }

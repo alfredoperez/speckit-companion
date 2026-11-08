@@ -5,7 +5,10 @@ import { IDEA_SET, readIdeaReport } from '../ideas/ideaReports';
 import type { ReportFile, ReportSet } from '../reports/reportSet';
 import { buildBugStory } from '../reports/bugStory';
 import { buildIdeaDecision } from '../reports/ideaDecision';
-import type { BugStory, IdeaDecision } from '../reports/reportPageModel';
+import type { BugStory, IdeaDecision, LinkedSpec } from '../reports/reportPageModel';
+import { resolveSpecDirectories } from '../../core/specDirectoryResolver';
+import { readSpecContextSyncSafe } from '../specs/specContextReader';
+import { featureSpecPath } from '../specs/featureSpecPath';
 import { bugActions, ideaActions, type ReportAction } from '../processes/processActions';
 
 export type ReportSetId = ReportSet<string>['id'];
@@ -96,4 +99,29 @@ const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | unde
 
 export function readReportPanel(set: ReportSetId, directory: string): ReportPanelItem | undefined {
     return READERS[set](directory);
+}
+
+const normFolder = (p: string): string => p.trim().replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+$/, '');
+
+/** Specs whose run record names `folder` (workspace-relative) as their source. */
+export async function specsFromIdea(folder: string, root: string): Promise<LinkedSpec[]> {
+    const want = normFolder(folder);
+    const found: LinkedSpec[] = [];
+    let specs: Awaited<ReturnType<typeof resolveSpecDirectories>>;
+    try {
+        specs = await resolveSpecDirectories(root);
+    } catch {
+        return found;
+    }
+    for (const spec of specs) {
+        try {
+            const dir = path.join(root, spec.path);
+            const context = readSpecContextSyncSafe(dir);
+            if (typeof context?.source !== 'string' || normFolder(context.source) !== want) continue;
+            found.push({ name: context.specName || spec.name, path: featureSpecPath(dir) });
+        } catch {
+            continue;
+        }
+    }
+    return found;
 }

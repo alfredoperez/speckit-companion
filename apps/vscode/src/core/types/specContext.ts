@@ -620,6 +620,8 @@ export interface ViewerState {
     request?: string;
     /** The ticket the spec came from, an id or a URL. */
     source?: string;
+    /** True when `source` names an idea folder, so the Overview can open that idea. */
+    sourceIsIdea?: boolean;
     /** An earlier spec folder this one extends. */
     extends?: string;
     /** An earlier spec folder this one replaces. */
