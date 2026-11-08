@@ -23,3 +23,8 @@ reads: [implement-exec]
 
    One `--verify-run` per runnable check and one `--verified` per judgement (a manual pass, a warning you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--assumes <req> "<what>"` per requirement the code relies on something no test checks (a library, the clock, the database), one `--decision` per genuine implementation choice. Record `--concern` only for real friction; on a clean run record none.
 
+8. **Set the review depth from the risk tier**, once validation ends:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --risk
+   ```
+   It prints the tier the changed files call for. If you know something the files do not show, raise it with `--risk-raise <normal|high> "<reason>"`; it never goes down. Review the work before it is committed at that depth: low is your own careful read of the diff, normal is one independent review, high is two independent reviewers.

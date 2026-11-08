@@ -26,7 +26,7 @@ commands:
           # wall clock and found nothing the self-review below had not already caught.
           - { type: prompt, text: "Before this work is committed, self-review your full diff against the project conventions and the review checklist, and fix any violations you find." }
           # A reviewer other than the author, because the self-review above is the author marking their own work.
-          - { type: prompt, text: "Now have the diff reviewed by someone other than yourself, before the commit. Dispatch ONE subagent running the /code-review skill over the working diff. Add a second subagent, in the same message, running /codex:review over the same diff ONLY when the diff touches one of the three places where a second pair of eyes has earned its cost: the webview renderer, the writer of the run record, or a publish command. Everywhere else /code-review alone is the gate. Each subagent returns findings only, never file contents. Then judge every finding yourself: fix the real ones, and say in one line which you rejected and why. ONE ROUND. Review a second time only when your own fixes changed real logic, meaning control flow, a migration, a data-shape writer, an availability or auth gate, or a DOM or lifecycle refactor, and then review only what you changed. Never a third. Carry anything still open into the PR body as a gap. If a subagent tool is unavailable, run /code-review inline once and say so." }
+          - { type: prompt, text: "Now have the diff reviewed by someone other than yourself, before the commit. Dispatch ONE subagent running the /code-review skill over the working diff. Add a second subagent, in the same message, running /codex:review over the same diff ONLY when the risk tier recorded by `write-context.py --risk` is high (no tier recorded: run `--risk` first) (the renderer, the run-record writer and the publish commands are listed as high below). Everywhere else /code-review alone is the gate. Each subagent returns findings only, never file contents. Then judge every finding yourself: fix the real ones, and say in one line which you rejected and why. ONE ROUND. Review a second time only when your own fixes changed real logic, meaning control flow, a migration, a data-shape writer, an availability or auth gate, or a DOM or lifecycle refactor, and then review only what you changed. Never a third. Carry anything still open into the PR body as a gap. If a subagent tool is unavailable, run /code-review inline once and say so." }
           - { type: prompt, text: "Commit the work and open a pull request using the create-pr skill, following the repo PR conventions. Do not merge. Leave the PR open for review. If you cannot run git or gh, report what you would do and continue." }
 
   specify:
@@ -64,3 +64,12 @@ commands:
       before:
         tasks-doc:
           - { type: node, ref: debug-timing }
+
+# Paths that make a change high risk, on top of Companion's defaults.
+risk:
+  high:
+    - "apps/vscode/webview/src/**"
+    - "apps/speckit-extension/scripts/capture.py"
+    - "apps/speckit-extension/scripts/write-context.py"
+    - "apps/speckit-extension/scripts/spec_context.py"
+    - ".claude/commands/publish*.md"

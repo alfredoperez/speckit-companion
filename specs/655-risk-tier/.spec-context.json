@@ -1,0 +1,541 @@
+{
+  "workflow": "companion",
+  "specName": "Review depth follows a risk tier the code computes",
+  "branch": "main",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T23:56:06.936Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-07T23:56:52.235Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T23:56:52.464Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:58:19.510Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:58:19.653Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:58:20.032Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T23:58:20.182Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "generate",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:58:20.327Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:58:20.734Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-07T23:58:20.827Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:59:25.195Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:59:25.323Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:59:25.417Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-07T23:59:25.513Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:00:04.046Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:00:04.164Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:00:04.280Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:00:04.397Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:00:04.514Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:09:23.524Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:09:23.637Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T00:09:23.656Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T00:09:24.171Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T00:09:24.349Z"
+    }
+  ],
+  "request": "Issue #963: feat: show what is proven, tested, assumed or only claimed for each spec — slice 4 of 6, item r7 only. PR body must say `Part of #963` (r7), never Closes.\n\nr7 · Review depth follows a risk tier the code computes; the agent may raise it with a reason, never lower it. Acceptance: the review depth comes from a computed risk tier, and an agent's raise is recorded with its reason.",
+  "unattended": true,
+  "coverage": {
+    "FR-001": {
+      "title": "The writer computes a low, normal or high tier from the changed files and records the reasons",
+      "tasks": [
+        "T001",
+        "T002",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_risk_tier.py"
+      ]
+    },
+    "FR-002": {
+      "title": "High defaults: migrations, SQL, auth, CI workflows, over 20 files; low: docs and tests only",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_risk_tier.py"
+      ]
+    },
+    "FR-003": {
+      "title": "A project adds high and low paths in companion.yml",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_risk_tier.py::test_a_project_glob_makes_a_path_high"
+      ]
+    },
+    "FR-004": {
+      "title": "The agent raises with a reason; lower, equal or reasonless raises are refused; recompute keeps a raise",
+      "tasks": [
+        "T001",
+        "T002",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_risk_tier.py"
+      ]
+    },
+    "FR-005": {
+      "title": "Implement computes the tier before review and sets the review depth",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-006": {
+      "title": "The Overview shows the review depth and who raised it and why",
+      "tasks": [
+        "T006",
+        "T007",
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx",
+        "apps/vscode/src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "Computing or raising never fails the host",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_risk_tier.py::test_outside_git_it_is_normal_and_says_why"
+      ]
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 13,
+    "projectedTasks": 15,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "The PR receipts (r1) and the mutation check (r4) are later slices"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts (capture.py, write-context.py, companion_config.load_config)",
+    "area: apps/speckit-extension/nodes/implement/record-verified.md",
+    "area: apps/vscode/src/features/spec-viewer/stateDerivation.ts",
+    "area: apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx VerifiedSection",
+    "constraint: writers never fail the host; history only grows"
+  ],
+  "intent": "Compute a low, normal or high risk tier from the changed files, let the agent only raise it with a reason, and set the review depth from it",
+  "source": "#963",
+  "workingBranch": "655-risk-tier",
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/655-risk-tier --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  WARNING plan.md:31  `main` is not within 8 lines of `apps/speckit-extension/scripts/write-context.py:1398` (symbol-not-near) ·   WARNING plan.md:38  `deriveViewerState` is not within 8 lines of `apps/vscode/src/features/spec-viewer/stateDerivation.ts:410` (symbol-not-near) ·   0 error(s), 2 warning(s)"
+    },
+    {
+      "what": "Type check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "93461613",
+      "tree": "f97b0b25e7db819bad0102c6ef70ea5d95bccdd1"
+    },
+    {
+      "what": "Jest suite",
+      "command": "npx jest",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 73.4,
+      "result": "Snapshots:   0 total · Time:        72.744 s, estimated 83 s · Ran all test suites.",
+      "commit": "93461613",
+      "tree": "f97b0b25e7db819bad0102c6ef70ea5d95bccdd1"
+    },
+    {
+      "what": "Canvas suite",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 20.1,
+      "result": "npm notice run node apps/copilot-canvas/build.mjs · npm notice run speckit-companion@0.37.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "93461613",
+      "tree": "95ff7607e1532668f5e205996dac5fa6da0593c2"
+    },
+    {
+      "what": "speckit-extension python suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 108.0,
+      "result": "---------------------------------------------------------------------- · Ran 1895 tests in 107.754s · OK (skipped=8)",
+      "commit": "93461613",
+      "tree": "8b94e242610499b05191845d82188b2190a2f666"
+    },
+    {
+      "what": "Command bodies match their nodes",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "93461613",
+      "tree": "95ff7607e1532668f5e205996dac5fa6da0593c2"
+    },
+    {
+      "what": "Instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.mark-complete.md                 0       0      0      48 · speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19",
+      "commit": "93461613",
+      "tree": "95ff7607e1532668f5e205996dac5fa6da0593c2"
+    },
+    {
+      "what": "Command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents",
+      "commit": "93461613",
+      "tree": "95ff7607e1532668f5e205996dac5fa6da0593c2"
+    },
+    {
+      "what": "Package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 26 runtime scripts, closure matches the declared list",
+      "commit": "93461613",
+      "tree": "95ff7607e1532668f5e205996dac5fa6da0593c2"
+    }
+  ],
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "decisions": [
+    {
+      "decision": "The tier in force is the max of the computed tier and any raise",
+      "why": "Recomputing must never lower a raise",
+      "rejected": "Letting the last write win",
+      "by": "agent",
+      "at": "2026-11-07T23:58:19.767Z"
+    },
+    {
+      "decision": "An unreadable change computes normal with a reason; an empty change computes low",
+      "why": "Never fail and never claim a low risk without evidence",
+      "rejected": "Failing the call when git is missing",
+      "by": "agent",
+      "at": "2026-11-07T23:58:19.767Z"
+    },
+    {
+      "decision": "Project globs in companion.yml extend the defaults",
+      "why": "Risky paths differ per project",
+      "rejected": "Fixed defaults only",
+      "by": "agent",
+      "at": "2026-11-07T23:58:19.767Z"
+    },
+    {
+      "decision": "An empty change computes normal, not low",
+      "why": "Low would skip review without evidence",
+      "rejected": "Low for no change",
+      "by": "agent",
+      "at": "2026-11-08T00:09:23.776Z"
+    },
+    {
+      "decision": "Any valid raise is kept and the tier is the max of computed and raised",
+      "why": "A recompute at the same tier must not drop the agent reason",
+      "rejected": "Keeping the raise only while it is above computed",
+      "by": "agent",
+      "at": "2026-11-08T00:09:23.776Z"
+    },
+    {
+      "decision": "Verified stays hidden when nothing was checked",
+      "why": "A depth line alone reads as verification",
+      "rejected": "Showing the section with only the depth",
+      "by": "agent",
+      "at": "2026-11-08T00:09:23.776Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: risk writer with compute and raise-only, implement node sets review depth, Verified shows the depth"
+    },
+    "tasks": {
+      "summary": "11 tasks: risk writer and flags, implement node and review hook, viewer pill; polish"
+    },
+    "implement": {
+      "summary": "A risk tier computed from the changed files sets the review depth; the agent may only raise it"
+    }
+  },
+  "approach": "A risk writer computes low, normal or high from the changed files and project globs; a raise can only add caution. Implement computes it after validation and sets the review depth; Verified shows a Review depth pill.",
+  "currentTask": null,
+  "task_summaries": {
+    "T006": {
+      "status": "DONE",
+      "did": "RiskEntry type and schema",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts",
+        "apps/vscode/src/core/types/spec-context.schema.json",
+        "apps/vscode/webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "pickRisk",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/stateDerivation.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Review depth pill in Verified head",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx",
+        "apps/vscode/webview/styles/spec-viewer/_overview-dossier.css"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "risk tests and stories",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/__tests__/stateDerivation.test.ts",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx",
+        "apps/vscode/webview/src/spec-viewer/components/ActivityPanel.stories.tsx"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "compute_risk, set_risk, raise_risk: merge-base files plus untracked, default and project globs, tier = max(computed, raised)",
+      "files": [
+        "apps/speckit-extension/scripts/capture.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "--risk and --risk-raise TIER REASON; refusals declined",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Record node step 8 computes the tier and sets review depth; close step renumbered 9; body rebuilt",
+      "files": [
+        "apps/speckit-extension/nodes/implement/record-verified.md",
+        "apps/speckit-extension/nodes/implement/complete.md",
+        "apps/speckit-extension/commands/speckit.companion.implement.md"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "This repo's review hook adds Codex on a high tier; risk.high lists renderer, writer, publish",
+      "files": [
+        ".specify/companion.yml"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Ten tier tests incl. project glob, spec folders, no git, raise kept, refusals",
+      "files": [
+        "apps/speckit-extension/tests/test_risk_tier.py"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Canvas vendor rebuilt; clip capture changed no image (a flaky builder capture discarded); changelog lines extended",
+      "files": [
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor/viewer.css",
+        "CHANGELOG.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "tsc, Jest, canvas and Python suites, build check, budget, emissions, manifest exit 0",
+      "files": [
+        "-"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "In a monorepo the tier counts the whole git repository, not the project folder; a hand-damaged stored raise can be lost",
+      "step": "implement"
+    }
+  ],
+  "last_action": "11/11 tasks; all suites green",
+  "convergeStartedAt": "2026-11-08T00:09:24.205Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-08T00:09:24.243Z",
+      "by": "extension",
+      "finishedAt": "2026-11-08T00:09:24.412Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

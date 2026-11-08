@@ -139,6 +139,25 @@
         "scopeSignal": { "type": "string", "enum": ["larger", "smaller", "none"] },
         "verdict": { "type": "string", "enum": ["simple", "normal", "oversized"] }
       }
+    },
+    "risk": {
+      "type": "object",
+      "required": ["tier", "computed", "reasons"],
+      "properties": {
+        "tier": { "type": "string", "enum": ["low", "normal", "high"] },
+        "computed": { "type": "string", "enum": ["low", "normal", "high"] },
+        "reasons": { "type": "array", "items": { "type": "string" } },
+        "raised": {
+          "type": "object",
+          "required": ["tier", "reason", "by", "at"],
+          "properties": {
+            "tier": { "type": "string", "enum": ["low", "normal", "high"] },
+            "reason": { "type": "string" },
+            "by": { "type": "string" },
+            "at": { "type": "string" }
+          }
+        }
+      }
     }
   },
   "$defs": {
