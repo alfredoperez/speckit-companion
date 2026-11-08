@@ -11,18 +11,14 @@ extension:
   license: MIT
 
 requires:
-  # Floor is the workflow-engine surface the Companion workflow rides:
-  # `specify workflow run`/`resume` plus the `command`/`gate`/`switch` step
-  # registry, all present from the 0.9.5 engine. A bare floor is correct as
-  # long as spec-kit's released line has moved past 0.9.5 — `.dev0` is only
-  # needed when the floor equals the exact line spec-kit's git HEAD is
-  # currently building (see spec-kit's own pyproject.toml version).
-  # That condition has not held since 0.9.5 shipped stable, so the bare floor
-  # blocks nobody. Do not "fix" this back to `>=0.9.5.dev0`: that pin was live
-  # only while spec-kit HEAD built the 0.9.5 line, and was deliberately removed
-  # in 0.20.2. The stale `0.9.5.dev0` strings under `examples/` are frozen
-  # snapshots from that era, not versions anyone runs today.
-  speckit_version: ">=0.9.5"
+  # The floor is the highest minimum among the CLI features this extension uses:
+  #   workflow engine (run/resume, command/gate/switch steps): 0.9.5
+  #   `specify init --extension`: 0.15.2
+  #   template stack and resolver: 0.16.2
+  #   `capture`: 1.2.1
+  #   top-level `defaults`: 1.2.5
+  # `.dev0` keeps a dev build of that line installable; dev builds sort below the final.
+  speckit_version: ">=1.2.5.dev0"
   tools:
     - name: python3
       required: false

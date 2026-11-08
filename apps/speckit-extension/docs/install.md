@@ -11,7 +11,7 @@ specify extension --help     # confirm `add` / `list` are present
 
 `python3` is also used by the capture script — but it's an **optional** tool: the capture degrades gracefully (warns + skips) if `python3` is absent and never fails the host spec-kit command.
 
-> **Version floor:** the extension declares `requires.speckit_version: ">=0.9.5"` — the release that introduced the workflow engine (`specify workflow run`/`resume`) and the `command`/`gate`/`switch` step registry the Companion workflow rides. The floor is deliberately **bare**, with no `.dev0` suffix: spec-kit shipped 0.9.5 as a stable release long ago and its `main` now builds a far later line, so git/`uv` dev builds (`X.Y.Z.devN`) already satisfy `>=0.9.5` under PEP 440. A `.dev0` suffix would only be needed if this floor were ever equal to the exact line spec-kit HEAD is currently building.
+> **Version floor:** the extension declares `requires.speckit_version: ">=1.2.5.dev0"`, the highest minimum among the CLI features it uses; `extension.yml` lists each one. The `.dev0` suffix keeps git and `uv` dev builds of that line installable, since they sort below the final release under PEP 440.
 
 ## From the release archive (recommended)
 

@@ -13,7 +13,7 @@ All notable changes to this project will be documented in this file.
 - **The Overview names the ticket.** It shows ==the ticket a spec came from== and the spec it extends, and the specs filter finds that ticket. ([#972](https://github.com/alfredoperez/speckit-companion/pull/972)) <!-- area: spec-viewer -->
 
 ### Fixed
-- **Upgrade follows Spec Kit's own steps.** Upgrade runs ==`specify self upgrade`, then each assistant's upgrade==, then re-adds Companion, so edited files survive. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->
+- **Upgrade follows Spec Kit's own steps.** Upgrade runs ==`specify self upgrade`, each assistant's upgrade==, then re-adds Companion, and a CLI before 1.2.5 keeps old presets. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957), [#980](https://github.com/alfredoperez/speckit-companion/pull/980)) <!-- area: install -->
 - **Answers refine the report in place.** Answering a question on a bug or idea ==edits that one report== instead of re-running the stage. ([#959](https://github.com/alfredoperez/speckit-companion/pull/959)) <!-- area: spec-viewer -->
 - **A reinstall keeps your pipeline.** Opening a project after a reinstall or update ==rebuilds its customised pipeline==, so the assistant never runs the shipped default. ([#950](https://github.com/alfredoperez/speckit-companion/pull/950)) <!-- area: pipeline -->
 - **Commands match what your project installed.** Companion spells each command ==the way Spec Kit recorded it== for your assistant, so Copilot projects get the dash names on disk. ([#948](https://github.com/alfredoperez/speckit-companion/pull/948), [#956](https://github.com/alfredoperez/speckit-companion/pull/956)) <!-- area: assistants -->
