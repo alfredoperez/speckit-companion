@@ -307,6 +307,34 @@ const builder = {
   ],
 };
 
+const proof = {
+  shot: {
+    src: '/landing/proof-verified.png',
+    width: 1312,
+    height: 1076,
+    alt: 'The Verified section of a spec Overview: a review depth line raised by the agent with its reason, a passed check, a check tinted amber and marked Out of date because two files changed since it ran, and one check the agent only reported.',
+    caption: 'Checks with the commit they ran on, and the ones the code has moved past',
+  },
+  points: [
+    {
+      title: 'Your request, word for word',
+      body: 'The Overview quotes what you typed, and every decision says who answered it and when.',
+    },
+    {
+      title: 'Tested, assumed or weak',
+      body: 'Each requirement shows its tests, what it relies on without one, or, with the mutation check on, tests that let a planted bug through.',
+    },
+    {
+      title: 'Checks that go stale',
+      body: 'A check keeps the code it ran on. Change the code and it reads Out of date until you run it again.',
+    },
+    {
+      title: 'Receipts in the pull request',
+      body: 'The PR body lists every check with its exit code, built from the run record, and marks what the agent only claimed.',
+    },
+  ],
+};
+
 // What the page has not shown yet. The Overview, living specs, review and the
 // pipeline each have a section above, so none of them gets a card here.
 const cards = [
@@ -985,6 +1013,47 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           extension for Spec Kit.
         </span>
         <a class="qs-full" href="/docs/customize/workflow-builder/">Read the Workflow Builder guide</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--builder" id="proof">
+    <div class="inner pb">
+      <div class="qs-say">
+        <h2>What was proven, and what was only claimed</h2>
+        <p>
+          Every spec says what a run actually checked, what it assumed, and what the agent only
+          reported. The evidence comes from the run record, not from the assistant's summary.
+        </p>
+      </div>
+
+      <div class="qs-sheet pb-sheet" data-reveal>
+        <figure class="qs-shot pb-shot">
+          <img
+            src={proof.shot.src}
+            alt={proof.shot.alt}
+            width={proof.shot.width}
+            height={proof.shot.height}
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>{proof.shot.caption}</figcaption>
+        </figure>
+        <ul class="pb-points" aria-label="What a spec proves">
+          {
+            proof.points.map((point) => (
+              <li>
+                <p class="pb-point-title">{point.title}</p>
+                <p class="pb-point-body">{point.body}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <p class="pb-note">
+        <span>It all reads from the spec's run record, so it travels with the branch.</span>
+        <a class="qs-full" href="/docs/results/the-overview/">Read what the Overview shows</a>
       </p>
     </div>
   </section>

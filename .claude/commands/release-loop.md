@@ -18,6 +18,15 @@ Triage the open issues (`gh issue list`), or take the numbers in `$ARGUMENTS`. V
 
 Run `/fix-tickets` with the batch's issue numbers, so it does not stop to confirm the queue. Full tickets run the full loop sequentially, one at a time; light tickets go in a separate `--light` run. Anything already built by hand goes through `/ship-ticket`. Merge a PR only after every CI check has finished and passed, never with a check still pending. Nothing is desktop-tested per ticket. Every merged change a user will meet has an entry under `## [Unreleased]`; write a missing one with `/changelog-entry`.
 
+**Before QA, answer the readiness questions** and carry each answer into the step 7 report. Anything that needs the user becomes a step 4 question.
+
+- **Tickets.** Which open items must ship in this release, and which wait? Release-time items (a version floor, a catalog refresh) are named, not built.
+- **Screenshots.** Does every big feature have a 16:9 shot cropped tight enough to read on a phone? The site's changelog takes the clean image plus a `highlight` box in `content/media/changelog.json` and draws the highlight itself; social posts and articles take a copy with a yellow marker label. Check one at 360px wide before calling it done.
+- **Copilot canvas and Claude Code mod.** Did their vendored code change (`npm run canvas:build`, `npm run mod:build`), and do they show the new record fields? A changed canvas needs `/publish-canvas`; fields they cannot show are named in the report.
+- **Shared code.** Did this release copy logic between the VS Code viewer, the canvas and the mod that should live once? Name it; do not refactor here.
+- **Docs and landing page.** Does each new feature have its page on the site, and does the landing page say what this release is about?
+- **Article.** Does a big feature deserve a post? Add it to `apps/web/data/blog/_queue.json` in the alfredo-perez.dev repo.
+
 ## 3. QA
 
 Once the batch is merged, run `/release-qa` on the fresh `main`: the automated gates, the terminal run, the scripted real-window checks (viewer, navigation, builder, themes, graded by `grade-scripted.py`), the headless canvas checks, then `qa-stage.sh` until it prints READY. Hand the user the short click-only Claude Desktop handoff path to paste (first open, stock and two roots, the timed run, the GitHub Copilot app), and turn Desktop's reply into the QA report. A FAIL with an obvious fix goes back to step 2; one that needs a call becomes a step 4 question.
