@@ -1724,6 +1724,8 @@ try {
     };
     const talkWindow = async () => {
         await resize({ maximize: true });
+        // A toast (e.g. "SpecKit detected! Configure your project principles") would sit over the footer.
+        await command('Notifications: Clear All Notifications').catch(() => undefined);
         if (!(await sidebarShown())) await command('View: Toggle Primary Side Bar Visibility');
     };
     /** One picture per commented line: the line with its comment card under it. */
@@ -1752,8 +1754,12 @@ try {
         await webview().locator('#specContent').waitFor({ timeout: 15000 });
         await webview().locator('#specContent').fill('Stop the article editor from losing work when the writer navigates away. Save the title, description, body and tags as they change, restore them on return, offer a Discard draft control, and clear the draft once the article is published or updated.');
         await page.waitForTimeout(800);
+        await command('Notifications: Clear All Notifications').catch(() => undefined);
+        await page.waitForTimeout(400);
         await capture('talk-new-spec-window', { target: 'window' });
         await capture('talk-new-spec', { target: 'editor', ratio: 16 / 9 });
+        // The New Spec screen left open stops every later step from finding its webview.
+        await clear();
         return 'talk-new-spec, talk-new-spec-window';
     }, { needs: 'talk-sandbox', shots: true });
 
