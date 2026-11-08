@@ -143,7 +143,7 @@ All three need the [Companion Spec Kit extension](/docs/install) and work with a
 
 | Question | Command | What it does |
 | --- | --- | --- |
-| Where does this spec stand? | `/speckit.companion.status` | Reports the current step, its status, the decisions recorded so far and the next action. Changes nothing. |
+| Where does this spec stand? | `/speckit.companion.status` | Reports the current step, its status, the decisions recorded so far and the next action. A script writes the answer and the assistant prints it as is. Changes nothing. |
 | I stopped halfway. How do I carry on? | `/speckit.companion.resume` | Finds the next step, carries the recorded decisions into scope and sends that step's command. In implement it continues at the next unchecked task. |
 | Did the run do what it says it did? | `/speckit.companion.doctor` | Recomputes what happened and reports problems. Read-only. |
 
