@@ -152,6 +152,30 @@ describe('SpecViewerProvider.showSpec', () => {
         expect((generateHtml as jest.Mock).mock.calls.length).toBeGreaterThan(firstHtmlCalls);
     });
 
+    it('opens a step document as soon as the run writes it, even from the Overview', async () => {
+        (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('plan', false)]);
+        await provider.showSpec(SPEC_DIR);
+        const state = (provider as any).panels.get(SPEC_DIR).state;
+        state.landing = 'overview';
+
+        (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('plan', true)]);
+        await provider.refreshIfDisplaying(`${SPEC_DIR}/plan.md`);
+
+        expect(renderedDocumentType()).toBe('plan');
+        expect((provider as any).panels.get(SPEC_DIR).state.landing).toBe('document');
+    });
+
+    it('stays on the Overview when an extra document such as research.md appears', async () => {
+        (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true)]);
+        await provider.showSpec(SPEC_DIR);
+        (provider as any).panels.get(SPEC_DIR).state.landing = 'overview';
+
+        (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('research', true)]);
+        await provider.refreshIfDisplaying(`${SPEC_DIR}/research.md`);
+
+        expect((provider as any).panels.get(SPEC_DIR).state.landing).toBe('overview');
+    });
+
     it('opens a spec with no documents at all without failing', async () => {
         (scanDocuments as jest.Mock).mockResolvedValue([]);
 
