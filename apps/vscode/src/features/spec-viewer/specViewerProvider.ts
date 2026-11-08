@@ -448,6 +448,10 @@ export class SpecViewerProvider {
     const wasNew = !instance.state.availableDocuments.find(
       d => d.type === docType && d.exists,
     );
+    // A step's new document opens even when the panel was landed on the Overview.
+    if (wasNew && instance.state.availableDocuments.length > 0 && ([CORE_DOCUMENTS.SPEC, CORE_DOCUMENTS.PLAN, CORE_DOCUMENTS.TASKS] as string[]).includes(docType)) {
+      instance.state.landing = "document";
+    }
 
     await this.updateContent(
       instance.state.specDirectory,

@@ -8,7 +8,7 @@ Your user's normal VS Code has SpecKit Companion {{VERSION}} installed. Three VS
 - **{{STOCK}}**: spec-kit without SpecKit Companion.
 - **two-roots**: both folders in one window.
 
-Claude Code already trusts both folders, so the terminals it opens will not ask anything. Grant access to **Visual Studio Code** (click tier) and, for part D only, **GitHub Copilot**. Confirm the front window's title before each click. If a click is refused because the grant lapsed, request access again.
+Claude Code already trusts both folders, so the terminals it opens will not ask anything. **You cannot click VS Code's Trust button:** your safety rules refuse it. After A1, ask the user to click Trust in all three windows ({{SANDBOX}}, {{STOCK}} and two-roots) and to tell you what appeared when they trusted {{STOCK}}, then carry on from A2. Grant access to **Visual Studio Code** (click tier) and, for part D only, **GitHub Copilot**. Confirm the front window's title before each click. If a click is refused because the grant lapsed, request access again.
 
 ## Checks
 
@@ -16,11 +16,11 @@ Write PASS, FAIL or BLOCKED and one line of what you saw for each. For a FAIL, g
 
 **A. First open.** {{SANDBOX}} window.
 1. If it shows Restricted Mode, note the SpecKit icon, Specs view and any popup before trusting. Nothing broken or empty is expected.
-2. Trust the folder (banner or Manage). Open the SpecKit icon: the Specs view lists the specs in groups; clicking `Demo — Planned` opens a styled viewer with a header, a rail and the document. A blank or unstyled viewer is a FAIL: open Help > Toggle Developer Tools > Console and copy the first error.
+2. Once the user has trusted the folders, open the SpecKit icon: the Specs view lists the specs in groups; clicking `Demo — Planned` opens a styled viewer with a header, a rail and the document. A blank or unstyled viewer is a FAIL: open Help > Toggle Developer Tools > Console and copy the first error.
 
 **B. Stock and two roots.**
-1. {{STOCK}} window: trust it, open the SpecKit icon. Write down each popup or banner, click its main button once, and say what happened.
-2. two-roots window: trust it. Say which folder's specs the Specs view shows and which folder New Spec (+) targets. Cancel the form.
+1. {{STOCK}} window (the user trusted it): open the SpecKit icon. Write down each popup or banner, click its main button once, and say what happened.
+2. two-roots window: say which folder's specs the Specs view shows and which folder New Spec (+) targets. Cancel the form.
 
 **C. One spec through VS Code's buttons.** {{SANDBOX}} window.
 1. Click `{{TIMED}}`'s spec in the sidebar. The footer's forward button reads Next: Plan.

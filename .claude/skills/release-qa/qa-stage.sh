@@ -16,7 +16,7 @@ FEATURE="Show a count of starred todos in the list footer."
 fail() { echo "[stage] NOT READY: $*"; exit 1; }
 say() { echo "[stage] $*"; }
 
-[ -z "$(git -C "$REPO" status --porcelain)" ] || fail "the repo has uncommitted changes, so the build under test would not match HEAD"
+[ -z "$(git -C "$REPO" status --porcelain -- . ':(exclude).claude' ':(exclude).specify')" ] || fail "the repo has uncommitted changes, so the build under test would not match HEAD"
 [ -e "$SB" ] && fail "$SB exists, pick a new run name"
 [ -e "$STOCK" ] && fail "$STOCK exists, pick a new run name"
 mkdir -p "$RESULTS" "$HERE/.bin"

@@ -714,10 +714,10 @@ try {
         }
     }, { needs: 'fixtures' });
 
-    await step('answer-sends', 'Send answer hands the answer to the assistant with the assess command', async () => {
+    await step('answer-sends', 'Send answer asks the assistant to fill in that one report, not to re-run the stage', async () => {
         await webview().locator('button', { hasText: 'Send answer' }).click();
         await expectText(webview().locator('.rp-question__sent'), /Sent to your assistant/);
-        return terminalText(/\[sent to assistant\].*speckit[-.]bug[-.]assess slug=cart-total-skips-first/);
+        return terminalText(/\[sent to assistant\] Update\b/);
     }, { needs: 'fixtures' });
 
     for (const tab of ['Overview', 'Specification', 'Plan', 'Tasks']) {
