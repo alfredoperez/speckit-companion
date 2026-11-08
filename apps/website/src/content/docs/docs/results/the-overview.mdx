@@ -161,6 +161,7 @@ With no arguments the doctor checks the active spec. `--feature-dir specs/042-ex
 | A step doing the next step's work | Plan content in the spec, a task list in the plan, code written before implement |
 | A step that closed having verified nothing | Implement finished but no test or check ever ran |
 | A missing file | A step that closed without the document it promised |
+| Two specs with one number | `634-plan-code-block` and `634-screen-block`, made by two runs that started together |
 | Why a spec didn't complete | The write was refused, it never arrived, or it landed and the display disagrees |
 
 Every check says whether it ran, was skipped and why, or doesn't apply, so a check that couldn't look never reads as clean. The doctor reports and stops there. To explain a failed capture it reads `specs/<NNN>/.trace.jsonl`, where every capture call writes one line, and that file is safe to delete.

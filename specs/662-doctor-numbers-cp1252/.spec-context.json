@@ -1,0 +1,254 @@
+{
+  "workflow": "speckit",
+  "specName": "Doctor flags shared spec numbers; status survives a legacy console",
+  "branch": "662-doctor-numbers-cp1252",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:20:23.271Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:21:57.743Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:21:57.860Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:21:58.226Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:21:58.368Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:21:58.804Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:21:58.924Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:21:59.110Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:21:59.298Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:21:59.458Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T13:21:59.487Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T13:25:36.628Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T13:28:21.882Z"
+    }
+  ],
+  "request": "#929 w30 · doctor flags duplicate folder numbers (P3). Add a check to apps/speckit-extension/scripts/doctor_checks.py that lists each numeric prefix under specs/ used by more than one folder, with the folders that share it. Acceptance: Doctor names each duplicated prefix and its folders. Timestamp-named folders are ignored. A clean specs/ gives no finding.\n#929 w43 · Windows-safe output in the status script (P3). In apps/speckit-extension/scripts/status-context.py, make both the summary and the JSON safe for a non-UTF-8 stdout. Acceptance: Running with PYTHONIOENCODING=cp1252 exits 0 and prints valid JSON. The RESOLUTION line still parses. Output on UTF-8 consoles keeps its meaning.\nOwner picked option 2: build the four small P3s (#929 w30, w43; #930 w40, w38) before the release.",
+  "size": "simple",
+  "decisions": [
+    {
+      "decision": "Seven digits or fewer is a sequence number",
+      "why": "a date or timestamp prefix has eight or more",
+      "rejected": "reading .specify/init-options.json for the numbering mode",
+      "by": "agent",
+      "at": "2026-11-08T13:21:58.061Z"
+    },
+    {
+      "decision": "Swap arrow and dash only when stdout cannot encode them",
+      "why": "UTF-8 output keeps its meaning",
+      "rejected": "ASCII everywhere",
+      "by": "agent",
+      "at": "2026-11-08T13:21:58.061Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Doctor names each shared number and its folders",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor_numbering.py::test_names_each_shared_number_and_its_folders"
+      ]
+    },
+    "FR-002": {
+      "title": "Timestamp prefixes are ignored",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor_numbering.py::test_timestamp_folders_and_a_clean_specs_folder_give_no_finding"
+      ]
+    },
+    "FR-003": {
+      "title": "Status survives cp1252 and keeps its arrow on UTF-8",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor_numbering.py::test_status_exits_zero_with_parseable_json_on_cp1252",
+        "apps/speckit-extension/tests/test_doctor_numbering.py::test_utf8_output_keeps_the_arrow"
+      ]
+    }
+  },
+  "step_summaries": {
+    "tasks": {
+      "summary": "3 tasks"
+    }
+  },
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "check_numbering",
+      "files": [
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/scripts/doctor.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "console-safe status",
+      "files": [
+        "apps/speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "5 tests, changelog, doctor table row",
+      "files": [
+        "apps/speckit-extension/tests/test_doctor_numbering.py",
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Numbering and console tests",
+      "command": "python3 -m unittest apps/speckit-extension/tests/test_doctor_numbering.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.5,
+      "result": "---------------------------------------------------------------------- · Ran 5 tests in 0.472s · OK",
+      "commit": "b631a6a3",
+      "tree": "1b33167ccb5bfb90b0e3a09a0e24c40c96511953"
+    },
+    {
+      "what": "Doctor tests",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_doctor*.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 4.3,
+      "result": "---------------------------------------------------------------------- · Ran 143 tests in 4.222s · OK",
+      "commit": "b631a6a3",
+      "tree": "d87e9ed8ef92616aa92bf792dafca680f9905eb1"
+    },
+    {
+      "what": "Spec-kit extension suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 156.5,
+      "result": "---------------------------------------------------------------------- · Ran 1943 tests in 156.199s · OK (skipped=14)",
+      "commit": "b631a6a3",
+      "tree": "ea5218a89958545a3e3ddf8db88d47c04cd1991c"
+    },
+    {
+      "what": "Command bodies match their nodes",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "b631a6a3",
+      "tree": "63b685e79b5798c401e831b038934c409b27ba5e"
+    },
+    {
+      "what": "Docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "Snapshots:   0 total · Time:        1.43 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "b631a6a3",
+      "tree": "f261930a5217c6bb19b668e48240d70a14609e38"
+    }
+  ],
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "7 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-08T13:25:36.681Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-08T13:25:36.743Z",
+      "by": "extension",
+      "finishedAt": "2026-11-08T13:28:21.975Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

@@ -255,11 +255,32 @@ def resolve(feature_dir: Path) -> dict:
     return resolution
 
 
+#: Stand-ins for a console that cannot print the summary's arrow and dash (a legacy Windows code page).
+_ASCII_FALLBACK = str.maketrans({"→": "->", "—": "-"})
+
+
+def _console_safe() -> None:
+    """Never fail on a console that cannot encode a character: swap the arrow and dash, replace the rest."""
+    global print
+    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    try:
+        "→—".encode(encoding)
+        return
+    except (UnicodeEncodeError, LookupError):
+        pass
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
+    plain_print = print
+    print = lambda *args, **kwargs: plain_print(*(str(a).translate(_ASCII_FALLBACK) for a in args), **kwargs)  # noqa: E731
+
+
 def _print_summary(res: dict, plain: bool = False) -> None:
     if res.get("empty"):
         print("Nothing to summarize (no spec files or recorded state found).")
         if not plain:
-            print(f"RESOLUTION: {json.dumps(res, ensure_ascii=False)}")
+            print(f"RESOLUTION: {json.dumps(res, ensure_ascii=True)}")
         return
 
     print(f"Spec: {res['specName']}   (source: {res['source']})")
@@ -282,7 +303,7 @@ def _print_summary(res: dict, plain: bool = False) -> None:
         print(f"Next: {res['nextActionLabel']}  →  {nxt}")
 
     if not plain:
-        print(f"RESOLUTION: {json.dumps(res, ensure_ascii=False)}")
+        print(f"RESOLUTION: {json.dumps(res, ensure_ascii=True)}")
 
 
 def main() -> int:
@@ -293,6 +314,7 @@ def main() -> int:
     parser.add_argument("--plain", action="store_true",
                         help="only the lines a person reads: no RESOLUTION line, and a missing spec said on stdout")
     args = parser.parse_args()
+    _console_safe()
 
     root = wc._repo_root()
     feature_dir = wc.resolve_feature_dir(root, args.feature_dir)
