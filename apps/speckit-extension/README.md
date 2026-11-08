@@ -21,7 +21,7 @@ This extension runs inside [Spec Kit](https://github.com/github/spec-kit) and re
 
 ## Requirements
 
-- A Spec Kit CLI with the `extension` command, 0.9.5 or newer, from GitHub or PyPI.
+- A Spec Kit CLI with the `extension` command, 1.2.5 or newer, from GitHub or PyPI.
 - `python3` is optional. Without it the recording is skipped and your Spec Kit command still runs.
 
 ```bash

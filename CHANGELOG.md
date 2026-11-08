@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 - **A reinstall keeps your pipeline.** Opening a project after a reinstall or update ==rebuilds its customised pipeline==, so the assistant never runs the shipped default. ([#950](https://github.com/alfredoperez/speckit-companion/pull/950)) <!-- area: pipeline -->
 - **Commands match what your project installed.** Companion spells each command ==the way Spec Kit recorded it== for your assistant, so Copilot projects get the dash names on disk. ([#948](https://github.com/alfredoperez/speckit-companion/pull/948), [#956](https://github.com/alfredoperez/speckit-companion/pull/956)) <!-- area: assistants -->
 - **Converge is timed without the add-on.** In a project without Companion's Spec Kit extension, ==converge records its start and finish== like every other step. ([#956](https://github.com/alfredoperez/speckit-companion/pull/956)) <!-- area: run-record -->
+- **Old Spec Kit keeps its preset.** On a Spec Kit CLI older than 1.2.5, Companion ==leaves a leftover preset in place== and says how to upgrade. (PRLINK) <!-- area: install -->
 - **A step works on the spec you clicked.** Terminals Companion opens for a spec carry ==its folder==, so steps stop picking another spec from `feature.json`. ([#946](https://github.com/alfredoperez/speckit-companion/pull/946)) <!-- area: spec-viewer -->
 
 ## [0.37.0] - 2026-10-13

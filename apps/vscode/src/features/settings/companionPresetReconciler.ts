@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { specifyVersion } from '../../speckit/specKitUpgrade';
 
 const execAsync = promisify(exec);
 
@@ -58,6 +59,26 @@ export interface ReconcileDeps {
     /** Runs a shell command in the workspace; injected so tests don't touch the real CLI. */
     run?: (cmd: string, cwd: string) => Promise<void>;
     log?: (msg: string) => void;
+    /** The `specify` CLI version, or undefined when it can't be read. */
+    cliVersion?: () => Promise<string | undefined>;
+}
+
+/** Older CLIs remove a preset without restoring the stock skills it replaced. */
+export const PRESET_REMOVE_MIN_CLI = '1.2.5';
+
+/** Compares the first three numeric parts, so `1.2.5.dev0` counts as 1.2.5. */
+export function cliAtLeast(version: string | undefined, floor: string): boolean {
+    const parts = (v: string): number[] => v.split('.').slice(0, 3).map(n => parseInt(n, 10) || 0);
+    if (!version || !/^\d+\.\d+/.test(version)) {
+        return false;
+    }
+    const [a, b] = [parts(version), parts(floor)];
+    for (let i = 0; i < 3; i++) {
+        if ((a[i] ?? 0) !== (b[i] ?? 0)) {
+            return (a[i] ?? 0) > (b[i] ?? 0);
+        }
+    }
+    return true;
 }
 
 /** Removes each leftover preset still installed; a CLI failure is logged, never thrown, so activation survives a missing `specify`. */
@@ -81,6 +102,11 @@ async function removeOnce(workspaceRoot: string, deps: ReconcileDeps): Promise<P
     if (ops.length === 0) {
         log('[companion] no leftover preset installed, nothing to remove');
         return ops;
+    }
+    const cli = await (deps.cliVersion ?? (async () => (await specifyVersion())?.cli))();
+    if (!cliAtLeast(cli, PRESET_REMOVE_MIN_CLI)) {
+        log(`[companion] leftover preset kept: specify ${cli || '(unknown version)'} is older than ${PRESET_REMOVE_MIN_CLI}, which removes presets safely. Run "specify self upgrade", then reload.`);
+        return [];
     }
     for (const op of ops) {
         const cmd = presetCommandFor(op);

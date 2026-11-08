@@ -6,8 +6,14 @@ import {
     presetCommandFor,
     removeLeftoverPresets,
     isCompanionInstalled,
+    cliAtLeast,
     PresetOp,
 } from '../companionPresetReconciler';
+
+const mockCli = { version: '1.2.5' as string | undefined };
+jest.mock('../../../speckit/specKitUpgrade', () => ({
+    specifyVersion: async () => (mockCli.version === undefined ? undefined : { cli: mockCli.version, integrationUpgrade: true }),
+}));
 
 const LEFTOVERS = ['companion-standard', 'companion-turbo', 'companion-lean', 'sdd-lean'];
 const NONE: Record<string, boolean> = Object.fromEntries(LEFTOVERS.map(id => [id, false]));
@@ -59,6 +65,15 @@ describe('companionPresetReconciler', () => {
         });
     });
 
+    describe('cliAtLeast', () => {
+        it.each([
+            ['1.2.5', true], ['1.2.5.dev0', true], ['1.3.2', true], ['2.0', true],
+            ['1.2.4', false], ['1.2.0', false], ['0.16.2', false], ['', false], [undefined, false], ['dev', false],
+        ])('%s against 1.2.5 is %s', (v, expected) => {
+            expect(cliAtLeast(v, '1.2.5')).toBe(expected);
+        });
+    });
+
     describe('presetCommandFor', () => {
         it('formats a removal as an id-form CLI command', () => {
             expect(presetCommandFor({ id: 'companion-standard', action: 'remove' }))
@@ -103,6 +118,28 @@ describe('companionPresetReconciler', () => {
             const ops = await removeLeftoverPresets(root, { run });
             expect(calls).toEqual(['specify preset remove companion-standard']);
             expect(ops).toEqual([{ id: 'companion-standard', action: 'remove' }]);
+        });
+
+        it('keeps the leftover and says why on a CLI older than 1.2.5', async () => {
+            install('companion-standard');
+            const { calls, run } = recorder();
+            const logs: string[] = [];
+            const ops = await removeLeftoverPresets(root, { run, log: m => logs.push(m), cliVersion: async () => '1.2.0' });
+            expect(calls).toEqual([]);
+            expect(ops).toEqual([]);
+            expect(logs.join('\n')).toMatch(/specify 1\.2\.0 is older than 1\.2\.5/);
+        });
+
+        it('keeps the leftover when the CLI version cannot be read', async () => {
+            install('companion-standard');
+            mockCli.version = undefined;
+            const { calls, run } = recorder();
+            try {
+                await removeLeftoverPresets(root, { run });
+            } finally {
+                mockCli.version = '1.2.5';
+            }
+            expect(calls).toEqual([]);
         });
 
         it('runs nothing when no leftover is installed', async () => {
