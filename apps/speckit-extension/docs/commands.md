@@ -193,12 +193,12 @@ Two user-invokable commands turn the captured state into something actionable. B
 
 ### `speckit.companion.status`
 
-Prints the active spec's current step, status, recorded `decisions[]`, and the next action/command. Falls back to file-derivation when no state file exists.
+Prints the active spec's current step, status, recorded `decisions[]`, and the next action/command. Falls back to file-derivation when no state file exists. It runs the script with `--plain`, which leaves out the `RESOLUTION` line (that line is for `resume`), and the assistant prints the output unchanged, with no summary of its own.
 
 ```bash
-python3 .specify/extensions/companion/scripts/status-context.py
+python3 .specify/extensions/companion/scripts/status-context.py --plain
 # or target an explicit dir:
-python3 .specify/extensions/companion/scripts/status-context.py --feature-dir specs/<NNN>-<slug>
+python3 .specify/extensions/companion/scripts/status-context.py --plain --feature-dir specs/<NNN>-<slug>
 ```
 
 ### `speckit.companion.resume`
