@@ -307,7 +307,9 @@ export function buildToc(
         const line = rootRect.top + rootRect.height * 0.3;
         let best: HTMLElement | null = headings[0] ?? null;
         for (const heading of headings) {
-            if (heading.getBoundingClientRect().top <= line) best = heading;
+            const rect = heading.getBoundingClientRect();
+            if (rect.height === 0 && rect.width === 0) continue;
+            if (rect.top <= line) best = heading;
             else break;
         }
         if (!best) return;

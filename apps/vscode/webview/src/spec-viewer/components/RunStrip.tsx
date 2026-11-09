@@ -19,7 +19,7 @@ export function RunStrip() {
     // One format, always a percentage: counts are not sent on every path.
     const counts = ns?.taskCounts;
     const taskPercent = counts && counts.total > 0
-        ? Math.round((counts.checked / counts.total) * 100)
+        ? Math.floor((counts.checked / counts.total) * 100)
         : ns?.taskCompletionPercent;
     if (typeof taskPercent === 'number' && taskPercent > 0) {
         facts.push({ key: 'tasks', value: `${taskPercent}% tasks` });

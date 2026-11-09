@@ -76,7 +76,7 @@ export function parseAcceptanceScenarios(markdown: string): string {
 }
 
 export function emphasizeScenarioKeywords(text: string): string {
-    const plainGiven = /^Given\b/.test(text);
+    const plainGiven = /^(\*\*)?Given\b/.test(text);
     return text
         .replace(/\*\*(Given|When|Then)\*\*/g, (_m, k: string) => `<strong class="keyword-${k.toLowerCase()}">${k}</strong>`)
         .replace(/(^|,\s+)(Given|When|Then)\b/g, (_m, lead: string, k: string) => `${lead}<strong class="keyword-${k.toLowerCase()}">${k}</strong>`)

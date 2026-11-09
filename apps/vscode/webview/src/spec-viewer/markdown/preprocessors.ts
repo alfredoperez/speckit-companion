@@ -253,7 +253,7 @@ export function preprocessTechnicalContext(markdown: string): string {
                 continue;
             }
             if (!line.trim()) { lastKey = null; continue; }
-            if (cells.length && lastKey !== null) {
+            if (cells.length && lastKey !== null && !/^\s*([-*+]\s|\d+\.\s|\||<|>|[-*_]{3,}\s*$)/.test(line)) {
                 lastVal += ' ' + line.trim();
                 cells[cells.length - 1] = cell(lastKey, lastVal);
                 continue;
