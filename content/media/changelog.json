@@ -4,79 +4,37 @@
     "request-verbatim": {
       "file": "apps/website/public/changelog/vscode-0.38.0-request-verbatim.png",
       "alt": "The Overview's Request block quoting the developer's words exactly, above the spec summary.",
-      "caption": "Your request, quoted word for word.",
-      "highlight": {
-        "x": 144,
-        "y": 308,
-        "w": 1240,
-        "h": 164
-      }
+      "caption": "Your request, quoted word for word."
     },
     "decision-authors": {
       "file": "apps/website/public/changelog/vscode-0.38.0-decision-authors.png",
       "alt": "Decisions on the Overview, each tagged with who made it: the developer, the agent or a default.",
-      "caption": "Every decision says who made it.",
-      "highlight": {
-        "x": 144,
-        "y": 226,
-        "w": 1280,
-        "h": 350
-      }
+      "caption": "Every decision says who made it."
     },
     "assumed-weak": {
       "file": "apps/website/public/changelog/vscode-0.38.0-assumed-weak.png",
       "alt": "The requirements table with rows marked Assumed and Weak beside the tested ones.",
-      "caption": "Assumed and weakly tested requirements stand out.",
-      "highlight": {
-        "x": 144,
-        "y": 230,
-        "w": 1280,
-        "h": 342
-      }
+      "caption": "Assumed and weakly tested requirements stand out."
     },
     "stale-check": {
       "file": "apps/website/public/changelog/vscode-0.38.0-stale-check.png",
       "alt": "The Verified section: a passed check, and one tinted amber and marked Out of date because files changed since it ran.",
-      "caption": "A check reads Out of date once the code moves past it.",
-      "highlight": {
-        "x": 216,
-        "y": 238,
-        "w": 884,
-        "h": 163
-      }
+      "caption": "A check reads Out of date once the code moves past it."
     },
     "review-depth": {
       "file": "apps/website/public/changelog/vscode-0.38.0-review-depth.png",
       "alt": "A review depth line on the Overview, raised by the agent with its one-line reason.",
-      "caption": "How deep the review went, and why.",
-      "highlight": {
-        "x": 144,
-        "y": 280,
-        "w": 945,
-        "h": 79
-      }
+      "caption": "How deep the review went, and why."
     },
     "source-ticket": {
       "file": "apps/website/public/changelog/vscode-0.38.0-source-ticket.png",
       "alt": "The Overview's header naming the ticket the spec came from and the spec it extends.",
-      "caption": "The ticket a spec came from.",
-      "highlight": {
-        "x": 844,
-        "y": 266,
-        "w": 372,
-        "h": 107
-      }
+      "caption": "The ticket a spec came from."
     },
     "bug-times": {
       "file": "apps/website/public/changelog/vscode-0.38.0-bug-times.png",
       "alt": "A bug page with step times for assess, fix and test, and a review pause between them.",
-      "caption": "Bug runs with real step times.",
-      "highlight": {
-        "x": 224,
-        "y": 363,
-        "w": 1456,
-        "h": 176
-      }
+      "caption": "Bug runs with real step times."
     }
   },
   "vscode@0.37.0": {
