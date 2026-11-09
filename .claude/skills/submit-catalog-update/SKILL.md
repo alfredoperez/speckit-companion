@@ -19,6 +19,7 @@ Deliberately no `Edit`/`Write`: this skill writes to a third-party repository an
 5. **Never rebuild the catalog JSON.** The script deep-copies the live entry and applies deltas, because that entry carries `verified`, `downloads`, `stars`, and `created_at` which exist nowhere in `extension.yml`. Rebuilding drops them and reads as a destructive edit.
 6. **Do not pass `--label`.** We hold only `pull` on github/spec-kit; `gh issue create --label` errors for a user without triage rights and nothing gets filed. Maintainers apply `extension-submission` at triage — that is the documented flow.
 7. **`--body-file`, never `--body`.** The body carries em dashes, backticks, `$`, and fenced blocks.
+8. **The `sha256` comes from the pinned asset, never from the live entry.** The deep copy in rule 5 carries the previous release's checksum, and Spec Kit's bot hashes the download and fails on a mismatch; `render_submission.py` recomputes it, so never hand-edit it back. If validation fails anyway, fix the field in the issue body and comment once: the bot re-runs only when a maintainer re-applies `extension-submission`, which we cannot do.
 
 ## Steps
 

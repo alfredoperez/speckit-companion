@@ -48,7 +48,7 @@ If `$ARGUMENTS` is empty, list open issues and ask which to run.
 Some issues fold several drafts into one ticket: the body has an `## Items` checklist (each line a draft id and one sentence), an optional `## Later` list, and the ticket's acceptance. They come from a plan map in the vault (`Projects/speckit companion/plans/`), which the issue links.
 
 - **Slice the checklist.** A slice is one item, or a few items that touch the same files and ship as one change. Name the slices before the first one starts and list them in the ticket's task. `## Later` items are not sliced; they stay in the issue.
-- **One auto run per slice.** Each slice is a ticket for steps 1 to 5. Its PR body says `Part of #N` and names its item ids; the slice that ticks the last unchecked item says `Closes #N` instead. After each merge, tick the slice's items in the issue body.
+- **One auto run per slice.** Each slice is a ticket for steps 1 to 5. Its PR body says `Part of #N` and names its item ids; the slice that ticks the last unchecked item says `Closes #N` instead, but only when no unchecked item is left in `## Later` either; otherwise it says `Part of #N`, moves the Later items into one follow-up issue that links back, and names that issue in the run report. After each merge, tick the slice's items in the issue body.
 - **Ask a slice's open decision at its start.** An item marked `decision:` in the issue waits on a choice the plan left open. Ask it before the slice runs (Factory's Plan page when the chat has one, otherwise AskUserQuestion, recommended option first), record the pick in the issue, and never guess it to keep moving.
 - **Screen changes need a mock first.** An issue labelled `ui` needs an approved `/design` mock linked in its body before its first slice. Without one, the ticket is review-gated: post what needs designing and move to the next ticket.
 - **Blocked issues wait.** An issue whose body says `Blocked by #M` while #M is open is skipped, and the report says so.
@@ -119,7 +119,7 @@ Dispatch all disjoint tasks **in a single message** so they run concurrently. Ea
 - **Verifies the defect still reproduces on current `main`** before building. Stale tasks are common; if it's already fixed, STOP and report that with evidence instead of inventing a change.
 - Fixes it **directly** — no `/speckit-companion-*` chain, no `specs/NNN-*/` folder.
 - Updates the docs the change requires (`CLAUDE.md`'s doc-map is not optional in light mode).
-- Writes the changelog entry with `/changelog-entry` when a user will meet the change.
+- Writes the changelog entry with `/changelog-entry` when a user will meet the change. Workers write its link as `([#PR](…/pull/PR))`; the main loop replaces `PR` with the real number right after `gh pr create`, in one commit, then rebases. Never hand a worker a guessed number.
 - Runs `npm run compile && npm test` (+ `npm run package` if the manifest/webview changed). **Does not return green if red.**
 - Commits on a branch named `light/<slug>` and **pushes**.
 - Returns `{ branch, filesChanged[], testsPassed, summary, escalate? }`.
@@ -191,7 +191,7 @@ Otherwise:
 ```bash
 tooling/scripts/merge-pr.sh <PR>      # waits here and merges once every check has passed (auto-merge would skip the test job, which is not required)
 ```
-When it queues the merge it returns at once: move to the next ticket and read the outcome with `gh pr view <PR> --json state` before the final report. Exit 3 means the pull request changes what a person sees and the owner has not looked: record "merged: NO — awaiting your review" and re-run with `--seen` only after they approve. Never merge around the script with `gh pr merge`.
+When it queues the merge it returns at once: move to the next ticket and read the outcome with `gh pr view <PR> --json state` before the final report. Exit 3 means the pull request changes what a person sees and the owner has not looked: record "merged: NO — awaiting your review" and re-run with `--seen` only after they approve. Never merge around the script with `gh pr merge`. Run it unpiped (`merge-pr.sh <PR>; echo "exit $?"`): piped into `tail`, the exit code is `tail`'s, so a refused merge reads as merged.
 
 If checks fail and can't be fixed on the branch, leave the PR open, record "merged: NO — checks failing," continue.
 
@@ -210,7 +210,7 @@ If checks fail and can't be fixed on the branch, leave the PR open, record "merg
 #### 5. Verify note — main loop
 Write one note per ticket (per slice, for a grouped issue) via the vault `obsidian` skill, beside the run report in `~/dev/GitHub/obsidian-vault/Projects/speckit companion/`, named `Verify <ticket title>.md`, `lifespan: ephemeral`. It is what the owner reads to check the work by hand, so it carries:
 - **How to test**, numbered: what to open or run (a command, a sandbox from `/sandbox`, a viewer page and a click) and what they should see.
-- **Screenshots** of every changed component from its Storybook stories, saved next to the note. Never launch a real VS Code window per ticket; the real window is `/release-qa`'s job.
+- **Screenshots** of every changed component from its Storybook stories, saved next to the note. Take them before asking the owner to look: start Storybook with `factory_app_start` on the branch, screenshot each changed story with playwright-core (`channel: 'chrome'`, `waitUntil: 'load'`, a 3 s wait, `fullPage: true`; never `networkidle`, the dev server's websocket never idles), read every image, and fix what contradicts itself first. Never launch a real VS Code window per ticket; the real window is `/release-qa`'s job.
 - **The files the run made**, inline when they explain the change: the spec's `spec.md` summary, `tasks.md`, and the last entries of `.spec-context.json`. Link the full files rather than pasting long ones.
 - The PR link and what is not covered.
 

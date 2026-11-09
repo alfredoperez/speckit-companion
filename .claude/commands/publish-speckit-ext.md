@@ -69,6 +69,7 @@ Release the **spec-kit extension** (`apps/speckit-extension/`, `id: companion`) 
    yes | specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
    specify extension list   # → SpecKit Companion (vX.Y.Z), all commands listed
    ```
+   - Run the scratch install with a CLI at or above `requires.speckit_version`: `uvx -q --from git+https://github.com/github/spec-kit.git@v<latest> specify …` in a bash function (zsh does not word-split a command held in a variable). The local `specify` may be older than the floor this release just raised.
    - If a prior local install left **inconsistent emission dirs** (`.{claude,cursor,agents}/skills/speckit-companion-*`, `.{gemini,qwen}/commands/speckit.companion.*`, etc.), the install can throw `FileNotFoundError`. Nuke all companion emission artifacts first, then retry.
    - **Expected non-error output** (don't flag these as failures): a raw-URL install shows a one-time `⚠ Untrusted Source` prompt; a pre-existing install aborts with `already installed … retry with --force` (remove first or use `--force`); a stale `✗ companion (v0.1.0) ⚠️ Corrupted extension` must be removed before installing; and a clean install ends with an **informational** `⚠ Configuration may be required / Check: .specify/extensions/companion/` — no manual config is actually needed.
 9. **Confirm** neither the prefixed tag nor `companion-latest` triggered `release.yml`: `gh run list --workflow=release.yml --limit 2` (no new run — both tags are non-`v*`).
