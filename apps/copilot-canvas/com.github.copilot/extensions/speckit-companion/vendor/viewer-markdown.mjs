@@ -299,7 +299,11 @@ function preprocessTechnicalContext(markdown) {
   const out = [];
   let inSection = false;
   let cells = [];
+  let lastKey = null;
+  let lastVal = "";
+  const cell = (k, v) => `<div class="tech-cell"><span class="tech-key">${parseInline(k)}</span><span class="tech-val">${parseInline(v)}</span></div>`;
   const flush = () => {
+    lastKey = null;
     if (cells.length) {
       out.push(`<details class="md-collapsible"><summary class="md-collapsible__summary">Technical Context</summary><div class="tech-grid">${cells.join("")}</div></details>`);
       cells = [];
@@ -320,10 +324,18 @@ function preprocessTechnicalContext(markdown) {
     if (inSection) {
       const m = line.match(/^\*\*(.+?)\*\*:[ \t]*(.+)$/);
       if (m) {
-        cells.push(`<div class="tech-cell"><span class="tech-key">${parseInline(m[1])}</span><span class="tech-val">${parseInline(m[2].trim())}</span></div>`);
+        lastKey = m[1];
+        lastVal = m[2].trim();
+        cells.push(cell(lastKey, lastVal));
         continue;
       }
       if (!line.trim()) {
+        lastKey = null;
+        continue;
+      }
+      if (cells.length && lastKey !== null && !/^\s*([-*+]\s|\d+\.\s|\||<|>|[-*_]{3,}\s*$)/.test(line)) {
+        lastVal += " " + line.trim();
+        cells[cells.length - 1] = cell(lastKey, lastVal);
         continue;
       }
       flush();
@@ -527,7 +539,7 @@ function parseAcceptanceScenarios(markdown) {
     const listItems = joinedLines.map((line, idx) => {
       const lineNum = idx + 1;
       const content = line.replace(/^\d+\.\s*/, "").trim();
-      const emphasized = escapeHtmlInScenario(content).replace(/\*?\*?(Given)\*?\*?/gi, '<strong class="keyword-given">$1</strong>').replace(/\*?\*?(When)\*?\*?/gi, '<strong class="keyword-when">$1</strong>').replace(/\*?\*?(Then)\*?\*?/gi, '<strong class="keyword-then">$1</strong>');
+      const emphasized = emphasizeScenarioKeywords(escapeHtmlInScenario(content));
       return `<li class="scenario-item line" data-line="${lineNum}" data-list-id="${listId}"><button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment to scenario line ${lineNum}" aria-label="Add comment to scenario line ${lineNum}">${commentIcon}</button><div class="line-content">${emphasized}</div><div class="line-comment-slot"></div></li>`;
     }).join("");
     return `<p class="scenario-label"><strong>Acceptance Scenarios:</strong></p>
@@ -535,6 +547,10 @@ function parseAcceptanceScenarios(markdown) {
 
 `;
   });
+}
+function emphasizeScenarioKeywords(text) {
+  const plainGiven = /^(\*\*)?Given\b/.test(text);
+  return text.replace(/\*\*(Given|When|Then)\*\*/g, (_m, k) => `<strong class="keyword-${k.toLowerCase()}">${k}</strong>`).replace(/(^|,\s+)(Given|When|Then)\b/g, (_m, lead, k) => `${lead}<strong class="keyword-${k.toLowerCase()}">${k}</strong>`).replace(/(,\s+)(when|then)\b/g, (m, lead, k) => plainGiven ? `${lead}<strong class="keyword-${k}">${k}</strong>` : m);
 }
 
 // stub:signals-stub
@@ -1693,7 +1709,7 @@ function clampCells(cells, n) {
 }
 function renderTable(rows) {
   if (rows.length < 2) return "";
-  let html = "<table>\n";
+  let html = '<div class="table-scroll"><table>\n';
   const headerCells = splitTableRow(rows[0]);
   html += "<thead><tr>\n";
   for (const cell of headerCells) {
@@ -1714,7 +1730,7 @@ function renderTable(rows) {
     }
     html += "</tbody>\n";
   }
-  html += "</table>\n";
+  html += "</table></div>\n";
   return html;
 }
 function renderMarkdown(markdown) {
@@ -1757,6 +1773,7 @@ function renderMarkdown(markdown) {
   let inList = false;
   let listType = "ul";
   let listItemCount = 0;
+  let lastListLineIndex = -1;
   let lastClosedListType = null;
   let lastClosedListCount = 0;
   let inTable = false;
@@ -1881,6 +1898,11 @@ function renderMarkdown(markdown) {
       inTable = false;
       tableRows = [];
     }
+    if (inList && lastListLineIndex === i - 1 && isListContinuation(line)) {
+      html = appendToLastListItem(html, parseInline(line.trim()));
+      lastListLineIndex = i;
+      continue;
+    }
     if (inList && !line.match(/^(\s*[-*+]|\s*\d+\.)\s/)) {
       html += listType === "ul" ? "</ul>\n" : "</ol>\n";
       lastClosedListType = listType;
@@ -1928,6 +1950,7 @@ function renderMarkdown(markdown) {
     }
     const ulMatch = line.match(/^(\s*)[-*+]\s+(.+)$/);
     if (ulMatch) {
+      lastListLineIndex = i;
       if (!inList || listType !== "ul") {
         if (inList) {
           html += listType === "ul" ? "</ul>\n" : "</ol>\n";
@@ -1987,6 +2010,7 @@ function renderMarkdown(markdown) {
     }
     const olMatch = line.match(/^(\s*)\d+\.\s+(.+)$/);
     if (olMatch) {
+      lastListLineIndex = i;
       if (!inList || listType !== "ol") {
         if (inList) {
           html += listType === "ul" ? "</ul>\n" : "</ol>\n";
@@ -2052,6 +2076,18 @@ function renderMarkdown(markdown) {
     html = markClarifications(html);
   }
   return html;
+}
+function isListContinuation(line) {
+  return line.trim() !== "" && !/^\s*([-*+]|\d+\.)\s/.test(line) && !/^\s*(#{1,6}\s|>|\||<|```|~~~|[-*_]{3,}\s*$)/.test(line);
+}
+function appendToLastListItem(html, extra) {
+  const liStart = html.lastIndexOf("<li ");
+  const capture = html.indexOf('<div class="task-item__capture">', liStart);
+  const slot = html.indexOf('<div class="line-comment-slot">', liStart);
+  const limit = capture !== -1 ? capture : slot;
+  const spanEnd = html.lastIndexOf("</span>", limit);
+  if (liStart === -1 || limit === -1 || spanEnd < liStart) return html;
+  return `${html.slice(0, spanEnd)} ${extra}${html.slice(spanEnd)}`;
 }
 function groupTaskDetails(html) {
   return html.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/g, (match, content) => {
