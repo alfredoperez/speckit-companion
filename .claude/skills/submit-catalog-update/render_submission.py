@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import copy
 import difflib
+import hashlib
 import json
 import re
 import subprocess
@@ -167,6 +168,12 @@ def _get(url: str) -> str:
         return r.read().decode("utf-8")
 
 
+def asset_sha256(url: str) -> str:
+    """The catalog bot checks sha256 against the downloaded asset, so it is always recomputed."""
+    with urllib.request.urlopen(url, timeout=60) as r:
+        return hashlib.sha256(r.read()).hexdigest()
+
+
 def _gh(args: list[str]) -> str:
     r = subprocess.run(["gh", *args], capture_output=True, text=True)
     if r.returncode != 0:
@@ -261,6 +268,7 @@ def build_catalog_entry(manifest: dict, catalog: dict, version: str, download: s
     entry["author"] = e["author"]
     entry["version"] = version
     entry["download_url"] = download
+    entry["sha256"] = asset_sha256(download)
     entry["repository"] = e["repository"]
     entry["homepage"] = e["homepage"]
     entry["license"] = e["license"]
