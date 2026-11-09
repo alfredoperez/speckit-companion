@@ -14,6 +14,10 @@ describe('reading column', () => {
         expect(rule(read('_tables.css'), '#markdown-content .table-scroll')).toContain('overflow-x: auto');
     });
 
+    it('fills its grid track so a long code line cannot push prose under the outline', () => {
+        expect(rule(read('_base.css'), '.content-area > #markdown-content')).toContain('width: 100%');
+    });
+
     it('keeps a file chip on one line and truncates it', () => {
         const css = read('_code.css');
         expect(rule(css, '#markdown-content .file-ref')).toContain('white-space: nowrap');
