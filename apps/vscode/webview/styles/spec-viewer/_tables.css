@@ -7,6 +7,12 @@
    Standard Tables
    ============================================ */
 
+/* A wide table scrolls inside the reading column instead of running under the outline. */
+#markdown-content .table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 #markdown-content table {
     width: 100%;
     margin: var(--space-4) 0;

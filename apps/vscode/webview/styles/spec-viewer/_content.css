@@ -15,6 +15,7 @@
     line-height: 1.6;
     color: var(--text-body);
     max-width: 72ch;
+    min-width: 0;
     margin: 0 auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -120,7 +121,7 @@
    ============================================ */
 
 #markdown-content a {
-    color: var(--accent);
+    color: color-mix(in srgb, var(--accent) 60%, var(--text-primary));
     text-decoration: none;
     transition: color var(--transition-fast);
 }

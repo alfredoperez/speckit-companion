@@ -16,12 +16,13 @@ export function RunStrip() {
 
     const stats = heroStats(vs);
     const facts: Array<{ key: FactKey; value: string; warning?: boolean }> = [];
-    // Ticked boxes in tasks.md, the same read the rail's percentage comes from.
+    // One format, always a percentage: counts are not sent on every path.
     const counts = ns?.taskCounts;
-    if (counts && counts.total > 0) {
-        facts.push({ key: 'tasks', value: `${counts.checked}/${counts.total} tasks` });
-    } else if (typeof ns?.taskCompletionPercent === 'number' && ns.taskCompletionPercent > 0) {
-        facts.push({ key: 'tasks', value: `${ns.taskCompletionPercent}% tasks` });
+    const taskPercent = counts && counts.total > 0
+        ? Math.round((counts.checked / counts.total) * 100)
+        : ns?.taskCompletionPercent;
+    if (typeof taskPercent === 'number' && taskPercent > 0) {
+        facts.push({ key: 'tasks', value: `${taskPercent}% tasks` });
     }
     const converge = vs.converge;
     if (converge && converge.openAdded > 0) {

@@ -62,10 +62,7 @@ export function parseAcceptanceScenarios(markdown: string): string {
 
             // Keep each scenario as one flowing sentence; just emphasize the
             // Given/When/Then keywords inline (no stacking, no line breaks).
-            const emphasized = escapeHtmlInScenario(content)
-                .replace(/\*?\*?(Given)\*?\*?/gi, '<strong class="keyword-given">$1</strong>')
-                .replace(/\*?\*?(When)\*?\*?/gi, '<strong class="keyword-when">$1</strong>')
-                .replace(/\*?\*?(Then)\*?\*?/gi, '<strong class="keyword-then">$1</strong>');
+            const emphasized = emphasizeScenarioKeywords(escapeHtmlInScenario(content));
 
             return `<li class="scenario-item line" data-line="${lineNum}" data-list-id="${listId}"><button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment to scenario line ${lineNum}" aria-label="Add comment to scenario line ${lineNum}">${commentIcon}</button><div class="line-content">${emphasized}</div><div class="line-comment-slot"></div></li>`;
         }).join('');
@@ -76,4 +73,13 @@ export function parseAcceptanceScenarios(markdown: string): string {
 
 `;
     });
+}
+
+export function emphasizeScenarioKeywords(text: string): string {
+    const plainGiven = /^Given\b/.test(text);
+    return text
+        .replace(/\*\*(Given|When|Then)\*\*/g, (_m, k: string) => `<strong class="keyword-${k.toLowerCase()}">${k}</strong>`)
+        .replace(/(^|,\s+)(Given|When|Then)\b/g, (_m, lead: string, k: string) => `${lead}<strong class="keyword-${k.toLowerCase()}">${k}</strong>`)
+        .replace(/(,\s+)(when|then)\b/g, (m, lead: string, k: string) =>
+            plainGiven ? `${lead}<strong class="keyword-${k}">${k}</strong>` : m);
 }
