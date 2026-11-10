@@ -1755,6 +1755,20 @@ class FoldBranchFallbackTests(unittest.TestCase):
         self.assertEqual(self._ctx(fdir)["branch"], "feat")
 
 
+class FoldChangedFilesTests(unittest.TestCase):
+    def test_an_untracked_file_in_an_untouched_directory_is_found(self) -> None:
+        import living_spec_fold as fold
+        root = _git_repo(ENABLED_TODOS_YAML, {"capabilities/todos/spec.md": TODOS_LIVING},
+                         code_files=["src/todos/list.ts"])
+        _write(root, "src/billing/new.ts", "// new slice\n")
+        _write(root, ".gitignore", "scratch/\n")
+        _write(root, "scratch/junk.txt", "x\n")
+        changed = set(fold._git_changed_files(root))
+        self.assertIn("src/todos/list.ts", changed)
+        self.assertIn("src/billing/new.ts", changed)
+        self.assertNotIn("scratch/junk.txt", changed)
+
+
 class RecordSyncedTests(unittest.TestCase):
     def _read(self, d: Path) -> dict:
         return _json.loads((d / ".spec-context.json").read_text(encoding="utf-8"))

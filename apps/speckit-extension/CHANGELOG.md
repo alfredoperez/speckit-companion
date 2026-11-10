@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Sync sees files in new folders.** Folding living specs picks up ==new untracked files== in folders your tracked changes never touched. ([#994](https://github.com/alfredoperez/speckit-companion/pull/994)) <!-- area: living-specs -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.
