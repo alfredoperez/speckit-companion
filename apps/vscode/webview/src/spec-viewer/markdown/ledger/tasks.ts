@@ -35,8 +35,14 @@ function stateIcon(state: TaskState): string {
     return statusDot(state === 'blocked' ? 'fail' : state);
 }
 
+const PROPORTIONAL_ABOVE = 32;
+
+/** One cell per task up to 32 tasks; beyond that, one proportional bar of done, running, blocked and to do. */
 function segments(tasks: LgTask[]): string {
-    return tasks.map((t) => `<i class="lg-seg lg-seg--${taskState(t, runningId)}"></i>`).join('');
+    if (tasks.length <= PROPORTIONAL_ABOVE) return tasks.map((t) => `<i class="lg-seg lg-seg--${taskState(t, runningId)}"></i>`).join('');
+    const c = counts(tasks);
+    const parts: Array<[TaskState, number]> = [['done', c.done], ['running', c.running], ['blocked', c.blocked], ['todo', c.total - c.done - c.running - c.blocked]];
+    return parts.filter(([, n]) => n > 0).map(([s, n]) => `<i class="lg-seg lg-seg--${s}" style="flex-grow:${n}"></i>`).join('');
 }
 
 function counts(tasks: LgTask[]): { done: number; running: number; blocked: number; total: number } {
@@ -59,7 +65,9 @@ function tasksHeader(model: LgTasksModel): string {
         c.running ? `<span class="lg-live lg-live--running">${stateIcon('running')}${c.running} running</span>` : '',
         c.blocked ? `<span class="lg-live lg-live--blocked">${stateIcon('blocked')}${c.blocked} blocked</span>` : '',
     ].join('');
-    const groups = model.phases.filter((p) => p.tasks.length).map((p) => `<span class="lg-bar-group">${segments(p.tasks)}</span>`).join('');
+    const groups = c.total > PROPORTIONAL_ABOVE
+        ? `<span class="lg-bar-group lg-bar-group--prop">${segments(model.tasks)}</span>`
+        : model.phases.filter((p) => p.tasks.length).map((p) => `<span class="lg-bar-group">${segments(p.tasks)}</span>`).join('');
     const storyIds = [...new Set(model.tasks.map((t) => t.story).filter((s): s is string => !!s))];
     const filters = storyIds.length > 1
         ? `<div class="lg-filters" role="group" aria-label="Filter by story"><span class="lg-filter-label">Story</span>` +
@@ -85,11 +93,12 @@ function phaseOpen(p: LgPhase): string {
     const c = counts(p.tasks);
     const done = phaseDone(p);
     const state = done ? 'done' : c.done || c.running ? 'active' : 'todo';
+    const mark = p.priority ? priorityMark(p.priority) : '';
     const lane = p.story
-        ? `<span class="lg-chip lg-phase-story">${escapeHtml(p.story)}</span>${p.priority ? priorityMark(p.priority) : ''}`
-        : `<span class="lg-phase-num">Phase ${p.num}</span>`;
+        ? `<span class="lg-chip lg-phase-story">${escapeHtml(p.story)}</span>${mark}`
+        : `<span class="lg-phase-num">Phase ${escapeHtml(p.key)}</span>${mark}`;
     const progress = p.tasks.length
-        ? `<span class="lg-phase-progress"><span class="lg-bar lg-bar--thin">${segments(p.tasks)}</span><span class="lg-phase-count">${c.done}/${c.total}${done ? ` ${codicon('check')}` : ''}</span></span>`
+        ? `<span class="lg-phase-progress"><span class="lg-bar lg-bar--thin">${segments(p.tasks)}</span><span class="lg-phase-count">${c.done}/${c.total}${done ? ` ${codicon('pass')}` : ''}</span></span>`
         : '';
     const bits = [
         p.tasks.length ? plural(p.tasks.length, 'task') : '',
@@ -97,9 +106,9 @@ function phaseOpen(p: LgPhase): string {
         p.files.length ? `<span class="lg-phase-files" title="${attr(p.files.join('\n'))}">${plural(p.files.length, 'file')}</span>` : '',
     ].filter(Boolean).join(' · ');
     const goal = p.goal ? `<p class="lg-phase-goal"><span>Goal</span> ${parseInline(p.goal)}</p>` : '';
-    return `<details class="lg-phase" data-phase="${p.num}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ''}${done ? '' : 'open'}>` +
+    return `<details class="lg-phase" data-phase="${attr(p.key)}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ''}${done ? '' : 'open'}>` +
         `<summary class="lg-phase-head"><span class="lg-phase-lane">${lane}</span>` +
-        `<span class="lg-phase-title">${codicon('chevron-right')}<span class="lg-phase-name" id="phase-${p.num}" data-toc="">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress}</summary>` +
+        `<span class="lg-phase-title">${codicon('chevron-right')}<span class="lg-phase-name" id="phase-${attr(p.key)}" data-toc="">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress}</summary>` +
         `<div class="lg-phase-body">${bits ? `<p class="lg-phase-meta">${bits}</p>` : ''}${goal}`;
 }
 
@@ -130,8 +139,8 @@ function checkpoint(p: LgPhase, text: string): string {
 
 function resolveStep(name: string, model: LgTasksModel): LgPhase | null {
     const n = name.trim().replace(/[.*_`]/g, '');
-    const num = n.match(/\bPhase\s+(\d+)/i);
-    if (num) return model.phases.find((p) => p.num === Number(num[1])) ?? null;
+    const num = n.match(/\bPhase\s+(\d+[a-z]?)\b/i);
+    if (num) return model.phases.find((p) => p.key === num[1].toLowerCase()) ?? null;
     const us = n.match(/^(US\d+)\b/i);
     if (us) return model.phases.find((p) => p.story === us[1].toUpperCase()) ?? null;
     const word = n.toLowerCase().replace(/\(.*?\)/g, '').trim().split(/\s+/)[0];
@@ -242,7 +251,11 @@ export function preprocessLedgerTasks(markdown: string, currentTaskId: string | 
             continue;
         }
 
-        if (!phase) { out.push(line); continue; }
+        if (!phase) {
+            if (phaseIdx === -1 && /^\*\*[^*]+\*\*/.test(line) && out.length && out[out.length - 1].trim()) out.push('');
+            out.push(line);
+            continue;
+        }
 
         if (lineKinds.GOAL_LINE.test(line) || lineKinds.FILES_LINE.test(line) || lineKinds.WAIT_LINE.test(line)) continue;
 

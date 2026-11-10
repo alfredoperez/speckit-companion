@@ -22,17 +22,26 @@
 #markdown-content .lg-live--running { color: var(--info); }
 #markdown-content .lg-live--blocked { color: var(--error); }
 
-#markdown-content .lg-bar { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+#markdown-content .lg-bar { display: flex; flex-wrap: nowrap; gap: 4px 10px; min-width: 0; }
 #markdown-content .lg-bar-group { display: flex; gap: 2px; flex: 0 1 auto; min-width: 0; }
-#markdown-content .lg-seg { display: block; width: 20px; height: 6px; border-radius: 1px; background: var(--border); }
+#markdown-content .lg-bar-group--prop { flex: 1 1 auto; gap: 2px; }
+#markdown-content .lg-bar-group--prop .lg-seg { flex: 1 1 0; height: 8px; }
+#markdown-content .lg-seg { display: block; flex: 0 1 20px; min-width: 1px; height: 6px; border-radius: 1px; background: var(--border); }
 #markdown-content .lg-seg--done { background: var(--success); }
 #markdown-content .lg-seg--running { background: var(--info); }
 #markdown-content .lg-seg--blocked { background: var(--error); }
-#markdown-content .lg-bar--thin { flex-wrap: nowrap; gap: 1px; }
-#markdown-content .lg-bar--thin .lg-seg { width: 8px; height: 3px; }
+#markdown-content .lg-bar--thin { gap: 1px; width: 96px; }
+#markdown-content .lg-bar--thin .lg-seg { flex: 1 1 0; max-width: 8px; height: 3px; }
+#markdown-content .lg-bar--thin .lg-seg:only-child { max-width: none; }
 
-#markdown-content .lg-tasks-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
-#markdown-content .lg-filters { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+#markdown-content .lg-tasks-controls { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+#markdown-content .lg-filters {
+  display: flex; flex-wrap: nowrap; align-items: center; gap: var(--space-2); flex: 1 1 auto; min-width: 0;
+  overflow-x: auto; scrollbar-width: none; padding-right: 28px;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+#markdown-content .lg-filters::-webkit-scrollbar { display: none; }
+#markdown-content .lg-filters > * { flex: none; white-space: nowrap; }
 #markdown-content .lg-filter-label { color: var(--text-muted); font-size: var(--text-sm); margin-right: var(--space-1); }
 
 #markdown-content .lg-filter,
@@ -48,7 +57,7 @@
 #markdown-content .lg-filter:focus-visible,
 #markdown-content .lg-toggle:focus-visible { outline: 1px solid var(--info); outline-offset: 1px; }
 
-#markdown-content .lg-toggle { border-color: transparent; padding-left: 0; }
+#markdown-content .lg-toggle { border-color: transparent; padding-left: 0; flex: none; white-space: nowrap; }
 #markdown-content .lg-toggle-track { position: relative; width: 28px; height: 16px; border-radius: 999px; background: var(--border); transition: background var(--transition-fast); }
 #markdown-content .lg-toggle-track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--text-primary); transition: transform var(--transition-fast); }
 #markdown-content .lg-toggle[aria-checked="true"] .lg-toggle-track { background: var(--info); }
@@ -69,14 +78,16 @@
 
 #markdown-content .lg-phase-lane { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding-top: 2px; }
 #markdown-content .lg-phase-num { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
-#markdown-content .lg-phase-title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); min-width: 0; }
+#markdown-content .lg-phase-title { display: flex; flex-wrap: nowrap; align-items: baseline; gap: var(--space-2); min-width: 0; }
+#markdown-content .lg-phase-title .codicon { flex: none; align-self: center; }
+#markdown-content .lg-phase-chip { flex: none; }
 #markdown-content .lg-phase-title .codicon { color: var(--text-muted); transition: transform var(--transition-fast); }
 #markdown-content .lg-phase[open] > .lg-phase-head .lg-phase-title .codicon { transform: rotate(90deg); }
-#markdown-content .lg-phase-name { font-weight: 600; color: var(--text-primary); font-size: 1.05em; }
+#markdown-content .lg-phase-name { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; font-weight: 600; color: var(--text-primary); font-size: 1.05em; }
 #markdown-content .lg-phase[open] .lg-phase-name { font-size: 1.2em; }
 #markdown-content .lg-phase-chip { font-family: var(--font-mono); font-size: 10px; padding: 0 6px; border-radius: var(--radius-sm); background: var(--bg-inset); color: var(--text-body); }
 
-#markdown-content .lg-phase-progress { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+#markdown-content .lg-phase-progress { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
 #markdown-content .lg-phase-count,
 #markdown-content .lg-wave-count { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 #markdown-content .lg-phase-count .codicon,
@@ -148,8 +159,11 @@
 #markdown-content li.lg-task .task-item__capture { padding-left: 60px; }
 
 @media (max-width: 520px) {
-  #markdown-content .lg-phase-head { grid-template-columns: minmax(0, 1fr) auto; }
-  #markdown-content .lg-phase-lane { grid-column: 1 / -1; flex-direction: row; align-items: center; }
+  #markdown-content .lg-phase-head { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "lane progress" "title title"; row-gap: var(--space-2); }
+  #markdown-content .lg-phase-lane { grid-area: lane; flex-direction: row; align-items: center; gap: var(--space-2); }
+  #markdown-content .lg-phase-title { grid-area: title; }
+  #markdown-content .lg-phase-progress { grid-area: progress; flex-direction: row; align-items: center; gap: var(--space-2); }
+  #markdown-content .lg-bar--thin { width: 72px; }
   #markdown-content .lg-phase-body { margin-left: 0; }
   #markdown-content li.lg-task .lg-task-main { grid-template-columns: auto minmax(0, 1fr); }
   #markdown-content li.lg-task .lg-task-state { grid-column: 2; }

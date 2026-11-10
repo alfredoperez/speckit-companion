@@ -28,6 +28,7 @@ export interface LgWave {
 
 export interface LgPhase {
     num: number;
+    key: string;
     title: string;
     story: string | null;
     storyTitle: string | null;
@@ -47,7 +48,7 @@ export interface LgTasksModel {
 }
 
 export const TASK_LINE = /^\s*[-*+]\s+\[([ xX])\]\s+(.*)$/;
-const PHASE_HEADING = /^##\s+Phase\s+(\d+)\s*[:\-–—]\s*(.+?)\s*$/;
+const PHASE_HEADING = /^##\s+Phase\s+(\d+)([a-z]?)\s*[:\-–—]\s*(.+?)\s*$/i;
 const WAVE_LINE = /^\*\*Wave\s+(\d+)\s*[—–:-]?\s*(.*?):?\*\*\s*$/i;
 const WAIT_LINE = /^\*\*[^*]*\bWait for\b.*\*\*\s*$/i;
 const GOAL_LINE = /^\*\*Goal(?:\s*:)?\*\*\s*:?\s*(.+)$/i;
@@ -104,6 +105,8 @@ export function parseTaskText(text: string, done: boolean): LgTask {
     return { id, done, parallel, story, phaseStory: null, desc: rest.replace(/\s*⛔\s*/g, ' ').trim(), files, doneWhen, waitsOn: waits ? waits[1].toUpperCase() : null, blocked, wave: null };
 }
 
+const PRIORITY_TAG = /\(\s*(?:Priority\s*:?\s*)?P([1-5])\s*\)/i;
+
 function parsePhaseTitle(raw: string): Pick<LgPhase, 'title' | 'story' | 'storyTitle' | 'priority' | 'mvp' | 'marked'> {
     let title = raw;
     const marked = /✅/.test(title);
@@ -111,10 +114,10 @@ function parsePhaseTitle(raw: string): Pick<LgPhase, 'title' | 'story' | 'storyT
     const mvp = /🎯|\bMVP\b/.test(title);
     title = title.replace(/🎯/g, '').replace(/\bMVP\b/g, '');
     let priority: 1 | 2 | 3 | null = null;
-    const p = title.match(/\(P([1-5])\)/);
+    const p = title.match(PRIORITY_TAG);
     if (p) {
         priority = Math.min(Number(p[1]), 3) as 1 | 2 | 3;
-        title = title.replace(/\(P[1-5]\)/, '');
+        title = title.replace(PRIORITY_TAG, '');
     }
     title = title.replace(/\s{2,}/g, ' ').trim();
     const us = title.match(/^User Story\s+(\d+)\s*[:\-–—]\s*(.+)$/i);
@@ -128,7 +131,7 @@ export function parseStoryMapping(lines: string[]): Map<string, string> {
     for (const line of lines) {
         const m = line.match(/^\|\s*(US\d+)\s*\|\s*(.+?)\s*\|\s*$/);
         if (!m) continue;
-        const title = m[2].replace(/^User Story\s+\d+\s*[:\-–—]\s*/i, '').replace(/\s*\(P[1-5]\)\s*$/, '').trim();
+        const title = m[2].replace(/^User Story\s+\d+\s*[:\-–—]\s*/i, '').replace(new RegExp(`\\s*${PRIORITY_TAG.source}\\s*$`, 'i'), '').trim();
         map.set(m[1].toUpperCase(), title);
     }
     return map;
@@ -163,7 +166,7 @@ export function parseTasksModel(lines: string[]): LgTasksModel {
         if (inFence) continue;
         const ph = line.match(PHASE_HEADING);
         if (ph) {
-            cur = { num: Number(ph[1]), ...parsePhaseTitle(ph[2]), goal: null, files: [], tasks: [], waves: [] };
+            cur = { num: Number(ph[1]), key: `${ph[1]}${ph[2].toLowerCase()}`, ...parsePhaseTitle(ph[3]), goal: null, files: [], tasks: [], waves: [] };
             phases.push(cur);
             wave = null;
             waitSeen = false;
