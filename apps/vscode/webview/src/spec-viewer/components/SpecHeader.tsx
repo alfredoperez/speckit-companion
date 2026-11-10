@@ -203,7 +203,7 @@ export function SpecHeader() {
                                     {badgeText}
                                 </span>
                             )}
-                            {idChip && (
+                            {idChip && idChip !== ns.branch && (
                                 <span class="spec-header-id" title="Spec folder">{idChip}</span>
                             )}
                             {ns.branch && (
