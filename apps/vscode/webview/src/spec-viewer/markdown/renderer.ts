@@ -29,6 +29,7 @@ import {
 } from './livingComponents';
 import { markClarifications, rememberClarifications } from './clarifications';
 import { mapToSourceLines } from './sourceLines';
+import { preprocessLedgerTasks, renderTaskRow } from './ledger/tasks';
 import { parseFenceInfo, type FenceInfo } from './fenceInfo';
 import { isBlockFence, PIN_LINE, registerBlockRenderer, renderBlockFence, type BlockPin } from './blockFences';
 import { renderCallsCard } from './callsCard';
@@ -271,6 +272,7 @@ export function renderMarkdown(markdown: string): string {
 
     markdown = preprocessSpecMetadata(markdown, hasSpecContext);
     markdown = preprocessUserStories(markdown);
+    markdown = preprocessLedgerTasks(markdown, currentTaskId);
     markdown = preprocessTaskPhases(markdown);
     markdown = preprocessRequirements(markdown);
     markdown = preprocessEntities(markdown);
@@ -517,44 +519,9 @@ export function renderMarkdown(markdown: string): string {
             }
             const content = parseInline(ulMatch[2]);
             // Check for task list
-            const taskMatch = content.match(/^\[([ xX])\]\s*(.+)$/);
+            const taskMatch = ulMatch[2].match(/^\[([ xX])\]\s*(.+)$/);
             if (taskMatch) {
-                const checked = taskMatch[1].toLowerCase() === 'x' ? 'checked' : '';
-                const taskText = taskMatch[2];
-
-                // Extract task ID (T001, T002, …). Specs write it either bolded
-                // (`**T001**`) or bare, so accept both.
-                const taskIdExtract = taskText.match(/^\s*(?:<strong>\s*)?(T\d+)(?:\s*<\/strong>)?\b/i);
-                const taskId = taskIdExtract ? taskIdExtract[1] : null;
-
-                // Build classes — include 'line' so hover/comment affordances activate
-                const classes = ['task-item', 'line'];
-                if (checked) classes.push('checked');
-                if (taskId && taskId === currentTaskId && !checked) classes.push('in-progress');
-
-                const classAttr = `class="${classes.join(' ')}"`;
-                const dataTaskAttr = taskId ? ` data-task-id="${taskId}"` : '';
-
-                // The id and the `[P]` / `[US#]` markers are metadata, not prose:
-                // they render as compact chips ahead of the description instead of
-                // sitting in the sentence as raw bracket noise.
-                let body = taskId
-                    ? taskText.replace(/^\s*(?:<strong>\s*)?T\d+(?:\s*<\/strong>)?\s*/i, '')
-                    : taskText;
-                const chips: string[] = [];
-                if (taskId) chips.push(`<span class="task-item__id">${taskId}</span>`);
-                body = body.replace(/^(?:\s*\[(P|US\d+)\])+/gi, (markers) => {
-                    for (const [, marker] of markers.matchAll(/\[(P|US\d+)\]/gi)) {
-                        const parallel = marker.toUpperCase() === 'P';
-                        chips.push(
-                            `<span class="task-item__marker${parallel ? ' task-item__marker--parallel' : ''}"` +
-                            ` title="${parallel ? 'Runs in parallel with its wave' : `User story ${marker.slice(2)}`}">` +
-                            `${marker.toUpperCase()}</span>`,
-                        );
-                    }
-                    return '';
-                }).trimStart();
-                const innerText = chips.join('') + body;
+                const taskId = taskMatch[2].match(/^\s*(?:\*\*)?(T\d+[a-z]?)/i)?.[1] ?? null;
                 const summary = taskId ? taskSummaries[taskId] : undefined;
                 let captureHtml = '';
                 if (summary && (summary.did || (summary.files && summary.files.length))) {
@@ -564,13 +531,13 @@ export function renderMarkdown(markdown: string): string {
                         : '';
                     captureHtml = `<div class="task-item__capture">${didHtml}${filesHtml}</div>`;
                 }
-                html += `<li ${classAttr} data-line="${sourceLineNum}"${dataTaskAttr}>` +
-                    `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to task line ${sourceLineNum}" aria-label="Add comment to task line ${sourceLineNum}">${COMMENT_ICON_SVG}</button>` +
-                    `<input type="checkbox" ${checked} data-line="${sourceLineNum}">` +
-                    `<span class="task-text line-content">${innerText}</span>` +
-                    captureHtml +
-                    `<div class="line-comment-slot"></div>` +
-                    `</li>\n`;
+                html += renderTaskRow({
+                    text: taskMatch[2],
+                    checked: taskMatch[1].toLowerCase() === 'x',
+                    line: sourceLineNum,
+                    commentButton: `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to task line ${sourceLineNum}" aria-label="Add comment to task line ${sourceLineNum}">${COMMENT_ICON_SVG}</button>`,
+                    capture: captureHtml,
+                });
             } else {
                 // Wrap regular list items with line actions for commenting
                 html += `<li class="line" data-line="${sourceLineNum}">

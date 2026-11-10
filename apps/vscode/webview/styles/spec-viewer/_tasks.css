@@ -228,19 +228,3 @@ body[data-read-only="true"] #markdown-content li.task-item input[type="checkbox"
 .task-details .line {
   padding: 2px 0;
 }
-
-/* ============================================
-   In Progress Badge
-   ============================================ */
-
-.task-item.in-progress .task-text::after {
-  content: "IN PROGRESS";
-  font-size: var(--text-xs);
-  font-weight: 600;
-  padding: 1px 6px;
-  margin-left: 8px;
-  border-radius: var(--radius-sm);
-  background: var(--accent-subtle);
-  color: var(--accent);
-  vertical-align: middle;
-}
