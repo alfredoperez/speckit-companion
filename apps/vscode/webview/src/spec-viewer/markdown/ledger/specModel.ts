@@ -107,10 +107,18 @@ export function taskRange(tasks: SpecTask[]): string {
 /** Split a scenario sentence into Given / When / Then / And steps. */
 export function splitScenario(line: string): SpecScenarioStep[] {
     const text = line.replace(/\s+/g, ' ').trim();
-    const marker = /(?:^|[,;]?\s+)\**(Given|When|Then|And|But)\**[:\s]\s*/gi;
+    const kws = 'Given|When|Then|And|But';
+    // A bold keyword anywhere, or a capitalised one at the start or after a comma/semicolon; never a lowercase word inside a clause.
+    const marker = new RegExp(`(?:^|[,;]\\s+|\\s+)\\*\\*(${kws})\\*\\*:?\\s*|(?:^|[,;]\\s+)(${kws})\\s+`, 'gi');
     const hits: { kw: string; start: number; end: number }[] = [];
+    const hasBold = /\*\*(?:Given|When|Then)\*\*/i.test(text);
     for (let m = marker.exec(text); m; m = marker.exec(text)) {
-        hits.push({ kw: m[1].toLowerCase(), start: m.index, end: marker.lastIndex });
+        const bold = m[1] !== undefined;
+        const word = (m[1] ?? m[2]);
+        const lower = word[0] !== word[0].toUpperCase();
+        const wordOk = !hasBold && (/^(?:when|then)$/i.test(word) || (/^(?:and|but)$/i.test(word) && hits.length >= 2));
+        if (!bold && lower && !wordOk) { marker.lastIndex = m.index + 1; continue; }
+        hits.push({ kw: word.toLowerCase(), start: m.index, end: marker.lastIndex });
     }
     if (hits.length === 0 || hits[0].start !== 0) return [{ kw: '', text }];
     return hits.map((h, i) => ({

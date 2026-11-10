@@ -36,6 +36,7 @@
 #markdown-content .lg-sp-header { margin: 0 0 var(--space-5); }
 #markdown-content .lg-sp-meta { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--text-muted); }
 #markdown-content .lg-sp-titlerow { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); flex-wrap: wrap; }
+body[data-has-spec-context="true"] #markdown-content .lg-sp-header h1.lg-sp-title { display: block; }
 #markdown-content .lg-sp-title { margin: var(--space-1) 0; font-size: 1.9em; line-height: 1.15; color: var(--text-primary); border: 0; padding: 0; }
 #markdown-content .lg-sp-sub { color: var(--text-muted); font-size: var(--text-sm); display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); }
 #markdown-content .lg-sp-statuschip { display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; border-radius: 999px; background: var(--bg-inset); color: var(--text-primary); font-size: var(--text-xs); }
@@ -53,7 +54,10 @@
 #markdown-content .lg-sp-index-row:focus-visible { outline: 1px solid var(--info); outline-offset: -1px; }
 #markdown-content .lg-sp-index-row .lg-sp-id { color: var(--fam, var(--text-muted)); }
 #markdown-content .lg-sp-rowtitle { display: block; color: var(--text-primary); font-weight: 600; }
-#markdown-content .lg-sp-index-row .lg-sp-sub { display: block; font-size: var(--text-xs); }
+#markdown-content .lg-sp-index-row .lg-sp-sub { display: block; font-size: var(--text-sm); line-height: 1.45; color: var(--text-body); }
+#markdown-content .lg-sp-index-row .lg-sp-rowtitle { font-size: 15px; line-height: 1.35; }
+#markdown-content .lg-sp-trail .lg-priority { height: 14px; align-items: flex-end; }
+#markdown-content .lg-sp-trail .lg-priority span { align-self: flex-end; line-height: 1; margin-left: 5px; }
 #markdown-content .lg-sp-trail { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
 
 /* rows */
@@ -66,7 +70,7 @@
 #markdown-content .lg-sp-text strong { color: var(--text-primary); }
 #markdown-content .lg-sp-strong { color: var(--text-primary); font-weight: 600; }
 #markdown-content .lg-sp-num { font-family: var(--font-mono); font-size: 0.92em; }
-#markdown-content .lg-sp-main .lg-sp-sub { display: block; font-size: var(--text-xs); }
+#markdown-content .lg-sp-main .lg-sp-sub { display: block; font-size: var(--text-sm); color: var(--text-body); }
 #markdown-content .lg-sp-status { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-body); white-space: nowrap; }
 #markdown-content .lg-sp-unresolved .lg-sp-text { color: var(--text-muted); }
 #markdown-content .lg-sp-withdrawn .lg-sp-text { color: var(--text-muted); text-decoration: line-through; }
@@ -81,14 +85,14 @@
 #markdown-content .lg-sp-storytitle { margin: 0; font-size: 1.1em; color: var(--text-primary); }
 #markdown-content .lg-sp-body .lg-sp-titlerow { flex-wrap: nowrap; }
 #markdown-content .lg-sp-desc { color: var(--text-body); }
-#markdown-content .lg-sp-why { color: var(--text-muted); font-size: var(--text-xs); }
+#markdown-content .lg-sp-why { color: var(--text-body); font-size: var(--text-sm); }
 #markdown-content .lg-sp-whylabel { font-family: var(--font-mono); letter-spacing: 0.08em; }
 #markdown-content .lg-sp-test { padding: var(--space-3); border-radius: var(--radius-sm); color: var(--text-body); }
 #markdown-content .lg-sp-testlabel { font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
 #markdown-content .lg-sp-notest { color: var(--text-muted); font-size: var(--text-sm); display: flex; align-items: center; gap: 6px; }
 #markdown-content .lg-sp-scn { border-left: 2px solid var(--scenario); padding-left: var(--space-3); display: flex; flex-direction: column; gap: 2px; }
 #markdown-content .lg-sp-step { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: var(--space-2); align-items: baseline; }
-#markdown-content .lg-sp-kw { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--scenario); }
+#markdown-content .lg-sp-kw { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--scenario); }
 #markdown-content .lg-sp-steptext { color: var(--text-body); overflow-wrap: anywhere; }
 #markdown-content .lg-sp-fold > summary { cursor: pointer; color: var(--text-muted); font-size: var(--text-sm); list-style: none; padding: var(--space-1) 0; }
 #markdown-content .lg-sp-fold > summary::-webkit-details-marker { display: none; }
