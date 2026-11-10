@@ -265,6 +265,19 @@ body[data-has-spec-context="true"] .meta-branch {
     white-space: nowrap;
 }
 
+.spec-header-id {
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Capability facts are readable content, so they take the body token.
    Middot separators are pseudo-elements so they stay out of the document text. */
 .spec-header-living {

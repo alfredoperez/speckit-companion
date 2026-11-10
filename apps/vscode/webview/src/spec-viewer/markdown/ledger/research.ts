@@ -4,7 +4,7 @@
  * plan.md's "Key decisions". Decisions and questions share one list, in document order.
  */
 
-import { parseInline } from '../inline';
+import { escapeHtml, parseInline } from '../inline';
 import { codicon, eyebrow, idChip, refAnchor, slugForId, statusDot } from './primitives';
 import type { Status } from './primitives';
 import { docKind, idsIn, mapSections, renderBlocks, splitFields, type SectionCtx } from './blocks';
@@ -143,7 +143,7 @@ export function decisionCard(d: Decision): string {
     const intro = d.intro.length ? `<div class="lg-decision__intro">${blocks(d.intro)}</div>` : '';
     const empty = !d.why.length && !turned && d.kind === 'decision' ? '<p class="lg-muted">No alternatives recorded. Nothing to unfold.</p>' : '';
 
-    return `<div class="lg-decision lg-fam-decision" ${refAnchor(d.id, { family: 'decision', status: st.status, label: d.kind === 'question' ? 'Question' : 'Decision' })} data-kind="${d.kind}">` +
+    return `<div class="lg-decision lg-fam-decision" ${refAnchor(d.id, { family: 'decision', status: st.status, label: d.kind === 'question' ? 'Question' : 'Decision' })} data-kind="${d.kind}" data-toc="${escapeHtml(`${d.id} ${d.title.replace(/[*`_]/g, '')}`).replace(/"/g, '&quot;')}">` +
         `<div class="lg-decision__lane"><span class="lg-chip">${d.id}</span></div>` +
         `<div class="lg-decision__main"><div class="lg-decision__head"><span class="lg-decision__title">${parseInline(d.title)}</span><span class="lg-status">${statusDot(st.status)}${st.label}</span></div>` +
         `${body}${intro}${empty}${alts}</div></div>`;
@@ -156,7 +156,7 @@ export function decisionsStrip(list: Decision[]): string {
         const note = d.alts.length ? `${d.alts.length} turned down` : '';
         return `<a class="lg-strip__row" href="#${slugForId(d.id)}"><span class="lg-chip">${d.id}</span><span class="lg-strip__title">${parseInline(d.title)}</span><span class="lg-strip__meta">${note}</span></a>`;
     }).join('');
-    return `<div class="lg-strip lg-fam-decision"><div class="lg-strip__head">${eyebrow('decision', 'Decisions at a glance', count)}</div>${rows}</div>`;
+    return `<div class="lg-strip lg-fam-decision" data-toc="Decisions"><div class="lg-strip__head">${eyebrow('decision', 'Decisions at a glance', count)}</div>${rows}</div>`;
 }
 
 function followUps(s: SectionCtx): string | null {

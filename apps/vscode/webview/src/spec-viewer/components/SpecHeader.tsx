@@ -1,5 +1,5 @@
 import type { JSX } from 'preact';
-import { navState, viewerState } from '../signals';
+import { markdownHtml, navState, viewerState } from '../signals';
 import type { LivingHeaderMeta, VSCodeApi } from '../types';
 
 declare const vscode: VSCodeApi;
@@ -143,6 +143,18 @@ function formatStatusLabel(status: string): string {
         .join(' ');
 }
 
+const TITLE_PREFIX = /^(?:Phase \d+ )?(?:Feature Specification|Implementation Plan|Specification|Research|Tasks|Plan)\s*:\s*/i;
+
+/** The document's own H1 as a plain title ("Feature Specification: X" becomes "X"), or null. */
+export function documentTitle(html: string): string | null {
+    const match = /<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(html);
+    if (!match) return null;
+    const probe = document.createElement('div');
+    probe.innerHTML = match[1].replace(/<(?:script|style)\b[\s\S]*?<\/(?:script|style)>/gi, '');
+    const text = (probe.textContent ?? '').replace(/\s+/g, ' ').trim().replace(TITLE_PREFIX, '').trim();
+    return text || null;
+}
+
 export function SpecHeader() {
     const ns = navState.value;
     const vs = viewerState.value;
@@ -159,6 +171,11 @@ export function SpecHeader() {
     const assistantName = meta ? undefined : ns.assistantName;
     const hasTerminal = !meta && !!ns.hasTerminal;
 
+    // The folder slug is an id, not a title: when the document names itself, that name leads.
+    const heading = !meta && !ns.titleFromHeading ? documentTitle(markdownHtml.value) : null;
+    const title = heading ?? ns.specContextName;
+    const idChip = heading && ns.specContextName && heading !== ns.specContextName ? ns.specContextName : null;
+
     const hasContext = !!(badgeText || ns.specContextName);
     if (!badgeText && !ns.createdDate && !ns.specContextName) return null;
 
@@ -166,14 +183,14 @@ export function SpecHeader() {
         <div class="spec-header" data-has-context={String(hasContext)}>
             <div class="spec-header-row">
                 <div class="spec-header-main">
-                    {ns.specContextName && (
+                    {title && (
                         <h1 class="spec-header-title">
                             {/* A living spec's draft state qualifies its title, so it reads
                                 as part of the name rather than as a fact filed under it. */}
                             {meta && badgeText === 'DRAFT' && (
                                 <span class="spec-badge spec-badge--draft">DRAFT</span>
                             )}
-                            {ns.specContextName}
+                            {title}
                         </h1>
                     )}
                     {(badgeText || ns.branch || ns.createdDate || meta || assistantName || hasTerminal) && (
@@ -185,6 +202,9 @@ export function SpecHeader() {
                                 >
                                     {badgeText}
                                 </span>
+                            )}
+                            {idChip && (
+                                <span class="spec-header-id" title="Spec folder">{idChip}</span>
                             )}
                             {ns.branch && (
                                 <span class="spec-header-branch" title={`Branch: ${ns.branch}`}>
