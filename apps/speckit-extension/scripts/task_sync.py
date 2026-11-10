@@ -53,8 +53,14 @@ def prose_lines(content: str):
     work — counting it once let this side report a task list complete while
     the viewer, which has always skipped fences, still showed tasks left.
     """
+    for _i, line in _indexed_prose(content.splitlines()):
+        yield line
+
+
+def _indexed_prose(lines):
+    """(index, line) for each line outside a fenced block, code spans blanked."""
     open_fence: str | None = None
-    for raw in content.splitlines():
+    for i, raw in enumerate(lines):
         fence = _FENCE_RE.match(raw)
         marker = fence.group(1) if fence else None
         if open_fence:
@@ -64,7 +70,7 @@ def prose_lines(content: str):
         if marker:
             open_fence = marker
             continue
-        yield _INLINE_CODE_RE.sub("", raw)
+        yield i, _INLINE_CODE_RE.sub("", raw)
 
 
 def parse_task_markers(tasks_md: Path) -> tuple[list[str], list[str]]:
@@ -95,18 +101,25 @@ def _mark_tasks_done(tasks_md: Path, ids: set) -> None:
     this single writer derives the checkboxes from that log. Targeted: only a
     *pending* line whose captured id is in `ids` is flipped (idempotent — an
     already-checked line never matches PENDING_TASK_RE), and only that line's
-    first `[ ]` is rewritten, so surrounding text is untouched."""
+    first `[ ]` is rewritten, so surrounding text is untouched.
+
+    It sees the lines the parser counts: a fenced example is never rewritten, and
+    one journaled id checks one occurrence, so a duplicated id stays visible to
+    the per-occurrence 100% rule however often the journal is materialized."""
     if not ids or not tasks_md.is_file():
         return
     try:
         lines = tasks_md.read_text(encoding="utf-8").splitlines(keepends=True)
     except OSError:
         return
+    prose = list(_indexed_prose(lines))
+    spent = {m.group(1) for _i, line in prose if (m := COMPLETED_TASK_RE.match(line))}
     changed = False
-    for i, line in enumerate(lines):
+    for i, line in prose:
         m = PENDING_TASK_RE.match(line)
-        if m and m.group(1) in ids:
-            lines[i] = line.replace("[ ]", "[x]", 1)
+        if m and m.group(1) in ids and m.group(1) not in spent:
+            lines[i] = lines[i].replace("[ ]", "[x]", 1)
+            spent.add(m.group(1))
             changed = True
     if not changed:
         return

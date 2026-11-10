@@ -800,6 +800,10 @@ class StatusResolveTests(unittest.TestCase):
         self.assertEqual(res["nextCommand"], "speckit.implement")
         self.assertFalse(res["complete"])
 
+    def test_an_unchecked_duplicate_is_the_next_task(self) -> None:
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [ ] **T001** a again"))
+        self.assertEqual(status_mod._next_unchecked_task(self.fd), "T001")
+
     def test_implement_all_done_is_complete(self) -> None:
         (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [x] **T002** b"))
         wc.update_context(self.fd, "implement", "implementing", "extension")
@@ -1675,6 +1679,20 @@ class AppendLogMaterializeTests(unittest.TestCase):
         wc._mark_tasks_done(self.fd / "tasks.md", {"T999"})
         self.assertEqual((self.fd / "tasks.md").read_text(), md)
 
+
+    def test_mark_tasks_done_leaves_a_fenced_example_alone(self) -> None:
+        doc = "- [ ] **T001** a\n\n```markdown\n- [ ] **T001** an example, not work\n```\n"
+        (self.fd / "tasks.md").write_text(doc)
+        wc._mark_tasks_done(self.fd / "tasks.md", {"T001"})
+        md = (self.fd / "tasks.md").read_text()
+        self.assertIn("- [x] **T001** a\n", md)
+        self.assertIn("- [ ] **T001** an example, not work", md)
+
+    def test_mark_tasks_done_checks_one_occurrence_of_a_duplicated_id(self) -> None:
+        (self.fd / "tasks.md").write_text("- [ ] **T001** a\n- [ ] **T001** a again\n")
+        wc._mark_tasks_done(self.fd / "tasks.md", {"T001"})
+        wc._mark_tasks_done(self.fd / "tasks.md", {"T001"})
+        self.assertEqual((self.fd / "tasks.md").read_text(), "- [x] **T001** a\n- [ ] **T001** a again\n")
 
 class ImplementCloseSingleCompleteTests(unittest.TestCase):
     """The implement step is closed from four independent paths — the live per-task

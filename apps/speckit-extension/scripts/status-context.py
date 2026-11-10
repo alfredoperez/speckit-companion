@@ -135,13 +135,14 @@ def _decisions(ctx: dict) -> list[str]:
 
 
 def _next_unchecked_task(feature_dir: Path) -> str | None:
-    """First not-yet-checked task id in tasks.md order, or None when all done."""
+    """First not-yet-checked task id in tasks.md order, or None when all done.
+
+    Per occurrence, like the 100% rule: a duplicated id with one marker unchecked is still pending."""
+    from collections import Counter
+
     all_ids, done_ids = wc.parse_task_markers(feature_dir / "tasks.md")
-    done = set(done_ids)
-    for tid in dict.fromkeys(all_ids):  # distinct, order-preserving
-        if tid not in done:
-            return tid
-    return None
+    remaining = Counter(all_ids) - Counter(done_ids)
+    return next((tid for tid in all_ids if remaining[tid] > 0), None)
 
 
 def resolve(feature_dir: Path) -> dict:

@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Task boxes match what you finished.** A finish never checks an example inside a code fence, and checks ==one copy of a duplicated id==. ([#991](https://github.com/alfredoperez/speckit-companion/pull/991)) <!-- area: run-record -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.
