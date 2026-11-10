@@ -314,7 +314,7 @@ describe('QuickstartSteps', () => {
         expect(html).toContain('Switch off by default');
         expect(html).toContain('lg-expect');
         expect(html).toContain('do ##class(X).Set(1)');
-        expect(html).toContain('href="#ref-fr-002"');
+        expect(html).toContain('data-ref="FR-002"');
         expect(html).toContain('2 steps');
     });
 

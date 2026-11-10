@@ -5,7 +5,7 @@
  */
 
 import { parseInline } from '../inline';
-import { codicon, eyebrow, idChip, slugForId, statusDot } from './primitives';
+import { codicon, eyebrow, idChip, refAnchor, slugForId, statusDot } from './primitives';
 import type { Status } from './primitives';
 import { docKind, idsIn, mapSections, renderBlocks, splitFields, type SectionCtx } from './blocks';
 
@@ -143,7 +143,7 @@ export function decisionCard(d: Decision): string {
     const intro = d.intro.length ? `<div class="lg-decision__intro">${blocks(d.intro)}</div>` : '';
     const empty = !d.why.length && !turned && d.kind === 'decision' ? '<p class="lg-muted">No alternatives recorded. Nothing to unfold.</p>' : '';
 
-    return `<div class="lg-decision lg-fam-decision" id="${slugForId(d.id)}" data-kind="${d.kind}">` +
+    return `<div class="lg-decision lg-fam-decision" ${refAnchor(d.id, { family: 'decision', status: st.status, label: d.kind === 'question' ? 'Question' : 'Decision' })} data-kind="${d.kind}">` +
         `<div class="lg-decision__lane"><span class="lg-chip">${d.id}</span></div>` +
         `<div class="lg-decision__main"><div class="lg-decision__head"><span class="lg-decision__title">${parseInline(d.title)}</span><span class="lg-status">${statusDot(st.status)}${st.label}</span></div>` +
         `${body}${intro}${empty}${alts}</div></div>`;

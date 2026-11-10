@@ -5,8 +5,8 @@
  */
 
 import { parseInline } from '../inline';
-import { eyebrow, idChip, codicon } from './primitives';
-import { docKind, idsIn, mapSections, renderBlocks } from './blocks';
+import { eyebrow, codicon } from './primitives';
+import { docKind, mapSections, renderBlocks } from './blocks';
 
 const STEP_HEADING = /^(?:Step[ \t]+)?(\d+)[.:)]?[ \t]*[—–:-]?[ \t]*(.+)$/i;
 const STARTS_STEP = /^(?:Step[ \t]+\d|\d+[.)][ \t])/i;
@@ -32,13 +32,12 @@ function stepHtml(s: Step): string {
             break;
         }
     }
-    const ids = idsIn(`${s.title}`, 2).map((id) => idChip(id)).join(' ');
     const doHtml = renderBlocks(body.filter((l, i) => l.trim() || body[i - 1] !== undefined));
     const exp = expect
         ? `<div class="lg-expect"><span class="lg-expect__label">Expect</span>${codicon('check')}<span>${parseInline(expect)}</span></div>`
         : '';
     return `<div class="lg-step lg-fam-data"><span class="lg-step__num">${s.n}</span>` +
-        `<div class="lg-step__main"><div class="lg-step__title">${parseInline(s.title)}${ids ? ` ${ids}` : ''}</div>${doHtml}${exp}</div></div>`;
+        `<div class="lg-step__main"><div class="lg-step__title">${parseInline(s.title)}</div>${doHtml}${exp}</div></div>`;
 }
 
 /** A numbered list run at column 0 becomes steps; indented lines and fences belong to their item. */
