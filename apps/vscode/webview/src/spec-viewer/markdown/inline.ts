@@ -3,6 +3,8 @@
  * Handles inline markdown elements like bold, italic, code, links
  */
 
+import { linkifyIds } from './ledger/refs';
+
 const KNOWN_EXTENSIONS = new Set<string>([
     '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
     '.md', '.json', '.jsonc',
@@ -73,7 +75,8 @@ export function fileRefHtml(code: string, lineNo: number, label: string): string
 /** A code span is restored after links are built, so one inside a target or alt text would land unescaped in the attribute. */
 const inAttribute = (value: string): boolean => value.includes('\x00CODE');
 
-export function parseInline(text: string): string {
+/** `linkIds: false` leaves ids as text, for a caller that reads the id out of the row before chipping the rest. */
+export function parseInline(text: string, linkIds = true): string {
     if (!text) return '';
 
     // Protect inline code first: extract backtick spans so their contents
@@ -115,6 +118,8 @@ export function parseInline(text: string): string {
         // Links
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, target) =>
             inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text}</a>`)
+        // Ids in prose become chips; code spans are still stashed here
+        .replace(/^[\s\S]*$/, (html) => (linkIds ? linkifyIds(html) : html))
         // Restore inline code spans
         .replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
 

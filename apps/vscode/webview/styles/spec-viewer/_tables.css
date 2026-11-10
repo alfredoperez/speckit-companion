@@ -111,57 +111,10 @@
     border: none;
 }
 
-/* Priority with small colored dot */
+/* Priority is a neutral mark (see .lg-priority), never a status colour */
 .story-priority {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: var(--text-xs);
-    font-weight: 500;
-    color: var(--text-secondary);
-    text-transform: capitalize;
-}
-
-.priority-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.priority-dot.p1 {
-    background: var(--error);
-}
-
-.priority-dot.p2 {
-    background: var(--warning);
-}
-
-.priority-dot.p3 {
-    background: var(--accent);
-}
-
-.priority-dot.p4,
-.priority-dot.p5 {
-    background: var(--text-muted);
-}
-
-/* Legacy priority pill styles (kept for backwards compatibility) */
-.priority-p1 {
-    color: var(--error);
-}
-
-.priority-p2 {
-    color: var(--warning);
-}
-
-.priority-p3 {
-    color: var(--accent);
-}
-
-.priority-p4,
-.priority-p5 {
-    color: var(--text-muted);
 }
 
 /* ============================================
@@ -370,16 +323,10 @@
     font-size: 0.9em;
 }
 
-.scenario-given {
-    color: var(--accent);
-}
-
-.scenario-when {
-    color: var(--warning);
-}
-
+.scenario-given,
+.scenario-when,
 .scenario-then {
-    color: var(--success);
+    color: var(--scenario);
 }
 
 /* ============================================
@@ -403,14 +350,8 @@
     color: var(--text-body);
 }
 
-#markdown-content .scenario-item .keyword-given {
-    color: var(--info);
-}
-
-#markdown-content .scenario-item .keyword-when {
-    color: var(--warning);
-}
-
+#markdown-content .scenario-item .keyword-given,
+#markdown-content .scenario-item .keyword-when,
 #markdown-content .scenario-item .keyword-then {
-    color: var(--success);
+    color: var(--scenario);
 }
