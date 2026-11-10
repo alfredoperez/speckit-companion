@@ -213,3 +213,26 @@ describe('plain bullet plans', () => {
         expect(out).toContain('pl-verdict--pending');
     });
 });
+
+describe('ConstitutionCheck verdict reading', () => {
+    const row = (status: string) => preprocessConstitution(`## Constitution Check\n\n| Principle | Status | Notes |\n|---|---|---|\n| I. A | ${status} | n |\n`);
+
+    it('reads a pass that mentions no deviations as a pass', () => {
+        expect(row('✅ Pass — no deviations')).toContain('pl-gate-row--pass');
+    });
+
+    it('reads a fail that mentions justification as a fail', () => {
+        const out = row('FAIL — needs justification');
+        expect(out).toContain('pl-gate-row--fail');
+        expect(out).toContain('Gate blocked');
+    });
+
+    it('keeps a row whose status it cannot classify', () => {
+        expect(row('Aligned')).toContain('I</span>');
+    });
+
+    it('keeps a bold bullet that carries no verdict', () => {
+        const out = preprocessConstitution('## Constitution Check\n\n- **I. A**: PASS ok\n- **Note**: reviewed by hand\n');
+        expect(out).toContain('reviewed by hand');
+    });
+});

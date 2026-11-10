@@ -16,9 +16,16 @@ export function linkifyIds(html: string): string {
         .join('');
 }
 
+function ownedBy(id: string, doc: string): boolean {
+    if (/^(FR|SC|US)/i.test(id)) return doc === 'spec';
+    if (/^T\d/i.test(id)) return doc === 'tasks';
+    return doc === 'research' || doc === 'plan';
+}
+
 /** After a render: a same-document chip whose target row is absent becomes an unresolved chip. */
-export function resolveLedgerRefs(root: ParentNode): void {
+export function resolveLedgerRefs(root: ParentNode, currentDoc?: string): void {
     root.querySelectorAll<HTMLAnchorElement>('a.lg-chip[data-ref]:not([data-doc])').forEach((chip) => {
+        if (currentDoc && !ownedBy(chip.dataset.ref ?? '', currentDoc)) return;
         const slug = (chip.getAttribute('href') ?? '').slice(1);
         if (root.querySelector(`[id="${slug.replace(/[^a-z0-9-]/g, '')}"]`)) return;
         const span = document.createElement('span');

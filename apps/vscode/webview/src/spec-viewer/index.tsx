@@ -58,7 +58,7 @@ function updateContent(content: string): void {
             document.getElementById('spec-toc')
         );
         const root = document.getElementById('markdown-content');
-        if (root) resolveLedgerRefs(root);
+        if (root) resolveLedgerRefs(root, navState.value?.currentDoc);
         applyPendingFragment();
     });
 }

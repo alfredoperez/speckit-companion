@@ -520,8 +520,6 @@ export function renderMarkdown(markdown: string): string {
                 listType = 'ul';
                 listItemCount = 0;
             }
-            const content = parseInline(ulMatch[2], !/^\[[ xX]\]/.test(ulMatch[2]));
-            // Check for task list
             const taskMatch = ulMatch[2].match(/^\[([ xX])\]\s*(.+)$/);
             if (taskMatch) {
                 const taskId = taskMatch[2].match(/^\s*(?:\*\*)?(T\d+[a-z]?)/i)?.[1] ?? null;
@@ -542,6 +540,7 @@ export function renderMarkdown(markdown: string): string {
                     capture: captureHtml,
                 });
             } else {
+                const content = parseInline(ulMatch[2], true);
                 // Wrap regular list items with line actions for commenting
                 html += `<li class="line" data-line="${sourceLineNum}">
                     <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to list line ${sourceLineNum}" aria-label="Add comment to list line ${sourceLineNum}">

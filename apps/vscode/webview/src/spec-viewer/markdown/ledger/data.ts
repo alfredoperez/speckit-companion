@@ -158,7 +158,7 @@ function relations(s: SectionCtx, names: string[]): string | null {
         if (!m) continue;
         const text = m[1].replace(/[`*]/g, '');
         const hits = names
-            .map((n) => ({ n, at: text.search(new RegExp(`(?<![A-Za-z0-9_])${n}(?![A-Za-z0-9_])`)) }))
+            .map((n) => ({ n, at: text.search(new RegExp(`(?<![A-Za-z0-9_])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9_])`)) }))
             .filter((h) => h.at >= 0)
             .sort((a, b) => a.at - b.at);
         if (hits.length < 2) continue;

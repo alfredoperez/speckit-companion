@@ -26,6 +26,7 @@ export function docKind(markdown: string): DocKind {
         const m = line.match(/^#[ \t]+(.+)$/);
         if (!m) continue;
         const t = m[1];
+        if (/^(?:Implementation Plan|Feature Specification|Tasks?)\b/i.test(t)) return /^Implementation Plan/i.test(t) ? 'plan' : 'other';
         if (/quickstart/i.test(t)) return 'quickstart';
         if (/data[- ]model|\bentities\b/i.test(t)) return 'data';
         if (/^contracts?\b|\bcontract\b/i.test(t)) return 'contract';

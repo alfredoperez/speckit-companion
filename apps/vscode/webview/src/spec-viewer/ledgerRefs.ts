@@ -180,7 +180,10 @@ export function jumpToRef(chip: HTMLElement): void {
     hideRefCard();
     const doc = chip.dataset.doc;
     if (doc && doc !== navState.value?.currentDoc) {
-        openDocumentAtFragment(doc, slugForId(id));
+        if (!openDocumentAtFragment(doc, slugForId(id))) {
+            chip.classList.add('lg-chip--unresolved');
+            chip.title = `No ${doc}.md in this spec`;
+        }
         return;
     }
     const target = targetFor(chip);

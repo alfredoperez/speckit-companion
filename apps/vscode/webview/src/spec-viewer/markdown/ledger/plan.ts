@@ -119,9 +119,10 @@ interface GateRow { numeral: string; name: string; verdict: Verdict; note: strin
 function classify(text: string): Verdict | null {
     const t = text.replace(/^[\s✅❌⚠️✔✓☑✗✘-]+/u, '').toLowerCase();
     const raw = text.toLowerCase();
-    if (/justif|exception|deviat|⚠/.test(raw)) return 'justified';
+    if (/^justif/.test(t)) return 'justified';
     if (/^(fail|violat)|❌|✗|✘/.test(raw.trim()) || /^(fail|violat)/.test(t)) return 'fail';
     if (/^(pass|ok\b|compliant|yes|met\b|complies)/.test(t) || /^[✅✔✓☑]/u.test(raw.trim())) return 'pass';
+    if (/justif|exception|deviat|⚠/.test(raw)) return 'justified';
     if (/^(n\/a|na\b|not applicable|skip)/.test(t)) return 'na';
     if (/^(pending|tbd|todo|\[ \])/.test(t)) return 'pending';
     return null;
@@ -137,6 +138,8 @@ function splitPrinciple(raw: string): { numeral: string; name: string } {
     return m ? { numeral: m[1], name: m[2] } : { numeral: '', name: text };
 }
 
+const GATE_BULLET = /^-[ \t]+\*\*(?:.+?)\*\*:?[ \t]*(?:[✅❌⚠️]\s*)?(?:PASS|FAIL|JUSTIFIED|N\/A)\b|^-[ \t]+\*\*(?:.+?)\*\*[ \t]*[—–:-]?[ \t]*.*?[ \t]*(?:[✅❌]\s*)?(?:PASS|FAIL)\b\.?[ \t]*$/iu;
+
 function readGateRows(body: string[]): GateRow[] {
     const rows: GateRow[] = [];
     const table = readTable(body);
@@ -149,8 +152,8 @@ function readGateRows(body: string[]): GateRow[] {
         const notesAt = col(/note|detail|rationale|comment|reason/i, table.head.length > 2 ? 2 : -1);
         for (const r of table.rows) {
             const cellStatus = r[statusAt] ?? '';
-            const verdict = classify(cellStatus);
-            if (!verdict || !r[0]) continue;
+            const verdict = classify(cellStatus) ?? 'pending';
+            if (!r[0]) continue;
             const p = splitPrinciple(r[0]);
             const note = notesAt >= 0 && notesAt !== statusAt ? (r[notesAt] ?? '') : stripVerdictWord(cellStatus);
             rows.push({ ...p, verdict, note });
@@ -203,7 +206,7 @@ export function preprocessConstitution(markdown: string): string {
         const count = `${rows.length} principles${gate.fails ? ` · ${gate.fails} fails` : ''}${justified ? ` · ${justified} justified` : ''}`;
         out.push(card('lg-fam-guard', 'plan-gate', eyebrow('guard', 'Constitution check', count) + verdictMark(gate.verdict, gate.word), rows.map(gateRowHtml).join(''), 'Constitution check'));
         // Prose that is not the gate banner, a table or a verdict bullet stays below the component.
-        const keep = body.filter((l) => l.trim() && !isTableLine(l) && !/^-[ \t]+\*\*/.test(l) && !/^\*?GATE\b/i.test(l.replace(/^\*+/, '')));
+        const keep = body.filter((l) => l.trim() && !isTableLine(l) && !GATE_BULLET.test(l) && !/^\*?GATE\b/i.test(l.replace(/^\*+/, '')));
         if (keep.length) out.push('', ...keep, '');
         i = end;
     }

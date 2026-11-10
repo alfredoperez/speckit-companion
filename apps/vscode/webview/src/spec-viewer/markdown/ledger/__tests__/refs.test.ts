@@ -85,3 +85,19 @@ describe('story priority', () => {
         expect(priorityMark(4)).toContain('<span>P4</span>');
     });
 });
+
+describe('resolveLedgerRefs by document', () => {
+    const html = '<div id="markdown-content">' + parseInline('Covers FR-001 and T001') + '</div>';
+
+    it('leaves a spec-owned id alone on the plan page', () => {
+        document.body.innerHTML = html;
+        resolveLedgerRefs(document.body, 'plan');
+        expect(document.querySelectorAll('.lg-chip--unresolved')).toHaveLength(0);
+    });
+
+    it('marks a missing id unresolved on the page that owns it', () => {
+        document.body.innerHTML = html;
+        resolveLedgerRefs(document.body, 'spec');
+        expect(document.querySelectorAll('.lg-chip--unresolved')).toHaveLength(1);
+    });
+});

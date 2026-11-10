@@ -249,6 +249,20 @@ describe('EntityRelations', () => {
     });
 });
 
+describe('EntityRelations with odd names', () => {
+    it('does not throw on an entity name with regex characters', () => {
+        const md = lines('# Data Model', '', '## Cache (', '', '| Field | Type |', '|---|---|', '| x | `u8` |', '', '## Item*', '', '| Field | Type |', '|---|---|', '| y | `u8` |', '', '## Key Relationships', '', '- **Cache (** holds **Item***', '');
+        expect(() => renderMarkdown(md)).not.toThrow();
+    });
+});
+
+describe('document kind from the title', () => {
+    it('keeps a plan about research on the plan path', () => {
+        const html = renderMarkdown('# Implementation Plan: Research dashboard\n\n## Constitution Check\n\n| Principle | Status | Notes |\n|---|---|---|\n| I. A | PASS | ok |\n');
+        expect(html).toContain('plan-gate');
+    });
+});
+
 describe('ContractCard', () => {
     it('renders a command with signature, inputs and a promise', () => {
         const html = renderMarkdown(lines(

@@ -50,6 +50,8 @@ export function setupLedgerTasks(container: HTMLElement = document.getElementByI
     });
 
     new MutationObserver(() => {
+        if (filters.story && !Array.from(container.querySelectorAll<HTMLElement>('.lg-filter')).some((b) => b.dataset.lgStory === filters.story)) filters.story = '';
+        if (filters.hideDone && !container.querySelector('.lg-toggle')) filters.hideDone = false;
         if (filters.story || filters.hideDone) apply();
     }).observe(container, { childList: true });
 }
