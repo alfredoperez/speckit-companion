@@ -273,9 +273,9 @@ export function renderMarkdown(markdown: string): string {
     }
 
     if (!livingMode) markdown = preprocessSpecLedger(markdown);
+    markdown = preprocessLedgerTasks(markdown, currentTaskId);
     markdown = preprocessSpecMetadata(markdown, hasSpecContext);
     markdown = preprocessUserStories(markdown);
-    markdown = preprocessLedgerTasks(markdown, currentTaskId);
     markdown = preprocessTaskPhases(markdown);
     markdown = preprocessRequirements(markdown);
     markdown = preprocessEntities(markdown);

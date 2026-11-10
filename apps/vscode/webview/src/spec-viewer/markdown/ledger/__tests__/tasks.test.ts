@@ -110,6 +110,35 @@ describe('preprocessLedgerTasks', () => {
         expect(out).toContain('See when a check is out of date');
     });
 
+    it('keeps the progress bar to one line and goes proportional above 32 tasks', () => {
+        const many = ['# Tasks: big', '', '## Phase 1: Setup', ...Array.from({ length: 40 }, (_, i) => `- [${i < 30 ? 'x' : ' '}] T${String(i + 1).padStart(3, '0')} item`)].join('\n');
+        const out = preprocessLedgerTasks(many);
+        expect(out).toContain('lg-bar-group--prop');
+        expect(out).toContain('lg-seg--done" style="flex-grow:30"');
+        expect(out).toContain('lg-seg--todo" style="flex-grow:10"');
+        expect(out).not.toContain('lg-seg--blocked');
+        expect(preprocessLedgerTasks(OURS)).not.toContain('flex-grow');
+    });
+
+    it('treats a lettered phase heading as a phase and strips the priority tag from titles', () => {
+        const md = ['# Tasks: x', '', '## Phase 7b: Closure (FR-1)', '- [ ] T048a [US5] a', '', '## Phase 8: User Story 5 - Follow mode (Priority: P2)', '- [ ] T049 [US5] b'].join('\n');
+        const model = parseTasksModel(md.split('\n'));
+        expect(model.phases.map((p) => p.key)).toEqual(['7b', '8']);
+        expect(model.stories.get('US5')).toBe('Follow mode');
+        expect(model.phases[1].priority).toBe(2);
+        const out = preprocessLedgerTasks(md);
+        expect(out).toContain('data-phase="7b"');
+        expect(out).toContain('Phase 7b');
+        expect(out).not.toContain('Priority: P2');
+    });
+
+    it('keeps intro lines above the header-free phases, one block each', () => {
+        const md = ['# Tasks: x', '', '**Input**: a', '**Tests**: b', 'continued', '', '## Phase 1: S', '- [ ] T001 a'].join('\n');
+        const out = preprocessLedgerTasks(md);
+        expect(out.indexOf('**Input**: a')).toBeLessThan(out.indexOf('lg-phase'));
+        expect(out).toContain('**Input**: a\n\n**Tests**: b\ncontinued');
+    });
+
     it('folds a done phase and opens the active one', () => {
         const out = preprocessLedgerTasks(OURS);
         expect(out).toMatch(/<details class="lg-phase" data-phase="2" data-state="done" >/);
