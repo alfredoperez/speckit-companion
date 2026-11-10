@@ -36,7 +36,7 @@ import { renderCallsCard } from './callsCard';
 import { NOTE_LINE, indexScreens, renderScreenBlock } from './screenCard';
 import { isCodeCardInfo, renderCodeCard } from './codeCard';
 import { renderStatesCard } from './statesCard';
-import { preprocessSpecLedger, SPEC_LEDGER_LINE } from './ledger/spec';
+import { preprocessSpecLedger, SPEC_LEDGER_LINE } from './ledger/specDoc';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;

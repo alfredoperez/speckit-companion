@@ -10,7 +10,7 @@
  */
 
 import { escapeHtml, parseInline } from '../inline';
-import { codicon, eyebrow, idChip, priorityMark, slugForId, statusDot, type Family, type Status } from './primitives';
+import { codicon, eyebrow, idChip, priorityMark, refAnchor, slugForId, statusDot, type Family, type Status } from './primitives';
 import {
     emptyModel, idsIn, isSpecDocument, parseTasks, scenarioFor, splitScenario, taskRange,
     type SpecEdge, type SpecModel, type SpecStory, type SpecTask,
@@ -33,9 +33,18 @@ function plural(n: number, one: string, many = `${one}s`): string {
     return `${n} ${n === 1 ? one : many}`;
 }
 
+const ANCHOR_KIND: [string, Family, string][] = [
+    ['lg-sp-story', 'story', 'User story'],
+    ['lg-sp-req', 'req', 'Requirement'],
+    ['lg-sp-sc', 'req', 'Success criterion'],
+    ['lg-sp-edge', 'guard', 'Edge case'],
+    ['lg-sp-assume', 'guard', 'Assumption'],
+];
+
 function root(cls: string, inner: string, id?: string): string {
-    const idAttr = id ? ` id="${slugForId(id)}"` : '';
-    return `<div class="lg-sp ${cls}"${idAttr}><div class="lg-sp-grid">${inner}</div></div>`;
+    const kind = ANCHOR_KIND.find(([c]) => cls.split(' ').includes(c));
+    const anchor = id ? ` ${refAnchor(id, kind ? { family: kind[1], label: kind[2] } : {})}` : '';
+    return `<div class="lg-sp ${cls}"${anchor}><div class="lg-sp-grid">${inner}</div></div>`;
 }
 
 function emphasizeModals(html: string): string {
@@ -433,7 +442,7 @@ export function preprocessSpecLedger(markdown: string): string {
             const prev = section;
             if (/^user scenarios/.test(lower)) section = 'stories';
             else if (/^edge cases/.test(lower)) section = 'edges';
-            else if (/^requirements\b/.test(lower) && level <= 2) section = 'req';
+            else if (/^(?:functional )?requirements\b/.test(lower) && level <= 2) section = 'req';
             else if (/^success criteria/.test(lower)) section = 'sc';
             else if (/key entities/.test(lower)) section = 'entities';
             else if (/^assumptions/.test(lower)) section = 'assume';
@@ -445,7 +454,7 @@ export function preprocessSpecLedger(markdown: string): string {
             if (section === 'entities' && prev !== 'entities') { slot(() => sectionEyebrow('data', 'Key entities', model.entities.length)); continue; }
             if (section === 'assume' && prev !== 'assume') { slot(() => sectionEyebrow('guard', 'Assumptions', model.assumptions.length, `· ${model.assumptions.filter((a) => !a.confirmed).length} unconfirmed`)); continue; }
             if (prev === 'sc' && section === 'sc' && /^measurable outcomes/.test(lower)) continue;
-            if (section === 'req' && /^requirements\b/.test(lower) && prev !== 'req') {
+            if (section === 'req' && /^(?:functional )?requirements\b/.test(lower) && prev !== 'req') {
                 reqOpen = true;
                 slot(() => sectionEyebrow('req', 'Requirements', model.reqs.length, tasks.length ? `· ${model.reqs.filter((r) => !tasks.some((t) => t.refs.includes(r.id))).length} untested` : ''));
             }

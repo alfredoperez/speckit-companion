@@ -4,7 +4,7 @@
  */
 
 export { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setTaskSummaries, slugify } from './renderer';
-export { setSpecLedgerTasks } from './ledger/spec';
+export { setSpecLedgerTasks } from './ledger/specDoc';
 export { renderScreenByName } from './screenCard';
 export { markClarifications, writtenQuestion } from './clarifications';
 export {

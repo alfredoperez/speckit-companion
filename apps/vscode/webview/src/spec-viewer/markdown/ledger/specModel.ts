@@ -145,5 +145,5 @@ export function isSpecDocument(markdown: string): boolean {
     if (/^##[ \t]+Phase\b/m.test(markdown)) return false;
     if (/^#[ \t]+Feature Specification\b/m.test(markdown)) return true;
     if (/^###[ \t]+User Story\s*\d+/m.test(markdown)) return true;
-    return /^##[ \t]+Requirements\b/m.test(markdown) && /^-[ \t]+\*\*(?:FR|NFR)-\d+\*\*/m.test(markdown);
+    return /^##[ \t]+(?:Functional )?Requirements\b/m.test(markdown) && /^-[ \t]+\*\*(?:FR|NFR)-\d+\*\*/m.test(markdown);
 }
