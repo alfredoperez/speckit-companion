@@ -95,8 +95,10 @@ export function preprocessTechnicalContext(markdown: string): string {
         if (/^##[ \t]+Technical Context\b/i.test(line)) { flush(); inSection = true; continue; }
         if (inSection && /^#{1,6}[ \t]/.test(line)) { inSection = false; flush(); out.push(line); continue; }
         if (inSection) {
-            const m = line.match(/^\*\*(.+?)\*\*:[ \t]*(.+)$/);
+            const m = line.match(/^(?:[-*+][ \t]+)?\*\*(.+?)\*\*:[ \t]*(.+)$/) ?? line.match(/^[-*+][ \t]+([A-Za-z][^:`*|]{0,38}):[ \t]+(.+)$/);
             if (m) { facts.push({ key: m[1], val: m[2].trim() }); lastIsOpen = true; continue; }
+            const bare = !facts.length && line.match(/^[-*+][ \t]+(\S.*)$/);
+            if (bare) { facts.push({ key: 'Stack', val: bare[1].trim() }); lastIsOpen = true; continue; }
             if (!line.trim()) { lastIsOpen = false; continue; }
             if (facts.length && lastIsOpen && !/^\s*([-*+]\s|\d+\.\s|\||<|>|[-*_]{3,}\s*$)/.test(line)) {
                 facts[facts.length - 1].val += ' ' + line.trim();
@@ -153,6 +155,9 @@ function readGateRows(body: string[]): GateRow[] {
             const note = notesAt >= 0 && notesAt !== statusAt ? (r[notesAt] ?? '') : stripVerdictWord(cellStatus);
             rows.push({ ...p, verdict, note });
         }
+        if (!rows.length && table.head.length === 2) {
+            for (const r of table.rows) if (r[0]) rows.push({ ...splitPrinciple(r[0]), verdict: 'pending', note: r[1] ?? '' });
+        }
         return rows;
     }
     for (const line of body) {
@@ -169,6 +174,7 @@ function readGateRows(body: string[]): GateRow[] {
 
 function gateOf(rows: GateRow[]): { word: string; verdict: Verdict; fails: number } {
     const fails = rows.filter((r) => r.verdict === 'fail').length;
+    if (!fails && rows.every((r) => r.verdict === 'pending')) return { word: 'Gate pending', verdict: 'pending', fails };
     return fails
         ? { word: 'Gate blocked', verdict: 'fail', fails }
         : { word: 'Gate passed', verdict: 'pass', fails };
@@ -378,7 +384,7 @@ export function preprocessPlanSummary(markdown: string): string {
     const gateRows = gateRange ? readGateRows(lines.slice(gateRange.start + 1, gateRange.end)) : [];
     if (gateRows.length) {
         const g = gateOf(gateRows);
-        const word = g.fails ? 'Blocked' : 'Passed';
+        const word = g.fails ? 'Blocked' : g.verdict === 'pending' ? 'Pending' : 'Passed';
         const sub = g.fails ? ` <span class="pl-stat-sub">· ${g.fails} fails</span>` : '';
         stats.push(cellOf('Gate', `<a href="#plan-gate">${verdictMark(g.verdict, word)}</a>${sub}`));
     }

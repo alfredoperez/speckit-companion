@@ -103,18 +103,18 @@
   border: 0;
   border-radius: 0;
   overflow: visible;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
 }
 #markdown-content .pl-card .tech-cell {
   display: grid;
-  grid-template-columns: minmax(84px, 30%) minmax(0, 1fr);
+  grid-template-columns: minmax(120px, 38%) minmax(0, 1fr);
   gap: var(--space-3);
   align-items: baseline;
   background: none;
   padding: var(--space-2) 0;
   border-top: 1px solid var(--border);
 }
-#markdown-content .pl-card .tech-key { text-transform: none; letter-spacing: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+#markdown-content .pl-card .tech-key { text-transform: none; letter-spacing: 0; font-size: var(--text-sm); color: var(--text-secondary); overflow-wrap: anywhere; min-width: 0; }
 #markdown-content .pl-card .tech-val { overflow-wrap: anywhere; color: var(--text-primary); }
 #markdown-content .pl-open { display: inline-flex; align-items: center; gap: 6px; }
 #markdown-content .pl-open .lg-dot { box-shadow: inset 0 0 0 1.5px var(--warning); background: transparent; }

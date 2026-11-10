@@ -328,3 +328,26 @@ describe('QuickstartSteps', () => {
         expect(renderMarkdown('# Quickstart\n\n1. only one\n')).not.toContain('lg-step');
     });
 });
+
+describe('research edge shapes', () => {
+    it('keeps a trailing section rule out of the card', () => {
+        const html = renderMarkdown(lines('# Research', '', '## R1 — A', '', '**Decision**: x.', '', '---', '', '## R2 — B', '', '**Decision**: y.'));
+        expect(html).not.toContain('<p>---</p>');
+    });
+
+    it('makes a numbered section that holds a Decision subsection a card and counts it', () => {
+        const html = renderMarkdown(lines(
+            '# Research', '', '## R1 — A', '', '**Decision**: x.', '',
+            '## R5 — Candidate designs', '', 'Three.', '',
+            '### Option A — Keep it', '', 'Harden.', '', '### Option B — Move', '', 'Migrate.', '',
+            '### Decision D1 — **Option A**', '', 'Keep it.', '', '**Rationale.** Simple.', '', '---',
+        ));
+        expect(html).toContain('id="ref-r5"');
+        expect(html).toContain('1 turned down');
+    });
+
+    it('drops the turned-down count when nothing was turned down', () => {
+        const html = renderMarkdown(lines('# Research', '', '## R1 — A', '', '**Decision**: x.', '', '## R2 — B', '', '**Decision**: y.'));
+        expect(html).not.toContain('0 turned down');
+    });
+});
