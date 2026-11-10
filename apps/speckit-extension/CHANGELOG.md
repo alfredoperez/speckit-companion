@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **A duplicated task keeps the spec open.** Rebuilding the record from files reads a spec with ==one unchecked copy== of a task id as unfinished. ([#993](https://github.com/alfredoperez/speckit-companion/pull/993)) <!-- area: run-record -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.

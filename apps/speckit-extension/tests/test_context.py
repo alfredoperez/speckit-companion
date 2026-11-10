@@ -587,6 +587,18 @@ class DeriveRoundTripTests(unittest.TestCase):
         self.assertEqual(ctx["currentStep"], "tasks")
         self.assertEqual(ctx["status"], "ready-to-implement")
 
+    def test_derive_duplicate_id_with_one_unchecked_marker_is_not_done(self) -> None:
+        # Same per-occurrence rule as task sync: one unchecked copy of an id keeps the spec open.
+        (self.fd / "spec.md").write_text("# Spec\n")
+        (self.fd / "plan.md").write_text("# Plan\n")
+        (self.fd / "tasks.md").write_text(_tasks("- [x] **T001** a", "- [ ] **T001** a again"))
+        derive_mod.derive(self.fd)
+        ctx = _ctx(self.fd)
+        self.assertEqual(ctx["currentStep"], "tasks")
+        self.assertEqual(ctx["status"], "ready-to-implement")
+        self.assertFalse(any(e.get("step") == "implement" and e.get("task") is None
+                             and e.get("kind") == "complete" for e in ctx["history"]))
+
     def test_derive_spec_only(self) -> None:
         (self.fd / "spec.md").write_text("# Spec\n")
         derive_mod.derive(self.fd)

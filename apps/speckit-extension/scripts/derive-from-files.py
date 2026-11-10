@@ -36,10 +36,8 @@ def _infer(feature_dir: Path) -> tuple[str, str] | None:
 
     if tasks_md.is_file():
         all_ids, done_ids = wc.parse_task_markers(tasks_md)
-        # Distinct-id + set-coverage, matching write-context.py sync_tasks, so a
-        # duplicated marker id can't make derive and task-sync disagree on "done".
-        distinct_all = set(all_ids)
-        if distinct_all and set(done_ids) >= distinct_all:
+        # Task sync's own predicate, per occurrence: a duplicated id with one marker unchecked is not done.
+        if ts._tasks_at_100((all_ids, done_ids)):
             return "implement", "implemented"
         return "tasks", "ready-to-implement"
     if plan_md.is_file():
@@ -116,7 +114,7 @@ def derive(feature_dir: Path, by: str = "derive") -> Path | None:
         ctx["currentTask"] = (pending[0] if pending
                               else (ts._last_finished(log, distinct_done) if distinct_done else None))
         # Close the implement step itself once every marker is checked off.
-        all_done = bool(distinct_all) and set(distinct_done) >= set(distinct_all)
+        all_done = ts._tasks_at_100((all_ids, done_ids))
         if all_done and not wc._has_complete(log, "implement", None):
             log.append({
                 "step": "implement",
