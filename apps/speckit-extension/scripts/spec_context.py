@@ -556,6 +556,14 @@ def _reclaim_lock(lock: Path, owner: str | None) -> None:
         pass
 
 
+def _lock_exists(lock: Path) -> bool:
+    """An unanswerable stat counts as present, so an error never becomes a tight retry loop."""
+    try:
+        return lock.exists()
+    except OSError:
+        return True
+
+
 def _read_lock_owner(lock: Path) -> str | None:
     try:
         return lock.read_text(encoding="utf-8")
@@ -650,14 +658,16 @@ def _acquire_lock(target: Path) -> None:
         owner = _read_lock_owner(lock)
         if owner is not None and _owner_is_gone(owner):
             _reclaim_lock(lock, owner)
-            continue
-        if _lock_is_abandoned(lock):
-            print(
-                f"[companion] Reclaimed a write lock untouched for "
-                f"{_LOCK_ABANDONED_S}s on {target}.",
-                file=sys.stderr,
-            )
+        elif _lock_is_abandoned(lock):
             _reclaim_lock(lock, owner)
+            if not _lock_exists(lock):
+                print(
+                    f"[companion] Reclaimed a write lock untouched for "
+                    f"{_LOCK_ABANDONED_S}s on {target}.",
+                    file=sys.stderr,
+                )
+        # Only a lock that is really gone earns an immediate retry; a reclaim that removed nothing waits like a busy lock.
+        if not _lock_exists(lock):
             continue
         if time.monotonic() >= give_up_at:
             print(

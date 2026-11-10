@@ -109,5 +109,42 @@ class AnUnreadableOwnerIsNotAReasonToReclaim(unittest.TestCase):
         self.assertTrue(lock.exists())
 
 
+class AnUnremovableStaleLockWaitsOutTheDeadline(unittest.TestCase):
+    def test_gives_up_at_the_deadline_instead_of_spinning(self):
+        import io
+        import os
+        from contextlib import redirect_stderr
+        from unittest import mock
+
+        sys.path.insert(0, str(EXT / "scripts"))
+        import spec_context as sc
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        lock = Path(tmp.name) / "x.lock"
+        lock.write_bytes(b"\xff\xfe")  # an owner that cannot be read: reclaim is a no-op
+        os.utime(lock, (0, 0))  # untouched for decades: abandoned
+        polls = []
+        real_open = os.open
+
+        def counting_open(*args, **kwargs):
+            polls.append(1)
+            if len(polls) > 500:
+                raise AssertionError("acquire retried past the deadline without sleeping")
+            return real_open(*args, **kwargs)
+
+        with mock.patch.object(sc, "_WRITE_LOCK_ENABLED", True), \
+                mock.patch.object(sc, "_LOCK_MAX_WAIT_S", 0.05), \
+                mock.patch.object(sc, "_LOCK_POLL_S", 0.001), \
+                mock.patch.object(sc, "_lock_path", lambda _t: lock), \
+                mock.patch.object(sc.os, "open", counting_open), \
+                redirect_stderr(io.StringIO()) as err:
+            sc._acquire_lock(Path(tmp.name) / "never-written.json")
+
+        self.assertTrue(lock.exists())
+        self.assertIn("recording without it", err.getvalue())
+        self.assertNotIn("Reclaimed", err.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()

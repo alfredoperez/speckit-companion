@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Captures never hang on a stuck lock.** A stale lock Companion cannot remove makes a capture ==wait, then record without it==, instead of spinning. ([#992](https://github.com/alfredoperez/speckit-companion/pull/992)) <!-- area: run-record -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.
