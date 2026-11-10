@@ -116,6 +116,19 @@ def _already_ignored(path: Path) -> bool:
         return False
 
 
+def _trace_already_ignored(feature_dir) -> bool:
+    """True when the trace in feature_dir is ignored by its sibling ignore file or any git rule."""
+    ignore = Path(feature_dir) / IGNORE_NAME
+    try:
+        if ignore.is_file() and any(
+            line.strip() == TRACE_NAME for line in ignore.read_text(encoding="utf-8").splitlines()
+        ):
+            return True
+    except OSError:
+        return False
+    return _already_ignored(Path(feature_dir) / TRACE_NAME)
+
+
 def _ensure_ignored(feature_dir: Path) -> None:
     """Make the trace self-ignoring.
 
@@ -183,12 +196,16 @@ def _enforce_cap(path: Path) -> None:
 
 def record(tool: str, op: str, ok: bool, *, ms: int, feature_dir=None,
            reason: str | None = None, spec: str | None = None,
-           files=None, written: int = 0, read: int = 0) -> None:
+           files=None, written: int = 0, read: int = 0,
+           ensure_ignore: bool = True) -> None:
     """Append one event. Swallows every failure — it runs on failing paths.
 
     A call that could not resolve a spec directory lands in the repo-level
     unattributed log rather than being dropped — that is the failure the doctor
     most needs to see.
+
+    `ensure_ignore=False` is for read-only callers: they append only to a trace
+    that is already ignored, and never create the ignore file themselves.
     """
     try:
         from spec_context import _now_iso
@@ -205,7 +222,10 @@ def record(tool: str, op: str, ok: bool, *, ms: int, feature_dir=None,
             files=files, written=written, read=read,
         )
         path = trace_path(feature_dir)
-        _ensure_ignored(feature_dir)
+        if ensure_ignore:
+            _ensure_ignored(feature_dir)
+        elif not _trace_already_ignored(feature_dir):
+            return
         with path.open("a", encoding="utf-8") as fh:
             fh.write(event.line())
         _enforce_cap(path)

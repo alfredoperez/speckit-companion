@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Drift and doctor leave your tree alone.** Running `living-drift` or `doctor` ==creates no new file==; it adds to a trace only where one is already ignored. ([#995](https://github.com/alfredoperez/speckit-companion/pull/995)) <!-- area: living-specs -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.

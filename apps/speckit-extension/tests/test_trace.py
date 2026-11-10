@@ -171,6 +171,44 @@ class TraceReaderTests(unittest.TestCase):
         self.assertEqual(len(read.verdicts), 1)
 
 
+
+class ADriftEvaluationCreatesNothing(unittest.TestCase):
+    """living-drift and the doctor promise to create nothing; their trace may only append where a write path already made it ignored."""
+
+    def setUp(self):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("drift", ROOT / "scripts" / "drift.py")
+        self.drift = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.drift)
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
+        self.specs = self.root / "specs"
+        self.specs.mkdir()
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        self.addCleanup(os.chdir, cwd)
+        self.addCleanup(self.tmp.cleanup)
+
+    def evaluate(self):
+        result = {"capabilities": [], "checked": 0, "skipped": []}
+        self.drift._trace_drift(str(self.root), {"capabilities": []}, False, result, None, 1)
+
+    def test_no_ignore_rule_means_no_new_file(self):
+        self.evaluate()
+        self.assertEqual(sorted(p.name for p in self.specs.iterdir()), [])
+
+    def test_an_existing_ignore_rule_lets_the_trace_append(self):
+        (self.specs / run_trace.IGNORE_NAME).write_text(f"{run_trace.TRACE_NAME}\n", encoding="utf-8")
+        self.evaluate()
+        self.assertTrue((self.specs / run_trace.TRACE_NAME).is_file())
+
+    def test_a_write_path_still_makes_its_trace_ignored(self):
+        run_trace.record("write-context", "set", True, ms=1, feature_dir=self.specs)
+        self.assertTrue((self.specs / run_trace.IGNORE_NAME).is_file())
+        self.assertTrue((self.specs / run_trace.TRACE_NAME).is_file())
+
 if __name__ == "__main__":
     unittest.main()
 

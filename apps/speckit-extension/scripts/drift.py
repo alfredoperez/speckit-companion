@@ -310,7 +310,8 @@ def _trace_drift(root: str, living: dict, working: bool, result, exc, ms: int) -
             reason = f"{type(exc).__name__}: {exc}".strip()
             run_trace.record("drift", "drift-compute", False, ms=ms,
                              feature_dir=None, reason=reason,
-                             read=len(living.get("capabilities") or []))
+                             read=len(living.get("capabilities") or []),
+                             ensure_ignore=False)
             return
         drifted = [c["name"] for c in result.get("capabilities", []) if not c.get("inSync")]
         run_trace.record(
@@ -319,6 +320,7 @@ def _trace_drift(root: str, living: dict, working: bool, result, exc, ms: int) -
             files=sorted({d["file"] for c in result.get("capabilities", [])
                           for d in (c.get("drifted") or [])}),
             read=len(living.get("capabilities") or []),
+            ensure_ignore=False,
         )
         _record_drift_verdict(root, {
             "working": working,
@@ -343,7 +345,9 @@ def _record_drift_verdict(root: str, verdict: dict) -> None:
         target = _Path(root) / run_trace.UNATTRIBUTED_DIR
         if not target.is_dir():
             return
-        run_trace._ensure_ignored(target)
+        # Read-only: append only where a write path already made the trace ignored.
+        if not run_trace._trace_already_ignored(target):
+            return
         line = json.dumps({"at": _now_iso(), "tool": "drift", "verdict": verdict},
                           ensure_ascii=False, separators=(",", ":")) + "\n"
         with (target / run_trace.TRACE_NAME).open("a", encoding="utf-8") as fh:
