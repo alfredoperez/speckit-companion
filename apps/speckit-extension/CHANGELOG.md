@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Release installs draw plan blocks.** A Companion installed from the release zip ==prints every plan block== instead of failing on a missing grammar. ([#997](https://github.com/alfredoperez/speckit-companion/pull/997)) <!-- area: install -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.

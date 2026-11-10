@@ -28,14 +28,15 @@ The VS Code extension bundles a copy of `apps/speckit-extension/extension.yml` a
    cd apps/speckit-extension
    cp extension.yml LICENSE /tmp/cb/companion-$V/
    cp -R commands workflows /tmp/cb/companion-$V/
+   mkdir -p /tmp/cb/companion-$V/presets && cp -R presets/_parts /tmp/cb/companion-$V/presets/
    python3 scripts/package-manifest.py --copy-to /tmp/cb/companion-$V/scripts
    cd - >/dev/null
    ( cd /tmp/cb && zip -rq companion-$V.zip companion-$V )
    ```
 
-   **What ships (and what doesn't).** The package carries `extension.yml`, `LICENSE`, `commands/`, `workflows/`, and the runtime scripts. **Which scripts those are is not restated here** — `package-manifest.py` is the single source of truth, and `--copy-to` fills the archive straight from it. That is deliberate: this list used to be typed out in prose in two places, drifted behind the commands that call the scripts, and shipped an archive missing five of them, which left the adoption, drift, and coverage commands unrunnable for anyone who installed from a release (#432). Run `python3 scripts/package-manifest.py --list` to see the current set.
+   **What ships (and what doesn't).** The package carries `extension.yml`, `LICENSE`, `commands/`, `workflows/`, `presets/_parts/`, and the runtime scripts. The parts ship because the plan step's `plan-blocks.py` reads its block grammars from them at run time. **Which scripts those are is not restated here** — `package-manifest.py` is the single source of truth, and `--copy-to` fills the archive straight from it. That is deliberate: this list used to be typed out in prose in two places, drifted behind the commands that call the scripts, and shipped an archive missing five of them, which left the adoption, drift, and coverage commands unrunnable for anyone who installed from a release (#432). Run `python3 scripts/package-manifest.py --list` to see the current set.
 
-   The archive deliberately **omits** README, CHANGELOG, ROADMAP, `docs/`, `examples/`, the build-only `nodes/`+`presets/` sources, the build/test scripts, `tests/`, and `assets/`. The catalog page renders README/CHANGELOG from the GitHub blob URLs below — they're not needed inside the zip. This is still an **allow-list**; don't swap it back to a `tar --exclude` deny-list, or new docs/sources will silently bloat the package again.
+   The archive deliberately **omits** README, CHANGELOG, ROADMAP, `docs/`, `examples/`, the build-only `nodes/` sources, the build/test scripts, `tests/`, and `assets/`. The catalog page renders README/CHANGELOG from the GitHub blob URLs below — they're not needed inside the zip. This is still an **allow-list**; don't swap it back to a `tar --exclude` deny-list, or new docs/sources will silently bloat the package again.
 
    **`--copy-to` leaves the destination holding exactly that list.** It clears any scripts already sitting there first, so a reused staging dir can't slip a leftover (say, a build-only script from an older layout) into the zip. It only ever removes loose `.py` files, never recursively: a destination holding anything else — a subdirectory, a document, the `apps/speckit-extension/scripts/` source tree itself — is refused with the offending entries named, so a mistyped path can't be emptied.
 

@@ -209,5 +209,36 @@ class TestCopyToLeavesExactlyTheList(unittest.TestCase):
             self.assertTrue(dest.is_file())
 
 
+
+class TheDocumentedArchiveRuns(unittest.TestCase):
+    """Build the archive with the documented commands, then run what the plan step runs from it."""
+
+    def build_block(self) -> str:
+        import re
+
+        doc = (SCRIPTS.parent / "docs" / "publishing.md").read_text(encoding="utf-8")
+        blocks = re.findall(r"```bash\n(.*?)```", doc, re.S)
+        block = next(b for b in blocks if "package-manifest.py --copy-to" in b)
+        return "\n".join(line for line in block.splitlines() if "zip -rq" not in line)
+
+    def test_the_plan_block_grammars_ship(self):
+        import subprocess
+        import sys
+
+        repo_root = SCRIPTS.parents[2]
+        with tempfile.TemporaryDirectory() as tmp:
+            subprocess.run(["bash", "-ec", self.build_block().replace("/tmp/cb", tmp)],
+                           cwd=repo_root, check=True, capture_output=True, text=True)
+            staged = next(Path(tmp).glob("companion-*"))
+            project = Path(tmp) / "project"
+            project.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=project, check=True)
+            for name in ("calls", "code", "states", "screens"):
+                with self.subTest(block=name):
+                    done = subprocess.run(
+                        [sys.executable, str(staged / "scripts" / "plan-blocks.py"), name],
+                        cwd=project, capture_output=True, text=True)
+                    self.assertEqual(done.returncode, 0, done.stderr)
+
 if __name__ == "__main__":
     unittest.main()

@@ -30,13 +30,14 @@ Release the **spec-kit extension** (`apps/speckit-extension/`, `id: companion`) 
    - **Every `provides.commands[].file` exists** AND every command markdown under `apps/speckit-extension/commands/` is listed in `provides.commands`.
    - README is current (it's the catalog listing page).
 4. **Commit + push** to `main` (`chore(speckit-ext): release v<X.Y.Z>`).
-5. **Build the archive** — **allow-list, runtime files only**. Copy just what the installed extension runs (manifest, dispatched commands, the workflow, the runtime scripts, license). Do NOT ship docs, CHANGELOG, ROADMAP, README, `examples/`, or the build-only `nodes/`+`presets/` sources — the catalog renders README/CHANGELOG from GitHub blob URLs, not the zip. (Don't "restore" a `tar --exclude` deny-list here: an allow-list is what keeps future doc/source additions out of the package.)
+5. **Build the archive** — **allow-list, runtime files only**. Copy just what the installed extension runs (manifest, dispatched commands, the workflow, the runtime scripts, the `presets/_parts/` the plan step reads at run time, license). Do NOT ship docs, CHANGELOG, ROADMAP, README, `examples/`, or the build-only `nodes/` sources — the catalog renders README/CHANGELOG from GitHub blob URLs, not the zip. (Don't "restore" a `tar --exclude` deny-list here: an allow-list is what keeps future doc/source additions out of the package.)
    ```bash
    V=<X.Y.Z>
    rm -rf /tmp/cb && mkdir -p /tmp/cb/companion-$V/scripts
    cd apps/speckit-extension
    cp extension.yml LICENSE /tmp/cb/companion-$V/
    cp -R commands workflows /tmp/cb/companion-$V/
+   mkdir -p /tmp/cb/companion-$V/presets && cp -R presets/_parts /tmp/cb/companion-$V/presets/
    python3 scripts/package-manifest.py --copy-to /tmp/cb/companion-$V/scripts
    cd - >/dev/null
    ( cd /tmp/cb && zip -rq companion-$V.zip companion-$V )
