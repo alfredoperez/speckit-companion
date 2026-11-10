@@ -92,5 +92,31 @@ class ThePicker(unittest.TestCase):
         self.assertEqual(done.stderr.count("[companion] Warning:"), 1)
 
 
+
+class TheRecordTakesTheWriterLock(unittest.TestCase):
+    def test_the_first_read_happens_under_the_lock(self):
+        import importlib.util
+        from unittest import mock
+
+        spec = importlib.util.spec_from_file_location("plan_blocks", SCRIPT)
+        helper = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(helper)
+        sc = sys.modules["spec_context"]
+        seen = []
+        real = sc._acquire_lock
+
+        def spy(target):
+            seen.append(sc._WRITE_LOCK_ENABLED)
+            return real(target)
+
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.object(sc, "_WRITE_LOCK_ENABLED", False), \
+                mock.patch.object(sc, "_acquire_lock", spy):
+            helper.record(Path(tmp), ["calls"])
+            for target in list(sc._HELD_LOCKS):
+                sc._release_lock(Path(target))
+        self.assertTrue(seen, "record() never read the context")
+        self.assertTrue(all(seen), "record() read the context before enabling the writer lock")
+
 if __name__ == "__main__":
     unittest.main()

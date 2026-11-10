@@ -20,7 +20,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from capture import _git_branch, _repo_root_for, atomic_write, fill_required, read_ctx  # noqa: E402
-from spec_context import _repo_root, resolve_feature_dir  # noqa: E402
+from spec_context import _repo_root, enable_write_lock, resolve_feature_dir  # noqa: E402
 
 PARTS = {"calls": "call-paths", "code": "code-pins", "states": "states", "screens": "screens"}
 NAMES = ", ".join([*PARTS, "none"])
@@ -50,6 +50,8 @@ def part_text(root: Path, part: str) -> str:
 
 def record(feature_dir: Path, chosen: list[str]) -> None:
     target = feature_dir / ".spec-context.json"
+    # A read-modify-write: queue behind any other writer, as write-context does.
+    enable_write_lock()
     ctx = read_ctx(target)
     fill_required(ctx, feature_dir, _git_branch(_repo_root_for(feature_dir)) or "main")
     ctx["planBlocks"] = chosen

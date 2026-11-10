@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Plan block choices never overwrite a capture.** Picking plan blocks ==waits its turn== behind other writes to the run record. ([#998](https://github.com/alfredoperez/speckit-companion/pull/998)) <!-- area: run-record -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.
