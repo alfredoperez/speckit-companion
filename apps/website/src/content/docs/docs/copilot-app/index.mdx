@@ -35,6 +35,16 @@ When the agent creates a spec, writes `plan.md` or ticks a task, the board updat
 
 You can also drive the board from the chat. Ask "which specs are still open?" or "show me the export spec" and the board follows.
 
+## Choose the repository
+
+The board starts in the session's working directory. In a Project chat, that directory can belong to the chat rather than the repository, so the board can show no specs even when the selected repository has them.
+
+Enter the absolute checkout path in **Repository directory** and press **Use repository**. The board saves that choice in the session's artifact storage, restores it after reloads and in new panels, and watches the selected repository for changes. A missing spec directory shows a warning with the scanned path instead of silently appearing as an empty project.
+
+Ask the agent to select a repository to use the board's `select_root` action. For an initial selection, the agent can open the canvas with `{ "root": "/absolute/path/to/repository" }`; a saved selection takes precedence so an older open input cannot undo a later choice after a reload.
+
+Changing repositories clears the selected spec and is blocked while a step sent from the board is running. Commands sent from a board outside the chat's working directory name the selected repository so relative paths resolve there.
+
 ## What each button sends
 
 A button sends one command into the chat, and your agent runs the step from there. The board never edits a spec document itself.

@@ -11,6 +11,7 @@ import { buildSnapshot, findSpec, readSpecDetail, recordLive, resolveSpecDirs } 
 import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
 import { BUSY, recordStep } from './run-record.mjs';
 import { stepEvidence, withRunningStep } from './spec-rules.mjs';
+import { validateRoot } from './workspace.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -57,7 +58,7 @@ function tokenMatches(given, expected) {
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
  * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
-export async function createSpecServer({ root, specDirs, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
+export async function createSpecServer({ root, workingDirectory = root, specDirs, saveRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
     const state = {
         root,
         specDirs: specDirs ?? resolveSpecDirs(root),
@@ -155,6 +156,29 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         if (asked || key !== state.sentKey) emit('snapshot', next);
         state.sentKey = key;
         return state.snapshot;
+    }
+
+    function selectRoot(root) {
+        const nextRoot = validateRoot(root);
+        if (state.runs.size || state.pendingSpecify || state.retries.size) {
+            throw new Error('Wait for the current spec step to finish before changing repositories.');
+        }
+        const nextDirs = resolveSpecDirs(nextRoot);
+        const nextSnapshot = buildSnapshot(nextRoot, nextDirs);
+        if (!saveRoot) throw new Error('Repository selection is unavailable without session storage.');
+        saveRoot(nextRoot);
+        clearTimeout(state.timer);
+        clearTimeout(state.runTimer);
+        for (const watcher of state.watchers) watcher.close();
+        state.watchers.clear();
+        state.root = nextRoot;
+        state.specDirs = nextDirs;
+        state.selected = null;
+        state.snapshot = nextSnapshot;
+        state.sentKey = null;
+        startWatching();
+        rescan();
+        return snapshot();
     }
 
     /** Write a settled step to the record, trying again for a couple of seconds while another writer holds its lock. */
@@ -293,6 +317,10 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     }
 
     async function deliver(spec, command, prompt, instructionsFile = null) {
+        if (state.root !== workingDirectory) {
+            prompt += `\n\nRepository directory: ${JSON.stringify(state.root)}. Run this request in that repository; resolve all relative spec, command and instruction-file paths from that directory, not the chat working directory.`;
+            if (instructionsFile) instructionsFile = resolve(state.root, instructionsFile);
+        }
         const sent = await send(prompt);
         emit('run', { spec, command, prompt, instructionsFile, sent, at: new Date().toISOString() });
         return { prompt, instructionsFile, sent };
@@ -393,6 +421,10 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
 
         if (req.method === 'POST') {
             const body = await readJson(req);
+            if (pathname === '/api/root') {
+                const next = selectRoot(body.root);
+                return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
             if (pathname === '/api/refresh') return sendJson(res, 200, { count: rescan().specs.length });
             if (pathname === '/api/focus') return sendJson(res, 200, focus(body.spec));
             if (pathname === '/api/run') return sendJson(res, 200, await run(body.spec, body.command));
@@ -444,6 +476,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         token: state.token,
         get snapshot() { return snapshot(); },
         rescan,
+        selectRoot,
         focus,
         run,
         specify,

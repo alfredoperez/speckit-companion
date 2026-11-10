@@ -4,6 +4,10 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+### Fixed
+
+- **Project chats can select their repository.** The board remembers the checkout, watches its specs, and warns when the scanned directory contains none. <!-- area: copilot-app -->
+
 ## [0.2.1] - 2026-11-08
 
 ### Fixed

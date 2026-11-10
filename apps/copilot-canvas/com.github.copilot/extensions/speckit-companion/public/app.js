@@ -54,6 +54,9 @@ const els = {
     detail: $('detail'),
     layout: $('layout'),
     repoLine: $('repo-line'),
+    repositoryForm: $('repository-form'),
+    repositoryRoot: $('repository-root'),
+    repositoryWarning: $('repository-warning'),
     live: $('live'),
     liveLabel: $('live-label'),
     search: $('search'),
@@ -297,11 +300,17 @@ function renderBoard() {
     $('count-done').textContent = specs.length - active;
     $('count-all').textContent = specs.length;
     els.repoLine.textContent = `Spec board · ${state.snapshot.repoName} · ${active} active of ${specs.length}`;
+    els.repoLine.title = state.snapshot.root;
+    if (document.activeElement !== els.repositoryRoot) els.repositoryRoot.value = state.snapshot.root;
+    els.repositoryWarning.hidden = !state.snapshot.missingSpecDirectories;
+    els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
 
     const shown = visibleSpecs();
     els.listEmpty.hidden = shown.length > 0;
     els.listEmpty.textContent = specs.length === 0
-        ? 'No specs here yet. Use New spec to start one.'
+        ? state.snapshot.missingSpecDirectories
+            ? 'No spec directory found. Check the repository directory above.'
+            : 'No specs here yet. Use New spec to start one.'
         : 'No specs match.';
     els.list.replaceChildren(...shown.map(spec => el('li', {},
         el('button', {
@@ -591,6 +600,14 @@ function renderSpecifyChoices() {
 }
 
 function applySnapshot(snapshot) {
+    if (state.snapshot && state.snapshot.root !== snapshot.root) {
+        state.selected = null;
+        state.detail = null;
+        state.shown = null;
+        state.detailRequest++;
+        state.query = '';
+        els.search.value = '';
+    }
     const key = JSON.stringify({ ...snapshot, generatedAt: null });
     const same = key === state.snapshotKey;
     state.snapshotKey = key;
@@ -652,6 +669,17 @@ els.refresh.addEventListener('click', async () => {
         toast(`Re-read ${count} specs`);
     } catch (error) {
         toast(`Refresh failed: ${error.message}`);
+    }
+});
+
+els.repositoryForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    try {
+        const result = await api('/api/root', { root: els.repositoryRoot.value.trim() });
+        els.repositoryRoot.blur();
+        toast(`Scanning ${result.root}: ${result.count} specs`);
+    } catch (error) {
+        toast(`Could not select repository: ${error.message}`);
     }
 });
 

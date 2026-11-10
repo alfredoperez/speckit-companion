@@ -4,6 +4,7 @@
 import { joinSession, createCanvas, CanvasError } from '@github/copilot-sdk/extension';
 import { createSpecServer } from './server.mjs';
 import { CANVAS_DESCRIPTION, SPEC_COMMANDS, SYSTEM_RULE, openStatus } from './prompts.mjs';
+import { rootSelection, validateRoot } from './workspace.mjs';
 
 const CANVAS_ID = 'speckit-spec-board';
 const servers = new Map();
@@ -43,10 +44,29 @@ const session = await joinSession({
                 type: ['object', 'null'],
                 additionalProperties: false,
                 properties: {
+                    root: { type: 'string', minLength: 1, description: 'Initial absolute repository directory when the chat has no saved selection. Use select_root to change a saved selection.' },
                     spec: { type: 'string', description: 'Optional spec to open focused (path, folder name, or number).' },
                 },
             },
             actions: [
+                {
+                    name: 'select_root',
+                    description: 'Select and save the absolute repository directory to scan. Use when the board is open in a Project chat rather than a repository checkout.',
+                    inputSchema: {
+                        type: 'object',
+                        additionalProperties: false,
+                        properties: { root: { type: 'string', minLength: 1 } },
+                        required: ['root'],
+                    },
+                    handler: (ctx) => {
+                        try {
+                            const snapshot = serverFor(ctx).selectRoot(ctx.input.root);
+                            return { root: snapshot.root, count: snapshot.specs.length };
+                        } catch (error) {
+                            throw specError(error);
+                        }
+                    },
+                },
                 {
                     name: 'list_specs',
                     description: 'List the specs on the board with status, pipeline step badges and task progress. Use this to answer any question about which specs exist or where they stand, instead of reading files under specs/. Pass filter "active" to skip completed and archived specs.',
@@ -113,12 +133,18 @@ const session = await joinSession({
                 },
             ],
             open: async (ctx) => {
-                const root = ctx.session?.workingDirectory;
+                const selection = rootSelection(session.workspacePath);
+                const savedRoot = selection.read();
+                const root = savedRoot ?? ctx.input?.root ?? ctx.session?.workingDirectory;
                 if (!root) throw new CanvasError('workspace_unavailable', 'The session has no working directory.');
                 let entry = servers.get(ctx.instanceId);
                 if (!entry) {
+                    const resolvedRoot = validateRoot(root);
+                    if (!savedRoot && ctx.input?.root) selection.write(resolvedRoot);
                     entry = await createSpecServer({
-                        root,
+                        root: resolvedRoot,
+                        workingDirectory: ctx.session?.workingDirectory,
+                        saveRoot: (root) => selection.write(root),
                         send: async (prompt) => {
                             await session.send({ prompt });
                             return true;
