@@ -11,8 +11,6 @@ import {
     preprocessRequirements,
     preprocessEntities,
     preprocessChecklist,
-    preprocessTechnicalContext,
-    preprocessConstitution,
     preprocessDecisions,
     preprocessCallouts,
     preprocessHtmlComments,
@@ -35,6 +33,7 @@ import { renderCallsCard } from './callsCard';
 import { NOTE_LINE, indexScreens, renderScreenBlock } from './screenCard';
 import { isCodeCardInfo, renderCodeCard } from './codeCard';
 import { renderStatesCard } from './statesCard';
+import { preprocessPlan } from './ledger/plan';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -275,8 +274,7 @@ export function renderMarkdown(markdown: string): string {
     markdown = preprocessRequirements(markdown);
     markdown = preprocessEntities(markdown);
     markdown = preprocessChecklist(markdown);
-    markdown = preprocessTechnicalContext(markdown);
-    markdown = preprocessConstitution(markdown);
+    markdown = preprocessPlan(markdown);
     markdown = preprocessDecisions(markdown);
     markdown = parseAcceptanceScenarios(markdown);
     markdown = preprocessCallouts(markdown);

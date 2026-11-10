@@ -204,7 +204,7 @@ describe('preprocessTechnicalContext', () => {
         const out = preprocessTechnicalContext(md);
 
         expect(out.match(/class="tech-cell"/g)).toHaveLength(2);
-        expect(out.match(/Technical Context<\/summary>/g)).toHaveLength(1);
+        expect(out.match(/Technical context/g)).toHaveLength(1);
         expect(out).toContain('TypeScript with React. ObjectScript for the server.');
         expect(out).toContain('none in the browser.');
     });
@@ -244,9 +244,10 @@ describe('preprocessConstitution', () => {
         ].join('\n');
         const out = preprocessConstitution(md);
 
-        expect((out.match(/class="con-row"/g) ?? []).length).toBe(2);
-        expect(out).toContain('class="verdict pass"');
-        expect(out).toContain('class="verdict fail"');
+        expect((out.match(/class="pl-gate-row /g) ?? []).length).toBe(2);
+        expect(out).toContain('pl-gate-row--pass');
+        expect(out).toContain('pl-gate-row--fail');
+        expect(out).toContain('Gate blocked');
         expect(out).toContain('schema accepts unknown fields');
     });
 
@@ -255,44 +256,16 @@ describe('preprocessConstitution', () => {
         expect(preprocessConstitution(md)).toBe(md);
     });
 
-    it('keeps the heading for a table-form Constitution Check (no bullets)', () => {
-        const md = [
-            '## Constitution Check',
-            '',
-            '| Principle | Status |',
-            '| --- | --- |',
-            '| I. Extensibility | PASS |',
-            '',
-            '## Project Structure',
-        ].join('\n');
-        const out = preprocessConstitution(md);
-
-        // No verdict rows are emitted for the table form, but the section header
-        // must survive (it used to be stripped, leaving the table headerless).
-        expect(out).not.toContain('class="con-row"');
-        expect(out).toContain('## Constitution Check');
-        expect(out).toContain('| I. Extensibility | PASS |');
-    });
-
     it('renders the real 060 plan.md grid + verdict rows through the pipeline', () => {
         const root = join(__dirname, '../../../../../../..');
         const plan = readFileSync(join(root, 'specs/060-spec-context-tracking/plan.md'), 'utf8');
         const html = renderMarkdown(plan);
 
         expect(html).toContain('class="tech-grid"');
-        expect(html).toContain('class="con-row"');
-        expect(html).toContain('class="verdict pass"');
+        expect(html).toContain('class="pl-gate-row pl-gate-row--pass"');
+        expect(html).toContain('Gate passed');
     });
 
-    it('collapses both plan sections and puts the verdict before the name', () => {
-        const tc = preprocessTechnicalContext('## Technical Context\n\n**Language/Version**: TS\n\n## Next\n');
-        expect(tc).toContain('<details class="md-collapsible"');
-        expect(tc).not.toContain('## Technical Context'); // heading replaced by the summary
-
-        const con = preprocessConstitution('## Constitution Check\n\n- **I. Extensibility**: PASS — ok.\n\n## Next\n');
-        expect(con).toContain('<details class="md-collapsible"');
-        expect(con).toMatch(/verdict pass">PASS<\/span><span class="con-name"/);
-    });
 });
 
 describe('renderTable escaped pipes', () => {

@@ -39,6 +39,67 @@ export const ConstitutionCheck: Story = {
     },
 };
 
+const GATE_TABLE = [
+    '## Constitution Check',
+    '',
+    '| Principle | Status | Notes |',
+    '|-----------|--------|-------|',
+    '| I. Extension isolation | ✅ Pass | Behaviour lives in shipped nodes and scripts. |',
+    '| II. Docs are part of the change | ⚠️ Justified | The /fix-tickets text follows once the mode is merged. |',
+    '| III. Never fail the host command | ❌ Fail | The mode raises on a malformed tasks.md. |',
+].join('\n');
+
+export const ConstitutionGate: Story = { name: 'Constitution gate (table, justified + fail)', args: { md: GATE_TABLE } };
+
+export const ComplexityTracking: Story = {
+    args: {
+        md: [
+            '## Complexity Tracking',
+            '',
+            '| Violation | Why Needed | Simpler Alternative Rejected Because |',
+            '|-----------|------------|-------------------------------------|',
+            '| New --waves mode in dispatch-briefs.py | Foundational must split at its Wait lines | A prose rule cannot be tested |',
+            '| Fourth workflow preset | | Reusing the Companion preset was never tried |',
+        ].join('\n'),
+    },
+};
+
+export const ProjectTree: Story = {
+    args: {
+        md: [
+            '## Project Structure',
+            '',
+            '```text',
+            'src/',
+            '├── settings.rs          # MODIFY: Add pager and pagers fields',
+            '├── pager.rs             # NEW: Pager configuration and selection logic',
+            '└── pager/',
+            '    ├── mod.rs           # Module exports',
+            '    └── tests.rs         # NEW: Unit tests',
+            '```',
+        ].join('\n'),
+    },
+};
+
+export const SummaryLede: Story = {
+    args: {
+        md: [
+            '## Summary',
+            '',
+            'Implement stops building the whole Foundational phase itself. The decision lives in dispatch-briefs.py, not in prose. A new --waves mode splits Foundational at its Wait lines. It prints worker briefs for every wave of four or more tasks.',
+            '',
+            GATE_TABLE,
+            '',
+            '## Project Structure',
+            '',
+            '```text',
+            'src/',
+            '└── pager.rs   # NEW: selection',
+            '```',
+        ].join('\n'),
+    },
+};
+
 export const CallPaths: Story = {
     args: {
         md: [
