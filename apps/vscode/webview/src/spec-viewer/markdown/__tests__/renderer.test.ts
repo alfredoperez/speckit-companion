@@ -460,3 +460,27 @@ describe('renderMarkdown: a block fence', () => {
         expect(renderMarkdown(src('code', ' sketch a.ts'))).toBe(plain('code'));
     });
 });
+
+describe('hard-wrapped list items', () => {
+    it('keeps a continuation line inside the item above it', () => {
+        const html = renderMarkdown('- `AuthenticationService` does **not** inject `CACHE_MANAGER`. It injects\n  `ActorContextCacheService`.\n- Second item\n');
+
+        expect(html.match(/<li /g)).toHaveLength(2);
+        expect(html).toMatch(/It injects <code[^>]*>[^<]*ActorContextCacheService/);
+        expect(html).not.toMatch(/<\/ul>\s*<p>/);
+    });
+
+    it('does not swallow a following paragraph after a blank line', () => {
+        const html = renderMarkdown('- item\n\nAfter.\n');
+
+        expect(html).toContain('<p>After.</p>');
+    });
+});
+
+describe('wide tables', () => {
+    it('sit in a scroll wrapper so they stay inside the reading column', () => {
+        const html = renderMarkdown('| a | b |\n|---|---|\n| 1 | 2 |\n');
+
+        expect(html).toMatch(/<div class="table-scroll"><table>[\s\S]*<\/table><\/div>/);
+    });
+});

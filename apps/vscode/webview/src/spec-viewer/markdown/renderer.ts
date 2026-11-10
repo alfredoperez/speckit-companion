@@ -209,7 +209,7 @@ function clampCells(cells: string[], n: number): string[] {
 function renderTable(rows: string[]): string {
     if (rows.length < 2) return '';
 
-    let html = '<table>\n';
+    let html = '<div class="table-scroll"><table>\n';
 
     // Header row
     const headerCells = splitTableRow(rows[0]);
@@ -233,7 +233,7 @@ function renderTable(rows: string[]): string {
         html += '</tbody>\n';
     }
 
-    html += '</table>\n';
+    html += '</table></div>\n';
     return html;
 }
 
@@ -297,6 +297,7 @@ export function renderMarkdown(markdown: string): string {
     let inList = false;
     let listType: 'ul' | 'ol' = 'ul';
     let listItemCount = 0;
+    let lastListLineIndex = -1;
     let lastClosedListType: 'ul' | 'ol' | null = null;
     let lastClosedListCount = 0;
     let inTable = false;
@@ -440,6 +441,12 @@ export function renderMarkdown(markdown: string): string {
             tableRows = [];
         }
 
+        if (inList && lastListLineIndex === i - 1 && isListContinuation(line)) {
+            html = appendToLastListItem(html, parseInline(line.trim()));
+            lastListLineIndex = i;
+            continue;
+        }
+
         // Close list if we're not on a list item
         if (inList && !line.match(/^(\s*[-*+]|\s*\d+\.)\s/)) {
             html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
@@ -496,6 +503,7 @@ export function renderMarkdown(markdown: string): string {
         // Unordered list
         const ulMatch = line.match(/^(\s*)[-*+]\s+(.+)$/);
         if (ulMatch) {
+            lastListLineIndex = i;
             if (!inList || listType !== 'ul') {
                 if (inList) {
                     html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
@@ -579,6 +587,7 @@ export function renderMarkdown(markdown: string): string {
         // Ordered list
         const olMatch = line.match(/^(\s*)\d+\.\s+(.+)$/);
         if (olMatch) {
+            lastListLineIndex = i;
             if (!inList || listType !== 'ol') {
                 if (inList) {
                     html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
@@ -686,6 +695,20 @@ export function renderMarkdown(markdown: string): string {
     }
 
     return html;
+}
+
+function isListContinuation(line: string): boolean {
+    return line.trim() !== '' && !/^\s*([-*+]|\d+\.)\s/.test(line) && !/^\s*(#{1,6}\s|>|\||<|```|~~~|[-*_]{3,}\s*$)/.test(line);
+}
+
+function appendToLastListItem(html: string, extra: string): string {
+    const liStart = html.lastIndexOf('<li ');
+    const capture = html.indexOf('<div class="task-item__capture">', liStart);
+    const slot = html.indexOf('<div class="line-comment-slot">', liStart);
+    const limit = capture !== -1 ? capture : slot;
+    const spanEnd = html.lastIndexOf('</span>', limit);
+    if (liStart === -1 || limit === -1 || spanEnd < liStart) return html;
+    return `${html.slice(0, spanEnd)} ${extra}${html.slice(spanEnd)}`;
 }
 
 /**

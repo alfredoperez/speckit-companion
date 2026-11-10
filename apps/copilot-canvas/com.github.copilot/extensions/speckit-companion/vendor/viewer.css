@@ -520,6 +520,7 @@ body {
 }
 .content-area > #markdown-content {
   grid-column: 1;
+  width: 100%;
 }
 .content-area > aside.spec-toc {
   grid-column: 2;
@@ -1085,6 +1086,7 @@ button.is-loading {
   line-height: 1.6;
   color: var(--text-body);
   max-width: 72ch;
+  min-width: 0;
   margin: 0 auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -1167,7 +1169,7 @@ button.is-loading {
   margin-right: var(--space-1);
 }
 #markdown-content a {
-  color: var(--accent);
+  color: color-mix(in srgb, var(--accent) 60%, var(--text-primary));
   text-decoration: none;
   transition: color var(--transition-fast);
 }
@@ -1882,6 +1884,9 @@ aside.spec-toc.spec-toc--compact {
   font-size: 0.85em;
   line-height: inherit;
   vertical-align: baseline;
+  max-width: 100%;
+  min-width: 0;
+  white-space: nowrap;
   transition:
     color var(--transition-fast),
     background var(--transition-fast),
@@ -1914,6 +1919,10 @@ aside.spec-toc.spec-toc--compact {
   border: none;
   padding: 0;
   font-size: 0.9em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .hljs {
   background: transparent !important;
@@ -2884,6 +2893,10 @@ pre.code-block code.hljs {
 }
 
 /* apps/vscode/webview/styles/spec-viewer/_tables.css */
+#markdown-content .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
 #markdown-content table {
   width: 100%;
   margin: var(--space-4) 0;

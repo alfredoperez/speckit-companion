@@ -289,7 +289,8 @@ body {
     align-content: start;
 }
 
-.content-area > #markdown-content { grid-column: 1; }
+/* width:100% stops auto margins from sizing the column to its widest code line. */
+.content-area > #markdown-content { grid-column: 1; width: 100%; }
 .content-area > aside.spec-toc { grid-column: 2; }
 
 /* The dossier is its own bounded page — it spans both tracks. */

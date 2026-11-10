@@ -231,7 +231,11 @@ export function preprocessTechnicalContext(markdown: string): string {
     const out: string[] = [];
     let inSection = false;
     let cells: string[] = [];
+    let lastKey: string | null = null;
+    let lastVal = '';
+    const cell = (k: string, v: string) => `<div class="tech-cell"><span class="tech-key">${parseInline(k)}</span><span class="tech-val">${parseInline(v)}</span></div>`;
     const flush = () => {
+        lastKey = null;
         if (cells.length) {
             out.push(`<details class="md-collapsible"><summary class="md-collapsible__summary">Technical Context</summary><div class="tech-grid">${cells.join('')}</div></details>`);
             cells = [];
@@ -243,10 +247,17 @@ export function preprocessTechnicalContext(markdown: string): string {
         if (inSection) {
             const m = line.match(/^\*\*(.+?)\*\*:[ \t]*(.+)$/);
             if (m) {
-                cells.push(`<div class="tech-cell"><span class="tech-key">${parseInline(m[1])}</span><span class="tech-val">${parseInline(m[2].trim())}</span></div>`);
+                lastKey = m[1];
+                lastVal = m[2].trim();
+                cells.push(cell(lastKey, lastVal));
                 continue;
             }
-            if (!line.trim()) { continue; }
+            if (!line.trim()) { lastKey = null; continue; }
+            if (cells.length && lastKey !== null && !/^\s*([-*+]\s|\d+\.\s|\||<|>|[-*_]{3,}\s*$)/.test(line)) {
+                lastVal += ' ' + line.trim();
+                cells[cells.length - 1] = cell(lastKey, lastVal);
+                continue;
+            }
             flush();
         }
         out.push(line);

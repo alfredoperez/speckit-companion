@@ -300,43 +300,29 @@ export function buildToc(
     };
     tocRoot.addEventListener('click', onClick);
 
-    // IntersectionObserver — tracks topmost intersecting heading.
-    const visible = new Set<string>();
-    const io = new IntersectionObserver(
-        entries => {
-            for (const entry of entries) {
-                const id = (entry.target as HTMLElement).id;
-                if (!id) continue;
-                if (entry.isIntersecting) visible.add(id);
-                else visible.delete(id);
-            }
-            if (visible.size === 0) return;
-            // Pick the heading nearest the top of the scroll viewport.
-            let best: HTMLElement | null = null;
-            let bestTop = Number.POSITIVE_INFINITY;
-            const rootTop = scrollRoot.getBoundingClientRect().top;
-            for (const id of visible) {
-                const el = markdownRoot.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
-                if (!el) continue;
-                const top = el.getBoundingClientRect().top - rootTop;
-                if (top < bestTop) {
-                    bestTop = top;
-                    best = el;
-                }
-            }
-            if (!best) return;
-            for (const link of linkByTargetId.values()) {
-                link.removeAttribute('aria-current');
-            }
-            const activeLink = linkByTargetId.get(best.id);
-            if (activeLink) activeLink.setAttribute('aria-current', 'location');
-        },
-        {
-            root: scrollRoot,
-            rootMargin: '-10% 0px -70% 0px',
-            threshold: 0
+    // IntersectionObserver — wakes on each heading crossing the activation line;
+    // the active entry is the last heading at or above that line, else the first.
+    const updateActive = () => {
+        const rootRect = scrollRoot.getBoundingClientRect();
+        const line = rootRect.top + rootRect.height * 0.3;
+        let best: HTMLElement | null = headings[0] ?? null;
+        for (const heading of headings) {
+            const rect = heading.getBoundingClientRect();
+            if (rect.height === 0 && rect.width === 0) continue;
+            if (rect.top <= line) best = heading;
+            else break;
         }
-    );
+        if (!best) return;
+        for (const link of linkByTargetId.values()) {
+            link.removeAttribute('aria-current');
+        }
+        linkByTargetId.get(best.id)?.setAttribute('aria-current', 'location');
+    };
+    const io = new IntersectionObserver(updateActive, {
+        root: scrollRoot,
+        rootMargin: '0px 0px -70% 0px',
+        threshold: 0
+    });
     for (const heading of headings) io.observe(heading);
 
     // ResizeObserver — the column and the disclosure are different DOM, so a

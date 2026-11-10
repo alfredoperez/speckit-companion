@@ -199,6 +199,16 @@ describe('tasks.md capture merge (setTaskSummaries)', () => {
 });
 
 describe('preprocessTechnicalContext', () => {
+    it('joins a hard-wrapped continuation line to the field above it', () => {
+        const md = ['## Technical Context', '', '**Language/Version**: TypeScript with React.', 'ObjectScript for the server.', '', '**Storage**: none', 'in the browser.', ''].join('\n');
+        const out = preprocessTechnicalContext(md);
+
+        expect(out.match(/class="tech-cell"/g)).toHaveLength(2);
+        expect(out.match(/Technical Context<\/summary>/g)).toHaveLength(1);
+        expect(out).toContain('TypeScript with React. ObjectScript for the server.');
+        expect(out).toContain('none in the browser.');
+    });
+
     it('turns the Technical Context key/value lines into a grid', () => {
         const md = [
             '## Technical Context',
@@ -331,6 +341,20 @@ describe('acceptance scenarios', () => {
         expect(html).toContain('<strong class="keyword-then">Then</strong>');
         // The sentence text stays intact (no per-clause line splitting).
         expect(html).toContain('a spec,');
+    });
+});
+
+describe('scenario keywords', () => {
+    it('leaves a lowercase "given" or "when" inside a sentence unhighlighted', () => {
+        const md = ['**Acceptance Scenarios**:', '', '1. **Given** a failure, **When** it shows, **Then** the reason given by the API is shown, even when unavailable.', ''].join('\n');
+        const html = renderMarkdown(md);
+
+        expect(html).toContain('<strong class="keyword-given">Given</strong>');
+        expect(html).toContain('<strong class="keyword-when">When</strong>');
+        expect(html).toContain('reason given by the API');
+        expect(html).toContain('even when unavailable');
+        expect(html.match(/keyword-given/g)).toHaveLength(1);
+        expect(html.match(/keyword-when/g)).toHaveLength(1);
     });
 });
 

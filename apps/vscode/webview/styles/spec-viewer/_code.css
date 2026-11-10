@@ -125,6 +125,9 @@
     font-size: 0.85em;
     line-height: inherit;
     vertical-align: baseline;
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
     transition: color var(--transition-fast), background var(--transition-fast),
                 border-color var(--transition-fast);
 }
@@ -162,6 +165,10 @@
     border: none;
     padding: 0;
     font-size: 0.9em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ============================================
