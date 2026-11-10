@@ -4,6 +4,7 @@
  */
 
 import { escapeHtml, parseInline } from './inline';
+import { linkifyIds } from './ledger/refs';
 import {
     preprocessSpecMetadata,
     preprocessUserStories,
@@ -517,7 +518,7 @@ export function renderMarkdown(markdown: string): string {
                 listType = 'ul';
                 listItemCount = 0;
             }
-            const content = parseInline(ulMatch[2]);
+            const content = parseInline(ulMatch[2], !/^\[[ xX]\]/.test(ulMatch[2]));
             // Check for task list
             const taskMatch = content.match(/^\[([ xX])\]\s*(.+)$/);
             if (taskMatch) {
@@ -556,7 +557,7 @@ export function renderMarkdown(markdown: string): string {
                     }
                     return '';
                 }).trimStart();
-                const innerText = chips.join('') + body;
+                const innerText = chips.join('') + linkifyIds(body);
                 const summary = taskId ? taskSummaries[taskId] : undefined;
                 let captureHtml = '';
                 if (summary && (summary.did || (summary.files && summary.files.length))) {

@@ -126,3 +126,81 @@ a.lg-chip:focus-visible {
 .lg-wash {
     background: color-mix(in srgb, var(--fam, var(--text-muted)) var(--ledger-wash), transparent);
 }
+
+.lg-flash {
+    animation: lg-flash 1.4s ease-out;
+}
+
+@keyframes lg-flash {
+    0%, 30% { background: color-mix(in srgb, var(--info) 22%, transparent); box-shadow: 0 0 0 2px var(--info); }
+    100% { background: transparent; box-shadow: 0 0 0 2px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lg-flash { animation: none; box-shadow: 0 0 0 2px var(--info); }
+}
+
+.lg-refcard {
+    position: fixed;
+    z-index: 1000;
+    box-sizing: border-box;
+    width: max-content;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated, var(--bg-inset));
+    color: var(--text-body);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    font-size: var(--text-sm);
+}
+
+.lg-refcard-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fam, var(--text-muted));
+}
+
+.lg-refcard-text {
+    margin-top: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.lg-refcard-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.lg-backpill {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-elevated, var(--bg-inset));
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.lg-backpill:hover,
+.lg-backpill:focus-visible {
+    outline: 1px solid var(--info);
+}

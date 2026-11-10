@@ -33,12 +33,29 @@ export function eyebrow(family: Family, label: string, count?: string | number):
     return `<span class="lg-eyebrow ${familyClass(family)}">${codicon(FAMILY_ICON[family])}${escapeHtml(label)}${tail}</span>`;
 }
 
+/** `US1` and `US-1` share one anchor; every other id keeps its own shape. */
 export function slugForId(id: string): string {
-    return `ref-${id.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+    const slug = id.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^us-?(\d)/, 'us-$1');
+    return `ref-${slug}`;
+}
+
+export interface RefAnchorOptions {
+    family?: Family;
+    status?: Status;
+    /** Short name the hover card shows above the text, e.g. "Requirement". */
+    label?: string;
+}
+
+/** Attribute string (no leading space) that makes a row the target of an id chip. Every value is escaped. */
+export function refAnchor(id: string, opts: RefAnchorOptions = {}): string {
+    const attr = (name: string, value: string | undefined) => (value ? ` ${name}="${escapeHtml(value)}"` : '');
+    return `id="${slugForId(id)}" data-ref-target="${escapeHtml(id)}"${attr('data-family', opts.family)}${attr('data-status', opts.status)}${attr('data-label', opts.label)}`;
 }
 
 export interface IdChipOptions {
     resolved?: boolean;
+    /** A document the id lives in ("research" for `research.md R12`); the click switches to it. */
+    doc?: string;
     status?: Status;
     title?: string;
 }
@@ -51,7 +68,10 @@ export function idChip(id: string, opts: IdChipOptions = {}): string {
     }
     const dot = opts.status ? statusDot(opts.status) : '';
     const title = opts.title ? ` title="${escapeHtml(opts.title).replace(/"/g, '&quot;')}"` : '';
-    return `<a class="lg-chip" href="#${slugForId(id)}" data-ref="${safe}"${title}>${dot}${safe}</a>`;
+    const doc = opts.doc && /^[a-z][a-z-]*$/.test(opts.doc) ? opts.doc : '';
+    const docAttr = doc ? ` data-doc="${doc}"` : '';
+    const label = doc ? `${doc}.md ${safe}` : safe;
+    return `<a class="lg-chip" href="#${slugForId(id)}" data-ref="${safe}"${docAttr}${title}>${dot}${label}</a>`;
 }
 
 export function fileChip(path: string): string {
@@ -65,8 +85,8 @@ export function statusDot(status: Status): string {
 }
 
 /** P1 = three bars on, P3 = one. Neutral ink only. */
-export function priorityMark(priority: 1 | 2 | 3): string {
-    const on = 4 - priority;
+export function priorityMark(priority: number): string {
+    const on = Math.max(1, 4 - priority);
     const bars = [1, 2, 3].map((n) => `<i${n <= on ? ' class="on"' : ''}></i>`).join('');
     return `<span class="lg-priority" aria-label="Priority ${priority}">${bars}<span>P${priority}</span></span>`;
 }
