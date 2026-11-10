@@ -35,6 +35,7 @@ import { renderCallsCard } from './callsCard';
 import { NOTE_LINE, indexScreens, renderScreenBlock } from './screenCard';
 import { isCodeCardInfo, renderCodeCard } from './codeCard';
 import { renderStatesCard } from './statesCard';
+import { preprocessSpecLedger, SPEC_LEDGER_LINE } from './ledger/spec';
 
 // Current task ID from spec-context (for in-progress badge)
 let currentTaskId: string | null = null;
@@ -269,6 +270,7 @@ export function renderMarkdown(markdown: string): string {
         markdown = preprocessLivingUncovered(markdown);
     }
 
+    if (!livingMode) markdown = preprocessSpecLedger(markdown);
     markdown = preprocessSpecMetadata(markdown, hasSpecContext);
     markdown = preprocessUserStories(markdown);
     markdown = preprocessTaskPhases(markdown);
@@ -620,6 +622,10 @@ export function renderMarkdown(markdown: string): string {
 
         // Per-item components keep the inline-comment "+" affordance: wrap them as
         // a commentable line (they replaced list items / headings that had it).
+        if (SPEC_LEDGER_LINE.test(line)) {
+            html += wrapComponentLine(line, sourceLineNum) + '\n';
+            continue;
+        }
         if (line.includes('<div class="req-row') ||
             line.includes('<div class="entity-row') ||
             line.includes('<div class="con-row') ||
