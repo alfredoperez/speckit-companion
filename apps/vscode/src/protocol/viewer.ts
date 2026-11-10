@@ -336,6 +336,8 @@ export interface NavState {
     stalenessMap?: StalenessMap;
     /** Spec status (read by the header badge fallback; not a footer input) */
     specStatus?: string;
+    /** tasks.md text beside the spec, for the spec page's per-story progress; "" when absent, left out when the refresh read no files. */
+    tasksMarkdown?: string;
     /** Current task ID from spec-context (for in-progress badge) */
     currentTask?: string | null;
     /** Active workflow step being worked on (mapped to tab name: spec/plan/tasks) — drives step-tab in-flight visuals */

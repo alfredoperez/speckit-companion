@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **A new look for spec documents.** Specs, plans, tasks and research read as ==cards and meters== with clickable ids. ([#999](https://github.com/alfredoperez/speckit-companion/pull/999)) <!-- area: spec-viewer -->
+
 ### Fixed
-- **The viewer reads cleanly.** Wrapped lines stay with their list item, wide tables ==scroll inside the page==, and Given and Then mark keywords only. ([#0](https://github.com/alfredoperez/speckit-companion/pull/988)) <!-- area: spec-viewer -->
-- **The outline and header agree with the page.** The outline marks ==the section you are reading==, file chips stay on one line, and tasks always show as a percentage. ([#0](https://github.com/alfredoperez/speckit-companion/pull/988)) <!-- area: spec-viewer -->
+- **The viewer reads cleanly.** Wrapped lines stay with their list item, wide tables ==scroll inside the page==, and Given and Then mark keywords only. ([#988](https://github.com/alfredoperez/speckit-companion/pull/988)) <!-- area: spec-viewer -->
+- **The outline and header agree with the page.** The outline marks ==the section you are reading==, file chips stay on one line, and tasks always show as a percentage. ([#988](https://github.com/alfredoperez/speckit-companion/pull/988)) <!-- area: spec-viewer -->
 
 ## [0.38.0] - 2026-11-08
 

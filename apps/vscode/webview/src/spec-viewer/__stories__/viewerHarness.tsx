@@ -20,7 +20,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { App } from '../App';
 import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from '../signals';
 import type { NavState, ViewerState, DocumentType, HistoryEntry, SerializedFooterAction } from '../types';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from '../markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setSpecLedgerTasks, setTaskSummaries } from '../markdown';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
 import { mockDoc, mockRelatedDoc, mockNavState } from '../components/__stories__/mockData';
@@ -177,6 +177,7 @@ export function FullViewer({ md, nav, vs, view }: FullViewerProps) {
     setHasSpecContext(!!(nav.specContextName || nav.badgeText));
     setCurrentTask(nav.currentTask ?? null);
     setTaskSummaries(vs.taskSummaries ?? null);
+    setSpecLedgerTasks(nav.tasksMarkdown ?? null);
     markdownHtml.value = renderMarkdown(md);
 
     useEffect(() => {
@@ -256,6 +257,8 @@ export function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view, l
     if (counts && counts.total > 0 && Math.round((counts.checked / counts.total) * 100) === nav.taskCompletionPercent) {
         nav.taskCounts = counts;
     }
+
+    if (!livingName && doc === 'spec' && docs.tasks) nav.tasksMarkdown = docs.tasks.md;
 
     return <FullViewer md={activeDoc?.md ?? docs[initialDoc].md} nav={nav} vs={vs} view={livingName ? 'document' : view} />;
 }

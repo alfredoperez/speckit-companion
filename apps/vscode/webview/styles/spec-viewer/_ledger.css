@@ -1,0 +1,206 @@
+/**
+ * Ledger foundations: section-family hues and the shared primitives every
+ * Ledger component composes. Family hue marks (eyebrow, 2px rule, icon, faint
+ * wash); it never colours body text and never stands in for status.
+ */
+
+:root {
+    --fam-story: #9db0ff;
+    --fam-req: #5cc8c0;
+    --fam-decision: #db9bd6;
+    --fam-task: #a3b3c2;
+    --fam-data: #e3a56f;
+    --fam-guard: #bfc283;
+    --scenario: var(--fam-story);
+    --ledger-wash: 8%;
+    --ledger-lane-id: 92px;
+    --ledger-lane-trail: 96px;
+}
+
+body.vscode-light {
+    --fam-story: #3d4fb8;
+    --fam-req: #0d6f6b;
+    --fam-decision: #96308f;
+    --fam-task: #50627a;
+    --fam-data: #9a5212;
+    --fam-guard: #5e6418;
+    --ledger-wash: 6%;
+}
+
+.lg-fam-story { --fam: var(--fam-story); }
+.lg-fam-req { --fam: var(--fam-req); }
+.lg-fam-decision { --fam: var(--fam-decision); }
+.lg-fam-task { --fam: var(--fam-task); }
+.lg-fam-data { --fam: var(--fam-data); }
+.lg-fam-guard { --fam: var(--fam-guard); }
+
+.lg-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fam, var(--text-muted));
+}
+
+.lg-eyebrow .lg-eyebrow-count {
+    color: var(--text-muted);
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.lg-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 0 6px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-inset);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    line-height: 1.7;
+    white-space: nowrap;
+    text-decoration: none;
+    vertical-align: baseline;
+}
+
+a.lg-chip:hover,
+a.lg-chip:focus-visible {
+    outline: 1px solid var(--info);
+    outline-offset: 0;
+}
+
+.lg-chip--unresolved {
+    background: transparent;
+    color: var(--text-muted);
+    text-decoration: underline dashed;
+    text-underline-offset: 3px;
+}
+
+.lg-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex: none;
+    background: var(--text-muted);
+}
+
+.lg-dot--done { background: var(--success); }
+.lg-dot--running { background: var(--info); }
+.lg-dot--warn { background: var(--warning); }
+.lg-dot--fail { background: var(--error); }
+.lg-dot--todo { background: transparent; box-shadow: inset 0 0 0 1.5px var(--text-muted); }
+
+.lg-priority {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 10px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+}
+
+.lg-priority i {
+    display: inline-block;
+    width: 3px;
+    background: var(--border);
+}
+
+.lg-priority i:nth-child(1) { height: 4px; }
+.lg-priority i:nth-child(2) { height: 7px; }
+.lg-priority i:nth-child(3) { height: 10px; }
+.lg-priority i.on { background: var(--text-body); }
+.lg-priority span { margin-left: 4px; }
+
+.lg-block {
+    border-left: 2px solid var(--fam, var(--border));
+    padding-left: var(--space-3);
+}
+
+.lg-wash {
+    background: color-mix(in srgb, var(--fam, var(--text-muted)) var(--ledger-wash), transparent);
+}
+
+.lg-flash {
+    animation: lg-flash 1.4s ease-out;
+}
+
+@keyframes lg-flash {
+    0%, 30% { background: color-mix(in srgb, var(--info) 22%, transparent); box-shadow: 0 0 0 2px var(--info); }
+    100% { background: transparent; box-shadow: 0 0 0 2px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lg-flash { animation: none; box-shadow: 0 0 0 2px var(--info); }
+}
+
+.lg-refcard {
+    position: fixed;
+    z-index: 1000;
+    box-sizing: border-box;
+    width: max-content;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-elevated, var(--bg-inset));
+    color: var(--text-body);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    font-size: var(--text-sm);
+}
+
+.lg-refcard-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fam, var(--text-muted));
+}
+
+.lg-refcard-text {
+    margin-top: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.lg-refcard-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 11px;
+}
+
+.lg-backpill {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-elevated, var(--bg-inset));
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.lg-backpill:hover,
+.lg-backpill:focus-visible {
+    outline: 1px solid var(--info);
+}

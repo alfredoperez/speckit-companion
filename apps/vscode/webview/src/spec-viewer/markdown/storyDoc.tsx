@@ -1,6 +1,9 @@
 import { useEffect } from 'preact/hooks';
-import { renderMarkdown, setHasSpecContext, setTaskSummaries } from './index';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './index';
+import { setupLedgerTasks } from './ledger/tasksInteractions';
 import { applyHighlighting } from '../highlighting';
+import { resolveLedgerRefs } from './ledger/refs';
+import { setupLedgerRefs } from '../ledgerRefs';
 
 /**
  * Shared Storybook host: renders markdown through the real `renderMarkdown`
@@ -10,21 +13,30 @@ import { applyHighlighting } from '../highlighting';
 export interface MarkdownDocProps {
     md: string;
     summaries?: Record<string, { did?: string; files?: string[] }>;
+    currentTask?: string;
+    width?: number;
 }
 
-export function MarkdownDoc({ md, summaries }: MarkdownDocProps) {
+export function MarkdownDoc({ md, summaries, currentTask, width }: MarkdownDocProps) {
+    setCurrentTask(currentTask ?? null);
     setHasSpecContext(false);
     setTaskSummaries(summaries ?? null);
     const html = renderMarkdown(md);
     // Apply syntax highlighting after paint, exactly as index.tsx does at runtime.
     useEffect(() => {
-        const id = requestAnimationFrame(() => applyHighlighting());
+        setupLedgerRefs();
+        setupLedgerTasks();
+        const id = requestAnimationFrame(() => {
+            applyHighlighting();
+            const root = document.getElementById('markdown-content');
+            if (root) resolveLedgerRefs(root);
+        });
         return () => cancelAnimationFrame(id);
     }, [html]);
     return (
         <div
             id="markdown-content"
-            style="max-width: 820px;"
+            style={`max-width: ${width ?? 820}px;`}
             dangerouslySetInnerHTML={{ __html: html }}
         />
     );

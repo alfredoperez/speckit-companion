@@ -1180,6 +1180,7 @@ export class SpecViewerProvider {
         undefined,     // reportActions — default
         undefined,     // report — default
         derived.taskCounts,
+        doc?.type === CORE_DOCUMENTS.SPEC ? tasksContent : undefined,
       );
 
       this.outputChannel.appendLine(
@@ -1509,6 +1510,7 @@ export class SpecViewerProvider {
       workflowPhase: derived.workflowPhase,
       taskCompletionPercent: effectiveTaskPct,
       taskCounts: effectiveTaskCounts,
+      tasksMarkdown: options?.skipContentAndStaleness || resolvedType !== CORE_DOCUMENTS.SPEC ? undefined : tasksContent,
       isViewingRelatedDoc: derived.isViewingRelatedDoc,
       enhancementButtons,
       stalenessMap,

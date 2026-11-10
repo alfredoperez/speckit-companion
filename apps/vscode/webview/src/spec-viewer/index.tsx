@@ -6,15 +6,18 @@
 import { render } from 'preact';
 import type { VSCodeApi, NavState } from './types';
 import { navState, markdownHtml } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode } from './markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setSpecLedgerTasks } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupCallsStrike, setupLineActions, setupStatesSelect } from './editor';
 import { setupAnswerActions } from './editor/answerEditor';
+import { setupLedgerTasks } from './markdown/ledger/tasksInteractions';
 import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupOpenLivingRequirement, setupRemoveRequirement, setupRevealGlob } from './actions';
 import { applyPendingFragment, setupDocumentLinkClickHandler } from './documentLinks';
 import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
 import { buildToc } from './toc';
+import { resolveLedgerRefs } from './markdown/ledger/refs';
+import { setupLedgerRefs } from './ledgerRefs';
 
 declare global {
     interface Window {
@@ -54,6 +57,8 @@ function updateContent(content: string): void {
             document.getElementById('markdown-content'),
             document.getElementById('spec-toc')
         );
+        const root = document.getElementById('markdown-content');
+        if (root) resolveLedgerRefs(root, navState.value?.currentDoc);
         applyPendingFragment();
     });
 }
@@ -108,6 +113,7 @@ function init(): void {
         if (initialNav.currentTask !== undefined) {
             setCurrentTask(initialNav.currentTask);
         }
+        if (initialNav.tasksMarkdown !== undefined) setSpecLedgerTasks(initialNav.tasksMarkdown || null);
     }
 
     // Wire message listener before render
@@ -123,6 +129,8 @@ function init(): void {
     setupAnswerActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
+    setupLedgerTasks();
+    setupLedgerRefs();
     setupDocumentLinkClickHandler();
     setupApproveRequirement();
     setupRevealGlob();

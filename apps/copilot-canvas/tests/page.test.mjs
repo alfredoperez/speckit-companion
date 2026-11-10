@@ -86,7 +86,7 @@ describe('board page', { concurrency: false }, async () => {
         await shot('02-overview');
         await page.click('.tab:has-text("Tasks")');
         await page.waitForSelector('#markdown-content .task-item');
-        assert.ok(await page.locator('#markdown-content .phase-header, #markdown-content h2').count(), 'task phases rendered');
+        assert.ok(await page.locator('#markdown-content .phase-header, #markdown-content .lg-phase, #markdown-content h2').count(), 'task phases rendered');
         await shot('03-tasks');
     });
 

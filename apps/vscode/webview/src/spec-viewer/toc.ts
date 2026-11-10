@@ -153,6 +153,49 @@ export function revealRequirement(heading: string): void {
     });
 }
 
+interface OutlineEntry {
+    el: HTMLElement;
+    level: 2 | 3;
+    title: string;
+}
+
+const slugOf = (text: string): string =>
+    text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'section';
+
+/**
+ * Every outline target in document order: real h2/h3 headings plus any element
+ * that stands in for one with `data-toc` (title = the attribute, or its own text
+ * when empty; level from `data-toc-level`, default 2). Ledger components replace
+ * a heading with an eyebrow, so without this the outline loses those sections.
+ */
+export function collectOutline(root: HTMLElement): OutlineEntry[] {
+    const taken = new Set<string>();
+    root.querySelectorAll<HTMLElement>('[id]').forEach(e => taken.add(e.id));
+    const out: OutlineEntry[] = [];
+    for (const el of Array.from(root.querySelectorAll<HTMLElement>('h2[id], h3[id], [data-toc]'))) {
+        const marked = el.hasAttribute('data-toc');
+        const raw = marked ? (el.dataset.toc || el.textContent) : el.textContent;
+        const title = (raw ?? '').replace(/\s+/g, ' ').trim();
+        if (!title || TOC_SKIP_PATTERNS.some(re => re.test(title))) continue;
+        let level: 2 | 3;
+        if (marked) {
+            level = el.dataset.tocLevel === '3' ? 3 : 2;
+            if (!el.id) {
+                let id = `toc-${slugOf(title)}`;
+                for (let n = 2; taken.has(id); n++) id = `toc-${slugOf(title)}-${n}`;
+                el.id = id;
+                taken.add(id);
+            }
+        } else {
+            level = el.tagName.toLowerCase() === 'h3' ? 3 : 2;
+        }
+        out.push({ el, level, title });
+    }
+    // A section component and the heading it grew from would list twice.
+    const marked = new Set(out.filter(e => e.el.hasAttribute('data-toc')).map(e => e.title.toLowerCase()));
+    return out.filter(e => e.el.hasAttribute('data-toc') || !marked.has(e.title.toLowerCase()));
+}
+
 export function buildToc(
     scrollRoot: HTMLElement | null,
     markdownRoot: HTMLElement | null,
@@ -162,21 +205,16 @@ export function buildToc(
 
     teardown(tocRoot);
 
-    const allHeadings = Array.from(
-        markdownRoot.querySelectorAll<HTMLElement>('h2[id], h3[id]')
-    ).filter(h => {
-        const text = (h.textContent ?? '').trim();
-        return !TOC_SKIP_PATTERNS.some(re => re.test(text));
-    });
-    const hasH3 = allHeadings.some(h => h.tagName.toLowerCase() === 'h3');
+    const allHeadings = collectOutline(markdownRoot);
+    const hasH3 = allHeadings.some(h => h.level === 3);
 
     // A living spec's requirements ARE its `h3`s, so hiding them by default
     // would leave the outline listing three section headings for a document the
     // reader navigates by requirement.
-    const living = allHeadings.some(h => requirementCard(h) !== null);
+    const living = allHeadings.some(h => requirementCard(h.el) !== null);
     const headings = showSubsections || living
         ? allHeadings
-        : allHeadings.filter(h => h.tagName.toLowerCase() === 'h2');
+        : allHeadings.filter(h => h.level === 2);
 
     // A capability with one requirement or none has nothing to navigate between.
     const lone = living && markdownRoot.querySelectorAll('.living-req-card').length <= 1;
@@ -224,16 +262,17 @@ export function buildToc(
     const linkByTargetId = new Map<string, HTMLAnchorElement>();
     let parentSection = '';
 
-    for (const heading of headings) {
+    for (const entry of headings) {
+        const heading = entry.el;
         const id = heading.id;
         if (!id) continue;
-        const level = heading.tagName.toLowerCase(); // 'h2' | 'h3'
+        const level = `h${entry.level}`;
 
         const li = document.createElement('li');
         const a = document.createElement('a');
         a.className = `spec-toc-link spec-toc-link--${level}`;
         a.href = `#${id}`;
-        const text = (heading.textContent ?? '').replace(PRIORITY_SUFFIX, '').trim();
+        const text = entry.title.replace(PRIORITY_SUFFIX, '').trim();
         a.textContent = text;
         // The entry clamps to two lines, so the full heading lives in the tooltip.
         a.title = text;
@@ -305,8 +344,8 @@ export function buildToc(
     const updateActive = () => {
         const rootRect = scrollRoot.getBoundingClientRect();
         const line = rootRect.top + rootRect.height * 0.3;
-        let best: HTMLElement | null = headings[0] ?? null;
-        for (const heading of headings) {
+        let best: HTMLElement | null = headings[0]?.el ?? null;
+        for (const { el: heading } of headings) {
             const rect = heading.getBoundingClientRect();
             if (rect.height === 0 && rect.width === 0) continue;
             if (rect.top <= line) best = heading;
@@ -323,7 +362,7 @@ export function buildToc(
         rootMargin: '0px 0px -70% 0px',
         threshold: 0
     });
-    for (const heading of headings) io.observe(heading);
+    for (const { el } of headings) io.observe(el);
 
     // ResizeObserver — the column and the disclosure are different DOM, so a
     // crossing of the threshold rebuilds rather than merely restyling. Rebuild

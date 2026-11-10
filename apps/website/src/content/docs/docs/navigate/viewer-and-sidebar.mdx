@@ -79,7 +79,7 @@ The viewer draws a spec's markdown as a page and never changes the file.
 
 <DocFigure src="spec-viewer-x16x9.png" caption="Header on top, step rail on the left, the document in the middle, the outline on the right." />
 
-The header carries the spec's name, its status badge, the branch, the creation date and the assistant the last step went to. Under it, the run strip counts tasks done, requirements traced, checks and active time, and links the pull request.
+The header carries the spec's title from its first heading, its folder, its status badge, the branch, the creation date and the assistant the last step went to. Under it, the run strip counts tasks done, requirements traced, checks and active time, and links the pull request.
 
 ### Step tabs
 
@@ -118,14 +118,26 @@ While a step runs there's no forward button and the footer reads "Step running, 
 
 <DocFigure src="step-rail-x16x9.png" caption="A specification: a user story as a card, and Given, When and Then picked out in each scenario." />
 
+Each kind of section has its own quiet colour on its label and rule: stories, requirements, decisions, tasks, data and constraints. Green, yellow and red only ever mean status.
+
 | In the markdown | On the page |
 | --- | --- |
-| `- **FR-001** The system must ...` | A labelled requirement row. Any prefix of two to five capital letters and a number works. |
-| Given, When and Then in a scenario | The three words emphasized in place |
-| `## Phase N: Title` in `tasks.md` | A phase header, with `MVP` and `(P1)` to `(P5)` drawn as chips |
-| `[P]` on a task line | A marker: the task can run in parallel |
-| `[US2]` on a task line | A marker: the user story the task belongs to |
-| `- [ ]` and `- [x]` | A checkbox per task. During implement the Tasks tab shows a live percentage from them. |
+| A user story with its priority | A card that holds the whole story: priority as P1 to P3, why, "Test it alone", its scenarios and, once tasks exist, how many are done |
+| `- **FR-001** The system must ...` | A requirement row. When tasks exist it shows whether a task builds it and what else references it. |
+| Given, When and Then in a scenario | One row per keyword. Extra scenarios fold under "N more scenarios". |
+| Success criteria, edge cases, assumptions, key entities, clarifications | Their own lists. An edge case reads "Covered by a scenario" or "No scenario". |
+| Technical context, constitution check, project structure in `plan.md` | A fact grid, a gate with a verdict per principle, and a file tree marking new and changed files |
+| Decision, Rationale and Alternatives in `research.md` | A decision card with the turned-down options folded, and a strip of every decision at the top |
+| Entities, contracts and quickstart steps | Entity cards, contract cards and numbered steps |
+| `## Phase N: Title` in `tasks.md` | A phase header with its progress. A finished phase folds to one line. |
+| `- [ ]` and `- [x]` | A task row: to do, running, done or blocked. Long tasks show two lines until you open them. |
+| Wave or "Wait for" lines in `tasks.md` | The tasks that run together, side by side |
+
+The Tasks tab opens with one progress bar, a filter by user story and **Hide done**. The filter lives in the viewer only and never touches the file.
+
+### Links between ids
+
+Every id in the text, such as `FR-003`, `SC-002`, `US1`, `T016` or `R2`, is a chip. Hover it to read what it names, click it to jump there, and press the **Back** pill or Alt+Left to return. `research.md R12` switches to that document first. An id the spec never defines shows as plain text with a dashed underline.
 
 A link to another document or another spec opens in the viewer at the heading it names, and a link to a source file opens in the editor beside it. [Plan blocks](/docs/steps/plan-blocks) covers the diagrams and cards a plan can carry. Syntax highlighting and Mermaid load from a CDN, so offline you get plain code and diagram source.
 

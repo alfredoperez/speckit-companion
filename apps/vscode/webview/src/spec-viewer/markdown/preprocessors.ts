@@ -5,6 +5,7 @@
 
 import { parseInline } from './inline';
 import { fencedRanges, mapOutsideFences } from './fenceInfo';
+import { priorityMark, refAnchor } from './ledger/primitives';
 
 /**
  * Preprocess spec metadata (Feature Branch, Created, Status, Input) into a compact header.
@@ -77,20 +78,6 @@ export function preprocessSpecMetadata(markdown: string, stripForContext = false
 }
 
 /**
- * Get human-readable priority label from priority code
- */
-function getPriorityLabel(priority: string): string {
-    const labels: Record<string, string> = {
-        'P1': 'Critical',
-        'P2': 'High',
-        'P3': 'Medium',
-        'P4': 'Low',
-        'P5': 'Trivial'
-    };
-    return labels[priority.toUpperCase()] || priority;
-}
-
-/**
  * Preprocess user story headings into styled cards with metadata line
  */
 function preprocessUserStoriesRun(markdown: string): string {
@@ -98,13 +85,10 @@ function preprocessUserStoriesRun(markdown: string): string {
     const storyPattern = /^(###)\s*User Story\s*(\d+)\s*[-–]\s*([^(]+)\s*\(Priority:\s*(P\d)\)/gm;
 
     return markdown.replace(storyPattern, (_, _hashes, num, title, priority) => {
-        const priorityClass = priority.toLowerCase();
-        const priorityLabel = getPriorityLabel(priority);
-
         // Compact single-line HTML to avoid markdown parser splitting issues
         const ticketIcon = `<svg class="meta-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 3A1.5 1.5 0 0 0 0 4.5v1.384c.63.313 1.033.95 1.033 1.616 0 .666-.403 1.303-1.033 1.616V10.5A1.5 1.5 0 0 0 1.5 12h13a1.5 1.5 0 0 0 1.5-1.5V9.116c-.63-.313-1.033-.95-1.033-1.616 0-.666.403-1.303 1.033-1.616V4.5A1.5 1.5 0 0 0 14.5 3h-13z"/></svg>`;
 
-        return `<div class="user-story-header"><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">·</span><span class="story-priority priority-${priorityClass}"><span class="priority-dot ${priorityClass}"></span>${priorityLabel}</span></div><h3 class="user-story-title">${parseInline(title.trim())}</h3></div>`;
+        return `<div class="user-story-header" ${refAnchor(`US-${num}`, { family: 'story', label: 'User story' })}><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">·</span><span class="story-priority">${priorityMark(Number(priority.slice(1)))}</span></div><h3 class="user-story-title">${parseInline(title.trim())}</h3></div>`;
     });
 }
 
@@ -221,104 +205,7 @@ export function preprocessChecklist(markdown: string): string {
     return out.join('\n');
 }
 
-/**
- * Preprocess plan.md's `## Technical Context` section — the `**Key**: value`
- * lines (Language/Version, Primary Dependencies, …) — into a key/value grid.
- * Scoped to that one section so other `**Label**: …` lines are untouched.
- */
-export function preprocessTechnicalContext(markdown: string): string {
-    const lines = markdown.split('\n');
-    const out: string[] = [];
-    let inSection = false;
-    let cells: string[] = [];
-    let lastKey: string | null = null;
-    let lastVal = '';
-    const cell = (k: string, v: string) => `<div class="tech-cell"><span class="tech-key">${parseInline(k)}</span><span class="tech-val">${parseInline(v)}</span></div>`;
-    const flush = () => {
-        lastKey = null;
-        if (cells.length) {
-            out.push(`<details class="md-collapsible"><summary class="md-collapsible__summary">Technical Context</summary><div class="tech-grid">${cells.join('')}</div></details>`);
-            cells = [];
-        }
-    };
-    for (const line of lines) {
-        if (/^##[ \t]+Technical Context\b/.test(line)) { flush(); inSection = true; continue; }
-        if (inSection && /^#{1,6}[ \t]/.test(line)) { inSection = false; flush(); out.push(line); continue; }
-        if (inSection) {
-            const m = line.match(/^\*\*(.+?)\*\*:[ \t]*(.+)$/);
-            if (m) {
-                lastKey = m[1];
-                lastVal = m[2].trim();
-                cells.push(cell(lastKey, lastVal));
-                continue;
-            }
-            if (!line.trim()) { lastKey = null; continue; }
-            if (cells.length && lastKey !== null && !/^\s*([-*+]\s|\d+\.\s|\||<|>|[-*_]{3,}\s*$)/.test(line)) {
-                lastVal += ' ' + line.trim();
-                cells[cells.length - 1] = cell(lastKey, lastVal);
-                continue;
-            }
-            flush();
-        }
-        out.push(line);
-    }
-    flush();
-    return out.join('\n');
-}
-
-/**
- * Preprocess plan.md's `## Constitution Check` bullet list
- * (`- **I. Name**: PASS — note`) into verdict rows with a PASS/FAIL chip. Scoped
- * to that section; the table form (used by some plans) renders as a table as-is.
- */
-export function preprocessConstitution(markdown: string): string {
-    const lines = markdown.split('\n');
-    const out: string[] = [];
-    let inSection = false;
-    let headingLine = '';
-    let rows: string[] = [];
-    // Close the section: emit the collapsible when verdict rows were collected,
-    // otherwise restore the original heading — a table-form (or other non-bullet)
-    // Constitution Check must keep its section header instead of vanishing.
-    const endSection = () => {
-        if (rows.length) {
-            out.push(`<details class="md-collapsible"><summary class="md-collapsible__summary">Constitution Check</summary>${rows.join('')}</details>`);
-        } else if (headingLine) {
-            out.push(headingLine, '');
-        }
-        rows = [];
-        headingLine = '';
-        inSection = false;
-    };
-    for (const line of lines) {
-        if (/^##[ \t]+Constitution Check\b/.test(line)) { endSection(); inSection = true; headingLine = line; continue; }
-        if (inSection && /^#{1,6}[ \t]/.test(line)) { endSection(); out.push(line); continue; }
-        if (inSection) {
-            let name: string | undefined, verdict: string | undefined, note: string | undefined;
-            // Verdict right after the name: `- **Name**: PASS — note`
-            let m = line.match(/^-[ \t]+\*\*(.+?)\*\*:?[ \t]*(?:[✅❌]\s*)?(PASS|FAIL)\b[ \t]*[—–-]?[ \t]*(.*)$/i);
-            if (m) { [, name, verdict, note] = m; }
-            // Verdict at the end of the sentence: `- **Name** — note … PASS.`
-            else if (m = line.match(/^-[ \t]+\*\*(.+?)\*\*[ \t]*[—–:-]?[ \t]*(.*?)[ \t]*(?:[✅❌]\s*)?(PASS|FAIL)\b\.?[ \t]*$/i)) {
-                [, name, note, verdict] = m;
-            }
-            if (name && verdict) {
-                const v = verdict.toUpperCase();
-                const noteHtml = note && note.trim() ? `<span class="con-note">${parseInline(note.trim())}</span>` : '';
-                rows.push(`<div class="con-row"><span class="verdict ${v.toLowerCase()}">${v}</span><span class="con-name">${parseInline(name)}</span>${noteHtml}</div>`);
-                continue;
-            }
-            if (!line.trim()) { continue; }
-            // Non-bullet content (e.g. a table) — restore the heading, keep the line.
-            endSection();
-            out.push(line);
-            continue;
-        }
-        out.push(line);
-    }
-    endSection();
-    return out.join('\n');
-}
+export { preprocessTechnicalContext, preprocessConstitution } from './ledger/plan';
 
 /**
  * Preprocess research.md `## Decision N: Title` blocks into cards. Opens a card

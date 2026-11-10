@@ -1,0 +1,253 @@
+/**
+ * Ledger · Plan: summary lede, technical context, constitution gate, complexity
+ * ledger, project tree, and the Ledger skin of the calls / screen / states / code
+ * cards. Family hue marks the eyebrow and glyph only; status is a dot and a word.
+ */
+
+#markdown-content .pl-card {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  container-type: inline-size;
+}
+
+#markdown-content .pl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+#markdown-content .pl-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  text-decoration: none;
+}
+#markdown-content .pl-verdict .lg-dot--fail { border-radius: 1px; }
+#markdown-content .pl-verdict--justified .lg-dot,
+#markdown-content .pl-verdict--pending .lg-dot { box-shadow: inset 0 0 0 1.5px var(--warning); background: transparent; }
+#markdown-content .pl-verdict--na .lg-dot { box-shadow: inset 0 0 0 1.5px var(--text-muted); background: transparent; }
+#markdown-content .pl-verdict .codicon { font-size: 14px; }
+
+/* ── Summary ── */
+#markdown-content .pl-summary { background: transparent; }
+#markdown-content .pl-lede {
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--text-body);
+  max-width: 72ch;
+}
+#markdown-content .pl-lede strong { color: var(--text-primary); font-weight: 650; }
+#markdown-content .pl-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+#markdown-content .pl-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) var(--space-3) 0 0;
+}
+#markdown-content .pl-stat-k {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+#markdown-content .pl-stat-v { font-weight: 600; color: var(--text-primary); }
+#markdown-content .pl-stat-v a { color: inherit; text-decoration: none; }
+#markdown-content .pl-stat-v a:hover,
+#markdown-content .pl-stat-v a:focus-visible { color: var(--info); text-decoration: underline; }
+#markdown-content .pl-stat-sub { font-weight: 400; color: var(--text-secondary); }
+@container (max-width: 480px) {
+  #markdown-content .pl-stats { grid-template-columns: 1fr; }
+  #markdown-content .pl-stat { flex-direction: row; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--border); }
+}
+
+/* ── Disclosure rows ── */
+#markdown-content details.pl-more { margin-top: var(--space-2); }
+#markdown-content details.pl-more > summary {
+  cursor: pointer;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  list-style: none;
+}
+#markdown-content details.pl-more > summary::-webkit-details-marker { display: none; }
+#markdown-content details.pl-more > summary::before { content: "\25B8"; color: var(--text-muted); transition: transform var(--transition-fast, 150ms); }
+#markdown-content details.pl-more[open] > summary::before { transform: rotate(90deg); }
+#markdown-content details.pl-more > summary:hover { color: var(--info); }
+#markdown-content .pl-lede-rest { display: block; margin-top: var(--space-1); }
+
+/* ── Technical context ── */
+#markdown-content .pl-card .tech-grid {
+  margin: 0;
+  gap: 0 var(--space-5);
+  background: none;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+}
+#markdown-content .pl-card .tech-cell {
+  display: grid;
+  grid-template-columns: minmax(120px, 38%) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: baseline;
+  background: none;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border);
+}
+#markdown-content .pl-card .tech-key { text-transform: none; letter-spacing: 0; font-size: var(--text-sm); color: var(--text-secondary); overflow-wrap: anywhere; min-width: 0; }
+#markdown-content .pl-card .tech-val { overflow-wrap: anywhere; color: var(--text-primary); }
+#markdown-content .pl-open { display: inline-flex; align-items: center; gap: 6px; }
+#markdown-content .pl-open .lg-dot { box-shadow: inset 0 0 0 1.5px var(--warning); background: transparent; }
+@container (max-width: 480px) {
+  #markdown-content .pl-card .tech-cell { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* ── Gate rows ── */
+#markdown-content .pl-gate-row {
+  display: grid;
+  grid-template-columns: var(--ledger-lane-id, 92px) minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+#markdown-content .pl-gate-num {
+  justify-self: start;
+  min-width: 1.6em;
+  text-align: center;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+}
+#markdown-content .pl-gate-num:empty { background: none; }
+#markdown-content .pl-gate-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#markdown-content .pl-gate-name { font-weight: 600; color: var(--text-primary); }
+#markdown-content .pl-gate-note { color: var(--text-body); overflow-wrap: anywhere; }
+#markdown-content .pl-gate-note--why {
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-left: 2px solid var(--fam);
+  background: color-mix(in srgb, var(--fam) var(--ledger-wash), transparent);
+}
+@container (max-width: 480px) {
+  #markdown-content .pl-gate-row { grid-template-columns: 1fr; gap: var(--space-1); }
+}
+
+/* ── Complexity ledger ── */
+#markdown-content .pl-cx-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.2fr) auto;
+  gap: var(--space-4);
+  align-items: start;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+}
+#markdown-content .pl-cx-cell { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#markdown-content .pl-cx-k { font-size: var(--text-xs); color: var(--text-secondary); }
+#markdown-content .pl-cx-v { color: var(--text-body); overflow-wrap: anywhere; }
+#markdown-content .pl-cx-name { font-weight: 600; color: var(--text-primary); }
+#markdown-content .pl-cx-why {
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid var(--fam);
+  background: color-mix(in srgb, var(--fam) var(--ledger-wash), transparent);
+}
+#markdown-content .pl-cx-missing { color: var(--text-muted); border: 1px dashed var(--border); padding: 0 var(--space-2); border-radius: var(--radius-sm); }
+#markdown-content .pl-empty {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0 0;
+  border-top: 1px dashed var(--border);
+  color: var(--text-secondary);
+}
+@container (max-width: 560px) {
+  #markdown-content .pl-cx-row { grid-template-columns: 1fr; gap: var(--space-2); }
+}
+
+/* ── Project tree ── */
+#markdown-content .pl-tree-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 4px 0 4px calc(var(--d, 0) * 20px);
+  min-height: 28px;
+}
+#markdown-content .pl-tree-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px var(--space-3); min-width: 0; }
+#markdown-content .pl-tree-dir { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-primary); }
+#markdown-content .pl-tree-note { color: var(--text-secondary); font-size: var(--text-sm); overflow-wrap: anywhere; }
+#markdown-content .pl-tree-stat {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+#markdown-content .pl-tree-stat--modified { color: var(--text-body); }
+#markdown-content .pl-tree .lg-file .codicon { font-size: 13px; }
+@container (max-width: 480px) {
+  #markdown-content .pl-tree-row { align-items: flex-start; }
+}
+
+/* ── Ledger skin for the plan cards ── */
+#markdown-content .calls-card,
+#markdown-content .screen-card,
+#markdown-content .states-card,
+#markdown-content .code-card {
+  border-radius: var(--radius-md);
+}
+#markdown-content .calls-head,
+#markdown-content .screen-head,
+#markdown-content .states-top,
+#markdown-content .code-head {
+  background: transparent;
+  border-radius: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+#markdown-content .calls-badge,
+#markdown-content .screen-badge,
+#markdown-content .states-badge,
+#markdown-content .code-badge {
+  border: 0;
+  padding: 0;
+  color: var(--fam-data);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+#markdown-content .calls-title,
+#markdown-content .screen-title,
+#markdown-content .states-title {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: var(--text-sm);
+}
+#markdown-content .calls-counts,
+#markdown-content .screen-count { color: var(--text-muted); text-transform: none; letter-spacing: normal; }
