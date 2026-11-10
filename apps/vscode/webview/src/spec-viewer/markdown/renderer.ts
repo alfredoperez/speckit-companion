@@ -3,6 +3,7 @@
  * Main rendering loop for converting markdown to HTML
  */
 
+import { preprocessLedgerArtifacts } from './ledger/artifacts';
 import { escapeHtml, parseInline } from './inline';
 import { linkifyIds } from './ledger/refs';
 import {
@@ -276,6 +277,7 @@ export function renderMarkdown(markdown: string): string {
     markdown = preprocessEntities(markdown);
     markdown = preprocessChecklist(markdown);
     markdown = preprocessPlan(markdown);
+    markdown = preprocessLedgerArtifacts(markdown);
     markdown = preprocessDecisions(markdown);
     markdown = parseAcceptanceScenarios(markdown);
     markdown = preprocessCallouts(markdown);
