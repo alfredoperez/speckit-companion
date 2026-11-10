@@ -101,12 +101,13 @@ describe('preprocessRequirements', () => {
         const html327 = renderMarkdown(spec327);
         const html349 = renderMarkdown(spec349);
 
-        // 327: 8 FRs + 5 SCs become req-rows
-        expect((html327.match(/class="req-row"/g) ?? []).length).toBeGreaterThanOrEqual(13);
-        expect(html327).toContain('data-kind="fr"');
-        expect(html327).toContain('data-kind="sc"');
-        // 349: user-story cards already render; requirements now badge too
-        expect(html349).toContain('class="req-row"');
+        // 327: 8 FRs + 5 SCs become ledger rows
+        expect((html327.match(/lg-sp-row lg-sp-(?:req|sc) /g) ?? []).length).toBeGreaterThanOrEqual(13);
+        expect(html327).toContain('lg-sp-req ');
+        expect(html327).toContain('lg-sp-sc ');
+        // 349: story cards and requirement rows render as ledger components
+        expect(html349).toContain('lg-sp-story');
+        expect(html349).toContain('lg-sp-req ');
     });
 });
 
