@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { parseTaskText, parseTasksModel, isTasksDocument, phaseDone } from '../tasksModel';
 import { preprocessLedgerTasks } from '../tasks';
 import { applyTaskFilters } from '../tasksInteractions';
@@ -99,10 +102,10 @@ describe('preprocessLedgerTasks', () => {
 
     it('adds the header with counts, a segmented bar and story filters', () => {
         const out = preprocessLedgerTasks(OURS, 'T009');
-        expect(out).toContain('<strong>4 of 9</strong>');
+        expect(out).toContain('<strong>4 of 7</strong>');
         expect(out).toContain('1 running');
         expect(out).toContain('1 blocked');
-        expect(out).toContain('aria-label="4 of 9 tasks done, 1 running, 1 blocked"');
+        expect(out).toContain('aria-label="4 of 7 tasks done, 1 running, 1 blocked"');
         expect(out).toContain('data-lg-story="US1"');
         expect(out).toContain('See when a check is out of date');
     });

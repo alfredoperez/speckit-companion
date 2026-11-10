@@ -25,6 +25,8 @@ export function applyTaskFilters(root: ParentNode, filters: Filters): void {
 }
 
 export function setupLedgerTasks(container: HTMLElement = document.getElementById('markdown-content') ?? document.body): void {
+    if (container.dataset.lgTasks) return;
+    container.dataset.lgTasks = '1';
     const filters: Filters = { story: '', hideDone: false };
     const apply = (): void => applyTaskFilters(container, filters);
 

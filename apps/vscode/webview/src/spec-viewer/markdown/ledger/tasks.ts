@@ -6,7 +6,7 @@
  */
 
 import { escapeHtml, parseInline } from '../inline';
-import { codicon, eyebrow, priorityMark, slugForId, statusDot } from './primitives';
+import { codicon, eyebrow, priorityMark, refAnchor, statusDot } from './primitives';
 import {
     LgPhase,
     LgTask,
@@ -298,7 +298,7 @@ export function renderTaskRow(input: TaskRowInput): string {
     const waits = task.waitsOn ? `<span class="lg-task-waits">waits on ${escapeHtml(task.waitsOn)}</span>` : '';
     const meta = files || waits ? `<span class="lg-task-meta">${files}${waits}</span>` : '';
     const done = task.doneWhen ? `<span class="lg-task-donewhen"><span>Done when</span> ${parseInline(task.doneWhen)}</span>` : '';
-    const dataTask = task.id ? ` data-task-id="${attr(task.id)}" id="${slugForId(task.id)}"` : '';
+    const dataTask = task.id ? ` data-task-id="${attr(task.id)}" ${refAnchor(task.id, { family: 'task', status: state === 'blocked' ? 'fail' : state, label: 'Task' })}` : '';
     const story = task.story ? ` data-story="${attr(task.story)}"` : '';
     const checkedAttr = input.checked ? 'checked' : '';
     return `<li class="${classes.join(' ')}" data-line="${input.line}" data-state="${state}"${dataTask}${story}>` +

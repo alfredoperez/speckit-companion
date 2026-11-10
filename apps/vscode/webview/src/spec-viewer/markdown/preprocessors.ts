@@ -5,6 +5,7 @@
 
 import { parseInline } from './inline';
 import { fencedRanges, mapOutsideFences } from './fenceInfo';
+import { priorityMark, refAnchor } from './ledger/primitives';
 
 /**
  * Preprocess spec metadata (Feature Branch, Created, Status, Input) into a compact header.
@@ -77,20 +78,6 @@ export function preprocessSpecMetadata(markdown: string, stripForContext = false
 }
 
 /**
- * Get human-readable priority label from priority code
- */
-function getPriorityLabel(priority: string): string {
-    const labels: Record<string, string> = {
-        'P1': 'Critical',
-        'P2': 'High',
-        'P3': 'Medium',
-        'P4': 'Low',
-        'P5': 'Trivial'
-    };
-    return labels[priority.toUpperCase()] || priority;
-}
-
-/**
  * Preprocess user story headings into styled cards with metadata line
  */
 function preprocessUserStoriesRun(markdown: string): string {
@@ -98,13 +85,10 @@ function preprocessUserStoriesRun(markdown: string): string {
     const storyPattern = /^(###)\s*User Story\s*(\d+)\s*[-–]\s*([^(]+)\s*\(Priority:\s*(P\d)\)/gm;
 
     return markdown.replace(storyPattern, (_, _hashes, num, title, priority) => {
-        const priorityClass = priority.toLowerCase();
-        const priorityLabel = getPriorityLabel(priority);
-
         // Compact single-line HTML to avoid markdown parser splitting issues
         const ticketIcon = `<svg class="meta-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 3A1.5 1.5 0 0 0 0 4.5v1.384c.63.313 1.033.95 1.033 1.616 0 .666-.403 1.303-1.033 1.616V10.5A1.5 1.5 0 0 0 1.5 12h13a1.5 1.5 0 0 0 1.5-1.5V9.116c-.63-.313-1.033-.95-1.033-1.616 0-.666.403-1.303 1.033-1.616V4.5A1.5 1.5 0 0 0 14.5 3h-13z"/></svg>`;
 
-        return `<div class="user-story-header"><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">·</span><span class="story-priority priority-${priorityClass}"><span class="priority-dot ${priorityClass}"></span>${priorityLabel}</span></div><h3 class="user-story-title">${parseInline(title.trim())}</h3></div>`;
+        return `<div class="user-story-header" ${refAnchor(`US-${num}`, { family: 'story', label: 'User story' })}><div class="user-story-meta">${ticketIcon}<span class="story-id">US-${num}</span><span class="meta-separator">·</span><span class="story-priority">${priorityMark(Number(priority.slice(1)))}</span></div><h3 class="user-story-title">${parseInline(title.trim())}</h3></div>`;
     });
 }
 
