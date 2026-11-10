@@ -1,4 +1,9 @@
+import { createRequire } from 'node:module';
+import { dirname } from 'node:path';
+import { searchForWorkspaceRoot } from 'vite';
 import type { StorybookConfig } from '@storybook/preact-vite';
+
+const require = createRequire(import.meta.url);
 
 const config: StorybookConfig = {
     stories: ['../apps/vscode/webview/src/**/*.mdx', '../apps/vscode/webview/src/**/*.stories.tsx'],
@@ -24,6 +29,14 @@ const config: StorybookConfig = {
             ...config.resolve.alias,
             'react': 'preact/compat',
             'react-dom': 'preact/compat',
+        };
+        // A worktree symlinks node_modules to the main checkout; Vite answers the
+        // codicon font with 403 unless that real folder is allowed, and the icons
+        // render as empty squares.
+        config.server = config.server || {};
+        config.server.fs = {
+            ...config.server.fs,
+            allow: [...(config.server.fs?.allow ?? []), searchForWorkspaceRoot(process.cwd()), dirname(dirname(require.resolve('@vscode/codicons/package.json')))],
         };
         config.esbuild = {
             ...config.esbuild,

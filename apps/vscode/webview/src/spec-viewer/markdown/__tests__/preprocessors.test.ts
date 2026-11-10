@@ -205,7 +205,7 @@ describe('preprocessTechnicalContext', () => {
         const out = preprocessTechnicalContext(md);
 
         expect(out.match(/class="tech-cell"/g)).toHaveLength(2);
-        expect(out.match(/Technical context/g)).toHaveLength(1);
+        expect(out.match(/Technical context(?!")/g)).toHaveLength(1);
         expect(out).toContain('TypeScript with React. ObjectScript for the server.');
         expect(out).toContain('none in the browser.');
     });

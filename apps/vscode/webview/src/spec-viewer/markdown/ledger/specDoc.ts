@@ -79,7 +79,7 @@ function mentions(text: string, id: string): boolean {
 }
 
 function sectionEyebrow(family: Family, label: string, count: number, tail = ''): string {
-    return root('lg-sp-eyebrow', `<div class="lg-sp-eyebrow-line">${eyebrow(family, label, count)}${note(tail)}</div>`);
+    return root('lg-sp-eyebrow', `<div class="lg-sp-eyebrow-line">${eyebrow(family, label, count)}${note(tail)}</div>`).replace('<div class="lg-sp ', `<div data-toc="${escapeHtml(label)}" class="lg-sp `);
 }
 
 /* ---------- header and index ---------- */
@@ -141,7 +141,7 @@ export function renderStoryIndex(model: SpecModel): string {
             `<span class="lg-sp-main"><span class="lg-sp-rowtitle">${inl(s.title)}</span>` +
             `${s.desc ? `<span class="lg-sp-sub">${inl(firstSentence(s.desc))}</span>` : ''}</span>${trail}</a>`;
     }).join('');
-    return root('lg-sp-index', `<div class="lg-sp-eyebrow-line">${eyebrow('story', 'User stories', model.stories.length)}${note(tail.replace(/^ · /, '· '))}</div>${rows}`);
+    return root('lg-sp-index', `<div class="lg-sp-eyebrow-line">${eyebrow('story', 'User stories', model.stories.length)}${note(tail.replace(/^ · /, '· '))}</div>${rows}`).replace('<div class="lg-sp ', '<div data-toc="User stories" class="lg-sp ');
 }
 
 /* ---------- story card ---------- */
@@ -283,7 +283,7 @@ export function renderClarifications(model: SpecModel): string[] {
         }).join('');
         const summary = `${eyebrow('decision', 'Clarifications')}${session.date ? ` <span class="lg-sp-note">session ${escapeHtml(session.date)}</span>` : ''}` +
             `${note(`· ${answered} answered${open ? ` · ${open} open` : ''}`)}`;
-        return `<div class="lg-sp lg-sp-clars lg-fam-decision"><details class="lg-sp-clarfold"${open ? ' open' : ''}><summary>${summary}</summary>${rows}</details></div>`;
+        return `<div class="lg-sp lg-sp-clars lg-fam-decision" data-toc="Clarifications"><details class="lg-sp-clarfold"${open ? ' open' : ''}><summary>${summary}</summary>${rows}</details></div>`;
     });
 }
 

@@ -26,8 +26,8 @@ function verdictMark(v: Verdict, label?: string): string {
     return `<span class="pl-verdict pl-verdict--${v}">${dot}${escapeHtml(label ?? VERDICT_WORD[v])}</span>`;
 }
 
-function card(cls: string, id: string | null, head: string, body: string): string {
-    const idAttr = id ? ` id="${id}"` : '';
+function card(cls: string, id: string | null, head: string, body: string, toc?: string): string {
+    const idAttr = (id ? ` id="${id}"` : '') + (toc ? ` data-toc="${toc}"` : '');
     return `<div class="pl-card ${cls}"${idAttr}><div class="pl-head">${head}</div>${body}</div>`;
 }
 
@@ -87,7 +87,7 @@ export function preprocessTechnicalContext(markdown: string): string {
             ? `<details class="pl-more"><summary>${rest.length} more facts · ${escapeHtml(rest.map((f) => f.key.replace(/[*`]/g, '')).join(', '))}</summary><div class="tech-grid">${rest.map(cell).join('')}</div></details>`
             : '';
         const count = `${facts.length} facts${open ? ` · ${open} open` : ''}`;
-        out.push(card('lg-fam-data', null, eyebrow('data', 'Technical context', count), `<div class="tech-grid">${shown}</div>${more}`));
+        out.push(card('lg-fam-data', null, eyebrow('data', 'Technical context', count), `<div class="tech-grid">${shown}</div>${more}`, 'Technical context'));
         facts = [];
     };
 
@@ -195,7 +195,7 @@ export function preprocessConstitution(markdown: string): string {
         const gate = gateOf(rows);
         const justified = rows.filter((r) => r.verdict === 'justified').length;
         const count = `${rows.length} principles${gate.fails ? ` · ${gate.fails} fails` : ''}${justified ? ` · ${justified} justified` : ''}`;
-        out.push(card('lg-fam-guard', 'plan-gate', eyebrow('guard', 'Constitution check', count) + verdictMark(gate.verdict, gate.word), rows.map(gateRowHtml).join('')));
+        out.push(card('lg-fam-guard', 'plan-gate', eyebrow('guard', 'Constitution check', count) + verdictMark(gate.verdict, gate.word), rows.map(gateRowHtml).join(''), 'Constitution check'));
         // Prose that is not the gate banner, a table or a verdict bullet stays below the component.
         const keep = body.filter((l) => l.trim() && !isTableLine(l) && !/^-[ \t]+\*\*/.test(l) && !/^\*?GATE\b/i.test(l.replace(/^\*+/, '')));
         if (keep.length) out.push('', ...keep, '');
@@ -298,7 +298,7 @@ function treeHtml(entries: TreeEntry[], withId: boolean): string {
         const stat = e.change ? `<span class="pl-tree-stat pl-tree-stat--${e.change}">${codicon(CHANGE_LABEL[e.change].icon)}${CHANGE_LABEL[e.change].word}</span>` : '';
         return `<div class="pl-tree-row" style="--d:${e.depth}"><span class="pl-tree-main">${name}${note}</span>${stat}</div>`;
     }).join('');
-    return card('lg-fam-task', withId ? 'plan-structure' : null, eyebrow('task', 'Project structure', count), rows);
+    return card('lg-fam-task', withId ? 'plan-structure' : null, eyebrow('task', 'Project structure', count), rows, withId ? 'Project structure' : undefined);
 }
 
 const STRUCTURE_SECTION = /^(Project Structure|Source Code|Structure)\b/i;
@@ -384,7 +384,7 @@ export function preprocessPlanSummary(markdown: string): string {
     }
     const strip = stats.length ? `<div class="pl-stats">${stats.join('')}</div>` : '';
     const head = `<span class="lg-eyebrow">${codicon('dash')}Summary</span>`;
-    const html = `<div class="pl-card pl-summary"><div class="pl-head">${head}</div><div class="pl-lede">${first}${restHtml}</div>${strip}</div>`;
+    const html = `<div class="pl-card pl-summary" data-toc="Summary"><div class="pl-head">${head}</div><div class="pl-lede">${first}${restHtml}</div>${strip}</div>`;
     return [...lines.slice(0, range.start), html, ...lines.slice(range.end)].join('\n');
 }
 

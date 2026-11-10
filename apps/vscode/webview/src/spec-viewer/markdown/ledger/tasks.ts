@@ -99,7 +99,7 @@ function phaseOpen(p: LgPhase): string {
     const goal = p.goal ? `<p class="lg-phase-goal"><span>Goal</span> ${parseInline(p.goal)}</p>` : '';
     return `<details class="lg-phase" data-phase="${p.num}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ''}${done ? '' : 'open'}>` +
         `<summary class="lg-phase-head"><span class="lg-phase-lane">${lane}</span>` +
-        `<span class="lg-phase-title">${codicon('chevron-right')}<span class="lg-phase-name" id="phase-${p.num}">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress}</summary>` +
+        `<span class="lg-phase-title">${codicon('chevron-right')}<span class="lg-phase-name" id="phase-${p.num}" data-toc="">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress}</summary>` +
         `<div class="lg-phase-body">${bits ? `<p class="lg-phase-meta">${bits}</p>` : ''}${goal}`;
 }
 

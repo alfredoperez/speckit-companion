@@ -4,7 +4,7 @@
 
 import { render } from 'preact';
 import { SpecHeader } from '../SpecHeader';
-import { navState, viewerState } from '../../signals';
+import { markdownHtml, navState, viewerState } from '../../signals';
 import { mockNavState } from '../__stories__/mockData';
 import type { LivingHeaderMeta } from '../../types';
 
@@ -60,6 +60,32 @@ describe('the status badge tooltip', () => {
 
         expect(container.querySelector('.spec-badge')?.getAttribute('title'))
             .toBe('COMPLETED · Apr 4, 2026');
+
+        cleanup(container);
+    });
+});
+
+describe('the title from the document', () => {
+    afterEach(() => { markdownHtml.value = ''; });
+
+    it('leads with the document heading and keeps the folder slug as an id chip', () => {
+        navState.value = mockNavState({ specContextName: 'iris-history-monitor-002-new-ui' });
+        markdownHtml.value = '<h1 class="lg-sp-title" id="x">Feature Specification: IRIS New UI</h1>';
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-title')?.textContent).toBe('IRIS New UI');
+        expect(container.querySelector('.spec-header-id')?.textContent).toBe('iris-history-monitor-002-new-ui');
+
+        cleanup(container);
+    });
+
+    it('falls back to the folder name when the document has no heading', () => {
+        navState.value = mockNavState({ specContextName: 'Some Spec' });
+        markdownHtml.value = '<p>no heading</p>';
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-title')?.textContent).toBe('Some Spec');
+        expect(container.querySelector('.spec-header-id')).toBeNull();
 
         cleanup(container);
     });
