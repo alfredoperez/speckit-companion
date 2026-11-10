@@ -57,8 +57,13 @@ def _normalize_existing(living: dict) -> list[dict]:
         entry = {"name": cap["name"], "match": list(cap.get("match") or [])}
         if cap.get("exclude"):
             entry["exclude"] = list(cap["exclude"])
-        if cap.get("spec") and cap["spec"] != _default_spec(cap["name"]):
+        # A declared `spec: ""` disables the spec path and is distinct from an omitted key.
+        if cap.get("spec_defaulted") is False and not cap.get("spec"):
+            entry["spec"] = ""
+        elif cap.get("spec") and cap["spec"] != _default_spec(cap["name"]):
             entry["spec"] = cap["spec"]
+        if cap.get("retire") is True:
+            entry["retire"] = True
         out.append(entry)
     return out
 
@@ -91,7 +96,8 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
         raise ValueError(legacy_warnings[0])
 
     capabilities = _normalize_existing(living)
-    spec_path = spec or _default_spec(name)
+    # The path the reader resolves for this capability, never the legacy `spec.md` it no longer defaults to.
+    spec_path = spec or f"{cc.DEFAULT_CAPABILITY_ROOT}/{name}/{name}{cc.SPEC_SUFFIX}"
 
     # A capability that was split into granular specs leaves an entry pointing at
     # a file that is gone. The helper only ever appended, so every re-adoption had
@@ -104,13 +110,17 @@ def register(root: str, name: str, match: list[str], exclude: list[str],
 
     existing = next((c for c in capabilities if c["name"] == name), None)
     if existing is not None:
+        if superseded:
+            # The replacement is already registered, but what it replaces is still on disk.
+            _write_registry(config_path, living["enabled"], capabilities, living.get("exempt"),
+                            living.get("rules"), living.get("layout"))
         # Idempotent: report what's ACTUALLY on disk, not the requested inputs
         # (a custom spec/match already registered must not be misreported).
         return {
             "name": name,
-            "action": "already-registered",
+            "action": "superseded" if superseded else "already-registered",
             "superseded": superseded,
-            "spec": existing.get("spec") or _default_spec(name),
+            "spec": existing["spec"] if "spec" in existing else _default_spec(name),
             "match": existing.get("match", []),
             "configPath": CONFIG_REL,
         }

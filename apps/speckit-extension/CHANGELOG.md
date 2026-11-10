@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Adoption's registry says what it wrote.** Replacing a capability ==removes the old entry== on disk, and rewrites keep `retire` and an empty `spec`. ([#990](https://github.com/alfredoperez/speckit-companion/pull/990)) <!-- area: living-specs -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.

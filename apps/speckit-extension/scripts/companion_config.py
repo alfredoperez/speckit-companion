@@ -861,6 +861,10 @@ def render_capability(cap: dict) -> list:
         out.append(f"{body}exclude: {_yaml_flow_list(cap['exclude'])}")
     if cap.get("spec"):
         out.append(f"{body}spec: {scalar(cap['spec'])}")
+    elif cap.get("spec") == "":
+        out.append(f'{body}spec: ""')
+    if cap.get("retire") is True:
+        out.append(f"{body}retire: true")
     return out
 
 

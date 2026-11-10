@@ -3577,10 +3577,66 @@ class ReplacingASupersededCapability(unittest.TestCase):
             self.assertNotIn("name: old", text)
             self.assertIn("name: new-a", text)
 
+    def test_replacing_into_an_already_registered_name_writes_the_removal(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            regcap.register(root, "old", ["src/old/**"], [], None)
+            regcap.register(root, "new", ["src/new/**"], [], None)
+            out = regcap.register(root, "new", ["src/new/**"], [], None, replaces=["old"])
+            self.assertEqual(out["superseded"], ["old"])
+            self.assertEqual(out["action"], "superseded")
+            living, _ = cc.resolve_living_specs(root)
+            self.assertEqual([c["name"] for c in living["capabilities"]], ["new"])
+
+    def test_re_registering_with_nothing_to_replace_stays_a_no_op(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            regcap.register(root, "new", ["src/new/**"], [], None)
+            out = regcap.register(root, "new", ["src/new/**"], [], None)
+            self.assertEqual(out["action"], "already-registered")
+
     def test_replacing_a_name_that_is_not_there_is_silent(self) -> None:
         with tempfile.TemporaryDirectory() as root:
             out = regcap.register(root, "solo", ["src/**"], [], None, replaces=["absent"])
             self.assertEqual(out["superseded"], [])
+
+
+class RegistryRewritesKeepWhatTheReaderAccepts(unittest.TestCase):
+    """Adding one capability rewrites the registry; every other entry must read back the same."""
+
+    def _registry(self, root: str, body: str) -> None:
+        Path(root, "living-specs.yml").write_text("enabled: true\ncapabilities:\n" + body, encoding="utf-8")
+
+    def _caps(self, root: str) -> dict:
+        living, _ = cc.resolve_living_specs(root)
+        return {c["name"]: c for c in living["capabilities"]}
+
+    def test_a_retired_capability_stays_retired(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            self._registry(root, '  - name: old\n    match: ["src/old/**"]\n    retire: true\n')
+            regcap.register(root, "new", ["src/new/**"], [], None)
+            caps = self._caps(root)
+            self.assertTrue(caps["old"]["retire"])
+            self.assertFalse(caps["new"]["retire"])
+
+    def test_a_declared_empty_spec_stays_declared_and_empty(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            self._registry(root, '  - name: old\n    match: ["src/old/**"]\n    spec: ""\n')
+            regcap.register(root, "new", ["src/new/**"], [], None)
+            old = self._caps(root)["old"]
+            self.assertEqual(old["spec"], "")
+            self.assertFalse(old["spec_defaulted"])
+
+    def test_already_registered_reports_a_declared_empty_spec_as_empty(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            self._registry(root, '  - name: quiet\n    match: ["src/quiet/**"]\n    spec: ""\n')
+            out = regcap.register(root, "quiet", ["src/quiet/**"], [], None)
+            self.assertEqual(out["action"], "already-registered")
+            self.assertEqual(out["spec"], "")
+
+    def test_a_new_registration_reports_the_path_the_reader_resolves(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            out = regcap.register(root, "billing", ["src/billing/**"], [], None)
+            self.assertEqual(out["spec"], self._caps(root)["billing"]["spec"])
+            self.assertEqual(out["spec"], "capabilities/billing/billing.spec.md")
 
 
 # LS·7 — the additive contract for `touches` markers (#672 Wave 1).
