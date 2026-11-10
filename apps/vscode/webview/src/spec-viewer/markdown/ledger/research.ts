@@ -27,7 +27,7 @@ interface Decision {
 }
 
 const KNOWN = /^(Question|Finding|Decision|Rationale|Why|Alternatives(?: considered)?|Alternative|Rejected)$/i;
-const NUMBERED = /^(?:Decision\s+(\d+)|([RD])(\d+))\s*[:—–-]\s*(.+)$/;
+const NUMBERED = /^(?:Decision\s+(\d+)|([RD])(\d+))(?:\s*[:—–-]|\.(?=\s))\s*(.+)$/;
 const BULLET = /^[ \t]*(?:[-*+]|\d+[.)])[ \t]+(.*)$/;
 
 const isBlank = (l: string) => !l.trim();
@@ -65,6 +65,37 @@ function parseAlts(lines: string[]): Alt[] {
     return items.map(splitAlt);
 }
 
+/** A numbered section with no labelled fields whose sub-headings hold a `Decision Dn` and its `Option X` candidates. */
+function composite(s: SectionCtx, num: RegExpMatchArray): Decision | null {
+    const subs: { title: string; lines: string[] }[] = [];
+    const lead: string[] = [];
+    let inFence = false;
+    for (const line of s.body) {
+        if (/^[ \t]*(```|~~~)/.test(line)) inFence = !inFence;
+        const h = inFence ? null : line.match(/^#{3,6}[ \t]+(.+?)[ \t]*#*[ \t]*$/);
+        if (h) subs.push({ title: h[1].replace(/\*\*|`/g, ''), lines: [] });
+        else (subs.length ? subs[subs.length - 1].lines : lead).push(line);
+    }
+    const pick = subs.find((x) => /^Decision\b/i.test(x.title));
+    if (!pick) return null;
+    const label = pick.title.replace(/^Decision\s+\w+\s*[—–:-]\s*/i, '');
+    const chosen = label.match(/\bOption\s+([A-Z])\b/i)?.[1];
+    const { lead: dl, fields } = splitFields(pick.lines, KNOWN);
+    const why = fields.filter((f) => /^(rationale|why)$/.test(f.label)).flatMap((f) => f.lines);
+    const alts = subs
+        .filter((x) => /^(Option|Alternative|Candidate)\b/i.test(x.title) && !(chosen && new RegExp(`^Option\\s+${chosen}\\b`, 'i').test(x.title)))
+        .map((x) => {
+            const [name, ...tail] = x.title.split(/\s+[—–]\s+/);
+            const first = trimLines(x.lines).find((l) => !BULLET.test(l) && l.trim()) ?? '';
+            return { name: tail.length ? `${name}: ${tail.join(' — ')}` : name, why: first.trim() };
+        });
+    return {
+        id: `${num[2] ?? 'D'}${num[1] ?? num[3]}`, kind: 'decision', title: num[4],
+        intro: trimLines(lead), question: [], finding: [],
+        decision: [`**${label}**`, '', ...trimLines(dl)], why, alts,
+    };
+}
+
 function fromSection(s: SectionCtx, index: number, strict: boolean): Decision | null {
     const text = s.heading.text.replace(/`/g, '');
     const num = text.match(NUMBERED);
@@ -73,6 +104,10 @@ function fromSection(s: SectionCtx, index: number, strict: boolean): Decision | 
     const has = (re: RegExp) => fields.some((f) => re.test(f.label));
     const numberedDecision = num && /^Decision/i.test(text);
     const labelled = has(/^(decision|question)$/);
+    if (num && !fields.length && !labelled && !/^Decision/i.test(text)) {
+        const c = composite(s, num);
+        if (c) return c;
+    }
     if (strict && !numberedDecision) return null;
     if (!numberedDecision && !(num && fields.length) && !labelled) return null;
 
@@ -151,10 +186,10 @@ export function decisionCard(d: Decision): string {
 
 export function decisionsStrip(list: Decision[]): string {
     const turned = list.reduce((n, d) => n + d.alts.length, 0);
-    const count = `${list.length} · ${turned} turned down`;
+    const count = turned ? `${list.length} · ${turned} turned down` : `${list.length}`;
     const rows = list.map((d) => {
         const note = d.alts.length ? `${d.alts.length} turned down` : '';
-        return `<a class="lg-strip__row" href="#${slugForId(d.id)}"><span class="lg-chip">${d.id}</span><span class="lg-strip__title">${parseInline(d.title)}</span><span class="lg-strip__meta">${note}</span></a>`;
+        return `<a class="lg-strip__row" href="#${slugForId(d.id)}"><span class="lg-chip">${d.id}</span><span class="lg-strip__title">${escapeHtml(d.title.replace(/[*`]/g, ''))}</span><span class="lg-strip__meta">${note}</span></a>`;
     }).join('');
     return `<div class="lg-strip lg-fam-decision" data-toc="Decisions"><div class="lg-strip__head">${eyebrow('decision', 'Decisions at a glance', count)}</div>${rows}</div>`;
 }

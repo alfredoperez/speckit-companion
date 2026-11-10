@@ -200,3 +200,16 @@ describe('SummaryLede', () => {
         expect(html).toContain('pl-gate-row');
     });
 });
+
+describe('plain bullet plans', () => {
+    it('reads "- Key: value" bullets as technical context facts', () => {
+        const out = preprocessTechnicalContext('## Technical context\n\n- Rust 1.94, edition 2021.\n- Models: one per file.\n- Build/test: cargo nextest.\n');
+        expect(out).toContain('tech-grid');
+        expect(out).toContain('Models');
+    });
+
+    it('shows a two-column principle table with no verdicts as a pending gate', () => {
+        const out = preprocessConstitution('## Constitution check\n\n| Principle | Obligation |\n|---|---|\n| I Speed | Fast. |\n');
+        expect(out).toContain('pl-verdict--pending');
+    });
+});

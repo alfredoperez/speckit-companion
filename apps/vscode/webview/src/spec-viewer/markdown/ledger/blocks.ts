@@ -33,6 +33,8 @@ export function docKind(markdown: string): DocKind {
         if (/\bplan\b|implementation/i.test(t)) return 'plan';
         return 'other';
     }
+    if (/^##[ \t]+[RD]\d+\b/m.test(markdown)) return 'research';
+    if (/^##[ \t]+Entities\b/im.test(markdown)) return 'data';
     return 'other';
 }
 
@@ -162,7 +164,7 @@ export function renderBlocks(lines: string[], opts: BlockOptions = {}): string {
             out.push(codeBlock(code.join('\n').replace(/^\n+|\n+$/g, '')));
             continue;
         }
-        if (!line.trim()) { flush(); continue; }
+        if (!line.trim() || /^[ \t]*([-*_])(?:[ \t]*\1){2,}[ \t]*$/.test(line)) { flush(); continue; }
         if (isTableLine(line)) {
             flush();
             const tbl: string[] = [];
@@ -196,7 +198,7 @@ export function renderBlocks(lines: string[], opts: BlockOptions = {}): string {
 }
 
 /** Bold-label field lines: `**Label**: text` or `**Label:** text`. */
-export const LABEL = /^[ \t]*\*\*([A-Za-z][A-Za-z ]{1,30}?):?\*\*:?[ \t]*(.*)$/;
+export const LABEL = /^[ \t]*(?:[-*+][ \t]+)?\*\*([A-Za-z][A-Za-z ]{1,30}?)[:.]?\*\*:?[ \t]*(.*)$/;
 
 export interface Field {
     label: string;
