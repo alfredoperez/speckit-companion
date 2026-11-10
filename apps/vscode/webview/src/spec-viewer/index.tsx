@@ -10,6 +10,7 @@ import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setRe
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupCallsStrike, setupLineActions, setupStatesSelect } from './editor';
 import { setupAnswerActions } from './editor/answerEditor';
+import { setupLedgerTasks } from './markdown/ledger/tasksInteractions';
 import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupOpenLivingRequirement, setupRemoveRequirement, setupRevealGlob } from './actions';
 import { applyPendingFragment, setupDocumentLinkClickHandler } from './documentLinks';
 import { createMessageRouter } from './messageHandlers';
@@ -127,6 +128,7 @@ function init(): void {
     setupAnswerActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
+    setupLedgerTasks();
     setupLedgerRefs();
     setupDocumentLinkClickHandler();
     setupApproveRequirement();

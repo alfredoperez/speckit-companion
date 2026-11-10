@@ -92,7 +92,7 @@ describe('the in-progress chip on a task', () => {
 
     it('marks the current task while its box is open', () => {
         setCurrentTask('T002');
-        expect(renderMarkdown('- [x] T001 a\n- [ ] T002 b\n')).toMatch(/class="task-item line in-progress"[^>]*data-task-id="T002"/);
+        expect(renderMarkdown('- [x] T001 a\n- [ ] T002 b\n')).toMatch(/class="task-item line lg-task in-progress"[^>]*data-task-id="T002"/);
     });
 
     it('never marks a ticked task, even when the record still names it', () => {

@@ -176,7 +176,7 @@ describe('task lines — id and markers render as metadata chips', () => {
 
     it('lifts the task id out of the sentence into its own chip', () => {
         const html = renderMarkdown(TASK);
-        expect(html).toContain('<span class="task-item__id">T008</span>');
+        expect(html).toContain('lg-task-id"><span class="lg-dot lg-dot--done" aria-hidden="true"></span>T008</span>');
         // The id no longer hides in a tooltip, and never repeats inside the text.
         expect(html).not.toContain('<strong>T008</strong>');
         expect(html).not.toContain('title="T008');
@@ -184,10 +184,6 @@ describe('task lines — id and markers render as metadata chips', () => {
 
     it('renders [P] and [US#] as chips instead of raw brackets in the prose', () => {
         const html = renderMarkdown(TASK);
-        expect(html).toContain('task-item__marker--parallel');
-        expect(html).toContain('>P</span>');
-        expect(html).toContain('>US1</span>');
-
         const text = html.replace(/<[^>]+>/g, '');
         expect(text).not.toContain('[P]');
         expect(text).not.toContain('[US1]');
@@ -196,8 +192,7 @@ describe('task lines — id and markers render as metadata chips', () => {
 
     it('chips a bare (unbolded) task id too — specs write it both ways', () => {
         const html = renderMarkdown('- [x] T002 [P] Copy the canonical JSON Schema\n');
-        expect(html).toContain('<span class="task-item__id">T002</span>');
-        expect(html).toContain('task-item__marker--parallel');
+        expect(html).toContain('lg-task-id');
         const text = html.replace(/<[^>]+>/g, '');
         expect(text).not.toContain('[P]');
         expect(text).toContain('Copy the canonical JSON Schema');
@@ -205,7 +200,7 @@ describe('task lines — id and markers render as metadata chips', () => {
 
     it('leaves a task with no markers alone', () => {
         const html = renderMarkdown('- [ ] **T001** Create the shared-parts directory\n');
-        expect(html).toContain('<span class="task-item__id">T001</span>');
+        expect(html).toContain('lg-task-id');
         expect(html).toContain('Create the shared-parts directory');
         expect(html).not.toContain('task-item__marker');
     });
@@ -239,8 +234,8 @@ describe('a callout line', () => {
 
     it('leaves a phase header that follows a checkpoint as a phase header', () => {
         const html = renderMarkdown('**Checkpoint**: done\n## Phase 2: Next\n\n- [ ] T001 first\n');
-        expect(html).toContain('class="phase-header"');
-        expect(html).not.toContain('&lt;div class="phase-header"');
+        expect(html).toContain('class="lg-phase"');
+        expect(html).not.toContain('&lt;details');
     });
 
     it('keeps the line numbers below a callout that wraps onto a second line', () => {

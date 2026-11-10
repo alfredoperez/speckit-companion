@@ -58,14 +58,14 @@ describe('preprocessTaskPhases', () => {
         const html = renderMarkdown(tasks);
 
         // Phase header rendered (not a raw "## Phase" heading)…
-        expect(html).toContain('class="phase-header"');
-        expect(html).toContain('phase-chip mvp');
+        expect(html).toContain('class="lg-phase"');
+        expect(html).toContain('lg-phase-chip');
         expect(html).not.toContain('<h2>Phase 3');
         // …and the checkbox list below it still renders as task items.
         expect(html).toContain('class="task-item');
         expect(html).toContain('<input type="checkbox" checked');
         // The id is a chip ahead of the description, not part of the sentence.
-        expect(html).toContain('<span class="task-item__id">T010</span>Implement deriveViewerState');
+        expect(html).toContain('<span class="lg-task-title">Implement deriveViewerState</span>');
     });
 });
 

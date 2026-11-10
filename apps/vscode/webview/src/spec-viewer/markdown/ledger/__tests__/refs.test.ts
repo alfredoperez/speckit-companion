@@ -38,7 +38,7 @@ describe('ids in prose', () => {
     it('chips a requirement id inside a task description but keeps the task id as its own chip', () => {
         const html = renderMarkdown('- [ ] T005 Implement FR-002\n');
 
-        expect(html).toContain('<span class="task-item__id">T005</span>');
+        expect(html).toContain('lg-task-id');
         expect(html).toContain('data-ref="FR-002"');
     });
 
