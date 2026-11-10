@@ -15,6 +15,8 @@ import { applyPendingFragment, setupDocumentLinkClickHandler } from './documentL
 import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
 import { buildToc } from './toc';
+import { resolveLedgerRefs } from './markdown/ledger/refs';
+import { setupLedgerRefs } from './ledgerRefs';
 
 declare global {
     interface Window {
@@ -54,6 +56,8 @@ function updateContent(content: string): void {
             document.getElementById('markdown-content'),
             document.getElementById('spec-toc')
         );
+        const root = document.getElementById('markdown-content');
+        if (root) resolveLedgerRefs(root);
         applyPendingFragment();
     });
 }
@@ -123,6 +127,7 @@ function init(): void {
     setupAnswerActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
+    setupLedgerRefs();
     setupDocumentLinkClickHandler();
     setupApproveRequirement();
     setupRevealGlob();

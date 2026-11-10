@@ -82,6 +82,18 @@ export function applyPendingFragment(): void {
     scrollToFragment(fragment);
 }
 
+/** Switches to another document of the spec and lands on one of its anchors; false when the spec has no such document. */
+export function openDocumentAtFragment(docType: string, fragment: string): boolean {
+    const ns = navState.value;
+    const core = ns?.coreDocs?.find(d => d.type === docType && d.exists);
+    const related = ns?.relatedDocs?.find(d => d.type === docType && d.exists);
+    if (!core && !related) return false;
+    pending = fragment ? { docType, fragment } : null;
+    viewerMode.value = 'document';
+    vscode.postMessage(core ? { type: 'stepperClick', phase: docType } : { type: 'switchDocument', documentType: docType });
+    return true;
+}
+
 export function setupDocumentLinkClickHandler(): void {
     document.addEventListener('click', (e) => {
         const anchor = (e.target as HTMLElement).closest<HTMLAnchorElement>('#markdown-content a[href]');
