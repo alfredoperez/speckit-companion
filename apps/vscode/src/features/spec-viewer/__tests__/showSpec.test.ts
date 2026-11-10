@@ -118,6 +118,38 @@ describe('SpecViewerProvider.showSpec', () => {
         expect(renderedDocumentType()).toBe('spec');
     });
 
+    describe('the spec page gets the sibling tasks.md', () => {
+        const lastArg = () => {
+            const calls = (generateHtml as jest.Mock).mock.calls;
+            const call = calls[calls.length - 1];
+            return call[call.length - 1];
+        };
+        const fileBytes = (files: Record<string, string>) => (uri: vscode.Uri) =>
+            files[uri.fsPath] === undefined
+                ? Promise.reject(new Error('ENOENT'))
+                : Promise.resolve(Buffer.from(files[uri.fsPath]));
+
+        it('fills tasksMarkdown from tasks.md when it exists', async () => {
+            (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('tasks', true)]);
+            (vscode.workspace.fs.readFile as jest.Mock).mockImplementation(
+                fileBytes({ [`${SPEC_DIR}/spec.md`]: '# Spec', [`${SPEC_DIR}/tasks.md`]: '- [x] T001 [US1] a' }),
+            );
+
+            await provider.showSpec(SPEC_DIR);
+
+            expect(lastArg()).toBe('- [x] T001 [US1] a');
+        });
+
+        it('leaves it empty when there is no tasks.md', async () => {
+            (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('tasks', false)]);
+            (vscode.workspace.fs.readFile as jest.Mock).mockImplementation(fileBytes({ [`${SPEC_DIR}/spec.md`]: '# Spec' }));
+
+            await provider.showSpec(SPEC_DIR);
+
+            expect(lastArg()).toBe('');
+        });
+    });
+
     it('falls back to the first document that exists when the spec document is missing', async () => {
         (scanDocuments as jest.Mock).mockResolvedValue([
             coreDoc('spec', false),

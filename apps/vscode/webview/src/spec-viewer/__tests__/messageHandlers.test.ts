@@ -167,3 +167,20 @@ describe('the webview routes every message the extension can send', () => {
         expect(specMoved.value).toBe(false);
     });
 });
+
+describe('the spec page gets the sibling tasks.md from the navState', () => {
+    const SPEC_MD = '# Feature Specification: X\n\n**Feature Branch**: `001-x`\n\n**Created**: 2026-10-09\n\n**Status**: Draft\n\n## User Scenarios & Testing\n\n### User Story 1 - Do it (Priority: P1)\n\nAs a user I do it.\n\n**Acceptance Scenarios**:\n\n1. **Given** a, **When** b, **Then** c\n';
+    const render = (tasks: string | undefined) => {
+        const { applyNavState } = require('../messageHandlers');
+        applyNavState(nav({ tasksMarkdown: tasks }));
+        return require('../markdown').renderMarkdown(SPEC_MD) as string;
+    };
+
+    it('shows story progress when tasksMarkdown is set', () => {
+        expect(render('- [x] T001 [US1] a\n- [ ] T002 [US1] b')).toContain('1/2');
+    });
+    it('drops the progress when tasksMarkdown is empty', () => {
+        render('- [x] T001 [US1] a');
+        expect(render('')).not.toContain('Built by T001');
+    });
+});

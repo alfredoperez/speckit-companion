@@ -6,7 +6,7 @@
 import { render } from 'preact';
 import type { VSCodeApi, NavState } from './types';
 import { navState, markdownHtml } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode } from './markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setSpecLedgerTasks } from './markdown';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupCallsStrike, setupLineActions, setupStatesSelect } from './editor';
 import { setupAnswerActions } from './editor/answerEditor';
@@ -113,6 +113,7 @@ function init(): void {
         if (initialNav.currentTask !== undefined) {
             setCurrentTask(initialNav.currentTask);
         }
+        if (initialNav.tasksMarkdown !== undefined) setSpecLedgerTasks(initialNav.tasksMarkdown || null);
     }
 
     // Wire message listener before render

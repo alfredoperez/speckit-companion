@@ -60,7 +60,8 @@ export function generateHtml(
     hasTerminal: boolean = false,
     reportActions: NonNullable<NavState['reportActions']> = [],
     report?: NavState['report'],
-    taskCounts?: NavState['taskCounts']
+    taskCounts?: NavState['taskCounts'],
+    tasksMarkdown?: string
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -103,6 +104,7 @@ export function generateHtml(
         workflowPhase,
         taskCompletionPercent,
         taskCounts,
+        tasksMarkdown,
         isViewingRelatedDoc,
         enhancementButtons,
         stalenessMap,
