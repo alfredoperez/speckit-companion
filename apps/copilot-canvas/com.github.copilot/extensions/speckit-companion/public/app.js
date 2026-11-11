@@ -331,7 +331,8 @@ function renderBoard() {
     els.repoLine.title = state.snapshot.root;
     if (document.activeElement !== els.repositoryRoot) els.repositoryRoot.value = state.snapshot.root;
     els.repositoryWarning.hidden = !state.snapshot.missingSpecDirectories;
-    els.repositoryFollow.hidden = state.snapshot.rootSource !== 'selected';
+    els.repositoryFollow.hidden = !['selected', 'bound'].includes(state.snapshot.rootSource);
+    els.repoLine.textContent += state.snapshot.boundSession ? ` · from ${state.snapshot.boundSession.name}` : '';
     els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
     renderChildren();
 

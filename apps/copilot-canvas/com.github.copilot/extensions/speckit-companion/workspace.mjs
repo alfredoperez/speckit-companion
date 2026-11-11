@@ -28,11 +28,20 @@ export function rootSelection(workspacePath) {
             if (!file) return;
             rmSync(file, { force: true });
         },
-        write(root) {
+        source() {
+            if (!file) return null;
+            try {
+                const { source } = JSON.parse(readFileSync(file, 'utf8'));
+                return source && typeof source.sessionId === 'string' ? { sessionId: source.sessionId, name: String(source.name ?? source.sessionId) } : null;
+            } catch {
+                return null;
+            }
+        },
+        write(root, source) {
             if (!file) throw new Error('Session storage is unavailable; the repository selection cannot be saved.');
             mkdirSync(dirname(file), { recursive: true });
             const temporary = `${file}.tmp`;
-            writeFileSync(temporary, `${JSON.stringify({ root })}\n`, { mode: 0o600 });
+            writeFileSync(temporary, `${JSON.stringify(source ? { root, source } : { root })}\n`, { mode: 0o600 });
             renameSync(temporary, file);
         },
     };

@@ -58,11 +58,12 @@ function tokenMatches(given, expected) {
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
  * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
-export async function createSpecServer({ root, workingDirectory = root, manual = false, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
+export async function createSpecServer({ root, workingDirectory = root, manual = false, bound = null, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
     const state = {
         root,
         workingDirectory,
         manual,
+        bound: manual ? bound : null,
         children: [],
         childNote: null,
         failed: null,
@@ -109,7 +110,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     }
 
     function snapshot() {
-        return { ...state.snapshot, rootSource: state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
+        return { ...state.snapshot, rootSource: state.bound ? 'bound' : state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', boundSession: state.bound, children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
     }
 
     /** The step's document as it is on disk right now, so a later look can tell whether the run touched it. */
@@ -176,6 +177,26 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         if (!saveRoot) throw new Error('Repository selection is unavailable without session storage.');
         saveRoot(nextRoot);
         state.manual = true;
+        state.bound = null;
+        applyRoot(nextRoot, nextDirs, nextSnapshot);
+        return snapshot();
+    }
+
+    /**
+     * The coordinating agent names a session and its worktree, read from the app's own session details. This is a caller-provided
+     * binding: the board cannot verify ownership. Rebinding the same or another session replaces the previous one.
+     */
+    function bindSession({ sessionId, cwd, name }) {
+        if (typeof sessionId !== 'string' || !sessionId.trim()) throw new Error('A source session id is required.');
+        const nextRoot = validateRoot(cwd);
+        if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+        if (!saveRoot) throw new Error('Repository selection is unavailable without session storage.');
+        const nextDirs = resolveSpecDirs(nextRoot);
+        const nextSnapshot = buildSnapshot(nextRoot, nextDirs);
+        const source = { sessionId: sessionId.trim(), name: typeof name === 'string' && name.trim() ? name.trim() : sessionId.trim() };
+        saveRoot(nextRoot, source);
+        state.manual = true;
+        state.bound = source;
         applyRoot(nextRoot, nextDirs, nextSnapshot);
         return snapshot();
     }
@@ -188,6 +209,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         const target = validateRoot(desiredRoot());
         clearRoot();
         state.manual = false;
+        state.bound = null;
         state.failed = null;
         applyRoot(target);
         return snapshot();
@@ -593,6 +615,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         rescan,
         selectRoot,
         selectChild,
+        bindSession,
         refreshChildren,
         followSession,
         followWorkingDirectory,

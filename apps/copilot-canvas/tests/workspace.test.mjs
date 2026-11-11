@@ -246,6 +246,65 @@ describe('session worktree following', () => {
     });
 });
 
+describe('coordinator-bound source session', () => {
+    it('binds, rebinds the same session to a new worktree, persists, and rolls back on failure', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-bind-'));
+        const [chat, treeA, treeB] = ['chat', 'tree-a', 'tree-b'].map(name => join(base, name));
+        mkdirSync(chat);
+        spec(treeA, '001-a', 'A');
+        spec(treeB, '002-b', 'B');
+        globalThis.__copilotWorkspacePath = base;
+        await import('../com.github.copilot/extensions/speckit-companion/extension.mjs');
+        const [canvas] = globalThis.__copilotJoined.at(-1).canvases;
+        const action = name => canvas.actions.find(candidate => candidate.name === name).handler;
+        const title = id => action('list_specs')({ instanceId: id, input: {} }).specs[0]?.title;
+        const open = () => canvas.open({ instanceId: 'bind-a', input: null, session: { workingDirectory: chat } });
+        try {
+            await open();
+            const bound = action('bind_coordinated_session')({ instanceId: 'bind-a', input: { sessionId: 'c1', cwd: treeA, name: 'agents' } });
+            assert.deepEqual(bound.source, { sessionId: 'c1', name: 'agents' });
+            assert.equal(title('bind-a'), 'A');
+            action('bind_coordinated_session')({ instanceId: 'bind-a', input: { sessionId: 'c1', cwd: treeB } });
+            assert.equal(title('bind-a'), 'B', 'the same session rebinds to a new worktree');
+            assert.throws(() => action('bind_coordinated_session')({ instanceId: 'bind-a', input: { sessionId: 'c2', cwd: join(base, 'missing') } }), /ENOENT/);
+            assert.equal(title('bind-a'), 'B', 'a failed bind keeps the previous binding');
+            assert.equal(rootSelection(base).source().sessionId, 'c1');
+            await canvas.onClose({ instanceId: 'bind-a' });
+            await open();
+            assert.equal(title('bind-a'), 'B', 'the binding survives a reopen and outranks the own directory');
+            globalThis.__copilotHandlers['session.context_changed']({ data: { cwd: chat } });
+            assert.equal(title('bind-a'), 'B');
+            action('select_root')({ instanceId: 'bind-a', input: { root: treeA } });
+            assert.equal(rootSelection(base).source(), null, 'a manual choice replaces the binding');
+            action('bind_coordinated_session')({ instanceId: 'bind-a', input: { sessionId: 'c1', cwd: treeB } });
+            action('use_session_directory')({ instanceId: 'bind-a', input: {} });
+            assert.equal(rootSelection(base).source(), null);
+            assert.equal(action('list_specs')({ instanceId: 'bind-a', input: {} }).specs.length, 0, 'back on the empty chat directory');
+        } finally {
+            await canvas.onClose({ instanceId: 'bind-a' });
+            globalThis.__copilotWorkspacePath = undefined;
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('refuses a bind while a step is running and keeps commands in the owning chat', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-bind-run-'));
+        const [chat, tree] = ['chat', 'tree'].map(name => join(base, name));
+        spec(chat, '001-c', 'C');
+        spec(tree, '002-t', 'T');
+        const board = await createSpecServer({ root: chat, send: async () => true, saveRoot: () => {}, clearRoot: () => {} });
+        try {
+            await board.run('001-c', 'plan');
+            assert.throws(() => board.bindSession({ sessionId: 'c1', cwd: tree }), /Wait for the current spec step/);
+            assert.equal(board.snapshot.root, chat);
+            assert.throws(() => board.bindSession({ sessionId: ' ', cwd: tree }), /session id/);
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+});
+
 describe('parent chat following owned sessions', () => {
     const waitFor = async (check) => {
         for (let i = 0; i < 60 && !check(); i++) await delay(50);
