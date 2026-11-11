@@ -112,6 +112,39 @@ const session = await joinSession({
                     },
                 },
                 {
+                    name: 'update_coordinated_sessions',
+                    description: 'Coordinator only: replace the complete list of your own nonarchived app sessions, including idle sessions, using scoped get_sessions_status and get_session for exact ids, names and worktree directories. Refresh after create, resume, switch, archive or worktree changes. The board cannot verify ownership; never supply unrelated sessions or guess a latest session. The user chooses a source; commands still run in this chat, not the child.',
+                    inputSchema: {
+                        type: 'object',
+                        additionalProperties: false,
+                        properties: {
+                            sessions: {
+                                type: 'array',
+                                items: {
+                                    type: 'object',
+                                    additionalProperties: false,
+                                    properties: {
+                                        sessionId: { type: 'string', minLength: 1 },
+                                        cwd: { type: 'string', minLength: 1 },
+                                        name: { type: 'string', minLength: 1 },
+                                        activity: { type: 'string', enum: ['busy', 'idle', 'unknown'] },
+                                    },
+                                    required: ['sessionId', 'cwd', 'name'],
+                                },
+                            },
+                        },
+                        required: ['sessions'],
+                    },
+                    handler: (ctx) => {
+                        try {
+                            const snapshot = serverFor(ctx).updateCoordinatedSessions(ctx.input.sessions);
+                            return { count: snapshot.coordinatedSessions.length, root: snapshot.root, source: snapshot.boundSession };
+                        } catch (error) {
+                            throw specError(error);
+                        }
+                    },
+                },
+                {
                     name: 'bind_coordinated_session',
                     description: 'Coordinator only. Show a coordinated session\'s worktree on this board. First read that session with your get_session tool and pass its exact session id, its worktree path and its name; never guess, scan sessions, or use a latest one, and when several children exist use the one the user means. This is a caller-provided binding the board cannot verify, and it does not follow later changes: call it again whenever the child is created, resumed, switched or its worktree changes. It is saved and outranks following; use_session_directory clears it. Commands from the board still run in this chat, naming that repository, not in the child.',
                     inputSchema: {
@@ -231,6 +264,8 @@ const session = await joinSession({
                         workingDirectory: current,
                         manual: Boolean(savedRoot || ctx.input?.root),
                         bound: savedRoot ? selection.source() : null,
+                        coordinatedSessions: selection.sessions(),
+                        saveCoordinatedSessions: (sessions, root, source) => selection.writeSessions(sessions, root, source),
                         saveRoot: (root, source) => selection.write(root, source),
                         clearRoot: () => selection.clear(),
                         discoverChildren,

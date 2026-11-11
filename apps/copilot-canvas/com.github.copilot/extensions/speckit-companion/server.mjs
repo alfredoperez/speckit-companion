@@ -58,12 +58,13 @@ function tokenMatches(given, expected) {
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
  * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
-export async function createSpecServer({ root, workingDirectory = root, manual = false, bound = null, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
+export async function createSpecServer({ root, workingDirectory = root, manual = false, bound = null, coordinatedSessions = [], saveCoordinatedSessions, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
     const state = {
         root,
         workingDirectory,
         manual,
         bound: manual ? bound : null,
+        coordinatedSessions,
         children: [],
         childNote: null,
         failed: null,
@@ -110,7 +111,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     }
 
     function snapshot() {
-        return { ...state.snapshot, rootSource: state.bound ? 'bound' : state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', boundSession: state.bound, children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
+        return { ...state.snapshot, rootSource: state.bound ? 'bound' : state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', boundSession: state.bound, coordinatedSessions: state.coordinatedSessions, children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
     }
 
     /** The step's document as it is on disk right now, so a later look can tell whether the run touched it. */
@@ -200,6 +201,43 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         state.bound = source;
         applyRoot(nextRoot, nextDirs, nextSnapshot);
         return snapshot();
+    }
+
+    function updateCoordinatedSessions(sessions) {
+        if (!Array.isArray(sessions)) throw new Error('A complete sessions array is required.');
+        const ids = new Set();
+        const next = sessions.map(session => {
+            if (!session || typeof session !== 'object' || Array.isArray(session) ||
+                Object.keys(session).some(key => !['sessionId', 'cwd', 'name', 'activity'].includes(key)) ||
+                typeof session.sessionId !== 'string' || !session.sessionId.trim() ||
+                typeof session.name !== 'string' || !session.name.trim() ||
+                (session.activity !== undefined && !['busy', 'idle', 'unknown'].includes(session.activity))) {
+                throw new Error('Each session requires an id, name and absolute directory, with optional busy, idle or unknown activity.');
+            }
+            const sessionId = session.sessionId.trim();
+            if (ids.has(sessionId)) throw new Error(`Duplicate coordinated session id: ${sessionId}`);
+            ids.add(sessionId);
+            return { sessionId, cwd: validateRoot(session.cwd), name: session.name.trim(), ...(session.activity ? { activity: session.activity } : {}) };
+        });
+        const selected = state.bound && next.find(session => session.sessionId === state.bound.sessionId);
+        const moved = selected && selected.cwd !== state.root;
+        if (moved && !idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+        if (!saveCoordinatedSessions) throw new Error('Session storage is unavailable; the session list cannot be saved.');
+        const nextDirs = moved ? resolveSpecDirs(selected.cwd) : null;
+        const nextSnapshot = moved ? buildSnapshot(selected.cwd, nextDirs) : null;
+        const source = selected ? { sessionId: selected.sessionId, name: selected.name } : state.bound;
+        saveCoordinatedSessions(next, state.manual ? (selected?.cwd ?? state.root) : null, source);
+        state.coordinatedSessions = next;
+        state.bound = source;
+        if (moved) applyRoot(selected.cwd, nextDirs, nextSnapshot);
+        else rescan();
+        return snapshot();
+    }
+
+    function selectCoordinatedSession(sessionId) {
+        const selected = state.coordinatedSessions.find(session => session.sessionId === sessionId);
+        if (!selected) throw Object.assign(new Error('The coordinated session is unavailable. Ask the coordinator to refresh the list.'), { status: 404 });
+        return bindSession(selected);
     }
 
     /** Go back to following the session; the saved choice is removed first so a reload agrees. */
@@ -556,6 +594,10 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
                 const next = selectChild(body.sessionId);
                 return sendJson(res, 200, { root: next.root, count: next.specs.length });
             }
+            if (pathname === '/api/root/coordinated') {
+                const next = selectCoordinatedSession(body.sessionId);
+                return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
             if (pathname === '/api/refresh') {
                 await refreshChildren();
                 return sendJson(res, 200, { count: rescan().specs.length });
@@ -617,6 +659,8 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         selectRoot,
         selectChild,
         bindSession,
+        updateCoordinatedSessions,
+        selectCoordinatedSession,
         refreshChildren,
         followSession,
         followWorkingDirectory,

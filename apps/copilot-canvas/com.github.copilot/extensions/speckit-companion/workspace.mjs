@@ -12,21 +12,32 @@ export function validateRoot(root) {
 
 export function rootSelection(workspacePath) {
     const file = workspacePath && join(workspacePath, 'files', 'speckit-companion', 'board.json');
+    function load() {
+        if (!file) return {};
+        try {
+            return JSON.parse(readFileSync(file, 'utf8'));
+        } catch (error) {
+            if (error.code === 'ENOENT') return {};
+            throw error;
+        }
+    }
+    function save(data) {
+        if (!file) throw new Error('Session storage is unavailable; the repository selection cannot be saved.');
+        mkdirSync(dirname(file), { recursive: true });
+        const temporary = `${file}.tmp`;
+        writeFileSync(temporary, `${JSON.stringify(data)}\n`, { mode: 0o600 });
+        renameSync(temporary, file);
+    }
     return {
         read() {
-            if (!file) return null;
-            let text;
-            try {
-                text = readFileSync(file, 'utf8');
-            } catch (error) {
-                if (error.code === 'ENOENT') return null;
-                throw error;
-            }
-            return validateRoot(JSON.parse(text).root);
+            const { root } = load();
+            return root ? validateRoot(root) : null;
         },
         clear() {
             if (!file) return;
-            rmSync(file, { force: true });
+            const data = load();
+            if (data.coordinatedSessions) save({ coordinatedSessions: data.coordinatedSessions });
+            else rmSync(file, { force: true });
         },
         source() {
             if (!file) return null;
@@ -38,11 +49,15 @@ export function rootSelection(workspacePath) {
             }
         },
         write(root, source) {
-            if (!file) throw new Error('Session storage is unavailable; the repository selection cannot be saved.');
-            mkdirSync(dirname(file), { recursive: true });
-            const temporary = `${file}.tmp`;
-            writeFileSync(temporary, `${JSON.stringify(source ? { root, source } : { root })}\n`, { mode: 0o600 });
-            renameSync(temporary, file);
+            const { coordinatedSessions } = load();
+            save({ root, ...(source ? { source } : {}), ...(coordinatedSessions ? { coordinatedSessions } : {}) });
+        },
+        sessions() {
+            const { coordinatedSessions } = load();
+            return Array.isArray(coordinatedSessions) ? coordinatedSessions : [];
+        },
+        writeSessions(coordinatedSessions, root, source) {
+            save({ ...(root ? { root } : {}), ...(source ? { source } : {}), coordinatedSessions });
         },
     };
 }

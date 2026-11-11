@@ -58,6 +58,8 @@ const els = {
     repositoryRoot: $('repository-root'),
     repositoryWarning: $('repository-warning'),
     repositoryFollow: $('repository-follow'),
+    coordinatedSession: $('coordinated-session'),
+    coordinatedHint: $('coordinated-session-hint'),
     childrenBox: $('repository-children'),
     childrenHint: $('repository-children-hint'),
     childrenList: $('repository-children-list'),
@@ -321,6 +323,21 @@ function renderChildren() {
         }, child.name || child.sessionId))));
 }
 
+function renderCoordinatedSessions() {
+    const sessions = state.snapshot.coordinatedSessions ?? [];
+    const bound = state.snapshot.boundSession;
+    const missing = bound && !sessions.some(session => session.sessionId === bound.sessionId);
+    els.coordinatedSession.replaceChildren(el('option', { value: '', text: 'Choose a coordinated session' }));
+    if (missing) els.coordinatedSession.append(el('option', { value: bound.sessionId, text: `${bound.name} (unavailable)` }));
+    for (const session of sessions) {
+        els.coordinatedSession.append(el('option', { value: session.sessionId, text: `${session.name}${session.activity ? ` · ${session.activity}` : ''}` }));
+    }
+    els.coordinatedSession.value = bound?.sessionId ?? '';
+    els.coordinatedHint.textContent = missing
+        ? 'The selected session is not in the latest list. Its last repository remains open; ask the coordinator to refresh or disconnect.'
+        : sessions.length ? 'The coordinator maintains this list; commands run in this chat.' : 'Ask the coordinator to update the session list.';
+}
+
 function renderBoard() {
     const specs = state.snapshot?.specs ?? [];
     const active = specs.filter(s => !s.done).length;
@@ -337,6 +354,7 @@ function renderBoard() {
     els.repoLine.textContent += state.snapshot.boundSession ? ` · from ${state.snapshot.boundSession.name}` : '';
     els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
     renderChildren();
+    renderCoordinatedSessions();
 
     const shown = visibleSpecs();
     els.listEmpty.hidden = shown.length > 0;
@@ -722,6 +740,20 @@ els.repositoryFollow.addEventListener('click', async () => {
         toast(`Disconnected; showing this session: ${result.root}`);
     } catch (error) {
         toast(`Could not disconnect: ${error.message}`);
+    }
+});
+
+els.coordinatedSession.addEventListener('change', async () => {
+    if (!els.coordinatedSession.value) {
+        renderCoordinatedSessions();
+        return;
+    }
+    try {
+        const result = await api('/api/root/coordinated', { sessionId: els.coordinatedSession.value });
+        toast(`Showing ${result.root}`);
+    } catch (error) {
+        renderCoordinatedSessions();
+        toast(`Could not select the session: ${error.message}`);
     }
 });
 

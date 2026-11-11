@@ -24,6 +24,9 @@
     </header>
 
     <form class="new-spec" id="repository-form">
+        <label for="coordinated-session">Coordinated session</label>
+        <select class="search" id="coordinated-session" aria-describedby="coordinated-session-hint"></select>
+        <p id="coordinated-session-hint" role="status"></p>
         <label for="repository-root">Repository directory</label>
         <div class="new-spec-row">
             <input class="search" id="repository-root" type="text" placeholder="/absolute/path/to/repository" required>

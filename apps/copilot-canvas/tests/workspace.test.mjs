@@ -247,6 +247,112 @@ describe('session worktree following', () => {
 });
 
 describe('coordinator-bound source session', () => {
+    it('updates and restores a coordinator list, selects over HTTP, and never guesses a replacement', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-coordinated-list-'));
+        const [chat, first, second, moved] = ['chat', 'first', 'second', 'moved'].map(name => join(base, name));
+        mkdirSync(chat);
+        spec(first, '001-a', 'First');
+        spec(second, '002-b', 'Second');
+        spec(moved, '003-c', 'Moved');
+        globalThis.__copilotWorkspacePath = base;
+        await import('../com.github.copilot/extensions/speckit-companion/extension.mjs');
+        const [canvas] = globalThis.__copilotJoined.at(-1).canvases;
+        const update = canvas.actions.find(action => action.name === 'update_coordinated_sessions').handler;
+        const sessions = [
+            { sessionId: 'one', cwd: first, name: 'First', activity: 'idle' },
+            { sessionId: 'two', cwd: second, name: 'Second', activity: 'busy' },
+        ];
+        let opened;
+        const read = async () => (await fetch(new URL('/api/snapshot', opened.url), { headers: { 'x-speckit-token': new URL(opened.url).searchParams.get('token') } })).json();
+        const select = async id => fetch(new URL('/api/root/coordinated', opened.url), {
+            method: 'POST',
+            headers: { 'x-speckit-token': new URL(opened.url).searchParams.get('token'), 'content-type': 'application/json' },
+            body: JSON.stringify({ sessionId: id }),
+        });
+        const replace = list => update({ instanceId: 'list-board', input: { sessions: list } });
+        try {
+            opened = await canvas.open({ instanceId: 'list-board', input: null, session: { workingDirectory: chat } });
+            replace(sessions);
+            assert.equal((await read()).root, chat, 'multiple options are not selected automatically');
+            assert.equal((await select('one')).status, 200);
+            assert.equal((await read()).boundSession.sessionId, 'one');
+            assert.throws(() => replace([sessions[0], sessions[0]]), /Duplicate/);
+            assert.throws(() => replace([{ ...sessions[0], cwd: 'relative' }]), /absolute/);
+            assert.throws(() => replace([{ ...sessions[0], cwd: join(base, 'missing') }]), /ENOENT/);
+            assert.throws(() => replace([{ ...sessions[0], sessionId: '  ' }]), /requires/);
+            assert.throws(() => replace([{ ...sessions[0], extra: true }]), /requires/);
+            assert.throws(() => replace([{ ...sessions[0], activity: 'archived' }]), /requires/);
+            assert.deepEqual((await read()).coordinatedSessions, sessions);
+            replace([{ ...sessions[0], cwd: moved }, sessions[1]]);
+            assert.equal((await read()).root, moved);
+            assert.equal((await read()).specs[0].title, 'Moved');
+            spec(moved, '004-d', 'Watched');
+            for (let i = 0; i < 50 && (await read()).specs.length !== 2; i++) await delay(50);
+            assert.equal((await read()).specs.length, 2, 'the moved worktree is watched');
+            replace([sessions[1]]);
+            assert.equal((await read()).root, moved);
+            assert.equal((await read()).boundSession.sessionId, 'one', 'a removed source remains selected and visibly unavailable');
+            await canvas.onClose({ instanceId: 'list-board' });
+            opened = await canvas.open({ instanceId: 'list-board', input: null, session: { workingDirectory: chat } });
+            assert.equal((await read()).root, moved);
+            assert.equal((await read()).boundSession.sessionId, 'one');
+            assert.deepEqual((await read()).coordinatedSessions, [sessions[1]]);
+            assert.equal((await select('one')).status, 404);
+            assert.equal((await select('two')).status, 200);
+            assert.equal((await read()).root, second);
+            canvas.actions.find(action => action.name === 'use_session_directory').handler({ instanceId: 'list-board' });
+            assert.equal(rootSelection(base).read(), null);
+            assert.deepEqual(rootSelection(base).sessions(), [sessions[1]]);
+        } finally {
+            await canvas.onClose({ instanceId: 'list-board' });
+            globalThis.__copilotWorkspacePath = undefined;
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('does not replace the list or source when session storage fails', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-coordinated-failure-'));
+        const [first, moved] = ['first', 'moved'].map(name => join(base, name));
+        spec(first, '001-a', 'First');
+        spec(moved, '002-b', 'Moved');
+        const item = { sessionId: 'one', cwd: first, name: 'First' };
+        const board = await createSpecServer({
+            root: first, manual: true, bound: { sessionId: 'one', name: 'First' }, coordinatedSessions: [item],
+            saveCoordinatedSessions: () => { throw new Error('disk full'); },
+        });
+        try {
+            assert.throws(() => board.updateCoordinatedSessions([{ ...item, cwd: moved }]), /disk full/);
+            assert.equal(board.snapshot.root, first);
+            assert.deepEqual(board.snapshot.coordinatedSessions, [item]);
+            assert.equal(board.snapshot.boundSession.name, 'First');
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('rejects a moved selected worktree while a run is in flight without changing the saved list', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-coordinated-busy-'));
+        const [first, moved] = ['first', 'moved'].map(name => join(base, name));
+        spec(first, '001-a', 'First');
+        spec(moved, '002-b', 'Moved');
+        const selection = rootSelection(base);
+        const board = await createSpecServer({ root: first, saveRoot: selection.write, saveCoordinatedSessions: selection.writeSessions, send: async () => true });
+        const item = { sessionId: 'one', cwd: first, name: 'First' };
+        try {
+            board.updateCoordinatedSessions([item]);
+            board.selectCoordinatedSession('one');
+            await board.run('001-a', 'plan');
+            assert.throws(() => board.updateCoordinatedSessions([{ ...item, cwd: moved }]), /current spec step/);
+            assert.equal(board.snapshot.root, first);
+            assert.deepEqual(selection.sessions(), [item]);
+            assert.throws(() => board.selectCoordinatedSession('one'), /current spec step/);
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
     it('binds, rebinds the same session to a new worktree, persists, and rolls back on failure', async () => {
         const base = mkdtempSync(join(tmpdir(), 'canvas-bind-'));
         const [chat, treeA, treeB] = ['chat', 'tree-a', 'tree-b'].map(name => join(base, name));
