@@ -58,12 +58,16 @@ function tokenMatches(given, expected) {
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
  * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
-export async function createSpecServer({ root, workingDirectory = root, manual = false, specDirs, saveRoot, clearRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
+export async function createSpecServer({ root, workingDirectory = root, manual = false, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
     const state = {
         root,
         workingDirectory,
         manual,
-        target: null,
+        children: [],
+        childNote: null,
+        failed: null,
+        discovering: false,
+        pollTimer: null,
         specDirs: specDirs ?? resolveSpecDirs(root),
         token: randomBytes(24).toString('base64url'),
         clients: new Set(),
@@ -105,7 +109,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     }
 
     function snapshot() {
-        return { ...state.snapshot, rootSource: state.manual ? 'selected' : 'session', specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
+        return { ...state.snapshot, rootSource: state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
     }
 
     /** The step's document as it is on disk right now, so a later look can tell whether the run touched it. */
@@ -176,17 +180,35 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         return snapshot();
     }
 
-    /** Go back to following the session's working directory; the saved choice is removed first so a reload agrees. */
+    /** Go back to following the session; the saved choice is removed first so a reload agrees. */
     function followSession() {
         if (!state.manual) return snapshot();
         if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
         if (!clearRoot) throw new Error('Repository selection is unavailable without session storage.');
-        const target = validateRoot(state.target ?? state.workingDirectory);
+        const target = validateRoot(desiredRoot());
         clearRoot();
         state.manual = false;
-        state.target = target;
+        state.failed = null;
         applyRoot(target);
         return snapshot();
+    }
+
+    function lacksSpecs(directory) {
+        try {
+            return buildSnapshot(directory, resolveSpecDirs(directory)).specs.length === 0;
+        } catch {
+            return true;
+        }
+    }
+
+    /**
+     * Where the board belongs without a manual choice: the session's own directory, unless that holds no specs and the session
+     * has exactly one child it owns. With several children nothing is guessed; the board lists them and waits for a pick.
+     */
+    function desiredRoot() {
+        const own = state.workingDirectory;
+        if (state.children.length === 1 && (!own || lacksSpecs(own))) return state.children[0].cwd;
+        return own;
     }
 
     /**
@@ -194,22 +216,51 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
      * but only once no step sent from the board is running or being recorded, so a run never ends up read from another repository.
      */
     function followWorkingDirectory(directory) {
-        const target = validateRoot(directory);
-        state.workingDirectory = target;
-        state.target = target;
+        state.workingDirectory = validateRoot(directory);
+        state.failed = null;
         reconcile();
     }
 
     function reconcile() {
-        if (state.manual || state.closed || !state.target || state.target === state.root || !idle()) return false;
+        const target = desiredRoot();
+        if (state.manual || state.closed || !target || target === state.root || target === state.failed || !idle()) return false;
         try {
-            applyRoot(validateRoot(state.target));
+            applyRoot(validateRoot(target));
         } catch (error) {
-            log(`[speckit-canvas] could not follow the session directory: ${error.message}`);
-            state.target = null;
+            log(`[speckit-canvas] could not follow ${target}: ${error.message}`);
+            state.failed = target;
             return false;
         }
         return true;
+    }
+
+    /** Sessions this one owns, as the runtime reports them; a vanished child drops out and the board falls back to the session. */
+    function setChildren(children, note = null) {
+        const next = children.filter(child => child && typeof child.cwd === 'string' && child.cwd).map(({ sessionId, name, cwd, state: childState }) => ({ sessionId, name, cwd, state: childState }));
+        state.children = next;
+        state.childNote = note;
+        state.failed = null;
+        if (!reconcile()) rescan({ asked: false });
+    }
+
+    async function refreshChildren() {
+        if (!discoverChildren || state.closed || state.discovering) return;
+        state.discovering = true;
+        try {
+            const { children, note } = await discoverChildren();
+            if (!state.closed) setChildren(children, note);
+        } catch (error) {
+            if (!state.closed) setChildren([], error.message);
+        } finally {
+            state.discovering = false;
+        }
+    }
+
+    /** Pick one of the sessions this one owns; only a listed session counts, never a path the caller names. */
+    function selectChild(sessionId) {
+        const child = state.children.find(candidate => candidate.sessionId === sessionId);
+        if (!child) throw Object.assign(new Error(`${sessionId} is not a session owned by this chat.`), { status: 404 });
+        return selectRoot(child.cwd);
     }
 
     function applyRoot(nextRoot, nextDirs = resolveSpecDirs(nextRoot), nextSnapshot = buildSnapshot(nextRoot, nextDirs)) {
@@ -478,7 +529,14 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
                 const next = followSession();
                 return sendJson(res, 200, { root: next.root, count: next.specs.length });
             }
-            if (pathname === '/api/refresh') return sendJson(res, 200, { count: rescan().specs.length });
+            if (pathname === '/api/root/child') {
+                const next = selectChild(body.sessionId);
+                return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
+            if (pathname === '/api/refresh') {
+                await refreshChildren();
+                return sendJson(res, 200, { count: rescan().specs.length });
+            }
             if (pathname === '/api/focus') return sendJson(res, 200, focus(body.spec));
             if (pathname === '/api/run') return sendJson(res, 200, await run(body.spec, body.command));
             if (pathname === '/api/specify') return sendJson(res, 200, await specify(body.description, body.workflow));
@@ -522,6 +580,10 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
 
     rescan();
     startWatching();
+    if (discoverChildren) {
+        refreshChildren();
+        if (childPollMs > 0) state.pollTimer = setInterval(refreshChildren, childPollMs).unref();
+    }
 
     return {
         url: `${state.origin}/?token=${encodeURIComponent(state.token)}`,
@@ -530,6 +592,8 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         get snapshot() { return snapshot(); },
         rescan,
         selectRoot,
+        selectChild,
+        refreshChildren,
         followSession,
         followWorkingDirectory,
         focus,
@@ -543,6 +607,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         },
         async close() {
             state.closed = true;
+            clearInterval(state.pollTimer);
             clearTimeout(state.timer);
             clearTimeout(state.runTimer);
             for (const timer of state.retries) clearTimeout(timer);

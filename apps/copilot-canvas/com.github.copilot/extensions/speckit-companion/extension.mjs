@@ -41,6 +41,24 @@ function followDirectory(entry, directory) {
     }
 }
 
+/**
+ * The sessions this chat created through the runtime's session management, read-only and filtered to this session's own children.
+ * The opt-in policy is the user's: it is never enabled from here, so a chat without it simply has no discovered children.
+ */
+async function discoverChildren() {
+    const list = session.rpc?.management?.list;
+    if (!list) return { children: [], note: 'This runtime does not expose session management.' };
+    try {
+        const { sessions } = await list({});
+        const children = (sessions ?? [])
+            .filter(peer => peer.parentSessionId === session.sessionId)
+            .map(peer => ({ sessionId: peer.sessionId, name: peer.name, cwd: peer.cwd, state: peer.state }));
+        return { children, note: null };
+    } catch (error) {
+        return { children: [], note: `Child sessions are not discoverable: ${error.message}` };
+    }
+}
+
 const session = await joinSession({
     systemMessage: { mode: 'append', content: SYSTEM_RULE },
     canvases: [
@@ -59,7 +77,7 @@ const session = await joinSession({
             actions: [
                 {
                     name: 'select_root',
-                    description: 'Select and save the absolute repository directory to scan. Use when the board is open in a Project chat rather than a repository checkout.',
+                    description: 'Select and save the absolute repository directory to scan. Use when the board is open in a Project chat rather than a repository checkout: pass the worktree path of the coordinated session that owns the repository (from the session\'s own details), never a guessed or most-recent one.',
                     inputSchema: {
                         type: 'object',
                         additionalProperties: false,
@@ -69,6 +87,24 @@ const session = await joinSession({
                     handler: (ctx) => {
                         try {
                             const snapshot = serverFor(ctx).selectRoot(ctx.input.root);
+                            return { root: snapshot.root, count: snapshot.specs.length };
+                        } catch (error) {
+                            throw specError(error);
+                        }
+                    },
+                },
+                {
+                    name: 'select_child',
+                    description: 'Select one of the sessions this chat created (listed in the board) and save the choice. Use when the board lists several child sessions and the user says which one to show. Specs are read from that child\'s worktree; commands still run in this chat with that repository named.',
+                    inputSchema: {
+                        type: 'object',
+                        additionalProperties: false,
+                        properties: { sessionId: { type: 'string', minLength: 1 } },
+                        required: ['sessionId'],
+                    },
+                    handler: (ctx) => {
+                        try {
+                            const snapshot = serverFor(ctx).selectChild(ctx.input.sessionId);
                             return { root: snapshot.root, count: snapshot.specs.length };
                         } catch (error) {
                             throw specError(error);
@@ -174,6 +210,8 @@ const session = await joinSession({
                         manual: Boolean(savedRoot || ctx.input?.root),
                         saveRoot: (root) => selection.write(root),
                         clearRoot: () => selection.clear(),
+                        discoverChildren,
+                        childPollMs: 15000,
                         send: async (prompt) => {
                             await session.send({ prompt });
                             return true;
@@ -214,5 +252,8 @@ session.on?.('user.message', (event) => {
     for (const entry of servers.values()) entry.began(event?.data?.content);
 });
 session.on?.('session.idle', () => {
-    for (const entry of servers.values()) entry.settle();
+    for (const entry of servers.values()) {
+        entry.settle();
+        entry.refreshChildren();
+    }
 });

@@ -58,6 +58,9 @@ const els = {
     repositoryRoot: $('repository-root'),
     repositoryWarning: $('repository-warning'),
     repositoryFollow: $('repository-follow'),
+    childrenBox: $('repository-children'),
+    childrenHint: $('repository-children-hint'),
+    childrenList: $('repository-children-list'),
     live: $('live'),
     liveLabel: $('live-label'),
     search: $('search'),
@@ -294,6 +297,30 @@ function visibleSpecs() {
     });
 }
 
+function renderChildren() {
+    const children = state.snapshot.children ?? [];
+    const note = state.snapshot.childNote;
+    els.childrenBox.hidden = children.length === 0 && !note;
+    els.childrenHint.textContent = children.length > 1 && state.snapshot.rootSource !== 'selected'
+        ? 'This chat owns several sessions. Choose the one whose specs to show.'
+        : note ?? '';
+    els.childrenList.replaceChildren(...children.map(child => el('li', {},
+        el('button', {
+            class: 'btn btn-quiet',
+            type: 'button',
+            title: child.cwd,
+            'aria-pressed': String(child.cwd === state.snapshot.root),
+            onclick: async () => {
+                try {
+                    const result = await api('/api/root/child', { sessionId: child.sessionId });
+                    toast(`Showing ${result.root}`);
+                } catch (error) {
+                    toast(`Could not select the session: ${error.message}`);
+                }
+            },
+        }, child.name || child.sessionId))));
+}
+
 function renderBoard() {
     const specs = state.snapshot?.specs ?? [];
     const active = specs.filter(s => !s.done).length;
@@ -306,6 +333,7 @@ function renderBoard() {
     els.repositoryWarning.hidden = !state.snapshot.missingSpecDirectories;
     els.repositoryFollow.hidden = state.snapshot.rootSource !== 'selected';
     els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
+    renderChildren();
 
     const shown = visibleSpecs();
     els.listEmpty.hidden = shown.length > 0;

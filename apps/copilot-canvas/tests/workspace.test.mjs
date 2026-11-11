@@ -245,3 +245,159 @@ describe('session worktree following', () => {
         }
     });
 });
+
+describe('parent chat following owned sessions', () => {
+    const waitFor = async (check) => {
+        for (let i = 0; i < 60 && !check(); i++) await delay(50);
+        assert.ok(check(), 'condition was not reached');
+    };
+    const child = (sessionId, cwd) => ({ sessionId, name: sessionId, cwd, state: 'idle' });
+
+    it('shows the only owned session\'s worktree, follows its changes and falls back when it goes away', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-'));
+        const [chat, treeA, treeB] = ['chat', 'tree-a', 'tree-b'].map(name => join(base, name));
+        mkdirSync(chat);
+        spec(treeA, '001-a', 'A');
+        spec(treeB, '002-b', 'B');
+        let owned = [child('c1', treeA)];
+        const board = await createSpecServer({ root: chat, discoverChildren: async () => ({ children: owned, note: null }) });
+        try {
+            await waitFor(() => board.snapshot.root === treeA);
+            assert.equal(board.snapshot.rootSource, 'child');
+            assert.equal(board.snapshot.specs[0].title, 'A');
+            owned = [child('c1', treeB)];
+            await board.refreshChildren();
+            assert.equal(board.snapshot.root, treeB, 'a new worktree for the same session is followed');
+            owned = [];
+            await board.refreshChildren();
+            assert.equal(board.snapshot.root, chat, 'an archived session drops out');
+            assert.equal(board.snapshot.rootSource, 'session');
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('never guesses between several sessions and only accepts a listed one', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-many-'));
+        const [chat, treeA, treeB] = ['chat', 'tree-a', 'tree-b'].map(name => join(base, name));
+        mkdirSync(chat);
+        spec(treeA, '001-a', 'A');
+        spec(treeB, '002-b', 'B');
+        const saved = [];
+        const board = await createSpecServer({
+            root: chat,
+            saveRoot: root => saved.push(root),
+            clearRoot: () => {},
+            discoverChildren: async () => ({ children: [child('c1', treeA), child('c2', treeB)], note: null }),
+        });
+        try {
+            await waitFor(() => board.snapshot.children.length === 2);
+            assert.equal(board.snapshot.root, chat);
+            assert.throws(() => board.selectChild('someone-elses'), /not a session owned/);
+            assert.throws(() => board.selectChild(undefined), /not a session owned/);
+            board.selectChild('c2');
+            assert.equal(board.snapshot.root, treeB);
+            assert.equal(board.snapshot.rootSource, 'selected');
+            assert.deepEqual(saved, [treeB]);
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('keeps a chat that holds specs, honours a manual choice and defers during a run', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-keep-'));
+        const [chat, tree, empty] = ['chat', 'tree', 'empty'].map(name => join(base, name));
+        spec(chat, '001-chat', 'Chat');
+        spec(tree, '002-tree', 'Tree');
+        mkdirSync(empty);
+        const discover = async () => ({ children: [child('c1', tree)], note: null });
+        const withSpecs = await createSpecServer({ root: chat, discoverChildren: discover });
+        const manual = await createSpecServer({ root: empty, manual: true, discoverChildren: discover });
+        try {
+            await delay(150);
+            assert.equal(withSpecs.snapshot.root, chat, 'a chat that holds specs is not replaced');
+            assert.equal(manual.snapshot.root, empty, 'an explicit choice outranks discovery');
+        } finally {
+            await withSpecs.close();
+            await manual.close();
+        }
+        const owned = [];
+        const board = await createSpecServer({ root: chat, send: async () => true, discoverChildren: async () => ({ children: owned, note: null }) });
+        try {
+            const { prompt } = await board.run('001-chat', 'plan');
+            owned.push(child('c1', tree));
+            board.followWorkingDirectory(empty);
+            await board.refreshChildren();
+            assert.equal(board.snapshot.root, chat, 'a step in flight keeps its repository');
+            board.began(prompt);
+            board.settle();
+            assert.equal(board.snapshot.root, tree, 'the move happens once the step has settled');
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('surfaces a runtime that cannot list sessions and names the repository on commands', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-note-'));
+        const [chat, tree] = ['chat', 'tree'].map(name => join(base, name));
+        mkdirSync(chat);
+        spec(tree, '001-t', 'T');
+        let unavailable = true;
+        const board = await createSpecServer({
+            root: chat,
+            send: async () => true,
+            discoverChildren: async () => {
+                if (unavailable) throw new Error('management is disabled');
+                return { children: [child('c1', tree)], note: null };
+            },
+        });
+        try {
+            await waitFor(() => board.snapshot.childNote === 'management is disabled');
+            assert.equal(board.snapshot.root, chat);
+            unavailable = false;
+            await board.refreshChildren();
+            assert.equal(board.snapshot.root, tree);
+            assert.equal(board.snapshot.childNote, null);
+            const { prompt } = await board.run('001-t', 'plan');
+            assert.ok(prompt.includes(`Repository directory: ${JSON.stringify(tree)}`), 'the command names the owned worktree');
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('lists only sessions whose parent is this session through the runtime', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-rpc-'));
+        const [chat, mine, other] = ['chat', 'mine', 'other'].map(name => join(base, name));
+        mkdirSync(chat);
+        spec(mine, '001-m', 'Mine');
+        spec(other, '002-o', 'Other');
+        const calls = [];
+        globalThis.__copilotWorkspacePath = base;
+        globalThis.__copilotManagementList = async params => {
+            calls.push(params);
+            return { sessions: [
+                { sessionId: 'x1', name: 'x1', cwd: other, state: 'busy', parentSessionId: 'someone-else' },
+                { sessionId: 'x2', name: 'x2', cwd: other, state: 'idle' },
+                { sessionId: 'm1', name: 'm1', cwd: mine, state: 'idle', parentSessionId: 'parent-session' },
+            ] };
+        };
+        await import('../com.github.copilot/extensions/speckit-companion/extension.mjs');
+        const [canvas] = globalThis.__copilotJoined.at(-1).canvases;
+        const action = name => canvas.actions.find(candidate => candidate.name === name).handler;
+        try {
+            await canvas.open({ instanceId: 'owned-a', input: null, session: { workingDirectory: chat } });
+            await waitFor(() => action('list_specs')({ instanceId: 'owned-a', input: {} }).specs[0]?.title === 'Mine');
+            assert.deepEqual(calls[0], {});
+            assert.throws(() => action('select_child')({ instanceId: 'owned-a', input: { sessionId: 'x2' } }), /not a session owned/);
+        } finally {
+            await canvas.onClose({ instanceId: 'owned-a' });
+            globalThis.__copilotManagementList = undefined;
+            globalThis.__copilotWorkspacePath = undefined;
+            rmSync(base, { recursive: true });
+        }
+    });
+});
