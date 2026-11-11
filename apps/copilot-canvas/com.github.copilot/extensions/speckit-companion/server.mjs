@@ -58,9 +58,12 @@ function tokenMatches(given, expected) {
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
  * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
-export async function createSpecServer({ root, workingDirectory = root, specDirs, saveRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
+export async function createSpecServer({ root, workingDirectory = root, manual = false, specDirs, saveRoot, clearRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
     const state = {
         root,
+        workingDirectory,
+        manual,
+        target: null,
         specDirs: specDirs ?? resolveSpecDirs(root),
         token: randomBytes(24).toString('base64url'),
         clients: new Set(),
@@ -102,7 +105,7 @@ export async function createSpecServer({ root, workingDirectory = root, specDirs
     }
 
     function snapshot() {
-        return { ...state.snapshot, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
+        return { ...state.snapshot, rootSource: state.manual ? 'selected' : 'session', specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
     }
 
     /** The step's document as it is on disk right now, so a later look can tell whether the run touched it. */
@@ -151,6 +154,7 @@ export async function createSpecServer({ root, workingDirectory = root, specDirs
     function rescan({ asked = true } = {}) {
         state.snapshot = buildSnapshot(state.root, state.specDirs);
         reviewRuns();
+        if (reconcile()) return state.snapshot;
         const next = snapshot();
         const key = JSON.stringify({ ...next, generatedAt: null });
         if (asked || key !== state.sentKey) emit('snapshot', next);
@@ -158,15 +162,57 @@ export async function createSpecServer({ root, workingDirectory = root, specDirs
         return state.snapshot;
     }
 
+    const idle = () => !state.runs.size && !state.pendingSpecify && !state.retries.size;
+
     function selectRoot(root) {
         const nextRoot = validateRoot(root);
-        if (state.runs.size || state.pendingSpecify || state.retries.size) {
-            throw new Error('Wait for the current spec step to finish before changing repositories.');
-        }
+        if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
         const nextDirs = resolveSpecDirs(nextRoot);
         const nextSnapshot = buildSnapshot(nextRoot, nextDirs);
         if (!saveRoot) throw new Error('Repository selection is unavailable without session storage.');
         saveRoot(nextRoot);
+        state.manual = true;
+        applyRoot(nextRoot, nextDirs, nextSnapshot);
+        return snapshot();
+    }
+
+    /** Go back to following the session's working directory; the saved choice is removed first so a reload agrees. */
+    function followSession() {
+        if (!state.manual) return snapshot();
+        if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+        if (!clearRoot) throw new Error('Repository selection is unavailable without session storage.');
+        const target = validateRoot(state.target ?? state.workingDirectory);
+        clearRoot();
+        state.manual = false;
+        state.target = target;
+        applyRoot(target);
+        return snapshot();
+    }
+
+    /**
+     * The session's working directory changed (the runtime reports it per session). Without a manual choice the board follows it,
+     * but only once no step sent from the board is running or being recorded, so a run never ends up read from another repository.
+     */
+    function followWorkingDirectory(directory) {
+        const target = validateRoot(directory);
+        state.workingDirectory = target;
+        state.target = target;
+        reconcile();
+    }
+
+    function reconcile() {
+        if (state.manual || state.closed || !state.target || state.target === state.root || !idle()) return false;
+        try {
+            applyRoot(validateRoot(state.target));
+        } catch (error) {
+            log(`[speckit-canvas] could not follow the session directory: ${error.message}`);
+            state.target = null;
+            return false;
+        }
+        return true;
+    }
+
+    function applyRoot(nextRoot, nextDirs = resolveSpecDirs(nextRoot), nextSnapshot = buildSnapshot(nextRoot, nextDirs)) {
         clearTimeout(state.timer);
         clearTimeout(state.runTimer);
         for (const watcher of state.watchers) watcher.close();
@@ -216,7 +262,10 @@ export async function createSpecServer({ root, workingDirectory = root, specDirs
         state.busy = false;
         // A host that never reports a turn starting gives no way to pair, so there every run settles.
         const over = run => run.started || !state.sawTurnStart;
-        if (![...state.runs.values(), state.pendingSpecify].some(run => run && over(run))) return;
+        if (![...state.runs.values(), state.pendingSpecify].some(run => run && over(run))) {
+            reconcile();
+            return;
+        }
         state.snapshot = buildSnapshot(state.root, state.specDirs);
         reviewRuns();
         for (const [id, run] of state.runs) {
@@ -317,7 +366,7 @@ export async function createSpecServer({ root, workingDirectory = root, specDirs
     }
 
     async function deliver(spec, command, prompt, instructionsFile = null) {
-        if (state.root !== workingDirectory) {
+        if (state.root !== state.workingDirectory) {
             prompt += `\n\nRepository directory: ${JSON.stringify(state.root)}. Run this request in that repository; resolve all relative spec, command and instruction-file paths from that directory, not the chat working directory.`;
             if (instructionsFile) instructionsFile = resolve(state.root, instructionsFile);
         }
@@ -425,6 +474,10 @@ export async function createSpecServer({ root, workingDirectory = root, specDirs
                 const next = selectRoot(body.root);
                 return sendJson(res, 200, { root: next.root, count: next.specs.length });
             }
+            if (pathname === '/api/root/follow') {
+                const next = followSession();
+                return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
             if (pathname === '/api/refresh') return sendJson(res, 200, { count: rescan().specs.length });
             if (pathname === '/api/focus') return sendJson(res, 200, focus(body.spec));
             if (pathname === '/api/run') return sendJson(res, 200, await run(body.spec, body.command));
@@ -477,6 +530,8 @@ export async function createSpecServer({ root, workingDirectory = root, specDirs
         get snapshot() { return snapshot(); },
         rescan,
         selectRoot,
+        followSession,
+        followWorkingDirectory,
         focus,
         run,
         specify,

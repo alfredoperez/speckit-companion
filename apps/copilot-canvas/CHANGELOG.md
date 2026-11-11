@@ -7,6 +7,7 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 ### Fixed
 
 - **Project chats can select their repository.** The board remembers the checkout, watches its specs, and warns when the scanned directory contains none. <!-- area: copilot-app -->
+- **The board follows each session's worktree.** Without a saved choice, each session's board moves to its own working directory when the runtime reports a change. <!-- area: copilot-app -->
 
 ## [0.2.1] - 2026-11-08
 

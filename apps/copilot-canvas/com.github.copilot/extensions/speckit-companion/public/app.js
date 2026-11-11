@@ -57,6 +57,7 @@ const els = {
     repositoryForm: $('repository-form'),
     repositoryRoot: $('repository-root'),
     repositoryWarning: $('repository-warning'),
+    repositoryFollow: $('repository-follow'),
     live: $('live'),
     liveLabel: $('live-label'),
     search: $('search'),
@@ -303,6 +304,7 @@ function renderBoard() {
     els.repoLine.title = state.snapshot.root;
     if (document.activeElement !== els.repositoryRoot) els.repositoryRoot.value = state.snapshot.root;
     els.repositoryWarning.hidden = !state.snapshot.missingSpecDirectories;
+    els.repositoryFollow.hidden = state.snapshot.rootSource !== 'selected';
     els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
 
     const shown = visibleSpecs();
@@ -680,6 +682,15 @@ els.repositoryForm.addEventListener('submit', async (event) => {
         toast(`Scanning ${result.root}: ${result.count} specs`);
     } catch (error) {
         toast(`Could not select repository: ${error.message}`);
+    }
+});
+
+els.repositoryFollow.addEventListener('click', async () => {
+    try {
+        const result = await api('/api/root/follow', {});
+        toast(`Following the session: ${result.root}`);
+    } catch (error) {
+        toast(`Could not follow the session: ${error.message}`);
     }
 });
 

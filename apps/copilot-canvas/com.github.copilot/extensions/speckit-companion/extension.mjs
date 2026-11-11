@@ -33,6 +33,14 @@ const specInput = {
     required: ['spec'],
 };
 
+function followDirectory(entry, directory) {
+    try {
+        entry.followWorkingDirectory(directory);
+    } catch (error) {
+        session?.log?.(`[speckit-canvas] cannot follow ${directory}: ${error.message}`);
+    }
+}
+
 const session = await joinSession({
     systemMessage: { mode: 'append', content: SYSTEM_RULE },
     canvases: [
@@ -61,6 +69,18 @@ const session = await joinSession({
                     handler: (ctx) => {
                         try {
                             const snapshot = serverFor(ctx).selectRoot(ctx.input.root);
+                            return { root: snapshot.root, count: snapshot.specs.length };
+                        } catch (error) {
+                            throw specError(error);
+                        }
+                    },
+                },
+                {
+                    name: 'use_session_directory',
+                    description: 'Drop the saved repository selection and follow this session\'s working directory again. The board then moves with the session\'s worktree automatically.',
+                    handler: (ctx) => {
+                        try {
+                            const snapshot = serverFor(ctx).followSession();
                             return { root: snapshot.root, count: snapshot.specs.length };
                         } catch (error) {
                             throw specError(error);
@@ -134,17 +154,26 @@ const session = await joinSession({
             ],
             open: async (ctx) => {
                 const selection = rootSelection(session.workspacePath);
-                const savedRoot = selection.read();
-                const root = savedRoot ?? ctx.input?.root ?? ctx.session?.workingDirectory;
-                if (!root) throw new CanvasError('workspace_unavailable', 'The session has no working directory.');
+                let savedRoot = null;
+                try {
+                    savedRoot = selection.read();
+                } catch (error) {
+                    // A saved directory that is gone or unreadable no longer applies; the board follows the session until a new one is chosen.
+                    session.log?.(`[speckit-canvas] ignoring the saved repository selection: ${error.message}`);
+                }
+                const current = ctx.session?.workingDirectory;
                 let entry = servers.get(ctx.instanceId);
                 if (!entry) {
+                    const root = savedRoot ?? ctx.input?.root ?? current;
+                    if (!root) throw new CanvasError('workspace_unavailable', 'The session has no working directory.');
                     const resolvedRoot = validateRoot(root);
                     if (!savedRoot && ctx.input?.root) selection.write(resolvedRoot);
                     entry = await createSpecServer({
                         root: resolvedRoot,
-                        workingDirectory: ctx.session?.workingDirectory,
+                        workingDirectory: current,
+                        manual: Boolean(savedRoot || ctx.input?.root),
                         saveRoot: (root) => selection.write(root),
+                        clearRoot: () => selection.clear(),
                         send: async (prompt) => {
                             await session.send({ prompt });
                             return true;
@@ -153,6 +182,7 @@ const session = await joinSession({
                     });
                     servers.set(ctx.instanceId, entry);
                 }
+                if (current) followDirectory(entry, current);
                 if (ctx.input?.spec) {
                     try {
                         entry.focus(ctx.input.spec);
@@ -172,6 +202,13 @@ const session = await joinSession({
     ],
 });
 
+// The runtime reports this session's own working directory changes (for example into a new worktree); a preliminary event precedes the settled one.
+session.on?.('session.context_changed', (event) => {
+    const data = event?.data;
+    const directory = data?.gitRoot ?? data?.cwd;
+    if (!directory || data.pendingGitContext) return;
+    for (const entry of servers.values()) followDirectory(entry, directory);
+});
 // A step the board sent starts when the session takes its message into a turn, and stops when that turn ends.
 session.on?.('user.message', (event) => {
     for (const entry of servers.values()) entry.began(event?.data?.content);

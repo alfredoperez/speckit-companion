@@ -131,3 +131,117 @@ describe('repository root selection', () => {
         }
     });
 });
+
+describe('session worktree following', () => {
+    const waitFor = async (check) => {
+        for (let i = 0; i < 60 && !check(); i++) await delay(50);
+        assert.ok(check(), 'condition was not reached');
+    };
+
+    it('follows its own session without touching a sibling board, and rebinds watchers', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-follow-'));
+        const [parent, childA, childB] = ['parent', 'child-a', 'child-b'].map(name => join(base, name));
+        spec(parent, '001-parent', 'Parent');
+        spec(childA, '002-a', 'A');
+        spec(childB, '003-b', 'B');
+        const one = await createSpecServer({ root: parent });
+        const two = await createSpecServer({ root: parent });
+        try {
+            one.followWorkingDirectory(childA);
+            assert.equal(one.snapshot.root, childA);
+            assert.equal(one.snapshot.rootSource, 'session');
+            assert.equal(one.snapshot.specs[0].title, 'A');
+            assert.equal(two.snapshot.root, parent, 'a sibling session keeps its own directory');
+            two.followWorkingDirectory(childB);
+            assert.equal(one.snapshot.root, childA);
+            assert.equal(two.snapshot.specs[0].title, 'B');
+            spec(childA, '004-new', 'New');
+            await waitFor(() => one.snapshot.specs.length === 2);
+            spec(parent, '005-old', 'Old repository');
+            await delay(400);
+            assert.equal(one.snapshot.specs.length, 2, 'the previous directory is no longer watched');
+            assert.ok(!(await one.run('002-a', 'ask')).prompt.includes('Repository directory'), 'the board root is the chat directory');
+        } finally {
+            await one.close();
+            await two.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('lets an explicit selection win and returns to the session on request', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-follow-manual-'));
+        const [chat, picked, moved] = ['chat', 'picked', 'moved'].map(name => join(base, name));
+        [chat, picked, moved].forEach((root, i) => spec(root, `00${i}-x`, root));
+        let cleared = 0;
+        const board = await createSpecServer({ root: chat, saveRoot: () => {}, clearRoot: () => { cleared++; } });
+        try {
+            board.selectRoot(picked);
+            board.followWorkingDirectory(moved);
+            assert.equal(board.snapshot.root, picked);
+            assert.equal(board.snapshot.rootSource, 'selected');
+            board.followSession();
+            assert.equal(cleared, 1);
+            assert.equal(board.snapshot.root, moved);
+            assert.equal(board.snapshot.rootSource, 'session');
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('waits for a running step before moving to the new directory', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-follow-run-'));
+        const [first, second] = ['first', 'second'].map(name => join(base, name));
+        spec(first, '001-one', 'One');
+        spec(second, '002-two', 'Two');
+        const board = await createSpecServer({ root: first, send: async () => true });
+        try {
+            const { prompt } = await board.run('001-one', 'plan');
+            board.followWorkingDirectory(second);
+            assert.equal(board.snapshot.root, first, 'the run keeps reading its own repository');
+            board.began(prompt);
+            board.settle();
+            assert.equal(board.snapshot.root, second);
+            assert.equal(board.snapshot.specs[0].title, 'Two');
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('follows runtime context changes per session, ignores preliminary ones and stale saved roots', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-follow-extension-'));
+        const [chat, tree, gone] = ['chat', 'tree', 'gone'].map(name => join(base, name));
+        [chat, tree].forEach((root, i) => spec(root, `00${i}-x`, root));
+        mkdirSync(join(tree, 'src'));
+        globalThis.__copilotWorkspacePath = base;
+        await import('../com.github.copilot/extensions/speckit-companion/extension.mjs');
+        const [canvas] = globalThis.__copilotJoined[0].canvases;
+        const action = name => canvas.actions.find(candidate => candidate.name === name).handler;
+        const changed = data => globalThis.__copilotHandlers['session.context_changed']({ data });
+        const root = id => action('list_specs')({ instanceId: id, input: {} }).specs[0].title;
+        try {
+            mkdirSync(join(base, 'files', 'speckit-companion'), { recursive: true });
+            writeFileSync(join(base, 'files', 'speckit-companion', 'board.json'), JSON.stringify({ root: gone }));
+            await canvas.open({ instanceId: 'follow-a', input: null, session: { workingDirectory: chat } });
+            assert.ok(root('follow-a').includes('chat'), 'a stale saved directory falls back to the session');
+            changed({ cwd: join(tree, 'src'), gitRoot: tree, pendingGitContext: true });
+            assert.ok(root('follow-a').includes('chat'), 'the preliminary event is ignored');
+            changed({ cwd: join(tree, 'src'), gitRoot: tree });
+            assert.ok(root('follow-a').includes('tree'));
+            changed({ cwd: chat });
+            await canvas.open({ instanceId: 'follow-a', input: null, session: { workingDirectory: tree } });
+            assert.ok(root('follow-a').includes('tree'), 'reopening catches up with the session directory');
+            action('select_root')({ instanceId: 'follow-a', input: { root: chat } });
+            changed({ cwd: tree });
+            assert.ok(root('follow-a').includes('chat'), 'an explicit selection is not overridden');
+            action('use_session_directory')({ instanceId: 'follow-a', input: {} });
+            assert.ok(root('follow-a').includes('tree'));
+            assert.equal(rootSelection(base).read(), null);
+        } finally {
+            await canvas.onClose({ instanceId: 'follow-a' });
+            globalThis.__copilotWorkspacePath = undefined;
+            rmSync(base, { recursive: true });
+        }
+    });
+});

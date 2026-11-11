@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 
 export function validateRoot(root) {
@@ -23,6 +23,10 @@ export function rootSelection(workspacePath) {
                 throw error;
             }
             return validateRoot(JSON.parse(text).root);
+        },
+        clear() {
+            if (!file) return;
+            rmSync(file, { force: true });
         },
         write(root) {
             if (!file) throw new Error('Session storage is unavailable; the repository selection cannot be saved.');

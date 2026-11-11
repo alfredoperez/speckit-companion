@@ -37,10 +37,11 @@ You can also drive the board from the chat. Ask "which specs are still open?" or
 
 ## Choose the repository
 
-The board starts in the session's working directory. In a Project chat, that directory can belong to the chat rather than the repository, so the board can show no specs even when the selected repository has them.
+By default the board follows its own session. It starts in the session's working directory and moves when the runtime reports that directory changed, for example when the session enters a new worktree. Each chat and each sub-session runs its own board, so parallel sessions in different worktrees never affect each other. A board cannot watch a different session from outside it: the app gives a canvas only its own session's context, so open the board in the sub-session to follow that session's worktree.
 
-Enter the absolute checkout path in **Repository directory** and press **Use repository**. The board saves that choice in the session's artifact storage, restores it after reloads and in new panels, and watches the selected repository for changes. A missing spec directory shows a warning with the scanned path instead of silently appearing as an empty project.
+The move waits until no step sent from the board is running or being recorded, so a run is never read from another repository. A reopened panel catches up with the session's current directory.
 
+An explicit choice overrides that. Enter the absolute checkout path in **Repository directory** and press **Use repository**, and the board saves it in the session's artifact storage, restores it after reloads and in new panels, and stops following the session. Press **Follow session** (or ask the agent for `use_session_directory`) to drop the saved choice. A saved directory that no longer exists is ignored and the board follows the session instead. A missing spec directory shows a warning with the scanned path.
 Ask the agent to select a repository to use the board's `select_root` action. For an initial selection, the agent can open the canvas with `{ "root": "/absolute/path/to/repository" }`; a saved selection takes precedence so an older open input cannot undo a later choice after a reload.
 
 Changing repositories clears the selected spec and is blocked while a step sent from the board is running. Commands sent from a board outside the chat's working directory name the selected repository so relative paths resolve there.
