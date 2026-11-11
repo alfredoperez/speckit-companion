@@ -332,6 +332,8 @@ function renderBoard() {
     if (document.activeElement !== els.repositoryRoot) els.repositoryRoot.value = state.snapshot.root;
     els.repositoryWarning.hidden = !state.snapshot.missingSpecDirectories;
     els.repositoryFollow.hidden = !['selected', 'bound'].includes(state.snapshot.rootSource);
+    els.repositoryFollow.textContent = state.snapshot.boundSession ? `Disconnect from ${state.snapshot.boundSession.name}` : 'Follow session';
+    els.repositoryFollow.title = state.snapshot.boundSession ? 'Stop showing the bound session and go back to this chat\'s own directory' : 'Drop the chosen directory and follow this session';
     els.repoLine.textContent += state.snapshot.boundSession ? ` · from ${state.snapshot.boundSession.name}` : '';
     els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
     renderChildren();
@@ -717,9 +719,9 @@ els.repositoryForm.addEventListener('submit', async (event) => {
 els.repositoryFollow.addEventListener('click', async () => {
     try {
         const result = await api('/api/root/follow', {});
-        toast(`Following the session: ${result.root}`);
+        toast(`Disconnected; showing this session: ${result.root}`);
     } catch (error) {
-        toast(`Could not follow the session: ${error.message}`);
+        toast(`Could not disconnect: ${error.message}`);
     }
 });
 

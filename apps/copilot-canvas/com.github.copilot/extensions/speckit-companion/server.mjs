@@ -175,9 +175,10 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         const nextDirs = resolveSpecDirs(nextRoot);
         const nextSnapshot = buildSnapshot(nextRoot, nextDirs);
         if (!saveRoot) throw new Error('Repository selection is unavailable without session storage.');
-        saveRoot(nextRoot);
+        const keepSource = state.bound && nextRoot === state.root ? state.bound : null;
+        saveRoot(nextRoot, keepSource ?? undefined);
         state.manual = true;
-        state.bound = null;
+        state.bound = keepSource;
         applyRoot(nextRoot, nextDirs, nextSnapshot);
         return snapshot();
     }

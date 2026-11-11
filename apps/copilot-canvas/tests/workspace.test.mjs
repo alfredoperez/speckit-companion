@@ -287,6 +287,42 @@ describe('coordinator-bound source session', () => {
         }
     });
 
+    it('keeps the binding through the board\'s ordinary buttons and drops it only on an explicit disconnect', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-bind-buttons-'));
+        const [chat, tree, other] = ['chat', 'tree', 'other'].map(name => join(base, name));
+        mkdirSync(chat);
+        spec(tree, '001-t', 'T');
+        spec(other, '002-o', 'O');
+        const board = await createSpecServer({ root: chat, saveRoot: () => {}, clearRoot: () => {}, send: async () => true });
+        const post = (path, body) => fetch(`http://127.0.0.1:${board.port}${path}`, {
+            method: 'POST',
+            headers: { 'x-speckit-token': board.token, 'content-type': 'application/json', host: `127.0.0.1:${board.port}` },
+            body: JSON.stringify(body),
+        }).then(async res => ({ status: res.status, body: await res.json() }));
+        try {
+            board.bindSession({ sessionId: 'c1', cwd: tree, name: 'agents' });
+            assert.equal((await post('/api/refresh', {})).status, 200);
+            assert.equal((await post('/api/focus', { spec: '001-t' })).status, 200);
+            assert.equal((await post('/api/root', { root: tree })).status, 200, 'Use repository on the shown directory');
+            assert.equal((await post('/api/root/child', { sessionId: 'nope' })).status, 404);
+            assert.equal(board.snapshot.rootSource, 'bound');
+            assert.deepEqual(board.snapshot.boundSession, { sessionId: 'c1', name: 'agents' });
+            assert.equal(board.snapshot.root, tree);
+            await post('/api/root', { root: other });
+            assert.equal(board.snapshot.rootSource, 'selected', 'choosing another directory is an explicit switch');
+            board.bindSession({ sessionId: 'c1', cwd: tree });
+            assert.equal((await post('/api/root/follow', {})).status, 200);
+            assert.equal(board.snapshot.rootSource, 'session');
+            assert.equal(board.snapshot.boundSession, null);
+            board.bindSession({ sessionId: 'c1', cwd: tree });
+            assert.equal((await post('/api/run', { spec: '001-t', command: 'plan' })).status, 200);
+            assert.equal(board.snapshot.rootSource, 'bound', 'a step keeps the binding');
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
     it('refuses a bind while a step is running and keeps commands in the owning chat', async () => {
         const base = mkdtempSync(join(tmpdir(), 'canvas-bind-run-'));
         const [chat, tree] = ['chat', 'tree'].map(name => join(base, name));
