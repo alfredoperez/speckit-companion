@@ -1,0 +1,942 @@
+{
+  "workflow": "companion",
+  "specName": "Retire living specs",
+  "branch": "feat/934-retire-living-specs",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T18:01:31.533Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:01:54.600Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:02:53.293Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T18:02:53.851Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T18:02:59.307Z"
+    },
+    {
+      "step": "plan",
+      "substep": "plan-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:06:24.027Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:06:24.326Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T18:06:32.769Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:07:13.127Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:07:13.628Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T18:07:19.942Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:07:25.772Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:07:39.604Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:08:44.239Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:08:44.240Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:10:27.989Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:10:28.096Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:10:28.221Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:10:28.322Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:12:04.573Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:12:45.055Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:13:12.269Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T025",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:13:42.149Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:18:29.449Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:18:29.559Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:18:29.663Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:18:29.765Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:18:29.866Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:18:29.965Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:18:30.065Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:18:30.166Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:22:23.409Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:22:23.512Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:22:23.644Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:22:23.773Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:22:23.882Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:22:23.998Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T026",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:26:30.185Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:26:30.209Z"
+    },
+    {
+      "step": "implement",
+      "substep": "execute",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:30:12.635Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T18:30:38.985Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T027",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:32:04.501Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T18:35:51.127Z"
+    }
+  ],
+  "unattended": true,
+  "request": "Spec number 669 (folder specs/669-retire-living-specs). Work ONLY in /Users/alfredoperez/dev/GitHub/speckit-companion.worktrees/feat-934-retire-living-specs (branch feat/934-retire-living-specs, already checked out — skip the branch hook). Ticket GitHub #934: retire living specs with a written loss list, plus w28 persistence statement (flow-forward with lineage links) on the site steps page and a doctor note for a constitution naming flow-back/living specs. Remove the seven speckit.companion.living-* commands, their scripts, reference parts, nodes (load-living-specs, draft-spec-delta), the brownfield preset's living nodes, extension.yml tags living-specs/drift, package-manifest/.vscodeignore/build entries, docs, site page apps/website/src/content/docs/docs/results/living-specs.mdx (redirect or retired note if linked), and the whole VS Code Living Specs surface (view, status bar, commands, builder panel, explorer). Keep: old .spec-context.json livingSpecs block loads quietly and the viewer keeps a read-only card for old records; a leftover livingSpecs: in .specify/companion.yml is ignored quietly and doctor prints one info line \"livingSpecs is retired; safe to delete\"; any removed VS Code setting goes through apps/vscode/src/core/settingsMigration.ts; never delete users' capabilities/ files; never rename/delete README-referenced screenshots. Loss list (registry, drift, coverage, fold-back/sync, adoption, move, show, validate, sidebar view, status bar, record fields) goes in the PR body and is linked from the speckit-extension CHANGELOG [Unreleased] Removed; root CHANGELOG gets a Removed line for the sidebar. Acceptance: grep -r living- apps/speckit-extension returns only the changelog; site builds.",
+  "last_action": "All checks green; ready for converge",
+  "expectations": [
+    "no replacement registry or drift tool",
+    "no recommendation of domain-spec until tried",
+    "no deletion of user capabilities/ files"
+  ],
+  "context": [
+    "area: apps/speckit-extension (commands, scripts, nodes, presets)",
+    "area: apps/vscode living-specs surface",
+    "area: apps/website docs",
+    "constraint: old livingSpecs records load quietly; capabilities/ untouched"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "No living-* command, tag or manifest entry",
+      "tasks": [
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_packaging.py::TestNoLivingSurface"
+      ]
+    },
+    "FR-002": {
+      "title": "Pipeline steps no longer load or fold living specs",
+      "tasks": [
+        "T008",
+        "T009",
+        "T011"
+      ]
+    },
+    "FR-003": {
+      "title": "Brownfield preset runs without living nodes",
+      "tasks": [
+        "T005",
+        "T009"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_workflows.py"
+      ]
+    },
+    "FR-004": {
+      "title": "Leftover livingSpecs config reads without error",
+      "tasks": [
+        "T012",
+        "T008"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_retired_living.py"
+      ]
+    },
+    "FR-005": {
+      "title": "Doctor prints one retired info line",
+      "tasks": [
+        "T013",
+        "T014"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_retired_living.py"
+      ]
+    },
+    "FR-006": {
+      "title": "User capabilities/ files never touched",
+      "tasks": [
+        "T012",
+        "T007"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_retired_living.py"
+      ]
+    },
+    "FR-007": {
+      "title": "Old records load and keep the read-only card",
+      "tasks": [
+        "T012",
+        "T016",
+        "T019"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/cards/__tests__/LivingSpecsCard.test.tsx"
+      ]
+    },
+    "FR-008": {
+      "title": "VS Code Living Specs surface removed; settings migrated",
+      "tasks": [
+        "T015",
+        "T017",
+        "T018",
+        "T019",
+        "T020"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "Loss list written and linked from changelog",
+      "tasks": [
+        "T001",
+        "T024"
+      ],
+      "assumes": "loss-list.md linked from the spec-kit changelog"
+    },
+    "FR-010": {
+      "title": "Site page retired; persistence model stated",
+      "tasks": [
+        "T022"
+      ],
+      "assumes": "site build passes; redirect via MOVED map"
+    },
+    "FR-011": {
+      "title": "Doctor notes a constitution naming flow-back or living specs",
+      "tasks": [
+        "T021"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_retired_living.py"
+      ]
+    },
+    "FR-012": {
+      "title": "Package/build/emission lists name no retired file",
+      "tasks": [
+        "T008",
+        "T010",
+        "T026"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 200,
+    "projectedTasks": 30,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "intent": "Retire living specs with a written loss list and state Companion's flow-forward persistence model",
+  "size": "oversized",
+  "source": "#934",
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/669-retire-living-specs --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 3 call paths, 11 lines, 2 screens, 5 parts. Every cited file and line checks out."
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "ad097447",
+      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+    },
+    {
+      "what": "package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 18 runtime scripts, closure matches the declared list",
+      "commit": "ad097447",
+      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 19 commands agree across 1 install areas, 1 agent records, and 2 documents",
+      "commit": "ad097447",
+      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+    },
+    {
+      "what": "instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19 · speckit.companion.status.md                        0       0      0     214",
+      "commit": "ad097447",
+      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+    },
+    {
+      "what": "type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.38.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "ad097447",
+      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+    },
+    {
+      "what": "acceptance grep",
+      "command": "bash -c '! grep -rl living- apps/speckit-extension | grep -v CHANGELOG'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "no output",
+      "commit": "ad097447",
+      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+    },
+    {
+      "what": "full suite",
+      "command": "npm run test:all",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 195.0,
+      "result": "---------------------------------------------------------------------- · Ran 1494 tests in 103.906s · OK (skipped=14)",
+      "commit": "ad097447",
+      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+    },
+    {
+      "what": "site build",
+      "command": "bash -c 'cd apps/website && npm run build'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 4.2,
+      "result": "[changelog] vscode@0.36.0 \"Older releases are archived in [`apps/website/src/data/chang\" has no area tag, filed under other by keyword. · [changelog] speckit@0.24.0 \"Older releases are archived in [`apps/website/src/data/chang\" has no area tag, filed under other by keyword. · [changelog] 768 entries in older releases have no area tag and were filed by keyword.",
+      "commit": "ad097447",
+      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Remove the three living write-context flags outright",
+      "why": "only retired bodies call them and the acceptance grep forbids living- in the extension",
+      "rejected": "accept-and-ignore for one release",
+      "by": "agent",
+      "at": "2026-11-12T18:06:24.149Z"
+    },
+    {
+      "decision": "Doctor prints one info line for a leftover livingSpecs: block; loader stays silent",
+      "why": "the loader already ignores unknown keys",
+      "rejected": "warning on every config read",
+      "by": "agent",
+      "at": "2026-11-12T18:06:24.149Z"
+    },
+    {
+      "decision": "Move glob matcher into capture.py, GitRunner and unsupportedForRuntime into core/utils",
+      "why": "risk tier, freshness and steering use them",
+      "rejected": "keep trimmed living-named host files",
+      "by": "agent",
+      "at": "2026-11-12T18:06:24.149Z"
+    },
+    {
+      "decision": "Delete the on-save spec shape checker",
+      "why": "it only runs when living-specs.yml is enabled",
+      "rejected": "keep it dormant",
+      "by": "agent",
+      "at": "2026-11-12T18:06:24.149Z"
+    },
+    {
+      "decision": "Keep LivingSpecsCard with text chips; drop registry enrichment",
+      "why": "old records must still render; nothing maintains the registry",
+      "rejected": "drop the card",
+      "by": "agent",
+      "at": "2026-11-12T18:06:24.149Z"
+    },
+    {
+      "decision": "Redirect the site page to a new steps section via MOVED",
+      "why": "existing redirect mechanism; final-page targets",
+      "rejected": "keep a stub page",
+      "by": "agent",
+      "at": "2026-11-12T18:06:24.149Z"
+    },
+    {
+      "decision": "Skip clips:capture and shots; never touch docs/screenshots",
+      "why": "captures run once at release QA; screenshot names are load-bearing",
+      "rejected": "regenerate media per ticket",
+      "by": "agent",
+      "at": "2026-11-12T18:06:24.149Z"
+    },
+    {
+      "decision": "Dropped capabilities/CapabilityContentView from the old-record card view; card reads loaded and synced only",
+      "why": "the enrichment read the registry nothing maintains",
+      "rejected": "keep path-linked chips",
+      "by": "agent",
+      "at": "2026-11-12T18:30:08.540Z"
+    },
+    {
+      "decision": "Deleted requirement-slices, claim-order and spec-shape fixtures",
+      "why": "only removed code read them",
+      "rejected": "keep inert fixtures",
+      "by": "agent",
+      "at": "2026-11-12T18:30:08.540Z"
+    },
+    {
+      "decision": "desktop-check uses addCompletedRun instead of addLivingSpecs",
+      "why": "the overview shot still needs a finished run",
+      "rejected": "drop the overview shot",
+      "by": "agent",
+      "at": "2026-11-12T18:30:08.540Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: delete living surfaces in four areas after moving three shared helpers; keep old-record card; doctor notes; site persistence section",
+      "key_finding": "Three non-living features (risk tier, viewer freshness, steering config check) borrow helpers from living files"
+    },
+    "tasks": {
+      "summary": "26 tasks: setup, 1 foundational wave, 4 parallel story phases, polish"
+    },
+    "implement": {
+      "summary": "Living specs retired across spec-kit ext, VS Code, site and media; old records and config load quietly; doctor notes added"
+    }
+  },
+  "approach": "Move the shared glob, git and YAML-subset helpers out of living files, then delete the living commands, scripts, nodes, VS Code surface and site page. Old livingSpecs records keep loading and render as a read-only card. The doctor notes leftover config and a constitution naming another persistence model, and the site states flow-forward with lineage links.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Wrote the loss list",
+      "files": [
+        "specs/669-retire-living-specs/loss-list.md"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Moved glob matcher into capture.py; GitRunner and unsupportedForRuntime into core/utils",
+      "files": [
+        "apps/speckit-extension/scripts/capture.py",
+        "apps/vscode/src/core/utils/git.ts",
+        "apps/vscode/src/core/utils/yamlSubset.ts"
+      ],
+      "wave": "T002-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Moved glob matcher into capture.py; GitRunner and unsupportedForRuntime into core/utils",
+      "files": [
+        "apps/speckit-extension/scripts/capture.py",
+        "apps/vscode/src/core/utils/git.ts",
+        "apps/vscode/src/core/utils/yamlSubset.ts"
+      ],
+      "wave": "T002-T003"
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "doctor retirement phase: T012",
+      "files": [
+        "apps/speckit-extension/scripts/doctor.py",
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/tests/test_retired_living.py"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "doctor retirement phase: T013",
+      "files": [
+        "apps/speckit-extension/scripts/doctor.py",
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/tests/test_retired_living.py"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "doctor retirement phase: T014",
+      "files": [
+        "apps/speckit-extension/scripts/doctor.py",
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/tests/test_retired_living.py"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "doctor retirement phase: T021",
+      "files": [
+        "apps/speckit-extension/scripts/doctor.py",
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/tests/test_retired_living.py"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Site: living page and sidebar entry removed, redirects repointed, steps section added, living text stripped",
+      "files": [
+        "apps/website"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Manifest entries, clip sources and renders removed; README reworded",
+      "files": [
+        "content/media",
+        "README.md"
+      ]
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Removed and doctor bullets added to both changelogs; docs-consistency passes",
+      "files": [
+        "CHANGELOG.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T025": {
+      "status": "DONE",
+      "did": "Architecture JSON drops living nodes; skill and command docs drop living shot and clip rows",
+      "files": [
+        "docs/architecture",
+        ".claude/skills",
+        ".claude/commands"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "manifest test: no living command, no living-specs or drift tag",
+      "files": [
+        "apps/speckit-extension/tests/test_packaging.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Brownfield preset names no living node and every node it names ships",
+      "files": [
+        "apps/speckit-extension/tests/test_workflows.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "deleted 7 commands, 3 reference parts, 3 living nodes and the living doc; dropped them from extension.yml",
+      "files": [
+        "apps/speckit-extension/commands",
+        "apps/speckit-extension/nodes",
+        "apps/speckit-extension/extension.yml"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "deleted 10 living scripts and 11 living-only tests plus 2 fixtures",
+      "files": [
+        "apps/speckit-extension/scripts",
+        "apps/speckit-extension/tests"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "cut living paths from the writers, config, graph, briefs, checks, trace and manifest; trimmed mixed tests",
+      "files": [
+        "apps/speckit-extension/scripts",
+        "apps/speckit-extension/tests"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "removed living nodes from orders, Brownfield, finalize, complete, timing, fan-out; updated docs and README",
+      "files": [
+        "apps/speckit-extension/nodes",
+        "apps/speckit-extension/workflows",
+        "apps/speckit-extension/docs",
+        "apps/speckit-extension/README.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "dropped living wording from companion.yml, .vscodeignore, subagent-tally, bench commands, CLAUDE.md",
+      "files": [
+        ".specify/companion.yml",
+        ".vscodeignore",
+        ".claude/scripts/subagent-tally.py"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "rebuilt command bodies; build --check clean",
+      "files": [
+        "apps/speckit-extension/commands"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "manifest test asserts no living view, welcome, command or menu entry",
+      "files": [
+        "apps/vscode/src/features/specs/__tests__/manifest.test.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "LivingSpecsCard test: old record renders names as plain text, posts no openLivingSpec",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/cards/__tests__/LivingSpecsCard.test.tsx"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Removed features/living-specs, spec shape checker, extension wiring, context keys, telemetry events and package.json contributions",
+      "files": [
+        "package.json",
+        "apps/vscode/src/extension.ts",
+        "apps/vscode/src/core/telemetry.ts",
+        "apps/vscode/docs/telemetry.md"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Removed the builder living panel, chip and PipelineLivingSpecs protocol",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder",
+        "apps/vscode/src/protocol/pipeline.ts",
+        "apps/vscode/src/features/pipeline-builder/builderPanel.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Removed viewer living mode (host and webview); card chips are plain text",
+      "files": [
+        "apps/vscode/src/features/spec-viewer",
+        "apps/vscode/src/protocol/viewer.ts",
+        "apps/vscode/webview/src/spec-viewer",
+        "apps/vscode/webview/styles"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Updated stories, desktop and docs capture tooling, rebuilt canvas vendor copy",
+      "files": [
+        ".storybook/preview.tsx",
+        "tooling/scripts",
+        "apps/copilot-canvas"
+      ]
+    },
+    "T026": {
+      "status": "DONE",
+      "did": "All checks green; acceptance grep returns only the changelog",
+      "files": [
+        "repo"
+      ]
+    },
+    "T027": {
+      "status": "DONE",
+      "did": "build-pipeline skips retired living nodes in a project order with one warning",
+      "files": [
+        "apps/speckit-extension/scripts/build-pipeline.py",
+        "apps/speckit-extension/tests/test_build_pipeline.py"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "docs/architecture/diagram.html not regenerated; archify is an agent skill, JSON is updated",
+      "step": "implement"
+    },
+    {
+      "note": "clips:capture and shots not run per the release-QA rule; stories that showed living panes changed (triptych B5 now two panels, C4 strip)",
+      "step": "implement"
+    },
+    {
+      "note": "doctor --all repeats the project-level retired/persistence notes per spec, like the existing agents and workflow checks",
+      "step": "implement"
+    },
+    {
+      "note": "A session mid-run on an old command body that calls --fold-living-spec gets an argparse error on that optional write",
+      "step": "implement"
+    },
+    {
+      "note": "Dev install is a copy, so removed commands linger as stale skills until specify extension add --dev --force",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor trace: 6 write-context calls logged as unknown outcome; they line up with --materialize and --verify-run calls, which write but record no outcome",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor dispatch: plan skipped its 3 reader briefs because specify had already sent 3 scouts over the same areas",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor workflow and numbering warnings are pre-existing repo state (workflow not registered; three 634 folders)",
+      "step": "implement"
+    }
+  ],
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py, apps/vscode/webview/src/install-nudges/__stories__/InstallNudges.stories.tsx and 54 more"
+    ]
+  },
+  "convergeStartedAt": "2026-11-12T18:35:44.338Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-12T18:30:39.061Z",
+      "by": "extension",
+      "finishedAt": "2026-11-12T18:35:51.194Z",
+      "added": [
+        "T027"
+      ],
+      "completed": true
+    }
+  ]
+}
