@@ -79,7 +79,7 @@ When specify settles, **Specification** is checked in the rail, the badge reads 
   <p>Or press <strong>Plan</strong> in the viewer footer.</p>
 </Actions>
 
-Plan always writes `plan.md`: a summary, a check against the constitution, and the project structure. The Companion command adds `research.md`, `data-model.md` and `contracts/` only when the size of the change warrants them, and can draw parts of the plan as [plan blocks](/docs/steps/plan-blocks). When [living specs](/docs/results/living-specs) are on, it reads the specs for the capabilities in scope first.
+Plan always writes `plan.md`: a summary, a check against the constitution, and the project structure. The Companion command adds `research.md`, `data-model.md` and `contracts/` only when the size of the change warrants them, and can draw parts of the plan as [plan blocks](/docs/steps/plan-blocks).
 
 When plan settles, **Plan** is checked, the badge reads **Planned**, the supporting documents sit beside Plan in the rail, and the footer offers **Next: Tasks**.
 
@@ -152,7 +152,7 @@ Spec Kit works on the feature of your current branch. Companion names the spec i
 
 With the Companion Spec Kit extension installed, [the Overview](/docs/results/the-overview) lists **Converge** after Implement with how long it took. Only the first pass is timed.
 
-Converge compares the code with one feature's own documents. It doesn't check [living specs](/docs/results/living-specs), which have drift and sync for that.
+Converge compares the code with one feature's own documents.
 
 ## Auto
 
@@ -189,6 +189,22 @@ To read the spec before it becomes code, run the steps one at a time and [review
 Converge is the Companion workflow's last step, so you rarely need this command. Use it to mark a spec complete by hand. It writes the `completed` status to the spec's `.spec-context.json`, and the spec moves to **Completed** in the sidebar.
 
 In the stock workflow a spec stays at **Implemented**, with a yellow beaker in the sidebar, until a clean converge pass completes it or you press **Mark Completed**. A completed spec's footer reads **Run complete** and offers **Converge**, **Archive** and **Reactivate**.
+
+## How Companion keeps specs
+
+Specs flow forward. Each change gets its own spec folder, and a completed spec is final. When a later change builds on or replaces an earlier one, it starts a new folder and links back, so the history reads as a chain.
+
+**Reactivate** is the one exception. It reopens a completed or archived spec in place, for work that belongs to that same change.
+
+Companion doesn't write changes back into a long-lived spec per capability. Living specs, the sidebar view, and the seven `living-*` commands were retired; the [loss list](https://github.com/alfredoperez/speckit-companion/blob/main/specs/669-retire-living-specs/loss-list.md) names what went and why. Teams that want flow-back can use the community [`reconcile`](https://github.com/stn1slv/spec-kit-reconcile) extension for Spec Kit, which reconciles drift into the feature's own spec, plan and tasks.
+
+Each spec's `.spec-context.json` can record three lineage fields:
+
+| Field | Meaning |
+| --- | --- |
+| `source` | The ticket the spec came from, as an id or a URL |
+| `extends` | An earlier spec folder this one builds on |
+| `supersedes` | An earlier spec folder this one replaces |
 
 ## Stock or Companion, measured
 
