@@ -6,7 +6,7 @@ SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs
 
 Five deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), the GitHub Copilot app canvas (`apps/copilot-canvas/`, an Agent Plugin whose board lives under `com.github.copilot/extensions/speckit-companion/`, loaded in this repo through `.github/extensions/speckit-companion/`), the Claude Code mod (`apps/claude-mod/`, listed by the repo-root `.claude-plugin/marketplace.json`; its `hooks/vendor/` is bundled from the canvas's `spec-rules.mjs` by `npm run mod:build`), and the marketing site (`apps/website/`).
 
-- `packages/` — npm workspace packages. `packages/viewer` is `speckit-viewer`, the viewer's contract, core and styles, which the extension imports.
+- `packages/` — npm workspace packages. `packages/viewer` is `speckit-viewer`: the viewer's contract, core, styles, its Preact view (`/view`) and the `<speckit-viewer>` element (`/element`). The extension's spec viewer is the package view plus its own parts in slots; Factory renders the element.
 - `specs/` — historical feature folders plus the pinned `_0N_demo-*` viewer fixtures.
 - `docs/` — images only: the screenshots the READMEs and the site load, the architecture diagram, the walkthrough video. No prose lives here; a test fails on a new markdown file.
 - `apps/vscode/tests/` — integration, eval and shared fixtures, including the VS Code mock. Unit tests live in `__tests__` beside the code they cover.
@@ -59,6 +59,7 @@ A few changes carry a follow-on that is easy to miss:
 
 `docs/architecture/diagram.html` draws how a command travels (generated from the JSON beside it by archify; edit the JSON, never the HTML). These are the rules it cannot show.
 
+- **The package view never talks to VS Code.** Everything it asks for goes through `onAction` (typed by `ViewerAction`); the webview's `signals.ts` forwards it to `postMessage`, the element re-emits it as a `speckit-action` event. Extension-only parts (editor, footer, banners, report pages) plug in through `ViewerSlotsContext`, never by importing into `packages/viewer`.
 - **The host owns the filesystem.** `apps/vscode/src/` reads and writes; the webview under `apps/vscode/webview/src/` gets state by `postMessage` and never touches a file.
 - **`core/` imports nothing from `features/` or `ai-providers/`.** A test holds the two grandfathered files to an exact allowlist, so the list only shrinks.
 - **Ask `getProjectRoot()` for the project folder.** Never read the first workspace folder; a test fails on a direct read.

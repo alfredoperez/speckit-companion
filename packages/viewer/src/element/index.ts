@@ -15,6 +15,7 @@ import { applyPendingFragment, setupDocumentLinkClickHandler } from '../view/doc
 
 export type { SpecContext } from '../contract/specContext';
 export type { SpecDocument, TaskCounts, ViewerAction } from '../contract/viewer';
+export { specTitleOf } from '../core/specTitle';
 
 /** The event every action of the viewer comes out as. */
 export type SpeckitActionEvent = CustomEvent<ViewerAction>;
