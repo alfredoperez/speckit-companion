@@ -6,7 +6,7 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ### Fixed
 
-- **No false "just now" on a fresh checkout.** A spec with a run record but no activity shows ==no time== instead of the checkout's file time. <!-- area: copilot-app -->
+- **No false "just now" on a fresh checkout.** A spec with a run record but no activity shows ==no time== instead of the checkout's file time. ([#1003](https://github.com/alfredoperez/speckit-companion/pull/1003)) <!-- area: copilot-app -->
 
 ## [0.2.1] - 2026-11-08
 
