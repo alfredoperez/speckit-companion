@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **Doctor checks plugin freshness.** It compares each Claude Code plugin your Companion config or nodes call with its marketplace and ==says when one is behind==, naming both versions; a version it cannot read is reported as unknown. <!-- area: install -->
+
+### Changed
+- **Plan writes design docs only when the spec needs them.** `data-model.md` is written only when the spec names ==a new entity==, and `contracts/` only for a new or changed API; specify marks entities that already exist *(existing)*. <!-- area: pipeline -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.

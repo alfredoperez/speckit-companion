@@ -217,7 +217,7 @@ Writes `<feature_directory>/spec.md` (older projects have `<short-name>.spec.md`
 
 ### `speckit.companion.plan`
 
-Writes `plan.md` (summary, constitution check, project structure) plus `research.md`, `data-model.md`, and `contracts/` as the recorded size warrants — at `simple` size it keeps the summary and folds the rest inline. When living specs are configured it reads the capabilities in scope into context first, and pulls each one's architecture tier only for an architecture-significant change.
+Writes `plan.md` (summary, constitution check, project structure) plus `research.md`, `data-model.md`, and `contracts/` as the recorded size warrants — at `simple` size it keeps the summary and folds the rest inline. `data-model.md` is written only when the spec names a new entity (one not marked *(existing)* under Key Entities), and `contracts/` only when it names a new or changed API. When living specs are configured it reads the capabilities in scope into context first, and pulls each one's architecture tier only for an architecture-significant change.
 
 ### `speckit.companion.tasks`
 

@@ -72,13 +72,20 @@ PLAN_CLOSED = [
 ]
 
 
+#: A spec that names a new entity and a new API, so plan calls for both design docs.
+SPEC_BOTH = "# spec\n\nFR-001: expose a `POST /things` endpoint.\n\n### Key Entities\n\n- **Thing**: new record.\n"
+#: The FIRM-12078 shape: a rename on an entity that already exists, no API.
+SPEC_RENAME = ("# spec\n\nFR-001: Staff MUST be able to rename a stage.\n\n### Key Entities\n\n"
+               "- **Stage** *(existing)*: a named group of tasks.\n\n## Success Criteria\n\n- the rest holds\n")
+
+
 class DispatchBriefs(unittest.TestCase):
-    def _feature(self, **ctx):
+    def _feature(self, spec=SPEC_BOTH, **ctx):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         d = Path(tmp.name) / "specs" / "001-thing"
         d.mkdir(parents=True)
-        (d / "thing.spec.md").write_text("# spec\n")
+        (d / "thing.spec.md").write_text(spec)
         (d / ".spec-context.json").write_text(json.dumps({"history": PLAN_CLOSED, **ctx}))
         return d
 
@@ -111,6 +118,25 @@ class DispatchBriefs(unittest.TestCase):
     def test_design_docs_dispatch_unless_simple(self):
         self.assertIn("Dispatch these 2 design docs", self._run(self._feature(size="normal"), "--docs").stdout)
         self.assertIn("Working inline", self._run(self._feature(size="simple"), "--docs").stdout)
+
+    def test_a_rename_of_an_existing_entity_with_no_api_writes_no_design_doc(self):
+        out = self._run(self._feature(SPEC_RENAME, size="normal"), "--docs").stdout
+        self.assertIn("Working inline: no design document applies", out)
+        self.assertIn("skip data-model.md: the spec names no new entity", out)
+        self.assertIn("skip contracts/: the spec names no new or changed API", out)
+        self.assertNotIn("=== doc:", out)
+
+    def test_each_design_doc_follows_its_own_signal(self):
+        entity_only = "# spec\n\n## Key Entities\n\n- **Invoice**: a bill.\n- **Stage** *(existing)*: tasks.\n"
+        api_only = "# spec\n\nThe GraphQL mutation gains a field.\n\n### Key Entities\n\n- **Stage** *(existing)*: x\n"
+        self.assertEqual(dispatch_briefs.design_docs(self._feature(entity_only)), ["data-model.md"])
+        self.assertEqual(dispatch_briefs.design_docs(self._feature(api_only)), ["contracts/"])
+        out = self._run(self._feature(entity_only, size="normal"), "--docs").stdout
+        self.assertIn("write data-model.md yourself; skip contracts/", out)
+
+    def test_an_unreadable_spec_keeps_both_design_docs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(dispatch_briefs.design_docs(Path(tmp)), ["data-model.md", "contracts/"])
 
     def test_a_closed_plan_with_no_checkins_is_named(self):
         d = self._feature(context=["area: src/a", "area: src/b"], size="normal")
