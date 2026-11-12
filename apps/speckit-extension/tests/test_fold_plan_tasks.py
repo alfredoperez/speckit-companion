@@ -7,6 +7,7 @@ import contextlib
 import importlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -38,10 +39,13 @@ class FoldPlanTasksTests(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.fd = Path(self._tmp.name) / "specs" / "_zzz-fold"
         self.fd.mkdir(parents=True)
+        self._cwd = os.getcwd()
+        os.chdir(self._tmp.name)
         wc.update_context(self.fd, "specify", "specifying", "extension", "start")
         wc.update_context(self.fd, "specify", "specified", "extension", "complete")
 
     def tearDown(self) -> None:
+        os.chdir(self._cwd)
         self._tmp.cleanup()
 
     def _run(self, *argv: str) -> int:

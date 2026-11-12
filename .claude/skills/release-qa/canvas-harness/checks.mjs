@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { BOARD, Blocked, REPO, changedSince, git, openSession, sleep, transcript, waitForBoard, waitSettled } from './session.mjs';
+import { judgeAutoFold } from './auto-folds.mjs';
 
 const [WS, OUT] = process.argv.slice(2).map((p) => resolve(p));
 const TRANSCRIPTS = join(OUT, 'canvas-transcripts');
@@ -230,16 +231,8 @@ async function autoFolds() {
     if (!ctx?.size && run.stray.length) return { result: 'FAIL', evidence: `the agent built the change without the pipeline: ${loaded ? 'it loaded the auto command but' : 'it never loaded the auto command,'} recorded no size, and changed ${run.stray.join(', ')}; ${facts}` };
     if (!ctx) return { result: 'BLOCKED', evidence: `the run left no record to read; ${facts}` };
     if (ctx.size !== 'simple') return { result: 'BLOCKED', evidence: `the agent sized the change ${ctx.size ?? 'unsized'}, so nothing was expected to fold; ${facts}` };
-    const ran = run.tools.filter((t) => /speckit[.-]companion[.-](plan|tasks)\b/.test(t.detail)).map((t) => t.detail.slice(0, 60));
-    const closed = (step) => (ctx.history ?? []).some((h) => h.step === step && h.kind === 'complete' && !h.task && !h.substep);
-    const problems = [
-        ran.length && `it still ran ${ran.join(', ')}`,
-        !closed('plan') && 'plan is not recorded as done',
-        !closed('tasks') && 'tasks is not recorded as done',
-        !existsSync(join(WS, 'specs', run.created[0], 'tasks.md')) && 'no tasks.md was written',
-    ].filter(Boolean);
-    const said = run.replies.some((reply) => /folded plan and tasks/i.test(reply)) ? 'said it folded' : 'never said it folded';
-    return { result: problems.length ? 'FAIL' : 'PASS', evidence: `${problems.length ? `${problems.join('; ')}; ` : 'no plan or tasks command ran; '}${said}; ${facts}` };
+    const verdict = judgeAutoFold({ tools: run.tools, replies: run.replies, context: ctx, tasksWritten: existsSync(join(WS, 'specs', run.created[0], 'tasks.md')) });
+    return { ...verdict, evidence: `${verdict.evidence}; ${facts}` };
 }
 
 const CHECKS = [
