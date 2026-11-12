@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
-- **Hands-off runs on spec-kit's workflow engine.** `specify workflow run` routes on the recorded size, and ==each review gate resumes headless==. ([#PR](https://github.com/alfredoperez/speckit-companion/pull/PR)) <!-- area: pipeline -->
+- **Hands-off runs on spec-kit's workflow engine.** `specify workflow run` routes on the recorded size, and ==each review gate resumes headless==. ([#1006](https://github.com/alfredoperez/speckit-companion/pull/1006)) <!-- area: pipeline -->
 - **Corner cuts show up as concerns.** A skipped test, a suppression, an empty stub or a lower coverage bar is ==recorded with its file and line==, never blocking. ([#1005](https://github.com/alfredoperez/speckit-companion/pull/1005)) <!-- area: run-record -->
 
 ### Changed
