@@ -318,8 +318,11 @@ function renderBoard() {
             statusPill(spec),
             miniRail(spec.steps),
             spec.tasks && spec.tasks.total > 0 ? el('span', { class: 'card-tasks', title: 'Tasks done' }, `${spec.tasks.checked}/${spec.tasks.total}`) : null,
-            el('span', { class: 'card-time', title: spec.lastActivity ?? spec.updatedAt ?? '' }, relativeTime(spec.lastActivity ?? spec.updatedAt)))))));
+            el('span', { class: 'card-time', title: cardTime(spec) ?? '' }, relativeTime(cardTime(spec))))))));
 }
+
+// A checkout resets file times, so they stand in for activity only on a spec with no run record.
+const cardTime = spec => spec.lastActivity ?? (spec.hasContext ? null : spec.updatedAt);
 
 /** The commands this spec's buttons send: its own workflow's family, else the workspace's. */
 function specCommands() {

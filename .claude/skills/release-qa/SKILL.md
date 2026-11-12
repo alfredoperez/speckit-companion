@@ -87,6 +87,8 @@ Claude Code, on the Mac:
 
 Then the user pastes the handoff path into Claude Desktop, which clicks through the four parts that still need eyes (first open, the stock workspace and two roots, the timed run, the GitHub Copilot app) and replies with one line per step. The handoff is short on purpose: a computer-use grant lapses after thirty idle minutes, so nothing a script can decide is on it. When its reply reports a terminal question, answer it from Bash (the headless fallback) and tell the user to have Desktop carry on. Claude Code turns the reply into the report, runs `timing.py report` and `check_capture.py` on the timed spec (`TIMED` in `stage.env`), stops the recorder (`touch shots/STOP`), and picks screenshots from `shots/`.
 
+Run release QA from its own worktree (`tooling/scripts/new-worktree.sh`) and replace the linked `node_modules` there with a real `npm ci`, so a second session switching the main checkout cannot break the run. The Copilot canvas dev loader in `~/.copilot/extensions/speckit-companion/` still imports the board from the main checkout by absolute path, so keep the main checkout's branch steady during a canvas run.
+
 What staging has to get right, each learned the hard way:
 
 - Any folder with its own `.claude/` shows Claude Code's trust prompt, even with `bypassPermissions`. `trust-claude-folder.py` answers it once; Claude Code records the answer itself.
@@ -326,7 +328,7 @@ Agent actions: in chat ask "what specs are still open?" and "show me the related
 ## Recipe: Website pages
 
 ```bash
-cd "$REPO/apps/website" && npm run preview
+cd "$REPO/apps/website" && npm run build && npm run preview
 ```
 
 Open each changed page in a browser (the `apps/website/src/content/docs/**` paths map to `/docs/...` routes) and look: images load, no layout break, links resolve. A page the diff changed only in text still gets one look. `shot.sh` a page when it fails or is docs-worthy.

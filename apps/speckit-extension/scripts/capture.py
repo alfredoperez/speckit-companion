@@ -306,7 +306,7 @@ def _code_at(path: Path) -> dict:
         with tempfile.TemporaryDirectory() as tmp:
             scratch = Path(tmp) / "index"
             if index.is_file():
-                shutil.copyfile(index, scratch)
+                shutil.copy2(index, scratch)  # keeps the mtime git's racy-clean check compares against
             env = {**os.environ, "GIT_INDEX_FILE": str(scratch), "GIT_OPTIONAL_LOCKS": "0"}
             git("add", "-A", env=env)
             found["tree"] = git("write-tree", env=env)

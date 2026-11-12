@@ -1,0 +1,481 @@
+{
+  "workflow": "companion",
+  "specName": "Release QA leftovers",
+  "branch": "fix/920-qa-leftovers",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:35:20.119Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T16:36:02.221Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:36:06.858Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:37:25.458Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:37:31.552Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:37:48.753Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:37:54.883Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:38:28.890Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:38:29.010Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:38:29.124Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:38:29.235Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:39:39.438Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:39:39.438Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:40:46.839Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:40:46.839Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:40:46.983Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:40:46.984Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:46:30.509Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:46:30.536Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:47:08.853Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T16:47:20.555Z"
+    }
+  ],
+  "unattended": true,
+  "request": "Fix the still-reproducing leftovers from issue #920 (release QA loose ends): (1) the site's `npm run preview` fails because astro preview is unsupported by the Vercel adapter; serve dist/client instead. (2) qa-stage.sh packaging fails in a worktree whose node_modules is a symlink (npm list reports extraneous); fail early with a clear \"run npm ci in this worktree\" message, and say so in the release-qa skill, which should recommend running QA from its own worktree. (3) the spec-kit extension's real-repo inventory gate fails on a stale local install; its failure message should name /install-local. (4) receipts' check snapshot copies the git index without its mtime, defeating git's racy-clean detection, so a same-size code edit within the same second is missed (test_receipts flakes 3/25); preserve the index mtime. (5) the Copilot board card shows \"just now\" for a spec whose record has no history, because it falls back to file mtime; only fall back to file time for specs without a record. Spec folder number must be 666.",
+  "last_action": "test:all green",
+  "expectations": [
+    "File not found warning window step (needs desktop)",
+    "Claude Code mod pane recheck (needs terminal run)",
+    "rewriting the canvas dev loader"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts/capture.py (check snapshot)",
+    "area: apps/copilot-canvas board public/app.js",
+    "area: apps/website preview script",
+    "area: .claude/skills/release-qa (qa-stage.sh, SKILL.md)",
+    "area: apps/speckit-extension/tests/test_command_emissions.py"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "A recorded check reads out of date after any tracked code change, including a same-second same-size rewrite",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_receipts.py::test_a_same_size_edit_in_the_same_second_still_goes_out_of_date"
+      ]
+    },
+    "FR-002": {
+      "title": "A board card shows no relative time for a spec whose record has no activity",
+      "tasks": [
+        "T003",
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/page.test.mjs::shows no time for a recorded spec with no activity"
+      ]
+    },
+    "FR-003": {
+      "title": "A board card still falls back to file time for a spec with no record",
+      "tasks": [
+        "T003",
+        "T005"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/page.test.mjs::shows no time for a recorded spec with no activity"
+      ]
+    },
+    "FR-004": {
+      "title": "The site preview script serves the built site",
+      "tasks": [
+        "T007",
+        "T008"
+      ],
+      "assumes": "manual curl of the preview; the site has no test harness"
+    },
+    "FR-005": {
+      "title": "qa-stage stops before packaging when node_modules is a link, naming npm ci",
+      "tasks": [
+        "T007",
+        "T009"
+      ],
+      "assumes": "gate line exercised by hand; qa-stage.sh builds sandboxes so it has no test"
+    },
+    "FR-006": {
+      "title": "The release QA guide recommends running QA from its own worktree",
+      "tasks": [
+        "T009"
+      ],
+      "assumes": "guide text"
+    },
+    "FR-007": {
+      "title": "The real-repo inventory gate failure names /install-local",
+      "tasks": [
+        "T007",
+        "T010"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_command_emissions.py"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Fix the #920 release QA leftovers that still reproduce",
+  "size": "normal",
+  "source": "#920",
+  "planBlocks": [],
+  "planBlocksPicked": [],
+  "decisions": [
+    {
+      "decision": "copy the git index with shutil.copy2",
+      "why": "keeps the index mtime so git's racy-clean check re-hashes same-second edits",
+      "rejected": "update-index --really-refresh on the scratch index",
+      "by": "agent",
+      "at": "2026-11-12T16:37:24.878Z"
+    },
+    {
+      "decision": "board falls back to file time only without a run record, on card and sort",
+      "why": "checkout file times are not activity",
+      "rejected": "dropping updatedAt from the row",
+      "by": "agent",
+      "at": "2026-11-12T16:37:24.878Z"
+    },
+    {
+      "decision": "site preview via python3 -m http.server on dist/client",
+      "why": "astro preview does not run with the Vercel adapter; no new dependency",
+      "rejected": "a Node static server script",
+      "by": "agent",
+      "at": "2026-11-12T16:37:24.878Z"
+    },
+    {
+      "decision": "qa-stage fails early on a linked node_modules",
+      "why": "npm list reports every package extraneous through the link",
+      "rejected": "auto-running npm ci in the stage script",
+      "by": "agent",
+      "at": "2026-11-12T16:37:24.878Z"
+    },
+    {
+      "decision": "deterministic same-second test pins file and index mtimes to one second with core.trustctime off",
+      "why": "the natural race only hits a few runs in 25",
+      "rejected": "a looped timing test",
+      "by": "agent",
+      "at": "2026-11-12T16:46:30.682Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Five targeted fixes, each at its cause",
+      "key_finding": "the receipts flake is git racy-clean defeated by copyfile dropping the index mtime"
+    },
+    "tasks": {
+      "summary": "11 tasks, 3 story phases with disjoint files plus polish"
+    },
+    "implement": {
+      "summary": "Five fixes shipped with tests; full suite green"
+    }
+  },
+  "approach": "copy2 for the snapshot index; hasContext gate on board time and sort; python static preview; symlink gate plus worktree advice in release QA; /install-local hint in the inventory gate.",
+  "currentTask": null,
+  "task_summaries": {
+    "T008": {
+      "status": "DONE",
+      "did": "preview serves dist/client with http.server; README and recipe say build first",
+      "files": [
+        "apps/website/package.json",
+        "apps/website/README.md",
+        ".claude/skills/release-qa/SKILL.md"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "qa-stage.sh stops when node_modules is a link; guide advises own worktree",
+      "files": [
+        ".claude/skills/release-qa/qa-stage.sh",
+        ".claude/skills/release-qa/SKILL.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "emission problems hint at /install-local",
+      "files": [
+        "apps/speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "checks run: unittest OK, bash -n OK, gate and preview proven",
+      "files": [
+        "apps/speckit-extension/scripts/check-command-emissions.py"
+      ]
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "Snapshot keeps the index mtime; deterministic same-second test",
+      "files": [
+        "apps/speckit-extension/scripts/capture.py",
+        "apps/speckit-extension/tests/test_receipts.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Snapshot keeps the index mtime; deterministic same-second test",
+      "files": [
+        "apps/speckit-extension/scripts/capture.py",
+        "apps/speckit-extension/tests/test_receipts.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Card time and sort tests, failing first",
+      "files": [
+        "apps/copilot-canvas/tests/page.test.mjs",
+        "apps/copilot-canvas/tests/core.test.mjs"
+      ],
+      "wave": "T003-T004"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Card time and sort tests, failing first",
+      "files": [
+        "apps/copilot-canvas/tests/page.test.mjs",
+        "apps/copilot-canvas/tests/core.test.mjs"
+      ],
+      "wave": "T003-T004"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "File time stands in only without a run record, on card and sort",
+      "files": [
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/public/app.js",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/spec-rules.mjs"
+      ],
+      "wave": "T005-T006"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "File time stands in only without a run record, on card and sort",
+      "files": [
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/public/app.js",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/spec-rules.mjs"
+      ],
+      "wave": "T005-T006"
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "npm run test:all green: jest 5122, canvas 174, python 1958"
+    }
+  },
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py"
+    ]
+  },
+  "verified": [
+    {
+      "what": "Old flaky receipt test, 50 runs",
+      "result": "0 of 50 failed (3 of 25 before the fix)"
+    },
+    {
+      "what": "Site preview from a built dist/client",
+      "result": "curl / returned 200 (worker run)"
+    },
+    {
+      "what": "npm run test:all",
+      "result": "jest 5122 passed, canvas 174 passed, python 1958 OK"
+    },
+    {
+      "what": "Receipt tests",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_receipts.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 6.0,
+      "result": "---------------------------------------------------------------------- · Ran 14 tests in 5.894s · OK",
+      "commit": "745b4e4d",
+      "tree": "cd182cdac86c867fab1f300b0fe5408383c7254d"
+    },
+    {
+      "what": "Inventory gate tests",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p test_command_emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.2,
+      "result": "---------------------------------------------------------------------- · Ran 30 tests in 0.134s · OK",
+      "commit": "745b4e4d",
+      "tree": "cd182cdac86c867fab1f300b0fe5408383c7254d"
+    },
+    {
+      "what": "Canvas tests",
+      "command": "node --test --import ./apps/copilot-canvas/tests/sdk-stub/register.mjs apps/copilot-canvas/tests/core.test.mjs apps/copilot-canvas/tests/page.test.mjs",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 19.9,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 19829.112625",
+      "commit": "745b4e4d",
+      "tree": "cd182cdac86c867fab1f300b0fe5408383c7254d"
+    },
+    {
+      "what": "Stage gate on a linked node_modules",
+      "command": "bash -c 'cd /tmp && mkdir -p g920/r && ln -sfn /usr g920/r/node_modules && REPO=g920/r; fail(){ echo NOT READY: $*; exit 0; }; ! [ -L $REPO/node_modules ] || fail npm ci'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "NOT READY: npm ci",
+      "commit": "745b4e4d",
+      "tree": "cd182cdac86c867fab1f300b0fe5408383c7254d"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "worktree has no Companion install (gitignored), so the run used the main checkout's scripts with --feature-dir",
+      "step": "implement"
+    },
+    {
+      "note": "doctor TRACE: one capture call failed with no outcome, and one --fold got plan instead of plan,tasks; neither was called by the main agent, likely a subagent",
+      "step": "implement"
+    }
+  ],
+  "convergeStartedAt": "2026-11-12T16:47:08.893Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-12T16:47:08.940Z",
+      "by": "extension",
+      "finishedAt": "2026-11-12T16:47:20.640Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

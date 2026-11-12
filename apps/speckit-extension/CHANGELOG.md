@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Task times come per wave.** A wave of tasks closes in one step, so the viewer shows ==one time per wave==. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: run-record -->
 
 ### Fixed
+- **Receipts catch every code edit.** A check reads ==out of date== even when the edit lands in the same second as the commit. <!-- area: run-record -->
 - **Specs finish at Completed.** A run ==no longer stops at Implemented== when converge adds and builds work or closes without its hook. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
 
 ## [0.26.0] - 2026-11-08

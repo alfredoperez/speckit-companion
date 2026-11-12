@@ -1,5 +1,6 @@
 """The pull request's Receipts section is built from the run record, not typed."""
 import json
+import os
 import re
 import subprocess
 import sys
@@ -61,6 +62,17 @@ class Receipts(unittest.TestCase):
         (self.spec / "notes.md").write_text("spec edit\n", encoding="utf-8")
         self.assertNotIn("out of date", self.row(self.receipts(), "Unit tests"))
         (self.root / "app.ts").write_text("two\n", encoding="utf-8")
+        self.assertRegex(self.row(self.receipts(), "Unit tests"), r"exit 0 at [0-9a-f]+ · out of date")
+
+    def test_a_same_size_edit_in_the_same_second_still_goes_out_of_date(self):
+        app, index, second = self.root / "app.ts", self.root / ".git" / "index", 1_700_000_000
+        self.git("config", "core.trustctime", "false")
+        os.utime(app, (second, second))
+        self.git("add", "app.ts")
+        os.utime(index, (second, second))
+        self.write("--verify-run", "Unit tests::true")
+        app.write_text("two\n", encoding="utf-8")
+        os.utime(app, (second, second))
         self.assertRegex(self.row(self.receipts(), "Unit tests"), r"exit 0 at [0-9a-f]+ · out of date")
 
     def test_mutation_review_depth_and_assumptions_are_listed(self):

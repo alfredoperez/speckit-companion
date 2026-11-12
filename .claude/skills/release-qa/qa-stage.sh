@@ -17,6 +17,7 @@ fail() { echo "[stage] NOT READY: $*"; exit 1; }
 say() { echo "[stage] $*"; }
 
 [ -z "$(git -C "$REPO" status --porcelain -- . ':(exclude).claude' ':(exclude).specify')" ] || fail "the repo has uncommitted changes, so the build under test would not match HEAD"
+! [ -L "$REPO/node_modules" ] || fail "node_modules is a link to another checkout, so packaging fails on npm list; run npm ci in $REPO"
 [ -e "$SB" ] && fail "$SB exists, pick a new run name"
 [ -e "$STOCK" ] && fail "$STOCK exists, pick a new run name"
 mkdir -p "$RESULTS" "$HERE/.bin"
