@@ -1,0 +1,332 @@
+{
+  "workflow": "companion",
+  "specName": "Release QA trusts a real fold on the Copilot app",
+  "branch": "fix/978-copilot-auto-fold",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:34:46.186Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:35:22.760Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T16:35:47.833Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:35:47.999Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T16:35:48.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:35:48.001Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T16:35:48.002Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:35:57.326Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:36:08.649Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:36:17.635Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:36:17.636Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:37:03.678Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:37:03.679Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:37:03.679Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:37:03.679Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:37:03.703Z"
+    },
+    {
+      "step": "implement",
+      "substep": "complete",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:44:45.148Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:45:08.183Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T16:45:22.222Z"
+    }
+  ],
+  "request": "Target path: specs/665-copilot-auto-fold-check (project root /Users/alfredoperez/dev/GitHub/speckit-companion.worktrees/fix-978-copilot-auto-fold). Source: #978. Fix the release-qa canvas harness check `canvas-auto-folds` in .claude/skills/release-qa/canvas-harness/checks.mjs: it reports a false FAIL. (1) Count only real command invocations of the plan/tasks commands, not file views/globs/searches of their SKILL.md or command files. (2) Judge the fold from the record's fold signature: plan and tasks start+complete boundaries written `by: extension` together (within a second). (3) Log the full detail of any offending tool call instead of cutting it at 60 chars. (4) Add a unit test for the false positive using the 2026-11-08 transcript shape (the model viewed .github/skills/speckit-companion-tasks/SKILL.md, the record holds the 4 fold boundaries within 3 ms, size simple) — it must PASS; plus a case where plan really ran and must FAIL.",
+  "unattended": true,
+  "last_action": "harness tests wired into test:canvas",
+  "expectations": [
+    "re-running the live harness",
+    "#817 F3: a wandered session reads SKILL.md"
+  ],
+  "context": [
+    "area: .claude/skills/release-qa/canvas-harness",
+    "evidence: speckit-sandboxes/evidence/2026-11-08-release-qa/canvas-run2"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Count only real plan/tasks invocations, never file views, globs or searches",
+      "tests": [
+        "auto-folds.test.mjs::treats a view",
+        "glob or search of the command files as a read",
+        "not a run"
+      ]
+    },
+    "FR-002": {
+      "title": "Judge the fold from the record: plan and tasks boundaries by the extension within one second",
+      "tests": [
+        "auto-folds.test.mjs::fails when the boundaries are by the extension but minutes apart"
+      ]
+    },
+    "FR-003": {
+      "title": "Show each offending call in full in the evidence",
+      "tests": [
+        "auto-folds.test.mjs::fails a run that really invoked plan",
+        "naming the whole call"
+      ]
+    },
+    "FR-004": {
+      "title": "The 2026-11-08 shape passes and a real plan run fails, in an automated test",
+      "tests": [
+        "auto-folds.test.mjs::passes the 2026-11-08 run",
+        "where the model only viewed the tasks skill"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 4,
+    "projectedTasks": 6,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "intent": "Stop canvas-auto-folds failing a run that really folded",
+  "size": "simple",
+  "source": "#978",
+  "approach": "Pure judgeAutoFold module called by checks.mjs, with a node:test file wired into test:canvas",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Pure judgeAutoFold module; autoFolds delegates to it",
+      "files": [
+        ".claude/skills/release-qa/canvas-harness/auto-folds.mjs",
+        ".claude/skills/release-qa/canvas-harness/checks.mjs"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Pure judgeAutoFold module; autoFolds delegates to it",
+      "files": [
+        ".claude/skills/release-qa/canvas-harness/auto-folds.mjs",
+        ".claude/skills/release-qa/canvas-harness/checks.mjs"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "node:test for reads-vs-runs, the Nov 8 fold, a real plan run and spans; wired into test:canvas",
+      "files": [
+        ".claude/skills/release-qa/canvas-harness/auto-folds.test.mjs",
+        "package.json"
+      ],
+      "wave": "T003-T006"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "node:test for reads-vs-runs, the Nov 8 fold, a real plan run and spans; wired into test:canvas",
+      "files": [
+        ".claude/skills/release-qa/canvas-harness/auto-folds.test.mjs",
+        "package.json"
+      ],
+      "wave": "T003-T006"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "node:test for reads-vs-runs, the Nov 8 fold, a real plan run and spans; wired into test:canvas",
+      "files": [
+        ".claude/skills/release-qa/canvas-harness/auto-folds.test.mjs",
+        "package.json"
+      ],
+      "wave": "T003-T006"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "node:test for reads-vs-runs, the Nov 8 fold, a real plan run and spans; wired into test:canvas",
+      "files": [
+        ".claude/skills/release-qa/canvas-harness/auto-folds.test.mjs",
+        "package.json"
+      ],
+      "wave": "T003-T006"
+    }
+  },
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "5 files changed"
+    ]
+  },
+  "decisions": [
+    {
+      "decision": "Shell and read tools never count as a run",
+      "why": "a shell can read a skill but cannot run a slash command; review found ls/grep false positives",
+      "rejected": "listing read-only bash verbs",
+      "by": "agent",
+      "at": "2026-11-12T16:44:44.448Z"
+    },
+    {
+      "decision": "Judgement moved to a pure module",
+      "why": "checks.mjs runs a live session at import, so it cannot be unit tested",
+      "rejected": "exporting from checks.mjs",
+      "by": "agent",
+      "at": "2026-11-12T16:44:44.448Z"
+    }
+  ],
+  "verified": [
+    {
+      "what": "Real 2026-11-08 transcript and record through judgeAutoFold",
+      "result": "PASS (old logic counted 1 false run)"
+    },
+    {
+      "what": "jest, Python suite and extension gates",
+      "result": "jest 5122 pass, unittest 1957 OK, build/package/emissions/budget checks exit 0"
+    },
+    {
+      "what": "Harness judgement tests",
+      "command": "node --test .claude/skills/release-qa/canvas-harness/auto-folds.test.mjs",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 47.884584",
+      "commit": "745b4e4d",
+      "tree": "5c4b3d6ce8386cecbc05d9e8760b9e14a94f9797"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Live canvas harness not re-run (owner said not to); the unit test stands in",
+      "step": "implement"
+    },
+    {
+      "note": "Debug-timing implement-exec boundary was stamped after T001 instead of before the section, so that substep timing is off",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor TRACE: 2 failed --fold plan calls in this spec trace came from test_fold_plan_tasks.py; a caller-error trace resolves the repo live spec via .specify/feature.json. Not fixed here (writer is high risk); flagged to the owner",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor NUMBERING: 634 used by three spec folders, pre-existing",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "canvas-auto-folds judges real invocations and the record fold signature, with full call detail"
+    }
+  },
+  "convergeStartedAt": "2026-11-12T16:45:08.222Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-12T16:45:08.266Z",
+      "by": "extension",
+      "finishedAt": "2026-11-12T16:45:22.299Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

@@ -1607,7 +1607,7 @@
     "canvas:build": "node apps/copilot-canvas/build.mjs",
     "mod:build": "node apps/claude-mod/build.mjs",
     "test:mod": "npm run canvas:build && npm run mod:build && claude plugin test apps/claude-mod",
-    "test:canvas": "npm run canvas:build && npm run mod:build && node --test --import ./apps/copilot-canvas/tests/sdk-stub/register.mjs 'apps/copilot-canvas/tests/*.test.mjs'",
+    "test:canvas": "npm run canvas:build && npm run mod:build && node --test --import ./apps/copilot-canvas/tests/sdk-stub/register.mjs 'apps/copilot-canvas/tests/*.test.mjs' '.claude/skills/release-qa/canvas-harness/*.test.mjs'",
     "canvas:dev": "node apps/copilot-canvas/dev.mjs .",
     "canvas:shots": "npm run canvas:build && CANVAS_SHOTS=.canvas-shots node --test --import ./apps/copilot-canvas/tests/sdk-stub/register.mjs apps/copilot-canvas/tests/page.test.mjs",
     "test:watch": "jest --watch",
