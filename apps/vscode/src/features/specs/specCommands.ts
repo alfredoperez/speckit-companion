@@ -275,7 +275,7 @@ export function registerSpecKitCommands(
         })
     );
 
-    // Generic reveal — works from ANY SpecKit tree (Specs, Living Specs, Steering).
+    // Generic reveal — works from ANY SpecKit tree (Specs, Steering).
     // Each tree stores its item's path differently, so resolve a URI from whatever
     // field is present, then hand off to VS Code's built-in reveal commands. Pre-stats
     // so a missing target surfaces an error rather than the silent no-op revealFileInOS

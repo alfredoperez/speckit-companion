@@ -18,8 +18,7 @@ The event names and properties below are what the dashboards and queries in this
 | `companion.installPrompt` | `action` (`shown`/`clicked`), `surface` | Surfaces: Create Spec, Activity, the sidebar badge (`sidebarBadge`), the pinned row (`pinnedRow`), the welcome view (`welcome`), the terminal (`terminal`), `activation`. Out-of-date variants report separately as `createSpecUpdate`, `activityUpdate`, `statusBarUpdate`, `activationUpdate`, so update adoption reads apart from first install |
 | `panel.opened` | — | Once per session; repeated visibility toggles don't re-count |
 | `sample.opened` | — | Once per session; the seeded sample never counts as a created spec |
-| `spec.opened`, `livingSpec.opened` | — | Once per spec/capability per session |
-| `livingSpec.drift`, `livingSpec.sync` | — | Per run |
+| `spec.opened` | — | Once per spec per session |
 | `steering.opened` | — | Per open |
 
 The per-spec id riding these events is a random UUID stored in the spec's `.spec-context.json`, never the spec name or path.
@@ -90,10 +89,10 @@ ORDER BY conversion DESC
 ```
 
 ```sql
--- Engagement: how often each observable action fires (spec opens, living-spec runs, steering opens)
+-- Engagement: how often each observable action fires (spec opens, steering opens)
 SELECT event, count() AS fires
 FROM events
-WHERE event IN ('spec.opened', 'livingSpec.opened', 'livingSpec.drift', 'livingSpec.sync', 'steering.opened')
+WHERE event IN ('spec.opened', 'steering.opened')
   AND timestamp > now() - INTERVAL 30 DAY
 GROUP BY event
 ORDER BY fires DESC

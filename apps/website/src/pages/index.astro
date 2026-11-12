@@ -83,11 +83,6 @@ const makeItYours = media('make-it-yours');
 // later rather than stopping at the comment.
 const review = media('review');
 
-// The Living Specs tab plays the drawn explainer
-// rather than a screenshot tour. A tour can only show the tree; the argument is
-// what the tree replaces, and that needs a diagram.
-const livingExplained = media('living-specs-explained');
-
 /*
   The hero. Four parts of the product cycle in one frame, each as a short
   silent loop of the real UI.
@@ -234,15 +229,6 @@ const tabs = [
     link: { label: 'Write your own workflow', href: '/docs/customize/your-own-workflow/' },
   },
   {
-    id: 'living',
-    label: 'Living specs',
-    window: 'Living Specs · what outlives the ticket',
-    heading: 'The learning outlives the ticket',
-    body: 'Spec Kit leaves each spec in a folder that goes quiet when the feature ships. Turn living specs on and every capability keeps one durable spec instead — at the root, or next to the code it describes.',
-    clip: livingExplained,
-    link: { label: 'How living specs work', href: '/docs/results/living-specs/' },
-  },
-  {
     id: 'review',
     label: 'Review',
     window: 'Review · a comment under the line it annotates',
@@ -319,7 +305,7 @@ const builder = {
   ],
 };
 
-// What the page has not shown yet. The Overview, living specs, review and the
+// What the page has not shown yet. The Overview, review and the
 // pipeline each have a section above, so none of them gets a card here.
 const cards = [
   {

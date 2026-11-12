@@ -152,20 +152,6 @@ export interface SpecViewerState {
     /** Display name of the spec (derived from folder name) */
     specName: string;
 
-    /**
-     * Living-spec document mode: the panel renders a capability's living spec
-     * (and its tier siblings) with no workflow chrome — no stepper, no footer
-     * actions, no `.spec-context.json` reads or backfills.
-     */
-    living?: boolean;
-
-    /**
-     * The tier file the living panel was opened from. Tier siblings are
-     * derived from this path, not from the directory — a colocated spec
-     * (`storage.spec.md`) has no `spec.md` in its directory.
-     */
-    livingSourcePath?: string;
-
     /** Bug-report mode: a `.specify/bugs/<slug>/` folder shown read-only, with no run record. */
     bug?: boolean;
 
@@ -232,67 +218,6 @@ export interface StalenessInfo {
 export type StalenessMap = Record<DocumentType, StalenessInfo>;
 
 // ============================================
-// Living Spec Header
-// ============================================
-
-/**
- * Capability facts shown in the viewer header for a living spec.
- *
- * Every optional field is absent — never zeroed — when it could not be
- * determined, so "no coverage tier" stays distinguishable from "nothing
- * covered". `coverage` and `drifted` come from the Living Specs sidebar's own
- * `readCapabilityHealth`, so the two surfaces cannot disagree.
- */
-export interface LivingHeaderMeta {
-    capabilityName: string;
-    /** Repo-relative POSIX path of the spec file. */
-    specPath: string;
-    location: 'centralized' | 'colocated';
-    /** Membership globs the capability claims. May be empty. */
-    match: string[];
-    requirements?: number;
-    scenarios?: number;
-    coverage?: { covered: number; total: number };
-    drifted?: boolean;
-    /** True when the capability is registered but its spec file does not exist yet. */
-    missing?: boolean;
-    /** True while the spec tier still carries its `[DRAFT]` banner, whichever tier is on screen. */
-    draft?: boolean;
-    /** Headings whose touched files drifted; absent when drift is unknown. */
-    driftedRequirements?: string[];
-    /** Headings absent from `main`'s copy of the spec; absent when that copy could not be read. */
-    newRequirements?: string[];
-    /** Coverage label per requirement key; absent when no requirement has a mapped test or coverage is unknown. */
-    requirementCoverage?: Record<string, string>;
-}
-
-/** One entry in a card's Leans on or Leaned on by list. */
-export interface RequirementLink {
-    capability: string;
-    heading: string;
-    /** The link as written, `capability#heading`. */
-    raw: string;
-    broken: boolean;
-    /** Workspace-relative spec path, present only when not broken. */
-    specPath?: string;
-}
-
-/** What the bar needs to offer Undo for the last Approve all or Remove. */
-export interface LivingUndo {
-    token: string;
-    kind: 'approve' | 'remove';
-    /** Epoch ms. */
-    expiresAt: number;
-}
-
-/** What the living-spec Overview lists, parsed from the spec tier once on the extension side. */
-export interface LivingOverview {
-    /** The `## Purpose` body, verbatim markdown. */
-    purpose: string;
-    requirements: { heading: string; adopted: boolean; leansOn?: RequirementLink[]; leanedOnBy?: RequirementLink[] }[];
-}
-
-// ============================================
 // Message Protocols
 // ============================================
 
@@ -305,14 +230,6 @@ export interface LivingOverview {
  * `enhancementButtons`.
  */
 export interface NavState<Report = unknown> {
-    /** Living-spec mode: webview hides the workflow stepper and footer. */
-    livingMode?: boolean;
-    /** Capability facts for the header; living-spec mode only. */
-    livingMeta?: LivingHeaderMeta | null;
-    /** The Overview's material; living-spec mode only. */
-    livingOverview?: LivingOverview | null;
-    /** The pending Undo for the last Approve all or Remove, present only while it is offered. */
-    livingUndo?: LivingUndo | null;
     /** The next steps a bug or idea page offers, computed from its files; report panels only. */
     reportActions?: { id: string; label: string; primary: boolean }[];
     /** Which report set the panel shows and, on the Story or Decision document, its page model; report panels only. */
@@ -429,18 +346,8 @@ export type ExtensionToViewerMessage<State = ViewerState, Report = unknown> =
           navState: NavState<Report>;
       }
     | {
-          type: 'livingHealthResolved';
-          /** The fact bundle with coverage/drift folded in, once the health call returns. */
-          livingMeta: LivingHeaderMeta;
-      }
-    | {
           type: 'actionToast';
           message: string;
-      }
-    | {
-          type: 'revealRequirement';
-          /** The requirement heading to bring into view, verbatim. */
-          heading: string;
       };
 
 /**
@@ -533,8 +440,6 @@ export type ViewerToExtensionMessage =
     | {
           type: 'runDocRefinement';
           doc: ReviewCommentDoc;
-          /** A living spec has no `.spec-context.json` to persist to, so its comments ride along. */
-          comments?: { lineNum: number; lineContent: string; comment: string }[];
       }
     // Lifecycle actions
     | {
@@ -553,53 +458,11 @@ export type ViewerToExtensionMessage =
     | {
           type: 'setStatus';
       }
-    // Living-spec drift → fold the changed code back into the spec
-    | {
-          type: 'livingUpdate';
-      }
-    // Update every drifted living spec from the current changes — the footer's second action
-    | {
-          type: 'livingSyncAll';
-      }
-    // Adopt another code area as a living spec; the command asks which
-    | {
-          type: 'livingAdopt';
-          /** Adopt the open capability's own areas rather than asking for new ones. */
-          thisCapability?: boolean;
-      }
-    // Check the open capability's spec against its code
-    | {
-          type: 'livingValidate';
-      }
-    // A Covers glob was clicked: reveal its folder in the Explorer
-    | {
-          type: 'revealGlob';
-          glob: string;
-      }
     // The reader chose the Overview inside the viewer, so the entry point's
     // document request is spent. Sent because a content refresh reassigns the
     // panel HTML and the webview's own mode does not survive that.
     | {
           type: 'overviewChosen';
-      }
-    // Living-spec approval: drop the `adopted` marker on one requirement, or all of them
-    // Delete one requirement from the living spec, by heading
-    | {
-          type: 'removeRequirement';
-          heading: string;
-      }
-    | {
-          type: 'approveRequirement';
-          heading: string;
-      }
-    | {
-          type: 'undoLivingAction';
-          token: string;
-      }
-    | {
-          type: 'approveSpec';
-          /** Which tier to approve; the one on screen when absent. */
-          documentType?: DocumentType;
       }
     // A bug or idea page's footer button: the id only, the extension re-reads the item
     | {
@@ -623,14 +486,6 @@ export type ViewerToExtensionMessage =
           type: 'openFile';
           filename: string;
           line?: number;
-      }
-    // Living-specs chip click — open the capability in the Living Specs viewer
-    | {
-          type: 'openLivingSpec';
-          capabilityName: string;
-          specPath?: string;
-          /** A requirement heading to land on, verbatim. */
-          requirement?: string;
       }
     // Webview render-time error (reported by error boundaries)
     | {

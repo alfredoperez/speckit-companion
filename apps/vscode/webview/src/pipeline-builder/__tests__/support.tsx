@@ -12,7 +12,7 @@
 import { render } from 'preact';
 import { Canvas } from '../Canvas';
 import type {
-    PipelineGraph, PipelineLivingSpecs, PipelineNode, PipelineStep,
+    PipelineGraph, PipelineNode, PipelineStep,
 } from '../../../../src/protocol/pipeline';
 
 export function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
@@ -73,23 +73,6 @@ export function graph(overrides: Partial<PipelineGraph> = {}): PipelineGraph {
     };
 }
 
-
-/** A living-specs block shaped the way `pipeline-graph.py` emits one. */
-export function livingSpecs(
-    overrides: Partial<PipelineLivingSpecs> = {},
-): PipelineLivingSpecs {
-    return {
-        enabled: false,
-        layout: 'central',
-        origin: 'none',
-        path: '',
-        capabilities: [],
-        exempt: ['**/*.config.*', '**/*.test.*', '**/__tests__/**', '**/migrations/**'],
-        rules: { spec: [], plan: [] },
-        warnings: [],
-        ...overrides,
-    };
-}
 
 /** Preact batches state updates, so a click's re-render lands on the next tick. */
 export const flush = () => new Promise(resolve => setTimeout(resolve, 0));

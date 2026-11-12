@@ -106,7 +106,7 @@ It must print exactly ${letters.length} cell(s) recorded. If it prints fewer, tr
 2. Measure, keeping the diffs for the judges:
 
 \`\`\`bash
-cd ${BENCH} && node run-all.mjs capture --sizes ${size} --modes companion,companion-living --no-reset
+cd ${BENCH} && node run-all.mjs capture --sizes ${size} --modes companion --no-reset
 \`\`\`
 
 Report the capture output verbatim in your final text, and nothing else. Do not run judges, do not commit, do not edit anything.`,
@@ -213,7 +213,7 @@ const recorded = await agent(
 1. Fold the rubric scores into the composite (this resets the cells; the judges are done with them):
 
 \`\`\`bash
-cd ${BENCH} && node run-all.mjs capture --sizes ${size} --modes companion,companion-living
+cd ${BENCH} && node run-all.mjs capture --sizes ${size} --modes companion
 \`\`\`
 
 2. Read the round against the sweeps before it, and keep the outputs:
@@ -226,7 +226,7 @@ cd ${BENCH} && for m in calls context turns work oracle wall; do echo "== $m"; n
 
 4. Commit the round in ${BENCH}: \`git add stats.jsonl history.jsonl runs runs-meta reviews REPORT.md\` then commit with the message \`bench: ${sweep}\`. Do not push.
 
-Return the two rows (mode = companion or companion-living), the verbatim \`calls\` and \`context\` compare tables, and the commit sha.`,
+Return the two rows (mode = companion), the verbatim \`calls\` and \`context\` compare tables, and the commit sha.`,
   { label: 'record', phase: 'Record', schema: RECORD_SCHEMA, effort: 'low' },
 )
 

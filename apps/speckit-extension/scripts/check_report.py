@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """The PASS/FAIL/WARN/INFO report shared by the check_* evals.
 
-`add` takes either the legacy `bool | None` shorthand (`check_capture.py` and
-`check_living_spec.py`: True/False/None → PASS/FAIL/INFO) or an explicit status
+`add` takes either the legacy `bool | None` shorthand (`check_capture.py`:
+True/False/None → PASS/FAIL/INFO) or an explicit status
 string (`check_quality.py`, the only caller that needs WARN). Both land in the
 same `rows`/`to_text`/`to_dict` shape, so a caller reading `Report.to_dict()`
 never has to know which eval produced it.

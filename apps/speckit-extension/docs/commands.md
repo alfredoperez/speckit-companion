@@ -16,7 +16,6 @@ Everything the extension declares, by family. The README's [Commands](../README.
 | [Pipeline](#pipeline-commands) | `speckit.companion.specify`, `speckit.companion.plan`, `speckit.companion.tasks`, `speckit.companion.implement`, `speckit.companion.auto`, `speckit.companion.classify`, `speckit.companion.mark-complete` |
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
 | [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
-| [Living specs](#living-specs-commands) | `speckit.companion.living-adopt`, `speckit.companion.living-drift`, `speckit.companion.living-show`, `speckit.companion.living-validate`, `speckit.companion.living-sync`, `speckit.companion.living-coverage`, `speckit.companion.living-move` |
 | [Hooks](#lifecycle-hooks) | `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge`, `speckit.companion.on-prompt`, `speckit.companion.on-stop` |
 
 ## Diagnostics
@@ -25,7 +24,7 @@ Everything the extension declares, by family. The README's [Commands](../README.
 
 Say what actually happened in a run, and where the record, the display, or the run's own claim is at fault. Read-only, always exits `0`, and every core check derives from `.spec-context.json` plus the spec's own documents — so it produces a meaningful verdict on a spec created long before this command existed.
 
-Nothing is read off a prior verdict. Drift is recomputed from scratch and a recorded drift-clean claim that contradicts the recomputation is reported as a false claim. Every check reports whether it ran, was skipped (always with a reason), or is not applicable, so "found nothing" and "could not look" never print the same way.
+Nothing is read off a prior verdict. Every check reports whether it ran, was skipped (always with a reason), or is not applicable, so "found nothing" and "could not look" never print the same way.
 
 ```bash
 python3 .specify/extensions/companion/scripts/doctor.py                              # the active spec
@@ -40,18 +39,17 @@ python3 .specify/extensions/companion/scripts/doctor.py --chat                  
 | `record` | Which steps started and never finished; which checked-off tasks have no journal entry; whether task finishes were written in one burst (so their durations mean nothing); which steps were closed by the wrong author |
 | `triage` | For the "status says one thing, the pipeline bar offers another" symptom: *records disagree with each other* (a capture defect) or *records are consistent* (a display defect) |
 | `bleed` | Where one step did the next step's work — plan content in the spec, a task checklist in the plan, implementation code in the task list, one task list in two documents, source committed before implement, a pre-implement step that outlasted implement |
-| `drift` | Recomputed drift with its work shown — capability, files, commits — each flag classified `real`, `self-inflicted`, `suspect-baseline`, or `unknown`; plus any recorded claim the recomputation contradicts |
 | `completion` | Why a spec did not land as `completed`: refused (with the writer's reason), reported success but never arrived, landed with the display disagreeing, or never attempted |
 | `verification` | Whether implement closed having actually run anything — a step that recorded no executed check shipped code nothing was run against. Reports "no record" rather than a problem on a spec that never reached implement |
 | `artifact` | Whether each step produced the file it declared — the build derives a manifest of what a run must write from every node's `writes:`, and a step that closed without one of them is named with the node that promised it. A warning, not a gate. An artifact the size budget may fold away is not judged, and a step that produced none of what this pipeline declares reports "no record" |
 | `template` | Whether `tasks.md` kept its generated shape — user-story phases containing waves, join lines and checkpoints intact |
-| `dispatch` | Whether plan handed out the workers it was told to. `dispatch-briefs.py` prints one reader brief per recorded code area and one writer brief per design document, and each worker checks in to the trace. A closed plan with briefs and no check-ins is a warning naming what it did inline, and so is an implement that folded its living-spec deltas without the reviewer `--living` offered |
+| `dispatch` | Whether plan handed out the workers it was told to. `dispatch-briefs.py` prints one reader brief per recorded code area and one writer brief per design document, and each worker checks in to the trace. A closed plan with briefs and no check-ins is a warning naming what it did inline |
 | `trace` | What the self-trace recorded: capture calls that failed and why, call counts, payload sizes, per-file rewrite counts, and calls that resolved to no spec at all. Reads the unrecorded-calls marker before deciding a spec has no trace evidence, so a run that could not write its trace at all still reports what it lost |
 | `chat` | *(`--chat` only)* From the session transcript: work tried and failed, retried, or stopped; claims the recomputation contradicts; and waste — narration, repeated commands, repeated rewrites |
 
 ### The self-trace
 
-Every capture and drift call records itself to `specs/<NNN>/.trace.jsonl` — one line, success or failure, with the reason verbatim. It costs no extra call and adds nothing to any command body: the scripts the pipeline already runs write it from the inside. Size-capped, self-ignoring on first write, read by nothing but the doctor, and safe to delete (a missing trace is a skipped check, never an error).
+Every capture call records itself to `specs/<NNN>/.trace.jsonl` — one line, success or failure, with the reason verbatim. It costs no extra call and adds nothing to any command body: the scripts the pipeline already runs write it from the inside. Size-capped, self-ignoring on first write, read by nothing but the doctor, and safe to delete (a missing trace is a skipped check, never an error).
 
 ### Debug mode
 
@@ -217,7 +215,7 @@ Writes `<feature_directory>/spec.md` (older projects have `<short-name>.spec.md`
 
 ### `speckit.companion.plan`
 
-Writes `plan.md` (summary, constitution check, project structure) plus `research.md`, `data-model.md`, and `contracts/` as the recorded size warrants — at `simple` size it keeps the summary and folds the rest inline. When living specs are configured it reads the capabilities in scope into context first, and pulls each one's architecture tier only for an architecture-significant change.
+Writes `plan.md` (summary, constitution check, project structure) plus `research.md`, `data-model.md`, and `contracts/` as the recorded size warrants — at `simple` size it keeps the summary and folds the rest inline. 
 
 ### `speckit.companion.tasks`
 
@@ -227,7 +225,7 @@ Writes `tasks.md`: a dependency-ordered checklist grouped by user story into pha
 
 Executes `tasks.md` wave by wave in dependency order, journaling each task's finish the moment it completes and folding the journal into `.spec-context.json` after each wave. It owns the `- [ ]` checkboxes through that fold rather than editing them by hand. It ends at `implemented` and hands off to converge, which is what completes the spec.
 
-On a host with a subagent tool it hands each user-story phase that owns five or more files to its own worker: the phases are disjoint because the tasks step gave every file exactly one owner phase, the workers only append their finishes, and the main agent folds each result as it returns. The Foundational phase goes through `dispatch-briefs.py --waves`, which splits it into waves (at join lines, `###` blocks and `Wave` headers, so tests stay ahead of the code they test) and prints the next wave that still has unfinished tasks: up to four worker briefs when it holds four or more, otherwise the tasks to build inline. Implement runs it before each Foundational wave and crosses a join line only once that wave's workers have returned; Setup and Polish it builds itself. Without a subagent tool it builds the waves inline exactly as before. Before it folds living-spec deltas, `dispatch-briefs.py --living` hands them to one reviewer with a short rubric (one rule per requirement, a checkable heading, behaviour rather than implementation, no filler) and the shape checker's findings; the reviewer edits the blocks in place and the fold runs after it returns.
+On a host with a subagent tool it hands each user-story phase that owns five or more files to its own worker: the phases are disjoint because the tasks step gave every file exactly one owner phase, the workers only append their finishes, and the main agent folds each result as it returns. The Foundational phase goes through `dispatch-briefs.py --waves`, which splits it into waves (at join lines, `###` blocks and `Wave` headers, so tests stay ahead of the code they test) and prints the next wave that still has unfinished tasks: up to four worker briefs when it holds four or more, otherwise the tasks to build inline. Implement runs it before each Foundational wave and crosses a join line only once that wave's workers have returned; Setup and Polish it builds itself. Without a subagent tool it builds the waves inline exactly as before.
 
 ### `speckit.companion.auto`
 
@@ -246,35 +244,3 @@ python3 .specify/extensions/companion/scripts/write-context.py --mark-complete -
 ```
 
 It refuses unless the spec is already `implemented` (or `implementing` with every task checked), and leaves an already-completed spec untouched. It never refuses for lack of verification: a spec with nothing verified and no concern explaining why completes with one `finished, unverified` concern and a `[companion] Warning:` line. Converge completes the spec in every run: once every task is checked, including any task converge added and built in the same pass, closing converge marks the spec completed, with no assistant involved. An added task left open keeps it at `implemented`. This command is left for marking a spec complete by hand.
-
-## Living-specs commands
-
-All five are **opt-in by presence**: with no `livingSpecs` block in `.specify/companion.yml`, or `enabled: false`, each reports nothing and changes nothing. The read commands are read-only and never fail the build — they always exit success, so a surrounding workflow decides whether to treat findings as a gate.
-
-### `speckit.companion.living-adopt`
-
-Brownfield adoption wizard. Point it at one code area; it reads that area's surface, proposes capabilities for just that area, and drafts a living spec for each from what the code already exposes. Every draft wears its limits openly — the spec is marked `[DRAFT]`, each requirement is tagged `observed` or `inferred`, uncertain items carry `[NEEDS CLARIFICATION: …]`, and unreadable files are listed under `## Uncovered`. You confirm, and the capability is registered so the resolver recognizes it. Incremental by design: one area at a time, never a whole-repo bootstrap, and a re-run on an adopted area is a safe no-op.
-
-### `speckit.companion.living-drift`
-
-Per capability, the source files that changed since its living spec was last committed, classified `tracked` (it went through the pipeline but was never folded back) or `unspeced` (it changed entirely outside the pipeline). Add `--working` to also count working-tree changes — uncommitted edits, deletions, and untracked files. Exempt generated code, tests, or migrations with a `livingSpecs.exempt` glob list. A capability whose spec isn't committed yet is **skipped**, not passed — the run reports how many it checked versus skipped, so "clean" is never confused with "did not run".
-
-### `speckit.companion.living-show`
-
-Prints one slice of a living spec instead of the whole file: `--headings <capability>` for its requirement headings in file order, `--requirement "<heading>"` for one requirement with its prose and scenarios (add `--capability` to search one capability), and `--file <path>` for the requirements whose markers describe that file, grouped by capability, most-specific first. It uses the same parser the load steps use, so its count is the viewer outline's count and the coverage denominator. Read-only, `--json` available, and every answer exits successfully — an unregistered capability lists the registered ones, a name matching nothing lists the headings that exist, and an ambiguous name lists the candidates rather than guessing. In the editor the same lookup runs the other way: the status bar names how many living specs claim the file you have open, and one click opens the requirement that describes it.
-
-### `speckit.companion.living-validate`
-
-The shape check every other reader assumes has already run. It reports a requirement that states a rule and never says how anyone would know it held, a scenario with a condition and no outcome (or the reverse), two requirements in one capability sharing the heading that fold-back and coverage both join on, a delta block marked for a capability the registry does not list, a MODIFIED or REMOVED entry naming a heading the target spec does not carry, and a file marker whose pattern matches nothing on disk. Each finding carries a severity, a stable code, the file, the line and a one-line fix; `--json` emits them as an object. Read-only and always exits successfully. Severity answers exactly one question — the fold runs these same checks and refuses to write a capability whose deltas carry an error, while a warning never stops anything.
-
-### `speckit.companion.living-sync`
-
-The write-side twin of drift: sync every affected living spec from your current changes — uncommitted, deleted, and untracked files included — in one pass. It groups the changes by capability using the same computation as `living-drift --working`, then updates each affected spec scoped to that capability's changed files, update-not-regenerate, so clarifications and hand-written detail survive. Reports what was synced and what was skipped (a never-committed spec belongs to `living-adopt`), and leaves the spec edits uncommitted so they commit with the code that caused them.
-
-### `speckit.companion.living-coverage`
-
-Reads each capability's `.coverage.md` tier and reports, per requirement, which have a test mapped and which are uncovered.
-
-### `speckit.companion.living-move`
-
-Moves a living spec between central storage (`capabilities/<capability>/<name>.spec.md`) and colocation next to its code, taking the spec file, its tier siblings (`.rules.md`, `.coverage.md`, or a legacy `.arch.md`), and the registry entry together so the three cannot end up disagreeing. Reversible — moving back restores the prior layout.

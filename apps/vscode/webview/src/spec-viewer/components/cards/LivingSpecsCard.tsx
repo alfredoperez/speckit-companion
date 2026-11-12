@@ -1,7 +1,5 @@
-import type { ViewerState, VSCodeApi, CapabilityContentView, LivingSpecsView } from '../../types';
+import type { ViewerState, LivingSpecsView } from '../../types';
 import { readableName } from '../../../../../src/core/utils/capabilityNames';
-
-declare const vscode: VSCodeApi;
 
 export interface LivingSpecsCardProps {
     state: ViewerState;
@@ -10,22 +8,10 @@ export interface LivingSpecsCardProps {
 export interface LivingSpecChip {
     name: string;
     synced: boolean;
-    specPath?: string;
 }
 
-/**
- * Collapse a living-specs view to one chip per capability. Prefers the resolved
- * `capabilities` (which carry the clickable spec path); falls back to the
- * names-only `loaded`/`synced` arrays for legacy payloads.
- */
+/** Collapse an old record's `loaded`/`synced` names to one chip per capability. */
 export function livingSpecChips(ls: LivingSpecsView): LivingSpecChip[] {
-    if (ls.capabilities && ls.capabilities.length > 0) {
-        return ls.capabilities.map((cap: CapabilityContentView) => ({
-            name: cap.name,
-            synced: cap.synced,
-            ...(cap.available && cap.specPath ? { specPath: cap.specPath } : {}),
-        }));
-    }
     const synced = new Set(ls.synced);
     const seen = new Set<string>();
     const chips: LivingSpecChip[] = [];
@@ -37,18 +23,10 @@ export function livingSpecChips(ls: LivingSpecsView): LivingSpecChip[] {
     return chips;
 }
 
-/** Shared compact links used by both the Overview context and legacy card story. */
+/** An old record's capability names as plain text; nothing opens, because the capability files are no longer a surface. */
 export function LivingSpecLinks({ livingSpecs }: { livingSpecs: LivingSpecsView }) {
     const chips = livingSpecChips(livingSpecs);
     if (chips.length === 0) return null;
-
-    const openSpec = (chip: LivingSpecChip) => {
-        vscode.postMessage({
-            type: 'openLivingSpec',
-            capabilityName: chip.name,
-            ...(chip.specPath ? { specPath: chip.specPath } : {}),
-        });
-    };
 
     const groups = [
         { label: 'Updated by this run', chips: chips.filter(c => c.synced) },
@@ -63,15 +41,7 @@ export function LivingSpecLinks({ livingSpecs }: { livingSpecs: LivingSpecsView 
                     <ul class="living-specs-chips" aria-label={group.label}>
                         {group.chips.map(chip => (
                             <li key={chip.name} class="living-specs-chips__item">
-                                <button
-                                    type="button"
-                                    class="living-specs-chip living-specs-chip--link"
-                                    title={`Open ${chip.name} in the Living Specs viewer`}
-                                    aria-label={`Open ${readableName(chip.name)} in the Living Specs viewer`}
-                                    onClick={() => openSpec(chip)}
-                                >
-                                    {readableName(chip.name)}
-                                </button>
+                                <span class="living-specs-chip" title={chip.name}>{readableName(chip.name)}</span>
                             </li>
                         ))}
                     </ul>
@@ -82,10 +52,9 @@ export function LivingSpecLinks({ livingSpecs }: { livingSpecs: LivingSpecsView 
 }
 
 /**
- * Compact run-log surface for the living specs a feature touched (LS·7): one
- * chip per capability, grouped by whether the run updated it or only read it. The full capability content lives in the Living Specs viewer, so a
- * chip opens it there rather than reprinting it here. Hides itself when there's
- * no `livingSpecs` data, like every other card.
+ * Run-log surface for the living specs an older feature touched: one plain
+ * chip per capability, grouped by whether the run updated it or only read it.
+ * Hides itself when there is no `livingSpecs` data, like every other card.
  */
 export function LivingSpecsCard({ state }: LivingSpecsCardProps) {
     const ls = state.livingSpecs;

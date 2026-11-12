@@ -20,13 +20,6 @@ import {
     stripTaskFormatLegend
 } from './preprocessors';
 import { parseAcceptanceScenarios } from './scenarios';
-import {
-    stripLivingDraftBanner,
-    preprocessLivingPurpose,
-    preprocessLivingScenarios,
-    preprocessLivingRequirements,
-    preprocessLivingUncovered
-} from './livingComponents';
 import { markClarifications, rememberClarifications } from './clarifications';
 import { mapToSourceLines } from './sourceLines';
 import { preprocessLedgerTasks, renderTaskRow } from './ledger/tasks';
@@ -45,20 +38,9 @@ let currentTaskId: string | null = null;
 // Whether spec-context.json data is available (controls metadata stripping)
 let hasSpecContext = false;
 
-// Whether the current document is a living spec. Set from navState.livingMode
-// before render; when false, none of the living preprocessors run and the
-// document takes the feature-spec path unchanged.
-let livingMode = false;
-
 let reportMode = false;
 
-// A line is trusted living-component HTML only if it *starts* with one of the
-// tag shapes the living preprocessors emit — never merely contains the class
-// substring. Prose that happens to include `class="living-` must still be
-// escaped, not passed through as raw HTML.
-const LIVING_HTML_LINE = /^\s*<(?:div|span|ol|ul|li|p) class="living-/;
-
-// `<!-- touches: a/**, b.ts -->`, `<!-- adopted: CLAUDE.md:18 -->`, `<!-- reviewed: … -->`: a living spec's markers.
+// `<!-- touches: a/**, b.ts -->`, `<!-- adopted: CLAUDE.md:18 -->`, `<!-- capability: name -->`: markers an older spec may carry; they are metadata, never prose.
 const TOUCHES_MARKER_LINE = /^\s*<!--\s*(?:touches|adopted|reviewed|aligns|capability):\s*.+?\s*-->\s*$/i;
 
 // Per-task capture summaries (what each task did + files), keyed by task id.
@@ -83,14 +65,6 @@ export function setCurrentTask(taskId: string | null): void {
  */
 export function setHasSpecContext(value: boolean): void {
     hasSpecContext = value;
-}
-
-/**
- * Set whether the document is a living spec. When true, the living
- * preprocessors run; when false, the feature-spec render path is unchanged.
- */
-export function setLivingMode(value: boolean): void {
-    livingMode = value;
 }
 
 /** Set whether the document is a bug or idea report, whose open questions get an Answer button. */
@@ -262,17 +236,7 @@ export function renderMarkdown(markdown: string): string {
     // Preprocess special patterns before main rendering
     markdown = preprocessHtmlComments(markdown);
 
-    // Living-spec components run only in living mode; a feature spec never
-    // touches this path, so its output stays byte-identical (FR-001, SC-001).
-    if (livingMode) {
-        markdown = stripLivingDraftBanner(markdown);
-        markdown = preprocessLivingPurpose(markdown);
-        markdown = preprocessLivingScenarios(markdown);
-        markdown = preprocessLivingRequirements(markdown);
-        markdown = preprocessLivingUncovered(markdown);
-    }
-
-    if (!livingMode) markdown = preprocessSpecLedger(markdown);
+    markdown = preprocessSpecLedger(markdown);
     markdown = preprocessLedgerTasks(markdown, currentTaskId);
     markdown = preprocessSpecMetadata(markdown, hasSpecContext);
     markdown = preprocessUserStories(markdown);
@@ -404,9 +368,7 @@ export function renderMarkdown(markdown: string): string {
             continue;
         }
 
-        // A requirement's file marker is metadata, never prose. The living
-        // requirement pass consumes the ones it owns; any other path reaches
-        // here, and printing the comment's own source is not a rendering.
+        // A requirement's file marker is metadata, never prose; printing the comment's own source is not a rendering.
         if (TOUCHES_MARKER_LINE.test(line)) continue;
 
         // Blockquote (group consecutive '>' lines into one <blockquote>).
@@ -604,8 +566,7 @@ export function renderMarkdown(markdown: string): string {
 
         // Check if line is preprocessed HTML (callouts, user stories, metadata, scenario tables)
         // Match any line containing our custom class patterns or HTML structure elements
-        if (LIVING_HTML_LINE.test(line) ||
-            line.includes('<div class="callout') ||
+        if (line.includes('<div class="callout') ||
             line.includes('<p class="rp-meta') ||
             line.includes('<div class="ck-group') ||
             line.includes('<div class="tech-grid') ||

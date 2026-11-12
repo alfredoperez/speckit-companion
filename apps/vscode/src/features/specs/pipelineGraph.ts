@@ -223,25 +223,6 @@ export function restoreDecision(
     ]);
 }
 
-/**
- * Turn living specs on or off, or choose where the specs live.
- *
- * Written into whichever file the resolver reads — the registry at the project
- * root, or the legacy block in `companion.yml` — because a setting written into
- * the other one is reported as saved and never read.
- */
-export function writeLivingSpecs(
-    script: string,
-    workspaceRoot: string,
-    change: { enabled?: boolean; layout?: 'central' | 'colocated' },
-): Promise<string | null> {
-    return runConfigWrite(script, workspaceRoot, [
-        ...(change.enabled === undefined
-            ? [] : ['--living-enabled', change.enabled ? 'true' : 'false']),
-        ...(change.layout === undefined ? [] : ['--living-layout', change.layout]),
-    ]);
-}
-
 /** Create a step of the project's own, seeded runnable. */
 export function createStep(
     script: string,

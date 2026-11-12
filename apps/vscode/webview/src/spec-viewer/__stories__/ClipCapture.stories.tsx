@@ -20,7 +20,6 @@
  * CSS pixels and one size change invalidates all of them.
  *
  *   D · review                 1224 x 776   the review loop, one document
- *   E · living-specs           1564 x 992   work tree, a click, the spec open
  *   F · workflow-documents 1224 x 776   two workflow documents, Plan and Tasks
  *   G · own-workflow           1224 x 776   Create Spec, then the step rail
  *   H · inline-comments        918 x 594    one comment card, closed and open
@@ -41,26 +40,19 @@
  * sidebar is the documented recreation (`sidebarTree.tsx`). Nothing here draws
  * a panel that the product does not draw.
  *
- * TWO DELIBERATE FIXTURE CHOICES, BOTH RECORDED FOR THE STORYBOARDS
- *  1. The Companion workflow card's shipping description is the pinned
- *     "specs 60–68% leaner" line (`workflowManager.ts` COMPANION_WORKFLOW).
- *     The claim ledger lists that number as unsourced and bans it from
- *     published material, so the G group renders the card with a cleared
- *     description instead. The product string is what needs fixing; a clip is
- *     not the place to publish it again.
- *  2. The E group's completed run carries a living-specs record renamed onto
- *     `photo-storage`, which is what the sidebar rows and the living-spec
- *     fixture call it. The on-disk completed Teamboard context records
- *     `profiles` / `media-storage` instead, and
- *     `docs/screenshots/generated/overview.png` keeps showing those. The
- *     override exists so nothing in this clip can name a capability its own
- *     tree does not list.
+ * ONE DELIBERATE FIXTURE CHOICE, RECORDED FOR THE STORYBOARDS
+ *  The Companion workflow card's shipping description is the pinned
+ *  "specs 60–68% leaner" line (`workflowManager.ts` COMPANION_WORKFLOW).
+ *  The claim ledger lists that number as unsourced and bans it from
+ *  published material, so the G group renders the card with a cleared
+ *  description instead. The product string is what needs fixing; a clip is
+ *  not the place to publish it again.
  */
 
 import type { Meta, StoryObj } from '@storybook/preact';
 import type { ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
-import type { NavState, ReviewComment, SerializedFooterAction, ViewerState } from '../types';
+import type { ReviewComment, SerializedFooterAction, ViewerState } from '../types';
 import {
     InteractiveViewer,
     vsFromContext,
@@ -68,23 +60,11 @@ import {
     type SpecContextData,
 } from './viewerHarness';
 import { CaptureFrame, STAGE_HEIGHT, STAGE_WIDTH } from './captureFrame';
-import { SidebarShell, type RowState } from './sidebarTree';
-import { specsPane, livingSpecsWorkTreePane, steeringPane } from './SidebarCapture.stories';
+import { SidebarShell } from './sidebarTree';
+import { specsPane, steeringPane } from './SidebarCapture.stories';
 import { teamboardDocs } from './VideoCapture.stories';
-import { mockDoc, mockNavState } from '../components/__stories__/mockData';
+import { mockDoc } from '../components/__stories__/mockData';
 import { DocumentContext, severalOnOneDocument } from '../components/InlineComment.stories';
-import { App } from '../App';
-import { navState, viewerState, markdownHtml, historyEntries } from '../signals';
-import {
-    renderMarkdown,
-    setCurrentTask,
-    setHasSpecContext,
-    setLivingCoverage,
-    setLivingMode,
-    setTaskSummaries,
-} from 'speckit-viewer/core/markdown/index';
-import { applyHighlighting } from '../highlighting';
-import { buildToc } from '../toc';
 import { restoreComments } from '../editor/restoreComments';
 import { clearAllRefinements } from '../editor/refinements';
 import { CreateSpecMock, type MockWorkflowChoice } from '../../spec-editor/CreateSpecMock';
@@ -94,12 +74,9 @@ import teamboardSpec from '../__fixtures__/teamboard/041-profile-photo-upload/sp
 import teamboardTasks from '../__fixtures__/teamboard/041-profile-photo-upload/tasks.md?raw';
 import ctxSpecifiedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.specified.json?raw';
 import ctxPlannedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.planned.json?raw';
-import ctxCompletedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.completed.json?raw';
-import photoStorageLivingSpec from '../__fixtures__/teamboard/photo-storage.spec.md?raw';
 
 const ctxSpecified = JSON.parse(ctxSpecifiedRaw) as SpecContextData;
 const ctxPlanned = JSON.parse(ctxPlannedRaw) as SpecContextData;
-const ctxCompleted = JSON.parse(ctxCompletedRaw) as SpecContextData;
 
 /** The two-button pause footer, same shape VideoCapture's snapshots use. */
 const pauseFooter = (forwardLabel: string): SerializedFooterAction[] => [
@@ -237,10 +214,9 @@ const REVIEW_SIDEBAR = 340;
  * The closing shot's sidebar column, and the reason it holds only TWO panes.
  *
  * Specs and Steering are the pair a fresh install with just the VS Code
- * extension actually puts in the activity bar: `contributes.views` gates
- * Living Specs behind `speckit.companion.installed` and ships Settings &
- * Feedback hidden. B4 in SidebarCapture.stories.tsx films all three sections
- * because it is the establishing shot of the whole sidebar; this one is the
+ * extension actually puts in the activity bar: `contributes.views` ships
+ * Settings & Feedback hidden. B4 in SidebarCapture.stories.tsx films the
+ * sections because it is the establishing shot of the whole sidebar; this one is the
  * end of a review, so it shows what the reader would have, not the maximum.
  *
  * Both panes are the same recreation (`sidebarTree.tsx`) and the same fixture
@@ -359,210 +335,6 @@ export const D5Sidebar: Story = {
     name: 'D5 · review: the spec back in the sidebar',
     parameters: { capture: { width: STAGE_WIDTH, height: STAGE_HEIGHT } },
     render: () => <ReviewShot comments={appliedComments} sidebar />,
-};
-
-// ═════════════════════════════════════════════════════════════════════════
-// E · living-specs — open a living spec from the work tree
-// ═════════════════════════════════════════════════════════════════════════
-// One window, three shots, filmed as one gesture: read the tree, click a row,
-// land in the spec. The sidebar column is the SAME tree in all three, so the
-// only things that ever change are one row's wash and the pane beside it.
-//
-//   E1  the tree at rest, beside the feature run that just finished
-//   E2  the pointer resting on the photo-storage row (list.hoverBackground)
-//   E3  that capability open in the viewer's real living mode, its row left
-//       selected the way the list leaves it once focus moves to the editor
-//
-// The tree is `livingSpecsWorkTreePane`, the deep fixture in
-// SidebarCapture.stories.tsx: eight capabilities, three of them centralized at
-// `capabilities/<name>/spec.md` and five colocated in `src/`, grouped exactly
-// the way `buildCapabilityTree` groups them. Depth is the point — the
-// centralized-versus-colocated split is only legible once there is a directory
-// tree to see it in.
-//
-// Deliberately NOT filmed: the Architecture and Coverage tiers. The resolver
-// recognizes `.rules.md` / `.coverage.md` siblings but nothing generates them,
-// and this repo's own registered capabilities have none. A capability with only
-// a spec on disk is a leaf row and shows only its spec, which is what E3 shows.
-
-const LIVING_WIDTH = 1564;
-const LIVING_HEIGHT = 992;
-const LIVING_SIDEBAR = 340;
-
-const livingRequirementCount = (photoStorageLivingSpec.match(/^###\s+/gm) ?? []).length;
-const livingScenarioCount = (photoStorageLivingSpec.match(/^####\s+Scenario:/gm) ?? []).length;
-
-/**
- * The sidebar column. Identical across E1, E2 and E3 except for `emphasis`,
- * which is the one row the list is doing something to.
- */
-function LivingSidebar({ emphasis }: { emphasis?: { row: string; state: RowState } }) {
-    return (
-        <div
-            id="clip-sidebar"
-            data-panel="sidebar"
-            style={`width: ${LIVING_SIDEBAR}px; flex-shrink: 0; border-right: 1px solid var(--vscode-editorWidget-border); background: var(--vscode-sideBar-background); overflow: hidden;`}
-        >
-            <SidebarShell
-                panes={[
-                    { ...specsPane(false), collapsed: true },
-                    livingSpecsWorkTreePane(emphasis, true),
-                    { ...steeringPane(), collapsed: true },
-                ]}
-            />
-        </div>
-    );
-}
-
-function LivingWindow({
-    emphasis,
-    children,
-}: {
-    emphasis?: { row: string; state: RowState };
-    children: ComponentChildren;
-}) {
-    return (
-        <div style="display: flex; width: 100%; height: 100%; background: var(--vscode-editor-background);">
-            <LivingSidebar emphasis={emphasis} />
-            <div id="clip-viewer" data-panel="viewer" style="flex: 1; min-width: 0; overflow: hidden;">
-                {children}
-            </div>
-        </div>
-    );
-}
-
-/** The row the clip clicks, in the deep tree's id space. */
-const CLICKED_ROW = 'lw-photo-storage';
-
-/**
- * The real App in living mode on the photo-storage fixture — the same
- * signals-in path `index.tsx` uses, and the same one C3 in
- * ReadmeCapture.stories.tsx uses, minus the tier tabs (see the group note).
- */
-function LivingCapabilityViewer() {
-    setLivingMode(true);
-    setLivingCoverage(null);
-    setHasSpecContext(true);
-    setCurrentTask(null);
-    setTaskSummaries(null);
-    viewerState.value = null;
-    historyEntries.value = [];
-    navState.value = mockNavState({
-        coreDocs: [mockDoc('spec', true, 'Spec')],
-        relatedDocs: [],
-        currentDoc: 'spec',
-        workflowPhase: 'spec',
-        isViewingRelatedDoc: false,
-        specStatus: 'active',
-        badgeText: 'LIVING',
-        createdDate: null,
-        specContextName: 'Photo Storage',
-        titleFromHeading: true,
-        branch: null,
-        filePath: 'capabilities/photo-storage/spec.md',
-        docTypeLabel: 'Spec',
-        activityPanelEnabled: false,
-        livingMode: true,
-        livingMeta: {
-            capabilityName: 'photo-storage',
-            specPath: 'capabilities/photo-storage/spec.md',
-            location: 'central',
-            match: [
-                'src/services/photoStorage/**',
-                'src/api/photos/**',
-                'src/components/PhotoUploader/**',
-                'src/jobs/thumbnailQueue/**',
-            ],
-            requirements: livingRequirementCount,
-            scenarios: livingScenarioCount,
-            coverage: { covered: livingRequirementCount - 2, total: livingRequirementCount },
-            drifted: true,
-        },
-    } as Partial<NavState>);
-    markdownHtml.value = renderMarkdown(photoStorageLivingSpec);
-
-    useEffect(() => {
-        const id = requestAnimationFrame(() => {
-            applyHighlighting();
-            buildToc(
-                document.getElementById('content-area'),
-                document.getElementById('markdown-content'),
-                document.getElementById('spec-toc'),
-            );
-        });
-        return () => {
-            cancelAnimationFrame(id);
-            setLivingMode(false);
-            setLivingCoverage(null);
-        };
-    }, []);
-
-    return (
-        <div class="viewer-container">
-            <App specStatus="active" />
-        </div>
-    );
-}
-
-/**
- * The completed run, with its living-specs record renamed onto the capability
- * the rest of this clip is about. See the file header for why the override
- * exists and what the on-disk fixture says instead. It is what sits in the
- * editor before anyone touches the tree, which is why E1 opens on it.
- */
-const vsCompletedFolded = (view: Partial<ViewerState> = {}): ViewerState =>
-    vsFromContext(ctxCompleted, [], {
-        livingSpecs: { loaded: ['member-profiles', 'photo-storage'], synced: ['photo-storage'] },
-        ...view,
-    });
-
-const completedNav = {
-    taskCompletionPercent: 100,
-    workflowPhase: 'implement',
-    badgeText: 'COMPLETED',
-};
-
-const finishedRun = (
-    <InteractiveViewer
-        ctx={ctxCompleted}
-        docs={teamboardDocs(teamboardTasks, 'tasks')}
-        initialDoc="spec"
-        view="document"
-        extraNav={completedNav}
-        vs={vsCompletedFolded()}
-    />
-);
-
-export const E1WorkTree: Story = {
-    name: 'E1 · living-specs: the work tree at rest',
-    parameters: { capture: { width: LIVING_WIDTH, height: LIVING_HEIGHT } },
-    render: () => (
-        <CaptureFrame>
-            <LivingWindow>{finishedRun}</LivingWindow>
-        </CaptureFrame>
-    ),
-};
-
-export const E2RowClicked: Story = {
-    name: 'E2 · living-specs: the pointer on a capability row',
-    parameters: { capture: { width: LIVING_WIDTH, height: LIVING_HEIGHT } },
-    render: () => (
-        <CaptureFrame>
-            <LivingWindow emphasis={{ row: CLICKED_ROW, state: 'hover' }}>{finishedRun}</LivingWindow>
-        </CaptureFrame>
-    ),
-};
-
-export const E3CapabilityOpen: Story = {
-    name: 'E3 · living-specs: the living spec open',
-    parameters: { capture: { width: LIVING_WIDTH, height: LIVING_HEIGHT } },
-    render: () => (
-        <CaptureFrame>
-            <LivingWindow emphasis={{ row: CLICKED_ROW, state: 'selected' }}>
-                <LivingCapabilityViewer />
-            </LivingWindow>
-        </CaptureFrame>
-    ),
 };
 
 // ═════════════════════════════════════════════════════════════════════════

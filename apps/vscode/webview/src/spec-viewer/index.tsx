@@ -6,12 +6,12 @@
 import { render } from 'preact';
 import type { VSCodeApi, NavState } from './types';
 import { navState, markdownHtml } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setSpecLedgerTasks } from 'speckit-viewer/core/markdown/index';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setReportMode, setSpecLedgerTasks } from 'speckit-viewer/core/markdown/index';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupCallsStrike, setupLineActions, setupStatesSelect } from './editor';
 import { setupAnswerActions } from './editor/answerEditor';
 import { setupLedgerTasks } from './markdown/ledger/tasksInteractions';
-import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupOpenLivingRequirement, setupRemoveRequirement, setupRevealGlob } from './actions';
+import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
 import { applyPendingFragment, setupDocumentLinkClickHandler } from './documentLinks';
 import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
@@ -105,9 +105,7 @@ function init(): void {
     const initialNav = window.__INITIAL_NAV_STATE__;
     if (initialNav) {
         navState.value = initialNav;
-        // Set renderer flags before the first updateContent below, or a living
-        // spec's first paint renders in feature-spec mode until a later message.
-        setLivingMode(!!initialNav.livingMode);
+        // Set renderer flags before the first updateContent below, or a report's first paint renders as a spec.
         setReportMode(!!initialNav.report);
         setHasSpecContext(!!(initialNav.specContextName || initialNav.badgeText));
         if (initialNav.currentTask !== undefined) {
@@ -132,10 +130,6 @@ function init(): void {
     setupLedgerTasks();
     setupLedgerRefs();
     setupDocumentLinkClickHandler();
-    setupApproveRequirement();
-    setupRevealGlob();
-    setupOpenLivingRequirement();
-    setupRemoveRequirement();
     restoreScrollPosition();
 
     // Handle initial raw content from template

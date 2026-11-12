@@ -125,7 +125,7 @@ export class SpecEditorProvider {
         }
         reportInstallPromptShown('createSpec');
         const choice = await vscode.window.showInformationMessage(
-            'SpecKit Companion adds living specs, full lifecycle capture, a fast-path for small changes, and hands-off Auto. Install it to enable the full workflow — or continue with standard SpecKit.',
+            'SpecKit Companion adds full lifecycle capture, a fast-path for small changes, and hands-off Auto. Install it to enable the full workflow — or continue with standard SpecKit.',
             { modal: true },
             'Install SpecKit Companion',
             'Use SpecKit Instead',

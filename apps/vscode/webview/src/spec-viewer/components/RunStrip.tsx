@@ -12,7 +12,7 @@ type FactKey = 'timing' | 'checks' | 'traced' | 'concerns' | 'converge' | 'tasks
 export function RunStrip() {
     const vs = viewerState.value;
     const ns = navState.value;
-    if (!vs || ns?.livingMode) return null;
+    if (!vs) return null;
 
     const stats = heroStats(vs);
     const facts: Array<{ key: FactKey; value: string; warning?: boolean }> = [];

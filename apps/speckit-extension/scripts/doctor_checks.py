@@ -482,8 +482,7 @@ def check_verification(feature_dir: Path, ctx: dict) -> tuple:
     Running the project's own checks is prompt text, and prompt text has no
     observer. `verified[]` is already written whenever a run records a check it
     executed, so a completed implement with an empty list is a run that shipped
-    code nothing was ever run against. Judged only as empty-or-not: interpreting
-    entry contents is drift's job, not this check's.
+    code nothing was ever run against. Judged only as empty-or-not.
     """
     skip = _no_record("verification", feature_dir, ctx)
     if skip is not None:
@@ -515,48 +514,36 @@ def check_verification(feature_dir: Path, ctx: dict) -> tuple:
     )]
 
 
-def check_briefed(feature_dir: Path, ctx: dict) -> tuple:
-    """Did a run with living specs turned on actually read any?
+def check_retired_living(root: Path) -> tuple:
+    """A leftover `livingSpecs:` block in the config is dead weight; say so once."""
+    cfg = Path(root) / ".specify" / "companion.yml"
+    try:
+        text = cfg.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return CheckStatus("retired_living", "skipped", "no .specify/companion.yml"), []
+    if not re.search(r"^livingSpecs\s*:", text, re.MULTILINE):
+        return CheckStatus("retired_living", "skipped", "no livingSpecs block in the config"), []
+    return CheckStatus("retired_living", "ran"), [Finding(
+        "retired_living", "note", "livingSpecs is retired; safe to delete",
+        "the `livingSpecs:` block in .specify/companion.yml is ignored; nothing reads it.",
+    )]
 
-    Loading them is best-effort and never fails, so a run that skipped the load
-    looks exactly like one with nothing to load: `livingSpecs.loaded` is empty
-    either way, no step reports a miss, and the run proceeds unbriefed. The two
-    cases are told apart by the registry — a project with capabilities and the
-    feature on had something to load, and an empty `loaded` there means the
-    briefing did not happen rather than that it was not wanted.
-    """
-    skip = _no_record("briefed", feature_dir, ctx)
-    if skip is not None:
-        return skip, []
 
-    living = ctx.get("livingSpecs") or {}
-    loaded = living.get("loaded") or []
-    if loaded:
-        return CheckStatus("briefed", "ran"), []
-
-    registry = None
-    for name in ("living-specs.yml", "living-specs.yaml"):
-        candidate = feature_dir.parent.parent / name
-        if candidate.exists():
-            registry = candidate
-            break
-    if registry is None:
-        return CheckStatus("briefed", "skipped", "no living-spec registry — nothing to load"), []
-
-    text = registry.read_text(encoding="utf-8", errors="replace")
-    if "enabled: true" not in text:
-        return CheckStatus("briefed", "skipped", "living specs are off for this project"), []
-    if "- name:" not in text:
-        return CheckStatus("briefed", "skipped", "registry holds no capabilities"), []
-
-    return CheckStatus("briefed", "ran"), [Finding(
-        "briefed", "problem",
-        "The run was never briefed",
-        "living specs are enabled and the registry holds capabilities, but `livingSpecs.loaded` "
-        "is empty: the load step was skipped, so this run drafted and implemented without the "
-        "context every other run in this project gets. Nothing failed, which is why it went "
-        "unnoticed — the load never fails by design.",
-        {"registry": registry.name, "loaded": 0},
+def check_persistence_model(root: Path) -> tuple:
+    """A constitution written around flow-back or living specs gets one pointer to the model Companion keeps."""
+    constitution = Path(root) / ".specify" / "memory" / "constitution.md"
+    try:
+        text = constitution.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return CheckStatus("persistence_model", "skipped", "no constitution"), []
+    if not re.search(r"flow[- ]?back|fold[- ]?back|living[- ]specs?", text, re.IGNORECASE):
+        return CheckStatus("persistence_model", "skipped", "constitution names no flow-back or living specs"), []
+    return CheckStatus("persistence_model", "ran"), [Finding(
+        "persistence_model", "note",
+        "The constitution mentions flow-back or living specs",
+        "Companion keeps specs flow-forward: one folder per change, completed is final, and lineage "
+        "links connect related changes. See \"How Companion keeps specs\" at "
+        "https://speckit-companion.dev/docs/steps#how-companion-keeps-specs",
     )]
 
 
@@ -570,8 +557,7 @@ def check_dispatch(feature_dir: Path, ctx: dict) -> tuple:
     and the same holds for the design docs when the size budget kept both. A
     `simple` run folds plan, so plan is not judged there. A closed implement whose
     Foundational phase had waves of four or more tasks and no wave check-ins built
-    them inline, and one offered a living-spec reviewer that never checked in folded
-    its deltas unreviewed.
+    them inline,.
     """
     skip = _no_record("dispatch", feature_dir, ctx)
     if skip is not None:
@@ -630,14 +616,6 @@ def check_dispatch(feature_dir: Path, ctx: dict) -> tuple:
                 "one checked in — dispatch the printed briefs as written",
                 {"waves": skipped},
             ))
-    if "implement" in closed and "living" in offered and not any(l.startswith("living:") for l in labels):
-        findings.append(Finding(
-            "dispatch", "warning",
-            "implement folded its living-spec deltas without dispatching their reviewer",
-            "`dispatch-briefs.py --living` printed a reviewer brief for this run and no reviewer checked in "
-            "— dispatch the printed brief before the fold",
-            {"expected": 1, "checked_in": 0},
-        ))
     return CheckStatus("dispatch", "ran"), findings
 
 

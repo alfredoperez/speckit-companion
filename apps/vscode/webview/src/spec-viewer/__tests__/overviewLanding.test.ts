@@ -65,11 +65,4 @@ describe('what the viewer lands on', () => {
 
         expect(showingOverview.value).toBe(true);
     });
-
-    it('opens a living spec on its cards, never an Overview', () => {
-        applyViewerState(ranOnce());
-        applyNavState(nav({ livingMode: true, landing: 'overview' }));
-
-        expect(showingOverview.value).toBe(false);
-    });
 });

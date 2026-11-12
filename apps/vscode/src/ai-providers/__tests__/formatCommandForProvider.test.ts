@@ -88,13 +88,13 @@ describe('formatCommandForProvider', () => {
 
     describe('toSlashCommand', () => {
         it('adds the slash and converts every dot for a dash host', () => {
-            expect(toSlashCommand('speckit.companion.living-adopt', AIProviders.CLAUDE))
-                .toBe('/speckit-companion-living-adopt');
+            expect(toSlashCommand('speckit.companion.mark-complete', AIProviders.CLAUDE))
+                .toBe('/speckit-companion-mark-complete');
         });
 
         it('converts a command that already carries its slash', () => {
-            expect(toSlashCommand('/speckit.companion.living-sync', AIProviders.CLAUDE))
-                .toBe('/speckit-companion-living-sync');
+            expect(toSlashCommand('/speckit.companion.resume', AIProviders.CLAUDE))
+                .toBe('/speckit-companion-resume');
         });
 
         it('leaves the argument alone, dots and all', () => {

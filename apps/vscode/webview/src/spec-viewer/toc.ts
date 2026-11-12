@@ -43,69 +43,6 @@ const TOC_SKIP_PATTERNS: RegExp[] = [
 // priority prominently, so the TOC strips the suffix to keep entries scannable.
 const PRIORITY_SUFFIX = /\s*\(Priority:\s*P\d+\)\s*$/i;
 
-/**
- * The requirement card a heading sits inside, or null.
- *
- * A living spec's requirements are its `h3`s, and the card around each one
- * already carries its coverage and the number of files its marker names. The
- * outline reads them off that card rather than parsing the markdown a second
- * time — a second parse is exactly how a row and its card come to disagree.
- */
-function requirementCard(heading: HTMLElement): HTMLElement | null {
-    return heading.closest<HTMLElement>('.living-req-card');
-}
-
-/**
- * State and file-count marks for one requirement row.
- *
- * Both are drawn, and both are hidden from assistive tech, because the row's
- * one accessible name says them in words instead. A dot carrying only a `title`
- * is not reliably announced, and a bare `2` beside a heading says nothing.
- * Returns the phrases the caller folds into that name.
- */
-function requirementMarks(card: HTMLElement, a: HTMLAnchorElement): string[] {
-    const said: string[] = [];
-
-    // The heading moves into its own span so it can ellipsize beside the marks;
-    // as a bare text node in a flex row it would push them off the edge.
-    const label = document.createElement('span');
-    label.className = 'spec-toc-text';
-    label.textContent = a.textContent;
-    a.textContent = '';
-
-    // A dot means "look here": drifted, adopted or new. A confirmed row has none.
-    // Same precedence as the card's edge colour: drifted, then new, then adopted.
-    const cardState = card.dataset.reqState;
-    const state = cardState === 'drifted' ? 'drifted'
-        : card.dataset.reqNew !== undefined ? 'new'
-        : cardState === 'adopted' ? 'adopted' : null;
-    if (state) {
-        const dot = document.createElement('span');
-        dot.className = `spec-toc-cov spec-toc-cov--state-${state}`;
-        dot.setAttribute('aria-hidden', 'true');
-        a.appendChild(dot);
-        said.push(state);
-    }
-    a.appendChild(label);
-    const coverage = card.dataset.reqCoverage;
-    if (coverage) said.push(`covered ${coverage}`);
-
-    const files = card.dataset.reqPatterns;
-    if (files) {
-        const count = document.createElement('span');
-        count.className = 'spec-toc-patterns';
-        count.setAttribute('aria-hidden', 'true');
-        count.textContent = files;
-        a.appendChild(count);
-        // Patterns, not files: `src/alpha/**` is one entry claiming a whole
-        // directory, and calling that "1 file" is a number the reader can check
-        // and find wrong.
-        said.push(`${files} ${files === '1' ? 'path pattern' : 'path patterns'}`);
-    }
-    return said;
-}
-
-
 export function prefersReducedMotion(): boolean {
     return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
@@ -131,26 +68,6 @@ function teardown(tocRoot: HTMLElement): void {
     prev.ro.disconnect();
     prev.clickCleanup();
     observers.delete(tocRoot);
-}
-
-/**
- * Bring one requirement into view by its heading text.
- *
- * A heading that matches nothing leaves the document where it is: the reader
- * asked to open a spec, and dropping them at the top is a worse answer than
- * their own scroll position but a far better one than an error.
- */
-export function revealRequirement(heading: string): void {
-    const wanted = heading.trim().toLowerCase();
-    if (!wanted) return;
-    const match = Array.from(
-        document.querySelectorAll<HTMLElement>('#markdown-content h3')
-    ).find(h => (h.textContent ?? '').trim().toLowerCase() === wanted);
-    if (!match) return;
-    match.scrollIntoView({
-        behavior: prefersReducedMotion() ? 'auto' : 'smooth',
-        block: 'start'
-    });
 }
 
 interface OutlineEntry {
@@ -208,17 +125,11 @@ export function buildToc(
     const allHeadings = collectOutline(markdownRoot);
     const hasH3 = allHeadings.some(h => h.level === 3);
 
-    // A living spec's requirements ARE its `h3`s, so hiding them by default
-    // would leave the outline listing three section headings for a document the
-    // reader navigates by requirement.
-    const living = allHeadings.some(h => requirementCard(h.el) !== null);
-    const headings = showSubsections || living
+    const headings = showSubsections
         ? allHeadings
         : allHeadings.filter(h => h.level === 2);
 
-    // A capability with one requirement or none has nothing to navigate between.
-    const lone = living && markdownRoot.querySelectorAll('.living-req-card').length <= 1;
-    if (headings.length === 0 || lone) {
+    if (headings.length === 0) {
         tocRoot.classList.add('spec-toc--empty');
         tocRoot.innerHTML = '';
         return;
@@ -236,7 +147,7 @@ export function buildToc(
     label.textContent = 'On this page';
     header.appendChild(label);
 
-    if (hasH3 && !living) {
+    if (hasH3) {
         const toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'spec-toc-toggle';
@@ -277,11 +188,7 @@ export function buildToc(
         // The entry clamps to two lines, so the full heading lives in the tooltip.
         a.title = text;
 
-        const card = requirementCard(heading);
-        // The marks are drawn but hidden from assistive tech; what they mean is
-        // said once, here, in the row's own accessible name.
-        const said = card ? requirementMarks(card, a) : [];
-        if (card) a.classList.add('spec-toc-link--requirement');
+        const said: string[] = [];
 
         if (level === 'h2') {
             parentSection = text;

@@ -103,19 +103,4 @@ describe('showingOverview — the viewer owns the landing decision', () => {
             expect(showingOverview.value).toBe(false);
         });
     });
-
-    describe('a living spec', () => {
-        it('has no Overview: it opens on its requirement cards', () => {
-            navState.value = { livingMode: true, landing: 'overview' } as any;
-            viewerState.value = null;
-
-            expect(showingOverview.value).toBe(false);
-        });
-
-        it('lands on the document when a document or requirement was asked for', () => {
-            navState.value = { livingMode: true, landing: 'document' } as any;
-
-            expect(showingOverview.value).toBe(false);
-        });
-    });
 });

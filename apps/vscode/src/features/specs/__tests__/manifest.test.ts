@@ -38,37 +38,33 @@ const SPEC_TERMINAL_WHEN = 'viewItem =~ /^spec-(active|tasks-done|implemented|co
 
 describe('sidebar contributions', () => {
     describe('view names', () => {
-        it('titles the six views for what they hold', () => {
+        it('titles the five views for what they hold', () => {
             const byId = Object.fromEntries(views.map(v => [v.id, v.name]));
             expect(byId).toEqual({
                 'speckit.views.explorer': 'Specs',
                 'speckit.views.bugs': 'Bugs',
                 'speckit.views.ideas': 'Ideas',
-                'speckit.views.livingSpecs': 'Living Specs',
                 'speckit.views.steering': 'Steering',
                 'speckit.views.settings': 'Settings & Feedback',
             });
         });
 
-        it('shows the living-specs view whenever a folder is open, so it can explain itself', () => {
-            const living = views.find(v => v.id === 'speckit.views.livingSpecs')!;
-            expect(living.visibility).toBe('collapsed');
-            // Gating the view on the companion extension meant a user without it
-            // saw the section vanish rather than learn how to get it.
-            expect(living.when).not.toContain('speckit.companion.installed');
-        });
-
-        it('places Bugs and Ideas between Specs and Living Specs, shown in a Spec Kit project', () => {
-            const living = views.find(v => v.id === 'speckit.views.livingSpecs')!;
-            expect(views.map(v => v.id).slice(0, 4)).toEqual([
+        it('lists Specs, Bugs, Ideas, Steering and Settings in order, with no Living Specs view', () => {
+            expect(views.map(v => v.id)).toEqual([
                 'speckit.views.explorer',
                 'speckit.views.bugs',
                 'speckit.views.ideas',
-                'speckit.views.livingSpecs',
+                'speckit.views.steering',
+                'speckit.views.settings',
             ]);
-            for (const id of ['speckit.views.bugs', 'speckit.views.ideas']) {
-                expect(views.find(v => v.id === id)!.when).toBe(`${living.when} && speckit.detected`);
-            }
+        });
+
+        it('contributes nothing living-specific: no view, welcome, command, menu or palette entry', () => {
+            const pattern = /livingSpecs|living-specs/;
+            expect(views.filter(v => pattern.test(JSON.stringify(v)))).toEqual([]);
+            expect(JSON.stringify(manifest.contributes.viewsWelcome)).not.toMatch(pattern);
+            expect(commands.filter(c => pattern.test(c.command))).toEqual([]);
+            expect(JSON.stringify(manifest.contributes.menus)).not.toMatch(pattern);
         });
 
         it.each([
@@ -98,21 +94,6 @@ describe('sidebar contributions', () => {
             expect(commandPalette.some(
                 e => e.command === 'speckit.processes.installExtension' && e.when === 'false')).toBe(true);
         });
-
-        it('walks the three living-specs first-run states, each to its one next action', () => {
-            const welcome = (manifest.contributes.viewsWelcome as { view: string; contents: string; when?: string }[])
-                .filter(w => w.view === 'speckit.views.livingSpecs');
-            expect(welcome).toHaveLength(3);
-            expect(welcome[0].when).toBe('!speckit.companion.installed');
-            expect(welcome[0].contents).toContain('speckit.companion.installSpecKitExtension');
-            expect(welcome[1].when).toBe('speckit.companion.installed && !speckit.livingSpecs.configured');
-            expect(welcome[1].contents).toContain('speckit.livingSpecs.init');
-            // Set-up leaves an empty registry, and the only thing to do next is
-            // adopt — behind an unlabelled wand until this said so.
-            expect(welcome[2].when).toBe(
-                'speckit.companion.installed && speckit.livingSpecs.configured && !speckit.livingSpecs.hasCapabilities');
-            expect(welcome[2].contents).toContain('speckit.livingSpecs.adopt');
-        });
     });
 
     describe('command titles', () => {
@@ -136,22 +117,11 @@ describe('sidebar contributions', () => {
             ['speckit.specs.reveal', 'Reveal in File Manager'],
             ['speckit.revealItemInExplorer', 'Reveal in VS Code Explorer'],
             ['speckit.revealItemInOS', 'Reveal in File Manager'],
-            ['speckit.livingSpecs.drift', 'Check for Drift'],
-            ['speckit.livingSpecs.adopt', 'Adopt Code Area…'],
-            ['speckit.livingSpecs.sync', 'Sync living specs from my changes'],
-            ['speckit.livingSpecs.refresh', 'Refresh Living Specs'],
-            ['speckit.livingSpecs.open', 'Open Living Spec'],
             ['speckit.bugs.refresh', 'Refresh Bugs'],
             ['speckit.ideas.refresh', 'Refresh Ideas'],
             ['speckit.companion.installSpecKitExtension', 'Install Companion Extension'],
         ])('%s is titled "%s"', (id, title) => {
             expect(commandTitle(id)).toBe(title);
-        });
-
-        it('files Open Living Spec under SpecKit and leaves it in the command palette', () => {
-            expect(commands.find(c => c.command === 'speckit.livingSpecs.open')).toEqual(
-                { command: 'speckit.livingSpecs.open', title: 'Open Living Spec', category: 'SpecKit' });
-            expect(commandPalette.some(e => e.command === 'speckit.livingSpecs.open' && e.when === 'false')).toBe(false);
         });
 
         it('declares no emoji in any command title', () => {
@@ -390,9 +360,6 @@ describe('sidebar contributions', () => {
 
     describe('reveal eligibility', () => {
         const REVEALABLE = [
-            'living-specs-capability',
-            'living-specs-tier',
-            'living-specs-orphan',
             'steering-document',
             'steering-file',
             'provider-settings',
@@ -416,18 +383,6 @@ describe('sidebar contributions', () => {
         it.each(REVEALABLE)('%s can be revealed in the file manager', contextValue => {
             expect(revealClauses('speckit.revealItemInOS')).toContain(contextValue);
         });
-
-        it.each(['living-specs-capability-missing', 'living-specs-empty'])(
-            '%s exposes no reveal action',
-            contextValue => {
-                for (const command of ['speckit.revealItemInExplorer', 'speckit.revealItemInOS']) {
-                    for (const entry of itemContext.filter(e => e.command === command)) {
-                        // A `viewItem == x` clause must not name the missing/empty value.
-                        expect(entry.when).not.toContain(`viewItem == ${contextValue}`);
-                    }
-                }
-            }
-        );
 
         it('restricts destructive steering actions to generated steering documents', () => {
             const entries = itemContext.filter(e => e.command === 'speckit.steering.delete');

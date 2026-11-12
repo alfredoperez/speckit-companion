@@ -28,7 +28,7 @@ _parts_spec = importlib.util.spec_from_file_location("command_parts", SCRIPTS / 
 parts = importlib.util.module_from_spec(_parts_spec)
 _parts_spec.loader.exec_module(parts)
 
-NAMES = ["speckit.companion.specify", "speckit.companion.living-move"]
+NAMES = ["speckit.companion.specify", "speckit.companion.before-step"]
 
 
 def build_area(root: str, area: str, names: list[str], extra: list[str] | None = None) -> None:
@@ -59,9 +59,9 @@ class TestNameTranslation(unittest.TestCase):
 
     def test_only_the_prefix_is_translated(self):
         """A hyphenated command must not have its own hyphens turned into dots."""
-        entry = ce.entry_for("speckit.companion.living-move", ".claude/skills")
-        self.assertEqual(entry, "speckit-companion-living-move")
-        self.assertEqual(ce.name_for(entry, ".claude/skills"), "speckit.companion.living-move")
+        entry = ce.entry_for("speckit.companion.before-step", ".claude/skills")
+        self.assertEqual(entry, "speckit-companion-before-step")
+        self.assertEqual(ce.name_for(entry, ".claude/skills"), "speckit.companion.before-step")
 
     def test_unrecognized_entry_has_no_name(self):
         self.assertIsNone(ce.name_for("README.md", ".claude/skills"))
@@ -96,7 +96,7 @@ class TestDiskDrift(unittest.TestCase):
             build_area(root, ".claude/skills", NAMES[:1])
             problems = ce.check_area(".claude/skills", NAMES, root)
             self.assertEqual(len(problems), 1, problems)
-            self.assertIn("missing emission: speckit.companion.living-move", problems[0])
+            self.assertIn("missing emission: speckit.companion.before-step", problems[0])
             self.assertIn(".claude/skills", problems[0])
 
     def test_orphan_is_caught_in_a_file_style_area_too(self):
@@ -237,7 +237,7 @@ class TestRecordDrift(unittest.TestCase):
             yml = self._hooks(root, NAMES[0])
             problems = ce.check_records(NAMES, reg, yml)
             self.assertEqual(len(problems), 1, problems)
-            self.assertIn("unrecorded command: speckit.companion.living-move", problems[0])
+            self.assertIn("unrecorded command: speckit.companion.before-step", problems[0])
 
     def test_stale_hook_is_reported_with_its_event(self):
         with tempfile.TemporaryDirectory() as root:
@@ -264,7 +264,7 @@ class TestDocDrift(unittest.TestCase):
             docs = self._doc(root, NAMES[0])
             problems = ce.check_docs(NAMES, docs)
             self.assertEqual(len(problems), 1, problems)
-            self.assertIn("undocumented command: speckit.companion.living-move", problems[0])
+            self.assertIn("undocumented command: speckit.companion.before-step", problems[0])
 
     def test_a_gated_document_that_vanished_is_reported(self):
         problems = ce.check_docs(NAMES, {"/nonexistent/doc.md": "a doc"})
@@ -277,7 +277,7 @@ class TestDocDrift(unittest.TestCase):
             docs = self._doc(root, "speckit.companion.specify\nspeckit.companion.relocate")
             problems = ce.check_docs(NAMES, docs)
             self.assertEqual(len(problems), 1, problems)
-            self.assertIn("speckit.companion.living-move", problems[0])
+            self.assertIn("speckit.companion.before-step", problems[0])
 
 
 class TestComposition(unittest.TestCase):

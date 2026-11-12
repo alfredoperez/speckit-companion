@@ -223,23 +223,6 @@ aside.spec-toc.spec-toc--compact {
     outline-offset: 2px;
 }
 
-/* ── A living spec's requirement rows ───────────────────────────────── */
-/* A living spec is navigated by requirement, so its `h3`s are the outline
-   rather than a subsection a toggle hides. They read as primary navigation,
-   not metadata, which is why they take --text-body rather than the muted
-   tone the collapsed-subsection rows use. */
-.spec-toc-link--requirement {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--sk-text-body);
-    /* Primary navigation, not a subsection: no guide rule, no indent. */
-    margin-left: 0;
-    padding-left: 8px;
-    border-left: 0;
-}
-
 /* The full ellipsis trio: two of the three alone silently wrap instead. */
 .spec-toc-text {
     flex: 1;
@@ -247,22 +230,4 @@ aside.spec-toc.spec-toc--compact {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-/* A dot means "look here", in its card's edge colour. A confirmed row has none. */
-.spec-toc-cov {
-    flex: none;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-}
-
-.spec-toc-cov--state-adopted { background: var(--sk-review); }
-.spec-toc-cov--state-drifted { background: var(--sk-warning); }
-.spec-toc-cov--state-new { background: var(--sk-success); }
-
-.spec-toc-patterns {
-    flex: none;
-    color: var(--sk-text-secondary);
-    font-variant-numeric: tabular-nums;
 }

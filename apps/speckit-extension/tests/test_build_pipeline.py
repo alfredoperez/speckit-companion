@@ -238,3 +238,23 @@ class ItReadsThisRepositorysOwnConfiguration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AnOldRecipeStillBuilds(unittest.TestCase):
+    """A project order that still names the retired living specs nodes builds, with one warning."""
+
+    def test_retired_nodes_are_skipped_not_refused(self):
+        order = assemble.default_order("specify")
+        retired = "load-living-specs"
+        config_text = "commands:\n  specify:\n    nodes:\n" + "".join(
+            f"      - {n}\n" for n in [order[0], retired, *order[1:], "draft-spec-delta"])
+        with project_with(config_text) as root, tempfile.TemporaryDirectory() as out:
+            result = subprocess.run(
+                [sys.executable, str(SCRIPTS / "build-pipeline.py"), "--project", root, "--out", out],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(result.stdout.count("skipped retired node(s)"), 1)
+            body = (Path(out) / "speckit.companion.specify.md").read_text(encoding="utf-8")
+        self.assertNotIn(retired, body)
+        self.assertIn("speckit-companion:node draft-spec", body)

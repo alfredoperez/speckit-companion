@@ -101,8 +101,8 @@ def entry_for(name: str, area: str) -> str:
 def name_for(entry: str, area: str) -> str | None:
     """The command name an on-disk entry stands for, or None if it fits no shape.
 
-    Only the PREFIX is translated, never the whole string: `living-move` must map
-    back to `speckit.companion.living-move`, not `speckit.companion.living.move`.
+    Only the PREFIX is translated, never the whole string: `before-step` must map
+    back to `speckit.companion.before-step`, not `speckit.companion.before.step`.
     """
     style, suffix = KNOWN_AREAS[area]
     if style == "dir":

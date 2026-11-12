@@ -7,7 +7,6 @@
 # as the authority on sequence; the phases must list exactly the same ids.
 order:
   - resolve-dir
-  - load-living-specs
   - classify-size
   - persist-size
   - draft-spec
@@ -18,7 +17,7 @@ order:
 
 phases:
   - name: gather
-    nodes: [resolve-dir, load-living-specs]
+    nodes: [resolve-dir]
   - name: classify
     nodes: [classify-size, persist-size]
   - name: author
@@ -50,12 +49,11 @@ decisions:
 # `variants:` says which of them stand in for which default node, so replacing
 # one is a pick rather than a rewrite.
 optional:
-  - draft-spec-delta
   - draft-spec-bugfix
   - quality-checklist-blocking
   - resolve-dir-git
 
 variants:
-  draft-spec: [draft-spec-delta, draft-spec-bugfix]
+  draft-spec: [draft-spec-bugfix]
   quality-checklist: [quality-checklist-blocking]
   resolve-dir: [resolve-dir-git]

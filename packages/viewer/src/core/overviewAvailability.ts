@@ -36,8 +36,6 @@ export function hasAnyData(state: RecordedActivity): boolean {
 export function hasOverview(
     viewerState: RecordedActivity | null | undefined,
     activityPanelEnabled: boolean,
-    livingMode: boolean,
 ): boolean {
-    if (livingMode) return false;
     return activityPanelEnabled && !!viewerState && hasAnyData(viewerState);
 }

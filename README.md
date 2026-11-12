@@ -7,7 +7,7 @@
 
 SpecKit Companion is a VS Code extension for developers who build with an AI assistant and [Spec Kit](https://github.com/github/spec-kit). It lists every spec in your project, opens each one as a page you can read and comment on, follows a run while it happens, and keeps a record of what the AI did and why. Your specs stay plain markdown in your repo, with the run record in a file beside each one, so nothing passes through a server of ours.
 
-![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
+![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
 ## Install
 
@@ -21,7 +21,7 @@ It's on Open VSX too.
 
 ### The Spec Kit extension (optional)
 
-This second install runs inside Spec Kit and records each run, which is what the Overview above, the Resume button and living specs are built from. Add it from your project root:
+This second install runs inside Spec Kit and records each run, which is what the Overview above and the Resume button are built from. Add it from your project root:
 
 ```bash
 specify extension add companion --from https://github.com/alfredoperez/speckit-companion/releases/download/companion-latest/companion.zip --force
@@ -42,7 +42,7 @@ The [Quickstart](https://speckit-companion.dev/docs/start/your-first-spec) follo
 
 - **A sidebar for every spec.** Specs are grouped by where they stand, with the status of each document and the assistant each one was last sent to. [Viewer and sidebar](https://speckit-companion.dev/docs/navigate/viewer-and-sidebar)
 
-  ![The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath](docs/screenshots/generated/specs-sidebar.gif)
+  ![The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the steering view beneath](docs/screenshots/generated/specs-sidebar.gif)
 
 - **Specs you can read.** Requirements are labeled rows, acceptance scenarios read as Given, When, Then, and tasks sit under their phases.
 
@@ -64,7 +64,7 @@ The [Quickstart](https://speckit-companion.dev/docs/start/your-first-spec) follo
 
   ![The Workflow Builder board: the specify, plan, tasks and implement steps as four columns, each with its phases and nodes, and the hooks this project attached listed under before and after with a companion.yml mark.](docs/screenshots/generated/builder-board.png)
 
-Also in the extension: [living specs](https://speckit-companion.dev/docs/results/living-specs) that stay current per capability, panes for [bugs and ideas](https://speckit-companion.dev/docs/ide/bugs-and-ideas), and [custom workflows](https://speckit-companion.dev/docs/customize/your-own-workflow).
+Also in the extension: panes for [bugs and ideas](https://speckit-companion.dev/docs/ide/bugs-and-ideas) and [custom workflows](https://speckit-companion.dev/docs/customize/your-own-workflow).
 
 ## Supported assistants
 

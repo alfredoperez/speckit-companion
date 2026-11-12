@@ -32,20 +32,6 @@ These three read the run record, which [Overview and progress](/docs/results/the
 | `/speckit.companion.resume` | A run stopped and you want to continue from the last finished step |
 | `/speckit.companion.doctor` | A run looks wrong and you want a health report |
 
-## Living specs
-
-All seven do nothing until [living specs](/docs/results/living-specs) are turned on.
-
-| Command | What it does |
-| --- | --- |
-| `/speckit.companion.living-adopt` | Drafts a living spec for a code area you name, and registers it |
-| `/speckit.companion.living-sync` | Updates every affected living spec from your current changes |
-| `/speckit.companion.living-drift` | Lists source files changed since each spec was last committed |
-| `/speckit.companion.living-coverage` | Reports which requirements have a test mapped |
-| `/speckit.companion.living-show` | Prints a requirement list, one requirement, or the requirements for one file |
-| `/speckit.companion.living-validate` | Checks the shape of living specs and of a feature spec's deltas |
-| `/speckit.companion.living-move` | Moves a living spec between the central folder and a place beside its code |
-
 The extension installs eight more commands that you never type: seven record a Spec Kit run's step times, and `speckit.companion.classify` sizes a change for the workflow.
 
 ## In the command palette
@@ -63,8 +49,6 @@ These are under the **SpecKit** category. The context-menu actions on a spec, su
 | **Constitution** | Sends `/speckit.constitution` |
 | **Run Custom Command** | Lists your [custom commands](/docs/customize/your-own-workflow) |
 | **New Bug**, **New Idea** | Start a [bug or an idea](/docs/ide/bugs-and-ideas) |
-| **Set Up Living Specs**, **Adopt Code Area…** | Turn [living specs](/docs/results/living-specs) on, and register a capability |
-| **Sync living specs from my changes**, **Validate living specs** | Send the matching living-specs command |
 | **Initialize SpecKit** | Runs `specify init` in the workspace |
 | **Install SpecKit CLI** | Installs the `specify` command |
 | **Install Companion Extension** | Installs the Companion extension for Spec Kit into the project |

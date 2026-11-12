@@ -7,11 +7,11 @@ reads: [branch]
 ---
 **Output**: `<feature_directory>/spec.md`. In **simple** mode the spec additionally carries an **Approach** section, and two lean files sit alongside it: `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in the spec). In **normal** mode the spec holds the four sections only, and no `plan.md` / `tasks.md` are written here.
 
-**Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the living specs loaded above, the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity.
+**Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity.
 
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --batch '{
-  "context": ["living spec: <name>", "area: <path or subsystem>", "constraint: <rule honored>"],
+  "context": ["area: <path or subsystem>", "constraint: <rule honored>"],
   "expectations": ["<out-of-scope item>", "<another>"],
   "coverage": [{"req": "FR-001", "title": "<the requirement's one-line text>"}],
   "set": {"intent": "<one-line goal>", "workflow": "companion", "size": "<verdict>"},
@@ -27,8 +27,6 @@ Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specified --kind complete --by extension
 ```
-
-**Fast-path living-spec load (simple mode only).** A `simple` run never reaches `plan`, where a full run loads them again. If the recorder before drafting recorded nothing, run it once more with the files the Approach names (`record-living-specs.py --feature-dir <feature_directory> --changed <files…>`); it stays silent when the project keeps no living specs.
 
 **Fast-path lifecycle fold (simple mode only).** When `verdict == "simple"`, record the folded `plan` and `tasks` steps so the history-driven panels read them as satisfied-by-fast-path and the spec lands ready for implement. One call, **after** the specify completion above, writes all four boundaries in order (plan start and complete, tasks start and complete) in a single write, so the fold lands whole or not at all. It is idempotent. Do not hand-write the boundaries, and do not run it for a `normal` verdict:
 ```bash

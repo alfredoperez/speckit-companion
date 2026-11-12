@@ -1355,103 +1355,6 @@ def check_order(command: str, nodes: list) -> None:
             )
 
 
-# --------------------------------------------------------------------------- #
-# Living specs — the two settings that are a choice, not a registry
-# --------------------------------------------------------------------------- #
-#: What `layout` may be. Mirrors `load_living_specs_block` in companion_config.py.
-LAYOUTS = ("central", "colocated")
-
-
-def living_specs_target(project_root: str) -> tuple:
-    """`(path, nested)` for the file living specs are configured in.
-
-    There are two shapes and the resolver already decides between them: the
-    registry at the project root, flat, which wins outright; and the legacy
-    `livingSpecs:` block inside `.specify/companion.yml`. Writing to whichever
-    one is NOT in force is a setting the project never reads — reported as
-    saved, changing nothing. A project with neither gets the registry, because
-    that is the shape everything else writes.
-    """
-    import sys
-
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    import companion_config as cc
-
-    _living, meta = cc.resolve_living_specs(project_root)
-    if meta["errors"]:
-        raise ConfigWriteError(
-            f"{meta['path']} could not be read, so it was not changed: "
-            + "; ".join(meta["errors"]))
-    if meta["origin"] == "legacy":
-        return os.path.join(project_root, cc.LEGACY_CONFIG_REL), True
-    return os.path.join(project_root, cc.LIVING_SPECS_REL), False
-
-
-def set_living_specs(text: str, nested: bool, enabled=None, layout=None) -> str:
-    """Return `text` with `enabled` and/or `layout` set, leaving the rest alone.
-
-    `nested` writes under a `livingSpecs:` key, which is the legacy shape; flat
-    is the registry's own. Only the key being changed is touched — the
-    capability list, the exempt globs and the authored rules are a registry the
-    panel reads and does not own, and a rewrite of the block would reformat all
-    three to set one boolean.
-    """
-    if layout is not None and layout not in LAYOUTS:
-        raise ConfigWriteError(
-            f"living specs are kept {' or '.join(LAYOUTS)}, not '{layout}'")
-    out = text
-    for key, value in (("enabled", enabled), ("layout", layout)):
-        if value is None:
-            continue
-        written = "true" if value is True else "false" if value is False else str(value)
-        out = _set_scalar(out, ("livingSpecs", key) if nested else (key,), written)
-    return out
-
-
-def _set_scalar(text: str, keys: tuple, value: str) -> str:
-    """Return `text` with `keys` set to `value`, creating the nesting it needs.
-
-    One scalar, found by walking the same way every writer here walks and
-    replacing one line. Everything around it — comments, blank lines, the keys
-    this does not name — comes through byte-identical.
-    """
-    lines = text.splitlines()
-    trailing_newline = text.endswith("\n") or not text
-    at, indent, end = -1, -len(INDENT), len(lines)
-    for depth, key in enumerate(keys):
-        step = next(
-            (_indent_of(lines[i]) for i in range(at + 1, end) if not _is_blank(lines[i])),
-            indent + len(INDENT),
-        ) if at >= 0 else 0
-        hit = _find_key(lines, key, at + 1, end, step)
-        last = depth == len(keys) - 1
-        if hit is None:
-            block = ([f"{' ' * (step + d * len(INDENT))}{_key(k)}:"
-                      for d, k in enumerate(keys[depth:-1])]
-                     + [f"{' ' * (step + (len(keys) - 1 - depth) * len(INDENT))}"
-                        f"{_key(keys[-1])}: {value}"])
-            # After what is there, not before it. Inserted at the top, a setting
-            # the panel added landed above the file's own header comment — and
-            # above `enabled:`, which is the key it belongs beside.
-            place = _content_end(lines, at, end)
-            out = lines[:place] + block + lines[place:]
-            return "\n".join(out) + ("\n" if trailing_newline or not text else "")
-        if last:
-            out = lines[:hit] + [f"{' ' * step}{_key(key)}: {value}"] + lines[hit + 1:]
-            return "\n".join(out) + ("\n" if trailing_newline else "")
-        _open_block(lines, hit)
-        at, indent = hit, step
-        end = _block_end(lines, hit, step, end)
-    return text
-
-
-def write_living_specs(project_root: str, enabled=None, layout=None) -> str:
-    """Apply `set_living_specs` to whichever file the resolver reads. Returns its path."""
-    path, nested = living_specs_target(project_root)
-    save_config(path, set_living_specs(read_config(path), nested, enabled, layout))
-    return path
-
-
 def config_path(project_root: str) -> str:
     """The file an edit belongs in.
 
@@ -1529,10 +1432,6 @@ def main() -> int:
                     help="the notice the verdict prints; empty prints none")
     ap.add_argument("--restore-decision", action="store_true",
                     help="drop this project's routing for --decision, back to the declared one")
-    ap.add_argument("--living-enabled", choices=("true", "false"),
-                    help="turn living specs on or off")
-    ap.add_argument("--living-layout", choices=LAYOUTS,
-                    help="where this project keeps its living specs")
     args = ap.parse_args()
 
     project = os.path.abspath(args.project)
@@ -1551,24 +1450,6 @@ def main() -> int:
         if args.new_step:
             made = new_step(project, args.new_step, args.label, args.after, args.writes)
             print(f"[config] created {os.path.relpath(made, project)}")
-            return 0
-
-        # Living specs are their own registry at the project root, not part of
-        # the workflow a `workflow:` key selects — so this never consults
-        # `config_path`, which would send the setting into a workflow file the
-        # resolver does not read.
-        if args.living_enabled is not None or args.living_layout is not None:
-            where = write_living_specs(
-                project,
-                None if args.living_enabled is None else args.living_enabled == "true",
-                args.living_layout)
-            said = []
-            if args.living_enabled is not None:
-                said.append("living specs "
-                            + ("on" if args.living_enabled == "true" else "off"))
-            if args.living_layout:
-                said.append(f"kept {args.living_layout}")
-            print(f"[config] {', '.join(said)} in {os.path.relpath(where, project)}")
             return 0
 
         # The selection lives in companion.yml; everything else lives in

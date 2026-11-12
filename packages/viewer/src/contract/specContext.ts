@@ -340,29 +340,10 @@ export interface StepSummaryEntry {
     [key: string]: unknown;
 }
 
-/** Normalized living-specs view exposed on `ViewerState` (coerced string arrays). */
+/** A retired feature's old record, shown as plain names (coerced string arrays). */
 export interface LivingSpecsView {
     loaded: string[];
     synced: string[];
-    /**
-     * Per-capability run-log chip metadata (name, resolved spec path, synced /
-     * delta state) — never the spec text itself, which the Living Specs viewer
-     * shows. Absent on legacy payloads (render the names-only list). Every
-     * loaded/synced name appears exactly once.
-     */
-    capabilities?: CapabilityContentView[];
-}
-
-/** One touched capability, resolved to a clickable run-log chip. */
-export interface CapabilityContentView {
-    name: string;
-    /** False when the capability couldn't be resolved to a spec path within the workspace. */
-    available: boolean;
-    /** Workspace-relative path to the capability spec; absent when unresolved/out-of-root. */
-    specPath?: string;
-    synced: boolean;
-    /** Fold-back counts from the feature spec's delta blocks; absent when none (never zeros). */
-    delta?: { added?: number; modified?: number; removed?: number; renamed?: number };
 }
 
 /** One row of the converge result: a pass and what it added. */

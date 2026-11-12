@@ -44,7 +44,6 @@ jest.mock('../../settings/companionPresetReconciler', () => ({
 jest.mock('../../../core/telemetry', () => ({
     ...jest.requireActual('../../../core/telemetry'),
     reportSpecOpened: jest.fn(),
-    reportLivingSpecOpened: jest.fn(),
     reportInstallPromptShown: jest.fn(),
 }));
 
@@ -70,11 +69,10 @@ const ARG = {
     contextSpecName: 16,
     activityPanelEnabled: 21,
     installPrompt: 22,
-    livingMode: 23,
-    titleFromHeading: 25,
-    readOnly: 30,
-    reportActions: 33,
-    report: 34,
+    titleFromHeading: 23,
+    readOnly: 26,
+    reportActions: 29,
+    report: 30,
 } as const;
 
 function createProvider(): SpecViewerProvider {
@@ -226,8 +224,7 @@ describe('Bug report panel', () => {
             expect(render[ARG.phases]).toEqual([]);
             expect(render[ARG.activityPanelEnabled]).toBe(false);
             expect(render[ARG.installPrompt]).toBeNull();
-            expect(render[ARG.livingMode]).toBe(false);
-            expect(render[ARG.titleFromHeading]).toBe(true);
+                expect(render[ARG.titleFromHeading]).toBe(true);
             expect(render[ARG.readOnly]).toBe(true);
             expect(render[ARG.badgeText]).toBe('VERIFIED');
             expect(render[ARG.contextSpecName]).toBe('cartTotal skips the first cart item');

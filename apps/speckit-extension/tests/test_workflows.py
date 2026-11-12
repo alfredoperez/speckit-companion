@@ -49,6 +49,19 @@ HOOKED = ("commands:\n  plan:\n    hooks:\n      after:\n        plan-doc:\n"
           "          - { type: prompt, text: \"check it\" }\n")
 
 
+class BrownfieldRunsWithoutLivingNodes(unittest.TestCase):
+    """FR-003: the shipped Brownfield preset names no living node, and every node it names ships."""
+
+    def test_no_node_it_names_is_a_living_node(self):
+        import companion_config as cc
+        preset = cc.load_yaml((EXT / "workflows" / "presets" / "brownfield.yml")
+                              .read_text(encoding="utf-8"))
+        named = {n for entry in preset["commands"].values() for n in entry["nodes"]}
+        self.assertEqual([n for n in named if "living" in n or "delta" in n], [])
+        shipped = {p.stem for p in (EXT / "nodes").rglob("*.md")}
+        self.assertEqual(named - shipped, set())
+
+
 class WithoutASelectionNothingChanges(unittest.TestCase):
     def test_companion_yml_is_the_configuration(self):
         with project(HOOKED) as root:
@@ -477,7 +490,7 @@ class PhasesAreTheProjectsToNameAndGroup(unittest.TestCase):
         "  specify:\n"
         "    phases:\n"
         "      - name: set up\n"
-        "        nodes: [resolve-dir, load-living-specs]\n"
+        "        nodes: [resolve-dir]\n"
         "      - name: size it\n"
         "        nodes: [classify-size, persist-size]\n"
         "      - name: our review\n"
@@ -608,7 +621,7 @@ class WritingTheGrouping(unittest.TestCase):
             config_write.check_phases("specify", [
                 {"name": "backwards",
                  "nodes": ["quality-checklist", "draft-spec", "resolve-dir",
-                           "load-living-specs", "classify-size", "persist-size",
+                           "classify-size", "persist-size",
                            "branch", "finalize", "handoff"]},
             ])
 

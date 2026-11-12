@@ -305,9 +305,8 @@
 /* ============================================
    Living specs card — compact chips
 
-   One chip per capability, grouped by whether the run updated it or only read it. The full content lives
-   in the Living Specs viewer, so a resolved chip links there rather than
-   reprinting requirements here.
+   One plain chip per capability in an old record, grouped by whether the run
+   updated it or only read it.
    ============================================ */
 
 .living-specs-chips {
@@ -342,20 +341,6 @@
     border-radius: var(--sk-radius-sm);
     background: var(--sk-bg-primary);
     color: var(--sk-text-body);
-}
-
-.living-specs-chip--link {
-    cursor: pointer;
-}
-
-.living-specs-chip--link:hover {
-    color: var(--sk-accent);
-    border-color: color-mix(in srgb, var(--sk-accent) 50%, transparent);
-}
-
-.living-specs-chip--link:focus-visible {
-    outline: 2px solid var(--sk-accent);
-    outline-offset: 1px;
 }
 
 .living-specs-groups {

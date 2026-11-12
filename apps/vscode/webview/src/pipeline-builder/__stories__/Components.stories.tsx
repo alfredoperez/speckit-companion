@@ -718,7 +718,7 @@ export const InspectorPinned: Story = {
     render: () => (
         <One><Inspector
             node={node('resolve-dir', 'Resolve the spec folder', {
-                pinned: 'load-living-specs, draft-spec has to run after it',
+                pinned: 'load-context, draft-spec has to run after it',
             })}
             step="specify" body="Resolve the feature directory." parts={[]}
             editable="Resolve the feature directory." {...INSPECT} /></One>
@@ -785,7 +785,7 @@ export const InspectorHeld: Story = {
     render: () => (
         <One><Inspector
             node={node('resolve-dir', 'Resolve the spec folder', {
-                pinned: 'load-living-specs, draft-spec read it',
+                pinned: 'load-context, draft-spec read it',
             })}
             step="specify" body="Resolve the feature directory from the branch." parts={[]}
             editable="Resolve the feature directory from the branch." {...INSPECT} /></One>

@@ -128,9 +128,9 @@ export function graph(
 export const SPECIFY = step('specify', [
     phase('gather', [
         node('resolve-dir', 'Resolve the spec folder', {
-            pinned: 'load-living-specs, draft-spec has to run after it',
+            pinned: 'load-context, draft-spec has to run after it',
         }),
-        node('load-living-specs', 'Load living specs', {
+        node('load-context', 'Load context', {
             kind: 'investigate', reads: ['resolve-dir'],
         }),
     ]),
@@ -270,9 +270,9 @@ export const STOCK: StockHook[] = [
 export const SPECIFY_THREE_YOURS = step('specify', [
     phase('gather', [
         node('resolve-dir', 'Resolve the spec folder', {
-            pinned: 'load-living-specs, draft-spec has to run after it',
+            pinned: 'load-context, draft-spec has to run after it',
         }),
-        node('load-living-specs', 'Load living specs', {
+        node('load-context', 'Load context', {
             kind: 'investigate', reads: ['resolve-dir'], replaced: true,
         }),
     ]),
@@ -295,7 +295,7 @@ export const SPECIFY_THREE_YOURS = step('specify', [
     },
     changes: {
         ...NO_CHANGES,
-        replaced: ['load-living-specs', 'draft-spec', 'quality-checklist'],
+        replaced: ['load-context', 'draft-spec', 'quality-checklist'],
     },
 });
 

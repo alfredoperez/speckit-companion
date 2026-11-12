@@ -20,28 +20,16 @@
  *   (measured by /bench-run-all, 2026-06-10). Change the numbers THERE first;
  *   this image only repeats them.
  *
- * C3 · Living Specs pair (`generated/living-specs-pair.png`)
- *   The Living Specs section image in both READMEs: the sidebar's Living Specs
- *   view (coverage counts, drift flags) beside the viewer in its real
- *   `livingMode` (LIVING badge, Covers globs, facts row, WHEN/THEN scenario
- *   rows), both on the SAME capability: photo-storage, 7 of 9 covered,
- *   drifted. The right panel is the actual App rendering, fed by the
- *   `photo-storage.spec.md` Teamboard fixture; counts in the header are
- *   derived from that file, never typed in. This composition is also the
- *   storyboard seed for the future Living Specs GIF (sidebar row → click →
- *   viewer opens → drift → Update).
- *
  * C4 · Benefits strip (`generated/benefits-strip.png`)
- *   The four-benefit sub-hero under the extension README's "What you get":
+ *   The benefits sub-hero under the extension README's "What you get":
  *   one panel per benefit, each a real product surface on the Teamboard
  *   fixtures. Traceability shows the Overview's run strip plus verified check
  *   rows from the completed run; Customization shows the
  *   `.specify/companion.yml` hooks shape (same shape as
  *   examples/ship-ticket/companion.inline.yml); Fast path shows the Intent
  *   section with the run's size verdict ("Sized simple: 6 files, 6 tasks
- *   projected"); Living Specs shows the viewer's real living header (LIVING
- *   badge, covers globs, coverage and drift facts) on photo-storage. Laid out
- *   as a 2x2 grid, not one row of four: the product type inside each panel
+ *   projected"). Laid out
+ *   as a grid, not one row of three: the product type inside each panel
  *   has to stay legible at the README's ~830px column width.
  *
  * C5 / C6 · Cross-promo banners (`generated/banner-install-engine.png`,
@@ -61,11 +49,11 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import type { ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
-import type { NavState, ViewerState } from '../types';
+import type { ViewerState } from '../types';
 import { InteractiveViewer, vsFromContext, type SpecContextData } from './viewerHarness';
 import { CaptureFrame } from './captureFrame';
 import { SidebarShell } from './sidebarTree';
-import { specsPane, livingSpecsPane, steeringPane } from './SidebarCapture.stories';
+import { specsPane, steeringPane } from './SidebarCapture.stories';
 import {
     ctxPlanning,
     planningStepHistory,
@@ -73,20 +61,7 @@ import {
     ScrollTo,
     teamboardDocs,
 } from './VideoCapture.stories';
-import { mockDoc, mockNavState } from '../components/__stories__/mockData';
-import { App } from '../App';
-import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from '../signals';
-import {
-    renderMarkdown,
-    setCurrentTask,
-    setHasSpecContext,
-    setLivingCoverage,
-    setLivingDrifted,
-    setLivingMode,
-    setTaskSummaries,
-} from 'speckit-viewer/core/markdown/index';
-import { applyHighlighting } from '../highlighting';
-import { buildToc } from '../toc';
+import { mockDoc } from '../components/__stories__/mockData';
 import {
     CoverageSection,
     DecisionsSection,
@@ -95,7 +70,6 @@ import {
     VerifiedSection,
 } from '../components/OverviewDossier';
 import { severalOnOneDocument, severalOnOneDocumentWithComposer } from '../components/InlineComment.stories';
-import { SpecHeader } from '../components/SpecHeader';
 
 // The cross-promo banner ground (C5/C6): the mossy sprout mascot cradling its
 // glowing seedling, plus the Geist faces the banner type renders in (the same
@@ -107,7 +81,6 @@ import geistSemiBold from '../../../../../../content/media/feature-clips/step-ra
 
 import teamboardTasks from '../__fixtures__/teamboard/041-profile-photo-upload/tasks.md?raw';
 import ctxCompletedRaw from '../__fixtures__/teamboard/041-profile-photo-upload/spec-context.completed.json?raw';
-import photoStorageLivingSpec from '../__fixtures__/teamboard/photo-storage.spec.md?raw';
 
 const meta: Meta = {
     title: 'Scenes/README Composites',
@@ -165,7 +138,6 @@ export const C1ReadmeHero: Story = {
                         <SidebarShell
                             panes={[
                                 specsPane(true, false),
-                                livingSpecsPane(),
                                 { ...steeringPane(), collapsed: true },
                             ]}
                         />
@@ -266,151 +238,8 @@ export const C2PipelineStats: Story = {
     ),
 };
 
-// ── C3 · the Living Specs pair ────────────────────────────────────────────
-// One capability, two surfaces. The sidebar's Living Specs view shows
-// photo-storage at "7/9 covered · drift"; the viewer beside it is App's real
-// living mode open on that same capability, whose header derives the same
-// 7/9 and the same drift flag from the fixture. If the two panels ever
-// disagree, the fixture is wrong, not the composition.
-
-const livingRequirementCount = (photoStorageLivingSpec.match(/^###\s+/gm) ?? []).length;
-const livingScenarioCount = (photoStorageLivingSpec.match(/^####\s+Scenario:/gm) ?? []).length;
-
-/**
- * Mount the real App in living mode on the photo-storage fixture, the same
- * signals-in path index.tsx uses. Static on purpose: the capture needs one
- * deterministic frame, not navigation.
- */
-const DRIFTED_REQUIREMENT = 'Oversized uploads are rejected before the body is read';
-
-/** `specOnly` renders the common case, a capability with just its spec.md and
- *  no architecture or coverage tiers, so no tier tabs appear in the header. */
-export function LivingViewerPanel({ specOnly = false }: { specOnly?: boolean } = {}) {
-    setLivingMode(true);
-    setLivingCoverage(null);
-    setLivingDrifted(specOnly ? [] : [DRIFTED_REQUIREMENT]);
-    // The cards live on the Spec view; the capture is about them, not the Overview.
-    viewerMode.value = 'document';
-    setHasSpecContext(!specOnly);
-    setCurrentTask(null);
-    setTaskSummaries(null);
-    viewerState.value = null;
-    historyEntries.value = [];
-    navState.value = mockNavState({
-        coreDocs: specOnly
-            ? [mockDoc('spec', true, 'Spec')]
-            : [
-                  mockDoc('spec', true, 'Spec'),
-                  mockDoc('rules', true, 'Architecture'),
-                  mockDoc('coverage', true, 'Coverage'),
-              ],
-        relatedDocs: [],
-        currentDoc: 'spec',
-        workflowPhase: 'spec',
-        isViewingRelatedDoc: false,
-        specStatus: 'active',
-        badgeText: 'LIVING',
-        createdDate: null,
-        specContextName: 'Photo Storage',
-        titleFromHeading: true,
-        branch: null,
-        filePath: 'capabilities/photo-storage/spec.md',
-        docTypeLabel: 'Spec',
-        activityPanelEnabled: false,
-        livingMode: true,
-        livingMeta: {
-            capabilityName: 'photo-storage',
-            specPath: 'capabilities/photo-storage/spec.md',
-            location: 'central',
-            match: [
-                'src/services/photoStorage/**',
-                'src/api/photos/**',
-                'src/components/PhotoUploader/**',
-                'src/jobs/thumbnailQueue/**',
-            ],
-            requirements: livingRequirementCount,
-            scenarios: livingScenarioCount,
-            coverage: { covered: livingRequirementCount - 2, total: livingRequirementCount },
-            drifted: true,
-            ...(specOnly ? {} : { driftedRequirements: [DRIFTED_REQUIREMENT] }),
-        },
-    } as Partial<NavState>);
-    markdownHtml.value = renderMarkdown(photoStorageLivingSpec);
-
-    useEffect(() => {
-        const id = requestAnimationFrame(() => {
-            applyHighlighting();
-            buildToc(
-                document.getElementById('content-area'),
-                document.getElementById('markdown-content'),
-                document.getElementById('spec-toc'),
-            );
-        });
-        return () => {
-            cancelAnimationFrame(id);
-            setLivingMode(false);
-            setLivingCoverage(null);
-            setLivingDrifted([]);
-            viewerMode.value = null;
-        };
-    }, []);
-
-    return (
-        <div class="viewer-container">
-            <App specStatus="active" />
-        </div>
-    );
-}
-
-export const C3LivingSpecsPair: Story = {
-    name: 'C3 · Living Specs pair',
-    parameters: { capture: { width: 1480, height: 1040 } },
-    render: () => (
-        <CaptureFrame>
-            <div
-                style="display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 36px 44px 40px; background: var(--vscode-editor-background); gap: 22px;"
-            >
-                <div style="display: flex; align-items: baseline; justify-content: space-between; flex-shrink: 0;">
-                    <div style="display: flex; align-items: baseline; gap: 16px;">
-                        <div style="font: 600 26px/1.2 var(--vscode-font-family); color: var(--vscode-editor-foreground); letter-spacing: -0.01em;">
-                            Living Specs
-                        </div>
-                        <div style="font: 400 15.5px/1.4 var(--vscode-font-family); color: var(--vscode-descriptionForeground);">
-                            One durable spec per capability, kept in one folder or next to the code it covers.
-                        </div>
-                    </div>
-                    <div style="font: 500 13px/1.4 var(--vscode-font-family); color: var(--vscode-disabledForeground); letter-spacing: 0.04em;">
-                        Coverage · Drift · Sync
-                    </div>
-                </div>
-                <div style="display: flex; gap: 22px; flex: 1; min-height: 0;">
-                    {/* Addressable panels: a composition (or the future GIF's
-                        storyboard) can mask, highlight, or morph either card
-                        by id without counting children. Rows inside the
-                        sidebar carry their own `#row-<slug>` ids already. */}
-                    <div id="living-pair-sidebar" data-panel="sidebar" style="width: 340px; flex-shrink: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background);">
-                        <SidebarShell
-                            panes={[
-                                { ...specsPane(false), collapsed: true },
-                                livingSpecsPane(true),
-                                { ...steeringPane(), collapsed: true },
-                            ]}
-                        />
-                    </div>
-                    <div id="living-pair-viewer" data-panel="viewer" style="flex: 1; min-width: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; position: relative;">
-                        <LivingViewerPanel />
-                        {/* Fade the clipped bottom edge of the document out to
-                            the ground, so the crop reads as intentional. */}
-                        <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(to bottom, transparent, var(--vscode-editor-background)); pointer-events: none;" />
-                    </div>
-                </div>
-            </div>
-        </CaptureFrame>
-    ),
-};
-
 // ── C4 · the benefits strip ───────────────────────────────────────────────
-// Four real product surfaces, one per benefit of the extension README's
+// Three real product surfaces, one per benefit of the extension README's
 // "What you get" spine, on one dark ground. Every panel is fixture-fed
 // product rendering (or, for Customization, the literal companion.yml hook
 // shape): nothing is drawn for the picture.
@@ -546,54 +375,6 @@ function CompanionYmlCard() {
     );
 }
 
-/** The viewer's real living header (SpecHeader in livingMode), signals-fed
- *  exactly like C3's viewer panel, on the same photo-storage fixture. */
-function LivingHeaderPanel() {
-    viewerState.value = null;
-    navState.value = mockNavState({
-        coreDocs: [
-            mockDoc('spec', true, 'Spec'),
-            mockDoc('rules', true, 'Architecture'),
-            mockDoc('coverage', true, 'Coverage'),
-        ],
-        relatedDocs: [],
-        currentDoc: 'spec',
-        workflowPhase: 'spec',
-        isViewingRelatedDoc: false,
-        specStatus: 'active',
-        badgeText: 'LIVING',
-        createdDate: null,
-        specContextName: 'Photo Storage',
-        titleFromHeading: true,
-        branch: null,
-        filePath: 'capabilities/photo-storage/spec.md',
-        docTypeLabel: 'Spec',
-        activityPanelEnabled: false,
-        livingMode: true,
-        livingMeta: {
-            capabilityName: 'photo-storage',
-            specPath: 'capabilities/photo-storage/spec.md',
-            location: 'central',
-            match: [
-                'src/services/photoStorage/**',
-                'src/api/photos/**',
-                'src/components/PhotoUploader/**',
-                'src/jobs/thumbnailQueue/**',
-            ],
-            requirements: livingRequirementCount,
-            scenarios: livingScenarioCount,
-            coverage: { covered: livingRequirementCount - 2, total: livingRequirementCount },
-            drifted: true,
-        },
-    } as Partial<NavState>);
-
-    return (
-        <div class="viewer-container" style="height: 100%; padding: 18px 22px;">
-            <SpecHeader />
-        </div>
-    );
-}
-
 export const C4BenefitsStrip: Story = {
     name: 'C4 · Benefits strip',
     parameters: { capture: { width: 1176, height: 902 } },
@@ -628,14 +409,6 @@ export const C4BenefitsStrip: Story = {
                     <div style="padding: 16px 22px 0;">
                         <IntentSection state={vsSizing} />
                     </div>
-                </BenefitPanel>
-                <BenefitPanel
-                    kicker="Living specs"
-                    heading="Specs that live with the code"
-                    caption="One durable spec per capability, central or colocated, with coverage counts and a drift flag the moment the code moves on."
-                    height={260}
-                >
-                    <LivingHeaderPanel />
                 </BenefitPanel>
             </div>
         </CaptureFrame>
@@ -874,7 +647,7 @@ function WideHeader({ title, subline, meta }: { title: string; subline: string; 
     );
 }
 
-/** The clipped-bottom-edge fade C1, C3 and C4 all end their panels with. */
+/** The clipped-bottom-edge fade C1 and C4 end their panels with. */
 function BottomFade() {
     return (
         <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 56px; background: linear-gradient(to bottom, transparent, var(--vscode-editor-background)); pointer-events: none;" />
@@ -883,55 +656,6 @@ function BottomFade() {
 
 const WIDE_PANEL =
     'position: relative; min-width: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; background: var(--vscode-editor-background);';
-
-// ── C8 · Living Specs pair, 16:9 (`generated/living-specs-pair-16x9.png`) ──
-// C3's composition at the wide frame: the sidebar's Living Specs view
-// (per-capability coverage counts, drift flags) beside the viewer in its real
-// livingMode on the SAME capability — photo-storage, 7 of 9 covered, drifted.
-// Both panels are product rendering fed by the photo-storage.spec.md fixture;
-// nothing here is drawn for the picture.
-
-export const C8LivingSpecsPairWide: Story = {
-    name: 'C8 · Living Specs pair (16:9)',
-    parameters: { capture: WIDE_CAPTURE },
-    render: () => (
-        <CaptureFrame>
-            <div style="display: flex; flex-direction: column; width: 100%; height: 100%; box-sizing: border-box; padding: 34px 44px 38px; background: var(--vscode-editor-background); gap: 20px;">
-                <WideHeader
-                    title="Living Specs"
-                    subline="One durable spec per capability, kept in one folder or next to the code it covers."
-                    meta="Coverage · Drift · Sync"
-                />
-                <div style="display: flex; gap: 22px; flex: 1; min-height: 0;">
-                    <div
-                        id="living-pair-wide-sidebar"
-                        data-panel="sidebar"
-                        style="width: 360px; flex-shrink: 0; border: 1px solid var(--vscode-panel-border); border-radius: 8px; overflow: hidden; background: var(--vscode-sideBar-background);"
-                    >
-                        <SidebarShell
-                            panes={[
-                                { ...specsPane(false), collapsed: true },
-                                livingSpecsPane(true),
-                                { ...steeringPane(), collapsed: true },
-                            ]}
-                        />
-                    </div>
-                    <div id="living-pair-wide-viewer" data-panel="viewer" style={`flex: 1; ${WIDE_PANEL}`}>
-                        {/* 140px shorter than C3, so the reading column is
-                            parked on Requirements: the LIVING header is fixed
-                            chrome and stays, and the frame spends its height
-                            on requirement and WHEN/THEN rows rather than on
-                            the Purpose paragraph. */}
-                        <ScrollTo headingId="requirements" offset={186}>
-                            <LivingViewerPanel />
-                        </ScrollTo>
-                        <BottomFade />
-                    </div>
-                </div>
-            </div>
-        </CaptureFrame>
-    ),
-};
 
 // ── C9 · Overview dossier, 16:9 (`generated/overview-16x9.png`) ────────────
 // The completed Teamboard run's Overview, laid into two columns so the whole

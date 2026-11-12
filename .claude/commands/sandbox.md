@@ -41,7 +41,7 @@ Shell state does not persist between Bash calls, so start each one with `. .clau
 
   A recipe with no Companion (`vscode-qa-stock`, `copilot-stock`, `claude-mod-stock`) refuses `--dev`; say so and build nothing.
 
-Anything else after the name goes to the recipe after `--`, unchanged: `living-specs` takes its scenario that way (`/sandbox living-specs drift-check ls-6`). An unknown recipe prints the list; relay it.
+Anything else after the name goes to the recipe after `--`, unchanged: a recipe takes its scenario that way. An unknown recipe prints the list; relay it.
 
 ### Report
 

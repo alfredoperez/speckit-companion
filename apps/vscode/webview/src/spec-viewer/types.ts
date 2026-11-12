@@ -27,7 +27,6 @@ export * from '../../../src/protocol/viewer';
 // drops the `visibleWhen` predicate the extension-side `FooterAction` carries)
 // come from the package contract and are re-exported here.
 export type {
-    CapabilityContentView,
     CheckpointStatus,
     ClassificationEntry,
     RiskEntry,

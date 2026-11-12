@@ -1,7 +1,7 @@
 {
   "name": "speckit-companion",
   "displayName": "SpecKit Companion",
-  "description": "See and steer everything your AI builds. Specs 60-68% leaner, same correctness. Live pipeline, per-phase timing, and living specs for GitHub SpecKit with Copilot, Claude, Gemini, and more.",
+  "description": "See and steer everything your AI builds. Specs 60-68% leaner, same correctness. Live pipeline and per-phase timing for GitHub SpecKit with Copilot, Claude, Gemini, and more.",
   "version": "0.38.0",
   "license": "MIT",
   "publisher": "alfredoperez",
@@ -78,12 +78,6 @@
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && speckit.detected"
         },
         {
-          "id": "speckit.views.livingSpecs",
-          "name": "Living Specs",
-          "visibility": "collapsed",
-          "when": "!(workbenchState == empty || workspaceFolderCount == 0)"
-        },
-        {
           "id": "speckit.views.steering",
           "name": "Steering",
           "when": "!(workbenchState == empty || workspaceFolderCount == 0) && config.speckit.views.steering.visible"
@@ -121,21 +115,6 @@
         "view": "speckit.views.explorer",
         "contents": "No specs match the current filter.\n\n[$(clear-all) Clear filter](command:speckit.specs.filter.clear)",
         "when": "speckit.specs.filterActive && speckit.specs.noFilterMatch"
-      },
-      {
-        "view": "speckit.views.livingSpecs",
-        "contents": "Living specs describe what your code does now, and stay true as it changes.\n\nThey need the Companion spec-kit extension in this project.\n\n[$(cloud-download) Install SpecKit Companion](command:speckit.companion.installSpecKitExtension)",
-        "when": "!speckit.companion.installed"
-      },
-      {
-        "view": "speckit.views.livingSpecs",
-        "contents": "Living specs aren't set up in this project yet.\n\nSetting up asks one question — where the specs should live — and writes the registry for you.\n\n[$(rocket) Set up living specs](command:speckit.livingSpecs.init)",
-        "when": "speckit.companion.installed && !speckit.livingSpecs.configured"
-      },
-      {
-        "view": "speckit.views.livingSpecs",
-        "contents": "Living specs are on, and nothing is adopted yet.\n\nPick a part of your code and Companion works out what it does, proposes the capabilities it finds, and waits for you before writing anything.\n\n[$(wand) Adopt your first code area](command:speckit.livingSpecs.adopt)",
-        "when": "speckit.companion.installed && speckit.livingSpecs.configured && !speckit.livingSpecs.hasCapabilities"
       },
       {
         "view": "speckit.views.steering",
@@ -521,64 +500,6 @@
         "icon": "$(terminal)"
       },
       {
-        "command": "speckit.livingSpecs.drift",
-        "title": "Check for Drift",
-        "category": "SpecKit",
-        "icon": "$(git-compare)"
-      },
-      {
-        "command": "speckit.livingSpecs.coverage",
-        "title": "Check Requirement Coverage",
-        "category": "SpecKit",
-        "icon": "$(checklist)"
-      },
-      {
-        "command": "speckit.livingSpecs.move",
-        "title": "Move Living Spec…",
-        "category": "SpecKit",
-        "icon": "$(arrow-swap)"
-      },
-      {
-        "command": "speckit.livingSpecs.init",
-        "title": "Set Up Living Specs",
-        "category": "SpecKit"
-      },
-      {
-        "command": "speckit.livingSpecs.adopt",
-        "title": "Adopt Code Area…",
-        "category": "SpecKit",
-        "icon": "$(wand)"
-      },
-      {
-        "command": "speckit.livingSpecs.sync",
-        "title": "Sync living specs from my changes",
-        "category": "SpecKit",
-        "icon": "$(sparkle)"
-      },
-      {
-        "command": "speckit.livingSpecs.validate",
-        "title": "Validate living specs",
-        "category": "SpecKit",
-        "icon": "$(checklist)"
-      },
-      {
-        "command": "speckit.livingSpecs.open",
-        "title": "Open Living Spec",
-        "category": "SpecKit"
-      },
-      {
-        "command": "speckit.livingSpecs.forFile",
-        "title": "Living Specs for This File",
-        "category": "SpecKit",
-        "icon": "$(book)"
-      },
-      {
-        "command": "speckit.livingSpecs.refresh",
-        "title": "Refresh Living Specs",
-        "category": "SpecKit",
-        "icon": "$(refresh)"
-      },
-      {
         "command": "speckit.bugs.refresh",
         "title": "Refresh Bugs",
         "category": "SpecKit",
@@ -605,32 +526,6 @@
       {
         "command": "speckit.processes.installExtension",
         "title": "Install Spec Kit Process Extension",
-        "category": "SpecKit"
-      },
-      {
-        "command": "speckit.livingSpecs.update",
-        "title": "Update to Match Code",
-        "category": "SpecKit",
-        "icon": "$(sparkle)"
-      },
-      {
-        "command": "speckit.livingSpecs.copyName",
-        "title": "Copy Name",
-        "category": "SpecKit"
-      },
-      {
-        "command": "speckit.livingSpecs.copyPath",
-        "title": "Copy Path",
-        "category": "SpecKit"
-      },
-      {
-        "command": "speckit.livingSpecs.copyRelativePath",
-        "title": "Copy Relative Path",
-        "category": "SpecKit"
-      },
-      {
-        "command": "speckit.livingSpecs.delete",
-        "title": "Delete",
         "category": "SpecKit"
       },
       {
@@ -728,21 +623,6 @@
           "command": "speckit.ideas.refresh",
           "when": "view == speckit.views.ideas",
           "group": "navigation@1"
-        },
-        {
-          "command": "speckit.livingSpecs.refresh",
-          "when": "view == speckit.views.livingSpecs",
-          "group": "navigation@1"
-        },
-        {
-          "command": "speckit.livingSpecs.adopt",
-          "when": "view == speckit.views.livingSpecs && speckit.livingSpecs.configured",
-          "group": "navigation@2"
-        },
-        {
-          "command": "speckit.livingSpecs.sync",
-          "when": "view == speckit.views.livingSpecs && speckit.livingSpecs.configured",
-          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -849,61 +729,6 @@
         {
           "command": "speckit.steering.delete",
           "when": "view == speckit.views.steering && viewItem == steering-document",
-          "group": "5_danger@1"
-        },
-        {
-          "command": "speckit.livingSpecs.update",
-          "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability-drifted",
-          "group": "inline@1"
-        },
-        {
-          "command": "speckit.livingSpecs.update",
-          "when": "view == speckit.views.livingSpecs && viewItem == living-specs-capability-drifted",
-          "group": "livingSpecs@0"
-        },
-        {
-          "command": "speckit.livingSpecs.move",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-capability-missing)",
-          "group": "livingSpecs@3"
-        },
-        {
-          "command": "speckit.livingSpecs.drift",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted)",
-          "group": "livingSpecs@1"
-        },
-        {
-          "command": "speckit.livingSpecs.coverage",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted)",
-          "group": "livingSpecs@2"
-        },
-        {
-          "command": "speckit.livingSpecs.copyName",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
-          "group": "3_copy@1"
-        },
-        {
-          "command": "speckit.livingSpecs.copyPath",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
-          "group": "3_copy@2"
-        },
-        {
-          "command": "speckit.livingSpecs.copyRelativePath",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
-          "group": "3_copy@3"
-        },
-        {
-          "command": "speckit.revealItemInExplorer",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
-          "group": "4_reveal@1"
-        },
-        {
-          "command": "speckit.revealItemInOS",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
-          "group": "4_reveal@2"
-        },
-        {
-          "command": "speckit.livingSpecs.delete",
-          "when": "view == speckit.views.livingSpecs && (viewItem == living-specs-capability || viewItem == living-specs-capability-drifted || viewItem == living-specs-tier || viewItem == living-specs-orphan)",
           "group": "5_danger@1"
         },
         {
@@ -1068,14 +893,6 @@
         },
         {
           "command": "speckit.specs.setStatus",
-          "when": "false"
-        },
-        {
-          "command": "speckit.livingSpecs.drift",
-          "when": "false"
-        },
-        {
-          "command": "speckit.livingSpecs.coverage",
           "when": "false"
         },
         {
@@ -1590,7 +1407,7 @@
             "description": "A spec with recorded activity opens on its Overview: why it exists, how long each phase took, the decisions made and what they rejected, and which test covers which requirement. It is what a reviewer reads instead of asking you again.\n[How the Overview works](https://github.com/alfredoperez/speckit-companion#overview-the-runs-story)",
             "media": {
               "image": "assets/walkthrough/overview.png",
-              "altText": "The Overview of a completed run: the intent, how long each phase took, the approach, and the living specs it touched"
+              "altText": "The Overview of a completed run: the intent, how long each phase took, and the approach"
             }
           }
         ]
@@ -1636,7 +1453,7 @@
     "shots:sheet": "node tooling/scripts/shots-sheet.mjs",
     "shots:board": "npm run canvas:build && node tooling/scripts/board-shots.mjs",
     "shots:place": "node tooling/scripts/place-shots.mjs",
-    "record": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-living-spec,film-tasks-ticking",
+    "record": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-tasks-ticking",
     "record:terminal": "node tooling/scripts/terminal-check.mjs --record .record",
     "record:board": "npm run canvas:build && node tooling/scripts/board-shots.mjs --record .record",
     "clips:capture": "node tooling/scripts/capture-docs-images.mjs",

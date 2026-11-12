@@ -2,11 +2,11 @@
  * SpecKit Companion - Navigation Styles
  * The document rail: a vertical nav answering
  * "where am I reading", with rail marks carrying step completion separately
- * from selection. Living mode keeps its horizontal tier strip.
+ * from selection.
  */
 
 /* ============================================
-   Compact Navigation Bar (living-mode tier strip host)
+   Compact Navigation Bar (horizontal strip host)
    ============================================ */
 
 .compact-nav {
@@ -276,7 +276,7 @@
 }
 
 /* ============================================
-   Sub-document chips (rail groups + living tier strip)
+   Sub-document chips (rail groups + horizontal strip)
    ============================================ */
 
 .step-children {
@@ -354,7 +354,7 @@
     box-shadow: var(--sk-shadow-sm);
 }
 
-/* Living tier strip keeps the horizontal chip look with an accent-tinted active. */
+/* The horizontal strip keeps the chip look with an accent-tinted active. */
 .compact-nav .step-child.active {
     background: var(--sk-accent-subtle);
     color: var(--sk-text-primary);

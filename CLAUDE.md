@@ -27,10 +27,8 @@ Behaviour is documented by the code and its tests first. User-facing reference l
 - `.claude/commands/changelog-entry.md` — the changelog voice and the shape of a release. `.claude/commands/publish.md` — the release checklist.
 - `THEME.md` — the marketing look (the site's Constellation colours, type, mascot and motifs) for anything promotional; `DESIGN.md` — the viewer's tokens and the taste rules for figures and captures.
 - `.claude/review-checklist.md` — webview/CSS correctness invariants review scans for (`.sr-only` vs `hidden`, ellipsis trio, Preact string styles, etc.).
-- `apps/speckit-extension/docs/` — the spec-kit extension's own notes: `node-model.md` (how commands are built from nodes), `living-specs.md`, `publishing.md` (its release flow).
+- `apps/speckit-extension/docs/` — the spec-kit extension's own notes: `node-model.md` (how commands are built from nodes), `publishing.md` (its release flow).
 - `apps/vscode/docs/telemetry.md` and `apps/website/docs/analytics.md` — the event catalogs and how to read them in PostHog.
-
-This repo does not keep living specs of its own; the feature it ships is unaffected.
 
 ## One fact, one owner
 

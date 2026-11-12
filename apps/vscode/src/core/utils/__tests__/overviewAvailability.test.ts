@@ -17,7 +17,7 @@ describe('overview availability', () => {
         });
 
         it('has no Overview', () => {
-            expect(hasOverview(deriveViewerState(readFixture()), true, false)).toBe(false);
+            expect(hasOverview(deriveViewerState(readFixture()), true)).toBe(false);
         });
     });
 

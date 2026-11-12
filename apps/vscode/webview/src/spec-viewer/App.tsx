@@ -24,12 +24,9 @@ export function App({ specStatus }: AppProps) {
     const vs = viewerState.value;
     const reviewComments = vs?.reviewComments;
 
-    const living = !!ns?.livingMode;
-    // A registered capability whose spec file does not exist yet renders nothing but the call to adopt it.
-    const livingEmpty = living && !!ns?.livingMeta?.missing;
     // The folder is gone: nothing on the rail or in the footer can act on it any more.
     const moved = specMoved.value;
-    const showOverview = showingOverview.value && !livingEmpty && !moved;
+    const showOverview = showingOverview.value && !moved;
 
     const [hasMountedActivity, setHasMountedActivity] = useState(false);
     useEffect(() => {
@@ -71,8 +68,8 @@ export function App({ specStatus }: AppProps) {
     return (
         <>
             <PageChrome />
-            <div class={`shell-grid${living || moved ? ' shell-grid--no-rail' : ''}`}>
-                {!living && !moved && <NavigationBar />}
+            <div class={`shell-grid${moved ? ' shell-grid--no-rail' : ''}`}>
+                {!moved && <NavigationBar />}
                 <div class="main-column">
                     {/* Document-scoped: it must not span the rail. */}
                     <RemovedDocBanner />
@@ -93,15 +90,7 @@ export function App({ specStatus }: AppProps) {
                         {moved && (
                             <div class="empty-state">This spec folder was moved or deleted. Open it again from the sidebar.</div>
                         )}
-                        {livingEmpty && !moved && (
-                            <div class="living-empty">
-                                <p>This capability has no spec yet.</p>
-                                <button type="button" class="primary" onClick={() => vscode.postMessage({ type: 'livingAdopt', thisCapability: true })}>
-                                    Adopt this area
-                                </button>
-                            </div>
-                        )}
-                        {!living && hasMountedActivity && (
+                        {hasMountedActivity && (
                             <div class="overview-pane" hidden={!showOverview}>
                                 <ActivityErrorBoundary>
                                     <ActivityPanel />

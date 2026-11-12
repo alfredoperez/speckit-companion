@@ -102,13 +102,9 @@ speckit-extension/**
 # Its sibling modules ship too — the writer imports them at startup.
 !apps/speckit-extension/scripts/write-context.py
 !apps/speckit-extension/scripts/spec_context.py
-!apps/speckit-extension/scripts/spec_deltas.py
 !apps/speckit-extension/scripts/capture.py
 !apps/speckit-extension/scripts/lowered_bar.py
 !apps/speckit-extension/scripts/task_sync.py
-!apps/speckit-extension/scripts/resolve-spec-paths.py
-!apps/speckit-extension/scripts/living_spec_fold.py
-!apps/speckit-extension/scripts/living_validate.py
 !apps/speckit-extension/scripts/run_trace.py
 # The shared atomic-write helper. The capture writers publish through it; each
 # guards the import and falls back to its old fixed-`.tmp` write, so leaving it

@@ -35,8 +35,7 @@ export const specMoved = signal(false);
 /** Whether this spec has an Overview at all (no recorded run → no Overview). */
 export const overviewAvailable = computed(() => {
     const ns = navState.value;
-    // A living spec is its cards; the requirement is the unit, not a page about the page.
-    return hasOverview(viewerState.value, ns?.activityPanelEnabled ?? true, !!ns?.livingMode);
+    return hasOverview(viewerState.value, ns?.activityPanelEnabled ?? true);
 });
 
 /** Read by both the rail (selection) and the pane (content), so they cannot disagree. */

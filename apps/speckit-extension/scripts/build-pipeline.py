@@ -369,6 +369,32 @@ def use_project_hook_nodes(project_root: str) -> None:
     _user_nodes_dir = os.path.join(project_root, USER_NODES_REL) if project_root else None
 
 
+#: Nodes of the retired living specs feature that a project's config may still name.
+RETIRED_NODES = frozenset({"load-living-specs", "draft-spec-delta"})
+
+
+def _is_retired_node(command: str, node) -> bool:
+    return node in RETIRED_NODES and not os.path.isfile(node_source(command, node)[0])
+
+
+def _drop_retired_nodes(config: dict) -> list:
+    """Strip retired nodes from each command's order and phases, so an old recipe still builds."""
+    warnings = []
+    for command, cmd in (config.get("commands") or {}).items():
+        if not isinstance(cmd, dict):
+            continue
+        lists = [cmd.get("nodes")] + [p.get("nodes") for p in cmd.get("phases") or [] if isinstance(p, dict)]
+        dropped = []
+        for nodes in lists:
+            if isinstance(nodes, list):
+                gone = [n for n in nodes if _is_retired_node(command, n)]
+                nodes[:] = [n for n in nodes if n not in gone]
+                dropped += [n for n in gone if n not in dropped]
+        if dropped:
+            warnings.append(f"{command}: skipped retired node(s) {', '.join(dropped)}; living specs are retired, so they can come out of .specify/companion.yml")
+    return warnings
+
+
 def plan_build(config: dict) -> tuple[dict, list]:
     """Resolve every command's order and hooks. Returns (plan, warnings).
 
@@ -376,7 +402,7 @@ def plan_build(config: dict) -> tuple[dict, list]:
     node reads, or names a hook node that does not exist.
     """
     plan = {}
-    warnings = []
+    warnings = _drop_retired_nodes(config)
     own_steps = set(project_commands())
     # A project may name and regroup the phases, so that is resolved before
     # anything reads one.

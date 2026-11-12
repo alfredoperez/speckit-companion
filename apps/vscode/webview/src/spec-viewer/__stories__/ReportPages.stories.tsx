@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { useEffect, useState } from 'preact/hooks';
 import { App } from '../App';
 import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from '../signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setReportMode, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
 import { setupAnswerActions } from '../editor/answerEditor';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
@@ -254,7 +254,6 @@ export function ReportViewer({ fixture, initialDocument, specs }: { fixture: Rep
     viewerMode.value = 'document';
     viewerState.value = null;
     historyEntries.value = [];
-    setLivingMode(false);
     setReportMode(true);
     setHasSpecContext(true);
     setCurrentTask(null);

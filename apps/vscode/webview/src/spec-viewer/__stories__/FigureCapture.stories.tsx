@@ -37,7 +37,7 @@ import type { ComponentChildren } from 'preact';
 import { CaptureFrame } from './captureFrame';
 import { InteractiveViewer, vsFromContext, type SpecContextData } from './viewerHarness';
 import { SidebarShell } from './sidebarTree';
-import { specsPane, livingSpecsPane, steeringPane } from './SidebarCapture.stories';
+import { specsPane, steeringPane } from './SidebarCapture.stories';
 import {
     ctxPlanning,
     ctxSpecified,
@@ -49,9 +49,6 @@ import {
     steps,
     teamboardDocs,
 } from './VideoCapture.stories';
-import { LivingViewerPanel } from './ReadmeCapture.stories';
-import { viewerMode } from '../signals';
-import { useEffect } from 'preact/hooks';
 import {
     CoverageSection,
     DecisionsSection,
@@ -257,7 +254,7 @@ export const F8InlineReview: Story = {
     ),
 };
 
-// ── The sidebar, and the living specs view ────────────────────────────────
+// ── The sidebar ────────────────────────────────
 
 export const F9Sidebar: Story = {
     name: 'F9 · The sidebar',
@@ -266,50 +263,12 @@ export const F9Sidebar: Story = {
         <CaptureFrame>
             <Figure compact windowName="Specs sidebar">
                 <div style="height: 100%; overflow: hidden;">
-                    <SidebarShell panes={[specsPane(true, false), livingSpecsPane(), steeringPane(true)]} />
+                    <SidebarShell panes={[specsPane(true, false), steeringPane(true)]} />
                 </div>
             </Figure>
         </CaptureFrame>
     ),
 };
-
-export const F10LivingSpecs: Story = {
-    name: 'F10 · Living specs',
-    parameters: { capture: { width: 1100, height: 760 } },
-    render: () => (
-        <CaptureFrame>
-            <Figure compact windowName="Living Specs · photo-storage">
-                <div style="display: flex; height: 100%;">
-                    <div style={`width: 340px; flex-shrink: 0; border-right: 1px solid ${T.borderPanel}; overflow: hidden;`}>
-                        <SidebarShell
-                            panes={[
-                                { ...specsPane(false), collapsed: true },
-                                livingSpecsPane(true),
-                                { ...steeringPane(), collapsed: true },
-                            ]}
-                        />
-                    </div>
-                    <div style="flex: 1; min-width: 0; position: relative; overflow: hidden;">
-                        <ScrollTo headingId="requirements" offset={186}>
-                            <LivingSpecBody />
-                        </ScrollTo>
-                    </div>
-                </div>
-            </Figure>
-        </CaptureFrame>
-    ),
-};
-
-/** The living viewer lands on its Overview tab; the figure wants the spec body. */
-function LivingSpecBody() {
-    useEffect(() => {
-        viewerMode.value = 'document';
-        return () => {
-            viewerMode.value = null;
-        };
-    }, []);
-    return <LivingViewerPanel specOnly />;
-}
 
 // ── The Workflow Builder ──────────────────────────────────────────────────
 

@@ -12,5 +12,3 @@ reads: []
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --advance --by ai --set workflow=companion
    ```
    The `--set` pins which workflow ran the spec in the same write, so a mid-run join keeps Companion dispatch. This closes the implement step and leaves the spec at `implemented`; it never writes `completed`. Best-effort and idempotent: if `python3` is unavailable, warn and skip without failing the host command.
-
-   - **Living specs (only when this project keeps them).** If the spec's `.spec-context.json` lists any `livingSpecs.loaded`, read `.specify/extensions/companion/commands/reference/living-implement-close.md` and follow it now: account for every loaded capability, have the deltas reviewed, and fold them. An absent or empty list means skip this.

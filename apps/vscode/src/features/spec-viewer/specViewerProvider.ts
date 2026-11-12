@@ -10,7 +10,7 @@ import * as vscode from "vscode";
 import { randomUUID } from "crypto";
 import { scanDocuments } from "./documentScanner";
 import { generateHtml } from "./html";
-import { createMessageHandlers, type LivingUndoAction } from "./messageHandlers";
+import { createMessageHandlers } from "./messageHandlers";
 import { computeStaleness, isStalenessRelevant } from "./staleness";
 import {
   computePanelDerivedState,
@@ -60,20 +60,16 @@ import { resolveSpecDisplayName } from "../../core/utils/specDisplayName";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { livingTierType, livingCapabilityName, livingTierDocuments, readLivingDoc, isLivingDraft, livingSpecHeading, livingPurposeBody, appendLivingRemoval } from "../living-specs/livingDocs";
-import { makeDefaultGitRunner, requirementKey, requirementLinks, requirementSlices } from "../living-specs/livingSpecsModel";
-import { buildLivingHeaderMeta, resolveLivingHealth } from "../living-specs/livingHeaderMeta";
-import type { LivingHeaderMeta } from "./types";
+import { makeDefaultGitRunner } from "../../core/utils/git";
 import { deriveStepHistory } from "../specs/stepHistoryDerivation";
 import { backfillMinimalContext } from "../specs/specContextBackfill";
 import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { resolveInstallPrompt, type InstallPrompt } from "../../speckit/specKitExtensionInstall";
-import { reportInstallPromptShown, reportSpecOpened, reportLivingSpecOpened } from "../../core/telemetry";
+import { reportInstallPromptShown, reportSpecOpened } from "../../core/telemetry";
 import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests, markStaleChecks } from "./stateDerivation";
 import { FRESHNESS_TIMEOUT_MS, staleCounts } from "./checkFreshness";
 import { deriveConvergeResult } from "./convergeResult";
-import { enrichLivingSpecs } from "../living-specs/livingSpecsContent";
 import { bugDirectoryOf } from "../bugs/bugReports";
 import { ideaDirectoryOf, ideaPageFile } from "../ideas/ideaReports";
 import { isReportPath, reportDirectoryOf, reportDocuments, type ReportSet } from "../reports/reportSet";
@@ -92,9 +88,6 @@ import {
 } from "../workflows";
 import type { FeatureWorkflowContext, WorkflowStepConfig } from "../workflows/types";
 import { resolveSpecBranch } from "../specs/specBranch";
-
-/** How long Approve all and Remove stay undoable. */
-const LIVING_UNDO_MS = 5000;
 
 function reportSetOfPath(filePath: string): ReportSet<string> | undefined {
   return Object.values(REPORT_SETS).find(set => isReportPath(set, filePath));
@@ -177,10 +170,6 @@ async function ensureSpecContext(
 export class SpecViewerProvider {
   /** Per-spec-directory panel instances; debounce-timer cleanup lives in the registry's `delete`. */
   private readonly panels = new PanelRegistry();
-  private readonly healthRequests = new Map<string, number>();
-
-  /** At most one Undo per living panel, held here because every write regenerates the webview page. */
-  private readonly livingUndos = new Map<string, LivingUndoAction & { token: string; expiresAt: number; timer: ReturnType<typeof setTimeout> }>();
 
   /** Fires VS Code + OS notifications when a dispatched step completes. */
   private readonly stepCompletionNotifier = new StepCompletionNotifier();
@@ -238,11 +227,8 @@ export class SpecViewerProvider {
    */
   public async show(
     filePath: string,
-    opts?: { living?: boolean; requirement?: string; bug?: boolean; report?: ReportSetId; landing?: boolean },
+    opts?: { bug?: boolean; report?: ReportSetId; landing?: boolean },
   ): Promise<void> {
-    if (opts?.living) {
-      return this.showLiving(filePath, opts.requirement);
-    }
     const reportSet = bugDirectoryOf(filePath)
       ? "bugs"
       : ideaDirectoryOf(filePath)
@@ -291,7 +277,7 @@ export class SpecViewerProvider {
     }
 
     // Create new panel for this spec
-    await this.createPanel(specDirectory, documentType, undefined, 'document');
+    await this.createPanel(specDirectory, documentType, 'document');
   }
 
   /**
@@ -308,40 +294,7 @@ export class SpecViewerProvider {
       existing.panel.reveal(vscode.ViewColumn.One);
       return;
     }
-    await this.createPanel(specDirectory, undefined, undefined, 'overview');
-  }
-
-  /**
-   * Open a living-spec capability document in the viewer (no workflow chrome).
-   * The panel is keyed by the tier file's own directory; tier siblings
-   * (spec / arch / coverage) become the tab strip.
-   */
-  private async showLiving(filePath: string, requirement?: string): Promise<void> {
-    const specDirectory = path.dirname(filePath);
-    const documentType = livingTierType(path.basename(filePath));
-
-    reportLivingSpecOpened(livingCapabilityName(filePath));
-
-    const existing = this.panels.get(specDirectory);
-    if (existing?.state.living) {
-      // Re-anchor: two colocated capabilities can share a directory (the
-      // panel key), so the clicked file decides which family renders.
-      if (this.livingSpecTier(existing.state.livingSourcePath) !== this.livingSpecTier(filePath)) {
-        this.settleLivingUndo(specDirectory);
-      }
-      existing.state = {
-        ...existing.state,
-        livingSourcePath: filePath,
-        specName: livingCapabilityName(filePath),
-        landing: requirement ? 'document' : existing.state.landing,
-      };
-      await this.updateLivingContent(specDirectory, documentType);
-      existing.panel.reveal(vscode.ViewColumn.One);
-      this.revealRequirement(specDirectory, requirement);
-      return;
-    }
-    await this.createPanel(specDirectory, documentType, { living: true, sourcePath: filePath }, requirement ? 'document' : undefined);
-    this.revealRequirement(specDirectory, requirement);
+    await this.createPanel(specDirectory, undefined, 'overview');
   }
 
   /** One read-only panel per bug or idea, keyed by its folder, showing the clicked report. */
@@ -361,20 +314,7 @@ export class SpecViewerProvider {
       existing.panel.reveal(vscode.ViewColumn.One);
       return;
     }
-    await this.createPanel(directory, documentType, undefined, "document", { report: reportSet });
-  }
-
-  /**
-   * Ask the panel to bring one requirement into view.
-   *
-   * Fire-and-forget on purpose: the reader opened the spec, and a scroll that
-   * did not happen must never be why the spec failed to open.
-   */
-  private revealRequirement(specDirectory: string, heading?: string): void {
-    if (!heading) {
-      return;
-    }
-    this.postMessage(specDirectory, { type: 'revealRequirement', heading });
+    await this.createPanel(directory, documentType, "document", { report: reportSet });
   }
 
   /**
@@ -388,7 +328,7 @@ export class SpecViewerProvider {
   public async refreshOpenPanels(): Promise<void> {
     const dirs: string[] = [];
     this.panels.forEach((instance, dir) => {
-      if (!instance.state.living && !instance.state.bug) dirs.push(dir);
+      if (!instance.state.bug) dirs.push(dir);
     });
     for (const dir of dirs) {
       await this.refreshContextIfDisplaying(path.join(dir, SPEC_CONTEXT_FILENAME));
@@ -425,9 +365,7 @@ export class SpecViewerProvider {
         }
       }
     }
-    const livingKey = path.dirname(filePath);
-    const living = this.panels.get(livingKey);
-    const specDirectory = living?.state.living ? livingKey : getSpecDirectoryFromPath(filePath);
+    const specDirectory = getSpecDirectoryFromPath(filePath);
     const instance = this.panels.get(specDirectory);
 
     if (!instance) {
@@ -437,11 +375,6 @@ export class SpecViewerProvider {
     this.outputChannel.appendLine(
       `[SpecViewer] Refreshing due to file change: ${filePath}`,
     );
-
-    if (instance.state.living) {
-      await this.updateLivingContent(specDirectory, instance.state.currentDocument);
-      return;
-    }
 
     // Auto-navigate to newly created file
     const docType = getDocumentTypeFromPath(filePath);
@@ -471,7 +404,7 @@ export class SpecViewerProvider {
   public async refreshContextIfDisplaying(specContextPath: string): Promise<void> {
     const specDir = path.dirname(specContextPath);
     const instance = this.panels.get(specDir);
-    if (!instance || instance.state.living || instance.state.bug) return;
+    if (!instance || instance.state.bug) return;
 
     try {
       const built = await this.buildViewerPayload(specDir, instance.state.currentDocument, {
@@ -598,7 +531,7 @@ export class SpecViewerProvider {
     const instance = this.panels.get(specDirectory);
     if (!instance) return;
     this.outputChannel.appendLine(`[SpecViewer] Spec folder gone: ${specDirectory}`);
-    const kind = instance.state.living ? "Living Spec" : instance.state.bug ? REPORT_SETS[instance.state.reportSet ?? "bugs"].panelPrefix : "Spec";
+    const kind = instance.state.bug ? REPORT_SETS[instance.state.reportSet ?? "bugs"].panelPrefix : "Spec";
     instance.panel.title = `${kind}: ${instance.state.specName} (moved)`;
     this.postMessage(specDirectory, { type: "specMoved", specDirectory });
   }
@@ -612,7 +545,7 @@ export class SpecViewerProvider {
 
   private refreshPanelTitle(specDirectory: string): void {
     const instance = this.panels.get(specDirectory);
-    if (!instance || instance.state.living || instance.state.bug) return;
+    if (!instance || instance.state.bug) return;
     const doc = instance.state.availableDocuments.find(d => d.type === instance.state.currentDocument);
     instance.panel.title = this.panelTitle(instance, doc?.label);
   }
@@ -623,15 +556,12 @@ export class SpecViewerProvider {
   private async createPanel(
     specDirectory: string,
     documentType: DocumentType | undefined,
-    living?: { living: true; sourcePath: string },
     landing?: 'overview' | 'document',
     mode?: { report?: ReportSetId },
   ): Promise<void> {
     const report = mode?.report;
     const bug = !!report;
-    const specName = living
-      ? livingCapabilityName(living.sourcePath)
-      : path.basename(specDirectory);
+    const specName = path.basename(specDirectory);
 
     const panel = vscode.window.createWebviewPanel(
       "speckit.specViewer",
@@ -651,8 +581,6 @@ export class SpecViewerProvider {
     const initialState: SpecViewerState = {
       specName,
       specDirectory,
-      living: !!living,
-      livingSourcePath: living?.sourcePath,
       ...(report ? { bug: true, reportSet: report } : {}),
       currentDocument: documentType ?? CORE_DOCUMENTS.SPEC,
       landing,
@@ -681,7 +609,6 @@ export class SpecViewerProvider {
       );
       if (!bug) {
         this.stepCompletionNotifier.forget(specDirectory);
-        this.settleLivingUndo(specDirectory);
       }
       this.awaitingOverview.delete(specDirectory);
       // PanelRegistry.delete clears any pending debounceTimer for us.
@@ -722,8 +649,6 @@ export class SpecViewerProvider {
       },
       outputChannel: this.outputChannel,
       context: this.context,
-      offerLivingUndo: (dir, action) => this.offerLivingUndo(dir, action),
-      takeLivingUndo: (dir, token) => this.takeLivingUndo(dir, token),
     });
 
     instance.panel.webview.onDidReceiveMessage(
@@ -731,155 +656,6 @@ export class SpecViewerProvider {
       undefined,
       this.context.subscriptions,
     );
-  }
-
-  /** The spec tier a tier file belongs to: two tiers of one capability share it, two colocated capabilities do not. */
-  private livingSpecTier(sourcePath: string | undefined): string | undefined {
-    return sourcePath ? livingTierDocuments(sourcePath).find(d => d.type === 'spec')?.filePath : undefined;
-  }
-
-  /** Hold an action as the panel's one Undo for LIVING_UNDO_MS; the action it replaces stands. */
-  private offerLivingUndo(specDirectory: string, action: LivingUndoAction): void {
-    this.settleLivingUndo(specDirectory);
-    const token = randomUUID();
-    const timer = setTimeout(() => this.settleLivingUndo(specDirectory, token), LIVING_UNDO_MS);
-    this.livingUndos.set(specDirectory, { ...action, token, expiresAt: Date.now() + LIVING_UNDO_MS, timer });
-  }
-
-  /** The held action for a current token, no longer held; undefined for a stale one. */
-  private takeLivingUndo(specDirectory: string, token: string): LivingUndoAction | undefined {
-    const held = this.livingUndos.get(specDirectory);
-    if (!held || held.token !== token) return undefined;
-    clearTimeout(held.timer);
-    this.livingUndos.delete(specDirectory);
-    return held;
-  }
-
-  /** The held action stands: drop it, and record a removal. */
-  private settleLivingUndo(specDirectory: string, token?: string): void {
-    const held = this.livingUndos.get(specDirectory);
-    if (!held || (token !== undefined && held.token !== token)) return;
-    clearTimeout(held.timer);
-    this.livingUndos.delete(specDirectory);
-    if (held.kind === "remove" && held.heading) {
-      appendLivingRemoval(held.filePath, held.capability, held.heading).catch((err) =>
-        this.outputChannel.appendLine(`[SpecViewer] Removal record not written for "${held.heading}": ${err}`),
-      );
-    }
-  }
-
-  /**
-   * Render a living-spec tier in the panel: rendered markdown, tier tabs,
-   * LIVING badge — and none of the workflow machinery (no context read or
-   * backfill, no phases, no footer actions).
-   */
-  private async updateLivingContent(
-    specDirectory: string,
-    documentType: DocumentType,
-  ): Promise<void> {
-    const instance = this.panels.get(specDirectory);
-    if (!instance?.state.living) return;
-
-    const anchor = instance.state.livingSourcePath
-      ?? instance.state.availableDocuments.find(d => d.type === 'spec')?.filePath
-      ?? featureSpecPath(specDirectory);
-    const documents = livingTierDocuments(anchor);
-    const doc = documents.find(d => d.type === documentType && d.exists)
-      ?? documents.find(d => d.exists)
-      ?? documents[0];
-    if (!doc) return;
-
-    const content = doc.exists ? await readLivingDoc(doc.filePath) : '';
-    const specName = instance.state.specName;
-
-    // The title belongs to the capability, not the tier on screen, so it comes
-    // from the spec tier's own heading whichever tab is showing.
-    const specTier = documents.find(d => d.type === 'spec');
-    const specTierContent = !specTier?.exists
-      ? ''
-      : specTier.filePath === doc.filePath
-        ? content
-        : await readLivingDoc(specTier.filePath);
-    const heading = livingSpecHeading(specTierContent);
-    const displayName = heading ?? specName;
-
-    const workspaceRoot = getProjectRoot();
-    const specTierPath = specTier?.filePath ?? doc.filePath;
-    const built = workspaceRoot
-      ? buildLivingHeaderMeta(workspaceRoot, specTierPath, specTierContent)
-      : null;
-    const withMissing = built && !specTier?.exists ? { ...built, missing: true } : built;
-    const meta = withMissing && isLivingDraft(specTierContent) ? { ...withMissing, draft: true } : withMissing;
-
-    // An adopt-drafted spec carries a `[DRAFT]` banner in its body; badge it
-    // DRAFT so the header stops contradicting the first line of the document.
-    const isDraft = isLivingDraft(content);
-    const links = workspaceRoot && meta ? requirementLinks(workspaceRoot, meta.capabilityName) : undefined;
-    const overview = {
-      purpose: livingPurposeBody(specTierContent),
-      requirements: requirementSlices(specTierContent).map(r => ({
-        heading: requirementKey(r.heading),
-        adopted: !!r.adopted,
-        leansOn: links?.get(requirementKey(r.heading))?.leansOn ?? [],
-        leanedOnBy: links?.get(requirementKey(r.heading))?.leanedOnBy ?? [],
-      })),
-    };
-    const undo = this.livingUndos.get(specDirectory);
-    const livingUndo = undo && undo.expiresAt > Date.now()
-      ? { token: undo.token, kind: undo.kind, expiresAt: undo.expiresAt }
-      : null;
-
-    instance.state = {
-      ...instance.state,
-      currentDocument: doc.type,
-      availableDocuments: documents,
-      lastUpdated: Date.now(),
-      phases: [],
-      currentPhase: 1,
-      taskCompletionPercent: 0,
-    };
-    instance.firstOpenComplete = true;
-    instance.panel.title = `Living Spec: ${displayName}`;
-
-    instance.panel.webview.html = generateHtml(
-      instance.panel.webview,
-      this.context.extensionUri,
-      content,
-      'This tier has not been written yet.',
-      documents,
-      doc.type,
-      displayName,
-      [],            // phases — no stepper
-      0,             // taskCompletionPercent
-      isDraft ? 'draft' : SpecStatuses.ACTIVE,
-      [],            // enhancementButtons
-      {},            // stalenessMap
-      null,          // activeStep
-      isDraft ? 'DRAFT' : 'LIVING',  // badgeText
-      null,
-      null,
-      displayName,   // contextSpecName (header title)
-      null,          // branch
-      doc.filePath,
-      null,          // currentStep
-      {},            // stepHistory
-      false,         // activity panel off — no run to narrate
-      null,          // no install prompt
-      true,          // livingMode
-      meta,
-      heading !== null,
-      instance.state.landing,
-      overview,
-      livingUndo,
-    );
-
-    this.outputChannel.appendLine(
-      `[SpecViewer] Updated living content: ${specName}/${doc.type}`,
-    );
-
-    if (meta) {
-      void this.pushLivingHealth(specDirectory, meta);
-    }
   }
 
   /** Render one bug or idea report read-only: its reports as the rail, no run record or run machinery. */
@@ -972,12 +748,8 @@ export class SpecViewerProvider {
       {},            // stepHistory
       false,         // activity panel off — no run to narrate
       null,          // no install prompt
-      false,         // livingMode
-      null,          // livingMeta
       true,          // titleFromHeading
       "document",
-      null,          // livingOverview
-      null,          // livingUndo
       undefined,     // removedDocument
       true,          // readOnly
       undefined,     // assistantName
@@ -992,45 +764,6 @@ export class SpecViewerProvider {
   }
 
   /**
-   * Resolve a capability's coverage and drift after the header has already
-   * painted, then push them to the open panel. Keeping this off the render
-   * path is what stops the git-backed drift check from delaying the panel.
-   */
-  private async pushLivingHealth(
-    specDirectory: string,
-    meta: LivingHeaderMeta,
-  ): Promise<void> {
-    const workspaceRoot = getProjectRoot();
-    if (!workspaceRoot) return;
-
-    // Only the latest request for a panel may post: an older one finishing last would repaint stale facts.
-    const request = (this.healthRequests.get(specDirectory) ?? 0) + 1;
-    this.healthRequests.set(specDirectory, request);
-    const health = await resolveLivingHealth(workspaceRoot, meta);
-    if (this.healthRequests.get(specDirectory) !== request) return;
-    if (health.coverage === undefined && health.drifted === undefined && health.newRequirements === undefined && health.requirementCoverage === undefined) return;
-
-    const instance = this.panels.get(specDirectory);
-    if (!instance?.state.living) return;
-
-    // Colocated capabilities share a panel key, so the panel may have been
-    // re-anchored to a different one while this git-backed call was in flight.
-    const anchor = instance.state.livingSourcePath;
-    const currentSpec = anchor
-      ? livingTierDocuments(anchor).find(d => d.type === 'spec')?.filePath
-      : undefined;
-    const currentSpecPath = currentSpec
-      ? path.relative(workspaceRoot, currentSpec).replace(/\\/g, '/')
-      : undefined;
-    if (currentSpecPath !== meta.specPath) return;
-
-    this.postMessage(specDirectory, {
-      type: "livingHealthResolved",
-      livingMeta: { ...meta, ...health },
-    });
-  }
-
-  /**
    * Update content in the panel
    */
   private async updateContent(
@@ -1039,12 +772,6 @@ export class SpecViewerProvider {
   ): Promise<void> {
     const instance = this.panels.get(specDirectory);
     if (!instance) return;
-    if (instance.state.living) {
-      return this.updateLivingContent(
-        specDirectory,
-        documentType ?? instance.state.currentDocument,
-      );
-    }
     if (instance.state.bug) {
       return this.updateReportContent(specDirectory, documentType ?? instance.state.currentDocument);
     }
@@ -1132,7 +859,7 @@ export class SpecViewerProvider {
 
       if (instance.state.landing === "overview" && instance.overviewAvailable === undefined) {
         const viewerState = await this.readViewerState(specDirectory);
-        instance.overviewAvailable = hasOverview(viewerState, this.readActivityPanelEnabled(), false);
+        instance.overviewAvailable = hasOverview(viewerState, this.readActivityPanelEnabled());
       }
       instance.panel.title = this.panelTitle(instance, doc?.label);
 
@@ -1167,12 +894,8 @@ export class SpecViewerProvider {
         derived.stepHistoryByTab,
         this.readActivityPanelEnabled(),
         this.computeInstallPrompt(),
-        undefined,     // livingMode — default
-        undefined,     // livingMeta — default
         undefined,     // titleFromHeading — default
         instance.state.landing,
-        undefined,     // livingOverview — default
-        undefined,     // livingUndo — default
         instance.state.removedDocument,
         undefined,     // readOnly — default
         resolveSpecAssistant(featureCtx),
@@ -1341,11 +1064,6 @@ export class SpecViewerProvider {
   ): Promise<void> {
     const instance = this.panels.get(specDirectory);
     if (!instance) return;
-    if (instance.state.living) {
-      // Living panels re-render whole-page; there is no context-driven
-      // viewerState to diff against.
-      return this.updateLivingContent(specDirectory, documentType);
-    }
     if (instance.state.bug) {
       return this.updateReportContent(specDirectory, documentType);
     }
@@ -1542,7 +1260,7 @@ export class SpecViewerProvider {
     };
 
     const viewerState = await this.readViewerState(specDirectory);
-    instance.overviewAvailable = hasOverview(viewerState, navState.activityPanelEnabled ?? true, false);
+    instance.overviewAvailable = hasOverview(viewerState, navState.activityPanelEnabled ?? true);
 
     return { doc, content, navState, viewerState, featureCtx, derived };
   }
@@ -1596,18 +1314,6 @@ export class SpecViewerProvider {
             try {
               derivedVs.verified = markStaleChecks(derivedVs.verified, await staleCounts(wsRoot, trees, makeDefaultGitRunner(FRESHNESS_TIMEOUT_MS)));
             } catch { /* leave verified unchanged */ }
-          }
-        }
-        // Living-specs content is filesystem-derived, so it's enriched here at
-        // the provider seam rather than inside the pure derivation.
-        if (derivedVs.livingSpecs) {
-          const wsRoot = getProjectRoot();
-          if (wsRoot) {
-            derivedVs.livingSpecs = enrichLivingSpecs(
-              derivedVs.livingSpecs,
-              wsRoot,
-              featureSpecPath(specDirectory)
-            );
           }
         }
         viewerState = {

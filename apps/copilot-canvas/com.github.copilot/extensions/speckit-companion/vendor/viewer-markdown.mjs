@@ -29,21 +29,21 @@ function refAnchor(id, opts = {}) {
   return `id="${slugForId(id)}" data-ref-target="${escapeHtml(id)}"${attr2("data-family", opts.family)}${attr2("data-status", opts.status)}${attr2("data-label", opts.label)}`;
 }
 function idChip(id, opts = {}) {
-  const safe2 = escapeHtml(id);
+  const safe = escapeHtml(id);
   if (!ID_PATTERN.test(id) || opts.resolved === false) {
-    return `<span class="lg-chip lg-chip--unresolved" title="Not found in this spec">${safe2}</span>`;
+    return `<span class="lg-chip lg-chip--unresolved" title="Not found in this spec">${safe}</span>`;
   }
   const dot = opts.status ? statusDot(opts.status) : "";
   const title = opts.title ? ` title="${escapeHtml(opts.title).replace(/"/g, "&quot;")}"` : "";
   const doc = opts.doc && /^[a-z][a-z-]*$/.test(opts.doc) ? opts.doc : "";
   const docAttr = doc ? ` data-doc="${doc}"` : "";
-  const label = doc ? `${doc}.md ${safe2}` : safe2;
-  return `<a class="lg-chip" href="#${slugForId(id)}" data-ref="${safe2}"${docAttr}${title}>${dot}${label}</a>`;
+  const label = doc ? `${doc}.md ${safe}` : safe;
+  return `<a class="lg-chip" href="#${slugForId(id)}" data-ref="${safe}"${docAttr}${title}>${dot}${label}</a>`;
 }
 function fileChip(path) {
-  const safe2 = escapeHtml(path);
+  const safe = escapeHtml(path);
   const name = escapeHtml(path.split("/").pop() ?? path);
-  return `<span class="lg-chip lg-file" data-file="${safe2.replace(/"/g, "&quot;")}">${codicon("file")}${name}</span>`;
+  return `<span class="lg-chip lg-file" data-file="${safe.replace(/"/g, "&quot;")}">${codicon("file")}${name}</span>`;
 }
 function statusDot(status2) {
   return `<span class="lg-dot lg-dot--${status2}" aria-hidden="true"></span>`;
@@ -1684,338 +1684,6 @@ function parseAcceptanceScenarios(markdown) {
 function emphasizeScenarioKeywords(text) {
   const plainGiven = /^(\*\*)?Given\b/.test(text);
   return text.replace(/\*\*(Given|When|Then)\*\*/g, (_m, k) => `<strong class="keyword-${k.toLowerCase()}">${k}</strong>`).replace(/(^|,\s+)(Given|When|Then)\b/g, (_m, lead, k) => `${lead}<strong class="keyword-${k.toLowerCase()}">${k}</strong>`).replace(/(,\s+)(when|then)\b/g, (m, lead, k) => plainGiven ? `${lead}<strong class="keyword-${k}">${k}</strong>` : m);
-}
-
-// packages/viewer/src/core/signals.ts
-var navState = { value: null };
-
-// packages/viewer/src/core/markdown/livingComponents.ts
-var COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
-function safe(region, fn) {
-  try {
-    return fn(region);
-  } catch {
-    return region;
-  }
-}
-var livingCoverage = /* @__PURE__ */ Object.create(null);
-function setLivingCoverage(map) {
-  const next = Object.assign(/* @__PURE__ */ Object.create(null), map || {});
-  const keys = Object.keys(next);
-  const changed = keys.length !== Object.keys(livingCoverage).length || keys.some((k) => next[k] !== livingCoverage[k]);
-  livingCoverage = next;
-  return changed;
-}
-var livingDrifted = /* @__PURE__ */ new Set();
-function setLivingDrifted(headings) {
-  const next = new Set(headings ?? []);
-  const changed = next.size !== livingDrifted.size || [...next].some((h) => !livingDrifted.has(h));
-  livingDrifted = next;
-  return changed;
-}
-var livingNew = /* @__PURE__ */ new Set();
-function setLivingNew(headings) {
-  const next = new Set(headings ?? []);
-  const changed = next.size !== livingNew.size || [...next].some((h) => !livingNew.has(h));
-  livingNew = next;
-  return changed;
-}
-var DRAFT_BANNER_SCAN_LINES = 10;
-var DRAFT_BANNER_LINE = /^\s*(?:>\s*)*(?:#{1,6}\s+)?(?:[*_]{1,3})?\s*\[draft\]/i;
-function stripLivingDraftBanner(markdown) {
-  return safe(markdown, (md) => {
-    const lines = md.split("\n");
-    const at = lines.findIndex((line, i) => i < DRAFT_BANNER_SCAN_LINES && DRAFT_BANNER_LINE.test(line));
-    if (at === -1) return md;
-    lines[at] = "";
-    return lines.join("\n");
-  });
-}
-function preprocessLivingPurpose(markdown) {
-  return safe(markdown, (md) => {
-    const lines = md.split("\n");
-    const start = lines.findIndex((line) => /^##\s+Purpose\s*$/.test(line));
-    if (start === -1) return md;
-    let end = lines.length;
-    for (let i = start + 1; i < lines.length; i++) {
-      if (/^##\s+/.test(lines[i])) {
-        end = i;
-        break;
-      }
-    }
-    const out = [
-      ...lines.slice(0, start),
-      '<div class="living-purpose">',
-      ...lines.slice(start, end),
-      "</div>",
-      ...lines.slice(end)
-    ];
-    return out.join("\n");
-  });
-}
-var scenarioCounter = 0;
-var uncoveredCounter = 0;
-var STEP_CLASS = {
-  WHEN: "living-when",
-  THEN: "living-then",
-  AND: "living-and"
-};
-function buildScenario(title, steps) {
-  const listId = `living-scenario-${++scenarioCounter}`;
-  const items = steps.map((s, idx) => {
-    const lineNum = idx + 1;
-    const rest = parseInline(s.rest.trim());
-    return `<li class="living-scenario-step line ${STEP_CLASS[s.kw]}" data-line="${lineNum}" data-list-id="${listId}"><button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment to scenario line ${lineNum}" aria-label="Add comment to scenario line ${lineNum}">${COMMENT_ICON_SVG}</button><div class="line-content"><span class="living-scenario-kw">${s.kw}</span> ${rest}</div><div class="line-comment-slot"></div></li>`;
-  }).join("");
-  const titleHtml = title ? `<div class="living-scenario-title line" data-line="0" data-list-id="${listId}"><button class="line-add-btn" data-line="0" data-list-id="${listId}" title="Add comment to scenario title" aria-label="Add comment to scenario title">${COMMENT_ICON_SVG}</button><div class="line-content">${parseInline(title.charAt(0).toUpperCase() + title.slice(1))}</div><div class="line-comment-slot"></div></div>` : "";
-  return `<div class="living-scenario">${titleHtml}<ol class="living-scenario-steps" id="${listId}">${items}</ol></div>`;
-}
-function preprocessLivingScenarios(markdown) {
-  return safe(markdown, (md) => {
-    scenarioCounter = 0;
-    const lines = md.split("\n");
-    const out = [];
-    let i = 0;
-    while (i < lines.length) {
-      const m = lines[i].match(/^####\s+Scenario:\s*(.*)$/);
-      if (!m) {
-        out.push(lines[i]);
-        i++;
-        continue;
-      }
-      const title = m[1].trim();
-      const steps = [];
-      let j = i + 1;
-      while (j < lines.length) {
-        const step = lines[j].match(/^-\s+\*\*(WHEN|THEN|AND)\*\*\s*(.*)$/);
-        if (step) {
-          steps.push({ kw: step[1].toUpperCase(), rest: step[2] });
-          j++;
-        } else if (lines[j].trim() === "" && steps.length === 0) {
-          j++;
-        } else {
-          break;
-        }
-      }
-      if (steps.length === 0) {
-        out.push(lines[i]);
-        i++;
-        continue;
-      }
-      out.push(buildScenario(title, steps));
-      i = j;
-    }
-    return out.join("\n");
-  });
-}
-var HAS_INFERRED = /\[inferred\]/i;
-var STRIP_INFERRED = /\s*\[inferred\]\s*/gi;
-var TOUCHES_LINE = /^\s*<!--\s*touches:\s*(.+?)\s*-->\s*$/;
-var ADOPTED_LINE = /^\s*<!--\s*adopted:\s*(.+?)\s*-->\s*$/;
-var ALIGNS_LINE = /^\s*<!--\s*aligns:\s*(.+?)\s*-->\s*$/;
-function buildRequirementCard(heading, blockLines, index2) {
-  const files = touchesCount(blockLines);
-  let inferred = false;
-  let title = heading.trimEnd();
-  if (HAS_INFERRED.test(heading)) {
-    inferred = true;
-    title = heading.replace(STRIP_INFERRED, " ").replace(/[ \t]+$/, "").trim();
-  }
-  let adoptedFrom = "";
-  let markerLines = 0;
-  for (const line of blockLines) {
-    if (line.trim().length === 0) {
-      markerLines++;
-      continue;
-    }
-    const a = line.match(ADOPTED_LINE);
-    if (!a && !TOUCHES_LINE.test(line) && !ALIGNS_LINE.test(line)) {
-      break;
-    }
-    if (a && !adoptedFrom) adoptedFrom = a[1];
-    markerLines++;
-  }
-  const body = blockLines.filter((_line, i) => i >= markerLines).map((line) => {
-    if (HAS_INFERRED.test(line)) {
-      inferred = true;
-      return line.replace(STRIP_INFERRED, " ").replace(/[ \t]+$/, "");
-    }
-    return line;
-  });
-  const badges = [];
-  const state = livingDrifted.has(title) ? "drifted" : adoptedFrom ? "adopted" : "confirmed";
-  if (state !== "confirmed") {
-    const word = state === "adopted" ? "Adopted" : "Drifted";
-    const why = state === "adopted" ? "Written from the code by AI, not from a spec you approved. No run has confirmed it yet." : "Code this requirement touches changed since the spec was last updated.";
-    badges.push(`<span class="living-req-pill living-req-pill--${state}"><span class="living-req-pill-dot" aria-hidden="true"></span>${word}</span><span class="living-req-why">${why}</span>`);
-  }
-  const isNew = livingNew.has(title);
-  if (isNew) {
-    badges.push('<span class="living-req-pill living-req-pill--new"><span class="living-req-pill-dot" aria-hidden="true"></span>New</span><span class="living-req-why">Added on this branch. The copy of this spec on main does not have it.</span>');
-  }
-  if (inferred) {
-    badges.push('<span class="living-req-confidence living-req-confidence--inferred">inferred</span>');
-  }
-  const cov = livingCoverage[title];
-  if (cov != null && String(cov).trim() !== "" && String(cov).trim() !== "0") {
-    badges.push(`<span class="living-req-coverage">${escapeHtml(String(cov))}</span>`);
-  }
-  const metaLine = badges.length ? [`<div class="living-req-meta">${badges.join("")}</div>`] : [];
-  const covAttr = cov != null && String(cov).trim() !== "" && String(cov).trim() !== "0" ? ` data-req-coverage="${escapeHtml(String(cov))}"` : "";
-  const filesAttr = files > 0 ? ` data-req-patterns="${files}"` : "";
-  const adoptedAttr = adoptedFrom ? " data-req-adopted" : "";
-  const newAttr = isNew ? " data-req-new" : "";
-  const globs = touchesGlobs(blockLines);
-  const fileBits = globs.map((g) => `<button type="button" class="living-req-file" data-reveal-glob="${escapeAttr(g)}" title="Reveal in Explorer">${escapeHtml(g)}</button>`);
-  if (adoptedFrom) {
-    fileBits.push(`<span class="living-req-file living-req-file--source" title="Adopted from this file">from ${escapeHtml(adoptedFrom)}</span>`);
-  }
-  const filesLine = fileBits.length ? [`<div class="living-req-files">${fileBits.join("")}</div>`] : [];
-  const links = navState.value?.livingOverview?.requirements.find((r) => r.heading === title);
-  const linksLines = [linkList("Leans on", links?.leansOn), linkList("Leaned on by", links?.leanedOnBy)].filter(Boolean);
-  const actions = [
-    adoptedFrom ? '<button type="button" class="living-req-approve" data-req-approve title="Confirm this requirement: removes the Adopted mark, changes nothing else"><span class="codicon codicon-check" aria-hidden="true"></span>Approve</button>' : "",
-    `<button type="button" class="living-req-remove" data-req-remove title="Delete this requirement and its scenarios from the spec"><span class="codicon codicon-trash" aria-hidden="true"></span>Remove</button>`
-  ].join("");
-  const actionsLine = [`<div class="living-req-actions">${actions}</div>`];
-  return [
-    `<div class="living-req-card" id="living-req-${index2}" data-req-index="${index2}" data-req="${escapeAttr(title)}" data-req-state="${state}"${covAttr}${filesAttr}${adoptedAttr}${newAttr}>`,
-    '<div class="living-req-header">',
-    ...metaLine,
-    `### ${title}`,
-    ...filesLine,
-    ...linksLines,
-    ...actionsLine,
-    "</div>",
-    ...body,
-    "</div>"
-  ];
-}
-function linkList(label, links) {
-  if (!links?.length) return "";
-  const items = links.map((l) => l.broken ? `<span class="living-req-link living-req-link--broken" title="Nothing matches this link: no such capability or requirement">${escapeHtml(l.raw)}</span>` : `<button type="button" class="living-req-link" data-open-living-requirement data-capability="${escapeAttr(l.capability)}" data-spec-path="${escapeAttr(l.specPath ?? "")}" data-heading="${escapeAttr(l.heading)}" title="Open ${escapeAttr(l.capability)} at this requirement"><span class="living-req-link-cap">${escapeHtml(l.capability)}</span>${escapeHtml(l.heading)}</button>`);
-  return `<div class="living-req-links"><span class="living-req-links-label">${label}</span>${items.join("")}</div>`;
-}
-function escapeAttr(value) {
-  return escapeHtml(value).replace(/"/g, "&quot;");
-}
-function touchesGlobs(blockLines) {
-  const m = blockLines.length > 0 ? blockLines[0].match(TOUCHES_LINE) : null;
-  return m ? m[1].split(",").map((g) => g.trim()).filter(Boolean) : [];
-}
-function touchesCount(blockLines) {
-  return touchesGlobs(blockLines).length;
-}
-function preprocessLivingRequirements(markdown) {
-  return safe(markdown, (md) => {
-    const lines = md.split("\n");
-    const secStart = lines.findIndex((l) => /^##\s+Requirements\s*$/.test(l));
-    if (secStart === -1) return md;
-    const secEnd = lines.length;
-    const fenced = /* @__PURE__ */ new Set();
-    let inFence = false;
-    for (let k = secStart + 1; k < secEnd; k++) {
-      if (/^\s*(```|~~~)/.test(lines[k])) {
-        inFence = !inFence;
-        fenced.add(k);
-        continue;
-      }
-      if (inFence) fenced.add(k);
-    }
-    const isHeading = (k) => !fenced.has(k) && /^###(?!#)\s+/.test(lines[k]);
-    const isSection = (k) => !fenced.has(k) && /^##(?!#)\s+/.test(lines[k]);
-    const cards = [];
-    let i = secStart + 1;
-    let index2 = 0;
-    while (i < secEnd) {
-      const head = isHeading(i) ? lines[i].match(/^###(?!#)\s+(.+)$/) : null;
-      if (!head) {
-        cards.push(lines[i]);
-        i++;
-        continue;
-      }
-      const heading = head[1];
-      let j = i + 1;
-      while (j < secEnd && !isHeading(j) && !isSection(j)) j++;
-      const blockLines = lines.slice(i + 1, j);
-      cards.push(...buildRequirementCard(heading, blockLines, index2));
-      index2++;
-      i = j;
-    }
-    const out = [
-      ...lines.slice(0, secStart + 1),
-      ...cards,
-      ...lines.slice(secEnd)
-    ];
-    return out.join("\n");
-  });
-}
-function parseUncoveredGroups(bodyLines) {
-  const scopeParts = [];
-  const groups = [];
-  let sawGroup = false;
-  for (const raw of bodyLines) {
-    if (raw.trim() === "") continue;
-    const topBullet = raw.match(/^-\s+\*\*(.+?)\*\*\s*:?\s*$/);
-    const fileBullet = raw.match(/^\s{1,}[-*]\s+(.+)$/);
-    if (topBullet) {
-      sawGroup = true;
-      groups.push({ reason: topBullet[1].trim(), files: [] });
-    } else if (fileBullet && groups.length > 0) {
-      groups[groups.length - 1].files.push(fileBullet[1].trim());
-    } else if (!sawGroup && !/^\s*[-*]\s+/.test(raw)) {
-      scopeParts.push(raw.trim());
-    } else {
-      return null;
-    }
-  }
-  if (!groups.length || groups.some((g) => g.files.length === 0)) return null;
-  return { scope: scopeParts.join(" "), groups };
-}
-function buildUncovered(scope, groups) {
-  const count = groups.reduce((n, g) => n + g.files.length, 0);
-  const scopeHtml = scope ? `<div class="living-uncovered-scope line" data-line="1" data-list-id="living-uncovered-scope"><button class="line-add-btn" data-line="1" data-list-id="living-uncovered-scope" title="Add comment to uncovered scope" aria-label="Add comment to uncovered scope">${COMMENT_ICON_SVG}</button><div class="line-content">${parseInline(scope)}</div><div class="line-comment-slot"></div></div>` : "";
-  const groupsHtml = groups.map((g) => {
-    const listId = `living-uncovered-${++uncoveredCounter}`;
-    const files = g.files.map((f, idx) => {
-      const lineNum = idx + 1;
-      return `<li class="living-uncovered-file line" data-line="${lineNum}" data-list-id="${listId}"><button class="line-add-btn" data-line="${lineNum}" data-list-id="${listId}" title="Add comment to uncovered file ${lineNum}" aria-label="Add comment to uncovered file ${lineNum}">${COMMENT_ICON_SVG}</button><div class="line-content">${parseInline(f)}</div><div class="line-comment-slot"></div></li>`;
-    }).join("");
-    return `<details class="living-uncovered-group"><summary>${parseInline(g.reason)} <span class="living-uncovered-group-count">${g.files.length}</span></summary><ul class="living-uncovered-files" id="${listId}">${files}</ul></details>`;
-  }).join("");
-  return `<div class="living-uncovered"><div class="living-uncovered-summary"><span class="living-uncovered-count">${count} file${count === 1 ? "" : "s"} not fully read</span></div>` + scopeHtml + groupsHtml + `</div>`;
-}
-function preprocessLivingUncovered(markdown) {
-  return safe(markdown, (md) => {
-    uncoveredCounter = 0;
-    const lines = md.split("\n");
-    const secStart = lines.findIndex((l) => /^##\s+Uncovered\s*$/.test(l));
-    if (secStart === -1) return md;
-    let secEnd = lines.length;
-    for (let i = secStart + 1; i < lines.length; i++) {
-      if (/^##\s+/.test(lines[i])) {
-        secEnd = i;
-        break;
-      }
-    }
-    const body = lines.slice(secStart + 1, secEnd);
-    const nonEmpty = body.filter((l) => l.trim() !== "");
-    const firstLine = nonEmpty[0]?.trim() ?? "";
-    let component;
-    if (nonEmpty.length === 0 || /^_none\b/i.test(firstLine)) {
-      const text = /^_none\b/i.test(firstLine) ? firstLine.replace(/^_+/, "").replace(/_+$/, "").trim() : "Every file in the area was read.";
-      component = `<div class="living-uncovered-none line" data-line="1" data-list-id="living-uncovered-none"><button class="line-add-btn" data-line="1" data-list-id="living-uncovered-none" title="Add comment to uncovered summary" aria-label="Add comment to uncovered summary">${COMMENT_ICON_SVG}</button><div class="line-content">${parseInline(text)}</div><div class="line-comment-slot"></div></div>`;
-    } else {
-      const parsed = parseUncoveredGroups(body);
-      if (!parsed) return md;
-      component = buildUncovered(parsed.scope, parsed.groups);
-    }
-    return [
-      ...lines.slice(0, secStart + 1),
-      component,
-      ...lines.slice(secEnd)
-    ].join("\n");
-  });
 }
 
 // packages/viewer/src/core/clarificationsIn.ts
@@ -3736,9 +3404,7 @@ ${renderStoryIndex(model)}`);
 // packages/viewer/src/core/markdown/renderer.ts
 var currentTaskId = null;
 var hasSpecContext = false;
-var livingMode = false;
 var reportMode = false;
-var LIVING_HTML_LINE = /^\s*<(?:div|span|ol|ul|li|p) class="living-/;
 var TOUCHES_MARKER_LINE = /^\s*<!--\s*(?:touches|adopted|reviewed|aligns|capability):\s*.+?\s*-->\s*$/i;
 var taskSummaries = {};
 function setTaskSummaries(map) {
@@ -3749,9 +3415,6 @@ function setCurrentTask(taskId) {
 }
 function setHasSpecContext(value) {
   hasSpecContext = value;
-}
-function setLivingMode(value) {
-  livingMode = value;
 }
 function setReportMode(on) {
   reportMode = on;
@@ -3780,7 +3443,7 @@ function highlightTree(text) {
     return m ? `${colorDirs(m[1])}<span class="tree-comment">${m[2]}</span>` : colorDirs(line);
   }).join("\n");
 }
-var COMMENT_ICON_SVG2 = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
+var COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
 function continuesParagraph(previous, next) {
   if (/( {2}|\\)$/.test(previous)) return false;
   return !/^\s*(\*\*|__|<|\||!\[|(Given|When|Then|And|But)\b|[A-Z][\w ]{0,24}:\s)/.test(next);
@@ -3789,7 +3452,7 @@ function wrapWithLineActions(content, lineNum, lastLineNum = lineNum) {
   const span = lastLineNum > lineNum ? ` data-line-end="${lastLineNum}"` : "";
   return `<div class="line" data-line="${lineNum}"${span}>
         <button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">
-            ${COMMENT_ICON_SVG2}
+            ${COMMENT_ICON_SVG}
         </button>
         <div class="line-content">${content}</div>
         <div class="line-comment-slot"></div>
@@ -3800,7 +3463,7 @@ registerBlockRenderer("screen", renderScreenBlock);
 registerBlockRenderer("code", renderCodeCard);
 registerBlockRenderer("states", renderStatesCard);
 function wrapComponentLine(componentHtml, lineNum) {
-  return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">${COMMENT_ICON_SVG2}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
+  return `<div class="line component-line" data-line="${lineNum}"><button class="line-add-btn" data-line="${lineNum}" title="Add comment to line ${lineNum}" aria-label="Add comment to line ${lineNum}">${COMMENT_ICON_SVG}</button>${componentHtml}<div class="line-comment-slot"></div></div>`;
 }
 function splitTableRow(row) {
   const cells = row.split(/(?<!\\)\|/).map((c) => c.replace(/\\\|/g, "|").trim());
@@ -3845,14 +3508,7 @@ function renderMarkdown(markdown) {
   markdown = stripFrontmatter(markdown);
   markdown = stripTaskFormatLegend(markdown);
   markdown = preprocessHtmlComments(markdown);
-  if (livingMode) {
-    markdown = stripLivingDraftBanner(markdown);
-    markdown = preprocessLivingPurpose(markdown);
-    markdown = preprocessLivingScenarios(markdown);
-    markdown = preprocessLivingRequirements(markdown);
-    markdown = preprocessLivingUncovered(markdown);
-  }
-  if (!livingMode) markdown = preprocessSpecLedger(markdown);
+  markdown = preprocessSpecLedger(markdown);
   markdown = preprocessLedgerTasks(markdown, currentTaskId);
   markdown = preprocessSpecMetadata(markdown, hasSpecContext);
   markdown = preprocessUserStories(markdown);
@@ -4084,14 +3740,14 @@ function renderMarkdown(markdown) {
           text: taskMatch[2],
           checked: taskMatch[1].toLowerCase() === "x",
           line: sourceLineNum,
-          commentButton: `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to task line ${sourceLineNum}" aria-label="Add comment to task line ${sourceLineNum}">${COMMENT_ICON_SVG2}</button>`,
+          commentButton: `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to task line ${sourceLineNum}" aria-label="Add comment to task line ${sourceLineNum}">${COMMENT_ICON_SVG}</button>`,
           capture: captureHtml
         });
       } else {
         const content = parseInline(ulMatch[2], true);
         html += `<li class="line" data-line="${sourceLineNum}">
                     <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to list line ${sourceLineNum}" aria-label="Add comment to list line ${sourceLineNum}">
-                        ${COMMENT_ICON_SVG2}
+                        ${COMMENT_ICON_SVG}
                     </button>
                     <span class="line-content">${content}</span>
                     <div class="line-comment-slot"></div>
@@ -4122,7 +3778,7 @@ function renderMarkdown(markdown) {
       const content = parseInline(olMatch[2]);
       html += `<li class="line" data-line="${sourceLineNum}">
                 <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to list line ${sourceLineNum}" aria-label="Add comment to list line ${sourceLineNum}">
-                    ${COMMENT_ICON_SVG2}
+                    ${COMMENT_ICON_SVG}
                 </button>
                 <span class="line-content">${content}</span>
                 <div class="line-comment-slot"></div>
@@ -4138,7 +3794,7 @@ function renderMarkdown(markdown) {
       html += wrapComponentLine(line, sourceLineNum) + "\n";
       continue;
     }
-    if (LIVING_HTML_LINE.test(line) || line.includes('<div class="callout') || line.includes('<p class="rp-meta') || line.includes('<div class="ck-group') || line.includes('<div class="tech-grid') || line.includes('<div class="decision-card') || line.includes('<div class="decision-field') || line.includes('<div class="spec-meta') || line.includes('<div class="spec-input') || line.includes('<p class="scenario-label') || line.includes('<table class="scenario-table') || line.includes("<details") || line.includes("<summary") || line.includes("</details>") || line.includes("</summary>") || line.includes('<span class="meta-') || line.includes('<span class="story-') || line.includes('<span class="priority-') || line.includes('<span class="scenario-') || line.includes("</div>") || line.includes("</span>") || line.includes("</p>") || line.includes("</table>")) {
+    if (line.includes('<div class="callout') || line.includes('<p class="rp-meta') || line.includes('<div class="ck-group') || line.includes('<div class="tech-grid') || line.includes('<div class="decision-card') || line.includes('<div class="decision-field') || line.includes('<div class="spec-meta') || line.includes('<div class="spec-input') || line.includes('<p class="scenario-label') || line.includes('<table class="scenario-table') || line.includes("<details") || line.includes("<summary") || line.includes("</details>") || line.includes("</summary>") || line.includes('<span class="meta-') || line.includes('<span class="story-') || line.includes('<span class="priority-') || line.includes('<span class="scenario-') || line.includes("</div>") || line.includes("</span>") || line.includes("</p>") || line.includes("</table>")) {
       html += line + "\n";
       continue;
     }
@@ -4233,10 +3889,6 @@ export {
   preprocessConstitution,
   preprocessDecisions,
   preprocessEntities,
-  preprocessLivingPurpose,
-  preprocessLivingRequirements,
-  preprocessLivingScenarios,
-  preprocessLivingUncovered,
   preprocessRequirements,
   preprocessSpecMetadata,
   preprocessTaskPhases,
@@ -4247,14 +3899,9 @@ export {
   resetScenarioTableCounter,
   setCurrentTask,
   setHasSpecContext,
-  setLivingCoverage,
-  setLivingDrifted,
-  setLivingMode,
-  setLivingNew,
   setReportMode,
   setSpecLedgerTasks,
   setTaskSummaries,
   slugify,
-  stripLivingDraftBanner,
   writtenQuestion
 };

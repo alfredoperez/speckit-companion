@@ -287,11 +287,8 @@ export function preprocessHtmlComments(markdown: string): string {
 function commentBlock(match: string, content: string): string {
     const trimmed = content.trim();
     if (!trimmed) return '';
-    // A living-spec marker (`touches:`, `reviewed:`, …) is machine metadata,
-    // not authoring scaffolding. Left to the rule below it would
-    // become a "Template Instructions" disclosure printing its own source,
-    // and the requirement pass — which runs after this one — would never
-    // see it. It passes through untouched and is dropped there.
+    // A marker comment (`touches:`, `reviewed:`, …) is machine metadata, not
+    // authoring scaffolding. It passes through untouched and the renderer drops it.
     if (/^(?:touches|adopted|reviewed|aligns|capability):/i.test(trimmed)) return match;
     return `\n<details class="template-instructions"><summary>Template Instructions</summary>\n\n${trimmed}\n\n</details>\n`;
 }

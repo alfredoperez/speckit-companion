@@ -23,7 +23,7 @@
  * HOW TO RUN
  *   node tooling/scripts/capture-docs-images.mjs                        documentation images
  *   node tooling/scripts/capture-docs-images.mjs --clips                every clip state
- *   node tooling/scripts/capture-docs-images.mjs --clips living-specs   one composition
+ *   node tooling/scripts/capture-docs-images.mjs --clips review   one composition
  *
  * `--clips` runs the CLIP_CAPTURES list instead, writing each PNG into the
  * composition that reads it (`content/media/feature-clips/<clip>/assets/captures/`)
@@ -98,7 +98,7 @@ const STORIES = [
     },
     {
         // The landscape three-panel sidebar explainer the README embeds
-        // (Specs / Steering / Living Specs as captioned cards).
+        // (Specs / Steering as captioned cards).
         story: 'vs-code-extension-sidebar--b-5-readme-triptych',
         out: 'sidebar-triptych.png',
     },
@@ -116,19 +116,10 @@ const STORIES = [
         out: 'pipeline-stats.png',
     },
     {
-        // The Living Specs pair for both READMEs (ReadmeCapture.stories.tsx
-        // C3): the sidebar's Living Specs view beside the viewer's real living
-        // mode, both on the photo-storage fixture capability. Also the
-        // storyboard seed for the future Living Specs GIF.
-        story: 'scenes-readme-composites--c-3-living-specs-pair',
-        out: 'living-specs-pair.png',
-    },
-    {
-        // The four-benefit sub-hero under the extension README's "What you
-        // get" (ReadmeCapture.stories.tsx C4): Traceability, Customization,
-        // Fast path, and Living Specs, each panel a fixture-fed product
-        // surface (run strip + verified rows, the companion.yml hooks shape,
-        // the size verdict, the living header).
+        // The benefits sub-hero under the extension README's "What you
+        // get" (ReadmeCapture.stories.tsx C4): Traceability, Customization
+        // and Fast path, each panel a fixture-fed product surface (run strip
+        // + verified rows, the companion.yml hooks shape, the size verdict).
         story: 'scenes-readme-composites--c-4-benefits-strip',
         out: 'benefits-strip.png',
     },
@@ -188,10 +179,6 @@ const STORIES = [
     // names above are load-bearing for the published Marketplace README, so
     // the wide cuts take new `-16x9` names and nothing already here moves.
     {
-        story: 'scenes-readme-composites--c-8-living-specs-pair-wide',
-        out: 'living-specs-pair-16x9.png',
-    },
-    {
         story: 'scenes-readme-composites--c-9-overview-dossier-wide',
         out: 'overview-16x9.png',
         annotate: {
@@ -218,7 +205,6 @@ const STORIES = [
     { story: 'content-article-figures--f-7-viewer-rows', out: 'figure-viewer-rows.png', theme: 'violet' },
     { story: 'content-article-figures--f-8-inline-review', out: 'figure-inline-review.png', theme: 'violet' },
     { story: 'content-article-figures--f-9-sidebar', out: 'figure-sidebar.png', theme: 'violet' },
-    { story: 'content-article-figures--f-10-living-specs', out: 'figure-living-specs.png', theme: 'violet' },
     { story: 'content-article-figures--f-11-builder', out: 'figure-builder.png', theme: 'violet' },
 ];
 
@@ -246,12 +232,6 @@ const CLIP_CAPTURES = [
     // The closing shot: the same document with the Specs view open beside it,
     // so the clip ends where you would go looking for that spec later.
     { clip: 'review', story: 'scenes-clip-states--d-5-sidebar', out: 'cm-sidebar.png' },
-
-    // E · living-specs (1564 x 992): the Living Specs work tree, a click on one
-    // capability row, and that capability's spec open in the viewer.
-    { clip: 'living-specs', story: 'scenes-clip-states--e-1-work-tree', out: 'ls-tree.png' },
-    { clip: 'living-specs', story: 'scenes-clip-states--e-2-row-clicked', out: 'ls-click.png' },
-    { clip: 'living-specs', story: 'scenes-clip-states--e-3-capability-open', out: 'ls-capability.png' },
 
     // F · workflow-documents (1224 x 776). These stories were written to shoot the
     // footer's Other actions menu, but the footer falls outside this capture box and

@@ -59,12 +59,6 @@ import dataModel394 from './__fixtures__/specs/394-adopt-codex-design/data-model
 import checklist394 from './__fixtures__/specs/394-adopt-codex-design/checklists/requirements.md?raw';
 import contract394 from './__fixtures__/specs/394-adopt-codex-design/contracts/ui-contract.md?raw';
 import ctx394Raw from './__fixtures__/specs/394-adopt-codex-design/.spec-context.json?raw';
-import spec406 from '../../../../../specs/406-living-spec-components/spec.md?raw';
-import plan406 from '../../../../../specs/406-living-spec-components/plan.md?raw';
-import tasks406 from '../../../../../specs/406-living-spec-components/tasks.md?raw';
-import ctx406Raw from '../../../../../specs/406-living-spec-components/.spec-context.json?raw';
-import readASpecLiving from './__fixtures__/living/read-a-spec.spec.md?raw';
-import moveASpecForwardLiving from './__fixtures__/living/move-a-spec-forward.spec.md?raw';
 import spec393 from './__fixtures__/specs/393-implement-button-lost/spec.md?raw';
 import plan393 from './__fixtures__/specs/393-implement-button-lost/plan.md?raw';
 import tasks393 from './__fixtures__/specs/393-implement-button-lost/tasks.md?raw';
@@ -73,7 +67,6 @@ import ctx393Raw from './__fixtures__/specs/393-implement-button-lost/.spec-cont
 const ctx392 = JSON.parse(ctx392Raw) as SpecContextData;
 const ctx172 = JSON.parse(ctx172Raw) as SpecContextData;
 const ctx394 = JSON.parse(ctx394Raw) as SpecContextData;
-const ctx406 = JSON.parse(ctx406Raw) as SpecContextData;
 const ctx393 = JSON.parse(ctx393Raw) as SpecContextData;
 
 const docs392: DocSet = {
@@ -105,12 +98,6 @@ const docs394: DocSet = {
     research: { md: research394, label: 'Research', parentStep: 'plan' },
     'data-model': { md: dataModel394, label: 'Data Model', parentStep: 'plan' },
     contract: { md: contract394, label: 'UI Contract', parentStep: 'plan' },
-};
-
-const docs406: DocSet = {
-    spec: { md: spec406, label: 'Specification' },
-    plan: { md: plan406, label: 'Plan' },
-    tasks: { md: tasks406, label: 'Tasks' },
 };
 
 const docs393: DocSet = {
@@ -149,76 +136,6 @@ export const ComposableCommandNodes172: Story = {
     name: '172 · Composable Command Nodes',
     render: () => (
         <InteractiveViewer ctx={ctx172} docs={docs172} initialDoc="spec" vs={vsFromContext(ctx172, completedFooter)} />
-    ),
-};
-
-export const LivingComponents406: Story = {
-    name: '406 · Living Components (Overview + real artifacts)',
-    render: () => (
-        <InteractiveViewer
-            ctx={ctx406}
-            docs={docs406}
-            initialDoc="spec"
-            view="overview"
-            vs={vsFromContext(ctx406, completedFooter)}
-            livingDocs={{
-                'read-a-spec': { md: readASpecLiving, label: 'read-a-spec' },
-                'move-a-spec-forward': { md: moveASpecForwardLiving, label: 'move-a-spec-forward' },
-            }}
-        />
-    ),
-};
-
-/**
- * The requirement outline (#672 Wave 1), driven through the real renderer.
- *
- * `read-a-spec` is a large living spec — the case the
- * outline exists for. Open it from the Overview's living-spec chip: the viewer's
- * own "On this page" outline lists every requirement rather than the document's
- * three section headings, each row carrying a coverage dot and, once markers are
- * adopted, the count of files it claims.
- */
-export const RequirementOutline672: Story = {
-    name: '672 · Requirement outline on a large living spec',
-    render: () => (
-        <InteractiveViewer
-            ctx={ctx406}
-            docs={docs406}
-            initialDoc="living:read-a-spec"
-            vs={vsFromContext(ctx406, completedFooter)}
-            livingDocs={{
-                'read-a-spec': { md: readASpecLiving, label: 'read-a-spec' },
-                'move-a-spec-forward': { md: moveASpecForwardLiving, label: 'move-a-spec-forward' },
-                // A short, marked spec beside the long unmarked ones, so the file
-                // count and a narrow column are both visible in one story.
-                marked: {
-                    label: 'marked',
-                    md: [
-                        '# marked',
-                        '',
-                        '## Purpose',
-                        '',
-                        'A capability whose requirements carry file markers.',
-                        '',
-                        '## Requirements',
-                        '',
-                        '### A requirement whose heading is long enough to need the ellipsis it carries',
-                        '<!-- touches: src/alpha/**, src/alpha/extra.ts, src/alpha/third.ts -->',
-                        '',
-                        'It claims three paths.',
-                        '',
-                        '#### Scenario: it applies',
-                        '- **WHEN** something changes under those paths',
-                        '- **THEN** this requirement is the one a run reads',
-                        '',
-                        '### An unmarked requirement',
-                        '',
-                        'Read by every run, which is what makes partial adoption safe.',
-                        '',
-                    ].join('\n'),
-                },
-            }}
-        />
     ),
 };
 

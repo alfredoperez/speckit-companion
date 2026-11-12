@@ -3,20 +3,10 @@
  * Exports markdown rendering functionality
  */
 
-export { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setTaskSummaries, slugify } from './renderer';
+export { renderMarkdown, setCurrentTask, setHasSpecContext, setReportMode, setTaskSummaries, slugify } from './renderer';
 export { setSpecLedgerTasks } from './ledger/specDoc';
 export { renderScreenByName } from './screenCard';
 export { markClarifications, writtenQuestion } from './clarifications';
-export {
-    setLivingCoverage,
-    setLivingDrifted,
-    setLivingNew,
-    stripLivingDraftBanner,
-    preprocessLivingPurpose,
-    preprocessLivingScenarios,
-    preprocessLivingRequirements,
-    preprocessLivingUncovered
-} from './livingComponents';
 export { parseInline, escapeHtml, escapeHtmlInScenario } from './inline';
 export {
     preprocessSpecMetadata,
