@@ -441,15 +441,39 @@ describe('board page', { concurrency: false }, async () => {
         mkdirSync(join(repository, 'specs/001-shared'), { recursive: true });
         writeFileSync(join(repository, 'specs/001-shared/spec.md'), '# Selected repository\n');
         const selection = rootSelection(workspace);
-        const server = await createSpecServer({ root: chat, saveRoot: selection.write });
+        let picked = null;
+        const server = await createSpecServer({ root: chat, saveRoot: selection.write, browseFolder: async () => {
+            if (picked instanceof Error) throw picked;
+            return picked;
+        } });
         const view = await browser.newPage({ viewport: { width: 1280, height: 860 } });
         try {
             await view.goto(server.url);
             await view.waitForSelector('#repository-warning:visible');
             assert.equal(await view.inputValue('#repository-root'), chat);
             if (SHOTS) await view.screenshot({ path: join(SHOTS, '08-repository-warning.png'), fullPage: false });
+            if (SHOTS) {
+                await view.fill('#repository-root', REPO);
+                const form = await view.locator('#repository-form').boundingBox();
+                const warning = await view.locator('#repository-warning').boundingBox();
+                await view.screenshot({ path: join(SHOTS, 'repository-controls.png'), clip: { x: form.x, y: form.y, width: form.width, height: warning.y - form.y } });
+                await view.fill('#repository-root', chat);
+            }
+            await view.click('#repository-browse');
+            assert.equal(await view.inputValue('#repository-root'), chat);
+            assert.equal(selection.read(), null);
+            picked = new Error('dialog unavailable');
+            await view.click('#repository-browse');
+            await view.waitForSelector('.toast.is-visible:has-text("dialog unavailable")');
+            picked = repository;
+            await view.click('#repository-browse');
+            await view.waitForSelector('.detail h2:has-text("Selected repository")');
+            assert.equal(selection.read(), repository);
+            await view.fill('#repository-root', chat);
+            await view.click('#repository-form button[type="submit"]');
+            await view.waitForSelector('#repository-warning:visible');
             await view.fill('#repository-root', repository);
-            await view.click('#repository-form button');
+            await view.click('#repository-form button[type="submit"]');
             await view.waitForSelector('.spec-card');
             await view.waitForSelector('.detail h2:has-text("Selected repository")');
             assert.equal(await view.locator('#repository-warning').isVisible(), false);
@@ -462,12 +486,12 @@ describe('board page', { concurrency: false }, async () => {
             mkdirSync(join(chat, 'specs/001-shared'), { recursive: true });
             writeFileSync(join(chat, 'specs/001-shared/spec.md'), '# Different repository\n');
             await view.fill('#repository-root', chat);
-            await view.click('#repository-form button');
+            await view.click('#repository-form button[type="submit"]');
             await view.waitForSelector('.detail h2:has-text("Different repository")');
             assert.equal(selection.read(), chat);
             if (SHOTS) await view.screenshot({ path: join(SHOTS, '09-repository-selection.png'), fullPage: false });
             await view.fill('#repository-root', join(workspace, 'missing'));
-            await view.click('#repository-form button');
+            await view.click('#repository-form button[type="submit"]');
             await view.waitForSelector('.toast.is-visible:has-text("Could not select repository")');
             assert.equal(selection.read(), chat);
         } finally {

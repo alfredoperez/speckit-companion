@@ -56,6 +56,7 @@ const els = {
     repoLine: $('repo-line'),
     repositoryForm: $('repository-form'),
     repositoryRoot: $('repository-root'),
+    repositoryBrowse: $('repository-browse'),
     repositoryWarning: $('repository-warning'),
     repositoryFollow: $('repository-follow'),
     coordinatedSession: $('coordinated-session'),
@@ -731,6 +732,21 @@ els.repositoryForm.addEventListener('submit', async (event) => {
         toast(`Scanning ${result.root}: ${result.count} specs`);
     } catch (error) {
         toast(`Could not select repository: ${error.message}`);
+    }
+});
+
+els.repositoryBrowse.addEventListener('click', async () => {
+    els.repositoryBrowse.disabled = true;
+    try {
+        const result = await api('/api/root/browse', {});
+        if (!result.cancelled) {
+            els.repositoryRoot.value = result.root;
+            toast(`Scanning ${result.root}: ${result.count} specs`);
+        }
+    } catch (error) {
+        toast(`Could not browse repositories: ${error.message}`);
+    } finally {
+        els.repositoryBrowse.disabled = false;
     }
 });
 

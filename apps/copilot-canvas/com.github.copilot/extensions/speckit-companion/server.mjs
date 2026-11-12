@@ -12,6 +12,7 @@ import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, b
 import { BUSY, recordStep } from './run-record.mjs';
 import { stepEvidence, withRunningStep } from './spec-rules.mjs';
 import { validateRoot } from './workspace.mjs';
+import { pickFolder } from './folder-picker.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -58,7 +59,7 @@ function tokenMatches(given, expected) {
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
  * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
-export async function createSpecServer({ root, workingDirectory = root, manual = false, bound = null, coordinatedSessions = [], saveCoordinatedSessions, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
+export async function createSpecServer({ root, workingDirectory = root, manual = false, bound = null, coordinatedSessions = [], saveCoordinatedSessions, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, browseFolder = pickFolder, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
     const state = {
         root,
         workingDirectory,
@@ -87,6 +88,8 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         sawTurnStart: false,
         host: null,
         origin: null,
+        rootRevision: 0,
+        browsing: false,
     };
 
     const commandSet = () => detectCommandSet(state.root);
@@ -325,6 +328,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     }
 
     function applyRoot(nextRoot, nextDirs = resolveSpecDirs(nextRoot), nextSnapshot = buildSnapshot(nextRoot, nextDirs)) {
+        state.rootRevision++;
         clearTimeout(state.timer);
         clearTimeout(state.runTimer);
         for (const watcher of state.watchers) watcher.close();
@@ -585,6 +589,22 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
             if (pathname === '/api/root') {
                 const next = selectRoot(body.root);
                 return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
+            if (pathname === '/api/root/browse') {
+                if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+                if (state.browsing) throw new Error('A folder picker is already open.');
+                state.browsing = true;
+                const revision = state.rootRevision;
+                try {
+                    const selected = await browseFolder(state.root);
+                    if (state.closed) throw new Error('The board was closed while the folder picker was open.');
+                    if (!selected) return sendJson(res, 200, { cancelled: true });
+                    if (revision !== state.rootRevision) throw new Error('The repository changed while the folder picker was open. Try again.');
+                    const next = selectRoot(selected);
+                    return sendJson(res, 200, { root: next.root, count: next.specs.length });
+                } finally {
+                    state.browsing = false;
+                }
             }
             if (pathname === '/api/root/follow') {
                 const next = followSession();

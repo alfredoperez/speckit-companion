@@ -7,6 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { rootSelection, validateRoot } from '../com.github.copilot/extensions/speckit-companion/workspace.mjs';
 import { buildSnapshot } from '../com.github.copilot/extensions/speckit-companion/specs-core.mjs';
 import { createSpecServer } from '../com.github.copilot/extensions/speckit-companion/server.mjs';
+import { pickerStartDirectory, pickFolder } from '../com.github.copilot/extensions/speckit-companion/folder-picker.mjs';
 
 function spec(root, id, title) {
     mkdirSync(join(root, 'specs', id), { recursive: true });
@@ -14,6 +15,89 @@ function spec(root, id, title) {
 }
 
 describe('repository root selection', () => {
+    it('starts the native picker at the main worktree, falling back to the current directory', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-picker-start-'));
+        const tree = join(base, 'tree');
+        mkdirSync(tree);
+        try {
+            const git = async () => ({ stdout: `worktree ${base}\0HEAD abc\0\0worktree ${tree}\0HEAD def\0\0` });
+            assert.equal(await pickerStartDirectory(tree, git), base);
+            assert.equal(await pickerStartDirectory(tree, async () => { throw new Error('not a repository'); }), tree);
+            const calls = [];
+            const run = async (command, args, options) => {
+                calls.push({ command, args, options });
+                return command === 'git' ? git() : { stdout: tree };
+            };
+            assert.equal(await pickFolder(tree, { platform: 'win32', run }), tree);
+            assert.equal(calls[1].command, 'powershell.exe');
+            assert.equal(calls[1].options.env.SPECKIT_PICKER_START, base);
+            assert.equal(await pickFolder(tree, { platform: 'darwin', run: async command => command === 'git' ? git() : { stdout: `${tree}\n` } }), tree);
+            assert.equal(await pickFolder(tree, { platform: 'linux', run: async command => {
+                if (command === 'git') return git();
+                throw Object.assign(new Error('cancelled'), { code: 1, stderr: '' });
+            } }), null);
+            await assert.rejects(pickFolder(tree, { platform: 'linux', run: async command => {
+                if (command === 'git') return git();
+                throw Object.assign(new Error('display unavailable'), { code: 1, stderr: 'Cannot open display' });
+            } }), /display unavailable/);
+        } finally {
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('browses through the protected root handler, preserving state on cancel, error and races', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-picker-server-'));
+        const first = join(base, 'first');
+        const second = join(base, 'second');
+        spec(first, '001-one', 'First');
+        spec(second, '002-two', 'Second');
+        const selection = rootSelection(base);
+        let picker = async () => null;
+        const board = await createSpecServer({ root: first, saveRoot: selection.write, browseFolder: root => picker(root), send: async () => true });
+        const browse = (headers = {}) => fetch(new URL('/api/root/browse', board.url), {
+            method: 'POST', headers: { 'x-speckit-token': board.token, 'Content-Type': 'application/json', ...headers }, body: '{}',
+        });
+        try {
+            let called = false;
+            picker = async root => { called = true; assert.equal(root, first); return null; };
+            assert.equal((await browse({ origin: 'http://evil.test' })).status, 403);
+            assert.equal(called, false);
+            assert.deepEqual(await (await browse()).json(), { cancelled: true });
+            assert.equal(selection.read(), null);
+            picker = async () => { throw new Error('display unavailable'); };
+            const failure = await browse();
+            assert.equal(failure.status, 400);
+            assert.match((await failure.json()).error, /display unavailable/);
+            assert.equal(board.snapshot.root, first);
+            picker = async () => second;
+            assert.deepEqual(await (await browse()).json(), { root: second, count: 1 });
+            assert.equal(selection.read(), second);
+            let finish;
+            picker = () => new Promise(resolve => { finish = resolve; });
+            const pending = browse();
+            while (!finish) await delay(5);
+            board.selectRoot(first);
+            finish(second);
+            const stale = await pending;
+            assert.equal(stale.status, 400);
+            assert.match((await stale.json()).error, /changed while/);
+            assert.equal(selection.read(), first);
+            finish = null;
+            const duringRun = browse();
+            while (!finish) await delay(5);
+            await board.run('001-one', 'plan');
+            finish(second);
+            const blocked = await duringRun;
+            assert.equal(blocked.status, 400);
+            assert.match((await blocked.json()).error, /current spec step/);
+            assert.equal(selection.read(), first);
+            assert.equal((await browse()).status, 400);
+        } finally {
+            await board.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
     it('validates paths and restores the session selection independently of the panel', () => {
         const workspace = mkdtempSync(join(tmpdir(), 'canvas-root-storage-'));
         try {
