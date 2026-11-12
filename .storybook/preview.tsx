@@ -13,6 +13,8 @@ import {
 
 // The viewer package's built stylesheet and VS Code theme, as the extension loads them
 // (`npm run viewer:build` writes them; the storybook scripts run it first).
+// The highlighter's code colours, loaded before the viewer's overrides as the old CDN link was.
+import 'highlight.js/styles/github-dark.min.css';
 import '../packages/viewer/dist/styles/viewer.css';
 import '../packages/viewer/dist/styles/themes/vscode.css';
 import '../apps/vscode/webview/styles/_install-banner.css';

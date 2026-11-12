@@ -221,6 +221,13 @@ export type StalenessMap = Record<DocumentType, StalenessInfo>;
 // Message Protocols
 // ============================================
 
+/** What the view reads of a host's report page: the rail label and the header badge. */
+export interface ReportSummary {
+    kind: 'bug' | 'idea';
+    badgeTone?: 'review' | 'to-fix';
+    page?: unknown;
+}
+
 /**
  * Navigation state for message-based updates.
  *
@@ -508,3 +515,6 @@ export type ViewerToExtensionMessage =
           /** The banner that was closed, so the right dismissal flag is written even if the gap has since changed. */
           prompt: InstallPrompt;
       };
+
+/** A message the viewer sends to the host, named for what the element emits. */
+export type ViewerAction = ViewerToExtensionMessage;

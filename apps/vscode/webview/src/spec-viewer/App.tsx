@@ -1,107 +1,39 @@
+import { App as ViewerApp, ViewerSlotsContext, type ViewerSlots } from 'speckit-viewer/view';
 import { ReportPage } from './report-pages/ReportPage';
-import { useRef, useEffect, useState } from 'preact/hooks';
-import { NavigationBar } from './components/NavigationBar';
 import { StaleBanner } from './components/StaleBanner';
 import { RemovedDocBanner } from './components/RemovedDocBanner';
-import { PageChrome } from './components/PageChrome';
 import { FooterActions } from './components/FooterActions';
-import { ActivityPanel } from './components/ActivityPanel';
-import { ActivityErrorBoundary } from './components/ActivityErrorBoundary';
-import { markdownHtml, navState, showingOverview, specMoved, viewerState } from './signals';
+import { InstallBanner } from './components/InstallBanner';
+import { navState } from './signals';
 import { restoreComments, clearAllRefinements } from './editor';
-import type { VSCodeApi } from './types';
-
-declare const vscode: VSCodeApi;
 
 export interface AppProps {
     specStatus: string;
 }
 
+/** The package viewer, with the parts only the extension has plugged into its slots. */
 export function App({ specStatus }: AppProps) {
-    const contentRef = useRef<HTMLDivElement>(null);
-    const html = markdownHtml.value;
-    const ns = navState.value;
-    const vs = viewerState.value;
-    const reviewComments = vs?.reviewComments;
-
-    // The folder is gone: nothing on the rail or in the footer can act on it any more.
-    const moved = specMoved.value;
-    const showOverview = showingOverview.value && !moved;
-
-    const [hasMountedActivity, setHasMountedActivity] = useState(false);
-    useEffect(() => {
-        if (showOverview) setHasMountedActivity(true);
-    }, [showOverview]);
-
-    // After Preact sets innerHTML via dangerouslySetInnerHTML,
-    // fire a custom event so highlighting/mermaid can run
-    useEffect(() => {
-        if (html && contentRef.current) {
-            contentRef.current.dispatchEvent(new CustomEvent('content-rendered'));
-        }
-    }, [html]);
-
-    // Restore persisted review comments inline. A doc switch / reload replaces
-    // innerHTML, so clear stale in-memory mounts first, then re-anchor. The
-    // second effect catches the viewerState that lands after the first paint
-    // and any live add/remove/refine updates (restoreComments is idempotent).
-    useEffect(() => {
-        if (html && contentRef.current) {
+    const report = navState.value?.report;
+    const slots: ViewerSlots = {
+        banners: (
+            <>
+                <RemovedDocBanner />
+                <StaleBanner />
+            </>
+        ),
+        footer: <FooterActions initialSpecStatus={specStatus} />,
+        reportPage: report?.page ? () => <ReportPage report={{ ...report, page: report.page! }} /> : undefined,
+        installBanner: <InstallBanner />,
+        // A doc switch or reload replaces innerHTML: clear stale mounts, then re-anchor the comments.
+        onRendered: () => {
             clearAllRefinements();
             restoreComments();
-        }
-    }, [html]);
-    useEffect(() => {
-        if (html && contentRef.current) restoreComments();
-    }, [reviewComments]);
-
-    // Mirror spec-context presence onto <body> so CSS can hide the first H1
-    // even though .spec-header is no longer a sibling of #markdown-content.
-    useEffect(() => {
-        const has = !!(ns?.specContextName || ns?.badgeText);
-        document.body.dataset.hasSpecContext = has ? 'true' : 'false';
-    }, [ns?.specContextName, ns?.badgeText]);
-
-    const report = ns?.report;
-    const reportPage = report?.page ? { ...report, page: report.page } : null;
-
+        },
+        onReviewCommentsChanged: restoreComments,
+    };
     return (
-        <>
-            <PageChrome />
-            <div class={`shell-grid${moved ? ' shell-grid--no-rail' : ''}`}>
-                {!moved && <NavigationBar />}
-                <div class="main-column">
-                    {/* Document-scoped: it must not span the rail. */}
-                    <RemovedDocBanner />
-                    <StaleBanner />
-                    <main class="content-area" id="content-area">
-                        {reportPage ? (
-                            <div id="markdown-content" ref={contentRef} hidden={moved}>
-                                <ReportPage report={reportPage} />
-                            </div>
-                        ) : (
-                            <div
-                                id="markdown-content"
-                                ref={contentRef}
-                                dangerouslySetInnerHTML={{ __html: html }}
-                                hidden={showOverview || moved}
-                            />
-                        )}
-                        {moved && (
-                            <div class="empty-state">This spec folder was moved or deleted. Open it again from the sidebar.</div>
-                        )}
-                        {hasMountedActivity && (
-                            <div class="overview-pane" hidden={!showOverview}>
-                                <ActivityErrorBoundary>
-                                    <ActivityPanel />
-                                </ActivityErrorBoundary>
-                            </div>
-                        )}
-                        <aside class="spec-toc" id="spec-toc" aria-label="Table of contents" hidden={showOverview || moved}></aside>
-                    </main>
-                </div>
-            </div>
-            {!moved && <FooterActions initialSpecStatus={specStatus} />}
-        </>
+        <ViewerSlotsContext.Provider value={slots}>
+            <ViewerApp />
+        </ViewerSlotsContext.Provider>
     );
 }

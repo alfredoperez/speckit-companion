@@ -30,6 +30,20 @@
       "source": "./src/core/*.ts",
       "default": "./dist/core/*.js"
     },
+    "./view": {
+      "types": "./src/view/index.ts",
+      "source": "./src/view/index.ts"
+    },
+    "./view/*": {
+      "types": "./src/view/*.ts",
+      "source": "./src/view/*.ts"
+    },
+    "./element": {
+      "types": "./dist/types/element/index.d.ts",
+      "source": "./src/element/index.ts",
+      "import": "./dist/element/index.js",
+      "default": "./dist/element/index.js"
+    },
     "./styles/*": "./dist/styles/*"
   },
   "typesVersions": {
@@ -45,6 +59,15 @@
       ],
       "core/*": [
         "src/core/*"
+      ],
+      "view": [
+        "src/view/index.ts"
+      ],
+      "view/*": [
+        "src/view/*"
+      ],
+      "element": [
+        "dist/types/element/index.d.ts"
       ]
     }
   },
@@ -52,6 +75,9 @@
     "build": "tsc -p tsconfig.json && node scripts/build-css.mjs"
   },
   "dependencies": {
+    "@preact/signals": "^1.3.4",
+    "highlight.js": "11.9.0",
+    "preact": "^10.29.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {

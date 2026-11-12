@@ -63,6 +63,9 @@ export function generateHtml(
     const scriptUri = webview.asWebviewUri(
         vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'spec-viewer.js')
     );
+    const highlightCssUri = webview.asWebviewUri(
+        vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'viewer', 'highlight', 'github-dark.css')
+    );
     const codiconCssUri = webview.asWebviewUri(
         vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'codicons', 'codicon.css')
     );
@@ -133,12 +136,12 @@ export function generateHtml(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'none';
-                   style-src ${webview.cspSource} 'unsafe-inline' https://cdn.jsdelivr.net;
+                   style-src ${webview.cspSource} 'unsafe-inline';
                    script-src 'nonce-${nonce}' https://cdn.jsdelivr.net;
                    img-src ${webview.cspSource} data: https:;
                    font-src ${webview.cspSource};">
     <link href="${styleUri}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/styles/github-dark.min.css">
+    <link rel="stylesheet" href="${highlightCssUri}">
     <link rel="stylesheet" href="${codiconCssUri}">
     <title>Spec: ${escapeHtml(specName)}</title>
 </head>
@@ -153,13 +156,6 @@ export function generateHtml(
         <div class="loading-spinner"></div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/highlight.min.js" nonce="${nonce}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/typescript.min.js" nonce="${nonce}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/bash.min.js" nonce="${nonce}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/json.min.js" nonce="${nonce}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/yaml.min.js" nonce="${nonce}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/css.min.js" nonce="${nonce}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9.0/languages/javascript.min.js" nonce="${nonce}"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" nonce="${nonce}"></script>
     <script nonce="${nonce}">
         const vscode = acquireVsCodeApi();
