@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **Corner cuts show up as concerns.** A skipped test, a suppression, an empty stub or a lower coverage bar is ==recorded with its file and line==, never blocking. ([#1005](https://github.com/alfredoperez/speckit-companion/pull/1005)) <!-- area: run-record -->
+
 ### Changed
 - **Hands-off runs cost less.** An auto run makes ==fewer bookkeeping calls== and carries fewer instructions, closing the gap to stock on harder work. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
 - **Size is decided before the spec.** A change you understand, with nothing risky in it, ==goes straight to implement== whatever its file count. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->

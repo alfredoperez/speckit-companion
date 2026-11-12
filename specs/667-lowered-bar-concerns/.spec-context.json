@@ -1,0 +1,436 @@
+{
+  "workflow": "companion",
+  "specName": "Implement records the ways an agent lowered the bar",
+  "branch": "feat/984-lowered-bar",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:59:33.962Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T17:00:52.676Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:00:52.821Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T17:00:52.822Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:00:52.823Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T17:00:52.824Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:00:58.530Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:02:05.259Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:02:05.259Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:02:17.656Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:02:17.657Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:03:00.603Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:03:00.603Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:03:08.170Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:03:08.195Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:03:08.336Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:09:47.032Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:10:02.743Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:10:39.261Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T17:10:42.703Z"
+    }
+  ],
+  "request": "GitHub issue #984 \"implement records the ways an agent lowered the bar\". Spec folder MUST be specs/667-<slug> (number 667). Work only in worktree /Users/alfredoperez/dev/GitHub/speckit-companion.worktrees/feat-984-lowered-bar (branch feat/984-lowered-bar already exists; do not create a branch). Outcome: before implement closes, a script scans the diff's added lines for .skip/.only, ts-ignore/ts-expect-error, eslint-disable, empty function stubs, lowered coverage thresholds; records each hit as a concern in the receipts with file and line; a hit with a reason on the same line (e.g. `eslint-disable-next-line x -- reason`) is recorded as reasoned; never blocks; shown on Overview beside other concerns (smallest UI change, none if receipts concerns already render). Record-only. Place the scan inside the existing receipts / --verify-run evidence path, no new hook. Acceptance: a run adding .skip ends with a concern naming file and line; a clean diff adds no concern; implement still closes on a hit. Edit nodes/parts/scripts under apps/speckit-extension/, never built commands; rebuild with build.py.",
+  "unattended": true,
+  "last_action": "recorded checks",
+  "expectations": [
+    "blocking implement on a hit",
+    "a viewer UI change",
+    "scanning committed history or specs/ and .specify/"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts/capture.py (--verify-run)",
+    "area: apps/speckit-extension/scripts/receipts.py",
+    "constraint: record-only, never blocks; no new hook"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Scan the lines implement added when it records its checks",
+      "tests": [
+        "apps/speckit-extension/tests/test_lowered_bar.py::test_an_added_skip_ends_with_a_concern_naming_file_and_line"
+      ]
+    },
+    "FR-002": {
+      "title": "Find skipped/focused tests, ts and eslint suppressions, empty stubs, lowered coverage thresholds",
+      "tests": [
+        "apps/speckit-extension/tests/test_lowered_bar.py::test_a_lowered_coverage_threshold_and_an_empty_stub_are_found"
+      ]
+    },
+    "FR-003": {
+      "title": "Record each hit as a concern with file and line",
+      "tests": [
+        "apps/speckit-extension/tests/test_lowered_bar.py::test_an_added_skip_ends_with_a_concern_naming_file_and_line"
+      ]
+    },
+    "FR-004": {
+      "title": "A hit with a same-line reason is recorded as reasoned",
+      "tests": [
+        "apps/speckit-extension/tests/test_lowered_bar.py::test_a_reason_on_the_line_is_recorded_as_reasoned"
+      ]
+    },
+    "FR-005": {
+      "title": "The scan never blocks or fails implement",
+      "tests": [
+        "apps/speckit-extension/tests/test_lowered_bar.py::test_implement_still_records_its_checks_on_a_hit"
+      ]
+    },
+    "FR-006": {
+      "title": "A clean change adds no concern",
+      "tests": [
+        "apps/speckit-extension/tests/test_lowered_bar.py::test_a_clean_change_adds_no_concern"
+      ]
+    },
+    "FR-007": {
+      "title": "A later scan replaces the earlier scan concerns only",
+      "tests": [
+        "apps/speckit-extension/tests/test_lowered_bar.py::test_a_later_scan_replaces_the_earlier_one_and_keeps_other_concerns"
+      ]
+    },
+    "FR-008": {
+      "title": "Hits show on the Overview and in the PR receipts",
+      "tests": [
+        "apps/speckit-extension/tests/test_lowered_bar.py::test_the_receipts_list_the_hits"
+      ],
+      "assumes": "the Overview already lists every concerns entry"
+    }
+  },
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 7,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "intent": "Record each way implement lowered the bar as a concern, never blocking",
+  "size": "simple",
+  "source": "#984",
+  "approach": "lowered_bar.py scans the uncommitted diff inside --verify-run and replaces the scan concerns; receipts list them",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Diff scanner and its call inside --verify-run, replacing the previous scan's concerns",
+      "files": [
+        "apps/speckit-extension/scripts/lowered_bar.py",
+        "apps/speckit-extension/scripts/capture.py"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Diff scanner and its call inside --verify-run, replacing the previous scan's concerns",
+      "files": [
+        "apps/speckit-extension/scripts/lowered_bar.py",
+        "apps/speckit-extension/scripts/capture.py"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Packed the scanner and listed the scan's concerns in the receipts",
+      "files": [
+        "apps/speckit-extension/scripts/package-manifest.py",
+        ".vscodeignore",
+        "apps/speckit-extension/scripts/receipts.py"
+      ],
+      "wave": "T003-T004"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Packed the scanner and listed the scan's concerns in the receipts",
+      "files": [
+        "apps/speckit-extension/scripts/package-manifest.py",
+        ".vscodeignore",
+        "apps/speckit-extension/scripts/receipts.py"
+      ],
+      "wave": "T003-T004"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Tests through --verify-run and receipts in a temp git repo",
+      "files": [
+        "apps/speckit-extension/tests/test_lowered_bar.py"
+      ],
+      "wave": "T005-T006"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Tests through --verify-run and receipts in a temp git repo",
+      "files": [
+        "apps/speckit-extension/tests/test_lowered_bar.py"
+      ],
+      "wave": "T005-T006"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Changelog line",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Scan stays silent outside git",
+      "files": [
+        "apps/speckit-extension/scripts/capture.py",
+        "apps/speckit-extension/tests/test_lowered_bar.py"
+      ]
+    }
+  },
+  "decisions": [
+    {
+      "decision": "Run the scan inside --verify-run, after the checks are recorded",
+      "why": "implement already calls it before closing, so the hits sit with the run evidence and no new hook is needed",
+      "rejected": "a separate script beside write-context.py that implement would have to remember to call",
+      "by": "agent",
+      "at": "2026-11-12T17:03:27.866Z"
+    },
+    {
+      "decision": "Scan the uncommitted change plus new files against HEAD, through a scratch index",
+      "why": "implement commits only after it records its checks, and the scratch index leaves the user staging untouched",
+      "rejected": "diffing against the merge base, which would re-report earlier commits on the branch",
+      "by": "agent",
+      "at": "2026-11-12T17:03:27.866Z"
+    },
+    {
+      "decision": "A later scan replaces the earlier scan concerns",
+      "why": "a cut the agent fixed before closing should not stay on the Overview",
+      "rejected": "append-only, which would keep fixed cuts forever",
+      "by": "agent",
+      "at": "2026-11-12T17:03:27.866Z"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Arrow-function no-ops such as () => {} are not counted as empty stubs, to keep test callbacks from flooding the Overview",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor TRACE: 2 failed capture calls and a --fold plan error in this spec trace come from the extension test suite writing through .specify/feature.json during --verify-run, not from this run; not fixed here",
+      "step": "implement"
+    },
+    {
+      "note": "Review finding rejected: empty pass and {} bodies stay counted as stubs, since the ticket asks for them; a Protocol ... body is no longer counted",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "--verify-run scans the uncommitted diff and records each lowered-bar hit as a concern; receipts list them"
+    }
+  },
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py"
+    ]
+  },
+  "verified": [
+    {
+      "what": "Full suite (jest, canvas, extension Python)",
+      "command": "npm run test:all",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 225.4,
+      "result": "---------------------------------------------------------------------- · Ran 1969 tests in 133.036s · OK (skipped=14)",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
+    },
+    {
+      "what": "Build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
+    },
+    {
+      "what": "Package manifest",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 28 runtime scripts, closure matches the declared list",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
+    },
+    {
+      "what": "Command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
+    },
+    {
+      "what": "Instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19 · speckit.companion.status.md                        0       0      0     214",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
+    },
+    {
+      "what": "Extension Python tests after review fixes",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 129.1,
+      "result": "---------------------------------------------------------------------- · Ran 1969 tests in 128.906s · OK (skipped=14)",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
+    },
+    {
+      "what": "Lowered-bar and receipts tests",
+      "command": "cd apps/speckit-extension && python3 -m unittest tests.test_lowered_bar tests.test_receipts tests.test_verify_run tests.test_verify_run_wiring",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 10.5,
+      "result": "---------------------------------------------------------------------- · Ran 43 tests in 10.435s · OK",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
+    }
+  ],
+  "convergeStartedAt": "2026-11-12T17:10:39.408Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-12T17:10:02.809Z",
+      "by": "extension",
+      "finishedAt": "2026-11-12T17:10:42.773Z",
+      "added": [
+        "T008"
+      ],
+      "completed": true
+    }
+  ]
+}

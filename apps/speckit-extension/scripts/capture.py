@@ -368,7 +368,34 @@ def append_verification_runs(feature_dir: Path, specs: list[str]) -> tuple[Path 
             continue
         entries.append(json.dumps(run_verification(what.strip(), command.strip(), at=feature_dir)))
     target = append_capture_entries(feature_dir, "verified", "what", entries, replace=True) if entries else None
+    if entries:
+        import subprocess
+
+        try:
+            record_lowered_bar(feature_dir)
+        except subprocess.CalledProcessError:
+            pass  # not a git project: nothing to scan
+        except Exception as err:  # noqa: BLE001
+            print(f"[companion] Lowered-bar scan skipped: {err}", file=sys.stderr)
     return target, skipped
+
+
+def record_lowered_bar(feature_dir: Path) -> Path | None:
+    """Replace the previous scan's concerns with what the change adds now; other concerns stay."""
+    import lowered_bar
+
+    found = lowered_bar.concerns(lowered_bar.scan(_repo_root_for(feature_dir)))
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    prior = ctx.get("concerns") if isinstance(ctx.get("concerns"), list) else []
+    kept = [c for c in prior if not (isinstance(c, dict) and c.get("source") == "scan")]
+    if not found and len(kept) == len(prior):
+        return None
+    ctx["concerns"] = kept + found
+    atomic_write(target, ctx)
+    for concern in found:
+        print(f"[companion] {concern['note']}", file=sys.stderr)
+    return target
 
 
 PLAN_CHECK_WHAT = "plan blocks check out"
