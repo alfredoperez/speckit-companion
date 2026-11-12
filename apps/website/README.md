@@ -20,7 +20,7 @@ Run these from `apps/website/`, not from the repo root.
 npm install    # first time
 npm run dev    # local dev server
 npm run build  # writes ./dist
-npm run preview
+npm run preview  # serves ./dist/client on :4321; run build first
 ```
 
 ## Deploy

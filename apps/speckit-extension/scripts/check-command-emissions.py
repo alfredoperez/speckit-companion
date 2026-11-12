@@ -177,11 +177,11 @@ def check_area(area: str, names, root: str) -> list:
         if name not in declared:
             problems.append(
                 f"orphan emission: {path} — no command named {name} in "
-                f"extension.yml provides.commands"
+                f"extension.yml provides.commands (a stale local install; run /install-local)"
             )
     for name in sorted(declared - set(on_disk)):
         problems.append(
-            f"missing emission: {name} — declared in extension.yml but absent from {area}"
+            f"missing emission: {name} — declared in extension.yml but absent from {area} (a stale local install; run /install-local)"
         )
     return problems
 

@@ -532,7 +532,7 @@ function buildSpecRow({ id, ctx, specText, files, written = null, tasksText, upd
     updatedAt: updatedAt ?? null
   };
 }
-var sortKey = (spec) => spec.lastActivity ?? spec.updatedAt ?? "";
+var sortKey = (spec) => spec.lastActivity ?? (spec.hasContext ? null : spec.updatedAt) ?? "";
 function sortSpecs(rows) {
   return rows.sort((a, b) => sortKey(b).localeCompare(sortKey(a)) || b.name.localeCompare(a.name));
 }
