@@ -240,35 +240,7 @@ export const FileNames = {
     constitutionMd: 'constitution.md',
 } as const;
 
-/**
- * Workflow step identifiers and their config key variants
- */
-export const WorkflowSteps = {
-    SPECIFY: 'specify',
-    PLAN: 'plan',
-    TASKS: 'tasks',
-    IMPLEMENT: 'implement',
-    CONFIG_SPECIFY: 'step-specify',
-    CONFIG_PLAN: 'step-plan',
-    CONFIG_TASKS: 'step-tasks',
-    CONFIG_IMPLEMENT: 'step-implement',
-} as const;
-
-/**
- * Spec lifecycle status values
- */
-export const SpecStatuses = {
-    ACTIVE: 'active',
-    TASKS_DONE: 'tasks-done',
-    // Terminal status written when the pipeline finishes implement autonomously
-    // (all tasks checked). Distinct from COMPLETED — `completed` is reserved for
-    // the user's explicit Mark Completed action; there is NO auto-advance from
-    // `implemented` to `completed`. A spec at `implemented` is done work awaiting
-    // that explicit user decision.
-    IMPLEMENTED: 'implemented',
-    COMPLETED: 'completed',
-    ARCHIVED: 'archived',
-} as const;
+export { WorkflowSteps, SpecStatuses } from 'speckit-viewer/core/statuses';
 
 /**
  * AI provider type identifiers

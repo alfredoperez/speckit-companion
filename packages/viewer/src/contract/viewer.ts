@@ -221,6 +221,13 @@ export type StalenessMap = Record<DocumentType, StalenessInfo>;
 // Message Protocols
 // ============================================
 
+/** What the view reads of a host's report page: the rail label and the header badge. */
+export interface ReportSummary {
+    kind: 'bug' | 'idea';
+    badgeTone?: 'review' | 'to-fix';
+    page?: unknown;
+}
+
 /**
  * Navigation state for message-based updates.
  *
@@ -236,6 +243,10 @@ export interface NavState<Report = unknown> {
     report?: Report;
     /** Header title came from the document's own H1, so skip slug casing. */
     titleFromHeading?: boolean;
+    /** The spec's own title (its spec document's H1), shown on every tab of the spec. */
+    specTitle?: string | null;
+    /** A run is going now; the extension leaves it unset, which reads as live. */
+    live?: boolean;
     /** Core documents with existence state */
     coreDocs: SpecDocument[];
     /** Related documents */
@@ -508,3 +519,6 @@ export type ViewerToExtensionMessage =
           /** The banner that was closed, so the right dismissal flag is written even if the gap has since changed. */
           prompt: InstallPrompt;
       };
+
+/** A message the viewer sends to the host, named for what the element emits. */
+export type ViewerAction = ViewerToExtensionMessage;

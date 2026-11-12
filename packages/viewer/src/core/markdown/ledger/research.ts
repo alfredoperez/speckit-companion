@@ -34,8 +34,8 @@ const isBlank = (l: string) => !l.trim();
 const trimLines = (lines: string[]): string[] => {
     let a = 0;
     let b = lines.length;
-    while (a < b && isBlank(lines[a])) a++;
-    while (b > a && isBlank(lines[b - 1])) b--;
+    while (a < b && isBlank(lines[a]!)) a++;
+    while (b > a && isBlank(lines[b - 1]!)) b--;
     return lines.slice(a, b);
 };
 
@@ -45,8 +45,8 @@ function splitAlt(text: string): Alt {
     if (!m) m = t.match(/^(.+?)[ \t]+[—–][ \t]+(.*)$/);
     if (!m) m = t.match(/^(.+?):[ \t]+(.*)$/);
     if (!m) m = t.match(/^(.+?)[ \t]*\((.+)\)[.]?$/);
-    const why = (m ? m[2] : '').replace(/^Rejected(?: because)?:?[ \t]*/i, '');
-    return { name: (m ? m[1] : t).replace(/[:.]$/, ''), why };
+    const why = (m ? m[2]! : '').replace(/^Rejected(?: because)?:?[ \t]*/i, '');
+    return { name: (m ? m[1]! : t).replace(/[:.]$/, ''), why };
 }
 
 function parseAlts(lines: string[]): Alt[] {
@@ -55,10 +55,10 @@ function parseAlts(lines: string[]): Alt[] {
     const items: string[] = [];
     for (const l of rows) {
         const m = l.match(BULLET);
-        if (m) items.push(m[1]);
+        if (m) items.push(m[1]!);
         else if (items.length && /^[ \t]+\S/.test(l)) items[items.length - 1] += ' ' + l.trim();
         else if (l.trim()) {
-            if (items.length && !BULLET.test(rows[0])) items[items.length - 1] += ' ' + l.trim();
+            if (items.length && !BULLET.test(rows[0]!)) items[items.length - 1] += ' ' + l.trim();
             else items.push(l.trim());
         }
     }
@@ -73,8 +73,8 @@ function composite(s: SectionCtx, num: RegExpMatchArray): Decision | null {
     for (const line of s.body) {
         if (/^[ \t]*(```|~~~)/.test(line)) inFence = !inFence;
         const h = inFence ? null : line.match(/^#{3,6}[ \t]+(.+?)[ \t]*#*[ \t]*$/);
-        if (h) subs.push({ title: h[1].replace(/\*\*|`/g, ''), lines: [] });
-        else (subs.length ? subs[subs.length - 1].lines : lead).push(line);
+        if (h) subs.push({ title: h[1]!.replace(/\*\*|`/g, ''), lines: [] });
+        else (subs.length ? subs[subs.length - 1]!.lines : lead).push(line);
     }
     const pick = subs.find((x) => /^Decision\b/i.test(x.title));
     if (!pick) return null;
@@ -87,10 +87,10 @@ function composite(s: SectionCtx, num: RegExpMatchArray): Decision | null {
         .map((x) => {
             const [name, ...tail] = x.title.split(/\s+[—–]\s+/);
             const first = trimLines(x.lines).find((l) => !BULLET.test(l) && l.trim()) ?? '';
-            return { name: tail.length ? `${name}: ${tail.join(' — ')}` : name, why: first.trim() };
+            return { name: tail.length ? `${name}: ${tail.join(' — ')}` : name!, why: first.trim() };
         });
     return {
-        id: `${num[2] ?? 'D'}${num[1] ?? num[3]}`, kind: 'decision', title: num[4],
+        id: `${num[2] ?? 'D'}${num[1] ?? num[3]}`, kind: 'decision', title: num[4]!,
         intro: trimLines(lead), question: [], finding: [],
         decision: [`**${label}**`, '', ...trimLines(dl)], why, alts,
     };
@@ -121,7 +121,7 @@ function fromSection(s: SectionCtx, index: number, strict: boolean): Decision | 
     return {
         id: `${prefix}${n}`,
         kind: question.length || finding.length ? 'question' : 'decision',
-        title: num ? num[4] : text,
+        title: num ? num[4]! : text,
         intro: trimLines([...(hasLabels ? lead : []), ...rest]),
         question,
         finding,
@@ -161,7 +161,7 @@ export function decisionCard(d: Decision): string {
         const finding = trimLines(d.finding);
         const evidence = finding.length > 3;
         const paras = finding.join('\n').split(/\n[ \t]*\n/);
-        const head = renderBlocks(paras[0].split('\n'));
+        const head = renderBlocks(paras[0]!.split('\n'));
         const tail = paras.slice(1).join('\n\n');
         const findingHtml = evidence
             ? `${head}<details class="lg-evidence"><summary>Read the evidence · ${finding.length} lines</summary>${renderBlocks(tail.split('\n'))}</details>`
@@ -211,22 +211,22 @@ function keyDecisions(s: SectionCtx): string | null {
     for (const l of s.direct) {
         if (isBlank(l)) continue;
         const m = l.match(BULLET);
-        if (m) items.push(m[1]);
+        if (m) items.push(m[1]!);
         else if (/^[ \t]+\S/.test(l) && items.length) items[items.length - 1] += ' ' + l.trim();
         else return null;
     }
     if (!items.length || !items.every((t) => /^\*\*.+?\*\*/.test(t))) return null;
     const cards = items.map((t, i) => {
         const m = t.match(/^\*\*(.+?)\*\*[:.]?[ \t]*(.*)$/)!;
-        let why = m[2];
+        let why = m[2]!;
         let alts: Alt[] = [];
         const a = why.match(/\b(?:Alternatives?(?: considered)?|Rejected)\b:?[ \t]*(.+)$/i);
         if (a) {
             why = why.slice(0, a.index).trim();
-            alts = [splitAlt(a[1])];
+            alts = [splitAlt(a[1]!)];
         }
         return decisionCard({
-            id: `D${i + 1}`, kind: 'decision', title: m[1].replace(/[.:]$/, ''),
+            id: `D${i + 1}`, kind: 'decision', title: m[1]!.replace(/[.:]$/, ''),
             intro: [], question: [], finding: [], decision: [], why: why ? [why] : [], alts,
         });
     });

@@ -49,7 +49,7 @@ function parseLine(raw: string): Line | string {
     let mark: PartMark | null = null;
     let dot: number | null = null;
     for (let found = rest.match(TRAILER); found; found = rest.match(TRAILER)) {
-        if (/^\d/.test(found[1])) {
+        if (/^\d/.test(found[1]!)) {
             if (dot !== null) return 'two dots on one part';
             dot = Number(found[1]);
         } else {
@@ -60,7 +60,7 @@ function parseLine(raw: string): Line | string {
     }
     const head = rest.match(/^([a-z]+):(?:\s+(.*))?$/);
     if (!head) return 'a line with no part kind';
-    if (!KINDS.includes(head[1])) return 'an unknown part';
+    if (!KINDS.includes(head[1]!)) return 'an unknown part';
     const kind = head[1] as PartKind;
     const text = (head[2] ?? '').trim();
     if (kind === 'row' && text) return 'a row holds no text of its own';
@@ -82,11 +82,11 @@ export function parseScreen(body: string): ParsedScreen {
         const line = parseLine(text);
         if (typeof line === 'string') return { ok: false, error: line };
         if (line.depth > stack.length) return { ok: false, error: 'a skipped level' };
-        if (line.depth > 0 && stack[line.depth - 1].kind !== 'row') return { ok: false, error: 'a part nested inside something that is not a row' };
+        if (line.depth > 0 && stack[line.depth - 1]!.kind !== 'row') return { ok: false, error: 'a part nested inside something that is not a row' };
         stack.length = line.depth;
         const { depth, ...fields } = line;
         const part: ScreenPart = { ...fields, children: [] };
-        (depth === 0 ? roots : stack[depth - 1].children).push(part);
+        (depth === 0 ? roots : stack[depth - 1]!.children).push(part);
         stack.push(part);
         count++;
         if (part.dot !== null) dots.push(part.dot);
@@ -103,9 +103,9 @@ export function parseScreen(body: string): ParsedScreen {
 export function parseNote(line: string): ScreenNote | null {
     const found = line.trim().match(/^(\d{1,2}):\s+(.+)$/);
     if (!found) return null;
-    const text = found[2].trim();
+    const text = found[2]!.trim();
     const sentence = text.match(/^(.+?[.!?])(?:\s+(.*))?$/);
-    return { n: Number(found[1]), lead: sentence ? sentence[1] : text, rest: sentence?.[2] ?? '' };
+    return { n: Number(found[1]!), lead: sentence ? sentence[1]! : text, rest: sentence?.[2] ?? '' };
 }
 
 /** `<name> <title>` as written after the `screen` word, or null when there is no usable name. */
@@ -209,15 +209,15 @@ let index = new Map<string, ScreenDef>();
 export function indexScreens(lines: string[]): void {
     index = new Map();
     for (let i = 0; i < lines.length; i++) {
-        const open = lines[i].trim().match(/^```screen(?:\s+(.*))?$/);
+        const open = lines[i]!.trim().match(/^```screen(?:\s+(.*))?$/);
         if (!open) continue;
         const body: string[] = [];
         let end = i + 1;
-        while (end < lines.length && !lines[end].trim().startsWith('```')) body.push(lines[end++]);
+        while (end < lines.length && !lines[end]!.trim().startsWith('```')) body.push(lines[end++]!);
         let at = end + 1;
-        while (at < lines.length && !lines[at].trim()) at++;
+        while (at < lines.length && !lines[at]!.trim()) at++;
         const noteLines: string[] = [];
-        while (at < lines.length && NOTE_LINE.test(lines[at])) noteLines.push(lines[at++]);
+        while (at < lines.length && NOTE_LINE.test(lines[at]!)) noteLines.push(lines[at++]!);
         const def = buildScreen(open[1] ?? '', body.join('\n'), noteLines);
         if (def && !index.has(def.name)) index.set(def.name, def);
         i = end;

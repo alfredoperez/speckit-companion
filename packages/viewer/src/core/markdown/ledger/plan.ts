@@ -34,10 +34,10 @@ function card(cls: string, id: string | null, head: string, body: string, toc?: 
 /** The section body under `## <title>` up to the next heading, as line indexes. */
 function sectionRange(lines: string[], title: RegExp, from = 0): { start: number; end: number } | null {
     for (let i = from; i < lines.length; i++) {
-        const m = lines[i].match(H2);
-        if (!m || !title.test(m[1])) continue;
+        const m = lines[i]!.match(H2);
+        if (!m || !title.test(m[1]!)) continue;
         let end = i + 1;
-        while (end < lines.length && !ANY_HEADING.test(lines[end])) end++;
+        while (end < lines.length && !ANY_HEADING.test(lines[end]!)) end++;
         return { start: i, end };
     }
     return null;
@@ -53,10 +53,10 @@ const isSeparator = (l: string) => /^\s*\|[\s:|-]+\|\s*$/.test(l) && l.includes(
 /** Header cells plus body rows of the first table in the lines, or null. */
 function readTable(lines: string[]): { head: string[]; rows: string[][] } | null {
     const at = lines.findIndex(isTableLine);
-    if (at < 0 || !lines[at + 1] || !isSeparator(lines[at + 1])) return null;
+    if (at < 0 || !lines[at + 1] || !isSeparator(lines[at + 1]!)) return null;
     const rows: string[][] = [];
-    for (let i = at + 2; i < lines.length && isTableLine(lines[i]); i++) rows.push(splitRow(lines[i]));
-    return { head: splitRow(lines[at]), rows };
+    for (let i = at + 2; i < lines.length && isTableLine(lines[i]!); i++) rows.push(splitRow(lines[i]!));
+    return { head: splitRow(lines[at]!), rows };
 }
 
 // ── Technical Context ───────────────────────────────────────────
@@ -96,12 +96,12 @@ export function preprocessTechnicalContext(markdown: string): string {
         if (inSection && /^#{1,6}[ \t]/.test(line)) { inSection = false; flush(); out.push(line); continue; }
         if (inSection) {
             const m = line.match(/^(?:[-*+][ \t]+)?\*\*(.+?)\*\*:[ \t]*(.+)$/) ?? line.match(/^[-*+][ \t]+([A-Za-z][^:`*|]{0,38}):[ \t]+(.+)$/);
-            if (m) { facts.push({ key: m[1], val: m[2].trim() }); lastIsOpen = true; continue; }
+            if (m) { facts.push({ key: m[1]!, val: m[2]!.trim() }); lastIsOpen = true; continue; }
             const bare = !facts.length && line.match(/^[-*+][ \t]+(\S.*)$/);
-            if (bare) { facts.push({ key: 'Stack', val: bare[1].trim() }); lastIsOpen = true; continue; }
+            if (bare) { facts.push({ key: 'Stack', val: bare[1]!.trim() }); lastIsOpen = true; continue; }
             if (!line.trim()) { lastIsOpen = false; continue; }
             if (facts.length && lastIsOpen && !/^\s*([-*+]\s|\d+\.\s|\||<|>|[-*_]{3,}\s*$)/.test(line)) {
-                facts[facts.length - 1].val += ' ' + line.trim();
+                facts[facts.length - 1]!.val += ' ' + line.trim();
                 continue;
             }
             flush();
@@ -135,7 +135,7 @@ function stripVerdictWord(text: string): string {
 function splitPrinciple(raw: string): { numeral: string; name: string } {
     const text = raw.replace(/\*\*/g, '').trim();
     const m = text.match(/^(?:Principle[ \t]+)?([IVXLC]+|\d+)[.:)\s—–-]+[ \t]*(.+)$/);
-    return m ? { numeral: m[1], name: m[2] } : { numeral: '', name: text };
+    return m ? { numeral: m[1]!, name: m[2]! } : { numeral: '', name: text };
 }
 
 const GATE_BULLET = /^-[ \t]+\*\*(?:.+?)\*\*:?[ \t]*(?:[✅❌⚠️]\s*)?(?:PASS|FAIL|JUSTIFIED|N\/A)\b|^-[ \t]+\*\*(?:.+?)\*\*[ \t]*[—–:-]?[ \t]*.*?[ \t]*(?:[✅❌]\s*)?(?:PASS|FAIL)\b\.?[ \t]*$/iu;
@@ -166,9 +166,9 @@ function readGateRows(body: string[]): GateRow[] {
     for (const line of body) {
         let m = line.match(/^-[ \t]+\*\*(.+?)\*\*:?[ \t]*(?:[✅❌⚠️]\s*)?(PASS|FAIL|JUSTIFIED|N\/A)\b[ \t]*[—–:-]?[ \t]*(.*)$/iu);
         let name: string, verdict: string, note: string;
-        if (m) { [, name, verdict, note] = m; }
+        if (m) { [, name, verdict, note] = m as [string, string, string, string]; }
         else if ((m = line.match(/^-[ \t]+\*\*(.+?)\*\*[ \t]*[—–:-]?[ \t]*(.*?)[ \t]*(?:[✅❌]\s*)?(PASS|FAIL)\b\.?[ \t]*$/iu))) {
-            [, name, note, verdict] = m;
+            [, name, note, verdict] = m as [string, string, string, string];
         } else continue;
         rows.push({ ...splitPrinciple(name), verdict: classify(verdict) ?? 'pass', note: note.trim() });
     }
@@ -194,10 +194,10 @@ export function preprocessConstitution(markdown: string): string {
     const out: string[] = [];
     let i = 0;
     while (i < lines.length) {
-        const m = lines[i].match(H2);
-        if (!m || !/^Constitution Check\b/i.test(m[1])) { out.push(lines[i++]); continue; }
+        const m = lines[i]!.match(H2);
+        if (!m || !/^Constitution Check\b/i.test(m[1]!)) { out.push(lines[i++]!); continue; }
         let end = i + 1;
-        while (end < lines.length && !ANY_HEADING.test(lines[end])) end++;
+        while (end < lines.length && !ANY_HEADING.test(lines[end]!)) end++;
         const body = lines.slice(i + 1, end);
         const rows = readGateRows(body);
         if (!rows.length) { out.push(...lines.slice(i, end)); i = end; continue; }
@@ -220,10 +220,10 @@ export function preprocessComplexity(markdown: string): string {
     const out: string[] = [];
     let i = 0;
     while (i < lines.length) {
-        const m = lines[i].match(H2);
-        if (!m || !/^Complexity Tracking\b/i.test(m[1])) { out.push(lines[i++]); continue; }
+        const m = lines[i]!.match(H2);
+        if (!m || !/^Complexity Tracking\b/i.test(m[1]!)) { out.push(lines[i++]!); continue; }
         let end = i + 1;
-        while (end < lines.length && !ANY_HEADING.test(lines[end])) end++;
+        while (end < lines.length && !ANY_HEADING.test(lines[end]!)) end++;
         const body = lines.slice(i + 1, end);
         const table = readTable(body);
         const real = table ? table.rows.filter((r) => r[0] && !/^[[<{]/.test(r[0])) : [];
@@ -236,7 +236,7 @@ export function preprocessComplexity(markdown: string): string {
                 const v: Verdict = why ? 'justified' : 'pending';
                 const whyHtml = why ? `<span class="pl-cx-v pl-cx-why">${parseInline(why)}</span>` : '<span class="pl-cx-v pl-cx-missing">Why needed: missing</span>';
                 const altHtml = alt ? `<span class="pl-cx-v">${parseInline(alt)}</span>` : '<span class="pl-cx-v pl-cx-missing">Simpler alternative: missing</span>';
-                return `<div class="pl-cx-row"><div class="pl-cx-cell"><span class="pl-cx-k">${escapeHtml(table.head[0] || 'Violation')}</span><span class="pl-cx-v pl-cx-name">${parseInline(r[0])}</span></div><div class="pl-cx-cell"><span class="pl-cx-k">${escapeHtml(table.head[1] || 'Why needed')}</span>${whyHtml}</div><div class="pl-cx-cell"><span class="pl-cx-k">${escapeHtml(table.head[2] || 'Simpler alternative')}</span>${altHtml}</div>${verdictMark(v, v === 'pending' ? 'Needs justification' : 'Justified')}</div>`;
+                return `<div class="pl-cx-row"><div class="pl-cx-cell"><span class="pl-cx-k">${escapeHtml(table.head[0] || 'Violation')}</span><span class="pl-cx-v pl-cx-name">${parseInline(r[0]!)}</span></div><div class="pl-cx-cell"><span class="pl-cx-k">${escapeHtml(table.head[1] || 'Why needed')}</span>${whyHtml}</div><div class="pl-cx-cell"><span class="pl-cx-k">${escapeHtml(table.head[2] || 'Simpler alternative')}</span>${altHtml}</div>${verdictMark(v, v === 'pending' ? 'Needs justification' : 'Justified')}</div>`;
             });
             const justified = real.filter((r) => (r[1] ?? '').trim()).length;
             out.push(card('lg-fam-guard', 'plan-complexity', head(`${justified} justified`), cx.join('')));
@@ -272,7 +272,7 @@ export function parseTree(codeLines: string[]): TreeEntry[] | null {
         const name = (hash >= 0 ? rest.slice(0, hash) : rest).trim();
         const comment = hash >= 0 ? rest.slice(hash).replace(/^\s*#\s*/, '').trim() : '';
         if (!name) continue;
-        while (indents.length && indents[indents.length - 1] >= pre.length) indents.pop();
+        while (indents.length && indents[indents.length - 1]! >= pre.length) indents.pop();
         const depth = indents.length;
         indents.push(pre.length);
         parents.length = depth;
@@ -318,13 +318,13 @@ export function preprocessProjectTree(markdown: string): string {
     let inStructure = false;
     let idUsed = false;
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = lines[i]!;
         const h = line.match(/^(#{2,3})[ \t]+(.+?)[ \t]*$/);
-        if (h) { inStructure = h[1] === '##' ? STRUCTURE_SECTION.test(h[2]) : inStructure; out.push(line); continue; }
+        if (h) { inStructure = h[1] === '##' ? STRUCTURE_SECTION.test(h[2]!) : inStructure; out.push(line); continue; }
         const fence = line.match(/^```[ \t]*([\w-]*)[ \t]*$/);
-        if (!inStructure || !fence || !/^(|text|plaintext|tree|txt)$/i.test(fence[1])) { out.push(line); continue; }
+        if (!inStructure || !fence || !/^(|text|plaintext|tree|txt)$/i.test(fence[1]!)) { out.push(line); continue; }
         let end = i + 1;
-        while (end < lines.length && !/^```/.test(lines[end])) end++;
+        while (end < lines.length && !/^```/.test(lines[end]!)) end++;
         const entries = end < lines.length ? parseTree(lines.slice(i + 1, end)) : null;
         if (!entries) { out.push(line); continue; }
         out.push(treeHtml(entries, !idUsed));
@@ -340,11 +340,11 @@ function treeStats(lines: string[]): { files: number; added: number } | null {
     let best: { files: number; added: number } | null = null;
     let inStructure = false;
     for (let i = 0; i < lines.length; i++) {
-        const h = lines[i].match(/^(#{2,3})[ \t]+(.+?)[ \t]*$/);
-        if (h) { if (h[1] === '##') inStructure = STRUCTURE_SECTION.test(h[2]); continue; }
-        if (!inStructure || !/^```[ \t]*(|text|plaintext|tree|txt)[ \t]*$/i.test(lines[i])) continue;
+        const h = lines[i]!.match(/^(#{2,3})[ \t]+(.+?)[ \t]*$/);
+        if (h) { if (h[1] === '##') inStructure = STRUCTURE_SECTION.test(h[2]!); continue; }
+        if (!inStructure || !/^```[ \t]*(|text|plaintext|tree|txt)[ \t]*$/i.test(lines[i]!)) continue;
         let end = i + 1;
-        while (end < lines.length && !/^```/.test(lines[end])) end++;
+        while (end < lines.length && !/^```/.test(lines[end]!)) end++;
         const entries = parseTree(lines.slice(i + 1, end));
         i = end;
         if (!entries) continue;
@@ -367,7 +367,7 @@ export function preprocessPlanSummary(markdown: string): string {
     if (!prose.length || prose.some((l) => /^\s*([-*+]\s|\d+\.\s|\||```|<|>|\[)/.test(l))) return markdown;
     const text = prose.join(' ').replace(/\s+/g, ' ').trim();
     const sentences = text.split(/(?<=[.!?])\s+(?=[A-Z`*])/);
-    const first = `<strong>${parseInline(sentences[0])}</strong>`;
+    const first = `<strong>${parseInline(sentences[0]!)}</strong>`;
     const rest = sentences.slice(1);
     let restHtml = '';
     if (rest.length > 2) {

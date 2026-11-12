@@ -3,10 +3,12 @@
 // rules weigh against each other exactly as they did unscoped.
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import postcss from 'postcss';
 
 const ROOT = ':where(.sk-viewer)';
+const require = createRequire(import.meta.url);
 const pkg = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = join(pkg, 'styles');
 const out = join(pkg, 'dist', 'styles');
@@ -43,6 +45,9 @@ export function buildCss() {
     mkdirSync(join(out, 'themes'), { recursive: true });
     writeFileSync(join(out, 'viewer.css'), sheet.toString());
     for (const name of readdirSync(join(src, 'themes'))) copyFileSync(join(src, 'themes', name), join(out, 'themes', name));
+    // Code colours for the bundled highlighter, unscoped like the CDN sheet the webview used to load.
+    mkdirSync(join(out, 'highlight'), { recursive: true });
+    copyFileSync(require.resolve('highlight.js/styles/github-dark.min.css'), join(out, 'highlight', 'github-dark.css'));
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) buildCss();

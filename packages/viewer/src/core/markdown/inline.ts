@@ -121,7 +121,7 @@ export function parseInline(text: string, linkIds = true): string {
         // Ids in prose become chips; code spans are still stashed here
         .replace(/^[\s\S]*$/, (html) => (linkIds ? linkifyIds(html) : html))
         // Restore inline code spans
-        .replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]);
+        .replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]!);
 
     // Post-process: Style acceptance scenario keywords (Given/When/Then)
     result = result

@@ -30,12 +30,12 @@ export const isCodeCardInfo = (rawTitle: string): boolean => CARD_INFO.test(rawT
 
 export function parseCodeInfo(rawTitle: string): CodeInfo | null {
     const words = rawTitle.trim().split(/\s+/);
-    const cited = words[0].match(CITATION);
+    const cited = words[0]!.match(CITATION);
     const sketch = words[0] === 'sketch';
     if (!sketch && !cited) return null;
-    const file = sketch ? words[1] ?? '' : cited![1];
-    const from = sketch ? 1 : Number(cited![2]);
-    const to = sketch ? null : Number(cited![3]);
+    const file = sketch ? words[1] ?? '' : cited![1]!;
+    const from = sketch ? 1 : Number(cited![2]!);
+    const to = sketch ? null : Number(cited![3]!);
     if (!file || file.startsWith('hl=')) return null;
     if (OUTSIDE_REPO.test(file) || file.split(/[\\/]/).includes('..')) return null;
     if (to !== null && (from < 1 || to < from)) return null;
@@ -44,10 +44,10 @@ export function parseCodeInfo(rawTitle: string): CodeInfo | null {
     if (rest.length > 1) return null;
     const hl: Array<[number, number]> = [];
     if (rest.length === 1) {
-        const listed = rest[0].match(HIGHLIGHT);
+        const listed = rest[0]!.match(HIGHLIGHT);
         if (!listed) return null;
-        for (const part of listed[1].split(',')) {
-            const [first, last = first] = part.split('-').map(Number);
+        for (const part of listed[1]!.split(',')) {
+            const [first, last = first] = part.split('-').map(Number) as [number, number?];
             if (last < first) return null;
             hl.push([first, last]);
         }

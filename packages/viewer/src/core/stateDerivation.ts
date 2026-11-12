@@ -1,0 +1,495 @@
+/**
+ * Pure derivation from `SpecContext` → `ViewerState`.
+ *
+ * Never touches the filesystem. Per-step timing (`stepHistory`) is derived
+ * in-memory from the canonical `history[]` log — the on-disk file no longer
+ * carries a `stepHistory` field. `pulse` is null when
+ * `status` ∈ {completed, archived}.
+ *
+ * **Inferred completion**: a step is treated as completed when it precedes
+ * `currentStep` in `STEP_NAMES` ordering, even if it has no history entry
+ * at all (common with external skills that advance `currentStep`
+ * without writing per-step entries).
+ */
+
+import {
+    SpecContext,
+    StepName,
+    StepHistoryEntry,
+    StepBadgeState,
+    STEP_NAMES,
+    ViewerDecision,
+    ViewerVerification,
+    ViewerCoverageRow,
+    ClassificationEntry,
+    RiskEntry,
+    TaskSummary,
+    ConcernEntry,
+    CheckpointStatus,
+    ReviewComment,
+    LivingSpecsView,
+    ConvergeResult,
+    DEFAULT_PIPELINE_STEPS,
+    Status,
+    TimingSummary,
+} from '../contract/specContext';
+import type { ViewerState as ContractViewerState } from '../contract/viewerState';
+import { deriveStepHistory, deriveTimingSummary } from './stepHistoryDerivation';
+
+/** The part of a workflow step the derivation reads; the host's step config satisfies it. */
+export interface StepConfigLike {
+    name: string;
+    untimed?: boolean;
+}
+
+/** The derived state; `Footer` is whatever the host's footer builder returns. */
+export type DerivedViewerState<Footer = never> = Omit<ContractViewerState, 'footer' | 'status' | 'activeStep' | 'pulse' | 'highlights' | 'activeSubstep' | 'timing'> & {
+    status: Status;
+    activeStep: StepName;
+    pulse: StepName | null;
+    highlights: StepName[];
+    activeSubstep: { step: StepName; name: string } | null;
+    footer: Footer[];
+    timing: TimingSummary;
+};
+
+export type FooterBuilder<Footer, Step extends StepConfigLike = StepConfigLike> = (
+    ctx: SpecContext,
+    activeStep: StepName,
+    workflowSteps: Step[] | undefined,
+    converge: ConvergeResult | undefined
+) => Footer[];
+
+type DerivedHistory = Record<string, StepHistoryEntry>;
+
+/**
+ * `SpecContext`'s fields are declared but come straight from a user-editable
+ * file, so a declared string/number/array field can still hold the wrong
+ * runtime shape. These coerce a declared field's value, not pluck one from
+ * an untyped bag.
+ */
+function asString(v: unknown): string | undefined {
+    return typeof v === 'string' && v.length > 0 ? v : undefined;
+}
+
+function asNumber(v: unknown): number | undefined {
+    return typeof v === 'number' ? v : undefined;
+}
+
+function asStringArray(v: unknown): string[] | undefined {
+    if (!Array.isArray(v)) return undefined;
+    const filtered = v.filter((x): x is string => typeof x === 'string');
+    return filtered.length > 0 ? filtered : undefined;
+}
+
+function coerceNameList(v: unknown): string[] {
+    if (!Array.isArray(v)) return [];
+    const out: string[] = [];
+    for (const x of v) {
+        if (typeof x !== 'string') continue;
+        const t = x.trim();
+        if (t.length > 0) out.push(t);
+    }
+    return out;
+}
+
+function pickLivingSpecs(ctx: SpecContext): LivingSpecsView | undefined {
+    const v: unknown = ctx.livingSpecs;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const ls = v as Record<string, unknown>;
+    const loaded = coerceNameList(ls.loaded);
+    const synced = coerceNameList(ls.synced);
+    if (loaded.length === 0 && synced.length === 0) return undefined;
+    return { loaded, synced };
+}
+
+function pickRecord<T>(v: unknown): Record<string, T> | undefined {
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    return v as Record<string, T>;
+}
+
+/**
+ * Normalize a JSON-or-text capture list: bare strings wrap under the identity
+ * key, objects carrying it pass through (extra keys kept), anything else is
+ * skipped. Mirrors the writer's tolerance so legacy and structured entries
+ * render side by side.
+ */
+function pickEntryList<T extends Record<string, unknown>>(
+    v: unknown,
+    identityKey: string,
+): T[] | undefined {
+    if (!Array.isArray(v) || v.length === 0) return undefined;
+    const out: T[] = [];
+    for (const entry of v) {
+        if (typeof entry === 'string' && entry.trim().length > 0) {
+            out.push({ [identityKey]: entry } as T);
+        } else if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+            const e = entry as Record<string, unknown>;
+            if (typeof e[identityKey] === 'string' && (e[identityKey] as string).trim().length > 0) {
+                out.push(e as T);
+            }
+        }
+    }
+    return out.length > 0 ? out : undefined;
+}
+
+/** Keep an optional field only when it's a non-empty string — a malformed capture must not reach the renderer. */
+function optString(v: unknown): string | undefined {
+    return typeof v === 'string' && v.trim().length > 0 ? v : undefined;
+}
+
+/** A timestamp the view can format, or nothing: an unreadable one must not render as "Invalid Date". */
+function optTime(v: unknown): string | undefined {
+    const s = optString(v);
+    return s && !Number.isNaN(Date.parse(s)) ? s : undefined;
+}
+
+function pickDecisions(ctx: SpecContext): ViewerDecision[] | undefined {
+    const raw = pickEntryList<Record<string, unknown>>(ctx.decisions, 'decision');
+    return raw?.map(e => {
+        const earlier = (pickEntryList<Record<string, unknown>>(e.earlier, 'decision') ?? [])
+            .map(a => ({ decision: a.decision as string, by: optString(a.by), at: optTime(a.at) }));
+        return {
+            decision: e.decision as string,
+            why: optString(e.why),
+            rejected: optString(e.rejected),
+            id: optString(e.id),
+            by: optString(e.by),
+            at: optTime(e.at),
+            earlier: earlier.length > 0 ? earlier : undefined,
+        };
+    });
+}
+
+function hexSha(v: unknown): string | undefined {
+    return typeof v === 'string' && /^[0-9a-f]{7,64}$/.test(v) ? v : undefined;
+}
+
+function pickVerified(ctx: SpecContext): ViewerVerification[] | undefined {
+    const raw = pickEntryList<Record<string, unknown>>(ctx.verified, 'what');
+    return raw?.map(e => {
+        const warnings = coerceNameList(e.warnings);
+        // Only the exact string counts as derived. A context file is user-writable, and a
+        // truthy-ish value quietly promoting a claim into a receipt is the one failure this
+        // whole distinction exists to prevent.
+        const derived = e.source === 'derived';
+        return {
+            what: e.what as string,
+            result: optString(e.result),
+            command: optString(e.command),
+            warnings: warnings.length > 0 ? warnings : undefined,
+            source: derived ? 'derived' as const : undefined,
+            exitCode: derived && typeof e.exitCode === 'number' ? e.exitCode : undefined,
+            durationSeconds:
+                derived && typeof e.durationSeconds === 'number' ? e.durationSeconds : undefined,
+            commit: derived ? hexSha(e.commit) : undefined,
+            tree: derived ? hexSha(e.tree) : undefined,
+        };
+    });
+}
+
+/**
+ * A coverage cell is a list, or the comma-separated string the batch capture
+ * wrote verbatim. Read as "not a list", every one of those rows said no test was
+ * linked while the names sat in the file.
+ */
+function coverageNames(v: unknown): string[] {
+    if (typeof v === 'string') return v.split(',').map(s => s.trim()).filter(Boolean);
+    return coerceNameList(v);
+}
+
+function pickCoverage(ctx: SpecContext): ViewerCoverageRow[] | undefined {
+    const v: unknown = ctx.coverage;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const rows: ViewerCoverageRow[] = [];
+    for (const [req, entry] of Object.entries(v as Record<string, unknown>)) {
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
+        const e = entry as Record<string, unknown>;
+        rows.push({
+            req,
+            title: typeof e.title === 'string' && e.title.trim() ? e.title : undefined,
+            tasks: coverageNames(e.tasks),
+            tests: coverageNames(e.tests),
+            assumes: typeof e.assumes === 'string' && e.assumes.trim() ? e.assumes.trim() : undefined,
+            weak: e.weak === true ? true : undefined,
+        });
+    }
+    if (rows.length === 0) return undefined;
+    rows.sort((a, b) => a.req.localeCompare(b.req, undefined, { numeric: true }));
+    return rows;
+}
+
+/**
+ * Confirm the tests a requirement names actually exist.
+ *
+ * Every cell in the coverage table is a string an assistant typed once. Nothing
+ * opened the path, so a requirement pointing at a deleted or misspelled test
+ * rendered exactly like one pointing at a real, passing suite — rung-one text
+ * wearing rung-three authority.
+ *
+ * `exists` is injected rather than imported so this stays pure and testable; the
+ * provider supplies a real filesystem check. Anything that is plainly not a path
+ * (a bare test name, a `describe` title) is left alone — the point is to catch a
+ * file that should be there and is not, never to demand a particular format.
+ */
+export function markMissingTests(
+    rows: ViewerCoverageRow[] | undefined,
+    exists: (relPath: string) => boolean
+): ViewerCoverageRow[] | undefined {
+    if (!rows) { return rows; }
+    return rows.map(row => {
+        const paths = row.tests.filter(looksLikePath);
+        if (paths.length === 0) { return row; }
+        const missing = paths.filter(p => !exists(stripTestSuffix(p)));
+        return missing.length ? { ...row, missingTests: missing } : row;
+    });
+}
+
+/** A test reference that names a file, rather than a suite or a case name. */
+function looksLikePath(ref: string): boolean {
+    return /[\\/]/.test(ref) && /\.[a-z]{2,4}$/i.test(ref.split('::')[0]!.split('#')[0]!.trim());
+}
+
+/** `src/x.test.ts::renders` and `src/x.test.ts#renders` both name one file. */
+function stripTestSuffix(ref: string): string {
+    return ref.split('::')[0]!.split('#')[0]!.trim();
+}
+
+function pickClassification(ctx: SpecContext): ClassificationEntry | undefined {
+    const v: unknown = ctx.classification;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const e = v as Record<string, unknown>;
+    if (typeof e.verdict !== 'string') return undefined;
+    return e as unknown as ClassificationEntry;
+}
+
+const RISK_TIERS = ['low', 'normal', 'high'];
+
+function pickRisk(ctx: SpecContext): RiskEntry | undefined {
+    const v: unknown = ctx.risk;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const e = v as Record<string, unknown>;
+    if (typeof e.tier !== 'string' || !RISK_TIERS.includes(e.tier)) return undefined;
+    const computed = typeof e.computed === 'string' && RISK_TIERS.includes(e.computed) ? e.computed : e.tier;
+    const out = { tier: e.tier, computed, reasons: asStringArray(e.reasons) ?? [] } as RiskEntry;
+    const r = e.raised as Record<string, unknown> | undefined;
+    if (r && typeof r === 'object' && typeof r.tier === 'string' && RISK_TIERS.includes(r.tier)
+        && typeof r.reason === 'string' && typeof r.by === 'string' && typeof r.at === 'string') {
+        out.raised = r as unknown as NonNullable<RiskEntry['raised']>;
+    }
+    return out;
+}
+
+function pickConcerns(ctx: SpecContext): ConcernEntry[] | undefined {
+    const v: unknown = ctx.concerns;
+    if (!Array.isArray(v) || v.length === 0) return undefined;
+    const out: ConcernEntry[] = [];
+    for (const entry of v) {
+        if (typeof entry === 'string') {
+            out.push({ note: entry });
+        } else if (entry && typeof entry === 'object') {
+            const e = entry as Record<string, unknown>;
+            if (typeof e.note === 'string') {
+                out.push({ task: typeof e.task === 'string' ? e.task : undefined, note: e.note });
+            }
+        }
+    }
+    return out.length > 0 ? out : undefined;
+}
+
+function pickReviewComments(ctx: SpecContext): ReviewComment[] | undefined {
+    const v: unknown = ctx.reviewComments;
+    if (!Array.isArray(v) || v.length === 0) return undefined;
+    const out: ReviewComment[] = [];
+    for (const entry of v) {
+        if (!entry || typeof entry !== 'object') continue;
+        const e = entry as Record<string, unknown>;
+        const anchor = e.anchor as Record<string, unknown> | undefined;
+        if (
+            typeof e.id === 'string' &&
+            typeof e.doc === 'string' && e.doc.length > 0 &&
+            typeof e.comment === 'string' &&
+            (e.status === 'pending' || e.status === 'applied') &&
+            typeof e.createdAt === 'string' &&
+            anchor && typeof anchor === 'object' &&
+            typeof anchor.blockText === 'string' &&
+            typeof anchor.line === 'number'
+        ) {
+            out.push({
+                id: e.id,
+                doc: e.doc,
+                anchor: {
+                    heading: typeof anchor.heading === 'string' ? anchor.heading : null,
+                    blockText: anchor.blockText,
+                    line: anchor.line,
+                },
+                comment: e.comment,
+                status: e.status,
+                createdAt: e.createdAt,
+            });
+        }
+    }
+    return out.length > 0 ? out : undefined;
+}
+
+// The checkpoint writer records a word and the panel wants a yes or no, so both shapes fold in.
+function asCheckpointDone(v: unknown): boolean | undefined {
+    if (typeof v === 'boolean') return v;
+    if (v === 'completed') return true;
+    if (v === 'pending' || v === 'skipped') return false;
+    return undefined;
+}
+
+function pickCheckpointStatus(ctx: SpecContext): CheckpointStatus | undefined {
+    const v: unknown = ctx.checkpointStatus;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return undefined;
+    const r = v as Record<string, unknown>;
+    const out: CheckpointStatus = {};
+    const commit = asCheckpointDone(r.commit);
+    const pr = asCheckpointDone(r.pr);
+    if (commit !== undefined) out.commit = commit;
+    if (pr !== undefined) out.pr = pr;
+    return out.commit !== undefined || out.pr !== undefined ? out : undefined;
+}
+
+// `isStepCompleted` lives in `src/features/specs/stepHistoryDerivation.ts`
+// (the canonical home for spec-state queries — the sidebar imports from
+// there too). Re-exported here for backward compatibility with the test
+// suite and any external callers.
+import { isStepCompleted, isTerminalStatus } from './stepHistoryDerivation';
+export { isStepCompleted };
+
+export function deriveStepBadges(
+    ctx: SpecContext,
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status),
+    workflowSteps?: StepConfigLike[]
+): Record<string, StepBadgeState> {
+    const out: Record<string, StepBadgeState> = {};
+    // A project's added step is in the pipeline but not in STEP_NAMES, so its rail mark would stay blank.
+    const names = new Set<string>([...STEP_NAMES, ...(workflowSteps ?? []).map(s => s.name)]);
+    for (const step of names) {
+        if (isStepCompleted(step as StepName, ctx.currentStep, stepHistory)) {
+            out[step] = 'completed';
+        } else {
+            const entry = stepHistory[step];
+            out[step] = entry?.startedAt ? 'in-progress' : 'not-started';
+        }
+    }
+    return out;
+}
+
+/**
+ * The step currently in flight: `startedAt` set, no `completedAt`. Distinct from
+ * `derivePulse`, which also treats steps before `currentStep` as complete
+ * (inferred completion). This is the literal "running" entry used for the
+ * footer's Generating state and the manual mark-complete action.
+ */
+export function findRunningStep(
+    stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }> | undefined
+): { step: string; startedAt: string | null } | null {
+    if (!stepHistory) return null;
+    for (const [step, entry] of Object.entries(stepHistory)) {
+        if (entry?.startedAt && !entry?.completedAt) {
+            return { step, startedAt: entry.startedAt ?? null };
+        }
+    }
+    return null;
+}
+
+export function derivePulse(
+    ctx: SpecContext,
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
+): StepName | null {
+    if (isTerminalStatus(ctx.status)) {
+        return null;
+    }
+    for (const step of STEP_NAMES) {
+        const entry = stepHistory[step];
+        if (entry?.startedAt && !isStepCompleted(step, ctx.currentStep, stepHistory)) {
+            return step;
+        }
+    }
+    return null;
+}
+
+export function deriveHighlights(
+    ctx: SpecContext,
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
+): StepName[] {
+    return STEP_NAMES.filter(s => isStepCompleted(s, ctx.currentStep, stepHistory));
+}
+
+export function deriveActiveSubstep(
+    ctx: SpecContext,
+    stepHistory: DerivedHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status)
+): DerivedViewerState['activeSubstep'] {
+    for (const step of STEP_NAMES) {
+        const entry = stepHistory[step];
+        const active = entry?.substeps?.find(s => !s.completedAt);
+        if (active) return { step, name: active.name };
+    }
+    if (ctx.progress) return { step: ctx.currentStep, name: ctx.progress };
+    return null;
+}
+
+export function deriveViewerState<Footer = never, Step extends StepConfigLike = StepConfigLike>(
+    ctx: SpecContext,
+    activeStep: StepName = ctx.currentStep,
+    workflowSteps?: Step[],
+    converge?: ConvergeResult,
+    buildFooter?: FooterBuilder<Footer, Step>
+): DerivedViewerState<Footer> {
+    // Derive stepHistory once from the canonical history[] sequence and reuse
+    // it across all the per-step derivations below.
+    const stepHistory = deriveStepHistory(ctx.history ?? [], ctx.currentStep, ctx.status);
+    // Denominator counts only timed steps; `untimed` ones (e.g. mark-complete) never measure.
+    const expectedTimingPhases = workflowSteps?.length
+        ? workflowSteps.filter(step => !step.untimed).map(step => step.name)
+        : DEFAULT_PIPELINE_STEPS;
+    return {
+        status: ctx.status,
+        activeStep,
+        steps: deriveStepBadges(ctx, stepHistory, workflowSteps),
+        pulse: derivePulse(ctx, stepHistory),
+        highlights: deriveHighlights(ctx, stepHistory),
+        activeSubstep: deriveActiveSubstep(ctx, stepHistory),
+        footer: buildFooter ? buildFooter(ctx, activeStep, workflowSteps, converge) : [],
+        history: ctx.history ?? [],
+        stepHistory,
+        timing: deriveTimingSummary(stepHistory, expectedTimingPhases),
+        approach: asString(ctx.approach),
+        lastAction: asString(ctx.last_action),
+        taskSummaries: pickRecord<TaskSummary>(ctx.task_summaries),
+        decisions: pickDecisions(ctx),
+        concerns: pickConcerns(ctx),
+        filesModified: asStringArray(ctx.files_modified),
+        prUrl: asString(ctx.prUrl),
+        prNumber: asNumber(ctx.prNumber),
+        checkpointStatus: pickCheckpointStatus(ctx),
+        stepSummaries: pickRecord<Record<string, unknown>>(ctx.step_summaries),
+        reviewComments: pickReviewComments(ctx),
+        livingSpecs: pickLivingSpecs(ctx),
+        intent: asString(ctx.intent),
+        request: optString(ctx.request),
+        source: optString(ctx.source),
+        extends: optString(ctx.extends),
+        supersedes: optString(ctx.supersedes),
+        expectations: asStringArray(ctx.expectations),
+        context: asStringArray(ctx.context),
+        verified: pickVerified(ctx),
+        coverage: pickCoverage(ctx),
+        classification: pickClassification(ctx),
+        risk: pickRisk(ctx),
+        converge,
+    };
+}
+
+export function markStaleChecks(
+    verified: ViewerVerification[] | undefined,
+    counts: ReadonlyMap<string, number | undefined>
+): ViewerVerification[] | undefined {
+    if (!verified) { return verified; }
+    return verified.map(v =>
+        v.source === 'derived' && v.tree ? { ...v, changedSince: counts.get(v.tree) } : v
+    );
+}

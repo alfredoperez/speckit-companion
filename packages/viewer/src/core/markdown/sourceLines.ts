@@ -18,7 +18,7 @@ export function mapToSourceLines(source: string, processed: string): number[] {
 
     let cursor = 0;
     for (let i = 0; i < processedLines.length; i++) {
-        const line = processedLines[i];
+        const line = processedLines[i]!;
         if (!line.trim()) continue;
         const found = sourceLines.indexOf(line, cursor);
         if (found === -1) continue;
@@ -31,7 +31,7 @@ export function mapToSourceLines(source: string, processed: string): number[] {
     for (let i = 0; i <= processedLines.length; i++) {
         const atEnd = i === processedLines.length;
         if (!atEnd && map[i] === 0) continue;
-        const nextSource = atEnd ? sourceLines.length + 1 : map[i];
+        const nextSource = atEnd ? sourceLines.length + 1 : map[i]!;
         const floor = Math.min(prevSource + 1, Math.max(nextSource - 1, 1));
         for (let j = prevIndex + 1; j < i; j++) {
             map[j] = Math.max(floor, nextSource - (i - j));

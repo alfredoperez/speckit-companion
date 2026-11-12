@@ -24,13 +24,13 @@ const MARKS = '+~- ';
 
 function parseRow(row: string, sourceLine: number): Omit<CallRow, 'guide'> | string {
     if (row.includes('\t')) return 'a tab in the line';
-    if (row.length < 2 || !MARKS.includes(row[0]) || row[1] !== ' ') return 'column 0 must be a mark followed by a space';
+    if (row.length < 2 || !MARKS.includes(row[0]!) || row[1] !== ' ') return 'column 0 must be a mark followed by a space';
     const rest = row.slice(2);
     const indent = rest.length - rest.trimStart().length;
     if (indent % 2) return 'an odd indent';
     const found = rest.trim().match(LOCATION);
     if (!found) return 'no location after the name';
-    const [, rawName, path, line] = found;
+    const [, rawName, path, line] = found as [string, string, string, string | undefined];
     const isNew = NEW_FILE.test(rawName);
     const name = rawName.replace(NEW_FILE, '').trim();
     const mark = row[0] as CallRow['mark'];
@@ -43,9 +43,9 @@ function parseRow(row: string, sourceLine: number): Omit<CallRow, 'guide'> | str
 
 function guides(rows: Omit<CallRow, 'guide'>[]): string[] {
     const hasLaterSibling = (index: number): boolean => {
-        const depth = rows[index].depth;
-        for (let j = index + 1; j < rows.length && rows[j].depth >= depth; j++) {
-            if (rows[j].depth === depth) return true;
+        const depth = rows[index]!.depth;
+        for (let j = index + 1; j < rows.length && rows[j]!.depth >= depth; j++) {
+            if (rows[j]!.depth === depth) return true;
         }
         return false;
     };
@@ -63,11 +63,11 @@ export function parseCalls(body: string, firstLine: number): ParsedCalls {
     const rows: Omit<CallRow, 'guide'>[] = [];
     const lines = body.split('\n');
     for (let i = 0; i < lines.length; i++) {
-        const text = lines[i].replace(/ +$/, '');
+        const text = lines[i]!.replace(/ +$/, '');
         if (!text.trim()) continue;
         const row = parseRow(text, firstLine + i);
         if (typeof row === 'string') return { ok: false, error: row };
-        const expected = rows.length === 0 ? 0 : Math.min(row.depth, rows[rows.length - 1].depth + 1);
+        const expected = rows.length === 0 ? 0 : Math.min(row.depth, rows[rows.length - 1]!.depth + 1);
         if (rows.length === 0 && row.depth !== 0) return { ok: false, error: 'the entry point is not indented' };
         if (rows.length > 0 && row.depth === 0) return { ok: false, error: 'a second entry point' };
         if (row.depth !== expected) return { ok: false, error: 'a skipped level' };
@@ -75,7 +75,7 @@ export function parseCalls(body: string, firstLine: number): ParsedCalls {
     }
     if (rows.length === 0) return { ok: false, error: 'an empty block' };
     const tree = guides(rows);
-    return { ok: true, rows: rows.map((row, index) => ({ ...row, guide: tree[index] })) };
+    return { ok: true, rows: rows.map((row, index) => ({ ...row, guide: tree[index]! })) };
 }
 
 const TINT: Record<CallRow['mark'], string> = { '+': 'add', '~': 'chg', '-': 'del', ' ': 'same' };

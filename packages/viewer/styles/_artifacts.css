@@ -246,3 +246,10 @@
   top: var(--sk-space-2);
   right: var(--sk-space-2);
 }
+
+#markdown-content .task-item__wave {
+  display: block;
+  font-size: var(--sk-text-xs);
+  color: var(--sk-text-muted);
+  margin-bottom: var(--sk-space-1);
+}

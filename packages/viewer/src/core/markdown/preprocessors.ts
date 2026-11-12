@@ -26,7 +26,7 @@ export function preprocessSpecMetadata(markdown: string, stripForContext = false
     }
 
     const title = match[1];
-    const metadataBlock = match[2];
+    const metadataBlock = match[2]!;
 
     // Parse individual metadata items - captures **Label** or **Label:** then the value
     // Also handles pipe-separated fields like: **Plan**: value | **Date**: value
@@ -35,8 +35,8 @@ export function preprocessSpecMetadata(markdown: string, stripForContext = false
     let itemMatch;
 
     while ((itemMatch = itemPattern.exec(metadataBlock)) !== null) {
-        let label = itemMatch[1].trim();
-        let value = itemMatch[2].trim();
+        let label = itemMatch[1]!.trim();
+        let value = itemMatch[2]!.trim();
 
         // Remove trailing colon from label if present (handles **Label:** format)
         label = label.replace(/:$/, '');
@@ -110,7 +110,7 @@ function preprocessTaskPhasesRun(markdown: string): string {
 
         const prio = title.match(/\((P[1-5])\)/);
         if (prio) {
-            const p = prio[1].toLowerCase();
+            const p = prio[1]!.toLowerCase();
             chips.push(`<span class="phase-chip prio ${p}">${prio[1]}</span>`);
             title = title.replace(/\((P[1-5])\)/, '');
         }
@@ -132,7 +132,7 @@ export function preprocessRequirements(markdown: string): string {
     const reqPattern = /^-\s+\*\*([A-Z]{2,5}-\d+)\*\*:?\s*(.+)$/gm;
 
     return markdown.replace(reqPattern, (_full, id, text) => {
-        const kind = String(id).split('-')[0].toLowerCase();
+        const kind = String(id).split('-')[0]!.toLowerCase();
         const body = parseInline(String(text).trim());
         return `<div class="req-row" data-kind="${kind}"><span class="req-badge">${id}</span><span class="req-text">${body}</span></div>`;
     });
@@ -157,7 +157,7 @@ export function preprocessEntities(markdown: string): string {
             if (m) {
                 const paren = m[2] ? `<span class="entity-paren">${parseInline(m[2])}</span>` : '';
                 const desc = m[3] ? `<span class="entity-desc">${parseInline(m[3].trim())}</span>` : '';
-                out.push(`<div class="entity-row"><span class="entity-name">${parseInline(m[1])}</span>${paren}${desc}</div>`);
+                out.push(`<div class="entity-row"><span class="entity-name">${parseInline(m[1]!)}</span>${paren}${desc}</div>`);
                 continue;
             }
         }
@@ -173,7 +173,7 @@ export function preprocessEntities(markdown: string): string {
  */
 export function preprocessChecklist(markdown: string): string {
     const h1 = markdown.match(/^#[ \t]+(.+)$/m);
-    if (!h1 || !/checklist/i.test(h1[1])) return markdown;
+    if (!h1 || !/checklist/i.test(h1[1]!)) return markdown;
 
     const lines = markdown.split('\n');
     const out: string[] = [];
@@ -188,14 +188,14 @@ export function preprocessChecklist(markdown: string): string {
         let m: RegExpMatchArray | null;
         if (m = line.match(/^##[ \t]+(.+)$/)) {
             flush();
-            if (/^notes\b/i.test(m[1])) { out.push(line); }
-            else { group = { name: m[1], items: [], pass: 0, total: 0 }; }
+            if (/^notes\b/i.test(m[1]!)) { out.push(line); }
+            else { group = { name: m[1]!, items: [], pass: 0, total: 0 }; }
             continue;
         }
         if (group && (m = line.match(/^-[ \t]+\[([ xX])\][ \t]+(.+)$/))) {
-            const ok = m[1].toLowerCase() === 'x';
+            const ok = m[1]!.toLowerCase() === 'x';
             group.total++; if (ok) group.pass++;
-            group.items.push(`<div class="ck-item${ok ? ' ok' : ''}"><span class="ck-box">${ok ? CHECK_SVG : ''}</span><span class="ck-text">${parseInline(m[2])}</span></div>`);
+            group.items.push(`<div class="ck-item${ok ? ' ok' : ''}"><span class="ck-box">${ok ? CHECK_SVG : ''}</span><span class="ck-text">${parseInline(m[2]!)}</span></div>`);
             continue;
         }
         if (group && line.trim()) { flush(); }
@@ -223,13 +223,13 @@ export function preprocessDecisions(markdown: string): string {
         let m: RegExpMatchArray | null;
         if (m = line.match(/^##[ \t]+Decision\s+(\d+)\s*:\s*(.+)$/)) {
             close();
-            out.push(`<div class="decision-card"><div class="decision-card__head"><span class="decision-num">Decision ${m[1]}</span><span class="decision-title">${parseInline(m[2])}</span></div>`);
+            out.push(`<div class="decision-card"><div class="decision-card__head"><span class="decision-num">Decision ${m[1]}</span><span class="decision-title">${parseInline(m[2]!)}</span></div>`);
             cardOpen = true;
             continue;
         }
         if (cardOpen && /^#{1,6}[ \t]/.test(line)) { close(); out.push(line); continue; }
         if (cardOpen && (m = line.match(/^\*\*(Decision|Rationale|Alternatives)(?:\s+considered)?\*\*:?[ \t]*(.*)$/i))) {
-            const label = m[1];
+            const label = m[1]!;
             const val = m[2] ? `<span class="decision-val">${parseInline(m[2].trim())}</span>` : '';
             out.push(`<div class="decision-field"><span class="decision-label decision-label--${label.toLowerCase()}">${label}</span>${val}</div>`);
             continue;
@@ -278,7 +278,7 @@ export function preprocessHtmlComments(markdown: string): string {
             comment.lastIndex = found.index + 4;
             continue;
         }
-        out += markdown.slice(from, found.index) + commentBlock(found[0], found[1]);
+        out += markdown.slice(from, found.index) + commentBlock(found[0], found[1]!);
         from = found.index + found[0].length;
     }
     return out + markdown.slice(from);

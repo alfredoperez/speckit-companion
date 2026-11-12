@@ -3407,8 +3407,29 @@ var hasSpecContext = false;
 var reportMode = false;
 var TOUCHES_MARKER_LINE = /^\s*<!--\s*(?:touches|adopted|reviewed|aligns|capability):\s*.+?\s*-->\s*$/i;
 var taskSummaries = {};
+var shownWaveNotes = /* @__PURE__ */ new Set();
 function setTaskSummaries(map) {
   taskSummaries = map || {};
+}
+function captureFor(taskId) {
+  const summary = taskId ? taskSummaries[taskId] : void 0;
+  if (!summary || !(summary.did || summary.files && summary.files.length)) return "";
+  const files = summary.files ?? [];
+  let lead = "";
+  if (summary.wave) {
+    const key = `${summary.wave}
+${summary.did ?? ""}
+${files.join("\n")}`;
+    const shared = Object.entries(taskSummaries).some(([id, other]) => id !== taskId && other.wave === summary.wave && (other.did ?? "") === (summary.did ?? "") && (other.files ?? []).join("\n") === files.join("\n"));
+    if (shared) {
+      if (shownWaveNotes.has(key)) return "";
+      shownWaveNotes.add(key);
+      lead = `<span class="task-item__wave">For ${escapeHtml(summary.wave.replace(/-/g, "\u2013"))}</span>`;
+    }
+  }
+  const didHtml = summary.did ? `<span class="task-item__did">${escapeHtml(summary.did)}</span>` : "";
+  const filesHtml = files.length ? `<span class="task-item__files">${files.map((f) => `<code class="task-item__file">${escapeHtml(f)}</code>`).join("")}</span>` : "";
+  return `<div class="task-item__capture">${lead}${didHtml}${filesHtml}</div>`;
 }
 function setCurrentTask(taskId) {
   currentTaskId = taskId;
@@ -3505,6 +3526,7 @@ function renderTable(rows) {
 function renderMarkdown(markdown) {
   markdown = markdown.replace(/\r\n?/g, "\n");
   const source = markdown;
+  shownWaveNotes = /* @__PURE__ */ new Set();
   markdown = stripFrontmatter(markdown);
   markdown = stripTaskFormatLegend(markdown);
   markdown = preprocessHtmlComments(markdown);
@@ -3729,13 +3751,7 @@ function renderMarkdown(markdown) {
       const taskMatch = ulMatch[2].match(/^\[([ xX])\]\s*(.+)$/);
       if (taskMatch) {
         const taskId = taskMatch[2].match(/^\s*(?:\*\*)?(T\d+[a-z]?)/i)?.[1] ?? null;
-        const summary = taskId ? taskSummaries[taskId] : void 0;
-        let captureHtml = "";
-        if (summary && (summary.did || summary.files && summary.files.length)) {
-          const didHtml = summary.did ? `<span class="task-item__did">${escapeHtml(summary.did)}</span>` : "";
-          const filesHtml = summary.files && summary.files.length ? `<span class="task-item__files">${summary.files.map((f) => `<code class="task-item__file">${escapeHtml(f)}</code>`).join("")}</span>` : "";
-          captureHtml = `<div class="task-item__capture">${didHtml}${filesHtml}</div>`;
-        }
+        const captureHtml = captureFor(taskId);
         html += renderTaskRow({
           text: taskMatch[2],
           checked: taskMatch[1].toLowerCase() === "x",

@@ -45,11 +45,37 @@ const TOUCHES_MARKER_LINE = /^\s*<!--\s*(?:touches|adopted|reviewed|aligns|capab
 
 // Per-task capture summaries (what each task did + files), keyed by task id.
 // Injected from viewerState so the tasks.md document can show captured detail.
-let taskSummaries: Record<string, { did?: string; files?: string[] }> = {};
+type CaptureSummary = { did?: string; files?: string[]; wave?: string };
+let taskSummaries: Record<string, CaptureSummary> = {};
+// A wave closed in one step gives every task the same note; it shows once per render.
+let shownWaveNotes = new Set<string>();
 
 /** Set the per-task capture summaries used to enrich the tasks.md document. */
-export function setTaskSummaries(map: Record<string, { did?: string; files?: string[] }> | null): void {
+export function setTaskSummaries(map: Record<string, CaptureSummary> | null): void {
     taskSummaries = map || {};
+}
+
+/** A task's captured detail: its own note on its row, a wave's shared note once, on the wave's first row. */
+function captureFor(taskId: string | null): string {
+    const summary = taskId ? taskSummaries[taskId] : undefined;
+    if (!summary || !(summary.did || (summary.files && summary.files.length))) return '';
+    const files = summary.files ?? [];
+    let lead = '';
+    if (summary.wave) {
+        const key = `${summary.wave}\n${summary.did ?? ''}\n${files.join('\n')}`;
+        const shared = Object.entries(taskSummaries).some(([id, other]) =>
+            id !== taskId && other.wave === summary.wave && (other.did ?? '') === (summary.did ?? '') && (other.files ?? []).join('\n') === files.join('\n'));
+        if (shared) {
+            if (shownWaveNotes.has(key)) return '';
+            shownWaveNotes.add(key);
+            lead = `<span class="task-item__wave">For ${escapeHtml(summary.wave.replace(/-/g, '–'))}</span>`;
+        }
+    }
+    const didHtml = summary.did ? `<span class="task-item__did">${escapeHtml(summary.did)}</span>` : '';
+    const filesHtml = files.length
+        ? `<span class="task-item__files">${files.map(f => `<code class="task-item__file">${escapeHtml(f)}</code>`).join('')}</span>`
+        : '';
+    return `<div class="task-item__capture">${lead}${didHtml}${filesHtml}</div>`;
 }
 
 /**
@@ -118,7 +144,7 @@ function highlightTree(text: string): string {
             // Split off a trailing comment first so dir-coloring never reaches into it.
             const m = line.match(/^(.*?)(#[^\n]*)$/);
             return m
-                ? `${colorDirs(m[1])}<span class="tree-comment">${m[2]}</span>`
+                ? `${colorDirs(m[1]!)}<span class="tree-comment">${m[2]}</span>`
                 : colorDirs(line);
         })
         .join('\n');
@@ -189,7 +215,7 @@ function renderTable(rows: string[]): string {
     let html = '<div class="table-scroll"><table>\n';
 
     // Header row
-    const headerCells = splitTableRow(rows[0]);
+    const headerCells = splitTableRow(rows[0]!);
     html += '<thead><tr>\n';
     for (const cell of headerCells) {
         html += `<th>${parseInline(cell.trim())}</th>\n`;
@@ -200,7 +226,7 @@ function renderTable(rows: string[]): string {
     if (rows.length > 2) {
         html += '<tbody>\n';
         for (let i = 2; i < rows.length; i++) {
-            const cells = clampCells(splitTableRow(rows[i]), headerCells.length);
+            const cells = clampCells(splitTableRow(rows[i]!), headerCells.length);
             html += '<tr>\n';
             for (const cell of cells) {
                 html += `<td>${parseInline(cell.trim())}</td>\n`;
@@ -225,6 +251,7 @@ export function renderMarkdown(markdown: string): string {
     // the whole document as raw paragraphs. See issue #158.
     markdown = markdown.replace(/\r\n?/g, '\n');
     const source = markdown;
+    shownWaveNotes = new Set();
 
     // Strip spec-kit's leading YAML frontmatter so it doesn't leak as an <hr> +
     // paragraph. Runs after newline normalization so it only deals with '\n'.
@@ -292,8 +319,8 @@ export function renderMarkdown(markdown: string): string {
     let paragraph: { lines: string[]; firstLine: number; lastLine: number; lastIndex: number; htmlStart: number; htmlEnd: number } | null = null;
 
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const sourceLineNum = sourceLineOf[i];
+        const line = lines[i]!;
+        const sourceLineNum = sourceLineOf[i]!;
 
         if (consumedLines.has(i)) continue;
 
@@ -324,22 +351,22 @@ export function renderMarkdown(markdown: string): string {
                 const codeText = codeContent.join('\n');
 
                 let noteAt = i + 1;
-                while (noteAt < lines.length && !lines[noteAt].trim()) noteAt++;
+                while (noteAt < lines.length && !lines[noteAt]!.trim()) noteAt++;
                 const isScreen = codeBlockLang === 'screen';
                 const isCodeCard = !isBlockFence(codeBlockLang) && codeBlockLang !== '' && codeBlockLang !== 'mermaid' && isCodeCardInfo(codeRawTitle);
                 const blockName = isCodeCard ? 'code' : codeBlockLang === 'code' ? '' : codeBlockLang;
-                const noteText = !isCodeCard && !isScreen && /^note:/i.test(lines[noteAt] ?? '') ? lines[noteAt].replace(/^note:\s*/i, '').trim() : '';
+                const noteText = !isCodeCard && !isScreen && /^note:/i.test(lines[noteAt] ?? '') ? lines[noteAt]!.replace(/^note:\s*/i, '').trim() : '';
                 const note = noteText || null;
                 const numbered: number[] = [];
-                while (isScreen && noteAt + numbered.length < lines.length && NOTE_LINE.test(lines[noteAt + numbered.length])) numbered.push(noteAt + numbered.length);
+                while (isScreen && noteAt + numbered.length < lines.length && NOTE_LINE.test(lines[noteAt + numbered.length]!)) numbered.push(noteAt + numbered.length);
                 const pins: BlockPin[] = [];
                 for (let at = noteAt; isCodeCard && at < lines.length; at++) {
-                    const pin = lines[at].match(PIN_LINE);
+                    const pin = lines[at]!.match(PIN_LINE);
                     if (!pin) break;
-                    pins.push({ line: Number(pin[1]), text: pin[2].trim(), sourceLine: sourceLineOf[at] ?? 0, source: lines[at] });
+                    pins.push({ line: Number(pin[1]!), text: pin[2]!.trim(), sourceLine: sourceLineOf[at] ?? 0, source: lines[at]! });
                 }
                 const block = inTemplateNote ? null : renderBlockFence(blockName, codeText, codeBlockInfo, {
-                    firstLine: codeFirstLine, note, pins, rawTitle: codeRawTitle, numberedNotes: numbered.map((at) => lines[at]), wrapLine: wrapComponentLine,
+                    firstLine: codeFirstLine, note, pins, rawTitle: codeRawTitle, numberedNotes: numbered.map((at) => lines[at]!), wrapLine: wrapComponentLine,
                 });
                 if (block) {
                     html += `${block}\n`;
@@ -438,8 +465,8 @@ export function renderMarkdown(markdown: string): string {
         if (headingMatch) {
             lastClosedListType = null;
             lastClosedListCount = 0;
-            const level = headingMatch[1].length;
-            const rawText = headingMatch[2];
+            const level = headingMatch[1]!.length;
+            const rawText = headingMatch[2]!;
             const content = parseInline(rawText);
             let openTag = `<h${level}>`;
             if (level <= 3) {
@@ -482,27 +509,19 @@ export function renderMarkdown(markdown: string): string {
                 listType = 'ul';
                 listItemCount = 0;
             }
-            const taskMatch = ulMatch[2].match(/^\[([ xX])\]\s*(.+)$/);
+            const taskMatch = ulMatch[2]!.match(/^\[([ xX])\]\s*(.+)$/);
             if (taskMatch) {
-                const taskId = taskMatch[2].match(/^\s*(?:\*\*)?(T\d+[a-z]?)/i)?.[1] ?? null;
-                const summary = taskId ? taskSummaries[taskId] : undefined;
-                let captureHtml = '';
-                if (summary && (summary.did || (summary.files && summary.files.length))) {
-                    const didHtml = summary.did ? `<span class="task-item__did">${escapeHtml(summary.did)}</span>` : '';
-                    const filesHtml = (summary.files && summary.files.length)
-                        ? `<span class="task-item__files">${summary.files.map(f => `<code class="task-item__file">${escapeHtml(f)}</code>`).join('')}</span>`
-                        : '';
-                    captureHtml = `<div class="task-item__capture">${didHtml}${filesHtml}</div>`;
-                }
+                const taskId = taskMatch[2]!.match(/^\s*(?:\*\*)?(T\d+[a-z]?)/i)?.[1] ?? null;
+                const captureHtml = captureFor(taskId);
                 html += renderTaskRow({
-                    text: taskMatch[2],
-                    checked: taskMatch[1].toLowerCase() === 'x',
+                    text: taskMatch[2]!,
+                    checked: taskMatch[1]!.toLowerCase() === 'x',
                     line: sourceLineNum,
                     commentButton: `<button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to task line ${sourceLineNum}" aria-label="Add comment to task line ${sourceLineNum}">${COMMENT_ICON_SVG}</button>`,
                     capture: captureHtml,
                 });
             } else {
-                const content = parseInline(ulMatch[2], true);
+                const content = parseInline(ulMatch[2]!, true);
                 // Wrap regular list items with line actions for commenting
                 html += `<li class="line" data-line="${sourceLineNum}">
                     <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to list line ${sourceLineNum}" aria-label="Add comment to list line ${sourceLineNum}">
@@ -537,7 +556,7 @@ export function renderMarkdown(markdown: string): string {
                 lastClosedListCount = 0;
             }
             listItemCount++;
-            const content = parseInline(olMatch[2]);
+            const content = parseInline(olMatch[2]!);
             // Wrap ordered list items with line actions for commenting
             html += `<li class="line" data-line="${sourceLineNum}">
                 <button class="line-add-btn" data-line="${sourceLineNum}" title="Add comment to list line ${sourceLineNum}" aria-label="Add comment to list line ${sourceLineNum}">
@@ -594,7 +613,7 @@ export function renderMarkdown(markdown: string): string {
 
         // Paragraph. A source line directly under another paragraph line is the same paragraph, hard-wrapped.
         if (paragraph && paragraph.htmlEnd === html.length && paragraph.lastIndex === i - 1 &&
-            continuesParagraph(paragraph.lines[paragraph.lines.length - 1], line)) {
+            continuesParagraph(paragraph.lines[paragraph.lines.length - 1]!, line)) {
             html = html.slice(0, paragraph.htmlStart);
             paragraph.lines.push(line.trimStart());
         } else {

@@ -27,8 +27,9 @@ module.exports = {
     '^@preact/signals$': '<rootDir>/node_modules/@preact/signals/dist/signals.js',
     '^@preact/signals-core$': '<rootDir>/node_modules/@preact/signals-core/dist/signals-core.js',
     // The viewer package from source, and its renderer reading the extension's live signal (as webpack does).
-    '^speckit-viewer/(contract|core)$': '<rootDir>/packages/viewer/src/$1/index.ts',
-    '^speckit-viewer/(contract|core)/(.*)$': '<rootDir>/packages/viewer/src/$1/$2',
+    '^speckit-viewer/(contract|core|view)$': '<rootDir>/packages/viewer/src/$1/index.ts',
+    '^speckit-viewer/element$': '<rootDir>/packages/viewer/src/element/index.ts',
+    '^speckit-viewer/(contract|core|view)/(.*)$': '<rootDir>/packages/viewer/src/$1/$2',
     '^\\.\\./signals$': '<rootDir>/apps/vscode/webview/src/spec-viewer/signals.ts'
   },
   transform: {
