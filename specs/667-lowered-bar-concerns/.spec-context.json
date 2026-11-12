@@ -355,10 +355,10 @@
       "command": "npm run test:all",
       "source": "derived",
       "exitCode": 0,
-      "durationSeconds": 234.8,
-      "result": "---------------------------------------------------------------------- · Ran 1969 tests in 133.018s · OK (skipped=14)",
-      "commit": "54f5d9ff",
-      "tree": "9f67fd32eee79e217122297216ed87697d37db29"
+      "durationSeconds": 225.4,
+      "result": "---------------------------------------------------------------------- · Ran 1969 tests in 133.036s · OK (skipped=14)",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
     },
     {
       "what": "Build check",
@@ -367,8 +367,8 @@
       "exitCode": 0,
       "durationSeconds": 0.0,
       "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
-      "commit": "54f5d9ff",
-      "tree": "81ceebeeba9dcd4e866bf3c50b2c085899ac26e7"
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
     },
     {
       "what": "Package manifest",
@@ -377,8 +377,8 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "[package-manifest] OK — 28 runtime scripts, closure matches the declared list",
-      "commit": "54f5d9ff",
-      "tree": "81ceebeeba9dcd4e866bf3c50b2c085899ac26e7"
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
     },
     {
       "what": "Command emissions",
@@ -387,8 +387,8 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents",
-      "commit": "54f5d9ff",
-      "tree": "81ceebeeba9dcd4e866bf3c50b2c085899ac26e7"
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
     },
     {
       "what": "Instruction budget",
@@ -397,18 +397,18 @@
       "exitCode": 0,
       "durationSeconds": 0.0,
       "result": "speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19 · speckit.companion.status.md                        0       0      0     214",
-      "commit": "54f5d9ff",
-      "tree": "81ceebeeba9dcd4e866bf3c50b2c085899ac26e7"
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
     },
     {
       "what": "Extension Python tests after review fixes",
       "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
       "source": "derived",
       "exitCode": 0,
-      "durationSeconds": 123.7,
-      "result": "---------------------------------------------------------------------- · Ran 1969 tests in 123.447s · OK (skipped=14)",
-      "commit": "54f5d9ff",
-      "tree": "19296650c37f48cd056b16dd1138633b38a4eb74"
+      "durationSeconds": 129.1,
+      "result": "---------------------------------------------------------------------- · Ran 1969 tests in 128.906s · OK (skipped=14)",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
     },
     {
       "what": "Lowered-bar and receipts tests",
@@ -416,9 +416,9 @@
       "source": "derived",
       "exitCode": 0,
       "durationSeconds": 10.5,
-      "result": "---------------------------------------------------------------------- · Ran 43 tests in 10.402s · OK",
-      "commit": "54f5d9ff",
-      "tree": "0f70a5483f6ff9fe63dbeae85a0c4ceb71ac4ba1"
+      "result": "---------------------------------------------------------------------- · Ran 43 tests in 10.435s · OK",
+      "commit": "2be79bf6",
+      "tree": "7e69efff0b62d1e90f85d60beeb942c3f0f3903c"
     }
   ],
   "convergeStartedAt": "2026-11-12T17:10:39.408Z",
