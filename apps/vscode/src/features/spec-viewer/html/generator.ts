@@ -54,7 +54,8 @@ export function generateHtml(
     reportActions: NonNullable<NavState['reportActions']> = [],
     report?: NavState['report'],
     taskCounts?: NavState['taskCounts'],
-    tasksMarkdown?: string
+    tasksMarkdown?: string,
+    specTitle?: string | null
 ): string {
     // Get URIs for resources
     const styleUri = webview.asWebviewUri(
@@ -120,6 +121,7 @@ export function generateHtml(
         activityPanelEnabled,
         installPrompt,
         titleFromHeading,
+        specTitle: specTitle ?? null,
         // The first render is the one a tree click lands on, and the shell's own
         // state does not survive an HTML reassignment — so the entry point's
         // request has to ride in here, not only on the later navigation update.

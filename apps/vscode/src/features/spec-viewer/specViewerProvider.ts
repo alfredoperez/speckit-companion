@@ -57,6 +57,7 @@ import { hasOverview } from "../../core/utils/overviewAvailability";
 import type { CustomCommandConfig } from "../../core/types/config";
 import { deriveChangeRoot } from "../../core/specDirectoryResolver";
 import { resolveSpecDisplayName } from "../../core/utils/specDisplayName";
+import { specTitleOf } from "speckit-viewer/core/specTitle";
 import { readSpecContext, SPEC_CONTEXT_FILENAME, SpecContextParseError } from "../specs/specContextReader";
 import { writeSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
@@ -904,6 +905,7 @@ export class SpecViewerProvider {
         undefined,     // report — default
         derived.taskCounts,
         doc?.type === CORE_DOCUMENTS.SPEC ? tasksContent : undefined,
+        await this.readSpecTitle(doc, documents, content),
       );
 
       this.outputChannel.appendLine(
@@ -1016,6 +1018,23 @@ export class SpecViewerProvider {
         ? EMPTY_STATE_MESSAGES[doc.type as CoreDocumentType]
         : DEFAULT_EMPTY_MESSAGE;
     return { content: "", emptyMessage };
+  }
+
+  /** The spec's own title from its spec document's H1, so the header keeps it on every tab. */
+  private async readSpecTitle(
+    activeDoc: SpecDocument | undefined,
+    documents: SpecDocument[],
+    activeContent: string,
+  ): Promise<string | null> {
+    if (activeDoc?.type === CORE_DOCUMENTS.SPEC) return specTitleOf(activeContent);
+    const specDoc = documents.find(d => d.type === CORE_DOCUMENTS.SPEC);
+    if (!specDoc?.exists) return null;
+    try {
+      const data = await vscode.workspace.fs.readFile(vscode.Uri.file(specDoc.filePath));
+      return specTitleOf(Buffer.from(data).toString("utf-8"));
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -1240,6 +1259,11 @@ export class SpecViewerProvider {
       createdDate: derived.createdDate,
       lastUpdatedDate: derived.lastUpdatedDate,
       specContextName: resolveSpecDisplayName(featureCtx?.specName, specDirectory),
+      specTitle: await this.readSpecTitle(
+        options?.skipContentAndStaleness ? undefined : doc,
+        instance.state.availableDocuments,
+        content,
+      ),
       branch: resolveSpecBranch(featureCtx) ?? null,
       assistantName: resolveSpecAssistant(featureCtx),
       hasTerminal: getSpecTerminal(specDirectory) !== undefined,

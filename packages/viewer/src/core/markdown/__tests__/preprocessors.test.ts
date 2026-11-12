@@ -192,6 +192,30 @@ describe('tasks.md capture merge (setTaskSummaries)', () => {
         expect(html).toContain('_install-banner.css');
     });
 
+    it("shows a wave's shared note once, on the wave's first task, and keeps a task's own note", () => {
+        const wave = { did: 'Starred field and filter', files: ['src/types.ts', 'src/App.tsx'], wave: 'T001-T003' };
+        setTaskSummaries({
+            T001: wave,
+            T002: wave,
+            T003: { did: 'Fixed the empty state', files: ['src/Empty.tsx'], wave: 'T001-T003' },
+        });
+        const html = renderMarkdown('- [x] **T001** Add the field\n- [x] **T002** Add the filter\n- [x] **T003** Empty state\n');
+        const rows = html.split('<li').slice(1);
+
+        expect(html.match(/Starred field and filter/g)).toHaveLength(1);
+        expect(rows[0]).toContain('For T001–T003');
+        expect(rows[1]).not.toContain('task-item__capture');
+        expect(rows[2]).toContain('Fixed the empty state');
+        expect(rows[2]).not.toContain('task-item__wave');
+    });
+
+    it('shows the wave note again on the next render', () => {
+        const wave = { did: 'Shared', wave: 'T001-T002' };
+        setTaskSummaries({ T001: wave, T002: wave });
+        renderMarkdown('- [x] **T001** A\n- [x] **T002** B\n');
+        expect(renderMarkdown('- [x] **T001** A\n- [x] **T002** B\n').match(/>Shared</g)).toHaveLength(1);
+    });
+
     it('omits the capture block when no summary is set', () => {
         setTaskSummaries(null);
         const html = renderMarkdown('- [x] **T001** Make the banner responsive\n');

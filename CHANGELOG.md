@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- **The spec header keeps its title.** Every tab shows the spec's own title, and a wave's shared notes show ==once instead of on every task==. ([#PR](https://github.com/alfredoperez/speckit-companion/pull/PR)) <!-- area: spec-viewer -->
+
 ## [0.39.0] - 2026-11-12
 
 Spec documents get a new look, and the Living Specs view is retired.

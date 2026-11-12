@@ -1,5 +1,6 @@
 import { markdownHtml, navState, viewerState } from '../signals';
 import { onAction } from '../host';
+import { TITLE_PREFIX } from '../../core/specTitle';
 
 
 // Visible-label overrides for canonical status keys whose default
@@ -17,8 +18,6 @@ function formatStatusLabel(status: string): string {
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(' ');
 }
-
-const TITLE_PREFIX = /^(?:Phase \d+ )?(?:Feature Specification|Implementation Plan|Specification|Spec|Research|Tasks|Plan)\s*:\s*/i;
 
 /** The document's own H1 as a plain title ("Feature Specification: X" becomes "X"), or null. */
 export function documentTitle(html: string): string | null {
@@ -41,10 +40,11 @@ export function SpecHeader() {
     const assistantName = ns.assistantName;
     const hasTerminal = !!ns.hasTerminal;
 
-    // The folder slug is an id, not a title: when the document names itself, that name leads.
-    const heading = !ns.titleFromHeading ? documentTitle(markdownHtml.value) : null;
+    // The folder slug is an id, not a title. The spec's own title leads on every tab, so the
+    // header does not change with the open document; a spec without one names itself by the document.
+    const heading = !ns.titleFromHeading ? ns.specTitle ?? documentTitle(markdownHtml.value) : null;
     const title = heading ?? ns.specContextName;
-    const idChip = heading && ns.specContextName && heading !== ns.specContextName ? ns.specContextName : null;
+    const idChip = heading && ns.specContextName && heading.toLowerCase() !== ns.specContextName.toLowerCase() ? ns.specContextName : null;
 
     const hasContext = !!(badgeText || ns.specContextName);
     if (!badgeText && !ns.createdDate && !ns.specContextName) return null;

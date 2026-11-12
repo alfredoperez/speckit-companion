@@ -243,6 +243,8 @@ export interface NavState<Report = unknown> {
     report?: Report;
     /** Header title came from the document's own H1, so skip slug casing. */
     titleFromHeading?: boolean;
+    /** The spec's own title (its spec document's H1), shown on every tab of the spec. */
+    specTitle?: string | null;
     /** Core documents with existence state */
     coreDocs: SpecDocument[];
     /** Related documents */

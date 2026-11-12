@@ -189,3 +189,29 @@ describe('the badge of a bug page', () => {
         cleanup(container);
     });
 });
+
+describe('the header title', () => {
+    afterEach(() => { markdownHtml.value = ''; });
+
+    it("keeps the spec's own title on every tab, with the id chip beside it", () => {
+        for (const html of ['<h1>Feature Specification: Starred todos</h1>', '<blockquote>See the spec</blockquote>', '<h1>Tasks</h1>']) {
+            navState.value = mockNavState({ specTitle: 'Starred todos', specContextName: '001 Starred Todos Filter', titleFromHeading: false });
+            markdownHtml.value = html;
+            const container = renderInto();
+
+            expect(container.querySelector('.spec-header-title')?.textContent).toBe('Starred todos');
+            expect(container.textContent).toContain('001 Starred Todos Filter');
+
+            cleanup(container);
+        }
+    });
+
+    it('drops the id chip when it only differs from the title by case', () => {
+        navState.value = mockNavState({ specTitle: 'Starred todos and filter', specContextName: 'Starred Todos And Filter', titleFromHeading: false });
+        const container = renderInto();
+
+        expect(container.textContent?.match(/starred todos and filter/gi)).toHaveLength(1);
+
+        cleanup(container);
+    });
+});
