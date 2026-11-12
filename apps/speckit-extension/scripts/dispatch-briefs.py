@@ -27,6 +27,7 @@ sys.path.insert(0, str(HERE))
 SCRIPT = ".specify/extensions/companion/scripts/dispatch-briefs.py"
 #: Past this many, areas share a reader: specify often records single files as areas.
 MAX_READERS = 4
+MIN_READER_AREAS = 3
 #: A Foundational wave this big goes to workers; smaller ones cost more to start than to build.
 MIN_WAVE = 4
 _FOUNDATIONAL = re.compile(r"^##\s+Phase\s+\d+\s*:\s*Foundational", re.IGNORECASE)
@@ -235,8 +236,10 @@ def main() -> int:
     briefs = doc_briefs(feature_dir, ctx) if args.docs else reader_briefs(feature_dir, ctx)
     what = "design docs" if args.docs else "readers"
 
-    if len(briefs) < 2:
-        why = "simple size keeps at most one" if args.docs else f"{len(briefs)} area recorded"
+    # Specify already read the areas it recorded; readers pay a cold start each, so two areas read inline.
+    floor = 2 if args.docs else MIN_READER_AREAS
+    if len(briefs) < floor:
+        why = "simple size keeps at most one" if args.docs else f"{len(briefs)} area(s) recorded, read inline"
         print(f"Working inline: {why}. No {what} to dispatch.")
         return 0
 

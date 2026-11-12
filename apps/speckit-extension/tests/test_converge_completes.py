@@ -46,6 +46,53 @@ class ConvergeCompletes(unittest.TestCase):
         self.assertEqual(status, "completed")
         self.assertEqual({h.get("by") for h in completes}, {"extension"})
 
+    def test_a_clean_converge_without_a_recorded_start_completes(self):
+        self.implemented("- [x] **T001** done")
+        self.write("--hook", "finish", "--step", "converge")
+        self.assertEqual(self.status()[0], "completed")
+
+    def test_a_converge_long_after_implement_is_not_back_dated(self):
+        self.implemented("- [x] **T001** done")
+        ctx = self.ctx()
+        for h in ctx["history"]:
+            if h.get("step") == "implement" and h.get("kind") == "complete":
+                h["at"] = "2020-01-01T00:00:00.000Z"
+        (self.spec / ".spec-context.json").write_text(json.dumps(ctx), encoding="utf-8")
+        self.write("--hook", "finish", "--step", "converge")
+        self.assertEqual(self.status()[0], "completed")
+        self.assertFalse(self.ctx().get("convergePasses"))
+
+    def test_a_model_that_advances_converge_itself_completes_the_spec(self):
+        self.implemented("- [x] **T001** done")
+        self.write("--hook", "start", "--step", "converge")
+        self.write("--step", "converge", "--advance", "--by", "ai")
+        self.assertEqual(self.status()[0], "completed")
+
+    def test_the_hook_after_a_model_close_adds_no_second_pass(self):
+        self.implemented("- [x] **T001** done")
+        self.write("--hook", "start", "--step", "converge")
+        self.write("--step", "converge", "--advance", "--by", "ai")
+        self.write("--hook", "finish", "--step", "converge")
+        self.assertEqual(self.status()[0], "completed")
+        self.assertEqual(len(self.ctx()["convergePasses"]), 1)
+
+    def test_a_converge_without_a_recorded_start_still_records_a_timed_pass(self):
+        self.implemented("- [x] **T001** done")
+        self.write("--hook", "finish", "--step", "converge")
+        passes = self.ctx().get("convergePasses")
+        self.assertEqual(len(passes), 1)
+        self.assertTrue(passes[0].get("startInferred"))
+        self.assertTrue(passes[0].get("finishedAt"))
+        self.assertLessEqual(passes[0]["startedAt"], passes[0]["finishedAt"])
+
+    def test_a_converge_without_a_recorded_start_that_added_and_built_tasks_completes(self):
+        self.implemented("- [x] **T001** done")
+        self.tasks.write_text("- [x] **T001** done\n- [x] **T002** found and built\n", encoding="utf-8")
+        future = 4_000_000_000
+        os.utime(self.tasks, (future, future))
+        self.write("--hook", "finish", "--step", "converge")
+        self.assertEqual(self.status()[0], "completed")
+
     def test_a_converge_that_added_tasks_stays_implemented(self):
         self.implemented("- [x] **T001** done")
         self.write("--hook", "start", "--step", "converge")
@@ -68,14 +115,10 @@ class ConvergeCompletes(unittest.TestCase):
         self.write("--hook", "finish", "--step", "converge")
         self.assertEqual(self.status()[0], "implementing")
 
-    def test_a_second_clean_converge_completes_after_the_first_added_tasks(self):
+    def test_a_converge_that_added_and_built_its_tasks_completes_in_one_pass(self):
         self.implemented("- [x] **T001** done")
         self.write("--hook", "start", "--step", "converge")
         self.tasks.write_text("- [x] **T001** done\n- [x] **T002** found and built\n", encoding="utf-8")
-        self.write("--hook", "finish", "--step", "converge")
-        self.assertNotEqual(self.status()[0], "completed")
-        os.utime(self.tasks, (OLD, OLD))
-        self.write("--hook", "start", "--step", "converge")
         self.write("--hook", "finish", "--step", "converge")
         self.assertEqual(self.status()[0], "completed")
 

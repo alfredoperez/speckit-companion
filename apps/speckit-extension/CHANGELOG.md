@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Changed
+- **Hands-off runs cost less.** An auto run makes ==fewer bookkeeping calls== and carries fewer instructions, closing the gap to stock on harder work. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
+- **Size is decided before the spec.** A change you understand, with nothing risky in it, ==goes straight to implement== whatever its file count. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
+- **Every requirement gets a test task.** The task list plans one test per requirement, checked ==through the screen or API== in the condition it names. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
+- **No more checklist file.** Specify checks the spec once and fixes it in place, without writing ==checklists/requirements.md==. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
+- **Task times come per wave.** A wave of tasks closes in one step, so the viewer shows ==one time per wave==. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: run-record -->
+
+### Fixed
+- **Specs finish at Completed.** A run ==no longer stops at Implemented== when converge adds and builds work or closes without its hook. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
+
 ## [0.26.0] - 2026-11-08
 
 Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, assumed or only claimed.

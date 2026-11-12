@@ -981,7 +981,7 @@ def set_classification(feature_dir: Path, raw: str) -> Path:
 # --------------------------------------------------------------------------- #
 
 BATCH_KEYS = ("verified", "decisions", "concerns", "expectations", "context",
-              "coverage", "step_summary", "last_action", "set")
+              "coverage", "step_summary", "last_action", "classification", "set")
 
 
 def _parsed_batch(raw: str) -> dict:
@@ -1073,6 +1073,10 @@ def apply_batch(feature_dir: Path, raw: str, step: str) -> tuple:
     # each on — intent, approach, workflow, size, unattended. They are ordinary
     # `--set` pairs; batching them changes nothing about what lands, only how
     # many times the file is opened to land it.
+    classification = doc.get("classification")
+    if isinstance(classification, dict) and classification:
+        note(set_classification(feature_dir, json.dumps(classification, ensure_ascii=False)),
+             "classification")
     pairs = doc.get("set")
     if isinstance(pairs, dict) and pairs:
         note(set_fields(feature_dir, [f"{k}={v}" for k, v in pairs.items()

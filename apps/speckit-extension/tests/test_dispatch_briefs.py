@@ -86,13 +86,17 @@ class DispatchBriefs(unittest.TestCase):
         return subprocess.run([sys.executable, str(SCRIPTS / "dispatch-briefs.py"),
                                "--feature-dir", str(d), *args], capture_output=True, text=True)
 
-    def test_two_areas_print_one_reader_brief_each(self):
-        d = self._feature(context=["area: src/a", "area: src/b", "constraint: x"])
+    def test_three_areas_print_one_reader_brief_each(self):
+        d = self._feature(context=["area: src/a", "area: src/b", "area: src/c", "constraint: x"])
         out = self._run(d).stdout
-        self.assertIn("Dispatch these 2 readers", out)
+        self.assertIn("Dispatch these 3 readers", out)
         self.assertIn("=== reader: 1 ===", out)
         self.assertIn("--checkin \"reader: 2\"", out)
         self.assertIn("`src/b`", out)
+
+    def test_two_areas_are_read_inline(self):
+        out = self._run(self._feature(context=["area: src/a", "area: src/b"])).stdout
+        self.assertIn("Working inline", out)
 
     def test_with_no_spec_file_the_brief_names_spec_md(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -113,12 +117,12 @@ class DispatchBriefs(unittest.TestCase):
         self.assertIn("Working inline", self._run(self._feature(size="simple"), "--docs").stdout)
 
     def test_a_closed_plan_with_no_checkins_is_named(self):
-        d = self._feature(context=["area: src/a", "area: src/b"], size="normal")
+        d = self._feature(context=["area: src/a", "area: src/b", "area: src/c"], size="normal")
         self._run(d)
         self._run(d, "--docs")
         _, findings = doctor_checks.check_dispatch(d, json.loads((d / ".spec-context.json").read_text()))
         titles = [f.title for f in findings]
-        self.assertIn("plan read the code inline instead of dispatching 2 readers", titles)
+        self.assertIn("plan read the code inline instead of dispatching 3 readers", titles)
         self.assertEqual(len(findings), 2)
 
     def test_checkins_from_an_earlier_run_do_not_count(self):

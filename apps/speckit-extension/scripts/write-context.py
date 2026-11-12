@@ -562,17 +562,13 @@ def fold_plan_tasks(feature_dir: Path, by: str) -> Path | None:
     return target
 
 
-def _complete_after_clean_converge(feature_dir: Path, by: str, added: list[str] | None = None) -> Path | None:
-    """Complete a spec whose converge added no task and left every task checked."""
-    ctx = read_ctx(feature_dir / ".spec-context.json")
+def _complete_after_clean_converge(feature_dir: Path, by: str) -> Path | None:
+    """Complete a spec once converge leaves every task checked, including any task it added and built.
+
+    Auto allows one correction round, so a pass that appends work and builds it is the last pass:
+    waiting for a second clean pass would strand the spec at `implemented`. An appended task left
+    open still blocks, because then the spec is not 100%."""
     if not _feature_tasks_at_100(feature_dir):
-        return None
-    if added is not None:
-        return mark_spec_complete(feature_dir, by) if not added else None
-    starts = [e for e in canonical_log(ctx)
-              if e.get("step") == "converge" and _is_step_level(e) and _entry_kind(e) == "start"]
-    at = _utc_stamp(str(ctx.get("convergeStartedAt") or (starts[-1].get("at") if starts else "")))
-    if at is None or (feature_dir / "tasks.md").stat().st_mtime > _epoch(at):
         return None
     return mark_spec_complete(feature_dir, by)
 
@@ -616,7 +612,41 @@ def _record_converge_finish(feature_dir: Path, added: list[str] | None, complete
     return target
 
 
+INFERRED_CONVERGE_START_MAX_SECONDS = 15 * 60
+
+
+def _open_pass_from_implement_close(feature_dir: Path, by: str) -> None:
+    """Open the converge pass at implement's close when no start was recorded, so the pass still has a duration."""
+    target = feature_dir / ".spec-context.json"
+    ctx = read_ctx(target)
+    if _open_converge_pass(ctx) is not None:
+        return
+    closes = [e for e in canonical_log(ctx)
+              if e.get("step") == "implement" and _is_step_level(e) and _entry_kind(e) == "complete"]
+    at = str(closes[-1].get("at") or "") if closes else ""
+    if not at:
+        return
+    # Only an auto run goes straight from implement into converge; a gap longer than this is
+    # someone pausing between steps, and back-dating would charge that pause to converge.
+    closed = _utc_stamp(at)
+    if closed is None or (datetime.now(timezone.utc).timestamp() - _epoch(closed)) > INFERRED_CONVERGE_START_MAX_SECONDS:
+        return
+    passes = ctx.get("convergePasses")
+    # A pass already finished after that close is this converge: a second close must not invent another.
+    if isinstance(passes, list) and any(
+            isinstance(p, dict) and str(p.get("finishedAt") or "") >= at for p in passes):
+        return
+    ctx["convergePasses"] = (list(passes) if isinstance(passes, list) else []) + [
+        {"startedAt": at, "by": by, "startInferred": True}
+    ]
+    atomic_write(target, ctx)
+
+
 def _after_converge(feature_dir: Path, by: str) -> None:
+    try:
+        _open_pass_from_implement_close(feature_dir, by)
+    except Exception as exc:  # noqa: BLE001 - timing is best effort
+        print(f"[companion] Warning: could not infer the converge start: {exc}", file=sys.stderr)
     ctx = read_ctx(feature_dir / ".spec-context.json")
     open_pass = _open_converge_pass(ctx)
     added: list[str] | None = None
@@ -627,7 +657,7 @@ def _after_converge(feature_dir: Path, by: str) -> None:
     completed = False
     try:
         if ctx.get("status") != "completed":
-            completed = _complete_after_clean_converge(feature_dir, by, added) is not None
+            completed = _complete_after_clean_converge(feature_dir, by) is not None
         else:
             all_ids, done_ids = parse_task_markers(feature_dir / "tasks.md")
             open_count = len(all_ids) - len(done_ids)
@@ -932,6 +962,9 @@ def _main() -> int:
              "scopeSignal, verdict}; verdict (simple|normal|oversized) is required.",
     )
     args = parser.parse_args()
+    # `--batch -` reads the JSON from stdin, so a quoted heredoc carries apostrophes safely.
+    if args.batch == "-":
+        args.batch = "" if sys.stdin is None or sys.stdin.isatty() else sys.stdin.read()
 
     if args.event:
         handled = _apply_event(args)
@@ -1315,7 +1348,12 @@ def _main() -> int:
             _record_converge_start(feature_dir, args.by)
         except Exception as exc:  # noqa: BLE001 - the converge start already landed
             print(f"[companion] Warning: skipped noting this converge run's start: {exc}", file=sys.stderr)
-    if target is not None and args.hook == "finish" and args.step == "converge":
+    # A model that closes converge itself (--advance, --finish, a complete) must complete the spec too,
+    # or a run whose after-converge hook never fires is stranded at `implemented`.
+    closes_converge = args.step == "converge" and not args.substep and (
+        args.hook == "finish" or args.advance or args.finish
+        or (args.kind == "complete" and not (args.task or args.close_task or args.tasks_file)))
+    if target is not None and closes_converge:
         try:
             _after_converge(feature_dir, args.by)
         except Exception as exc:  # noqa: BLE001 - the converge close already landed

@@ -71,7 +71,7 @@ A node declares its output two ways. `writes:` is what the step always produces;
 | specify | `_frame` | — | new file (frontmatter + User Input + Outline lead-in) |
 | specify | `resolve-dir` | control | new file (feature-dir setup + START bash) |
 | specify | `draft-spec` | author | new file (spec.md sections) |
-| specify | `quality-checklist` | author | new file (checklists/requirements.md) |
+| specify | `quality-checklist` | author | self-check of spec.md in place (may write checklists/requirements.md) |
 | specify | `classify-size` | control | new file — absorbs the `sizing` part fence inline |
 | specify | `branch` | control | new file (simple/normal branching) |
 | specify | `finalize` | control | new file (Output + completion + fast-path-fold bash) |
@@ -190,10 +190,10 @@ commands:
     phases:
       - name: set up
         nodes: [resolve-dir, load-living-specs]
-      - name: our review
-        nodes: [draft-spec, quality-checklist]
       - name: size it
         nodes: [classify-size, persist-size]
+      - name: our review
+        nodes: [draft-spec, quality-checklist]
       - name: finish
         nodes: [branch, finalize, handoff]
 ```

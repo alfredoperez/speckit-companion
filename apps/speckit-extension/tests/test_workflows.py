@@ -478,10 +478,10 @@ class PhasesAreTheProjectsToNameAndGroup(unittest.TestCase):
         "    phases:\n"
         "      - name: set up\n"
         "        nodes: [resolve-dir, load-living-specs]\n"
-        "      - name: our review\n"
-        "        nodes: [draft-spec, quality-checklist]\n"
         "      - name: size it\n"
         "        nodes: [classify-size, persist-size]\n"
+        "      - name: our review\n"
+        "        nodes: [draft-spec, quality-checklist]\n"
         "      - name: finish\n"
         "        nodes: [branch, finalize, handoff]\n"
     )
@@ -504,7 +504,7 @@ class PhasesAreTheProjectsToNameAndGroup(unittest.TestCase):
             plan, _warnings = build.plan_build(build.load_config(root))
         self.assertEqual(
             plan["specify"]["phasesChanged"],
-            ["set up", "our review", "size it", "finish"])
+            ["set up", "size it", "our review", "finish"])
 
     def test_the_shipped_grouping_reports_no_change(self):
         with project("") as root:

@@ -70,8 +70,8 @@ class ACustomisedBuildIsHeldToTheSameGates(unittest.TestCase):
         p.write("--command", "specify", "--renamed", "author", "our review",
                 "--phases", json.dumps([
                     {"name": "set up", "nodes": ["resolve-dir", "load-living-specs"]},
-                    {"name": "our review", "nodes": ["draft-spec", "quality-checklist"]},
                     {"name": "size it", "nodes": ["classify-size", "persist-size"]},
+                    {"name": "our review", "nodes": ["draft-spec", "quality-checklist"]},
                     {"name": "finish", "nodes": ["branch", "finalize", "handoff"]},
                 ]))
         p.node("specify", "draft-spec",
