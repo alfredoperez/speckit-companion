@@ -108,7 +108,7 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
    ```
    The `--set` pins which workflow ran the spec in the same write, so a mid-run join keeps Companion dispatch. This closes the implement step and leaves the spec at `implemented`; it never writes `completed`. Best-effort and idempotent: if `python3` is unavailable, warn and skip without failing the host command.
 
-   - **Living specs (only when this project keeps them).** If a `living-specs.yml` sits at the repository root, or `.specify/companion.yml` has a `livingSpecs` block, read `.specify/extensions/companion/commands/reference/living-implement-close.md` and follow it now: account for every loaded capability, have the deltas reviewed, and fold them. Otherwise skip this.
+   - **Living specs (only when this project keeps them).** If the spec's `.spec-context.json` lists any `livingSpecs.loaded`, read `.specify/extensions/companion/commands/reference/living-implement-close.md` and follow it now: account for every loaded capability, have the deltas reviewed, and fold them. An absent or empty list means skip this.
 <!-- /speckit-companion:node complete -->
 <!-- speckit-companion:node handoff -->
 <!-- speckit-companion:part timing -->

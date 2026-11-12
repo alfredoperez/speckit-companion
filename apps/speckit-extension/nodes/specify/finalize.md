@@ -28,7 +28,7 @@ Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specified --kind complete --by extension
 ```
 
-**Fast-path living-spec load (simple mode, and only when this project keeps living specs).** A `simple` run never reaches `plan`, where a full run loads them again. If a `living-specs.yml` sits at the repository root, or `.specify/companion.yml` has a `livingSpecs` block, follow "Simple runs" in `.specify/extensions/companion/commands/reference/living-specify-load.md`. Otherwise skip this.
+**Fast-path living-spec load (simple mode only).** A `simple` run never reaches `plan`, where a full run loads them again. If the recorder before drafting recorded nothing, run it once more with the files the Approach names (`record-living-specs.py --feature-dir <feature_directory> --changed <files…>`); it stays silent when the project keeps no living specs.
 
 **Fast-path lifecycle fold (simple mode only).** When `verdict == "simple"`, record the folded `plan` and `tasks` steps so the history-driven panels read them as satisfied-by-fast-path and the spec lands ready for implement. One call, **after** the specify completion above, writes all four boundaries in order (plan start and complete, tasks start and complete) in a single write, so the fold lands whole or not at all. It is idempotent. Do not hand-write the boundaries, and do not run it for a `normal` verdict:
 ```bash
