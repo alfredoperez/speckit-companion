@@ -193,7 +193,7 @@ function SpecsWelcome() {
                 <div>A spec turns an idea into a plan and tasks your AI assistant can implement — and this panel shows every step as it runs.</div>
                 <a class="vsc-welcome__cta"><span class="codicon codicon-plus" aria-hidden="true" />Create your first spec</a>
                 <a class="vsc-welcome__cta"><span class="codicon codicon-play" aria-hidden="true" />Open a live sample</a>
-                <div>SpecKit Companion adds living specs, lifecycle capture, and a fast-path for small changes.</div>
+                <div>SpecKit Companion adds lifecycle capture and a fast-path for small changes.</div>
                 <a class="vsc-welcome__cta"><span class="codicon codicon-rocket" aria-hidden="true" />Install SpecKit Companion</a>
                 <a>Dismiss</a>
             </div>
@@ -215,7 +215,7 @@ function ActivityBarBadge() {
 function CreateSpecModalDialog() {
     return (
         <div class="vsc-modal">
-            <div class="vsc-modal__msg">SpecKit Companion adds living specs, full lifecycle capture, a fast-path for small changes, and hands-off Auto. Install it to enable the full workflow — or continue with standard SpecKit.</div>
+            <div class="vsc-modal__msg">SpecKit Companion adds full lifecycle capture, a fast-path for small changes, and hands-off Auto. Install it to enable the full workflow — or continue with standard SpecKit.</div>
             <div class="vsc-modal__actions">
                 <button type="button" class="vsc-btn">Install SpecKit Companion</button>
                 <button type="button" class="vsc-btn vsc-btn--secondary">Use SpecKit Instead</button>
@@ -248,7 +248,7 @@ export const ActivationToast: Story = {
             >
                 <Toast
                     kind="info"
-                    message="This project uses spec-kit. Install the SpecKit Companion extension to unlock live status, resumability, the complexity fast path, and living specs 🌱."
+                    message="This project uses spec-kit. Install the SpecKit Companion extension to unlock live status, resumability, and the complexity fast path 🌱."
                     actions={['Install', "Don't show again"]}
                 />
             </Row>
@@ -295,7 +295,7 @@ export const PinnedCtaRow: Story = {
                     </div>
                     <div class="vsc-row vsc-row--cta">
                         <span class="codicon codicon-rocket" aria-hidden="true" />
-                        <span>Get Companion — living specs, capture, fast-path</span>
+                        <span>Get Companion — lifecycle capture, fast-path</span>
                     </div>
                     <div class="vsc-row"><span class="codicon codicon-chevron-right" aria-hidden="true" /><span>Active (2)</span></div>
                     <div class="vsc-row"><span class="codicon codicon-chevron-right" aria-hidden="true" /><span>Completed (7)</span></div>

@@ -997,60 +997,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-choice--inline .pb-choice-label { font-family: var(--font-mono); }
 
 
-/* ---- Living specs: two settings, and a registry to read ---- */
-
-.pb-living-toggle,
-.pb-living-caps {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    min-width: 0;
-}
-
-.pb-living-cap {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: var(--space-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    min-width: 0;
-}
-
-.pb-living-cap-name {
-    font-size: var(--text-sm);
-    color: var(--text-body);
-}
-
-.pb-living-cap-spec,
-.pb-living-cap-match,
-.pb-living-note {
-    font-size: var(--text-xs);
-    /* Metadata: a path and a glob say where, not what. */
-    color: var(--text-secondary);
-    overflow-wrap: anywhere;
-}
-
-.pb-living-note { margin: 0; }
-
-/* Prose, not metadata: an authored rule and an empty state are sentences
-   someone reads, and the metadata greys are below WCAG AA on dark. */
-.pb-living-rule,
-.pb-living-empty {
-    margin: 0;
-    font-size: var(--text-xs);
-    color: var(--text-body);
-    overflow-wrap: anywhere;
-}
-
-/* The registry's own word for a capability nobody retired by hand. */
-.pb-living-tag {
-    align-self: flex-start;
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--review-ink);
-}
-
 /* ============================================
    Inspector — a node, read here
    ============================================ */

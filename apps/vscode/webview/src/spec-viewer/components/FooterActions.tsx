@@ -1,7 +1,6 @@
 import { navState, viewerState } from '../signals';
 import { inFlightStepFor, isStepInFlight } from 'speckit-viewer/core/stepInFlight';
 import { CatalogFooter } from './footer/CatalogFooter';
-import { LivingFooter } from './footer/LivingFooter';
 import { ReportFooter } from './footer/ReportFooter';
 
 export interface FooterActionsProps {
@@ -19,9 +18,6 @@ export function FooterActions(_props: FooterActionsProps) {
     const vs = viewerState.value;
     const ns = navState.value;
 
-    // A living spec has no lifecycle state to derive a catalogue from; its bar
-    // is the two drift actions.
-    if (ns?.livingMode) return <LivingFooter />;
     if (ns?.reportActions?.length) return <ReportFooter />;
     if (!vs) return null;
 

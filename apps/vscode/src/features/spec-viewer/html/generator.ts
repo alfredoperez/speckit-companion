@@ -11,10 +11,7 @@ import {
     SpecStatus,
     EnhancementButton,
     StalenessMap,
-    NavState,
-    LivingHeaderMeta,
-    LivingOverview,
-    LivingUndo
+    NavState
 } from '../types';
 import { escapeHtml, encodeBase64Utf8, generateNonce } from '../utils';
 import type { InstallPrompt } from '../../../protocol/viewer';
@@ -48,12 +45,8 @@ export function generateHtml(
     stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
     activityPanelEnabled: boolean = true,
     installPrompt: InstallPrompt | null = null,
-    livingMode: boolean = false,
-    livingMeta?: LivingHeaderMeta | null,
     titleFromHeading: boolean = false,
     landing?: 'overview' | 'document',
-    livingOverview?: LivingOverview | null,
-    livingUndo?: LivingUndo | null,
     removedDocument?: string | null,
     readOnly: boolean = false,
     assistantName?: string,
@@ -123,10 +116,6 @@ export function generateHtml(
         docTypeLabel: getDocTypeLabel(currentStep ?? currentDocType),
         activityPanelEnabled,
         installPrompt,
-        livingMode,
-        livingMeta: livingMeta ?? null,
-        livingOverview: livingOverview ?? null,
-        livingUndo: livingUndo ?? null,
         titleFromHeading,
         // The first render is the one a tree click lands on, and the shell's own
         // state does not survive an HTML reassignment — so the entry point's

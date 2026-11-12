@@ -14,8 +14,6 @@ export function NavigationBar() {
         taskCompletionPercent, isViewingRelatedDoc, activeStep,
         currentStep, stepHistory, stalenessMap } = ns;
 
-    // A living spec has no rail: its tiers open from the tree, and the cards are the page.
-    if (ns.livingMode) return null;
 
     // The rail lists documents only: action steps (Implement, Mark Complete,
     // any custom step without a document) never render as entries. Every

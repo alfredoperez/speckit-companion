@@ -690,8 +690,8 @@ describe('a node says whether it can move, and why not', () => {
             phases: [{
                 name: 'gather', hooks: [],
                 nodes: [
-                    node({ id: 'resolve-dir', pinned: 'load-living-specs has to run after it' }),
-                    node({ id: 'load-living-specs', name: 'Load living specs' }),
+                    node({ id: 'resolve-dir', pinned: 'load-context has to run after it' }),
+                    node({ id: 'load-context', name: 'Load context' }),
                 ],
             }],
         })],
@@ -717,7 +717,7 @@ describe('a node says whether it can move, and why not', () => {
         expect(held?.textContent).toBe('held');
         expect(cards[1].querySelector('.pb-held')).toBeNull();
         expect(title).toContain('Cannot be reordered');
-        expect(title).toContain('load-living-specs has to run after it');
+        expect(title).toContain('load-context has to run after it');
         expect(title).toContain('rewrite it');
     });
 

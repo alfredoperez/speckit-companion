@@ -91,7 +91,7 @@ const preview: Preview = {
                     'Core',
                     ['Foundations'],
                     'VS Code Extension',
-                    ['Primitives', 'Create Spec', 'Spec Viewer', ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts'], 'Overview'], 'Living Spec Viewer', 'Sidebar', 'Pipeline Builder', 'Install Nudges'],
+                    ['Primitives', 'Create Spec', 'Spec Viewer', ['Markdown Rendering', ['Spec', 'Plan', 'Tasks', 'Artifacts'], 'Overview'], 'Sidebar', 'Pipeline Builder', 'Install Nudges'],
                     'Website',
                     'Content',
                     ['Figure', 'Article Figures', 'Carousel', 'Post Images'],

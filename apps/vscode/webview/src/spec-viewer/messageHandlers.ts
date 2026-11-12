@@ -13,8 +13,7 @@
 import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/dispatcher';
 import { showToast } from '../shared/components/Toast';
 import { navState, viewerState, historyEntries, viewerMode, specMoved } from './signals';
-import { setCurrentTask, setHasSpecContext, setLivingCoverage, setLivingDrifted, setLivingMode, setLivingNew, setReportMode, setSpecLedgerTasks, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
-import { revealRequirement } from './toc';
+import { setCurrentTask, setHasSpecContext, setReportMode, setSpecLedgerTasks, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
 
 /**
@@ -28,13 +27,10 @@ export function applyNavState(next: NavState): void {
     // Cleared before the new state lands, not after: a render triggered by `navState` would
     // otherwise read the previous echo and answer with it.
     viewerMode.value = null;
-    // Labels belong to one capability; the next one may never send a health message to replace them.
-    if (next.livingMeta?.specPath !== navState.value?.livingMeta?.specPath) setLivingCoverage(null);
     navState.value = next;
     if (next.currentTask !== undefined) setCurrentTask(next.currentTask);
     if (next.tasksMarkdown !== undefined) setSpecLedgerTasks(next.tasksMarkdown || null);
     setHasSpecContext(!!(next.specContextName || next.badgeText));
-    setLivingMode(!!next.livingMode);
     setReportMode(!!next.report);
 }
 
@@ -59,17 +55,6 @@ export function buildHandlers(
 
         navStateUpdated: message => {
             if (message.navState) applyNavState(message.navState);
-        },
-
-        livingHealthResolved: message => {
-            if (navState.value) {
-                navState.value = { ...navState.value, livingMeta: message.livingMeta };
-            }
-            // Drift, New and coverage land after the first paint, so the cards redraw to take their edge.
-            const drifted = setLivingDrifted(message.livingMeta.driftedRequirements);
-            const fresh = setLivingNew(message.livingMeta.newRequirements);
-            const covered = setLivingCoverage(message.livingMeta.requirementCoverage);
-            if (drifted || fresh || covered) rerender();
         },
 
         viewerStateUpdated: message => {
@@ -105,11 +90,6 @@ export function buildHandlers(
 
         actionToast: message => {
             showToast('action-toast', message.message);
-        },
-
-        revealRequirement: message => {
-            viewerMode.value = 'document';
-            revealRequirement(message.heading);
         },
     };
 }

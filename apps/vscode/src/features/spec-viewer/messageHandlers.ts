@@ -36,7 +36,6 @@ import {
 } from "../specs/specContextReader";
 import { updateSpecContext } from "../specs/specContextWriter";
 import { synthesizeCustomProgress, stepHasOutput } from "../specs/customWorkflowProgress";
-import { isPathWithinRoot, requirementKey, requirementLinks, resolveCapabilityBySpecPath } from "../living-specs/livingSpecsModel";
 import { dispatchStep } from "../specs/dispatchStep";
 import { watchStepDispatch, type StepDispatchWatch } from "../specs/dispatchFailure";
 import { lastEntryIsCompletionFor } from "../specs/historyHelpers";
@@ -50,7 +49,6 @@ import type { WorkflowStepConfig } from "../workflows/types";
 import { nextWorkflowStep, workflowStepIndex } from "../workflows/stepSequence";
 import { shouldRecordStepStart } from "../workflows";
 import { isOptionalCommand } from "./optionalCommands";
-import { appendLivingRemoval, approveLivingText, livingTierDocuments, removeLivingRequirement } from "../living-specs/livingDocs";
 import {
   addComment as addCommentToCtx,
   buildReviewComment,
@@ -76,16 +74,6 @@ import {
   ViewerToExtensionMessage,
 } from "./types";
 
-/** An Approve all or Remove the reader can still undo: the file before and after the write. */
-export interface LivingUndoAction {
-  kind: "approve" | "remove";
-  filePath: string;
-  before: string;
-  after: string;
-  capability: string;
-  heading?: string;
-}
-
 /**
  * Interface for message handler dependencies
  */
@@ -110,10 +98,6 @@ export interface MessageHandlerDependencies {
   executeInTerminal: (prompt: string) => Promise<vscode.Terminal | undefined | void>;
   outputChannel: vscode.OutputChannel;
   context: vscode.ExtensionContext;
-  /** Hold this action as the panel's one Undo; a newer action settles the older one. */
-  offerLivingUndo: (specDirectory: string, action: LivingUndoAction) => void;
-  /** Take the held action back when the token is current; undefined when stale. */
-  takeLivingUndo: (specDirectory: string, token: string) => LivingUndoAction | undefined;
   /** Fixed when the panel opens: a read-only panel accepts only the messages that read. */
   readOnly?: boolean;
 }
@@ -182,7 +166,7 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       handleAddComment(dir, msg.id, msg.doc, msg.lineNum, msg.lineContent, msg.comment, deps),
     removeComment: (msg, dir, deps) => handleRemoveComment(dir, msg.id, deps),
     editComment: (msg, dir, deps) => handleEditComment(dir, msg.id, msg.comment, deps),
-    runDocRefinement: (msg, dir, deps) => dispatchDocRefinement(dir, msg.doc, deps, msg.comments),
+    runDocRefinement: (msg, dir, deps) => dispatchDocRefinement(dir, msg.doc, deps),
     completeSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.COMPLETED, deps),
     archiveSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ARCHIVED, deps),
     reactivateSpec: (_msg, dir, deps) => handleLifecycleAction(dir, SpecStatuses.ACTIVE, deps),
@@ -198,35 +182,6 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
     showTerminal: async (_msg, dir) => {
       await vscode.commands.executeCommand(Commands.specsShowTerminal, dir);
     },
-    livingUpdate: (_msg, dir, deps) => handleLivingUpdate(dir, deps),
-    livingSyncAll: async () => {
-      await vscode.commands.executeCommand("speckit.livingSpecs.sync");
-    },
-    livingAdopt: async (msg, dir, deps) => {
-      const areas = msg.thisCapability ? livingCapabilityAreas(dir, deps) : undefined;
-      await (areas
-        ? vscode.commands.executeCommand("speckit.livingSpecs.adopt", { areas })
-        : vscode.commands.executeCommand("speckit.livingSpecs.adopt"));
-    },
-    livingValidate: async (_msg, dir, deps) => {
-      const capabilitySpecPath = livingCapabilitySpecPath(dir, deps);
-      await (capabilitySpecPath
-        ? vscode.commands.executeCommand("speckit.livingSpecs.validate", { capabilitySpecPath })
-        : vscode.commands.executeCommand("speckit.livingSpecs.validate"));
-    },
-    revealGlob: async (msg) => {
-      const root = getProjectRoot();
-      if (!root) return;
-      // The static prefix of the glob is a real path; the rest is a pattern.
-      const prefix = String(msg.glob ?? "").split(/[*?{[]/)[0].replace(/\/+$/, "");
-      const target = path.resolve(root, prefix || ".");
-      if (!target.startsWith(root)) return;
-      if (fs.existsSync(target)) {
-        await vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(target));
-      } else {
-        await vscode.commands.executeCommand("workbench.action.findInFiles", { filesToInclude: msg.glob });
-      }
-    },
     overviewChosen: async (_msg, dir, deps) => {
       const instance = deps.getInstance(dir);
       if (!instance) return;
@@ -234,16 +189,10 @@ function buildHandlerMap(): DispatcherMap<ViewerToExtensionMessage, [string, Mes
       instance.state.removedDocument = undefined;
       deps.refreshPanelTitle(dir);
     },
-    approveRequirement: (msg, dir, deps) => handleLivingApprove(dir, undefined, msg.heading, deps),
-    removeRequirement: (msg, dir, deps) => handleLivingRemove(dir, msg.heading, deps),
-    approveSpec: (msg, dir, deps) => handleLivingApprove(dir, msg.documentType, undefined, deps),
-    undoLivingAction: (msg, dir, deps) => handleLivingUndo(dir, msg.token, deps),
     reportAction: (msg, dir, deps) => handleReportAction(dir, msg.id, deps),
     reportAnswer: (msg, dir, deps) => handleReportAnswer(dir, msg, deps),
     openFile: (msg, dir, deps) => handleOpenFile(dir, msg.filename, deps, validLine(msg.line)),
     openIdea: msg => handleOpenIdea(msg.folder),
-    openLivingSpec: (msg, _dir, deps) =>
-      handleOpenLivingSpec(msg.specPath, msg.capabilityName, deps, msg.requirement),
     webviewError: async (msg, _dir, deps) => {
       deps.outputChannel.appendLine(
         `[SpecViewer] Webview error (${msg.source}): ${msg.message}` +
@@ -926,46 +875,6 @@ async function showFileBeside(
   }
 }
 
-/**
- * The living-spec viewer's Update button — fold the changed code back into the
- * open spec. Resolves the spec tier's path from the panel's own source anchor
- * (the single source of truth the header already renders from) and hands off to
- * the sidebar's Update command so both surfaces build the same prompt.
- */
-/** The workspace-relative path of the capability spec this panel is showing. */
-function livingCapabilitySpecPath(
-  specDirectory: string,
-  deps: MessageHandlerDependencies,
-): string | undefined {
-  const root = getProjectRoot();
-  const anchor = deps.getInstance(specDirectory)?.state.livingSourcePath;
-  if (!root || !anchor) return undefined;
-  const specTier = livingTierDocuments(anchor).find(d => d.type === "spec");
-  if (!specTier) return undefined;
-  return path.relative(root, specTier.filePath).replace(/\\/g, "/");
-}
-
-/** The directories the open capability claims, from the literal part of each membership glob. */
-function livingCapabilityAreas(
-  specDirectory: string,
-  deps: MessageHandlerDependencies,
-): string[] | undefined {
-  const root = getProjectRoot();
-  const specPath = livingCapabilitySpecPath(specDirectory, deps);
-  const cap = root && specPath ? resolveCapabilityBySpecPath(root, specPath) : undefined;
-  const areas = cap?.match.map(g => g.split(/[*?[{]/)[0].replace(/\/+$/, "") || ".");
-  return areas?.length ? [...new Set(areas)] : undefined;
-}
-
-async function handleLivingUpdate(
-  specDirectory: string,
-  deps: MessageHandlerDependencies,
-): Promise<void> {
-  const capabilitySpecPath = livingCapabilitySpecPath(specDirectory, deps);
-  if (!capabilitySpecPath) return;
-  await vscode.commands.executeCommand("speckit.livingSpecs.update", { capabilitySpecPath });
-}
-
 /** A folder name that is safe to place in a prompt as it stands. */
 const PROMPT_SAFE_SLUG = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
@@ -1083,167 +992,6 @@ async function handleReportAnswer(
   const reviseDecision =
     item.kind === "idea" && document !== "decision" && reportFile(set, state.specDirectory, "decision" as typeof document).exists;
   await deps.executeInTerminal(buildAnswerPrompt({ kind: item.kind, folder: item.folder, document, staged, reviseDecision }));
-}
-
-/**
- * Open a living-spec capability document in the viewer (living mode) from a
- * run-log chip. The path is workspace-relative and confined within the root
- * before it reaches the filesystem — the same guard the tree's open command uses.
- */
-async function handleOpenLivingSpec(
-  suppliedPath: string | undefined,
-  capabilityName: string,
-  deps: MessageHandlerDependencies,
-  requirement?: string,
-): Promise<void> {
-  const root = getProjectRoot();
-  if (!root) return;
-
-  let specPath = suppliedPath;
-  if (!specPath) {
-    const safeName = /^[a-zA-Z0-9._-]+$/.test(capabilityName) ? capabilityName : null;
-    if (safeName) {
-      const patterns = [`**/${safeName}.spec.md`, `**/${safeName}/spec.md`];
-      for (const pattern of patterns) {
-        const matches = await vscode.workspace.findFiles(
-          pattern,
-          '**/{.git,node_modules,dist,storybook-static}/**',
-          1,
-        );
-        const match = matches[0];
-        if (match) {
-          specPath = path.relative(root, match.fsPath);
-          break;
-        }
-      }
-    }
-  }
-
-  if (!specPath || !isPathWithinRoot(root, specPath)) {
-    deps.outputChannel.appendLine(
-      `[SpecViewer] Unable to resolve living spec for capability: ${capabilityName}`,
-    );
-    vscode.window.showWarningMessage(`Living spec not found: ${capabilityName}`);
-    return;
-  }
-  const absPath = path.join(root, specPath);
-  await vscode.commands.executeCommand("speckit.viewSpecDocument", absPath, {
-    living: true,
-    requirement,
-  });
-}
-
-const LIVING_TIER_FILE = /(^|\.)spec\.md$|\.rules\.md$/;
-
-/** Approve one requirement or a whole tier: only ever deletes `adopted` markers and the `[DRAFT]` banner. */
-async function handleLivingApprove(
-  specDirectory: string,
-  documentType: DocumentType | undefined,
-  heading: string | undefined,
-  deps: MessageHandlerDependencies,
-): Promise<void> {
-  const instance = deps.getInstance(specDirectory);
-  if (!instance?.state.living) return;
-  const type = documentType ?? instance.state.currentDocument;
-  const doc = instance.state.availableDocuments.find((d) => d.type === type && d.exists);
-  const root = getProjectRoot();
-  if (!doc || !root) return;
-  const rel = path.relative(root, doc.filePath);
-  if (!isPathWithinRoot(root, rel) || !LIVING_TIER_FILE.test(path.basename(doc.filePath))) {
-    deps.outputChannel.appendLine(`[SpecViewer] Approve refused: not a living tier in the workspace: ${doc.filePath}`);
-    return;
-  }
-  const before = await fs.promises.readFile(doc.filePath, "utf-8");
-  const after = approveLivingText(before, heading);
-  if (after === null) {
-    deps.outputChannel.appendLine(`[SpecViewer] Approve: nothing to approve on ${heading ?? doc.fileName}`);
-    return;
-  }
-  await fs.promises.writeFile(doc.filePath, after, "utf-8");
-  deps.outputChannel.appendLine(`[SpecViewer] Approved ${heading ?? doc.fileName}`);
-  if (heading === undefined) {
-    deps.offerLivingUndo(specDirectory, { kind: "approve", filePath: doc.filePath, before, after, capability: instance.state.specName });
-  }
-  await deps.updateContent(specDirectory, instance.state.currentDocument);
-}
-
-/**
- * Delete one requirement from the open living spec. Refused while another
- * capability's `aligns` still names it: a dangling edge reads as a working one.
- */
-async function handleLivingRemove(
-  specDirectory: string,
-  heading: string,
-  deps: MessageHandlerDependencies,
-): Promise<void> {
-  const instance = deps.getInstance(specDirectory);
-  const root = getProjectRoot();
-  const specPath = livingCapabilitySpecPath(specDirectory, deps);
-  if (!instance?.state.living || !root || !specPath) return;
-  const cap = resolveCapabilityBySpecPath(root, specPath);
-  if (!cap) return;
-
-  const leaners = [...new Set((requirementLinks(root, cap.name).get(requirementKey(heading))?.leanedOnBy ?? []).map((l) => l.capability))];
-  if (leaners.length) {
-    void vscode.window.showWarningMessage(
-      `Cannot remove "${heading}": ${leaners.join(", ")} still align${leaners.length === 1 ? "s" : ""} to it. Change those first.`,
-    );
-    return;
-  }
-
-  const choice = await vscode.window.showWarningMessage(
-    `Remove "${heading}" from ${cap.name}? The requirement and its scenarios are deleted from the spec file.`,
-    { modal: true },
-    "Remove",
-  );
-  if (choice !== "Remove") return;
-
-  const file = path.join(root, specPath);
-  const before = await fs.promises.readFile(file, "utf-8");
-  const after = removeLivingRequirement(before, heading);
-  if (after === null) return;
-  await fs.promises.writeFile(file, after, "utf-8");
-  deps.outputChannel.appendLine(`[SpecViewer] Removed requirement "${heading}" from ${cap.name}`);
-  deps.offerLivingUndo(specDirectory, { kind: "remove", filePath: file, before, after, capability: cap.name, heading });
-  await deps.updateContent(specDirectory, instance.state.currentDocument);
-}
-
-/**
- * Put the file back as it was before the last Approve all or Remove. Refused
- * when the file changed since, because restoring would overwrite that change;
- * a refused removal then stands and is recorded.
- */
-async function handleLivingUndo(
-  specDirectory: string,
-  token: string,
-  deps: MessageHandlerDependencies,
-): Promise<void> {
-  const action = deps.takeLivingUndo(specDirectory, token);
-  if (!action) return;
-  const current = await fs.promises.readFile(action.filePath, "utf-8").catch(() => undefined);
-  let restored = current === action.after;
-  if (restored) {
-    try {
-      await fs.promises.writeFile(action.filePath, action.before, "utf-8");
-      deps.outputChannel.appendLine(`[SpecViewer] Undid ${action.kind} on ${path.basename(action.filePath)}`);
-    } catch (err) {
-      // The undo is spent either way, so a failed restore leaves the action standing.
-      restored = false;
-      void vscode.window.showWarningMessage(`Undo failed: ${path.basename(action.filePath)} could not be written.`);
-      deps.outputChannel.appendLine(`[SpecViewer] Undo write failed on ${action.filePath}: ${err}`);
-    }
-  } else {
-    void vscode.window.showWarningMessage(
-      `Undo skipped: ${path.basename(action.filePath)} changed after the ${action.kind === "remove" ? "removal" : "approval"}, and restoring it would overwrite that change.`,
-    );
-  }
-  if (!restored && action.kind === "remove" && action.heading) {
-    await appendLivingRemoval(action.filePath, action.capability, action.heading).catch((err) =>
-      deps.outputChannel.appendLine(`[SpecViewer] Removal record not written for "${action.heading}": ${err}`),
-    );
-  }
-  const instance = deps.getInstance(specDirectory);
-  if (instance) await deps.updateContent(specDirectory, instance.state.currentDocument);
 }
 
 /**
@@ -1442,36 +1190,6 @@ function refinementPrompt(target: string, pending: ReviewComment[]): string {
   ].join("\n");
 }
 
-/** A living spec has no `.spec-context.json`, so the webview sends its comments with the request and the same prompt targets the tier file. */
-async function dispatchLivingRefinement(
-  specDirectory: string,
-  doc: ReviewCommentDoc,
-  inline: { lineNum: number; lineContent: string; comment: string }[],
-  deps: MessageHandlerDependencies,
-): Promise<void> {
-  const instance = deps.getInstance(specDirectory);
-  const sourceDoc = instance?.state.availableDocuments.find((d) => d.type === doc && d.exists);
-  if (!sourceDoc || inline.length === 0) {
-    deps.outputChannel.appendLine(`[SpecViewer] No pending comments for ${doc} — nothing to refine`);
-    return;
-  }
-  let sourceLines: string[] | null = null;
-  try {
-    sourceLines = (await fs.promises.readFile(sourceDoc.filePath, "utf-8")).split("\n");
-  } catch {
-    sourceLines = null;
-  }
-  const pending = inline.map((c, i) =>
-    buildReviewComment(doc, c.lineNum, c.lineContent, sourceLines, c.comment, `living-${i}`),
-  );
-  const root = getProjectRoot();
-  const target = root ? path.relative(root, sourceDoc.filePath).replace(/\\/g, "/") : sourceDoc.filePath;
-  deps.outputChannel.appendLine(
-    `[SpecViewer] Dispatching ${pending.length} refinement(s) for living ${target} (direct edit)`,
-  );
-  await deps.executeInTerminal(refinementPrompt(target, pending));
-}
-
 /**
  * Dispatch a document's pending comments to the AI as a direct-edit prompt,
  * then mark them `applied` (kept as history). Used by both the inline Refine
@@ -1484,13 +1202,9 @@ async function dispatchDocRefinement(
   specDirectory: string,
   doc: ReviewCommentDoc,
   deps: MessageHandlerDependencies,
-  inline?: { lineNum: number; lineContent: string; comment: string }[],
 ): Promise<void> {
   const instance = deps.getInstance(specDirectory);
   if (!instance) return;
-  if (instance.state.living) {
-    return dispatchLivingRefinement(specDirectory, doc, inline ?? [], deps);
-  }
   let ctx: SpecContext | null = null;
   try {
     ctx = await readSpecContext(specDirectory);

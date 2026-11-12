@@ -35,7 +35,6 @@ import {
 } from './AttachForm';
 import { TemplateForm } from './TemplateForm';
 import { DecisionForm } from './DecisionForm';
-import { LivingSpecsPanel } from './LivingSpecsPanel';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
 const vscode = acquireVsCodeApi();
@@ -60,7 +59,6 @@ type Side =
     | { kind: 'template'; command: string }
     /** Where one node's verdicts route. `node` is the node that decides. */
     | { kind: 'decision'; command: string; node: string }
-    | { kind: 'living' }
     | null;
 
 /**
@@ -317,7 +315,6 @@ function App() {
                     setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
                 }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
-                onOpenLivingSpecs={() => { setNotice(null); setSide({ kind: 'living' }); }}
             />
             {line && (
                 <StatusLine status={line}
@@ -468,14 +465,6 @@ function App() {
                         />
                     );
                 })()}
-
-                {side?.kind === 'living' && graph.livingSpecs && (
-                    <LivingSpecsPanel
-                        living={graph.livingSpecs}
-                        onCancel={() => setSide(null)}
-                        onSet={change => send({ type: 'setLivingSpecs', ...change })}
-                    />
-                )}
 
                 {side?.kind === 'template' && (() => {
                     const step = graph.steps.find(s => s.name === side.command);
