@@ -474,6 +474,27 @@ def sync_tasks(feature_dir: Path, tasks_md: Path, final_status: str, by: str) ->
     return target
 
 
+_WAVE_BREAK = re.compile(r"^\s*(#{2,}\s|\*\*Wave\b|\*\*⟶|⟶)")
+_TASK_ID = re.compile(r"\*\*(T\d+)\*\*|\b(T\d{3,})\b")
+
+
+def _wave_segment_of(tasks_md: Path, task_id: str) -> int | None:
+    """Index of the wave block in tasks.md that holds `task_id`: a heading or a join line starts a new block."""
+    try:
+        lines = tasks_md.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    segment = 0
+    for line in lines:
+        if _WAVE_BREAK.match(line):
+            segment += 1
+            continue
+        m = _TASK_ID.search(line) if re.match(r"^\s*-\s*\[", line) else None
+        if m and (m.group(1) or m.group(2)) == task_id:
+            return segment
+    return None
+
+
 def close_task(
     feature_dir: Path, task_id: str, by: str,
     did: str | None = None, files: list[str] | None = None,
@@ -489,9 +510,14 @@ def close_task(
     Byte-equivalent to `--task … --append` followed by `--materialize`, and
     idempotent for the same reason the fold is.
     """
-    # A comma list closes one wave in one call; each task records the wave it ran in.
+    # A comma list closes one wave in one call; each task records the wave it ran in. Only tasks
+    # that share a wave in tasks.md earn the label, so a whole list dumped at the end still reads as a batch.
     ids = [t.strip() for t in task_id.split(",") if t.strip()]
-    wave = f"{ids[0]}-{ids[-1]}" if len(ids) > 1 else None
+    wave = None
+    if len(ids) > 1:
+        segments = {_wave_segment_of(feature_dir / "tasks.md", t) for t in ids}
+        if len(segments) == 1 and None not in segments:
+            wave = f"{ids[0]}-{ids[-1]}"
     appended = None
     for tid in ids:
         appended = append_task_log(feature_dir, tid, by, did, files, wave=wave) or appended

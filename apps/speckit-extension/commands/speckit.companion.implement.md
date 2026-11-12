@@ -85,7 +85,7 @@ Execute `tasks.md` phase by phase in dependency order. Each phase is laid out as
      "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case>"}, {"req": "FR-004", "assumes": "<what it relies on without a test>"}],
      "step_summary": {"summary": "<what shipped in one line>"},
      "last_action": "<final breadcrumb>"
-   }' && python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "<what>::<command>" --verify-run "<what>::<command>"
+   }'; python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "<what>::<command>" --verify-run "<what>::<command>"
    ```
    Every suite, build and lint goes through `--verify-run`, which runs the command and keeps its exit code. `verified` is only for what cannot be run, a manual pass or a judgement. A check you could not run is a `concerns` entry naming what was skipped; do **not** record a `--verified` for it.
 

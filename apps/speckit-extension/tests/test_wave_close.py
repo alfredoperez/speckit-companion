@@ -42,6 +42,14 @@ class WaveClose(unittest.TestCase):
         tasks = (self.spec / "tasks.md").read_text(encoding="utf-8")
         self.assertEqual(tasks.count("- [x]"), 3)
 
+    def test_tasks_from_two_waves_closed_together_get_no_wave(self):
+        (self.spec / "tasks.md").write_text(
+            "- [ ] **T001** a\n- [ ] **T002** b\n**⟶ Wait for Wave 1 to finish, then:**\n- [ ] **T003** c\n",
+            encoding="utf-8")
+        self.write("--close-task", "T001,T002,T003", "--by", "ai", "--did", "everything at the end")
+        summaries = self.ctx()["task_summaries"]
+        self.assertFalse(any(summaries[t].get("wave") for t in ("T001", "T002", "T003")))
+
     def test_a_single_id_still_closes_one_task_without_a_wave(self):
         self.write("--close-task", "T004", "--by", "ai", "--did", "one task")
         self.assertNotIn("wave", self.ctx()["task_summaries"]["T004"])

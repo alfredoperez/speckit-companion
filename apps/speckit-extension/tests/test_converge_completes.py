@@ -51,6 +51,17 @@ class ConvergeCompletes(unittest.TestCase):
         self.write("--hook", "finish", "--step", "converge")
         self.assertEqual(self.status()[0], "completed")
 
+    def test_a_converge_long_after_implement_is_not_back_dated(self):
+        self.implemented("- [x] **T001** done")
+        ctx = self.ctx()
+        for h in ctx["history"]:
+            if h.get("step") == "implement" and h.get("kind") == "complete":
+                h["at"] = "2020-01-01T00:00:00.000Z"
+        (self.spec / ".spec-context.json").write_text(json.dumps(ctx), encoding="utf-8")
+        self.write("--hook", "finish", "--step", "converge")
+        self.assertEqual(self.status()[0], "completed")
+        self.assertFalse(self.ctx().get("convergePasses"))
+
     def test_a_model_that_advances_converge_itself_completes_the_spec(self):
         self.implemented("- [x] **T001** done")
         self.write("--hook", "start", "--step", "converge")

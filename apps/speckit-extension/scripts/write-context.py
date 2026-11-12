@@ -562,7 +562,7 @@ def fold_plan_tasks(feature_dir: Path, by: str) -> Path | None:
     return target
 
 
-def _complete_after_clean_converge(feature_dir: Path, by: str, added: list[str] | None = None) -> Path | None:
+def _complete_after_clean_converge(feature_dir: Path, by: str) -> Path | None:
     """Complete a spec once converge leaves every task checked, including any task it added and built.
 
     Auto allows one correction round, so a pass that appends work and builds it is the last pass:
@@ -612,6 +612,9 @@ def _record_converge_finish(feature_dir: Path, added: list[str] | None, complete
     return target
 
 
+INFERRED_CONVERGE_START_MAX_SECONDS = 15 * 60
+
+
 def _open_pass_from_implement_close(feature_dir: Path, by: str) -> None:
     """Open the converge pass at implement's close when no start was recorded, so the pass still has a duration."""
     target = feature_dir / ".spec-context.json"
@@ -622,6 +625,11 @@ def _open_pass_from_implement_close(feature_dir: Path, by: str) -> None:
               if e.get("step") == "implement" and _is_step_level(e) and _entry_kind(e) == "complete"]
     at = str(closes[-1].get("at") or "") if closes else ""
     if not at:
+        return
+    # Only an auto run goes straight from implement into converge; a gap longer than this is
+    # someone pausing between steps, and back-dating would charge that pause to converge.
+    closed = _utc_stamp(at)
+    if closed is None or (datetime.now(timezone.utc).timestamp() - _epoch(closed)) > INFERRED_CONVERGE_START_MAX_SECONDS:
         return
     passes = ctx.get("convergePasses")
     # A pass already finished after that close is this converge: a second close must not invent another.
@@ -649,7 +657,7 @@ def _after_converge(feature_dir: Path, by: str) -> None:
     completed = False
     try:
         if ctx.get("status") != "completed":
-            completed = _complete_after_clean_converge(feature_dir, by, added) is not None
+            completed = _complete_after_clean_converge(feature_dir, by) is not None
         else:
             all_ids, done_ids = parse_task_markers(feature_dir / "tasks.md")
             open_count = len(all_ids) - len(done_ids)
