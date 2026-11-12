@@ -43,6 +43,10 @@ surfaces:
     paths: ["apps/vscode/webview/**", "apps/vscode/src/features/**"]
     checks: [jest, clips-check, nav-matrix, themes, narrow-panel, popups]
 
+  - name: viewer library
+    paths: ["packages/viewer/**"]
+    checks: [jest, canvas-tests, clips-check, nav-matrix, themes, narrow-panel]
+
   - name: AI providers
     paths: ["apps/vscode/src/ai-providers/**"]
     checks: [jest, provider-dispatch]

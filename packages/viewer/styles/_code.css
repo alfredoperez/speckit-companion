@@ -1,0 +1,345 @@
+/**
+ * SpecKit Companion - Code Block Styles
+ * Code blocks, syntax highlighting, and mermaid diagrams
+ */
+
+/* ============================================
+   Code Blocks
+   ============================================ */
+
+/* Code block container - professional style */
+#markdown-content pre.code-block {
+    position: relative;
+    margin: var(--sk-space-5) 0;
+    padding: 0;
+    background: var(--sk-bg-code);
+    border: 1px solid var(--sk-border-code);
+    border-radius: var(--sk-radius-lg);
+    overflow: hidden;
+}
+
+/* Language label */
+#markdown-content pre.code-block::before {
+    content: attr(data-language);
+    display: block;
+    padding: var(--sk-space-2) var(--sk-space-4);
+    font-size: var(--sk-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sk-text-muted);
+    background: var(--sk-bg-code-header);
+    border-bottom: 1px solid var(--sk-border-code);
+}
+
+#markdown-content pre.code-block:not([data-language])::before {
+    display: none;
+}
+
+#markdown-content pre.code-block code {
+    display: block;
+    padding: var(--sk-space-4);
+    font-family: var(--sk-font-mono);
+    font-size: 12px; /* Fixed size per FR-010 */
+    line-height: var(--sk-leading-relaxed);
+    overflow-x: auto;
+    tab-size: 4;
+    color: var(--sk-code-text);
+    background: transparent;
+    border: none;
+}
+
+/* Tree structure blocks — same owned dark surface as code, so the colored
+   text must come from the code palette, never the theme accent. */
+#markdown-content pre.tree-structure {
+    background: var(--sk-bg-code);
+    border: 1px solid var(--sk-border-code);
+    border-radius: var(--sk-radius-md);
+    padding: var(--sk-space-4);
+    margin: var(--sk-space-4) 0;
+    overflow-x: auto;
+}
+
+#markdown-content pre.tree-structure code {
+    font-family: var(--sk-font-mono);
+    font-size: 12px; /* Fixed size for consistency with code blocks */
+    line-height: var(--sk-leading-normal);
+    color: var(--sk-code-text);
+    white-space: pre;
+    display: block;
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+
+#markdown-content pre.tree-structure .tree-dir {
+    color: var(--sk-code-type);
+}
+
+#markdown-content pre.tree-structure .tree-comment {
+    color: var(--sk-code-comment);
+    font-style: italic;
+}
+
+/* Legacy pre blocks (fallback) */
+#markdown-content pre:not(.code-block):not(.tree-structure):not(.mermaid) {
+    margin: var(--sk-space-4) 0;
+    padding: var(--sk-space-4);
+    background: var(--sk-bg-code);
+    border: 1px solid var(--sk-border-code);
+    border-radius: var(--sk-radius-md);
+    overflow-x: auto;
+}
+
+#markdown-content pre:not(.code-block):not(.tree-structure):not(.mermaid) code {
+    font-family: var(--sk-font-mono);
+    font-size: var(--sk-text-sm);
+    line-height: var(--sk-leading-normal);
+    display: block;
+    color: var(--sk-code-text);
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* ============================================
+   Inline Code — File References (pill buttons)
+   ============================================ */
+
+/* Clickable file reference pill buttons */
+/* A path is a reference, not a call to action: it stays quiet in the sentence
+   and only picks up the accent when you hover it. (It also rides the viewer's
+   own palette — it used to reach for the host's link color, which is off-key
+   against the owned theme.) */
+#markdown-content .file-ref {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 5px;
+    border-radius: var(--sk-radius-sm);
+    background: color-mix(in srgb, var(--sk-text-muted) 12%, transparent);
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--sk-text-body);
+    font-size: 0.85em;
+    line-height: inherit;
+    vertical-align: baseline;
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    transition: color var(--sk-transition-fast), background var(--sk-transition-fast),
+                border-color var(--sk-transition-fast);
+}
+
+/* File icon via codicon font */
+#markdown-content .file-ref::before {
+    font-family: 'codicon';
+    content: '\eb60';
+    font-size: 11px;
+    line-height: 1;
+    color: var(--sk-text-muted);
+    speak: never;
+}
+
+#markdown-content .file-ref:hover {
+    color: var(--sk-accent);
+    background: var(--sk-accent-subtle);
+    border-color: var(--sk-border-accent);
+}
+
+#markdown-content .file-ref:hover::before {
+    color: var(--sk-accent);
+}
+
+#markdown-content .file-ref:focus-visible {
+    outline: 2px solid var(--sk-accent);
+    outline-offset: 1px;
+}
+
+/* Reset nested code inside pill — inherit from button */
+#markdown-content .file-ref code {
+    font-family: var(--sk-font-mono);
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.9em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================================
+   Syntax Highlighting (hljs compatibility)
+   ============================================ */
+
+/* Only override background to be transparent - let CDN styles handle colors */
+.hljs {
+    background: transparent !important;
+}
+
+/* Ensure code blocks have proper padding when hljs is applied */
+pre.code-block code.hljs {
+    padding: var(--sk-space-4);
+}
+
+/* Token-driven syntax roles on the owned dark surface (both themes) —
+   overrides the CDN theme so the palette stays in tokens.css. */
+#markdown-content .hljs-keyword,
+#markdown-content .hljs-selector-tag,
+#markdown-content .hljs-literal {
+    color: var(--sk-code-keyword);
+}
+
+#markdown-content .hljs-string,
+#markdown-content .hljs-attr,
+#markdown-content .hljs-regexp {
+    color: var(--sk-code-string);
+}
+
+#markdown-content .hljs-title,
+#markdown-content .hljs-function,
+#markdown-content .hljs-name {
+    color: var(--sk-code-function);
+}
+
+#markdown-content .hljs-comment,
+#markdown-content .hljs-quote {
+    color: var(--sk-code-comment);
+}
+
+#markdown-content .hljs-number,
+#markdown-content .hljs-symbol {
+    color: var(--sk-code-number);
+}
+
+#markdown-content .hljs-variable,
+#markdown-content .hljs-template-variable {
+    color: var(--sk-code-variable);
+}
+
+#markdown-content .hljs-type,
+#markdown-content .hljs-built_in,
+#markdown-content .hljs-class {
+    color: var(--sk-code-type);
+}
+
+/* ============================================
+   Mermaid Diagram Styling
+   ============================================ */
+
+.mermaid-container {
+    margin: var(--sk-space-5) 0;
+    padding: var(--sk-space-4);
+    background: var(--sk-bg-secondary);
+    border: 1px solid var(--sk-border);
+    border-radius: var(--sk-radius-lg);
+    width: 100%;
+    overflow-x: auto;
+}
+
+.mermaid {
+    display: flex;
+    justify-content: flex-start;
+    background: transparent;
+    font-family: var(--sk-font-family);
+}
+
+.mermaid svg {
+    height: auto;
+    /* Force narrow diagrams (short state/flowchart) up to at least 1100px so
+       per-box text has enough pixels to stay legible; wider diagrams render
+       at natural width (useMaxWidth=false on flowchart/sequence) and the
+       container's overflow-x: auto handles horizontal scroll. */
+    min-width: min(100%, 1100px);
+    transform-origin: top left;
+}
+
+/* Zoom controls toolbar */
+.mermaid-controls {
+    display: flex;
+    gap: 4px;
+    margin-bottom: var(--sk-space-2);
+    justify-content: flex-end;
+}
+
+.mermaid-controls button {
+    padding: 2px 8px;
+    font-size: 12px;
+    font-family: inherit;
+    background: var(--sk-bg-elevated);
+    border: 1px solid var(--sk-border);
+    border-radius: var(--sk-radius-sm);
+    color: var(--sk-text-secondary);
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.mermaid-controls button:hover {
+    background: var(--sk-bg-hover);
+    color: var(--sk-text-primary);
+}
+
+/* Mermaid theme overrides for better VS Code integration */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+    fill: var(--sk-bg-elevated) !important;
+    stroke: var(--sk-accent) !important;
+    stroke-width: 2px !important;
+}
+
+.mermaid .node .label,
+.mermaid .nodeLabel,
+.mermaid .label {
+    color: var(--sk-text-primary) !important;
+    fill: var(--sk-text-primary) !important;
+}
+
+.mermaid .edgePath .path {
+    stroke: var(--sk-accent) !important;
+    stroke-width: 2px !important;
+}
+
+.mermaid .edgeLabel {
+    background-color: var(--sk-bg-secondary) !important;
+    color: var(--sk-text-primary) !important;
+    fill: var(--sk-text-primary) !important;
+    padding: 4px 8px;
+    border-radius: var(--sk-radius-sm);
+}
+
+/* State diagram specific */
+.mermaid .statediagram-state rect {
+    fill: var(--sk-bg-elevated) !important;
+    stroke: var(--sk-accent) !important;
+}
+
+.mermaid .statediagram-state .state-title {
+    fill: var(--sk-text-primary) !important;
+    font-weight: 600;
+}
+
+/* Edge labels (transition labels) */
+.mermaid .transition,
+.mermaid .edgeLabel span,
+.mermaid .edgeLabel p,
+.mermaid text.edgeLabel {
+    fill: var(--sk-header-section) !important;
+    color: var(--sk-header-section) !important;
+    font-weight: 500;
+}
+
+/* Start/end nodes */
+.mermaid .start-state,
+.mermaid circle[class*="start"] {
+    fill: var(--sk-success) !important;
+}
+
+.mermaid .end-state,
+.mermaid circle[class*="end"] {
+    fill: var(--sk-text-muted) !important;
+}

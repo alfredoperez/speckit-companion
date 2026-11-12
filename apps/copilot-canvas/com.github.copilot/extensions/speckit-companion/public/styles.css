@@ -1,12 +1,41 @@
-/* Token values mirror apps/vscode/webview/styles/spec-viewer/_tokens-viewer.css. */
-/* Design tokens come from vendor/viewer.css, the VS Code viewer's own sheet (loaded first).
-   Only what the board adds on top lives here. */
+/* Design tokens come from vendor/viewer.css: the speckit-viewer package's stylesheet and its
+   VS Code theme, which set --sk-* on the body (class sk-viewer). The board reads them under the
+   names it was written with; only what it adds on top lives here. */
 :root {
     --review-ink: #c9adf5;
-    --focus: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+body {
+    --accent: var(--sk-accent);
+    --bg-primary: var(--sk-bg-primary);
+    --text-body: var(--sk-text-body);
+    --font-family: var(--sk-font-family);
+    --border: var(--sk-border);
+    --radius-sm: var(--sk-radius-sm);
+    --bg-secondary: var(--sk-bg-secondary);
+    --text-primary: var(--sk-text-primary);
+    --border-hover: var(--sk-border-hover);
+    --bg-elevated: var(--sk-bg-elevated);
+    --accent-ink: var(--sk-accent-ink);
+    --text-muted: var(--sk-text-muted);
+    --success: var(--sk-success);
+    --error: var(--sk-error);
+    --radius-md: var(--sk-radius-md);
+    --bg-inset: var(--sk-bg-inset);
+    --font-mono: var(--sk-font-mono);
+    --info-subtle: var(--sk-info-subtle);
+    --info: var(--sk-info);
+    --warning-subtle: var(--sk-warning-subtle);
+    --warning: var(--sk-warning);
+    --success-subtle: var(--sk-success-subtle);
+    --accent-subtle: var(--sk-accent-subtle);
+    --review-subtle: var(--sk-review-subtle);
+    --space-2: var(--sk-space-2);
+    --shadow-md: 0 6px 18px rgb(0 0 0 / 18%);
+    --focus: color-mix(in srgb, var(--sk-accent) 70%, transparent);
 }
 body.vscode-light {
     --review-ink: #5b30b0;
+    --shadow-md: 0 6px 18px rgb(24 53 45 / 10%);
 }
 
 * { box-sizing: border-box; }

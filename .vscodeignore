@@ -82,6 +82,8 @@ apps/website/**
 apps/speckit-extension/**
 # The GitHub Copilot app canvas: its own deliverable, loaded by the Copilot app, never by VS Code.
 apps/copilot-canvas/**
+# The viewer library: webpack bundles what the extension needs into dist/.
+packages/**
 # The Claude Code mod and its marketplace file: installed by Claude Code, never by VS Code.
 apps/claude-mod/**
 .claude-plugin/**

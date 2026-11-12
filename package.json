@@ -48,6 +48,9 @@
     "onStartupFinished"
   ],
   "main": "./dist/extension.js",
+  "workspaces": [
+    "packages/*"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -1596,15 +1599,20 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile && npm run package-web",
+    "viewer:build": "npm run build -w speckit-viewer",
+    "precompile": "npm run viewer:build",
     "compile": "tsc -p ./",
+    "prewatch": "npm run viewer:build",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
+    "precompile-web": "npm run viewer:build",
     "compile-web": "webpack --mode development",
     "watch-web": "webpack --mode development --watch",
+    "prepackage-web": "npm run viewer:build",
     "package-web": "webpack --mode production --devtool hidden-source-map",
     "test": "jest",
     "test:all": "jest && npm run test:canvas && python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
-    "canvas:build": "node apps/copilot-canvas/build.mjs",
+    "canvas:build": "npm run viewer:build && node apps/copilot-canvas/build.mjs",
     "mod:build": "node apps/claude-mod/build.mjs",
     "test:mod": "npm run canvas:build && npm run mod:build && claude plugin test apps/claude-mod",
     "test:canvas": "npm run canvas:build && npm run mod:build && node --test --import ./apps/copilot-canvas/tests/sdk-stub/register.mjs 'apps/copilot-canvas/tests/*.test.mjs' '.claude/skills/release-qa/canvas-harness/*.test.mjs'",
@@ -1616,7 +1624,9 @@
     "test:visual:ci": "node tooling/scripts/visual-builder.mjs --layout",
     "upstreams": "node tooling/scripts/refresh-upstreams.mjs",
     "install-local": "npm version patch --no-git-tag-version && npm run package && code --install-extension speckit-companion-$(node -p \"require('./package.json').version\").vsix --force",
+    "prestorybook": "npm run viewer:build",
     "storybook": "storybook dev -p 6006",
+    "prebuild-storybook": "npm run viewer:build",
     "build-storybook": "storybook build",
     "media:all": "node tooling/scripts/capture-docs-images.mjs && node tooling/scripts/capture-docs-images.mjs --clips && node tooling/scripts/render-web-clips.mjs && node tooling/scripts/build-stills.mjs && node tooling/scripts/build-clip-gifs.mjs && node apps/website/scripts/sync-media.mjs && node tooling/scripts/clip-storyboard.mjs --check && node tooling/scripts/check-media-manifest.mjs",
     "check:desktop": "npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs",

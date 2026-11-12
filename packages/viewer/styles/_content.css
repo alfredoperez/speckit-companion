@@ -1,0 +1,591 @@
+/**
+ * SpecKit Companion - Content Styles
+ * Markdown rendering base styles
+ */
+
+/* ============================================
+   Markdown Content Styles
+   ============================================ */
+
+#markdown-content {
+    font-family: var(--sk-font-family);
+    /* Floor at 16px (matches VS Code's native markdown preview) so the panel
+       stays readable regardless of a small editor font; scales up beyond that. */
+    font-size: max(16px, calc(var(--sk-font-size) + 1px));
+    line-height: 1.6;
+    color: var(--sk-text-body);
+    max-width: 72ch;
+    min-width: 0;
+    margin: 0 auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+}
+
+/* ============================================
+   Spec Metadata Bar (compact header info)
+   ============================================ */
+
+.spec-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sk-space-2);
+    padding: 10px 12px;
+    margin-bottom: var(--sk-space-3);
+    border-radius: var(--sk-radius-md);
+    background: var(--sk-bg-elevated);
+}
+
+/* An empty metadata bar is authoring residue — never render it (FR-011). */
+.spec-meta:empty {
+    display: none;
+}
+
+.meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sk-space-1);
+    font-size: var(--sk-text-sm);
+}
+
+.meta-label {
+    color: var(--sk-text-muted);
+    font-weight: 500;
+    font-family: var(--sk-font-mono);
+}
+
+/* Guaranteed-contrast branch chip: primary ink on a real surface (FR-011). */
+.meta-branch {
+    font-family: var(--sk-font-mono);
+    font-size: var(--sk-text-xs);
+    font-weight: 650;
+    padding: 2px 8px;
+    background: var(--sk-bg-secondary);
+    border: 1px solid var(--sk-border-hover);
+    border-radius: var(--sk-radius-sm);
+    color: var(--sk-text-primary);
+}
+
+.meta-status {
+    font-size: var(--sk-text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: var(--sk-radius-sm);
+}
+
+.meta-status-draft {
+    background: var(--sk-warning-subtle);
+    color: var(--sk-warning);
+    border: 1px solid var(--sk-warning);
+}
+
+.meta-status-ready,
+.meta-status-approved {
+    background: var(--sk-success-subtle);
+    color: var(--sk-success);
+    border: 1px solid var(--sk-success);
+}
+
+.meta-status-in-progress {
+    background: var(--sk-accent-subtle);
+    color: var(--sk-accent);
+    border: 1px solid var(--sk-accent);
+}
+
+.meta-date {
+    color: var(--sk-text-secondary);
+    font-family: var(--sk-font-mono);
+}
+
+.spec-input {
+    font-size: var(--sk-text-sm);
+    color: var(--sk-text-secondary);
+    padding: var(--sk-space-3) var(--sk-space-3);
+    margin: var(--sk-space-2) 0 var(--sk-space-5) 0;
+    background: var(--sk-bg-elevated);
+    border-left: 3px solid var(--sk-border-hover);
+    border-radius: 0 var(--sk-radius-sm) var(--sk-radius-sm) 0;
+    font-style: italic;
+}
+
+.spec-input .meta-label {
+    font-style: normal;
+    margin-right: var(--sk-space-1);
+}
+
+/* ============================================
+   Links
+   ============================================ */
+
+#markdown-content a {
+    color: color-mix(in srgb, var(--sk-accent) 60%, var(--sk-text-primary));
+    text-decoration: none;
+    transition: color var(--sk-transition-fast);
+}
+
+#markdown-content a:hover {
+    text-decoration: underline;
+    color: var(--sk-accent-hover);
+}
+
+/* ============================================
+   Horizontal rules
+   ============================================ */
+
+#markdown-content hr {
+    border: none;
+    border-top: 1px solid var(--sk-border);
+    margin: var(--sk-space-4) 0;
+}
+
+/* ============================================
+   Images
+   ============================================ */
+
+#markdown-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--sk-radius-md);
+    margin: var(--sk-space-4) 0;
+    box-shadow: var(--sk-shadow-sm);
+}
+
+/* ============================================
+   Strong and emphasis
+   ============================================ */
+
+#markdown-content strong {
+    font-weight: 600;
+    color: var(--sk-text-primary);
+}
+
+#markdown-content em {
+    font-style: italic;
+}
+
+/* ============================================
+   State-based hiding (completed specs)
+   ============================================ */
+
+/* Hide DRAFT badge when spec is completed or archived */
+body[data-spec-status="completed"] .meta-status-draft,
+body[data-spec-status="archived"] .meta-status-draft {
+    display: none;
+}
+
+/* Suppress in-content metadata that the structured header already shows.
+   The .spec-meta bar (synthesized by preprocessSpecMetadata), the .spec-input
+   callout, and any stray .meta-branch chips all duplicate fields the header
+   already renders from spec-context.json. When that header is active
+   (App.tsx sets body[data-has-spec-context="true"]), hide them. */
+body[data-has-spec-context="true"] .spec-meta,
+body[data-has-spec-context="true"] .spec-input,
+body[data-has-spec-context="true"] .meta-branch {
+    display: none;
+}
+
+/* ============================================
+   Page chrome — ONE band, two halves
+   Identity (what this spec is) on the left, run facts (how the run went) on the
+   right. One boundary, not two stacked headers. The facts yield as the pane
+   narrows; identity never does.
+   ============================================ */
+
+.page-chrome {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sk-space-5);
+    padding: var(--sk-space-3) var(--sk-content-padding);
+    border-bottom: 1px solid var(--sk-border);
+    background: var(--sk-bg-primary);
+    flex-shrink: 0;
+}
+
+/* ============================================
+   Structured Header (spec-context driven) — the identity half
+   ============================================ */
+
+.spec-header {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    background: transparent;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.spec-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sk-space-4);
+}
+
+.spec-header-main {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* Title is the page anchor: largest type, page-level weight, sits above the
+   metadata cluster so the eye lands on the spec name first, not on the badge. */
+/* The draft badge leads the title, so a reader learns the spec is unverified
+   in the same glance as its name. The review hue, because that is what it asks
+   for; the status badges below stay in their own colours. */
+.spec-header-title .spec-badge--draft {
+    margin-right: 0.5em;
+    vertical-align: 0.18em;
+    color: var(--sk-review-ink);
+    background: var(--sk-review-subtle);
+    border-color: color-mix(in srgb, var(--sk-review) 35%, transparent);
+}
+
+.spec-header-title {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--sk-header-title);
+    line-height: 1.2;
+    letter-spacing: -0.015em;
+    /* Casing is decided in data (toDisplayCase, acronym-aware) so it survives
+       here for both feature names and authored headings — no CSS capitalize,
+       which would mangle "CLI" and re-case an authored heading. */
+    text-transform: none;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.spec-header-id {
+    font-family: var(--sk-font-editor);
+    font-size: 0.75rem;
+    color: var(--sk-text-secondary);
+    padding: 1px 6px;
+    border: 1px solid var(--sk-border);
+    border-radius: 4px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Capability facts are readable content, so they take the body token.
+   Middot separators are pseudo-elements so they stay out of the document text. */
+.spec-header-living {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    font-size: var(--sk-text-xs);
+    color: var(--sk-text-body);
+}
+
+.spec-header-fact + .spec-header-fact::before,
+.spec-header-badges > .spec-header-living::before {
+    content: '·';
+    margin-right: 8px;
+    color: var(--sk-text-muted);
+}
+
+/* No badge before it (a living spec that is not a draft): no separator either. */
+.spec-header-badges > .spec-header-living:first-child::before {
+    content: none;
+    margin-right: 0;
+}
+
+.spec-header-fact--adopted {
+    color: var(--sk-review-ink);
+    font-weight: 600;
+}
+
+.spec-header-fact--drift {
+    color: var(--sk-list-warning);
+    font-weight: 600;
+}
+
+.spec-header-update-btn {
+    padding: 1px 8px;
+    font-size: var(--sk-text-xs);
+    line-height: 1.6;
+    color: var(--sk-button-secondary-fg);
+    background: var(--sk-button-secondary-bg);
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.spec-header-update-btn:hover {
+    background: var(--sk-button-secondary-hover);
+}
+
+.spec-header-update-btn:focus-visible {
+    outline: 1px solid var(--sk-focus-border);
+    outline-offset: 1px;
+}
+
+/* The healthy-state action. Present so the header always has something to do,
+   quiet so it never competes with Update, which is the one that matters. */
+.spec-header-update-btn--quiet {
+    color: var(--sk-text-body);
+    background: transparent;
+    border: 1px solid var(--sk-border);
+}
+
+.spec-header-update-btn--quiet:hover {
+    background: var(--sk-bg-elevated);
+    border-color: var(--sk-focus-border);
+}
+
+/* Where the capability applies and where its file is, on one row. Stacked as two
+   uppercase label rows they read as the same fact said twice. */
+.spec-header-where {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 18px;
+    min-width: 0;
+}
+
+/* What the capability claims — the one fact that lives nowhere else in the UI. */
+.spec-header-covers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.spec-header-covers__label {
+    font-size: var(--sk-text-xs);
+    color: var(--sk-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* A glob is a place in the repo, so it is a button that reveals it. Full
+   text, wrapping — a path cut to "workflow-edito…" is a path you cannot read. */
+.spec-header-glob {
+    font-family: var(--sk-font-mono);
+    font-size: var(--sk-text-xs);
+    padding: 2px 6px;
+    background: var(--sk-bg-elevated);
+    border: 1px solid transparent;
+    border-radius: var(--sk-radius-sm);
+    color: var(--sk-text-body);
+    cursor: pointer;
+    min-width: 0;
+    word-break: break-all;
+    text-align: left;
+}
+
+.spec-header-glob:hover {
+    border-color: var(--sk-border-hover);
+    color: var(--sk-text-primary);
+}
+
+.spec-header-glob:focus-visible {
+    outline: 1px solid var(--sk-focus-border);
+    outline-offset: 1px;
+}
+
+.spec-header-glob--more {
+    color: var(--sk-text-secondary);
+    font-family: inherit;
+    cursor: default;
+}
+
+/* Where the spec file lives — a path the reader uses to find the file, so it
+   takes the body token; size and mono face carry the hierarchy instead. */
+.spec-header-location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.spec-header-path {
+    font-family: var(--sk-font-mono);
+    font-size: var(--sk-text-xs);
+    color: var(--sk-text-body);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Glance-metadata cluster: badge · branch · date all flow inline at the same
+   density. No margin-left:auto orphaning the date — the · separator carries
+   the visual rhythm instead. */
+.spec-header-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* A long branch name truncates rather than pushing the date out or wrapping the
+   cluster — the title and the lifecycle badge never yield. The ellipsis needs a
+   text-bearing box of its own: the chip is a flex parent, and `text-overflow`
+   does nothing on one. */
+.spec-header-branch {
+    min-width: 0;
+    max-width: 34ch;
+}
+
+.spec-header-branch__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Hide the first H1 when structured header provides the title.
+   Body attribute is set by App.tsx so the rule survives DOM hierarchy changes
+   (the spec-header is no longer always a sibling of #markdown-content). */
+body[data-has-spec-context="true"] #markdown-content h1:first-of-type {
+    display: none;
+}
+
+.spec-header-branch {
+    font-family: var(--sk-font-mono);
+    font-size: var(--sk-text-xs);
+    padding: 2px 8px;
+    /* Neutral terminal metadata — the old --purple (symbolIcon color) renders
+       off-theme (orange) in many themes. */
+    background: var(--sk-bg-elevated);
+    border: 1px solid var(--sk-border);
+    border-radius: var(--sk-radius-sm);
+    color: var(--sk-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.spec-header-branch .codicon {
+    font-size: 12px;
+}
+
+.spec-header-terminal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.spec-header-terminal-btn .codicon {
+    font-size: 12px;
+}
+
+/* Created-date inline with the badge cluster — glance metadata, not a heading.
+   The leading middot is a pseudo-element so it doesn't pollute the DOM tree
+   or screen-reader output (already aria-labelled on the parent). */
+.spec-header-date {
+    font-family: var(--sk-font-mono);
+    font-size: var(--sk-text-xs);
+    color: var(--sk-text-muted);
+    white-space: nowrap;
+}
+
+.spec-header-date::before {
+    content: '· ';
+    color: var(--sk-border);
+}
+
+/* ============================================
+   Spec Badge (primary/heading color)
+   ============================================ */
+
+/* Badge role: a soft-filled pill — mono microtype, semantic hue on its
+   tinted wash, identical dimensions across every state. */
+.spec-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 22px;
+    font-size: var(--sk-text-xs);
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-family: var(--sk-font-mono);
+    background: var(--sk-bg-elevated);
+    color: var(--sk-text-secondary);
+    border: 1px solid transparent;
+}
+
+.spec-badge--completed,
+body[data-spec-status="completed"] .spec-badge {
+    background: var(--sk-success-subtle);
+    color: var(--sk-success);
+    font-weight: 700;
+}
+
+/* A bug waiting for review marks with the review hue; one back in To fix takes the warning wash. */
+.spec-badge--report-review {
+    background: color-mix(in srgb, var(--sk-review) 12%, transparent);
+    color: var(--sk-review-ink);
+    border-color: color-mix(in srgb, var(--sk-review) 40%, transparent);
+}
+
+.spec-badge--report-to-fix {
+    background: var(--sk-warning-subtle);
+    color: var(--sk-warning);
+}
+
+/* Active — subtle accent hint so a live working spec reads distinct from
+   the unstyled default / DRAFT / ARCHIVED neutrals, without competing with
+   the in-progress tier. */
+.spec-badge--active {
+    background: var(--sk-accent-subtle);
+    color: var(--sk-text-primary);
+}
+
+.spec-badge--archived,
+body[data-spec-status="archived"] .spec-badge {
+    background: var(--sk-bg-secondary);
+    color: var(--sk-text-muted);
+}
+
+.spec-badge--tasks-done,
+body[data-spec-status="tasks-done"] .spec-badge {
+    background: var(--sk-success-subtle);
+    color: var(--sk-success);
+}
+
+/* In-progress statuses — specifying / planning / tasking / implementing.
+   Warm working tint (the warning hue marks live runs) + gentle border
+   breath via the spec-badge-working keyframe. */
+.spec-badge--specifying,
+.spec-badge--planning,
+.spec-badge--tasking,
+.spec-badge--implementing {
+    background: var(--sk-warning-subtle);
+    color: var(--sk-warning);
+    animation: spec-badge-working 2.5s ease-in-out infinite;
+}
+
+/* Intermediate-done statuses — a phase finished, workflow continues. */
+.spec-badge--specified,
+.spec-badge--planned,
+.spec-badge--ready-to-implement {
+    background: var(--sk-success-subtle);
+    color: var(--sk-success);
+}
+
+/* Draft / pre-work — muted, not as dim as archived. */
+.spec-badge--draft {
+    background: color-mix(in srgb, var(--sk-text-secondary) 10%, transparent);
+    color: var(--sk-text-secondary);
+}

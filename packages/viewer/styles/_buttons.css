@@ -1,0 +1,122 @@
+/**
+ * SpecKit Companion - Standalone Button Styles
+ * Sentence-case primitives with identical dimensions across
+ * variants, primary fill reserved for the next action, surface contrast for
+ * everything else — no accent-flip hover, no lift, no glow. The
+ * .actions-scoped styles in _footer.css mirror these when inside .actions.
+ */
+
+button.primary,
+button.secondary,
+button.ghost,
+button.enhancement,
+button.destructive {
+    min-height: 32px;
+    padding: 6px 14px;
+    border-radius: var(--sk-radius-sm);
+    cursor: pointer;
+    font-family: var(--sk-font-family);
+    font-size: 12.5px;
+    font-weight: 650;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background var(--sk-transition-fast) ease,
+                color var(--sk-transition-fast) ease,
+                border-color var(--sk-transition-fast) ease;
+    white-space: nowrap;
+}
+
+button.primary:not([disabled]):active,
+button.secondary:not([disabled]):active,
+button.ghost:not([disabled]):active,
+button.enhancement:not([disabled]):active,
+button.destructive:not([disabled]):active {
+    translate: 0 1px;
+}
+
+button.primary {
+    background: var(--sk-accent);
+    color: var(--sk-accent-ink);
+    border: 1px solid transparent;
+    padding: 6px 20px;
+}
+
+button.primary:hover {
+    background: var(--sk-accent-hover);
+}
+
+button.primary:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+button.secondary {
+    background: var(--sk-bg-secondary);
+    border: 1px solid var(--sk-border-hover);
+    color: var(--sk-text-primary);
+}
+
+button.secondary:hover {
+    background: var(--sk-bg-elevated);
+}
+
+button.ghost {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--sk-text-secondary);
+}
+
+button.ghost:hover {
+    background: var(--sk-bg-elevated);
+    color: var(--sk-text-primary);
+}
+
+button.enhancement {
+    background: var(--sk-bg-elevated);
+    border: 1px solid var(--sk-border);
+    color: var(--sk-text-primary);
+}
+
+button.enhancement .icon {
+    font-size: 13px;
+}
+
+button.enhancement:hover {
+    background: var(--sk-bg-inset);
+}
+
+/* Destructive — soft semantic treatment for an operation that can't be undone. */
+button.destructive {
+    background: var(--sk-error-subtle);
+    border: 1px solid color-mix(in srgb, var(--sk-error) 40%, transparent);
+    color: var(--sk-error);
+}
+
+button.destructive:hover {
+    background: color-mix(in srgb, var(--sk-error) 24%, var(--sk-bg-primary));
+    border-color: var(--sk-error);
+}
+
+button.destructive:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Loading/"Generating…" state — disabled button with a spinner.
+   Reuses the shared `spin` keyframe from _animations.css. */
+button.is-loading {
+    opacity: 0.7;
+    cursor: progress;
+}
+
+.btn-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex: 0 0 auto;
+}

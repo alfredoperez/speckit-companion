@@ -1,0 +1,248 @@
+/**
+ * SpecKit Companion - Artifact Renderings
+ * Key-entity rows, spec-checklist quality report, and the per-task capture
+ * detail merged into the tasks.md document. Emitted by preprocessEntities /
+ * preprocessChecklist and the task-item renderer.
+ */
+
+/* ── Key entities — hairline list rows, not cards ── */
+#markdown-content .entity-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sk-space-3);
+  padding: var(--sk-space-3) 0;
+  border: none;
+  border-bottom: 1px solid var(--sk-border);
+  border-radius: 0;
+  background: transparent;
+  margin: 0;
+}
+
+#markdown-content .entity-name {
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-sm);
+  font-weight: 600;
+  color: var(--sk-text-primary);
+}
+
+#markdown-content .entity-paren {
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-xs);
+  color: var(--sk-text-muted);
+}
+
+#markdown-content .entity-desc {
+  flex: 1 1 240px;
+  font-size: var(--sk-text-sm);
+  color: var(--sk-text-body);
+  line-height: var(--sk-leading-snug);
+}
+
+/* ── Checklist quality report ───────────────────────────── */
+#markdown-content .ck-group {
+  border: 1px solid var(--sk-border);
+  border-radius: var(--sk-radius-md);
+  background: var(--sk-bg-secondary);
+  margin: var(--sk-space-3) 0;
+  overflow: hidden;
+}
+
+#markdown-content .ck-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sk-space-2) var(--sk-space-4);
+  /* Surface tint, NOT the code-header token — that one is always-dark now. */
+  background: var(--sk-bg-elevated);
+  border-bottom: 1px solid var(--sk-border);
+}
+
+#markdown-content .ck-name {
+  font-size: var(--sk-text-sm);
+  font-weight: 600;
+  color: var(--sk-text-primary);
+}
+
+#markdown-content .ck-count {
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-xs);
+  color: var(--sk-success);
+  background: var(--sk-success-subtle);
+  border: none;
+  padding: 2px var(--sk-space-2);
+  border-radius: 999px;
+}
+
+#markdown-content .ck-item {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sk-space-3);
+  align-items: start;
+  padding: var(--sk-space-2) var(--sk-space-4);
+  font-size: var(--sk-text-sm);
+  color: var(--sk-text-body);
+  line-height: var(--sk-leading-snug);
+}
+
+#markdown-content .ck-item + .ck-item {
+  border-top: 1px solid var(--sk-border);
+}
+
+#markdown-content .ck-box {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--sk-success);
+  color: var(--sk-success);
+  background: var(--sk-success-subtle);
+  display: grid;
+  place-items: center;
+  margin-top: 1px;
+}
+
+#markdown-content .ck-box svg {
+  width: 10px;
+  height: 10px;
+}
+
+#markdown-content .ck-item:not(.ok) .ck-box {
+  border-color: var(--sk-text-muted);
+  color: transparent;
+  background: none;
+}
+
+/* ── Research decision cards ────────────────────────────── */
+#markdown-content .decision-card {
+  border: 1px solid var(--sk-border);
+  border-radius: var(--sk-radius-md);
+  background: var(--sk-bg-secondary);
+  padding: var(--sk-space-4) var(--sk-space-5);
+  margin: var(--sk-space-4) 0;
+}
+
+#markdown-content .decision-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sk-space-2);
+  margin-bottom: var(--sk-space-2);
+}
+
+#markdown-content .decision-num {
+  font-size: var(--sk-text-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sk-accent);
+  background: var(--sk-accent-subtle);
+  border: none;
+  padding: 2px var(--sk-space-2);
+  border-radius: var(--sk-radius-sm);
+  white-space: nowrap;
+}
+
+#markdown-content .decision-title {
+  font-size: var(--sk-text-base);
+  font-weight: 600;
+  color: var(--sk-text-primary);
+}
+
+#markdown-content .decision-field {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sk-space-3);
+  align-items: baseline;
+  padding: var(--sk-space-1) 0;
+}
+
+#markdown-content .decision-label {
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sk-text-muted);
+}
+
+#markdown-content .decision-label--decision { color: var(--sk-accent); }
+#markdown-content .decision-label--rationale { color: var(--sk-text-secondary); }
+#markdown-content .decision-label--alternatives { color: var(--sk-warning); }
+
+#markdown-content .decision-val {
+  font-size: var(--sk-text-sm);
+  color: var(--sk-text-body);
+  line-height: var(--sk-leading-snug);
+}
+
+#markdown-content .decision-card ul {
+  margin: var(--sk-space-1) 0 var(--sk-space-2) 1.1em;
+}
+
+/* ── Per-task capture detail (tasks.md) ─────────────────── */
+#markdown-content .task-item__capture {
+  /* .task-item is display:flex/wrap, so a full-width flex-basis pushes the
+     captured detail onto its own row below the checkbox + text. */
+  flex: 0 0 100%;
+  margin-top: var(--sk-space-2);
+  padding-top: var(--sk-space-2);
+  border-top: 1px dashed var(--sk-border);
+}
+
+#markdown-content .task-item__did {
+  display: block;
+  font-size: var(--sk-text-sm);
+  color: var(--sk-text-secondary);
+  line-height: var(--sk-leading-snug);
+}
+
+#markdown-content .task-item__files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sk-space-2);
+  margin-top: var(--sk-space-2);
+}
+
+#markdown-content .task-item__file {
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-xs);
+  color: var(--sk-text-secondary);
+  /* Surface tint, not the always-dark code token (light-theme readability). */
+  background: var(--sk-bg-elevated);
+  border: 1px solid var(--sk-border);
+  border-radius: var(--sk-radius-sm);
+  padding: 1px 6px;
+}
+
+/* ── Card hover: a quiet border strengthen — accent-flip hover reads as
+   decoration against dense document content (DESIGN.md). ── */
+#markdown-content .decision-card,
+#markdown-content .ck-group {
+  transition: border-color var(--sk-transition-fast) ease;
+}
+
+#markdown-content .decision-card:hover,
+#markdown-content .ck-group:hover {
+  border-color: var(--sk-border-hover);
+}
+
+
+/* ── Commentable wrapper (keeps the inline "+" affordance) ── */
+#markdown-content .component-line {
+  margin: var(--sk-space-2) 0;
+}
+
+#markdown-content .component-line:hover {
+  background: transparent;
+}
+
+#markdown-content .component-line > .req-row,
+#markdown-content .component-line > .entity-row,
+#markdown-content .component-line > .con-row,
+#markdown-content .component-line > .phase-header,
+#markdown-content .component-line > .user-story-header {
+  margin: 0;
+}
+
+#markdown-content .component-line > .line-add-btn {
+  top: var(--sk-space-2);
+  right: var(--sk-space-2);
+}

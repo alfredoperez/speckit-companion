@@ -153,7 +153,7 @@ export function generateHtml(
     <link rel="stylesheet" href="${codiconCssUri}">
     <title>Spec: ${escapeHtml(specName)}</title>
 </head>
-<body style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}"${readOnly ? ' data-read-only="true"' : ''}>
+<body class="sk-viewer" style="background: var(--vscode-editor-background, #1e1e1e);" data-spec-status="${specStatus}" data-spec-badge="${escapeHtml(badgeText || '')}"${readOnly ? ' data-read-only="true"' : ''}>
     <div class="viewer-container" id="app-root"></div>
     <template id="initial-content" data-raw="${content ? encodeBase64Utf8(content) : ''}"></template>
     <script nonce="${nonce}">

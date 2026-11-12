@@ -1,11 +1,11 @@
 import type { ViewerState, HistoryEntry, StepHistoryEntry } from '../../types';
-import { mergeStepEvents, buildHistoryIndex, TimelineEventModel } from '../../timelineEvents';
+import { mergeStepEvents, buildHistoryIndex, TimelineEventModel } from 'speckit-viewer/core/timelineEvents';
 import { Badge } from '../../../shared/components/Badge';
 import { TimelineEvent } from '../TimelineEvent';
 import {
     formatElapsed,
     formatAbsolute,
-} from '../../relativeTime';
+} from 'speckit-viewer/core/relativeTime';
 import { STEP_NAMES } from '../../../../../src/core/types/specContext';
 
 // The canonical step order, imported rather than restated.

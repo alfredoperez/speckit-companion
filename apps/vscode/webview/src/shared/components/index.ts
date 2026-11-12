@@ -7,9 +7,10 @@
  * matching `*.stories.tsx` so future contributors can see the variants at
  * a glance.
  *
- * Style tokens live in `webview/styles/tokens.css`. Primitive defaults
- * (Card / EmptyState / Tooltip / Button variants) live in
- * `_primitives.css` and `_buttons.css` under `webview/styles/spec-viewer/`.
+ * Style tokens live in `webview/styles/tokens.css` (the viewer's in the
+ * `speckit-viewer` package themes). Primitive defaults (Card / EmptyState /
+ * Tooltip / Button variants) live in `_primitives.css` and `_buttons.css`
+ * under `packages/viewer/styles/`.
  */
 
 export { Button } from './Button';

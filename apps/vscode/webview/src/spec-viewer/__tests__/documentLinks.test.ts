@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { renderMarkdown } from '../markdown/renderer';
+import { renderMarkdown } from 'speckit-viewer/core/markdown/renderer';
 import { navState } from '../signals';
 import { applyPendingFragment, resolveDocumentLink, setupDocumentLinkClickHandler } from '../documentLinks';
 import type { NavState, SpecDocument } from '../types';

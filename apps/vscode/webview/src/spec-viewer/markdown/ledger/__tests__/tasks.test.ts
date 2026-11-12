@@ -1,10 +1,10 @@
 /**
  * @jest-environment jsdom
  */
-import { parseTaskText, parseTasksModel, isTasksDocument, phaseDone } from '../tasksModel';
-import { preprocessLedgerTasks } from '../tasks';
+import { parseTaskText, parseTasksModel, isTasksDocument, phaseDone } from 'speckit-viewer/core/markdown/ledger/tasksModel';
+import { preprocessLedgerTasks } from 'speckit-viewer/core/markdown/ledger/tasks';
 import { applyTaskFilters } from '../tasksInteractions';
-import { renderMarkdown, setCurrentTask } from '../../renderer';
+import { renderMarkdown, setCurrentTask } from 'speckit-viewer/core/markdown/renderer';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 

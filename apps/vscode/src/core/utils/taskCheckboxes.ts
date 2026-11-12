@@ -1,3 +1,5 @@
+import type { TaskCounts } from 'speckit-viewer/contract/viewer';
+
 /**
  * The one reader of task checkboxes in a markdown document: a task is a list item, so only a
  * line-leading `- [ ]` counts — one inside a fenced block or code span is documentation, not work.
@@ -18,10 +20,7 @@ const FENCE_PATTERN = /^\s*(`{3,}|~{3,})/;
 const INLINE_CODE_PATTERN = /(`+)[^`]*?\1/g;
 const TASK_LINE_PATTERN = /^\s*[-*+]\s*\[([ xX])\]\s*(?:\*\*)?(T\d+)/;
 
-export interface TaskCounts {
-    checked: number;
-    total: number;
-}
+export type { TaskCounts };
 
 /** The document's lines with fenced code blocks dropped and inline code spans blanked out. */
 export function* proseLines(content: string): Generator<string> {

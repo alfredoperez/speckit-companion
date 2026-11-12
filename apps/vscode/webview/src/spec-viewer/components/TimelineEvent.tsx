@@ -1,5 +1,5 @@
-import type { TimelineEventModel } from '../timelineEvents';
-import { formatStepOffset } from '../relativeTime';
+import type { TimelineEventModel } from 'speckit-viewer/core/timelineEvents';
+import { formatStepOffset } from 'speckit-viewer/core/relativeTime';
 
 const KNOWN_ACTORS = new Set(['extension', 'cli', 'ai', 'user']);
 

@@ -11,8 +11,11 @@ import {
     type VsCodeVars,
 } from './capture-theme';
 
-// Import all spec-viewer CSS
-import '../apps/vscode/webview/styles/spec-viewer/index.css';
+// The viewer package's built stylesheet and VS Code theme, as the extension loads them
+// (`npm run viewer:build` writes them; the storybook scripts run it first).
+import '../packages/viewer/dist/styles/viewer.css';
+import '../packages/viewer/dist/styles/themes/vscode.css';
+import '../apps/vscode/webview/styles/_install-banner.css';
 // The builder panel rides the shared tokens rather than the viewer's owned
 // palette, so it needs both files to render the way the panel does.
 import '../apps/vscode/webview/styles/tokens.css';
@@ -108,7 +111,7 @@ const preview: Preview = {
             // tokens.css and highlighting.ts key off body.vscode-dark/-light,
             // so the class must live on <body>, not just the wrapper div.
             document.body.classList.remove('vscode-dark', 'vscode-light', 'vscode-high-contrast');
-            document.body.classList.add(theme.bodyClass);
+            document.body.classList.add('sk-viewer', theme.bodyClass);
 
             // tokens.css declares its tokens on :root, and a custom property's
             // var(--vscode-*) resolves where the property is DECLARED — so the

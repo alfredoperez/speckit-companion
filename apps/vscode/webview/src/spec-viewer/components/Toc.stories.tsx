@@ -17,13 +17,13 @@ interface TocHarnessProps {
 
 function renderHeadingsHtml(headings: Heading[]): string {
     if (headings.length === 0) {
-        return '<p style="color: var(--text-muted)">Empty document — TOC hides itself when no headings exist.</p>';
+        return '<p style="color: var(--sk-text-muted)">Empty document — TOC hides itself when no headings exist.</p>';
     }
     return headings
         .map(h => {
             const tag = h.level;
             return `<${tag} id="${h.id}" style="margin-top: ${h.level === 'h2' ? 24 : 16}px">${h.text}</${tag}>` +
-                `<p style="color: var(--text-muted); margin-top: 8px;">Sample body so the scroll container has content beneath each heading.</p>`;
+                `<p style="color: var(--sk-text-muted); margin-top: 8px;">Sample body so the scroll container has content beneath each heading.</p>`;
         })
         .join('');
 }
@@ -52,9 +52,9 @@ function TocHarness({ headings, width }: TocHarnessProps) {
             style={{
                 height: '560px',
                 overflowY: 'auto',
-                padding: 'var(--content-padding)',
+                padding: 'var(--sk-content-padding)',
                 width: width ? `${width}px` : undefined,
-                border: width ? '1px solid var(--border)' : undefined,
+                border: width ? '1px solid var(--sk-border)' : undefined,
             }}
         >
             <div
@@ -184,7 +184,7 @@ function MetadataHidingHarness() {
             <em>User description: "Rethink how we show the badge status because when tasks step finishes, it shows 'implement' in the badge instead of reflecting that the current step (tasks) is completed."</em>
         </div>
         <h2 id="summary">Summary</h2>
-        <p style="color: var(--text-muted); margin-top: 8px;">
+        <p style="color: var(--sk-text-muted); margin-top: 8px;">
             Below the meta blocks (which should be hidden when spec-context is
             on), the regular markdown content keeps rendering as usual.
         </p>
@@ -204,11 +204,11 @@ function MetadataHidingHarness() {
             style={{
                 display: 'flex',
                 flexDirection: 'row',
-                gap: 'var(--space-6)',
+                gap: 'var(--sk-space-6)',
                 alignItems: 'flex-start',
                 height: '480px',
                 overflowY: 'auto',
-                padding: 'var(--content-padding)',
+                padding: 'var(--sk-content-padding)',
             }}
         >
             <div

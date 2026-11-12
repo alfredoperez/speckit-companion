@@ -8,7 +8,7 @@ import {
     setLivingDrifted,
     setLivingNew,
     setTaskSummaries,
-} from './index';
+} from 'speckit-viewer/core/markdown/index';
 import { navState } from '../signals';
 import type { NavState, RequirementLink } from '../types';
 import { applyHighlighting } from '../highlighting';

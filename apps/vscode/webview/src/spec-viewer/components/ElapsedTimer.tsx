@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { formatElapsed } from '../relativeTime';
+import { formatElapsed } from 'speckit-viewer/core/relativeTime';
 
 interface ElapsedTimerProps {
     startedAt: string | null | undefined;

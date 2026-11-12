@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/apps/vscode/src', '<rootDir>/apps/vscode/webview/src', '<rootDir>/apps/vscode/tests'],
+  roots: ['<rootDir>/apps/vscode/src', '<rootDir>/apps/vscode/webview/src', '<rootDir>/apps/vscode/tests', '<rootDir>/packages/viewer'],
   testMatch: [
     '**/tests/**/*.test.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)'
@@ -25,7 +25,11 @@ module.exports = {
     '^preact/hooks$': '<rootDir>/node_modules/preact/hooks/dist/hooks.js',
     '^preact/jsx-runtime$': '<rootDir>/node_modules/preact/jsx-runtime/dist/jsxRuntime.js',
     '^@preact/signals$': '<rootDir>/node_modules/@preact/signals/dist/signals.js',
-    '^@preact/signals-core$': '<rootDir>/node_modules/@preact/signals-core/dist/signals-core.js'
+    '^@preact/signals-core$': '<rootDir>/node_modules/@preact/signals-core/dist/signals-core.js',
+    // The viewer package from source, and its renderer reading the extension's live signal (as webpack does).
+    '^speckit-viewer/(contract|core)$': '<rootDir>/packages/viewer/src/$1/index.ts',
+    '^speckit-viewer/(contract|core)/(.*)$': '<rootDir>/packages/viewer/src/$1/$2',
+    '^\\.\\./signals$': '<rootDir>/apps/vscode/webview/src/spec-viewer/signals.ts'
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
@@ -34,7 +38,8 @@ module.exports = {
   },
   testPathIgnorePatterns: [
     '/node_modules/',
-    '/__mocks__/'
+    '/__mocks__/',
+    '/packages/viewer/dist/'
   ],
   // 使快照文件更易读
   snapshotFormat: {

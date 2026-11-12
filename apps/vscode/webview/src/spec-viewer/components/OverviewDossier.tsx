@@ -1,9 +1,9 @@
 import type { ViewerState, ViewerCoverageRow, ViewerVerification } from '../types';
-import { formatElapsed, formatAbsolute } from '../relativeTime';
+import { formatElapsed, formatAbsolute } from 'speckit-viewer/core/relativeTime';
 import { LivingSpecLinks, livingSpecChips } from './cards/LivingSpecsCard';
-import { coverageState, isTraced } from '../coverageState';
+import { coverageState, isTraced } from 'speckit-viewer/core/coverageState';
 import { STEP_NAMES } from '../../../../src/core/types/specContext';
-import { safeUrl } from '../markdown/inline';
+import { safeUrl } from 'speckit-viewer/core/markdown/inline';
 import type { VSCodeApi } from '../types';
 
 declare const vscode: VSCodeApi;

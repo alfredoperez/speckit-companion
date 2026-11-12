@@ -18,10 +18,10 @@ import {
     setLivingCoverage,
     setLivingDrifted,
     setLivingNew,
-} from '../livingComponents';
+} from 'speckit-viewer/core/markdown/livingComponents';
 import { navState } from '../../signals';
 import type { NavState, RequirementLink } from '../../types';
-import { renderMarkdown, setLivingMode } from '../renderer';
+import { renderMarkdown, setLivingMode } from 'speckit-viewer/core/markdown/renderer';
 
 afterEach(() => {
     setLivingMode(false);

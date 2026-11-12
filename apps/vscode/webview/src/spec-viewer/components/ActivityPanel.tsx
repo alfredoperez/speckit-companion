@@ -1,6 +1,6 @@
 import type { ViewerState } from '../types';
 import { viewerState, navState, historyEntries } from '../signals';
-import { hasAnyData } from '../overviewModel';
+import { hasAnyData } from 'speckit-viewer/core/overviewModel';
 import {
     IntentSection,
     ExpectationsSection,

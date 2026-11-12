@@ -1,5 +1,5 @@
 import { navState, viewerState } from '../signals';
-import { inFlightStepFor, isStepInFlight } from '../stepInFlight';
+import { inFlightStepFor, isStepInFlight } from 'speckit-viewer/core/stepInFlight';
 import { CatalogFooter } from './footer/CatalogFooter';
 import { LivingFooter } from './footer/LivingFooter';
 import { ReportFooter } from './footer/ReportFooter';

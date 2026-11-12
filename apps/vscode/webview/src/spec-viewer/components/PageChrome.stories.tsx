@@ -35,10 +35,10 @@ function Pane({ width, children }: { width?: number; children: ComponentChildren
     return (
         <div
             class="viewer-container"
-            style={`height: auto; ${width ? `width: ${width}px; border-right: 1px solid var(--border);` : ''}`}
+            style={`height: auto; ${width ? `width: ${width}px; border-right: 1px solid var(--sk-border);` : ''}`}
         >
             {children}
-            <div style="padding: 20px var(--content-padding); color: var(--text-muted); font-size: 12px;">
+            <div style="padding: 20px var(--sk-content-padding); color: var(--sk-text-muted); font-size: 12px;">
                 (reading column starts here)
             </div>
         </div>

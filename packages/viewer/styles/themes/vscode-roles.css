@@ -1,0 +1,12 @@
+/** The extension's role colours: blue for info and requirement ids, red for high priority. */
+.sk-viewer {
+    --sk-info: var(--sk-blue);
+    --sk-info-subtle: var(--sk-blue-subtle);
+    --sk-priority-high: var(--sk-error);
+    --sk-priority-medium: var(--sk-warning);
+    --sk-priority-low: var(--sk-accent);
+    --sk-id-fr: var(--sk-info);
+    --sk-id-fr-subtle: var(--sk-info-subtle);
+    --sk-id-sc: var(--sk-success);
+    --sk-id-sc-subtle: var(--sk-success-subtle);
+}

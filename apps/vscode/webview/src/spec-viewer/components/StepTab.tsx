@@ -1,6 +1,6 @@
 import type { SpecDocument, StalenessMap } from '../types';
 import { navState, viewerState } from '../signals';
-import { CONVERGE_STEP, IMPLEMENT_STEP, isConvergeInFlight, isStepInFlight } from '../stepInFlight';
+import { CONVERGE_STEP, IMPLEMENT_STEP, isConvergeInFlight, isStepInFlight } from 'speckit-viewer/core/stepInFlight';
 import { ElapsedTimer } from './ElapsedTimer';
 
 const DOC_TO_STEP: Record<string, string> = {

@@ -5,7 +5,7 @@
 
 import type { NavState, SpecDocument, VSCodeApi } from './types';
 import { navState, viewerMode } from './signals';
-import { slugify } from './markdown';
+import { slugify } from 'speckit-viewer/core/markdown/index';
 import { prefersReducedMotion } from './toc';
 
 declare const vscode: VSCodeApi;

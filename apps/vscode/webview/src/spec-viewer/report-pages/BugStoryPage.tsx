@@ -1,6 +1,6 @@
 import type { BugEngineView, BugLead, BugMeta, BugReportName, BugStep, BugStepId, BugStory } from '../../../../src/features/reports/reportPageModel';
 import { Inline, Prose } from './fragments';
-import { safeUrl } from '../markdown/inline';
+import { safeUrl } from 'speckit-viewer/core/markdown/inline';
 
 const LEADS: Record<BugLead, string> = {
     assessed: 'Assessed, not fixed yet.',
