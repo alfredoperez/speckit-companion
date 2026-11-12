@@ -119,10 +119,11 @@ describe('SpecViewerProvider.showSpec', () => {
     });
 
     describe('the spec page gets the sibling tasks.md', () => {
+        // tasksMarkdown, the argument before the spec title.
         const lastArg = () => {
             const calls = (generateHtml as jest.Mock).mock.calls;
             const call = calls[calls.length - 1];
-            return call[call.length - 1];
+            return call[call.length - 2];
         };
         const fileBytes = (files: Record<string, string>) => (uri: vscode.Uri) =>
             files[uri.fsPath] === undefined
