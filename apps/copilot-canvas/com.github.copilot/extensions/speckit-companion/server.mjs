@@ -11,6 +11,8 @@ import { buildSnapshot, findSpec, readSpecDetail, recordLive, resolveSpecDirs } 
 import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
 import { BUSY, recordStep } from './run-record.mjs';
 import { stepEvidence, withRunningStep } from './spec-rules.mjs';
+import { validateRoot } from './workspace.mjs';
+import { pickFolder } from './folder-picker.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
 const ASSETS = {
@@ -57,9 +59,18 @@ function tokenMatches(given, expected) {
  * `send(prompt)` puts a prompt into the agent chat; it resolves to false when there is no session (dev mode).
  * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
-export async function createSpecServer({ root, specDirs, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
+export async function createSpecServer({ root, workingDirectory = root, manual = false, bound = null, coordinatedSessions = [], saveCoordinatedSessions, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, browseFolder = pickFolder, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
     const state = {
         root,
+        workingDirectory,
+        manual,
+        bound: manual ? bound : null,
+        coordinatedSessions,
+        children: [],
+        childNote: null,
+        failed: null,
+        discovering: false,
+        pollTimer: null,
         specDirs: specDirs ?? resolveSpecDirs(root),
         token: randomBytes(24).toString('base64url'),
         clients: new Set(),
@@ -77,6 +88,8 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         sawTurnStart: false,
         host: null,
         origin: null,
+        rootRevision: 0,
+        browsing: false,
     };
 
     const commandSet = () => detectCommandSet(state.root);
@@ -101,7 +114,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     }
 
     function snapshot() {
-        return { ...state.snapshot, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
+        return { ...state.snapshot, rootSource: state.bound ? 'bound' : state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', boundSession: state.bound, coordinatedSessions: state.coordinatedSessions, children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
     }
 
     /** The step's document as it is on disk right now, so a later look can tell whether the run touched it. */
@@ -150,11 +163,184 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     function rescan({ asked = true } = {}) {
         state.snapshot = buildSnapshot(state.root, state.specDirs);
         reviewRuns();
+        if (reconcile()) return state.snapshot;
         const next = snapshot();
         const key = JSON.stringify({ ...next, generatedAt: null });
         if (asked || key !== state.sentKey) emit('snapshot', next);
         state.sentKey = key;
         return state.snapshot;
+    }
+
+    const idle = () => !state.runs.size && !state.pendingSpecify && !state.retries.size;
+
+    function selectRoot(root) {
+        const nextRoot = validateRoot(root);
+        if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+        const nextDirs = resolveSpecDirs(nextRoot);
+        const nextSnapshot = buildSnapshot(nextRoot, nextDirs);
+        if (!saveRoot) throw new Error('Repository selection is unavailable without session storage.');
+        const keepSource = state.bound && nextRoot === state.root ? state.bound : null;
+        saveRoot(nextRoot, keepSource ?? undefined);
+        state.manual = true;
+        state.bound = keepSource;
+        applyRoot(nextRoot, nextDirs, nextSnapshot);
+        return snapshot();
+    }
+
+    /**
+     * The coordinating agent names a session and its worktree, read from the app's own session details. This is a caller-provided
+     * binding: the board cannot verify ownership. Rebinding the same or another session replaces the previous one.
+     */
+    function bindSession({ sessionId, cwd, name }) {
+        if (typeof sessionId !== 'string' || !sessionId.trim()) throw new Error('A source session id is required.');
+        const nextRoot = validateRoot(cwd);
+        if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+        if (!saveRoot) throw new Error('Repository selection is unavailable without session storage.');
+        const nextDirs = resolveSpecDirs(nextRoot);
+        const nextSnapshot = buildSnapshot(nextRoot, nextDirs);
+        const source = { sessionId: sessionId.trim(), name: typeof name === 'string' && name.trim() ? name.trim() : sessionId.trim() };
+        saveRoot(nextRoot, source);
+        state.manual = true;
+        state.bound = source;
+        applyRoot(nextRoot, nextDirs, nextSnapshot);
+        return snapshot();
+    }
+
+    function updateCoordinatedSessions(sessions) {
+        if (!Array.isArray(sessions)) throw new Error('A complete sessions array is required.');
+        const ids = new Set();
+        const next = sessions.map(session => {
+            if (!session || typeof session !== 'object' || Array.isArray(session) ||
+                Object.keys(session).some(key => !['sessionId', 'cwd', 'name', 'activity'].includes(key)) ||
+                typeof session.sessionId !== 'string' || !session.sessionId.trim() ||
+                typeof session.name !== 'string' || !session.name.trim() ||
+                (session.activity !== undefined && !['busy', 'idle', 'unknown'].includes(session.activity))) {
+                throw new Error('Each session requires an id, name and absolute directory, with optional busy, idle or unknown activity.');
+            }
+            const sessionId = session.sessionId.trim();
+            if (ids.has(sessionId)) throw new Error(`Duplicate coordinated session id: ${sessionId}`);
+            ids.add(sessionId);
+            return { sessionId, cwd: validateRoot(session.cwd), name: session.name.trim(), ...(session.activity ? { activity: session.activity } : {}) };
+        });
+        const selected = state.bound && next.find(session => session.sessionId === state.bound.sessionId);
+        const moved = selected && selected.cwd !== state.root;
+        if (moved && !idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+        if (!saveCoordinatedSessions) throw new Error('Session storage is unavailable; the session list cannot be saved.');
+        const nextDirs = moved ? resolveSpecDirs(selected.cwd) : null;
+        const nextSnapshot = moved ? buildSnapshot(selected.cwd, nextDirs) : null;
+        const source = selected ? { sessionId: selected.sessionId, name: selected.name } : state.bound;
+        saveCoordinatedSessions(next, state.manual ? (selected?.cwd ?? state.root) : null, source);
+        state.coordinatedSessions = next;
+        state.bound = source;
+        if (moved) applyRoot(selected.cwd, nextDirs, nextSnapshot);
+        else rescan();
+        return snapshot();
+    }
+
+    function selectCoordinatedSession(sessionId) {
+        const selected = state.coordinatedSessions.find(session => session.sessionId === sessionId);
+        if (!selected) throw Object.assign(new Error('The coordinated session is unavailable. Ask the coordinator to refresh the list.'), { status: 404 });
+        return bindSession(selected);
+    }
+
+    /** Go back to following the session; the saved choice is removed first so a reload agrees. */
+    function followSession() {
+        if (!state.manual) return snapshot();
+        if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+        if (!clearRoot) throw new Error('Repository selection is unavailable without session storage.');
+        const target = validateRoot(desiredRoot());
+        clearRoot();
+        state.manual = false;
+        state.bound = null;
+        state.failed = null;
+        applyRoot(target);
+        return snapshot();
+    }
+
+    function lacksSpecs(directory) {
+        try {
+            return buildSnapshot(directory, resolveSpecDirs(directory)).specs.length === 0;
+        } catch {
+            return true;
+        }
+    }
+
+    /**
+     * Where the board belongs without a manual choice: the session's own directory, unless that holds no specs and the session
+     * has exactly one child it owns. With several children nothing is guessed; the board lists them and waits for a pick.
+     */
+    function desiredRoot() {
+        const own = state.workingDirectory;
+        if (state.children.length === 1 && (!own || lacksSpecs(own))) return state.children[0].cwd;
+        return own;
+    }
+
+    /**
+     * The session's working directory changed (the runtime reports it per session). Without a manual choice the board follows it,
+     * but only once no step sent from the board is running or being recorded, so a run never ends up read from another repository.
+     */
+    function followWorkingDirectory(directory) {
+        state.workingDirectory = validateRoot(directory);
+        state.failed = null;
+        reconcile();
+    }
+
+    function reconcile() {
+        const target = desiredRoot();
+        if (state.manual || state.closed || !target || target === state.root || target === state.failed || !idle()) return false;
+        try {
+            applyRoot(validateRoot(target));
+        } catch (error) {
+            log(`[speckit-canvas] could not follow ${target}: ${error.message}`);
+            state.failed = target;
+            return false;
+        }
+        return true;
+    }
+
+    /** Sessions this one owns, as the runtime reports them; a vanished child drops out and the board falls back to the session. */
+    function setChildren(children, note = null) {
+        const next = children.filter(child => child && typeof child.cwd === 'string' && child.cwd).map(({ sessionId, name, cwd, state: childState }) => ({ sessionId, name, cwd, state: childState }));
+        state.children = next;
+        state.childNote = note;
+        state.failed = null;
+        if (!reconcile()) rescan({ asked: false });
+    }
+
+    async function refreshChildren() {
+        if (!discoverChildren || state.closed || state.discovering) return;
+        state.discovering = true;
+        try {
+            const { children, note } = await discoverChildren();
+            if (!state.closed) setChildren(children, note);
+        } catch (error) {
+            if (!state.closed) setChildren([], error.message);
+        } finally {
+            state.discovering = false;
+        }
+    }
+
+    /** Pick one of the sessions this one owns; only a listed session counts, never a path the caller names. */
+    function selectChild(sessionId) {
+        const child = state.children.find(candidate => candidate.sessionId === sessionId);
+        if (!child) throw Object.assign(new Error(`${sessionId} is not a session owned by this chat.`), { status: 404 });
+        return selectRoot(child.cwd);
+    }
+
+    function applyRoot(nextRoot, nextDirs = resolveSpecDirs(nextRoot), nextSnapshot = buildSnapshot(nextRoot, nextDirs)) {
+        state.rootRevision++;
+        clearTimeout(state.timer);
+        clearTimeout(state.runTimer);
+        for (const watcher of state.watchers) watcher.close();
+        state.watchers.clear();
+        state.root = nextRoot;
+        state.specDirs = nextDirs;
+        state.selected = null;
+        state.snapshot = nextSnapshot;
+        state.sentKey = null;
+        startWatching();
+        rescan();
+        return snapshot();
     }
 
     /** Write a settled step to the record, trying again for a couple of seconds while another writer holds its lock. */
@@ -192,7 +378,10 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         state.busy = false;
         // A host that never reports a turn starting gives no way to pair, so there every run settles.
         const over = run => run.started || !state.sawTurnStart;
-        if (![...state.runs.values(), state.pendingSpecify].some(run => run && over(run))) return;
+        if (![...state.runs.values(), state.pendingSpecify].some(run => run && over(run))) {
+            reconcile();
+            return;
+        }
         state.snapshot = buildSnapshot(state.root, state.specDirs);
         reviewRuns();
         for (const [id, run] of state.runs) {
@@ -293,6 +482,10 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
     }
 
     async function deliver(spec, command, prompt, instructionsFile = null) {
+        if (state.root !== state.workingDirectory) {
+            prompt += `\n\nRepository directory: ${JSON.stringify(state.root)}. Run this request in that repository; resolve all relative spec, command and instruction-file paths from that directory, not the chat working directory.`;
+            if (instructionsFile) instructionsFile = resolve(state.root, instructionsFile);
+        }
         const sent = await send(prompt);
         emit('run', { spec, command, prompt, instructionsFile, sent, at: new Date().toISOString() });
         return { prompt, instructionsFile, sent };
@@ -393,7 +586,42 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
 
         if (req.method === 'POST') {
             const body = await readJson(req);
-            if (pathname === '/api/refresh') return sendJson(res, 200, { count: rescan().specs.length });
+            if (pathname === '/api/root') {
+                const next = selectRoot(body.root);
+                return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
+            if (pathname === '/api/root/browse') {
+                if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
+                if (state.browsing) throw new Error('A folder picker is already open.');
+                state.browsing = true;
+                const revision = state.rootRevision;
+                try {
+                    const selected = await browseFolder(state.root);
+                    if (state.closed) throw new Error('The board was closed while the folder picker was open.');
+                    if (!selected) return sendJson(res, 200, { cancelled: true });
+                    if (revision !== state.rootRevision) throw new Error('The repository changed while the folder picker was open. Try again.');
+                    const next = selectRoot(selected);
+                    return sendJson(res, 200, { root: next.root, count: next.specs.length });
+                } finally {
+                    state.browsing = false;
+                }
+            }
+            if (pathname === '/api/root/follow') {
+                const next = followSession();
+                return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
+            if (pathname === '/api/root/child') {
+                const next = selectChild(body.sessionId);
+                return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
+            if (pathname === '/api/root/coordinated') {
+                const next = selectCoordinatedSession(body.sessionId);
+                return sendJson(res, 200, { root: next.root, count: next.specs.length });
+            }
+            if (pathname === '/api/refresh') {
+                await refreshChildren();
+                return sendJson(res, 200, { count: rescan().specs.length });
+            }
             if (pathname === '/api/focus') return sendJson(res, 200, focus(body.spec));
             if (pathname === '/api/run') return sendJson(res, 200, await run(body.spec, body.command));
             if (pathname === '/api/specify') return sendJson(res, 200, await specify(body.description, body.workflow));
@@ -437,6 +665,10 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
 
     rescan();
     startWatching();
+    if (discoverChildren) {
+        refreshChildren();
+        if (childPollMs > 0) state.pollTimer = setInterval(refreshChildren, childPollMs).unref();
+    }
 
     return {
         url: `${state.origin}/?token=${encodeURIComponent(state.token)}`,
@@ -444,6 +676,14 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         token: state.token,
         get snapshot() { return snapshot(); },
         rescan,
+        selectRoot,
+        selectChild,
+        bindSession,
+        updateCoordinatedSessions,
+        selectCoordinatedSession,
+        refreshChildren,
+        followSession,
+        followWorkingDirectory,
         focus,
         run,
         specify,
@@ -455,6 +695,7 @@ export async function createSpecServer({ root, specDirs, send = async () => fals
         },
         async close() {
             state.closed = true;
+            clearInterval(state.pollTimer);
             clearTimeout(state.timer);
             clearTimeout(state.runTimer);
             for (const timer of state.retries) clearTimeout(timer);

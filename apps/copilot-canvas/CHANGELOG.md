@@ -4,6 +4,14 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+### Fixed
+
+- **Choose coordinated sessions from a list.** The coordinating agent maintains the session options and updates the selected worktree. <!-- area: copilot-app -->
+- **Project chats can select their repository.** Browse for a checkout or enter its path; the board remembers it and watches its specs. <!-- area: copilot-app -->
+- **The board follows each session's worktree.** Without a saved choice, each session's board moves to its own working directory when the runtime reports a change. <!-- area: copilot-app -->
+- **A coordinator can bind a child session's worktree.** The agent passes the child's id and path from its session details, and the board keeps it through ordinary buttons. <!-- area: copilot-app -->
+- **A Project chat shows its session's worktree.** With session management on, the board follows the only session the chat owns and lists several for you to pick. <!-- area: copilot-app -->
+
 ## [0.2.1] - 2026-11-08
 
 ### Fixed

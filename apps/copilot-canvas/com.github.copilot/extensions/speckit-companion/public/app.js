@@ -54,6 +54,16 @@ const els = {
     detail: $('detail'),
     layout: $('layout'),
     repoLine: $('repo-line'),
+    repositoryForm: $('repository-form'),
+    repositoryRoot: $('repository-root'),
+    repositoryBrowse: $('repository-browse'),
+    repositoryWarning: $('repository-warning'),
+    repositoryFollow: $('repository-follow'),
+    coordinatedSession: $('coordinated-session'),
+    coordinatedHint: $('coordinated-session-hint'),
+    childrenBox: $('repository-children'),
+    childrenHint: $('repository-children-hint'),
+    childrenList: $('repository-children-list'),
     live: $('live'),
     liveLabel: $('live-label'),
     search: $('search'),
@@ -290,6 +300,45 @@ function visibleSpecs() {
     });
 }
 
+function renderChildren() {
+    const children = state.snapshot.children ?? [];
+    const note = state.snapshot.childNote;
+    els.childrenBox.hidden = children.length === 0 && !note;
+    els.childrenHint.textContent = children.length > 1 && state.snapshot.rootSource !== 'selected'
+        ? 'This chat owns several sessions. Choose the one whose specs to show.'
+        : note ?? '';
+    els.childrenList.replaceChildren(...children.map(child => el('li', {},
+        el('button', {
+            class: 'btn btn-quiet',
+            type: 'button',
+            title: child.cwd,
+            'aria-pressed': String(child.cwd === state.snapshot.root),
+            onclick: async () => {
+                try {
+                    const result = await api('/api/root/child', { sessionId: child.sessionId });
+                    toast(`Showing ${result.root}`);
+                } catch (error) {
+                    toast(`Could not select the session: ${error.message}`);
+                }
+            },
+        }, child.name || child.sessionId))));
+}
+
+function renderCoordinatedSessions() {
+    const sessions = state.snapshot.coordinatedSessions ?? [];
+    const bound = state.snapshot.boundSession;
+    const missing = bound && !sessions.some(session => session.sessionId === bound.sessionId);
+    els.coordinatedSession.replaceChildren(el('option', { value: '', text: 'Choose a coordinated session' }));
+    if (missing) els.coordinatedSession.append(el('option', { value: bound.sessionId, text: `${bound.name} (unavailable)` }));
+    for (const session of sessions) {
+        els.coordinatedSession.append(el('option', { value: session.sessionId, text: `${session.name}${session.activity ? ` · ${session.activity}` : ''}` }));
+    }
+    els.coordinatedSession.value = bound?.sessionId ?? '';
+    els.coordinatedHint.textContent = missing
+        ? 'The selected session is not in the latest list. Its last repository remains open; ask the coordinator to refresh or disconnect.'
+        : sessions.length ? 'The coordinator maintains this list; commands run in this chat.' : 'Ask the coordinator to update the session list.';
+}
+
 function renderBoard() {
     const specs = state.snapshot?.specs ?? [];
     const active = specs.filter(s => !s.done).length;
@@ -297,11 +346,23 @@ function renderBoard() {
     $('count-done').textContent = specs.length - active;
     $('count-all').textContent = specs.length;
     els.repoLine.textContent = `Spec board · ${state.snapshot.repoName} · ${active} active of ${specs.length}`;
+    els.repoLine.title = state.snapshot.root;
+    if (document.activeElement !== els.repositoryRoot) els.repositoryRoot.value = state.snapshot.root;
+    els.repositoryWarning.hidden = !state.snapshot.missingSpecDirectories;
+    els.repositoryFollow.hidden = !['selected', 'bound'].includes(state.snapshot.rootSource);
+    els.repositoryFollow.textContent = state.snapshot.boundSession ? `Disconnect from ${state.snapshot.boundSession.name}` : 'Follow session';
+    els.repositoryFollow.title = state.snapshot.boundSession ? 'Stop showing the bound session and go back to this chat\'s own directory' : 'Drop the chosen directory and follow this session';
+    els.repoLine.textContent += state.snapshot.boundSession ? ` · from ${state.snapshot.boundSession.name}` : '';
+    els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
+    renderChildren();
+    renderCoordinatedSessions();
 
     const shown = visibleSpecs();
     els.listEmpty.hidden = shown.length > 0;
     els.listEmpty.textContent = specs.length === 0
-        ? 'No specs here yet. Use New spec to start one.'
+        ? state.snapshot.missingSpecDirectories
+            ? 'No spec directory found. Check the repository directory above.'
+            : 'No specs here yet. Use New spec to start one.'
         : 'No specs match.';
     els.list.replaceChildren(...shown.map(spec => el('li', {},
         el('button', {
@@ -591,6 +652,14 @@ function renderSpecifyChoices() {
 }
 
 function applySnapshot(snapshot) {
+    if (state.snapshot && state.snapshot.root !== snapshot.root) {
+        state.selected = null;
+        state.detail = null;
+        state.shown = null;
+        state.detailRequest++;
+        state.query = '';
+        els.search.value = '';
+    }
     const key = JSON.stringify({ ...snapshot, generatedAt: null });
     const same = key === state.snapshotKey;
     state.snapshotKey = key;
@@ -652,6 +721,55 @@ els.refresh.addEventListener('click', async () => {
         toast(`Re-read ${count} specs`);
     } catch (error) {
         toast(`Refresh failed: ${error.message}`);
+    }
+});
+
+els.repositoryForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    try {
+        const result = await api('/api/root', { root: els.repositoryRoot.value.trim() });
+        els.repositoryRoot.blur();
+        toast(`Scanning ${result.root}: ${result.count} specs`);
+    } catch (error) {
+        toast(`Could not select repository: ${error.message}`);
+    }
+});
+
+els.repositoryBrowse.addEventListener('click', async () => {
+    els.repositoryBrowse.disabled = true;
+    try {
+        const result = await api('/api/root/browse', {});
+        if (!result.cancelled) {
+            els.repositoryRoot.value = result.root;
+            toast(`Scanning ${result.root}: ${result.count} specs`);
+        }
+    } catch (error) {
+        toast(`Could not browse repositories: ${error.message}`);
+    } finally {
+        els.repositoryBrowse.disabled = false;
+    }
+});
+
+els.repositoryFollow.addEventListener('click', async () => {
+    try {
+        const result = await api('/api/root/follow', {});
+        toast(`Disconnected; showing this session: ${result.root}`);
+    } catch (error) {
+        toast(`Could not disconnect: ${error.message}`);
+    }
+});
+
+els.coordinatedSession.addEventListener('change', async () => {
+    if (!els.coordinatedSession.value) {
+        renderCoordinatedSessions();
+        return;
+    }
+    try {
+        const result = await api('/api/root/coordinated', { sessionId: els.coordinatedSession.value });
+        toast(`Showing ${result.root}`);
+    } catch (error) {
+        renderCoordinatedSessions();
+        toast(`Could not select the session: ${error.message}`);
     }
 });
 
