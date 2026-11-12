@@ -46,6 +46,8 @@ RUNTIME_SCRIPTS = frozenset({
     "spec_context.py",
     "spec_deltas.py",
     "capture.py",
+    # The diff scan `--verify-run` records as concerns.
+    "lowered_bar.py",
     "task_sync.py",
     "living_spec_fold.py",
     # The shape check, and the fold imports it: a gate a missing file can turn
