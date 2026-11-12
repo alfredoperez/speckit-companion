@@ -19,7 +19,7 @@ function formatStatusLabel(status: string): string {
         .join(' ');
 }
 
-const TITLE_PREFIX = /^(?:Phase \d+ )?(?:Feature Specification|Implementation Plan|Specification|Research|Tasks|Plan)\s*:\s*/i;
+const TITLE_PREFIX = /^(?:Phase \d+ )?(?:Feature Specification|Implementation Plan|Specification|Spec|Research|Tasks|Plan)\s*:\s*/i;
 
 /** The document's own H1 as a plain title ("Feature Specification: X" becomes "X"), or null. */
 export function documentTitle(html: string): string | null {

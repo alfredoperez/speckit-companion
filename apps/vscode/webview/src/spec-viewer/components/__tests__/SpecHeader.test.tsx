@@ -68,6 +68,16 @@ describe('the title from the document', () => {
         cleanup(container);
     });
 
+    it('drops a short "Spec:" prefix the same way', () => {
+        navState.value = mockNavState({ specContextName: 'Demo — Specified' });
+        markdownHtml.value = '<h1>Spec: Demo — Dark Mode Toggle</h1>';
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-title')?.textContent).toBe('Demo — Dark Mode Toggle');
+
+        cleanup(container);
+    });
+
     it('falls back to the folder name when the document has no heading', () => {
         navState.value = mockNavState({ specContextName: 'Some Spec' });
         markdownHtml.value = '<p>no heading</p>';

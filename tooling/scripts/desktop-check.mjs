@@ -126,6 +126,10 @@ function buildProject({ provider = 'claude' } = {}) {
             cpSync(join(EXTENSION, 'specs', spec), join(project, 'specs', spec), { recursive: true });
         }
         addCompletedRun(project);
+        // The Workflow Builder draws the Companion pipeline only when the Companion spec-kit extension is in the project.
+        const companion = join(project, '.specify', 'extensions', 'companion');
+        mkdirSync(companion, { recursive: true });
+        cpSync(join(EXTENSION, 'apps', 'speckit-extension', 'extension.yml'), join(companion, 'extension.yml'));
     }
     // Whatever a step sends goes to this stand-in, so nothing real runs and the terminal shows what was sent.
     const bin = join(root, 'bin');
@@ -875,8 +879,8 @@ try {
         }
         await expand(await rowAt(1, 'Active'));
     };
-    /** The spec's name as the viewer header shows it. */
-    const headerName = async () => (await webview().locator('.spec-header-title').first().innerText()).replace(/\s+/g, ' ').trim();
+    /** The viewer header's title plus its spec-name chip, which carries the name when the document's own heading leads. */
+    const headerName = async () => (await webview().locator('.spec-header-main').first().innerText()).replace(/\s+/g, ' ').trim();
     /** How many editor tabs are open. */
     const tabCount = () => page.locator('.editor-group-container .tab').count();
     /** The specs the Specs pane lists under a group, by expanding it and reading the rows down to the next group. */
