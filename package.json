@@ -1605,6 +1605,7 @@
     "prewatch": "npm run viewer:build",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
+    "check:vsix": "node tooling/scripts/check-vsix.mjs",
     "precompile-web": "npm run viewer:build",
     "compile-web": "webpack --mode development",
     "watch-web": "webpack --mode development --watch",

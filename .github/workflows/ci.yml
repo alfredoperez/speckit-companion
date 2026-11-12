@@ -124,6 +124,12 @@ jobs:
         if: needs.changes.outputs.code == 'true'
         run: npx tsc -p tsconfig.webview.json --noEmit
 
+      # Packages the .vsix and fails when a shipped file requires something it does not
+      # carry, or when the extension's main entry does not load with vscode stubbed.
+      - name: The packaged extension carries what it requires
+        if: needs.changes.outputs.code == 'true'
+        run: npm run check:vsix
+
       - name: Run tests
         if: needs.changes.outputs.code == 'true'
         run: npm test
