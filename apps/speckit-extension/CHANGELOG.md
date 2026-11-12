@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ### Added
 - **Hands-off runs on spec-kit's workflow engine.** `specify workflow run` routes on the recorded size, and ==each review gate resumes headless==. ([#1006](https://github.com/alfredoperez/speckit-companion/pull/1006)) <!-- area: pipeline -->
 - **Corner cuts show up as concerns.** A skipped test, a suppression, an empty stub or a lower coverage bar is ==recorded with its file and line==, never blocking. ([#1005](https://github.com/alfredoperez/speckit-companion/pull/1005)) <!-- area: run-record -->
-- **The doctor flags retired living-spec settings.** It prints ==one line== when a leftover living-specs setting is present, and notes a constitution that still names flow-back. ([#934](https://github.com/alfredoperez/speckit-companion/issues/934)) <!-- area: run-record -->
+- **The doctor flags retired living-spec settings.** It prints ==one line== when a leftover living-specs setting is present, and notes a constitution that still names flow-back. ([#1008](https://github.com/alfredoperez/speckit-companion/pull/1008)) <!-- area: run-record -->
 
 ### Changed
 - **Hands-off runs cost less.** An auto run makes ==fewer bookkeeping calls== and carries fewer instructions, closing the gap to stock on harder work. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
@@ -21,7 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Task times come per wave.** A wave of tasks closes in one step, so the viewer shows ==one time per wave==. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: run-record -->
 
 ### Removed
-- **Living specs are retired.** The seven living commands left too, and ==each change keeps one folder==; the [loss list](https://github.com/alfredoperez/speckit-companion/blob/main/specs/669-retire-living-specs/loss-list.md) says what went. ([#934](https://github.com/alfredoperez/speckit-companion/issues/934)) <!-- area: living-specs -->
+- **Living specs are retired.** The seven living commands left too, and ==each change keeps one folder==; the [loss list](https://github.com/alfredoperez/speckit-companion/blob/main/specs/669-retire-living-specs/loss-list.md) says what went. ([#1008](https://github.com/alfredoperez/speckit-companion/pull/1008)) <!-- area: living-specs -->
 
 ### Fixed
 - **Receipts catch every code edit.** A check reads ==out of date== even when the edit lands in the same second as the commit. ([#1003](https://github.com/alfredoperez/speckit-companion/pull/1003)) <!-- area: run-record -->
