@@ -1,0 +1,520 @@
+{
+  "workflow": "companion",
+  "specName": "Hands-off runs also work on spec-kit's workflow engine",
+  "branch": "feat/933-workflow-engine",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:25:03.597Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T17:26:10.516Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:26:15.600Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:27:43.787Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:27:49.486Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:28:09.095Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:28:14.649Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:28:32.664Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:29:22.506Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:29:22.506Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:29:58.327Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:30:23.732Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:30:44.352Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:30:44.352Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:30:44.472Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:31:04.841Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:31:13.260Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:43:39.126Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:43:39.388Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:43:39.419Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T17:43:49.003Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T17:44:02.281Z"
+    }
+  ],
+  "request": "GitHub issue #933: hands-off runs also work on spec-kit's workflow engine (see gh issue view 933)",
+  "unattended": true,
+  "last_action": "sandbox gated run completed",
+  "expectations": [
+    "extension manifest shipping workflows (not supported)",
+    "changing auto"
+  ],
+  "context": [
+    "area: apps/speckit-extension/workflows",
+    "area: apps/speckit-extension/scripts/doctor_checks.py",
+    "constraint: Spec Kit 1.4.1 gate verdict_input, shell stdout, switch strips",
+    "constraint: pipeline shape derived once by pipeline-graph.py"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "read size via a read-only step",
+      "tasks": [
+        "T001",
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_workflow_engine.py"
+      ]
+    },
+    "FR-002": {
+      "title": "case keys equal route-changing verdicts",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_workflow_integrity.py::test_the_cases_are_the_verdicts_that_change_the_route"
+      ]
+    },
+    "FR-003": {
+      "title": "missing size takes full pipeline",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_workflow_engine.py::test_prints_nothing_without_a_record"
+      ]
+    },
+    "FR-004": {
+      "title": "remove scope",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_workflow_integrity.py::test_the_unused_scope_input_is_gone"
+      ]
+    },
+    "FR-005": {
+      "title": "per-gate verdict input",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_workflow_integrity.py::test_every_gate_names_its_own_resumable_verdict_input"
+      ]
+    },
+    "FR-006": {
+      "title": "doctor reports and fixes registration",
+      "tasks": [
+        "T005",
+        "T006",
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_doctor_workflow.py"
+      ]
+    },
+    "FR-007": {
+      "title": "test checks switch source and keys",
+      "tasks": [
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_workflow_integrity.py::test_the_switch_reads_the_stdout_of_a_shell_step"
+      ]
+    },
+    "FR-008": {
+      "title": "site documents run/resume",
+      "tasks": [
+        "T009"
+      ],
+      "assumes": "site page section reviewed by reading"
+    },
+    "FR-009": {
+      "title": "auto unchanged",
+      "tasks": [
+        "T012"
+      ],
+      "assumes": "auto body unchanged except the shared self-advance sentence, which auto already skips"
+    }
+  },
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Run the Companion pipeline on spec-kit's workflow engine with size routing and headless gates",
+  "size": "normal",
+  "source": "#933",
+  "decisions": [
+    {
+      "decision": "size step = shell running status-context.py --size, switch on stdout",
+      "why": "shell steps expose stdout in 1.4.1; reader already resolves feature.json",
+      "rejected": "capture:true on classify (cannot make output.size, 600s kill)",
+      "by": "agent",
+      "at": "2026-11-12T17:27:43.616Z"
+    },
+    {
+      "decision": "one verdict input per gate (review_spec, review_plan)",
+      "why": "a bound input stays set after approve; a shared one passes every later gate",
+      "rejected": "single verdict input",
+      "by": "agent",
+      "at": "2026-11-12T17:27:43.616Z"
+    },
+    {
+      "decision": "doctor workflow check + doctor.py --fix runs specify workflow add",
+      "why": "extensions cannot ship workflows and have no install hook",
+      "rejected": "registering from a run hook",
+      "by": "agent",
+      "at": "2026-11-12T17:27:43.616Z"
+    },
+    {
+      "decision": "command steps carry 'workflow engine step' in their args and the self-advance part skips handoff on it",
+      "why": "first gated sandbox run self-advanced from specify through converge before the engine reached the gate",
+      "rejected": "an env var (the engine sets none for command steps)",
+      "by": "agent",
+      "at": "2026-11-12T17:43:39.570Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Size step, per-gate verdict inputs, doctor registration check, site docs",
+      "key_finding": "Spec Kit 1.4.1 gates keep a bound verdict after approve, so gates need separate inputs"
+    },
+    "tasks": {
+      "summary": "12 tasks in 5 phases"
+    },
+    "implement": {
+      "summary": "Engine routes on recorded size, gates resume headless, doctor registers the workflow, site documents it"
+    }
+  },
+  "approach": "Replace classify with a read-only shell step printing the recorded size and switch on its stdout. Give each gate its own verdict input. Doctor reports and fixes a missing or stale registration.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "status-context.py --size prints the recorded size or nothing",
+      "files": [
+        "apps/speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Failing tests for the size step, switch source, case keys, verdict inputs",
+      "files": [
+        "apps/speckit-extension/tests/test_workflow_engine.py",
+        "apps/speckit-extension/tests/test_workflow_integrity.py"
+      ],
+      "wave": "T002-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Failing tests for the size step, switch source, case keys, verdict inputs",
+      "files": [
+        "apps/speckit-extension/tests/test_workflow_engine.py",
+        "apps/speckit-extension/tests/test_workflow_integrity.py"
+      ],
+      "wave": "T002-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Workflow routes on a shell size step, per-gate verdict inputs, scope removed",
+      "files": [
+        "apps/speckit-extension/workflows/speckit-companion.workflow.yml",
+        "apps/speckit-extension/commands/speckit.companion.classify.md"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Failing doctor workflow-registration tests",
+      "files": [
+        "apps/speckit-extension/tests/test_doctor_workflow.py"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "check_workflow and register_workflow; doctor body names the check and --fix",
+      "files": [
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/commands/speckit.companion.doctor.md"
+      ],
+      "wave": "T006-T007"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "check_workflow and register_workflow; doctor body names the check and --fix",
+      "files": [
+        "apps/speckit-extension/scripts/doctor_checks.py",
+        "apps/speckit-extension/commands/speckit.companion.doctor.md"
+      ],
+      "wave": "T006-T007"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "doctor.py wires the workflow check and --fix",
+      "files": [
+        "apps/speckit-extension/scripts/doctor.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Site page documents the engine path",
+      "files": [
+        "apps/website/src/content/docs/docs/customize/your-own-workflow.mdx"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Changelog line",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "build/check/manifest/emissions/budget green; 1983 Python tests OK; jest 5121/5122 (changelog PR link pending)",
+      "files": [
+        "apps/speckit-extension/presets/_parts/self-advance.md",
+        "apps/speckit-extension/commands"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Sandbox: register via doctor --fix; simple run skips gates; normal run pauses at review-spec, resume passes each gate, completes; history matches auto",
+      "files": [
+        "~/dev/sandboxes/engine-933*"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "engine simple run (sandbox engine-933-simple)",
+      "result": "specify, size, route, simple-implement, converge; no gate; status completed"
+    },
+    {
+      "what": "engine normal run (sandbox engine-933-gate2)",
+      "result": "paused at review-spec with only specify recorded; resume --input review_spec=approve ran plan and paused at review-plan; resume review_plan=approve ran tasks, implement, converge; completed"
+    },
+    {
+      "what": "engine vs auto history, same request",
+      "result": "identical step order specify, plan, tasks, implement, converge"
+    },
+    {
+      "what": "doctor --fix in sandbox",
+      "result": "workflow list shows speckit-companion; registered copy byte-identical; check clean after"
+    },
+    {
+      "what": "build check",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "b6a6cbb9",
+      "tree": "09e844ce942f9362bc886cfcd0e25e5508002709"
+    },
+    {
+      "what": "packaging",
+      "command": "python3 apps/speckit-extension/scripts/package-manifest.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[package-manifest] OK — 28 runtime scripts, closure matches the declared list",
+      "commit": "b6a6cbb9",
+      "tree": "09e844ce942f9362bc886cfcd0e25e5508002709"
+    },
+    {
+      "what": "emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents",
+      "commit": "b6a6cbb9",
+      "tree": "09e844ce942f9362bc886cfcd0e25e5508002709"
+    },
+    {
+      "what": "budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19 · speckit.companion.status.md                        0       0      0     214",
+      "commit": "b6a6cbb9",
+      "tree": "09e844ce942f9362bc886cfcd0e25e5508002709"
+    },
+    {
+      "what": "engine tests",
+      "command": "python3 -m unittest apps/speckit-extension/tests/test_workflow_engine.py apps/speckit-extension/tests/test_workflow_integrity.py apps/speckit-extension/tests/test_doctor_workflow.py apps/speckit-extension/tests/test_doctor.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "---------------------------------------------------------------------- · Ran 112 tests in 2.018s · OK",
+      "commit": "b6a6cbb9",
+      "tree": "09e844ce942f9362bc886cfcd0e25e5508002709"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "reject at a gate not exercised in the sandbox; relies on spec-kit's on_reject: abort",
+      "step": "implement"
+    },
+    {
+      "note": "tests drive doctor_checks/register_workflow directly and mock subprocess; the real specify workflow add path was proven only in the sandbox",
+      "step": "implement"
+    }
+  ],
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "17 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-12T17:43:49.041Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-12T17:43:49.081Z",
+      "by": "extension",
+      "finishedAt": "2026-11-12T17:44:02.346Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

@@ -893,6 +893,45 @@ def check_agents(root: Path) -> tuple:
     return CheckStatus("agents", "ran"), findings
 
 
+_WORKFLOW_REPORTED: set = set()
+_SHIPPED_WORKFLOW = Path(".specify/extensions/companion/workflows/speckit-companion.workflow.yml")
+_REGISTERED_WORKFLOW = Path(".specify/workflows/speckit-companion/workflow.yml")
+
+
+def check_workflow(root: Path) -> tuple:
+    """Can `specify workflow run speckit-companion` find the workflow Companion ships, at its current version?"""
+    root = Path(root).resolve()
+    if root in _WORKFLOW_REPORTED:
+        return CheckStatus("workflow", "skipped", "reported with the first spec of this run"), []
+    shipped = root / _SHIPPED_WORKFLOW
+    if not shipped.is_file():
+        return CheckStatus("workflow", "not-applicable", "Companion ships no workflow here"), []
+    _WORKFLOW_REPORTED.add(root)
+    registered = root / _REGISTERED_WORKFLOW
+    fix = (f"Run `specify workflow add {_SHIPPED_WORKFLOW.as_posix()}`, or "
+           f"`python3 .specify/extensions/companion/scripts/doctor.py --fix`.")
+    if not registered.is_file():
+        title = "The Companion workflow is not registered with spec-kit's workflow engine"
+        detail = f"`specify workflow list` does not show it, so `specify workflow run speckit-companion` fails. {fix}"
+    elif registered.read_bytes() != shipped.read_bytes():
+        title = "The registered Companion workflow is out of date"
+        detail = f"The engine runs an older copy than the one this Companion version ships. {fix}"
+    else:
+        return CheckStatus("workflow", "ran"), []
+    return CheckStatus("workflow", "ran"), [Finding("workflow", "warning", title, detail)]
+
+
+def register_workflow(root: Path) -> int:
+    """Register the shipped workflow with the engine; without the CLI, say the command to run."""
+    import shutil
+    import subprocess
+    command = ["specify", "workflow", "add", _SHIPPED_WORKFLOW.as_posix()]
+    if shutil.which("specify") is None:
+        print(f"[doctor] The specify CLI is not on PATH. Run this from the project: {' '.join(command)}")
+        return 1
+    return subprocess.run(command, cwd=root).returncode
+
+
 def check_template(feature_dir: Path) -> tuple:
     """Did the task list keep the shape it was generated with?"""
     tasks_md = Path(feature_dir) / "tasks.md"

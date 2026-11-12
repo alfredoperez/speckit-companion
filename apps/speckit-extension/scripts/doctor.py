@@ -33,7 +33,7 @@ from spec_context import (  # noqa: E402
 )
 
 CHECKS = ("record", "triage", "bleed", "drift", "completion", "verification", "artifact",
-          "template", "built", "agents", "numbering", "briefed", "dispatch", "trace", "chat")
+          "template", "built", "agents", "workflow", "numbering", "briefed", "dispatch", "trace", "chat")
 
 SEVERITIES = ("problem", "warning", "note")
 _SEVERITY_RANK = {s: i for i, s in enumerate(SEVERITIES)}
@@ -331,6 +331,7 @@ def examine(feature_dir: Path, root: Path, chat: bool) -> Report:
     run_check(report, "template", lambda: _via("doctor_checks", "check_template", feature_dir))
     run_check(report, "built", lambda: _via("doctor_checks", "check_built", feature_dir, ctx, root))
     run_check(report, "agents", lambda: _via("doctor_checks", "check_agents", root))
+    run_check(report, "workflow", lambda: _via("doctor_checks", "check_workflow", root))
     run_check(report, "numbering", lambda: _via("doctor_checks", "check_numbering", feature_dir))
     run_check(report, "briefed", lambda: _via("doctor_checks", "check_briefed", feature_dir, ctx))
     run_check(report, "dispatch", lambda: _via("doctor_checks", "check_dispatch", feature_dir, ctx))
@@ -376,9 +377,13 @@ def main(argv=None) -> int:
                              "succeeds, which is the default and stays the default.")
     parser.add_argument("--traceback", action="store_true",
                         help="Print a traceback for a check that raised (debugging the doctor).")
+    parser.add_argument("--fix", action="store_true",
+                        help="Register the shipped Companion workflow with spec-kit's workflow engine, then exit.")
     args = parser.parse_args(argv)
 
     root = _repo_root()
+    if args.fix:
+        return _via("doctor_checks", "register_workflow", root)
     if args.all:
         targets = _spec_dirs(root)
         if not targets:

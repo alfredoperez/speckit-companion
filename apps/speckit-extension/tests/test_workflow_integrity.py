@@ -107,36 +107,69 @@ class ClassifySpeaksTheSharedVocabulary(unittest.TestCase):
                                  (SCRIPTS / "write-context.py").read_text()).group(1).split("|"))
         self.assertEqual(emitted, accepted)
 
-    def test_the_workflow_file_routes_on_a_verdict_the_classifier_emits(self):
-        """The routing switch is the one consumer no test had ever opened, and it
-        branched on `small` — a word the classifier never emits — so the folded
-        path was unreachable and every spec silently took the full pipeline."""
+class EngineWorkflowRoutesAndResumes(unittest.TestCase):
+    """#933 — on `specify workflow run`, the switch must read a value a step can
+    carry, route on the recorded verdicts, and every gate must pass headless."""
+
+    EXT = REPO / "apps" / "speckit-extension"
+
+    def setUp(self):
         import re
-        emitted = set(re.search(r"size=<([^>]+)>", self.BODY.read_text()).group(1).split("|"))
-        workflow = (REPO / "apps" / "speckit-extension" / "workflows"
-                    / "speckit-companion.workflow.yml").read_text()
+        import companion_config as cc
+        self.wf = cc.load_yaml((self.EXT / "workflows" / "speckit-companion.workflow.yml").read_text())
+        order = cc.load_yaml((self.EXT / "nodes" / "specify" / "_order.yml").read_text())
+        self.verdicts = order["decisions"][0]["verdicts"]
+        self.steps = {s["id"]: s for s in self.wf["steps"]}
+        self.route = next(s for s in self.wf["steps"] if s.get("type") == "switch")
+        self.re = re
 
-        cases_block = workflow.split("cases:", 1)[1]
-        # Case keys are the lines indented one level under `cases:`; stop at the
-        # first line that dedents back out of the block (`default:` is a sibling
-        # of `cases:`, not a case).
-        keys = []
-        for line in cases_block.splitlines()[1:]:
-            if not line.strip() or line.lstrip().startswith("#"):
-                continue
-            indent = len(line) - len(line.lstrip())
-            if indent < 6:
-                break
-            if indent == 6 and line.rstrip().endswith(":"):
-                keys.append(line.strip().rstrip(":"))
+    def _gates(self, steps):
+        for step in steps:
+            if step.get("type") == "gate":
+                yield step
+            for branch in list((step.get("cases") or {}).values()) + [step.get("default") or []]:
+                yield from self._gates(branch)
 
-        self.assertRegex(workflow, r"(?m)^ {4}default:",
-                         "the safe fallback that keeps an unmatched size on the full pipeline is gone")
-        self.assertTrue(keys, "the switch routes on nothing")
-        for key in keys:
-            self.assertIn(key, emitted,
-                          f"the workflow routes on '{key}', which the classifier never emits "
-                          f"(it emits {sorted(emitted)}) — that branch is unreachable")
+    def test_the_switch_reads_the_stdout_of_a_shell_step(self):
+        ref = self.re.fullmatch(r"\{\{\s*steps\.([\w-]+)\.output\.stdout\s*\}\}", self.route["expression"])
+        self.assertIsNotNone(ref, f"the switch reads {self.route['expression']!r}, which no step outputs")
+        self.assertEqual(self.steps[ref.group(1)].get("type"), "shell",
+                         "only a shell step carries stdout for the switch to read")
+
+    def test_the_cases_are_the_verdicts_that_change_the_route(self):
+        changing = {v["name"] for v in self.verdicts if v.get("folds") or v.get("warns")}
+        self.assertEqual(set(self.route["cases"]), changing)
+        self.assertTrue(self.route.get("default"), "an unknown or missing size has no route")
+
+    def _commands(self, steps):
+        for step in steps:
+            if step.get("command"):
+                yield step
+            for branch in list((step.get("cases") or {}).values()) + [step.get("default") or []]:
+                yield from self._commands(branch)
+
+    def test_every_companion_step_is_told_not_to_hand_off(self):
+        """Without the marker a step self-advances through the gates the engine owns."""
+        part = (self.EXT / "presets" / "_parts" / "self-advance.md").read_text()
+        marker = self.re.search(r"input says `([^`]+)`", part).group(1)
+        for step in self._commands(self.wf["steps"]):
+            if step["command"].startswith("speckit.companion."):
+                self.assertIn(marker, step["input"]["args"], f"{step['id']} would run past the engine's gates")
+
+    def test_the_unused_scope_input_is_gone(self):
+        self.assertNotIn("scope", self.wf["inputs"])
+
+    def test_every_gate_names_its_own_resumable_verdict_input(self):
+        gates = list(self._gates(self.wf["steps"]))
+        self.assertTrue(gates)
+        for gate in gates:
+            name = gate.get("verdict_input")
+            self.assertIn(name, self.wf["inputs"], f"{gate['id']} cannot be passed headless")
+            self.assertEqual(self.wf["inputs"][name].get("enum"), ["", "approve", "reject"])
+        # A route never reuses an input, or approving one gate would pass the next.
+        for branch in [self.route["default"], *self.route["cases"].values()]:
+            names = [g["verdict_input"] for g in self._gates(branch)]
+            self.assertEqual(len(names), len(set(names)))
 
 
 class WorkflowIdentityIsPinnedEveryStep(unittest.TestCase):
