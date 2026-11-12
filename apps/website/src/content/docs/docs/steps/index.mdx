@@ -108,7 +108,7 @@ When tasks settles, **Tasks** is checked, the badge reads **Tasks Created**, and
   caption="After tasks: the badge reads Tasks Created, every document is checked, and each phase lists its tasks with empty boxes."
 />
 
-**Other actions** has two entries here. **Analyze** cross-checks the spec, the plan and the tasks for consistency. **Create GitHub issues** sends `/speckit.taskstoissues`, which creates one GitHub issue per task.
+**Other actions** has two entries here. **Analyze** cross-checks the spec, the plan and the tasks for consistency. **Create GitHub issues** sends `/speckit.taskstoissues`, which creates one GitHub issue per task. On Spec Kit 1.4 and later it sends `/speckit.github.taskstoissues`, which needs Spec Kit's `github` extension (`specify extension add github`).
 
 <Aside type="caution" title="It creates real issues">
 It needs a GitHub remote and the GitHub MCP server in your assistant. Companion can't undo the issues, so it asks you to confirm first.

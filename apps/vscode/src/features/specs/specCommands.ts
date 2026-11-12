@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { getAIProvider } from '../../extension';
 import { SpecExplorerProvider, SpecInfo, isSpecLifecycleItem } from './specExplorerProvider';
 import { NotificationUtils } from '../../core/utils/notificationUtils';
@@ -59,6 +60,13 @@ export function optionalCommandLine(name: string, formattedCommand: string, targ
     if (name !== 'taskstoissues') return `/${formattedCommand} ${targetDir}`;
     const tasksFile = `${toWorkspaceRelative(targetDir).split(path.sep).join('/')}/tasks.md`;
     return `/${formattedCommand} Create the issues from ${tasksFile}. If that is not the tasks file of the feature you resolve for this run, stop and say so instead of creating issues.`;
+}
+
+/** Spec Kit 1.4 moved issue creation into its `github` extension; older projects keep the core command. */
+export function tasksToIssuesCommand(root: string | undefined): string {
+    return root && fs.existsSync(path.join(root, '.specify', 'extensions', 'github'))
+        ? 'speckit.github.taskstoissues'
+        : 'speckit.taskstoissues';
 }
 
 function resolveSpecDirArg(target: SpecTreeItem | string | undefined): string | undefined {
@@ -685,7 +693,9 @@ function registerPhaseCommands(
                 }
 
                 // Non-workflow steps use default command
-                const formattedCmd = formatCommandForProvider(`speckit.${cmd.name}`);
+                const formattedCmd = formatCommandForProvider(
+                    cmd.name === 'taskstoissues' ? tasksToIssuesCommand(getProjectRoot()) : `speckit.${cmd.name}`
+                );
                 let prompt = optionalCommandLine(cmd.name, formattedCmd, targetDir);
                 if (refinementContext) {
                     prompt += refinementContext;
