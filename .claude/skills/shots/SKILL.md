@@ -57,11 +57,6 @@ Pictures and footage of the real product, and the scripted checks that take them
 | `converge-footer`, `converge-sent`, `converge-terminal` | A finished spec's footer, the viewer beside the terminal after Converge, the terminal alone |
 | `joined-paragraph` | A wrapped paragraph hovered, with its one comment button |
 | `tab-overview`, `tab-specification`, `tab-plan`, `tab-tasks` | Each tab of the tasked demo spec |
-| `living-specs-pane` | The Living Specs pane alone, with coverage counts, a drift flag and the update button |
-| `living-spec`, `living-spec-requirement`, `living-spec-colocated` | A capability's page, one requirement with its scenario, and a colocated spec |
-| `living-spec-drifted` | The requirement marked Drifted |
-| `living-specs-window`, `living-drift-window` | Whole window: the tree beside a capability's requirements, and beside the drifted one |
-| `overview-living-specs`, `overview-living-specs-window` | The Overview's living specs region, alone and in the whole window |
 | `overview-intent`, `overview-timing`, `overview-expectations`, `overview-verified`, `overview-decisions`, `overview-coverage`, `overview-run-log` | Each other region of a finished run's Overview |
 | `sidebar-hover`, `sidebar-more-actions` | A spec row hovered, and its More Actions menu open |
 
@@ -126,7 +121,6 @@ Each writes `.record/<name>/` (gitignored): a numbered sequence of PNG frames pl
 
 | Recording | Script | What it films |
 | --- | --- | --- |
-| `living-spec-read` | `desktop-check.mjs` | A living spec scrolled from its counts past the requirement marked Drifted |
 | `tasks-ticking` | `desktop-check.mjs` | The Tasks tab repainting as three tasks finish |
 | `mod-tick-task` | `terminal-check.mjs` | The mod's pane and band counting tasks ticked from outside |
 | `mod-session-start` | `terminal-check.mjs` | Claude Code starting in a project with specs: the pane opens by itself and three tasks tick |
@@ -139,7 +133,7 @@ Each writes `.record/<name>/` (gitignored): a numbered sequence of PNG frames pl
 **One recording at a time.**
 
 - Terminal: `npm run record:terminal -- --only film-session-start`, or `-- --only start,film-tick-task` (`film-tick-task` types into the session, so it needs `start`).
-- Extension: `npm run record` already passes `--only`, and a second one is ignored. Call the script: `npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-living-spec` (or `film-tasks-ticking`).
+- Extension: `npm run record` already passes `--only`, and a second one is ignored. Call the script: `npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-tasks-ticking`.
 - Board: `npm run record:board` always records all three.
 
 **Record only what moves on its own**: a long document going past, or a run advancing. A dialog opening is one state arriving, and a still says it better. A recording is tens of megabytes, so nothing under `.record/` is committed.
