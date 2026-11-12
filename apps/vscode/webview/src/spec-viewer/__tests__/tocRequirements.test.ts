@@ -7,8 +7,8 @@
  * the seam between those three and not inside any one of them.
  */
 
-import { renderMarkdown, setLivingMode } from '../markdown/renderer';
-import { setLivingCoverage, setLivingDrifted, setLivingNew } from '../markdown/livingComponents';
+import { renderMarkdown, setLivingMode } from 'speckit-viewer/core/markdown/renderer';
+import { setLivingCoverage, setLivingDrifted, setLivingNew } from 'speckit-viewer/core/markdown/livingComponents';
 import { buildToc } from '../toc';
 
 const SPEC = `## Purpose
@@ -142,7 +142,7 @@ describe('the living-spec outline (#672 Wave 1)', () => {
     });
 
     it('cancels the heading guide on requirement rows only', () => {
-        const css = require('fs').readFileSync(require('path').join(__dirname, '../../../styles/spec-viewer/_toc.css'), 'utf8') as string;
+        const css = require('fs').readFileSync(require('path').join(__dirname, '../../../../../../packages/viewer/styles/_toc.css'), 'utf8') as string;
         const rule = /\.spec-toc-link--requirement\s*\{([^}]*)\}/.exec(css)![1];
         expect(rule).toContain('border-left: 0');
         expect(rule).toContain('margin-left: 0');

@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { applyNavState, buildHandlers } from '../messageHandlers';
-import { preprocessLivingRequirements, setLivingCoverage } from '../markdown';
+import { preprocessLivingRequirements, setLivingCoverage } from 'speckit-viewer/core/markdown/index';
 import { navState } from '../signals';
 import type { ExtensionToViewerMessage, LivingHeaderMeta, NavState } from '../types';
 

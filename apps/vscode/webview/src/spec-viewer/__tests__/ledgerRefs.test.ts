@@ -3,7 +3,7 @@
  */
 
 import { navState } from '../signals';
-import { idChip, refAnchor } from '../markdown/ledger/primitives';
+import { idChip, refAnchor } from 'speckit-viewer/core/markdown/ledger/primitives';
 import { hideBackPill, hideRefCard, setupLedgerRefs } from '../ledgerRefs';
 import type { NavState } from '../types';
 

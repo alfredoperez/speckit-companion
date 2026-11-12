@@ -20,7 +20,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { App } from '../App';
 import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from '../signals';
 import type { NavState, ViewerState, DocumentType, HistoryEntry, SerializedFooterAction } from '../types';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setSpecLedgerTasks, setTaskSummaries } from '../markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setSpecLedgerTasks, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
 import { mockDoc, mockRelatedDoc, mockNavState } from '../components/__stories__/mockData';

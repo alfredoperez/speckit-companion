@@ -6,6 +6,7 @@ SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs
 
 Five deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), the GitHub Copilot app canvas (`apps/copilot-canvas/`, an Agent Plugin whose board lives under `com.github.copilot/extensions/speckit-companion/`, loaded in this repo through `.github/extensions/speckit-companion/`), the Claude Code mod (`apps/claude-mod/`, listed by the repo-root `.claude-plugin/marketplace.json`; its `hooks/vendor/` is bundled from the canvas's `spec-rules.mjs` by `npm run mod:build`), and the marketing site (`apps/website/`).
 
+- `packages/` — npm workspace packages. `packages/viewer` is `speckit-viewer`, the viewer's contract, core and styles, which the extension imports.
 - `specs/` — historical feature folders plus the pinned `_0N_demo-*` viewer fixtures.
 - `docs/` — images only: the screenshots the READMEs and the site load, the architecture diagram, the walkthrough video. No prose lives here; a test fails on a new markdown file.
 - `apps/vscode/tests/` — integration, eval and shared fixtures, including the VS Code mock. Unit tests live in `__tests__` beside the code they cover.
@@ -107,7 +108,7 @@ A pull request from a fork runs no CI until a maintainer approves it: `gh run li
 - **No hard-wrapped paragraphs** in any `.md` file — one logical line per paragraph.
 - **Comments: default none**, one line max, no spec/PR identifiers (`// per PR #182`); strip diagnostic `console.log`s before commit.
 - **Verify a backlog issue still reproduces on `main` before fixing** — queued issues are frequently already fixed or dups.
-- Design tokens: readable content uses `--text-body`/`--text-primary`; `--text-secondary`/`--text-muted` are below WCAG AA on dark — metadata only (#254). The review hue marks, it does not fill: `--review` is for rules, borders and tints, and every purple *word* takes `--review-ink`, which is derived per theme.
+- Design tokens: readable content uses `--text-body`/`--text-primary`; `--text-secondary`/`--text-muted` are below WCAG AA on dark — metadata only (#254). The review hue marks, it does not fill: `--review` is for rules, borders and tints, and every purple *word* takes `--review-ink`, which is derived per theme. The viewer reads the same names with an `sk-` prefix (`--sk-text-body`), set only by the theme files in `packages/viewer/styles/themes/`.
 - Tests: BDD `describe`/`it`; VS Code API mocked at `apps/vscode/tests/__mocks__/vscode.ts` — extend it there. Known gap: config-dependent webview paths have no config-mock harness.
 - Run the extension: F5 → Extension Development Host.
 - **Check in three levels; the whole suite runs once.** After each batch of edits, `npx tsc --noEmit -p ./`. After a substantial chunk works, only the related tests (`npx jest --findRelatedTests <changed files>`), in the background. Before the push, `npm run test:all` once, in the background. `test:visual:ci`, the live e2e and the desktop check run before a release, not per feature. Never sit idle on a run, and never wait on CI in the chat (`gh pr checks --watch`): push and move on.

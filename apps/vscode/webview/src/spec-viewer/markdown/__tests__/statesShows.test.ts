@@ -1,8 +1,8 @@
 /** @jest-environment jsdom */
-import { registerBlockRenderer } from '../blockFences';
-import { renderScreenBlock } from '../screenCard';
-import { renderStatesCard } from '../statesCard';
-import { renderMarkdown } from '../renderer';
+import { registerBlockRenderer } from 'speckit-viewer/core/markdown/blockFences';
+import { renderScreenBlock } from 'speckit-viewer/core/markdown/screenCard';
+import { renderStatesCard } from 'speckit-viewer/core/markdown/statesCard';
+import { renderMarkdown } from 'speckit-viewer/core/markdown/renderer';
 import { setupStatesSelect } from '../../editor/statesSelect';
 
 const STATES = [

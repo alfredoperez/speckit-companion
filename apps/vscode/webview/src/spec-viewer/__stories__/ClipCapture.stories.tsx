@@ -82,7 +82,7 @@ import {
     setLivingCoverage,
     setLivingMode,
     setTaskSummaries,
-} from '../markdown';
+} from 'speckit-viewer/core/markdown/index';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
 import { restoreComments } from '../editor/restoreComments';

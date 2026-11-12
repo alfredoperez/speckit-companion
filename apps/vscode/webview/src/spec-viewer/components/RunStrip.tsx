@@ -1,5 +1,5 @@
 import { navState, viewerState } from '../signals';
-import { heroStats, formatActiveTime } from '../activityHeroModel';
+import { heroStats, formatActiveTime } from 'speckit-viewer/core/activityHeroModel';
 
 /**
  * Run facts for the header band. Deliberately says nothing the badge or the rail

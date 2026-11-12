@@ -5,7 +5,7 @@
 
 import { computed, signal } from '@preact/signals';
 import type { NavState, Refinement, ViewerState, HistoryEntry } from './types';
-import { hasDurableContext } from './overviewModel';
+import { hasDurableContext } from 'speckit-viewer/core/overviewModel';
 import { hasOverview } from '../../../src/core/utils/overviewAvailability';
 
 /** Navigation state from extension messages */

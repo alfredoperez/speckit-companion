@@ -6,7 +6,7 @@
 import { render } from 'preact';
 import type { VSCodeApi, NavState } from './types';
 import { navState, markdownHtml } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setSpecLedgerTasks } from './markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setSpecLedgerTasks } from 'speckit-viewer/core/markdown/index';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupCallsStrike, setupLineActions, setupStatesSelect } from './editor';
 import { setupAnswerActions } from './editor/answerEditor';

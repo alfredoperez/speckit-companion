@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
 import { closeInlineEditor, isInlineEditorOpen } from '../editorHost';
 import { setupAnswerActions } from '../answerEditor';
-import { renderMarkdown, setReportMode } from '../../markdown';
+import { renderMarkdown, setReportMode } from 'speckit-viewer/core/markdown/index';
 import { navState } from '../../signals';
 
 const postMessage = jest.fn();

@@ -41,25 +41,25 @@ export const DocumentContext = ({ children }: { children: JSX.Element }) => (
     id="markdown-content"
     style={
       {
-        "--bg-primary": "#1e1e1e",
-        "--bg-secondary": "#252526",
-        "--bg-hover": "rgba(255,255,255,0.05)",
-        "--text-primary": "#cccccc",
-        "--text-body": "#d0d0d0",
-        "--text-secondary": "#9d9d9d",
-        "--text-muted": "#8a8a8a",
-        "--border": "#3c3c3c",
-        "--border-accent": "rgba(14,99,156,0.5)",
-        "--accent": "#0e639c",
-        "--accent-subtle": "rgba(14,99,156,0.2)",
-        "--error": "#f14c4c",
-        "--error-subtle": "rgba(241,76,76,0.1)",
-        "--space-1": "4px",
-        "--space-2": "8px",
-        "--space-3": "12px",
-        "--radius-sm": "3px",
-        "--transition-fast": "100ms ease",
-        "--header-title": "#ffffff",
+        "--sk-bg-primary": "#1e1e1e",
+        "--sk-bg-secondary": "#252526",
+        "--sk-bg-hover": "rgba(255,255,255,0.05)",
+        "--sk-text-primary": "#cccccc",
+        "--sk-text-body": "#d0d0d0",
+        "--sk-text-secondary": "#9d9d9d",
+        "--sk-text-muted": "#8a8a8a",
+        "--sk-border": "#3c3c3c",
+        "--sk-border-accent": "rgba(14,99,156,0.5)",
+        "--sk-accent": "#0e639c",
+        "--sk-accent-subtle": "rgba(14,99,156,0.2)",
+        "--sk-error": "#f14c4c",
+        "--sk-error-subtle": "rgba(241,76,76,0.1)",
+        "--sk-space-1": "4px",
+        "--sk-space-2": "8px",
+        "--sk-space-3": "12px",
+        "--sk-radius-sm": "3px",
+        "--sk-transition-fast": "100ms ease",
+        "--sk-header-title": "#ffffff",
         padding: "16px",
         fontFamily: "system-ui, sans-serif",
         fontSize: "13px",
@@ -291,7 +291,7 @@ export const TaskLine: Story = {
     <ul style="padding: 0; margin: 0; list-style: none;">
       <li
         class="task-item line"
-        style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-2); padding: var(--space-1) 0; position: relative;"
+        style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sk-space-2); padding: var(--sk-space-1) 0; position: relative;"
       >
         <input type="checkbox" />
         <span class="task-text line-content">Implement the login form</span>
@@ -307,7 +307,7 @@ export const TaskLine: Story = {
       </li>
       <li
         class="task-item line"
-        style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-2); padding: var(--space-1) 0; position: relative;"
+        style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sk-space-2); padding: var(--sk-space-1) 0; position: relative;"
       >
         <input type="checkbox" />
         <span class="task-text line-content">Write unit tests for login validation</span>

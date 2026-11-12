@@ -1,0 +1,337 @@
+/* Report pages: the bug story and the idea decision, read as a document. */
+
+#markdown-content .rp-lead {
+    margin: 0 0 var(--sk-space-3);
+    color: var(--sk-text-body);
+    font-size: var(--sk-text-lg);
+    font-weight: 500;
+    line-height: var(--sk-leading-normal);
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+}
+
+#markdown-content .rp-lead strong {
+    color: var(--sk-text-primary);
+    font-weight: 650;
+}
+
+#markdown-content .rp-meta {
+    margin: 0 0 var(--sk-space-6);
+    color: var(--sk-text-muted);
+    font-size: var(--sk-text-sm);
+    line-height: var(--sk-leading-normal);
+    overflow-wrap: anywhere;
+}
+
+#markdown-content h2 + .rp-meta {
+    margin: calc(-1 * var(--sk-space-2)) 0 var(--sk-space-3);
+}
+
+#markdown-content .rp-next {
+    margin: 0;
+    color: var(--sk-text-body);
+}
+
+#markdown-content .rp-line {
+    --rp-gutter: var(--sk-space-6);
+    --rp-mark: 0.7em;
+    margin: 0;
+    padding: 0 0 0 var(--rp-gutter);
+    list-style: none;
+}
+
+#markdown-content .rp-step {
+    position: relative;
+    min-width: 0;
+    margin: 0;
+    padding-bottom: var(--sk-space-6);
+}
+
+#markdown-content .rp-step:last-child { padding-bottom: 0; }
+
+#markdown-content .rp-step::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--sk-space-1) + var(--rp-mark) + var(--sk-space-1));
+    bottom: calc(-1 * var(--sk-space-1));
+    left: calc(-1 * var(--rp-gutter) + var(--rp-mark) / 2);
+    width: 1px;
+    background: var(--sk-border);
+}
+
+#markdown-content .rp-step:last-child::before { display: none; }
+
+#markdown-content .rp-step__mark {
+    position: absolute;
+    top: var(--sk-space-1);
+    left: calc(-1 * var(--rp-gutter));
+    box-sizing: border-box;
+    width: var(--rp-mark);
+    height: var(--rp-mark);
+    border-radius: 50%;
+    background: var(--sk-success);
+}
+
+#markdown-content .rp-step--next .rp-step__mark {
+    border: 1.5px solid var(--sk-text-muted);
+    background: var(--sk-bg-primary);
+}
+
+#markdown-content .rp-step__when {
+    margin: 0 0 var(--sk-space-1);
+    color: var(--sk-text-muted);
+    font-size: var(--sk-text-sm);
+    line-height: var(--sk-leading-normal);
+}
+
+#markdown-content .rp-step h2 { margin: 0 0 var(--sk-space-3); }
+
+#markdown-content .rp-step > p { margin: 0 0 var(--sk-space-3); }
+#markdown-content .rp-step > :last-child { margin-bottom: 0; }
+
+#markdown-content .rp-rows,
+#markdown-content :is(ul, ol).rp-score,
+#markdown-content :is(ul, ol):has(> li.rp-score) {
+    margin: var(--sk-space-4) 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--sk-border);
+}
+
+#markdown-content .rp-rows > li {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) 8em minmax(0, 3fr);
+    gap: var(--sk-space-1) var(--sk-space-4);
+    align-items: baseline;
+    margin: 0;
+    padding: var(--sk-space-2) 0;
+    border-top: 1px solid var(--sk-border);
+    color: var(--sk-text-body);
+    font-size: var(--sk-text-sm);
+    line-height: var(--sk-leading-normal);
+}
+
+#markdown-content .rp-rows > li > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#markdown-content .rp-rows > li > :first-child { justify-self: start; }
+
+#markdown-content :where(.rp-rows > li > :first-child) { color: var(--sk-text-primary); }
+#markdown-content :where(.rp-rows > li > :nth-child(2)) { color: var(--sk-text-body); }
+#markdown-content .rp-rows > li > [class*="rp-tone--"] { font-weight: 600; }
+
+#markdown-content .rp-rows code { white-space: normal; }
+
+#markdown-content li.rp-score,
+#markdown-content .rp-score > li {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--sk-space-1) var(--sk-space-4);
+    align-items: baseline;
+    margin: 0;
+    padding: var(--sk-space-3) 0;
+    border-top: 1px solid var(--sk-border);
+    color: var(--sk-text-body);
+}
+
+#markdown-content li.rp-score > *,
+#markdown-content .rp-score > li > * {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#markdown-content li.rp-score > :first-child,
+#markdown-content .rp-score > li > :first-child {
+    color: var(--sk-text-primary);
+    font-weight: 600;
+}
+
+#markdown-content li.rp-score > :not(:first-child):not(.rp-score__rating),
+#markdown-content .rp-score > li > :not(:first-child):not(.rp-score__rating) {
+    grid-column: 1 / -1;
+}
+
+#markdown-content .rp-score__rating {
+    color: var(--sk-text-body);
+    font-size: var(--sk-text-sm);
+    font-weight: 600;
+}
+
+#markdown-content .rp-tone--favourable { color: var(--sk-success); }
+#markdown-content .rp-tone--mixed { color: var(--sk-warning); }
+#markdown-content .rp-tone--unfavourable { color: var(--sk-error); }
+
+#markdown-content .rp-tone--skipped { color: var(--sk-text-body); font-style: italic; }
+
+#markdown-content .rp-step--old > :not(.rp-step__when):not(h2) { opacity: 0.7; }
+
+#markdown-content .rp-notice,
+#markdown-content .rp-paused {
+    margin: 0 0 var(--sk-space-6);
+    padding: var(--sk-space-3) var(--sk-space-4);
+    border: 1px solid var(--sk-border);
+    border-radius: var(--sk-radius-md);
+    color: var(--sk-text-body);
+}
+
+#markdown-content .rp-notice > p,
+#markdown-content .rp-paused > p { margin: 0 0 var(--sk-space-2); }
+#markdown-content .rp-notice > :last-child,
+#markdown-content .rp-paused > :last-child { margin-bottom: 0; }
+
+#markdown-content .rp-notice {
+    border-color: color-mix(in srgb, var(--sk-warning) 40%, transparent);
+    background: var(--sk-warning-subtle);
+}
+
+#markdown-content .rp-paused {
+    border-color: var(--sk-review);
+    background: color-mix(in srgb, var(--sk-review) 8%, transparent);
+}
+
+#markdown-content .rp-notice__title,
+#markdown-content .rp-paused__title {
+    color: var(--sk-text-primary);
+    font-weight: 650;
+}
+
+#markdown-content .rp-paused__title { text-transform: uppercase; letter-spacing: 0.04em; font-size: var(--sk-text-sm); color: var(--sk-review-ink); }
+
+#markdown-content .rp-runlog {
+    margin: var(--sk-space-3) 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--sk-border);
+}
+
+#markdown-content .rp-runlog__step {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--sk-space-1) var(--sk-space-4);
+    margin: 0;
+    padding: var(--sk-space-2) 0;
+    border-top: 1px solid var(--sk-border);
+    color: var(--sk-text-body);
+    font-size: var(--sk-text-sm);
+}
+
+#markdown-content .rp-runlog__step > :first-child { color: var(--sk-text-primary); font-weight: 600; }
+#markdown-content .rp-runlog__step--failed > :last-child { color: var(--sk-error); }
+
+#markdown-content .rp-defs {
+    margin: var(--sk-space-4) 0;
+    border-bottom: 1px solid var(--sk-border);
+}
+
+#markdown-content .rp-defs > div {
+    display: grid;
+    grid-template-columns: 9.25rem minmax(0, 1fr);
+    gap: var(--sk-space-1) var(--sk-space-4);
+    align-items: baseline;
+    padding: var(--sk-space-3) 0;
+    border-top: 1px solid var(--sk-border);
+}
+
+#markdown-content .rp-defs dt {
+    margin: 0;
+    color: var(--sk-text-primary);
+    font-size: var(--sk-text-sm);
+    font-weight: 600;
+}
+
+#markdown-content .rp-defs dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--sk-text-body);
+    overflow-wrap: anywhere;
+}
+
+#markdown-content .rp-defs dd > :first-child { margin-top: 0; }
+#markdown-content .rp-defs dd > :last-child { margin-bottom: 0; }
+#markdown-content .rp-defs dd ul { margin: var(--sk-space-1) 0 0; padding-left: var(--sk-space-5); }
+
+@container viewer (max-width: 700px) {
+    #markdown-content .rp-line { --rp-gutter: var(--sk-space-5); }
+
+    #markdown-content .rp-rows > li,
+    #markdown-content .rp-defs > div {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+#markdown-content .rp-question {
+    color: var(--sk-text-body);
+}
+
+#markdown-content .rp-question__text {
+    color: inherit;
+    font: inherit;
+}
+
+#markdown-content .rp-question__badge {
+    margin-left: var(--sk-space-1);
+    color: var(--sk-warning);
+    font-size: var(--sk-text-sm);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+#markdown-content .rp-question__answer {
+    margin-left: var(--sk-space-2);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--sk-accent);
+    font: inherit;
+    font-size: var(--sk-text-sm);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+#markdown-content .rp-question__answer:hover {
+    color: var(--sk-accent-hover);
+}
+
+#markdown-content .rp-question__answer:focus-visible {
+    outline: 2px solid var(--sk-accent);
+    outline-offset: 2px;
+    border-radius: var(--sk-radius-sm);
+}
+
+#markdown-content .rp-question__sent {
+    margin-left: var(--sk-space-1);
+    color: var(--sk-text-muted);
+    font-size: var(--sk-text-sm);
+}
+
+#markdown-content .rp-answer-slot {
+    margin: var(--sk-space-2) 0;
+}
+
+#markdown-content .rp-specs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#markdown-content .rp-specs__link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: var(--sk-accent);
+    cursor: pointer;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+#markdown-content .rp-specs__link:hover,
+#markdown-content .rp-specs__link:focus-visible {
+    text-decoration: underline;
+}

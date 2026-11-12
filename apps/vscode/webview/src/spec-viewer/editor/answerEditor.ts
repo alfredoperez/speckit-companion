@@ -2,7 +2,7 @@ import { render, h } from 'preact';
 import type { VSCodeApi } from '../types';
 import { InlineEditor } from '../components/InlineEditor';
 import { navState } from '../signals';
-import { writtenQuestion } from '../markdown/clarifications';
+import { writtenQuestion } from 'speckit-viewer/core/markdown/clarifications';
 import { closeInlineEditor, openInlineEditor } from './editorHost';
 
 declare const vscode: VSCodeApi;

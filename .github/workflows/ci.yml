@@ -61,13 +61,13 @@ jobs:
           # and the paths CLAUDE.md names, many of them under .claude/, so a
           # prose-only change or a renamed skill can fail it.
           NO_BEHAVIOUR='(^(assets|\.codex|\.agents|\.specify)/|^\.github/ISSUE_TEMPLATE/|^LICENSE$|^icon\.png$)'
-          MOD='^(apps/claude-mod/|apps/copilot-canvas/|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
+          MOD='^(apps/claude-mod/|apps/copilot-canvas/|packages/viewer/|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
           CAPTURE='(^(apps/speckit-extension/|specs/509-timing-capture/|specs/510-living-sync/|specs/514-fast-path-fixture/|\.github/workflows/ci\.yml$)|\.py$)'
-          VISUAL='^(apps/vscode/webview/|apps/website/|content/media/|\.storybook/|tooling/scripts/|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
+          VISUAL='^(apps/vscode/webview/|packages/viewer/|apps/website/|content/media/|\.storybook/|tooling/scripts/|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
           # The browser step is thirteen minutes, so it gets its own narrower
           # list: the panel, the stories that render it, and the script that
           # drives them. A site or media change stops at clips:check.
-          BUILDER='^(apps/vscode/webview/|\.storybook/|tooling/scripts/visual-builder\.mjs$|tooling/scripts/lib/storybook-browser\.mjs$|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
+          BUILDER='^(apps/vscode/webview/|packages/viewer/|\.storybook/|tooling/scripts/visual-builder\.mjs$|tooling/scripts/lib/storybook-browser\.mjs$|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
 
           answer() {
             if [ "$everything" = yes ] || grep -qE "$2" changed.txt; then
@@ -123,6 +123,12 @@ jobs:
       - name: Type-check the webview
         if: needs.changes.outputs.code == 'true'
         run: npx tsc -p tsconfig.webview.json --noEmit
+
+      # Packages the .vsix and fails when a shipped file requires something it does not
+      # carry, or when the extension's main entry does not load with vscode stubbed.
+      - name: The packaged extension carries what it requires
+        if: needs.changes.outputs.code == 'true'
+        run: npm run check:vsix
 
       - name: Run tests
         if: needs.changes.outputs.code == 'true'

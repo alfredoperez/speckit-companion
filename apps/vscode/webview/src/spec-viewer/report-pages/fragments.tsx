@@ -1,4 +1,4 @@
-import { parseInline } from '../markdown/inline';
+import { parseInline } from 'speckit-viewer/core/markdown/inline';
 
 type Block =
     | { kind: 'paragraph'; text: string; strong?: boolean }

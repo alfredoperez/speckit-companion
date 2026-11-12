@@ -1,0 +1,60 @@
+{
+  "name": "speckit-viewer",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The SpecKit Companion spec viewer: contract, core and styles, shared by the extension and other hosts.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alfredoperez/speckit-companion",
+    "directory": "packages/viewer"
+  },
+  "exports": {
+    "./contract": {
+      "types": "./src/contract/index.ts",
+      "source": "./src/contract/index.ts",
+      "default": "./dist/contract/index.js"
+    },
+    "./contract/*": {
+      "types": "./src/contract/*.ts",
+      "source": "./src/contract/*.ts",
+      "default": "./dist/contract/*.js"
+    },
+    "./core": {
+      "types": "./src/core/index.ts",
+      "source": "./src/core/index.ts",
+      "default": "./dist/core/index.js"
+    },
+    "./core/*": {
+      "types": "./src/core/*.ts",
+      "source": "./src/core/*.ts",
+      "default": "./dist/core/*.js"
+    },
+    "./styles/*": "./dist/styles/*"
+  },
+  "typesVersions": {
+    "*": {
+      "contract": [
+        "src/contract/index.ts"
+      ],
+      "contract/*": [
+        "src/contract/*"
+      ],
+      "core": [
+        "src/core/index.ts"
+      ],
+      "core/*": [
+        "src/core/*"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/build-css.mjs"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "postcss": "^8.5.26"
+  }
+}

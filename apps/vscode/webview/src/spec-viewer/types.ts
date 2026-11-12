@@ -17,15 +17,15 @@ export interface VSCodeApi {
 // ============================================
 
 // The document vocabulary, payload shapes and message unions are declared
-// once, in `src/protocol/viewer.ts`, and compiled by both sides. This file
-// used to re-declare all of it, which is how the extension came to have
+// once, in the `speckit-viewer` package contract, bound to the extension's
+// report pages in `src/protocol/viewer.ts`, and compiled by both sides. This
+// file used to re-declare all of it, which is how the extension came to have
 // three message variants the webview had never heard of.
 export * from '../../../src/protocol/viewer';
 
-// The `.spec-context.json` shapes the viewer renders are declared once, in the
-// contract module, and re-exported here. Only the two types below stay local:
-// they are the *serialized* wire form of the footer, which drops the
-// `visibleWhen` predicate the extension-side `FooterAction` carries.
+// The `.spec-context.json` shapes and the serialized viewer state (whose footer
+// drops the `visibleWhen` predicate the extension-side `FooterAction` carries)
+// come from the package contract and are re-exported here.
 export type {
     CapabilityContentView,
     CheckpointStatus,
@@ -49,24 +49,7 @@ export type {
     ViewerVerification,
 } from '../../../src/core/types/specContext';
 
-import type {
-    CheckpointStatus,
-    FooterScope,
-    ReviewCommentStatus,
-    ClassificationEntry,
-    RiskEntry,
-    ConcernEntry,
-    HistoryEntry,
-    LivingSpecsView,
-    ReviewComment,
-    StepBadgeState,
-    StepHistoryEntry,
-    TaskSummary,
-    TimingSummary,
-    ViewerCoverageRow,
-    ViewerDecision,
-    ViewerVerification,
-} from '../../../src/core/types/specContext';
+import type { ReviewCommentStatus } from '../../../src/core/types/specContext';
 
 
 import type { ViewerToExtensionMessage } from '../../../src/protocol/viewer';
@@ -94,93 +77,13 @@ export interface ViewerWebviewState {
 // ============================================
 
 
-/** Serializable footer action — visibleWhen function is stripped before send. */
-export interface SerializedFooterAction {
-    id: string;
-    label: string;
-    scope: FooterScope;
-    tooltip: string;
-}
-
-
-// ============================================
-// Persisted review comments
-// ============================================
-
-
-/** One row of the converge result: a pass and what it added. */
-export interface ConvergePassRow {
-    index: number;
-    outcome: ConvergeOutcome;
-    addedIds: string[];
-    durationMs?: number;
-}
-
-/** A task the latest converge pass added, as tasks.md holds it now. */
-export interface ConvergeAddedTask {
-    id: string;
-    title: string;
-    checked: boolean;
-}
-
-export type ConvergeOutcome = 'running' | 'gaps' | 'clean' | 'unknown';
-
-/** What the viewer shows for converge; absent when converge never ran. */
-export interface ConvergeResult {
-    outcome: ConvergeOutcome;
-    passCount: number;
-    passes: ConvergePassRow[];
-    addedTasks: ConvergeAddedTask[];
-    openAdded: number;
-    completedBy?: { at: string; by: string };
-}
-
-export interface ViewerState {
-    status: string;
-    activeStep: string;
-    steps: Record<string, StepBadgeState>;
-    pulse: string | null;
-    highlights: string[];
-    activeSubstep: { step: string; name: string } | null;
-    footer: SerializedFooterAction[];
-    history: HistoryEntry[];
-    stepHistory: Record<string, StepHistoryEntry>;
-    timing?: TimingSummary;
-    approach?: string;
-    lastAction?: string;
-    taskSummaries?: Record<string, TaskSummary>;
-    /** Normalized: legacy string entries arrive as `{decision}`. */
-    decisions?: ViewerDecision[];
-    concerns?: ConcernEntry[];
-    filesModified?: string[];
-    prUrl?: string;
-    prNumber?: number;
-    checkpointStatus?: CheckpointStatus;
-    stepSummaries?: Record<string, Record<string, unknown>>;
-    /** Persisted inline review comments, for restore + the Activity list. */
-    reviewComments?: ReviewComment[];
-    /** Living specs this feature loaded/synced (LS·7). Absent when none. */
-    livingSpecs?: LivingSpecsView;
-    /** Reasoning-trail capture, normalized for rendering. */
-    intent?: string;
-    request?: string;
-    /** The ticket the spec came from, an id or a URL. */
-    source?: string;
-    /** True when `source` names an idea folder, so the Overview can open that idea. */
-    sourceIsIdea?: boolean;
-    /** An earlier spec folder this one extends. */
-    extends?: string;
-    /** An earlier spec folder this one replaces. */
-    supersedes?: string;
-    expectations?: string[];
-    context?: string[];
-    verified?: ViewerVerification[];
-    coverage?: ViewerCoverageRow[];
-    classification?: ClassificationEntry;
-    risk?: RiskEntry;
-    /** Converge result; absent when converge never ran. */
-    converge?: ConvergeResult;
-}
+export type {
+    ConvergeAddedTask,
+    ConvergeOutcome,
+    ConvergePassRow,
+    ConvergeResult,
+} from '../../../src/core/types/specContext';
+export type { SerializedFooterAction, ViewerState } from 'speckit-viewer/contract/viewerState';
 
 
 // ============================================

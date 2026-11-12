@@ -1,0 +1,104 @@
+/**
+ * SpecKit Companion - Animation Styles
+ * Keyframes and animations
+ */
+
+/* ============================================
+   Keyframe Animations
+   ============================================ */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Pulsing blue glow for active tasks progress badge */
+@keyframes pulse-badge {
+    0%, 100% {
+        box-shadow: 0 0 0 3px var(--sk-accent-subtle), 0 0 8px var(--sk-accent);
+    }
+    50% {
+        box-shadow: 0 0 0 5px var(--sk-accent-subtle), 0 0 16px var(--sk-accent);
+    }
+}
+
+/* Glowing green effect for PROJECT COMPLETE badge */
+@keyframes glow-complete {
+    0%, 100% {
+        box-shadow: 0 0 8px color-mix(in srgb, var(--sk-success) 40%, transparent);
+        border-color: var(--sk-success);
+    }
+    50% {
+        box-shadow: 0 0 16px color-mix(in srgb, var(--sk-success) 60%, transparent);
+        border-color: color-mix(in srgb, var(--sk-success) 80%, white);
+    }
+}
+
+/* Gentle border breath for in-progress spec badges (specifying / planning /
+   tasking / implementing). Subtle enough to coexist with multiple badges in
+   a list view — border only, no glow. Breathes the working (warning) hue. */
+@keyframes spec-badge-working {
+    0%, 100% {
+        border-color: color-mix(in srgb, var(--sk-warning) 35%, transparent);
+    }
+    50% {
+        border-color: color-mix(in srgb, var(--sk-warning) 70%, transparent);
+    }
+}
+
+/* Pulsing glow for active working step (purple = active progress, distinct
+   from the green completed checkmark). */
+@keyframes working-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px var(--sk-bg-secondary), 0 0 0 4px var(--sk-purple), 0 0 8px var(--sk-purple);
+    }
+    50% {
+        box-shadow: 0 0 0 3px var(--sk-bg-secondary), 0 0 0 5px var(--sk-purple), 0 0 16px var(--sk-purple);
+    }
+}
+
+.step-tab__substep {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.75em;
+    opacity: 0.7;
+    font-style: italic;
+}
+
+/* Purple glow for review mode */
+@keyframes review-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+    50% {
+        box-shadow: 0 0 8px var(--sk-review-glow);
+    }
+}

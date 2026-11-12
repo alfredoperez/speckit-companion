@@ -9,7 +9,7 @@
 
 import type { Meta, StoryObj } from '@storybook/preact';
 import type { ComponentChildren } from 'preact';
-import '../../../styles/spec-viewer/_install-banner.css';
+import '../../../styles/_install-banner.css';
 
 const meta: Meta = {
     title: 'VS Code Extension/Install Nudges',

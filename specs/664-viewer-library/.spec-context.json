@@ -1,0 +1,914 @@
+{
+  "workflow": "companion",
+  "specName": "Spec viewer as a shared library (V1 to V4)",
+  "branch": "feat/983-viewer-library",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:34:42.942Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T16:38:08.139Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:38:13.369Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:48:59.507Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:49:24.101Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:49:58.195Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T16:50:10.419Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:50:24.976Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:50:24.976Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:50:24.976Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:58:31.467Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:58:31.467Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:58:31.467Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T16:58:31.467Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.312Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.312Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.436Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.437Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.581Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.718Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.718Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:01:57.718Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:03:14.396Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:41:53.281Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:41:53.282Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:41:53.412Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T17:41:53.412Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:07:14.551Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:07:14.551Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:09:24.638Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T18:09:24.663Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T18:09:47.231Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T18:10:18.191Z"
+    }
+  ],
+  "request": "Spec folder number 664 (create-new-feature --number 664). Work in /Users/alfredoperez/dev/GitHub/speckit-companion.worktrees/feat-983-viewer-library on existing branch feat/983-viewer-library. Issue #983, slices V1–V4 only: V1 package `speckit-viewer` (unscoped, MIT, private:true, provisional name) at packages/viewer; V2 npm workspaces (apps/*? only packages/*), extension viewer bundle byte-identical; V3 extract /contract (Zod schemas for .spec-context.json, NavState, ViewerState, outgoing events) and /core (markdown renderer + pure derivations, no framework/DOM) and the extension imports them; bundle identical after stripping module ids/paths; V4 /styles: viewer.css on --sk-* tokens, scoped, theme files vscode/light/dark/ap-ui; no --vscode-* outside themes/vscode.css; info/priority/requirement colours are roles. Stop after V4.",
+  "unattended": true,
+  "last_action": "implement validated; converge next",
+  "expectations": [
+    "V5 onAction and host cut-off",
+    "V6 custom element and bundled highlight.js",
+    "V7 stories move",
+    "V8 publishing",
+    "V9-V11 Factory, canvas and mod switching",
+    "host-side state derivations moving into core"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/spec-viewer (markdown renderer, pure derivations, types)",
+    "area: apps/vscode/src/core/types/specContext.ts and src/protocol/viewer.ts (contract)",
+    "area: apps/vscode/webview/styles (viewer CSS and tokens)",
+    "area: webpack.config.js, tsconfig*.json, jest.config.js (build)",
+    "constraint: F5 runs tsc output, so the host can only require compiled JS",
+    "constraint: copilot-canvas stubs the renderer's one signal import"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Package speckit-viewer at packages/viewer, MIT, private",
+      "tasks": [
+        "T001"
+      ],
+      "assumes": "package.json fields read by eye"
+    },
+    "FR-002": {
+      "title": "npm workspace; bundle byte-identical after the workspace change",
+      "tasks": [
+        "T001",
+        "T008"
+      ],
+      "tests": [
+        "tooling/scripts/viewer-bundle-diff.mjs"
+      ]
+    },
+    "FR-003": {
+      "title": "Entry points /contract, /core, /styles",
+      "tasks": [
+        "T004"
+      ],
+      "assumes": "exports map read by eye and exercised by the Node import test"
+    },
+    "FR-004": {
+      "title": "/contract owns context, nav, viewer state and message shapes with runtime schemas",
+      "tasks": [
+        "T010",
+        "T014",
+        "T016"
+      ],
+      "tests": [
+        "packages/viewer/tests/schemas.test.ts"
+      ]
+    },
+    "FR-005": {
+      "title": "/core holds renderer and pure derivations with no VS Code, Preact or DOM imports",
+      "tasks": [
+        "T011"
+      ],
+      "tests": [
+        "packages/viewer/tsconfig.json (no DOM lib build)"
+      ]
+    },
+    "FR-006": {
+      "title": "Extension imports contract and core from the package, no second copy",
+      "tasks": [
+        "T012",
+        "T013"
+      ],
+      "assumes": "tsc passes with the moved files gone from the extension"
+    },
+    "FR-007": {
+      "title": "Bundle equal after stripping module ids and paths, with a rerunnable command",
+      "tasks": [
+        "T008"
+      ],
+      "tests": [
+        "tooling/scripts/viewer-bundle-diff.mjs"
+      ]
+    },
+    "FR-008": {
+      "title": "Renderer output for fixture specs matches main",
+      "tasks": [
+        "T009"
+      ],
+      "tests": [
+        "packages/viewer/src/core/markdown/__tests__/renderer.test.ts"
+      ]
+    },
+    "FR-009": {
+      "title": "/styles reads only --sk-* tokens, scoped selectors",
+      "tasks": [
+        "T020",
+        "T021"
+      ],
+      "tests": [
+        "apps/vscode/tests/unit/spec-viewer/tokensScope.spec.ts::scopes every selector under .sk-viewer"
+      ]
+    },
+    "FR-010": {
+      "title": "Four theme files; no --vscode-* outside vscode.css",
+      "tasks": [
+        "T018",
+        "T022"
+      ],
+      "tests": [
+        "apps/vscode/tests/unit/spec-viewer/tokensScope.spec.ts::names no VS Code variable outside the VS Code theme"
+      ]
+    },
+    "FR-011": {
+      "title": "Info, priority and requirement colours are roles; light has no blue info or red high",
+      "tasks": [
+        "T022"
+      ],
+      "tests": [
+        "apps/vscode/tests/unit/spec-viewer/tokensScope.spec.ts::keep blue off info and red off high priority"
+      ]
+    },
+    "FR-012": {
+      "title": "Extension looks the same on the VS Code theme",
+      "tasks": [
+        "T019",
+        "T023"
+      ],
+      "tests": [
+        "tooling/scripts/viewer-style-diff.mjs"
+      ]
+    },
+    "FR-013": {
+      "title": "Package loads in plain Node outside the extension",
+      "tasks": [
+        "T015",
+        "T017"
+      ],
+      "tests": [
+        "packages/viewer/tests/node-import.test.ts"
+      ]
+    },
+    "FR-014": {
+      "title": "Surface map lists packages/viewer/**",
+      "tasks": [
+        "T002"
+      ],
+      "assumes": "surface map entry read by eye"
+    }
+  },
+  "classification": {
+    "projectedFiles": 120,
+    "projectedTasks": 22,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "intent": "Start the speckit-viewer package (contract, core, styles) and switch the extension to it with an unchanged viewer",
+  "size": "oversized",
+  "source": "#983",
+  "decisions": [
+    {
+      "decision": "Hand-edit the lockfile for the workspace link instead of npm install",
+      "why": "npm 12 re-resolved Storybook's nested Vite and dropped 38 entries; the hand edit is 12 lines and npm ci accepts it",
+      "rejected": "npm install",
+      "by": "agent",
+      "at": "2026-11-12T16:48:59.308Z"
+    },
+    {
+      "decision": "Exports with a source condition for bundlers and compiled CommonJS dist for F5 and plain Node, typesVersions for node10",
+      "why": "host tsconfig rootDir and node10 resolution; F5 runs tsc output and can only require JS",
+      "rejected": "widening rootDir or project references",
+      "by": "agent",
+      "at": "2026-11-12T16:48:59.308Z"
+    },
+    {
+      "decision": "Keep the renderer's ../signals import; core ships a plain holder and the extension aliases it to its signal",
+      "why": "extension code stays identical so the normalized bundle diff is empty; the canvas stub disappears",
+      "rejected": "a setter called at start-up",
+      "by": "agent",
+      "at": "2026-11-12T16:48:59.308Z"
+    },
+    {
+      "decision": "Zod schemas beside hand-written interfaces, held together by type tests",
+      "why": "deriving 1,300 lines of types from schemas would change types across the extension at once",
+      "rejected": "z.infer as the owner; Ajv on the JSON schema",
+      "by": "agent",
+      "at": "2026-11-12T16:48:59.308Z"
+    },
+    {
+      "decision": "Scope at build time with PostCSS, prefixing selectors with :where(.sk-viewer)",
+      "why": "zero added specificity keeps the cascade; the source stays readable",
+      "rejected": "@scope (engine floor), nesting, a one-time source rewrite",
+      "by": "agent",
+      "at": "2026-11-12T16:48:59.308Z"
+    },
+    {
+      "decision": "vscode.css keeps today's colours; role colours live in roles.css for light, dark and ap-ui",
+      "why": "owner's delegate: extension unchanged, recolour stays a one-line switch",
+      "rejected": "recolouring the extension now",
+      "by": "agent",
+      "at": "2026-11-12T16:48:59.308Z"
+    },
+    {
+      "decision": "Keep the extension's types byte-for-byte by making NavState and ExtensionToViewerMessage generic over the report payload and host state",
+      "why": "the contract cannot import the extension's report pages; the host binds them in its shim",
+      "rejected": "typing report as unknown everywhere",
+      "by": "agent",
+      "at": "2026-11-12T18:09:24.796Z"
+    },
+    {
+      "decision": "Generate the VS Code theme from main's token files, inlining root-level values a theme block would otherwise change",
+      "why": "the old cascade resolved some tokens on html; collapsing to one element changed them (the light scenario hue)",
+      "rejected": "hand-copying the palette",
+      "by": "agent",
+      "at": "2026-11-12T18:09:24.796Z"
+    },
+    {
+      "decision": "Prune theme tokens nothing reads",
+      "why": "the old palette carried about 20 unused names",
+      "rejected": "carrying them into the package",
+      "by": "agent",
+      "at": "2026-11-12T18:09:24.796Z"
+    },
+    {
+      "decision": "Install banner stays in the extension and reads var(--sk-x, var(--x))",
+      "why": "the spec editor imports it unscoped on the old tokens",
+      "rejected": "two copies",
+      "by": "agent",
+      "at": "2026-11-12T18:09:24.796Z"
+    },
+    {
+      "decision": "Canvas board aliases the old token names to --sk-* on body",
+      "why": "its own UI read tokens the vendored viewer sheet used to set globally; V10 switches it properly",
+      "rejected": "rewriting the board's stylesheet now",
+      "by": "agent",
+      "at": "2026-11-12T18:09:24.796Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Package layout, runtime resolution, the signal seam, schemas and build-time scoping decided; V2 already proven byte-identical",
+      "key_finding": "The host tsc build cannot import package source (rootDir, node10, F5 runs tsc output), so the package needs a compiled CommonJS build beside its source exports"
+    },
+    "tasks": {
+      "summary": "24 tasks: setup, foundational build wiring, three story phases (move, schemas and Node proof, styles), one validation task"
+    },
+    "implement": {
+      "summary": "speckit-viewer package with contract, core and styles; the extension, Storybook and canvas consume it; bundles byte-identical and computed styles unchanged"
+    }
+  },
+  "approach": "Make packages/viewer a source-first workspace package with a compiled CommonJS fallback. Move the framework-free renderer, derivations and contract into it and leave re-exports in the extension. Move the CSS onto --sk-* tokens with four themes, scoped by a PostCSS build, and prove both moves with normalized bundle and computed-style diffs.",
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/664-viewer-library --strict",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 0.0,
+      "result": "  WARNING plan.md:53  `apps/vscode/src/features/spec-viewer/html/generator.ts` has no `:line`, so it is unverified (no-line) ·   WARNING plan.md:54  `apps/vscode/webview/styles/spec-viewer.css` has no `:line`, so it is unverified (no-line) ·   5 error(s), 5 warning(s)",
+      "warnings": [
+        "exited 1"
+      ]
+    },
+    {
+      "what": "host type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.0,
+      "result": "npm notice run speckit-companion@0.38.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "c75c57de",
+      "tree": "fdb5e793b569b7d520e4a98c94e96db7355a45f3"
+    },
+    {
+      "what": "webview type-check",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.2,
+      "result": "npm notice run speckit-companion@0.38.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json",
+      "commit": "c75c57de",
+      "tree": "fdb5e793b569b7d520e4a98c94e96db7355a45f3"
+    },
+    {
+      "what": "package build without DOM lib",
+      "command": "npm run viewer:build",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 1.1,
+      "result": "npm notice run npm run build -w speckit-viewer · npm notice run speckit-viewer@0.0.0 build · npm notice run tsc -p tsconfig.json && node scripts/build-css.mjs",
+      "commit": "c75c57de",
+      "tree": "fdb5e793b569b7d520e4a98c94e96db7355a45f3"
+    },
+    {
+      "what": "webview bundles identical to main after normalizing",
+      "command": "node tooling/scripts/viewer-bundle-diff.mjs /private/tmp/claude-501/-Users-alfredoperez-dev-GitHub-speckit-companion/cb4730f5-7927-4cdb-8dba-fe23d0e8cbd4/scratchpad/base-dist dist",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "spec-editor.js: identical after normalizing · process-create.js: identical after normalizing · pipeline-builder.js: identical after normalizing",
+      "commit": "c75c57de",
+      "tree": "fdb5e793b569b7d520e4a98c94e96db7355a45f3"
+    },
+    {
+      "what": "full Jest suite",
+      "command": "npx jest --silent",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 72.8,
+      "result": "Tests:       5142 passed, 5142 total · Snapshots:   0 total · Time:        72.017 s, estimated 75 s",
+      "commit": "c75c57de",
+      "tree": "fdb5e793b569b7d520e4a98c94e96db7355a45f3"
+    },
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 21.7,
+      "result": "npm notice run tsc -p tsconfig.json && node scripts/build-css.mjs · npm notice run speckit-companion@0.38.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "c75c57de",
+      "tree": "fdb5e793b569b7d520e4a98c94e96db7355a45f3"
+    },
+    {
+      "what": "Webview bundles after V2, V3 and V4",
+      "result": "byte-identical to main for all four bundles, stronger than the normalized bar"
+    },
+    {
+      "what": "Computed styles of every element and pseudo-element in 306 viewer stories, VS Code dark and light",
+      "result": "no difference once stories read --sk-* and spinners and opening states are frozen"
+    },
+    {
+      "what": "Factory load check (Factory's Vitest 5.0.3 and tsc 5.9.3 in a scratch folder)",
+      "result": "imports /contract and /core and passes; strict tsc reports 471 noUncheckedIndexedAccess errors in package source"
+    },
+    {
+      "what": "SpecContextSchema on this repo's 111 spec records",
+      "result": "107 parse; 4 legacy records fail (sdd author, mark-complete step, missing substep)"
+    }
+  ],
+  "planBlocks": [
+    "calls"
+  ],
+  "planBlocksPicked": [
+    "calls"
+  ],
+  "concerns": [
+    {
+      "note": "plan.md call paths still fail check_plan (5 malformed lines): moved files have no line yet and CSS or constants are not functions"
+    },
+    {
+      "note": "Storybook now renders viewer stories with the extension's real palette; main's Storybook loaded tokens.css after the viewer palette, so some light-theme text colours change in stories (not in the extension). Clips and README images captured from Storybook will differ when next regenerated; not regenerated here (no screenshots in this run).",
+      "step": "implement"
+    },
+    {
+      "note": "Factory's strict tsc reports 471 noUncheckedIndexedAccess errors in package source; V8 should ship .d.ts so consumers do not re-check source.",
+      "step": "implement"
+    },
+    {
+      "note": "Files were moved and tokens renamed with scripts (git mv, a regex rename over CSS and stories, a theme generator), not the edit tool; every result is held by tsc, the bundle diff and the style diff.",
+      "step": "implement"
+    },
+    {
+      "note": "Legacy .spec-context.json records still need the extension's normalizer before SpecContextSchema; 4 of 111 in this repo fail without it.",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 2 TRACE problems (--fold 'plan') came from running the speckit-extension Python suite while .specify/feature.json pointed at this spec, so its fixture calls wrote to this trace; DISPATCH warning is the Foundational wave built inline on purpose (4 config edits that depend on the move); the 634 numbering warning predates this run."
+    }
+  ],
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Workspace and package, byte-identical bundle; surface map, vsix ignore and repo map list packages/",
+      "files": [
+        "package.json",
+        "package-lock.json",
+        "packages/viewer/package.json",
+        "packages/viewer/LICENSE",
+        ".claude/skills/release-qa/surface-map.yml",
+        ".vscodeignore",
+        "CLAUDE.md"
+      ],
+      "wave": "T001-T003"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Workspace and package, byte-identical bundle; surface map, vsix ignore and repo map list packages/",
+      "files": [
+        "package.json",
+        "package-lock.json",
+        "packages/viewer/package.json",
+        "packages/viewer/LICENSE",
+        ".claude/skills/release-qa/surface-map.yml",
+        ".vscodeignore",
+        "CLAUDE.md"
+      ],
+      "wave": "T001-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Workspace and package, byte-identical bundle; surface map, vsix ignore and repo map list packages/",
+      "files": [
+        "package.json",
+        "package-lock.json",
+        "packages/viewer/package.json",
+        "packages/viewer/LICENSE",
+        ".claude/skills/release-qa/surface-map.yml",
+        ".vscodeignore",
+        "CLAUDE.md"
+      ],
+      "wave": "T001-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Package exports (source, types, CommonJS default), webpack source condition and signals seam, Jest mapping, pre-build scripts",
+      "files": [
+        "packages/viewer/package.json",
+        "packages/viewer/tsconfig.json",
+        "webpack.config.js",
+        "jest.config.js",
+        "tsconfig.test.json",
+        "package.json"
+      ],
+      "wave": "T004-T007"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Package exports (source, types, CommonJS default), webpack source condition and signals seam, Jest mapping, pre-build scripts",
+      "files": [
+        "packages/viewer/package.json",
+        "packages/viewer/tsconfig.json",
+        "webpack.config.js",
+        "jest.config.js",
+        "tsconfig.test.json",
+        "package.json"
+      ],
+      "wave": "T004-T007"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Package exports (source, types, CommonJS default), webpack source condition and signals seam, Jest mapping, pre-build scripts",
+      "files": [
+        "packages/viewer/package.json",
+        "packages/viewer/tsconfig.json",
+        "webpack.config.js",
+        "jest.config.js",
+        "tsconfig.test.json",
+        "package.json"
+      ],
+      "wave": "T004-T007"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Package exports (source, types, CommonJS default), webpack source condition and signals seam, Jest mapping, pre-build scripts",
+      "files": [
+        "packages/viewer/package.json",
+        "packages/viewer/tsconfig.json",
+        "webpack.config.js",
+        "jest.config.js",
+        "tsconfig.test.json",
+        "package.json"
+      ],
+      "wave": "T004-T007"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Contract (spec context, viewer protocol, wire viewer state) and core (renderer, derivations, signals holder) moved into the package; DOM resolver split out",
+      "files": [
+        "packages/viewer/src/contract/",
+        "packages/viewer/src/core/"
+      ],
+      "wave": "T010-T011"
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Contract (spec context, viewer protocol, wire viewer state) and core (renderer, derivations, signals holder) moved into the package; DOM resolver split out",
+      "files": [
+        "packages/viewer/src/contract/",
+        "packages/viewer/src/core/"
+      ],
+      "wave": "T010-T011"
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Extension re-exports and imports point at the package; Storybook and canvas build from package source; canvas vendor rebuilt",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts",
+        "apps/vscode/src/protocol/viewer.ts",
+        "apps/vscode/webview/src/spec-viewer/",
+        ".storybook/main.ts",
+        "apps/copilot-canvas/build.mjs"
+      ],
+      "wave": "T012-T013"
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Extension re-exports and imports point at the package; Storybook and canvas build from package source; canvas vendor rebuilt",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts",
+        "apps/vscode/src/protocol/viewer.ts",
+        "apps/vscode/webview/src/spec-viewer/",
+        ".storybook/main.ts",
+        "apps/copilot-canvas/build.mjs"
+      ],
+      "wave": "T012-T013"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Bundle diff script; webview bundles byte-identical to main; moved renderer tests pass",
+      "files": [
+        "tooling/scripts/viewer-bundle-diff.mjs",
+        "packages/viewer/src/core/markdown/__tests__/"
+      ],
+      "wave": "T008-T009"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Bundle diff script; webview bundles byte-identical to main; moved renderer tests pass",
+      "files": [
+        "tooling/scripts/viewer-bundle-diff.mjs",
+        "packages/viewer/src/core/markdown/__tests__/"
+      ],
+      "wave": "T008-T009"
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Zod schemas tied to the interfaces both ways; plain-Node import test; 107 of 111 repo records parse",
+      "files": [
+        "packages/viewer/src/contract/schemas.ts",
+        "packages/viewer/tests/schemas.test.ts",
+        "packages/viewer/tests/node-import.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Zod schemas tied to the interfaces both ways; plain-Node import test; 107 of 111 repo records parse",
+      "files": [
+        "packages/viewer/src/contract/schemas.ts",
+        "packages/viewer/tests/schemas.test.ts",
+        "packages/viewer/tests/node-import.test.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Zod schemas tied to the interfaces both ways; plain-Node import test; 107 of 111 repo records parse",
+      "files": [
+        "packages/viewer/src/contract/schemas.ts",
+        "packages/viewer/tests/schemas.test.ts",
+        "packages/viewer/tests/node-import.test.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Factory's Vitest loads /contract and /core from source and passes; strict tsc flags 471 noUncheckedIndexedAccess errors in package source (V8: ship .d.ts)",
+      "files": [
+        "specs/664-viewer-library/factory-proof.md",
+        "packages/viewer/src/core/markdown/ledger/tasks.ts"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Partials moved to the package on --sk-* tokens with role tokens; PostCSS build scopes every selector under :where(.sk-viewer)",
+      "files": [
+        "packages/viewer/styles/",
+        "packages/viewer/scripts/build-css.mjs"
+      ],
+      "wave": "T020-T021"
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Partials moved to the package on --sk-* tokens with role tokens; PostCSS build scopes every selector under :where(.sk-viewer)",
+      "files": [
+        "packages/viewer/styles/",
+        "packages/viewer/scripts/build-css.mjs"
+      ],
+      "wave": "T020-T021"
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "VS Code, light, dark and ap-ui themes plus role files; extension, Storybook and canvas load the built CSS with sk-viewer on body; stories moved to --sk-*",
+      "files": [
+        "packages/viewer/styles/themes/",
+        "apps/vscode/webview/styles/",
+        "apps/vscode/src/features/spec-viewer/html/generator.ts",
+        ".storybook/",
+        "apps/copilot-canvas/"
+      ],
+      "wave": "T022-T023"
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "VS Code, light, dark and ap-ui themes plus role files; extension, Storybook and canvas load the built CSS with sk-viewer on body; stories moved to --sk-*",
+      "files": [
+        "packages/viewer/styles/themes/",
+        "apps/vscode/webview/styles/",
+        "apps/vscode/src/features/spec-viewer/html/generator.ts",
+        ".storybook/",
+        "apps/copilot-canvas/"
+      ],
+      "wave": "T022-T023"
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Token-rule tests (14) pass; computed-style diff over 306 stories in dark and light finds no difference",
+      "files": [
+        "apps/vscode/tests/unit/spec-viewer/tokensScope.spec.ts",
+        "tooling/scripts/viewer-style-diff.mjs"
+      ],
+      "wave": "T018-T019"
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Token-rule tests (14) pass; computed-style diff over 306 stories in dark and light finds no difference",
+      "files": [
+        "apps/vscode/tests/unit/spec-viewer/tokensScope.spec.ts",
+        "tooling/scripts/viewer-style-diff.mjs"
+      ],
+      "wave": "T018-T019"
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "tsc host and webview, package build, bundle diff, Jest 5142, canvas 173, Python 1957 all pass",
+      "files": [
+        "(no file)"
+      ]
+    }
+  },
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches .github/workflows/ci.yml, apps/vscode/webview/src/install-nudges/__stories__/InstallNudges.stories.tsx, apps/vscode/webview/src/shared/components/index.ts and 94 more"
+    ]
+  },
+  "convergeStartedAt": "2026-11-12T18:09:58.503Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-12T18:09:47.311Z",
+      "by": "extension",
+      "finishedAt": "2026-11-12T18:10:18.258Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

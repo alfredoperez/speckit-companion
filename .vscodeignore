@@ -41,6 +41,14 @@ jest.config.js
 tsconfig.test.json
 coverage/**
 dist/__tests__/**
+# Only the webpack bundle and the webview assets run. tsc's per-file output (`npm run
+# compile`, for F5) has no runtime reader, and it requires the viewer package, which
+# webpack bundles but the .vsix does not ship. `npm run check:vsix` guards this.
+dist/**
+!dist/extension.js
+!dist/webview/**/*.js
+!dist/webview/**/*.css
+!dist/webview/**/*.ttf
 docs/**
 webpack.config.js
 *.log
@@ -82,6 +90,8 @@ apps/website/**
 apps/speckit-extension/**
 # The GitHub Copilot app canvas: its own deliverable, loaded by the Copilot app, never by VS Code.
 apps/copilot-canvas/**
+# The viewer library: webpack bundles what the extension needs into dist/.
+packages/**
 # The Claude Code mod and its marketplace file: installed by Claude Code, never by VS Code.
 apps/claude-mod/**
 .claude-plugin/**

@@ -1,0 +1,88 @@
+/**
+ * The @ap/ui theme: the viewer drawn in Factory's light look, valued from @ap/ui's tokens
+ * (--page, --surface, --text, --accent-text and the rest), with the shared colour rules.
+ * Starts from the light theme, so anything @ap/ui has no token for keeps its light value.
+ */
+@import 'light.css';
+
+.sk-viewer {
+    /* Canvas and surfaces: the page behind, the surface for what sits on it. */
+    --sk-bg-primary: var(--page);
+    --sk-bg-secondary: var(--surface);
+    --sk-bg-elevated: var(--hover);
+    --sk-bg-hover: var(--hover);
+    --sk-bg-inset: color-mix(in srgb, var(--hover) 70%, var(--hairline));
+
+    /* Ink. */
+    --sk-text-primary: var(--text);
+    --sk-text-body: color-mix(in srgb, var(--text) 84%, var(--surface));
+    --sk-text-secondary: var(--sk-text-body);
+    --sk-text-muted: var(--muted);
+    --sk-text-label: var(--muted);
+
+    /* One accent. -text reads on the page and the surface; the fill carries a white label. */
+    --sk-accent: var(--accent-text);
+    --sk-accent-ink: var(--accent-on);
+    --sk-accent-hover: color-mix(in srgb, var(--accent-text) 85%, var(--text));
+    --sk-accent-subtle: var(--accent-wash);
+    --sk-accent-glow: none;
+
+    /* Status: ok, warn, fail. @ap/ui has no blue hue of its own. */
+    --sk-blue: var(--accent-text);
+    --sk-blue-subtle: var(--accent-wash);
+    --sk-success: var(--ok-text);
+    --sk-success-subtle: var(--ok-wash);
+    --sk-warning: var(--warn-text);
+    --sk-warning-subtle: var(--warn-wash);
+    --sk-error: var(--fail-text);
+    --sk-error-subtle: var(--fail-wash);
+
+    /* Review is the second accent, the pink. */
+    --sk-purple: var(--accent-text);
+    --sk-review: var(--pink-text);
+    --sk-review-ink: var(--pink-text);
+    --sk-review-subtle: var(--pink-wash);
+    --sk-review-glow: none;
+
+    --sk-border: var(--hairline);
+    --sk-border-hover: var(--border-strong);
+    --sk-border-accent: color-mix(in srgb, var(--accent-edge) 50%, transparent);
+
+    --sk-header-title: var(--text);
+    --sk-header-section: var(--text);
+    --sk-header-subsection: var(--text);
+
+    /* Code sits on a light well, in colours that clear 4.5:1 on it. */
+    --sk-bg-code: color-mix(in srgb, var(--hover) 55%, var(--surface));
+    --sk-bg-code-header: var(--hover);
+    --sk-border-code: var(--hairline);
+    --sk-code-text: var(--text);
+    --sk-code-keyword: var(--pink-text);
+    --sk-code-string: var(--ok-text);
+    --sk-code-number: var(--warn-text);
+    --sk-code-function: var(--accent-text);
+    --sk-code-comment: var(--muted);
+    --sk-code-variable: color-mix(in srgb, var(--accent-text) 60%, var(--text));
+    --sk-code-type: var(--ok-text);
+
+    --sk-border-checkbox: var(--border-strong);
+    --sk-bg-checkbox: var(--surface);
+
+    --sk-radius-sm: var(--radius-chip);
+    --sk-radius-md: var(--radius-control);
+    --sk-radius-lg: var(--radius-panel);
+    --sk-shadow-sm: none;
+    --sk-shadow-lg: none;
+
+    --sk-font-family: var(--font-doc);
+    --sk-font-mono: var(--font-doc-mono);
+    --sk-font-size: var(--fs-doc);
+    --sk-font-editor: var(--font-doc-mono);
+
+    /* What the extension takes from the editor. */
+    --sk-focus-border: var(--accent-edge);
+    --sk-list-warning: var(--warn-text);
+    --sk-button-secondary-fg: var(--text);
+    --sk-button-secondary-bg: var(--hover);
+    --sk-button-secondary-hover: color-mix(in srgb, var(--hover) 80%, var(--border-strong));
+}

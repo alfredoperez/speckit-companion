@@ -13,7 +13,7 @@
 import { createDispatcher, type DispatcherMap } from '../../../src/core/utils/dispatcher';
 import { showToast } from '../shared/components/Toast';
 import { navState, viewerState, historyEntries, viewerMode, specMoved } from './signals';
-import { setCurrentTask, setHasSpecContext, setLivingCoverage, setLivingDrifted, setLivingMode, setLivingNew, setReportMode, setSpecLedgerTasks, setTaskSummaries } from './markdown';
+import { setCurrentTask, setHasSpecContext, setLivingCoverage, setLivingDrifted, setLivingMode, setLivingNew, setReportMode, setSpecLedgerTasks, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
 import { revealRequirement } from './toc';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from './types';
 

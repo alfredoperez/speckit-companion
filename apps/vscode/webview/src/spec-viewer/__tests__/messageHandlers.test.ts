@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { buildHandlers } from '../messageHandlers';
-import { preprocessLivingRequirements } from '../markdown';
+import { preprocessLivingRequirements } from 'speckit-viewer/core/markdown/index';
 import { navState, viewerState, historyEntries, specMoved } from '../signals';
 import type { ExtensionToViewerMessage, NavState, ViewerState } from '../types';
 
@@ -47,7 +47,7 @@ describe('the webview routes every message the extension can send', () => {
         // reads the protocol as text as well, so that a variant added there is
         // visibly accounted for here even to someone skimming.
         const protocol = fs.readFileSync(
-            path.join(__dirname, '..', '..', '..', '..', 'src', 'protocol', 'viewer.ts'),
+            path.join(__dirname, '..', '..', '..', '..', '..', '..', 'packages', 'viewer', 'src', 'contract', 'viewer.ts'),
             'utf8',
         );
         const union = protocol.slice(protocol.indexOf('export type ExtensionToViewerMessage'));
@@ -173,7 +173,7 @@ describe('the spec page gets the sibling tasks.md from the navState', () => {
     const render = (tasks: string | undefined) => {
         const { applyNavState } = require('../messageHandlers');
         applyNavState(nav({ tasksMarkdown: tasks }));
-        return require('../markdown').renderMarkdown(SPEC_MD) as string;
+        return require('speckit-viewer/core/markdown/index').renderMarkdown(SPEC_MD) as string;
     };
 
     it('shows story progress when tasksMarkdown is set', () => {
