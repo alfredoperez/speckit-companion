@@ -261,7 +261,10 @@ def check_record(feature_dir: Path, ctx: dict, now: datetime | None = None) -> t
     # run journaling four tasks at the identical millisecond, three times over,
     # scored a 60s span and warned about nothing. Cluster first, then judge each
     # cluster on its own span.
-    finishes = _agent_task_finish_times(ctx)
+    # A wave closed in one call is one unit on purpose; only its total is timed.
+    summaries = ctx.get("task_summaries") if isinstance(ctx.get("task_summaries"), dict) else {}
+    waved = {t for t, s in summaries.items() if isinstance(s, dict) and s.get("wave")}
+    finishes = [f for f in _agent_task_finish_times(ctx) if f[0] not in waved]
     clusters, current = [], []
     for entry in finishes:
         if current and (entry[1] - current[0][1]).total_seconds() > BURST_WINDOW_SECONDS:

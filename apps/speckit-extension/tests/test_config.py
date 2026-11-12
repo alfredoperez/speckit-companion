@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the companion.yml loader, merge contract, and failure table (#317).
 
-Stdlib `unittest` only. These prove the prose in _parts/orchestrator.md matches
+Stdlib `unittest` only. These prove the prose in commands/reference/node-hooks.md matches
 the code: hooks merge in declared order, a recipe's nodes: override resolves, an
 anchor outside the active recipe is warned + skipped, a missing type:node ref is a
 hard error, absent config is silent defaults, and malformed config degrades + warns.

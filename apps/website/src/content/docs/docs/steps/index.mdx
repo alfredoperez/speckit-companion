@@ -50,17 +50,17 @@ The plan step checks its design against the constitution and records the result 
   <p>Or click <code>+</code> in the Specs view, write the brief and press <strong>Create Spec</strong>.</p>
 </Actions>
 
-Specify creates a `specs/<number>-<name>/` folder and writes two files in it: the spec, named `spec.md` like the stock workflow's (specs written before Companion switched keep their `<name>.spec.md` name and still open), and `checklists/requirements.md`, a quality checklist the assistant grades the spec against once.
+Specify creates a `specs/<number>-<name>/` folder and writes the spec in it, named `spec.md` like the stock workflow's (specs written before Companion switched keep their `<name>.spec.md` name and still open). The assistant checks the spec once against a short quality list and fixes what fails in place.
 
 Where the brief leaves a question open, the spec marks it in the text. **Clarify**, under **Other actions** in the footer, has your assistant ask you those questions and write the answers in.
 
-The Companion command also sizes the change. There's no setting for this.
+The Companion command sizes the change before it writes the spec. There's no setting for this.
 
 | Verdict | The bar | What specify does |
 | --- | --- | --- |
-| Simple | Up to 5 files and 10 tasks, and easy to undo and easy to check | Writes a short plan and the task list in the same pass. The next step is implement. |
-| Normal | Over that bar, or inside it but hard to undo or hard to check | Writes only the spec. You continue with plan, then tasks. |
-| Oversized | Over it by a wide margin, across several parts of the code | Same as normal. The verdict is recorded. |
+| Simple | Understood, touches nothing risky (stored data, security, a contract others use, ordering, delivery, untested behavior), and someone could finish it from the request and the diff | Writes the spec with a short Approach and the task list in the same pass. The next step is implement. |
+| Normal | Anything else | Writes only the spec. You continue with plan, then tasks. |
+| Oversized | Several parts of the code, or roughly 10+ files or 20+ tasks | Same as normal. The verdict is recorded. |
 
 A migration, deleted stored data or a contract other code depends on is sized normal whatever its file count, so a risky change never skips plan and tasks. The verdict shows on [the Overview](/docs/results/the-overview) as a line such as `Sized simple: 6 files, 8 tasks projected`.
 

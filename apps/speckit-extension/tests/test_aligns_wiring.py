@@ -16,10 +16,12 @@ ROOT = Path(__file__).resolve().parents[1]
 # absent: it writes a feature spec, and a hop into another capability's rules there widens
 # the brief without changing what gets written.
 LOADS_WITH_THE_HOP = [
-    "commands/speckit.companion.plan.md",
+    # Plan reads its living-spec load from a reference file only when living specs are on.
+    "commands/reference/living-plan-load.md",
     # A worker gets a phase-scoped slice, not the plan's context, so the agent actually
     # writing the guarded code never sees the rule the plan read without this.
-    "commands/speckit.companion.implement.md",
+    # Implement hands workers their slice from the fan-out reference, read when it dispatches.
+    "commands/reference/fan-out.md",
 ]
 
 RESOLVER_CALL = re.compile(r"resolve-spec-paths\.py[^\n`]*--requirements-for[^\n`]*")
@@ -49,7 +51,7 @@ class AShippedCommandAsksForTheHop(unittest.TestCase):
     def test_the_hop_is_explained_where_it_is_used(self):
         # A rule reached this way arrives with `matched: false`, which reads like noise to
         # anyone who was not told it is the point.
-        node = (ROOT / "nodes" / "plan" / "load-living-specs.md").read_text(encoding="utf-8")
+        node = (ROOT / "commands" / "reference" / "living-plan-load.md").read_text(encoding="utf-8")
         self.assertIn("aligns", node)
         self.assertIn("matched", node)
 

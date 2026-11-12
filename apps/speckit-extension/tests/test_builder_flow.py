@@ -35,8 +35,8 @@ OURS = (
 
 FOUR_PHASES = json.dumps([
     {"name": "set up", "nodes": ["resolve-dir", "load-living-specs"]},
-    {"name": "our review", "nodes": ["draft-spec", "quality-checklist"]},
     {"name": "size it", "nodes": ["classify-size", "persist-size"]},
+    {"name": "our review", "nodes": ["draft-spec", "quality-checklist"]},
     {"name": "finish", "nodes": ["branch", "finalize", "handoff"]},
 ])
 
@@ -111,7 +111,7 @@ class EverythingChangedAtOnceReachesTheBuild(unittest.TestCase):
 
     def test_the_phases_are_the_ones_this_project_named(self):
         self.assertEqual(self.project.phases_in("specify"),
-                         ["set up", "our review", "size it", "finish"])
+                         ["set up", "size it", "our review", "finish"])
 
     def test_the_nodes_run_in_the_order_this_project_asked_for(self):
         order = self.project.nodes_in("plan")
@@ -200,8 +200,8 @@ class MovingANodeToAnotherPhase(unittest.TestCase):
 
     PHASES = [
         {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
-        {"name": "author", "nodes": ["draft-spec", "quality-checklist"]},
         {"name": "classify", "nodes": ["classify-size", "persist-size"]},
+        {"name": "author", "nodes": ["draft-spec", "quality-checklist"]},
         {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
     ]
 
@@ -311,12 +311,12 @@ class RunningADifferentBlockInANodesPlace(unittest.TestCase):
     #: specify with `draft-spec` swapped for its brownfield variant.
     PHASES = json.dumps([
         {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
-        {"name": "author", "nodes": ["draft-spec-delta", "quality-checklist"]},
         {"name": "classify", "nodes": ["classify-size", "persist-size"]},
+        {"name": "author", "nodes": ["draft-spec-delta", "quality-checklist"]},
         {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
     ])
-    ORDER = ("resolve-dir,load-living-specs,draft-spec-delta,quality-checklist,"
-             "classify-size,persist-size,branch,finalize,handoff")
+    ORDER = ("resolve-dir,load-living-specs,classify-size,persist-size,"
+             "draft-spec-delta,quality-checklist,branch,finalize,handoff")
 
     def setUp(self):
         self.project = Project()
@@ -465,8 +465,8 @@ class PointingATemplateSectionAtAFragment(unittest.TestCase):
                       "--hook", "prompt", "--text", "Read the house rules first.")
         phases = [
             {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
-            {"name": "author", "nodes": ["draft-spec-delta", "quality-checklist"]},
             {"name": "classify", "nodes": ["classify-size", "persist-size"]},
+            {"name": "author", "nodes": ["draft-spec-delta", "quality-checklist"]},
             {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
         ]
         order = [n for p in phases for n in p["nodes"]]

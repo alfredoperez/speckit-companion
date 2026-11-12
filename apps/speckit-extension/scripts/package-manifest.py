@@ -167,6 +167,10 @@ def shipped_command_bodies() -> list[str]:
         for entry in sorted(os.listdir(workflows)):
             if entry.endswith((".yml", ".yaml", ".md")):
                 paths.append(os.path.join(workflows, entry))
+    # Reference files ship with the commands and are read on demand, so their scripts ship too.
+    reference = os.path.join(EXT_ROOT, "commands", "reference")
+    if os.path.isdir(reference):
+        paths += [os.path.join(reference, f) for f in sorted(os.listdir(reference)) if f.endswith(".md")]
     # A part is body text too: fenced into a command, or attached by a project's hook.
     parts = os.path.join(EXT_ROOT, "presets", "_parts")
     paths += [os.path.join(parts, f) for f in sorted(os.listdir(parts)) if f.endswith(".md")]

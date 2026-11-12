@@ -163,8 +163,8 @@ class TheOrderIsCheckedBeforeItIsWritten(unittest.TestCase):
         with self.assertRaises(config_write.ConfigWriteError) as caught:
             config_write.check_order(
                 "specify",
-                ["resolve-dir", "load-living-specs", "quality-checklist", "draft-spec",
-                 "classify-size", "persist-size", "branch", "finalize", "handoff"],
+                ["resolve-dir", "load-living-specs", "classify-size", "persist-size",
+                 "quality-checklist", "draft-spec", "branch", "finalize", "handoff"],
             )
         self.assertIn("quality-checklist", str(caught.exception))
         self.assertIn("draft-spec", str(caught.exception))
@@ -179,8 +179,8 @@ class TheOrderIsCheckedBeforeItIsWritten(unittest.TestCase):
         with self.assertRaises(config_write.ConfigWriteError) as caught:
             config_write.check_order(
                 "specify",
-                ["resolve-dir", "load-living-specs", "draft-spec", "quality-checklist",
-                 "classify-size", "persist-size", "branch", "handoff", "finalize"],
+                ["resolve-dir", "load-living-specs", "classify-size", "persist-size",
+                 "draft-spec", "quality-checklist", "branch", "handoff", "finalize"],
             )
         said = str(caught.exception)
         self.assertIn("handoff", said)

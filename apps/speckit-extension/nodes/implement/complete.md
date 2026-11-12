@@ -13,31 +13,4 @@ reads: []
    ```
    The `--set` pins which workflow ran the spec in the same write, so a mid-run join keeps Companion dispatch. This closes the implement step and leaves the spec at `implemented`; it never writes `completed`. Best-effort and idempotent: if `python3` is unavailable, warn and skip without failing the host command.
 
-   - **Account for every loaded capability first: a delta or an explicit skip, never silence.** Before folding, read `livingSpecs.loaded` in this feature's `.spec-context.json`. An absent key or an empty list means nothing was loaded and there is nothing to account for; skip to the fold. Go through **every** name in that list, and give each exactly one of two outcomes. For a loaded capability whose *behavior* this feature actually changed, append a delta block to this feature's `spec.md` capturing the real new or changed requirement, marked with that capability's name so the fold routes it to the right spec:
-     ```markdown
-     ## ADDED Requirements
-     <!-- capability: <name> -->
-
-     ### <the new capability requirement, as a testable statement>
-
-     #### Scenario: <name>
-     - **WHEN** <trigger>
-     - **THEN** <observable outcome>
-     ```
-     **A file no loaded capability claims belongs to a capability that does not exist yet.** Before writing any block, run the resolver on the files you changed: `python3 .specify/extensions/companion/scripts/resolve-spec-paths.py --changed <files> --json`. A file with no match is not yet a reason to write anything. Ask one question: **would someone planning a change here need to know this?** A file that only supports behaviour a spec already states needs no block: say so in your summary and move on. New code is never squeezed into a requirement to give it a home. When the file does add something a person can now do, that is new behaviour with no home. Do not route it to the nearest capability you happened to load. Give it a block of its own with a new name, `<!-- capability: <name> -->`, where the name is a thing a person can now do, said out loud, never a directory. Register it before the fold, with the directories you touched as its match: `python3 .specify/extensions/companion/scripts/register-capability.py --name <name> --match '<dir>/**'`. The fold then creates the spec from your block. Say in your summary that a capability appeared and why.
-
-     Pick the verb by whether the requirement heading already exists in the capability's living spec (`capabilities/<name>/<name>.spec.md`). A requirement that is **not already there** goes under `## ADDED Requirements`, even if it revises the same behavior area. Reserve `## MODIFIED Requirements` for changing the body of a requirement whose heading is already in the living spec; the heading must match an existing one for the edit to replace it in place. **Read the existing headings before choosing:** a new heading that says what an existing one says in other words is that requirement, changed, and belongs under MODIFIED with the existing heading. A `// simplified:` ceiling you left in the code is **not** a delta entry: inside a delta block every `###` is a requirement heading, so a "Known limits" heading there folds into the capability as a requirement. Record ceilings as `concerns` in this step's capture instead, and let `living-sync` place them. Use `## REMOVED Requirements` when you deleted one, and `## RENAMED Requirements` (`### Old heading -> New heading`) for a rename. Write one block per changed capability, each with its own `<!-- capability: <name> -->` marker: several marked blocks fan out, each capability spec receiving only its own requirements. Never invent requirements to pad the list, and add a third scenario to an existing requirement only when it covers a failure the first two miss, saying which in the scenario name.
-
-     For a loaded capability whose behavior this feature did **not** change, one you merely read for context, record an explicit skip. One call per untouched capability:
-     ```bash
-     python3 .specify/extensions/companion/scripts/write-context.py --living-spec-skip "<name>: <one-line reason it wasn't changed>"
-     ```
-     By the end, every name in `livingSpecs.loaded` is accounted for by a delta block or a recorded skip. A capability that is neither is a hole the fold flags.
-
-   - **Have the deltas reviewed before they fold.** A living spec is context every later run loads, so what folds into it is read by someone other than its author. Run `python3 .specify/extensions/companion/scripts/dispatch-briefs.py --feature-dir <feature_directory> --living` and do exactly what it prints.
-
-   - **Fold living-spec deltas (opt-in, best-effort).** After the close, fold the deltas you just authored into the durable living spec, OpenSpec's "archive" step:
-     ```bash
-     python3 .specify/extensions/companion/scripts/write-context.py --fold-living-spec --by ai
-     ```
-     It parses the feature spec for `## ADDED / MODIFIED / REMOVED / RENAMED Requirements` blocks and applies each to the resolved `capabilities/<name>/<name>.spec.md`: the changed-files-matched capability for unmarked blocks, and every `<!-- capability: <name> -->`-marked capability for the rest. Opt-in (it only acts when `livingSpecs.enabled: true`), a clean no-op when there is no delta block, idempotent on re-run, and it records the synced names onto `livingSpecs.synced`. Never fails the host command.
+   - **Living specs (only when this project keeps them).** If a `living-specs.yml` sits at the repository root, or `.specify/companion.yml` has a `livingSpecs` block, read `.specify/extensions/companion/commands/reference/living-implement-close.md` and follow it now: account for every loaded capability, have the deltas reviewed, and fold them. Otherwise skip this.

@@ -213,7 +213,7 @@ The four step commands are the Companion pipeline itself. They mirror stock spec
 
 ### `speckit.companion.specify`
 
-Writes `<feature_directory>/spec.md` (older projects have `<short-name>.spec.md`, and every step still reads it) — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — plus `checklists/requirements.md`. It also **classifies the change's size** (`simple` / `normal` / `oversized`, against a 5-file / 10-task bar; a change that is hard to undo or hard to check is never `simple`) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
+Writes `<feature_directory>/spec.md` (older projects have `<short-name>.spec.md`, and every step still reads it) — prioritized user stories with acceptance scenarios, functional requirements, key entities, edge cases, and measurable success criteria — and checks it once against a short quality list. Before drafting it **classifies the change's size** (`simple` / `normal` / `oversized`: simple is understood, touches nothing high-risk, and could be finished from the request and the diff) and records the verdict, which is what the later steps read to right-size themselves. A `simple` verdict fast-tracks: specify additionally emits a lean `plan.md` and a real `tasks.md` in the same pass, and the spec lands at the tasks step ready to implement.
 
 ### `speckit.companion.plan`
 
@@ -245,7 +245,7 @@ Marks a spec complete by hand; the workflow's last step is converge. Writes `sta
 python3 .specify/extensions/companion/scripts/write-context.py --mark-complete --by ai
 ```
 
-It refuses unless the spec is already `implemented` (or `implementing` with every task checked), and leaves an already-completed spec untouched. It never refuses for lack of verification: a spec with nothing verified and no concern explaining why completes with one `finished, unverified` concern and a `[companion] Warning:` line. A clean converge pass completes the spec in every run: when converge added no task and every task is checked, `--hook finish --step converge` marks the spec completed, with no assistant involved. This command is left for marking a spec complete by hand.
+It refuses unless the spec is already `implemented` (or `implementing` with every task checked), and leaves an already-completed spec untouched. It never refuses for lack of verification: a spec with nothing verified and no concern explaining why completes with one `finished, unverified` concern and a `[companion] Warning:` line. Converge completes the spec in every run: once every task is checked, including any task converge added and built in the same pass, closing converge marks the spec completed, with no assistant involved. An added task left open keeps it at `implemented`. This command is left for marking a spec complete by hand.
 
 ## Living-specs commands
 

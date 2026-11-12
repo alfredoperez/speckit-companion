@@ -269,9 +269,21 @@ def run_checks(spec_dir: Path) -> Report:
         # the non-zero-gap check yet are clearly one end-of-step dump → FAIL. Only
         # by:ai finishes count; the by:extension backstop legitimately bursts.
         span = _step_span(history, "implement")
-        ai_finish_times = [at for e in history
-                            if isinstance(e.get("task"), str) and e.get("by") == "ai"
-                            and e.get("kind") == "complete" and (at := _parse_at(e.get("at")))]
+        # A wave closed in one call is one timed unit, so it counts as one finish.
+        summaries = ctx.get("task_summaries") if isinstance(ctx.get("task_summaries"), dict) else {}
+        wave_of = {t: s.get("wave") for t, s in summaries.items() if isinstance(s, dict) and s.get("wave")}
+        seen_waves: set = set()
+        ai_finish_times = []
+        for e in history:
+            if not (isinstance(e.get("task"), str) and e.get("by") == "ai" and e.get("kind") == "complete"):
+                continue
+            at = _parse_at(e.get("at"))
+            wave = wave_of.get(e["task"])
+            if at is None or (wave and wave in seen_waves):
+                continue
+            if wave:
+                seen_waves.add(wave)
+            ai_finish_times.append(at)
         if span is not None and span[2] > 0 and len(ai_finish_times) >= 3:
             step_span = span[2]
             ts = sorted(ai_finish_times)
