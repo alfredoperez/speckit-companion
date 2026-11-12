@@ -497,8 +497,8 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
-      "commit": "59304cca",
-      "tree": "d7680bcd12e1b0cae584d76e07c92b9cf1f4ba1e"
+      "commit": "60b021a4",
+      "tree": "5849a6334a85668291066e756dc515b0aa4b332c"
     },
     {
       "what": "package manifest",
@@ -507,21 +507,18 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "[package-manifest] OK — 18 runtime scripts, closure matches the declared list",
-      "commit": "59304cca",
-      "tree": "d7680bcd12e1b0cae584d76e07c92b9cf1f4ba1e"
+      "commit": "60b021a4",
+      "tree": "5849a6334a85668291066e756dc515b0aa4b332c"
     },
     {
       "what": "command emissions",
       "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
       "source": "derived",
-      "exitCode": 1,
+      "exitCode": 0,
       "durationSeconds": 0.1,
-      "result": "  - stale record: speckit.companion.living-show registered for claude — not in extension.yml provides.commands ·   - stale record: speckit.companion.living-sync registered for claude — not in extension.yml provides.commands ·   - stale record: speckit.companion.living-validate registered for claude — not in extension.yml provides.commands",
-      "warnings": [
-        "exited 1"
-      ],
-      "commit": "59304cca",
-      "tree": "d7680bcd12e1b0cae584d76e07c92b9cf1f4ba1e"
+      "result": "[command-emissions] OK — 19 commands agree across 1 install areas, 1 agent records, and 2 documents",
+      "commit": "60b021a4",
+      "tree": "5849a6334a85668291066e756dc515b0aa4b332c"
     },
     {
       "what": "instruction budget",
@@ -530,18 +527,18 @@
       "exitCode": 0,
       "durationSeconds": 0.0,
       "result": "speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19 · speckit.companion.status.md                        0       0      0     214",
-      "commit": "59304cca",
-      "tree": "d7680bcd12e1b0cae584d76e07c92b9cf1f4ba1e"
+      "commit": "60b021a4",
+      "tree": "5849a6334a85668291066e756dc515b0aa4b332c"
     },
     {
       "what": "type-check",
       "command": "npx tsc --noEmit -p ./",
       "source": "derived",
       "exitCode": 0,
-      "durationSeconds": 2.1,
+      "durationSeconds": 2.4,
       "result": "npm notice run speckit-companion@0.38.0 npx · npm notice run 'tsc' --noEmit -p ./",
-      "commit": "59304cca",
-      "tree": "d7680bcd12e1b0cae584d76e07c92b9cf1f4ba1e"
+      "commit": "60b021a4",
+      "tree": "5849a6334a85668291066e756dc515b0aa4b332c"
     },
     {
       "what": "acceptance grep",
@@ -557,24 +554,21 @@
       "what": "full suite",
       "command": "npm run test:all",
       "source": "derived",
-      "exitCode": 1,
-      "durationSeconds": 211.1,
-      "result": "---------------------------------------------------------------------- · Ran 1495 tests in 117.767s · FAILED (failures=1, skipped=14)",
-      "warnings": [
-        "exited 1"
-      ],
-      "commit": "59304cca",
-      "tree": "d7680bcd12e1b0cae584d76e07c92b9cf1f4ba1e"
+      "exitCode": 0,
+      "durationSeconds": 215.8,
+      "result": "---------------------------------------------------------------------- · Ran 1495 tests in 122.130s · OK (skipped=14)",
+      "commit": "60b021a4",
+      "tree": "5849a6334a85668291066e756dc515b0aa4b332c"
     },
     {
       "what": "site build",
       "command": "bash -c 'cd apps/website && npm run build'",
       "source": "derived",
       "exitCode": 0,
-      "durationSeconds": 3.9,
+      "durationSeconds": 4.2,
       "result": "[changelog] vscode@0.36.0 \"Older releases are archived in [`apps/website/src/data/chang\" has no area tag, filed under other by keyword. · [changelog] speckit@0.24.0 \"Older releases are archived in [`apps/website/src/data/chang\" has no area tag, filed under other by keyword. · [changelog] 768 entries in older releases have no area tag and were filed by keyword.",
-      "commit": "59304cca",
-      "tree": "d7680bcd12e1b0cae584d76e07c92b9cf1f4ba1e"
+      "commit": "60b021a4",
+      "tree": "5849a6334a85668291066e756dc515b0aa4b332c"
     },
     {
       "what": "acceptance grep (changelog, plus the retired-node skip list and its test)",
@@ -583,8 +577,8 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "no output",
-      "commit": "59304cca",
-      "tree": "d7680bcd12e1b0cae584d76e07c92b9cf1f4ba1e"
+      "commit": "60b021a4",
+      "tree": "5849a6334a85668291066e756dc515b0aa4b332c"
     }
   ],
   "decisions": [
