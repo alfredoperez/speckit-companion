@@ -293,54 +293,8 @@ export function computeApproveFooter(
     return { showApproveButton: false, approveText: '' };
 }
 
-/**
- * Map stepHistory keys from step names to tab names. `mapStepToTab`
- * collapses `tasks` and `implement` onto the `tasks` tab key (Implement has
- * no dedicated tab). When a later step aliases onto the same key, the
- * resolution prefers (1) the entry whose own step name equals the tab key
- * (e.g. `tasks` wins over `implement` for the `tasks` tab), then (2) a
- * completed entry over an in-flight one, then (3) earlier `startedAt` over
- * later. Without this priority, a producer that emits `implement` before
- * `tasks` (or with later `startedAt`) would shadow `tasks`' real duration on
- * the Tasks tab — order-dependence we don't want to rely on.
- */
-export function mapStepHistoryToTabKeys(
-    stepHistory?: Record<string, { startedAt?: string; completedAt?: string | null }>,
-): Record<string, { startedAt?: string; completedAt?: string | null }> | undefined {
-    if (!stepHistory) return undefined;
-    const out: Record<string, { startedAt?: string; completedAt?: string | null }> = {};
-    const winningStep: Record<string, string> = {};
-
-    for (const [step, entry] of Object.entries(stepHistory)) {
-        const tabName = mapStepToTab(step) || step;
-        const incumbent = out[tabName];
-        if (!incumbent) {
-            out[tabName] = entry;
-            winningStep[tabName] = step;
-            continue;
-        }
-        // 1. The entry whose step name equals the tab name wins.
-        if (step === tabName) {
-            out[tabName] = entry;
-            winningStep[tabName] = step;
-            continue;
-        }
-        if (winningStep[tabName] === tabName) continue;
-        // 2. Completed entries beat in-flight ones.
-        if (entry.completedAt && !incumbent.completedAt) {
-            out[tabName] = entry;
-            winningStep[tabName] = step;
-            continue;
-        }
-        if (!entry.completedAt && incumbent.completedAt) continue;
-        // 3. Earlier startedAt wins (preserves the historical first run).
-        if (entry.startedAt && incumbent.startedAt && entry.startedAt < incumbent.startedAt) {
-            out[tabName] = entry;
-            winningStep[tabName] = step;
-        }
-    }
-    return out;
-}
+export { mapStepHistoryToTabKeys } from 'speckit-viewer/core/navState';
+import { mapStepHistoryToTabKeys } from 'speckit-viewer/core/navState';
 
 /**
  * Per-step badge state with the `specify` → `spec` alias copy used by the

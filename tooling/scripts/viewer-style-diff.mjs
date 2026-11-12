@@ -28,6 +28,8 @@ const THEMES = [
 ];
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.png': 'image/png' };
 const ROOTS = { sb: sbDir, sbhead: headSbDir, base: join(baseDist, 'webview'), head: join(headDist, 'webview') };
+// A side whose stylesheet is scoped under .sk-viewer (the package's, from V4 on) gets the class on <body>, as the extension sets it.
+const scoped = { base: existsSync(join(ROOTS.base, 'viewer', 'viewer.css')), head: existsSync(join(ROOTS.head, 'viewer', 'viewer.css')) };
 
 const server = createServer((req, res) => {
     const url = new URL(req.url, 'http://x');
@@ -95,7 +97,7 @@ async function render(side, snap, theme) {
         document.documentElement.setAttribute('style', snap.rootStyle);
         document.body.className = cls;
         document.body.innerHTML = `<div class="${cls.split(' ').pop()}">${snap.html}</div>`;
-    }, { snap, cls: side === 'head' ? `sk-viewer ${theme.bodyClass}` : theme.bodyClass });
+    }, { snap, cls: scoped[side] ? `sk-viewer ${theme.bodyClass}` : theme.bodyClass });
     await page.waitForLoadState('networkidle');
     await page.evaluate(() => document.fonts.ready);
     // A running spinner is sampled mid-turn; freeze every animation at its start so both sides match.

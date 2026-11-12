@@ -64,7 +64,9 @@ export function StepTab(props: StepTabProps) {
     // The percent host stands in for implement when the rail has no implement entry.
     const hostsRunningImplement = !!isPercentHost && isStepInFlight(IMPLEMENT_STEP, run);
     const hostsRunningConverge = !!isPercentHost && !hostsRunningImplement && isConvergeInFlight(run);
-    const isWorking = isStepInFlight(stepName, run) || hostsRunningImplement || hostsRunningConverge;
+    // A host that knows no run is going (`live: false`) shows an open step as left open, not working.
+    const live = navState.value?.live ?? true;
+    const isWorking = live && (isStepInFlight(stepName, run) || hostsRunningImplement || hostsRunningConverge);
     const isLocked = runningStepIndex != null
         && index > runningStepIndex
         && !isViewing

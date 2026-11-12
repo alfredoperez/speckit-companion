@@ -245,6 +245,8 @@ export interface NavState<Report = unknown> {
     titleFromHeading?: boolean;
     /** The spec's own title (its spec document's H1), shown on every tab of the spec. */
     specTitle?: string | null;
+    /** A run is going now; the extension leaves it unset, which reads as live. */
+    live?: boolean;
     /** Core documents with existence state */
     coreDocs: SpecDocument[];
     /** Related documents */

@@ -46,13 +46,13 @@ Files: packages/viewer/src/view/** (except host, signals, slots), apps/vscode/we
 Files: packages/viewer/src/core/navState.ts, packages/viewer/src/element/**, packages/viewer/scripts/build-element.mjs, packages/viewer/tests/element/**
 
 ### Tests
-- [ ] **T016** [US2] FR-008/FR-009: `buildNavState` puts action steps on the rail, maps implement to the Tasks tab and falls back on an unknown `currentDoc` · packages/viewer/src/core/__tests__/navState.test.ts
-- [ ] **T017** [US2] FR-007, FR-010 to FR-012, FR-014: a page with only the element bundle renders a fixture, switches document on a rail click, emits `speckit-action`, shows the `actions` slot first and requests no CDN script (headless Chrome) · packages/viewer/tests/element/element.check.mjs
+- [x] **T016** [US2] FR-008/FR-009: `buildNavState` puts action steps on the rail, maps implement to the Tasks tab and falls back on an unknown `currentDoc` · packages/viewer/src/core/__tests__/navState.test.ts
+- [x] **T017** [US2] FR-007, FR-010 to FR-012, FR-014: a page with only the element bundle renders a fixture, switches document on a rail click, emits `speckit-action`, shows the `actions` slot first and requests no CDN script (headless Chrome) · packages/viewer/tests/element/element.check.mjs
 
 ### Implementation
-- [ ] **T018** [US2] `buildNavState` from a record, the documents, the current document and task counts · packages/viewer/src/core/navState.ts
-- [ ] **T019** [US2] `<speckit-viewer>`: properties, light-DOM render, internal navigation, `speckit-action` events, `actions` slot · packages/viewer/src/element/index.ts
-- [ ] **T020** [US2] esbuild ESM bundle and declarations; wire into the package build · packages/viewer/scripts/build-element.mjs, packages/viewer/package.json
+- [x] **T018** [US2] `buildNavState` from a record, the documents, the current document and task counts · packages/viewer/src/core/navState.ts
+- [x] **T019** [US2] `<speckit-viewer>`: properties, light-DOM render, internal navigation, `speckit-action` events, `actions` slot · packages/viewer/src/element/index.ts
+- [x] **T020** [US2] esbuild ESM bundle and declarations; wire into the package build · packages/viewer/scripts/build-element.mjs, packages/viewer/package.json
 
 **Checkpoint**: a plain page renders a spec with the element alone.
 
@@ -61,7 +61,7 @@ Files: packages/viewer/src/core/navState.ts, packages/viewer/src/element/**, pac
 Files: packages/viewer/tests/strict.test.ts
 
 ### Tests
-- [ ] **T021** [US3] FR-015: both package tsconfigs type-check with `noUncheckedIndexedAccess` and report zero errors · packages/viewer/tests/strict.test.ts
+- [x] **T021** [US3] FR-015: both package tsconfigs type-check with `noUncheckedIndexedAccess` and report zero errors · packages/viewer/tests/strict.test.ts
 
 **Checkpoint**: Factory can import the package without `@ts-nocheck`.
 

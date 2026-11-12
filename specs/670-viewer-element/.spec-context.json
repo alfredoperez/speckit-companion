@@ -165,6 +165,54 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-12T22:02:57.872Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.424Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.424Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.583Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.583Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.721Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.851Z"
     }
   ],
   "unattended": true,
@@ -379,7 +427,7 @@
       "note": "check_plan.py reports malformed call-path lines: the blocks cite files that do not exist yet (moved view code), so lines cannot be verified"
     }
   ],
-  "currentTask": "T014",
+  "currentTask": "T021",
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -524,6 +572,56 @@
         ".storybook/preview.tsx"
       ],
       "wave": "T013-T014"
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "buildNavState in core (action steps on the rail, implement on Tasks, unknown doc falls back) with tests",
+      "files": [
+        "packages/viewer/src/core/navState.ts",
+        "packages/viewer/src/core/__tests__/navState.test.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "buildNavState in core (action steps on the rail, implement on Tasks, unknown doc falls back) with tests",
+      "files": [
+        "packages/viewer/src/core/navState.ts",
+        "packages/viewer/src/core/__tests__/navState.test.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "speckit-viewer element (light DOM, own navigation, speckit-action events, actions slot) and its esbuild ESM bundle plus declarations",
+      "files": [
+        "packages/viewer/src/element/index.ts",
+        "packages/viewer/scripts/build-element.mjs",
+        "packages/viewer/package.json"
+      ],
+      "wave": "T019-T020"
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "speckit-viewer element (light DOM, own navigation, speckit-action events, actions slot) and its esbuild ESM bundle plus declarations",
+      "files": [
+        "packages/viewer/src/element/index.ts",
+        "packages/viewer/scripts/build-element.mjs",
+        "packages/viewer/package.json"
+      ],
+      "wave": "T019-T020"
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Headless Chrome check of the element bundle alone: rail, slot, highlighting, navigation, events, no CDN",
+      "files": [
+        "packages/viewer/tests/element/element.check.mjs"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Strict test: both package tsconfigs forbid unchecked index access and type-check clean",
+      "files": [
+        "packages/viewer/tests/strict.test.ts"
+      ]
     }
   }
 }
