@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-11-12
+
+Hands-off runs cost less and finish at Completed, they also run on Spec Kit's workflow engine, and living specs are retired.
+
 ### Added
 - **Hands-off runs on spec-kit's workflow engine.** `specify workflow run` routes on the recorded size, and ==each review gate resumes headless==. ([#1006](https://github.com/alfredoperez/speckit-companion/pull/1006)) <!-- area: pipeline -->
 - **Corner cuts show up as concerns.** A skipped test, a suppression, an empty stub or a lower coverage bar is ==recorded with its file and line==, never blocking. ([#1005](https://github.com/alfredoperez/speckit-companion/pull/1005)) <!-- area: run-record -->
@@ -49,32 +53,3 @@ Companion lines up with Spec Kit 1.2.5, and every spec records what was proven, 
 - **Your team's templates shape Companion runs too.** Template overrides and presets shape Companion runs on ==Spec Kit 1.2.5== or newer, without touching stock runs. ([#937](https://github.com/alfredoperez/speckit-companion/pull/937), [#980](https://github.com/alfredoperez/speckit-companion/pull/980)) <!-- area: pipeline -->
 - **The run record stays whole.** A small spec's plan and tasks land in one write, a status never moves back, and a damaged record is ==kept aside==. ([#936](https://github.com/alfredoperez/speckit-companion/pull/936), [#970](https://github.com/alfredoperez/speckit-companion/pull/970)) <!-- area: run-record -->
 
-## [0.25.0] - 2026-10-13
-
-The plan step draws what a change touches, and plain Spec Kit commands are left exactly as shipped.
-
-### Highlights
-
-#### The plan draws its blocks
-One deciding step adds call paths, pinned code, states or screens to the plan ==only when the change needs them==, and checks each one: every file and line resolves, every state is reachable, every screen dot has its note.
-<!-- area: pipeline; pr: 875, 905 -->
-
-#### Plain Spec Kit commands stay untouched
-Stock runs are recorded through spec-kit's own hooks, so the `/speckit.*` commands are ==exactly what spec-kit ships==, and a terminal run of plain Spec Kit still gets its step times.
-<!-- area: pipeline; pr: 906 -->
-
-### Added
-- **A risky small change takes the full pipeline.** Sizing asks whether a change is hard to undo or hard to check, and one that is ==never takes the short path==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: pipeline -->
-- **A spec that finishes unverified says so.** Completing with nothing verified and no concern explaining why still completes, records =="finished, unverified"== and warns. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
-- **A run records its working branch.** A step started on another branch than the spec was created on records it, so the viewer ==names the right branch==. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: run-record -->
-- **The configuration writer sets a verdict's routing.** A verdict's skipped steps and its notice are written together, and removing the entry ==restores the declared routing==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: pipeline-builder -->
-- **Living specs travel with the pipeline graph.** The graph carries whether they run, where specs live and ==which capabilities are registered==, so a panel can draw them. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
-
-### Changed
-- **Terminal runs of plain SpecKit list no tasks.** The viewer's task list fills ==only when VS Code sends the step==. ([#906](https://github.com/alfredoperez/speckit-companion/pull/906)) <!-- area: run-record -->
-- **The plan step records its check.** Closing the plan step records its block check with an exit code, so ==the result is always kept==. ([#905](https://github.com/alfredoperez/speckit-companion/pull/904)) <!-- area: pipeline -->
-
-### Fixed
-- **A registry rewrite keeps the chosen layout.** Registering a capability re-emits the registry, which dropped `layout` and sent ==every later adoption back to asking==. ([#888](https://github.com/alfredoperez/speckit-companion/pull/888)) <!-- area: living-specs -->
-- **The manual check records its result.** The brownfield preset's click-through step called the recorder with `--concerns`, a flag that does not exist, so the result was dropped. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: run-record -->
-- **A completed spec names no current task.** Marking a spec complete clears the current task, which had kept naming the last one finished. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: run-record -->
