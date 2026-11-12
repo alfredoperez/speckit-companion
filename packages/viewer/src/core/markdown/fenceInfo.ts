@@ -17,13 +17,13 @@ export function fenceLanguage(word: string): string {
 
 export function parseFenceInfo(info: string): FenceInfo {
     const text = info.trim();
-    const first = text.split(/\s+/, 1)[0];
+    const first = text.split(/\s+/, 1)[0]!;
     const hasLanguage = !first.includes('=');
     const language = hasLanguage ? fenceLanguage(first) : '';
     const rest = hasLanguage ? text.slice(first.length) : text;
     const options = new Map<string, string | true>();
     let title = '';
-    for (const [, key, raw] of rest.matchAll(OPTION)) {
+    for (const [, key, raw] of rest.matchAll(OPTION) as IterableIterator<[string, string, string | undefined]>) {
         const value = raw === undefined ? true : raw.replace(/^(["'])(.*)\1$/, '$2');
         if (key === 'title' && typeof value === 'string') title = value;
         else options.set(key, value);

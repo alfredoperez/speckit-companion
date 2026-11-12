@@ -108,7 +108,7 @@ export function activeDurationMs(
         .sort((a, b) => a - b);
     let sum = 0;
     for (let i = 1; i < ts.length; i++) {
-        sum += Math.min(ts[i] - ts[i - 1], capMs);
+        sum += Math.min(ts[i]! - ts[i - 1]!, capMs);
     }
     return sum;
 }

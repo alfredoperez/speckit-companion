@@ -25,16 +25,16 @@ interface FieldTable {
 
 function asFieldTable(t: Table): FieldTable | null {
     const type = colIndex(t.head, TYPE_HEAD);
-    if (type < 0 || !FIELD_HEAD.test(plain(t.head[0]))) return null;
+    if (type < 0 || !FIELD_HEAD.test(plain(t.head[0]!))) return null;
     return { name: 0, type, table: t };
 }
 
 function tableRuns(lines: string[]): Table[] {
     const found: Table[] = [];
     for (let i = 0; i < lines.length; i++) {
-        if (!isTableLine(lines[i])) continue;
+        if (!isTableLine(lines[i]!)) continue;
         const run: string[] = [];
-        while (i < lines.length && isTableLine(lines[i])) run.push(lines[i++]);
+        while (i < lines.length && isTableLine(lines[i]!)) run.push(lines[i++]!);
         const t = parseTable(run);
         if (t) found.push(t);
     }
@@ -50,7 +50,7 @@ function entityName(heading: string): Named {
     let t = heading.replace(/`/g, '').replace(/^\d+[.)]\s*/, '').replace(/^Entity:\s*/i, '').trim();
     let qualifier = '';
     const q = t.match(/^(.+?)[ \t]*(?:\(([^)]+)\)|[—–][ \t]*(.+))$/);
-    if (q) { t = q[1].trim(); qualifier = (q[2] ?? q[3]).trim(); }
+    if (q) { t = q[1]!.trim(); qualifier = (q[2] ?? q[3])!.trim(); }
     return { name: t, qualifier };
 }
 
@@ -68,10 +68,10 @@ function fieldLanes(ft: FieldTable, names: string[], self: string): string {
     const ruleCols = table.head.map((_, i) => i).filter((i) => i !== ft.name && i !== ft.type);
     const rows = table.rows.map((r) => {
         const rule = ruleCols.map((i) => r[i]).filter(Boolean).join(' · ');
-        return `<div class="lg-flane" role="row"><span class="lg-f-name" role="cell">${escapeHtml(plain(r[ft.name]))}</span><span class="lg-f-type" role="cell">${linkType(r[ft.type], names, self)}</span><span class="lg-f-rule" role="cell">${parseInline(rule)}</span></div>`;
+        return `<div class="lg-flane" role="row"><span class="lg-f-name" role="cell">${escapeHtml(plain(r[ft.name]!))}</span><span class="lg-f-type" role="cell">${linkType(r[ft.type]!, names, self)}</span><span class="lg-f-rule" role="cell">${parseInline(rule)}</span></div>`;
     }).join('');
-    const ruleHead = ruleCols.length ? plain(table.head[ruleCols[0]]) : '';
-    const head = `<div class="lg-flane lg-flane--head" role="row"><span>${escapeHtml(plain(table.head[0]))}</span><span>${escapeHtml(plain(table.head[ft.type]))}</span><span>${escapeHtml(ruleHead)}</span></div>`;
+    const ruleHead = ruleCols.length ? plain(table.head[ruleCols[0]!]!) : '';
+    const head = `<div class="lg-flane lg-flane--head" role="row"><span>${escapeHtml(plain(table.head[0]!))}</span><span>${escapeHtml(plain(table.head[ft.type]!))}</span><span>${escapeHtml(ruleHead)}</span></div>`;
     return `<div class="lg-fields" role="table">${head}${rows}</div>`;
 }
 
@@ -88,7 +88,7 @@ function asTransitions(t: Table): Transition[] | null {
     const to = colIndex(t.head, TO_HEAD);
     if (from < 0 || event < 0 || to < 0 || new Set([from, event, to]).size < 3) return null;
     const note = t.head.findIndex((_, i) => ![from, event, to].includes(i));
-    return t.rows.map((r) => ({ from: r[from], event: r[event], to: r[to], note: note >= 0 ? r[note] : '' }));
+    return t.rows.map((r) => ({ from: r[from]!, event: r[event]!, to: r[to]!, note: note >= 0 ? r[note]! : '' }));
 }
 
 export function transitionList(list: Transition[]): string {
@@ -120,9 +120,9 @@ function entityCard(s: SectionCtx, names: string[]): string | null {
     let start = -1;
     let len = 0;
     for (let i = 0; i < s.body.length && start < 0; i++) {
-        if (!isTableLine(s.body[i])) continue;
+        if (!isTableLine(s.body[i]!)) continue;
         let n = 0;
-        while (i + n < s.body.length && isTableLine(s.body[i + n])) n++;
+        while (i + n < s.body.length && isTableLine(s.body[i + n]!)) n++;
         const t = parseTable(s.body.slice(i, i + n));
         if (t && asFieldTable(t)) { start = i; len = n; }
         i += n - 1;
@@ -130,11 +130,11 @@ function entityCard(s: SectionCtx, names: string[]): string | null {
     s.body.forEach((l, i) => {
         if (i >= start && i < start + len) return;
         const f = l.match(FILE_LINE);
-        if (f && i < start) { file = f[1]; fileNote = f[2].replace(/^[.(\s]+|[.)\s]+$/g, ''); return; }
+        if (f && i < start) { file = f[1]!; fileNote = f[2]!.replace(/^[.(\s]+|[.)\s]+$/g, ''); return; }
         (i < start ? before : after).push(l);
     });
 
-    const variants = /^variant/i.test(plain(field.table.head[0]));
+    const variants = /^variant/i.test(plain(field.table.head[0]!));
     const count = field.table.rows.length;
     const unit = variants ? (count === 1 ? 'variant' : 'variants') : (count === 1 ? 'field' : 'fields');
     const meta = [qualifier || fileNote, `${count} ${unit}`].filter(Boolean).map(escapeHtml).join(' · ');
@@ -156,13 +156,13 @@ function relations(s: SectionCtx, names: string[]): string | null {
     for (const l of s.direct) {
         const m = l.match(/^[ \t]*[-*+][ \t]+(.*)$/);
         if (!m) continue;
-        const text = m[1].replace(/[`*]/g, '');
+        const text = m[1]!.replace(/[`*]/g, '');
         const hits = names
             .map((n) => ({ n, at: text.search(new RegExp(`(?<![A-Za-z0-9_])${n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![A-Za-z0-9_])`)) }))
             .filter((h) => h.at >= 0)
             .sort((a, b) => a.at - b.at);
         if (hits.length < 2) continue;
-        const [a, b] = [hits[0], hits[hits.length - 1]];
+        const [a, b] = [hits[0]!, hits[hits.length - 1]!];
         const verb = text.slice(a.at + a.n.length, b.at).replace(/^[\s:—–→>-]+|[\s:—–→>-]+$/g, '');
         const chip = (n: string) => `<a class="lg-rel__ent" href="#${entitySlug(n)}">${codicon('table')}${escapeHtml(n)}</a>`;
         rows.push(`<div class="lg-rel__row">${chip(a.n)}<span class="lg-rel__verb">${escapeHtml(verb || 'relates to')}</span>${chip(b.n)}</div>`);
@@ -176,10 +176,10 @@ function replaceLooseTransitions(markdown: string): string {
     const out: string[] = [];
     let fence = false;
     for (let i = 0; i < lines.length; i++) {
-        if (/^[ \t]*(```|~~~)/.test(lines[i])) fence = !fence;
-        if (fence || !isTableLine(lines[i])) { out.push(lines[i]); continue; }
+        if (/^[ \t]*(```|~~~)/.test(lines[i]!)) fence = !fence;
+        if (fence || !isTableLine(lines[i]!)) { out.push(lines[i]!); continue; }
         const run: string[] = [];
-        while (i < lines.length && isTableLine(lines[i])) run.push(lines[i++]);
+        while (i < lines.length && isTableLine(lines[i]!)) run.push(lines[i++]!);
         i--;
         const t = parseTable(run);
         const tr = t && asTransitions(t);

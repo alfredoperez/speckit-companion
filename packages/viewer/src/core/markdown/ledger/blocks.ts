@@ -25,7 +25,7 @@ export function docKind(markdown: string): DocKind {
         if (inFence) continue;
         const m = line.match(/^#[ \t]+(.+)$/);
         if (!m) continue;
-        const t = m[1];
+        const t = m[1]!;
         if (/^(?:Implementation Plan|Feature Specification|Tasks?)\b/i.test(t)) return /^Implementation Plan/i.test(t) ? 'plan' : 'other';
         if (/quickstart/i.test(t)) return 'quickstart';
         if (/data[- ]model|\bentities\b/i.test(t)) return 'data';
@@ -43,10 +43,10 @@ export function docKind(markdown: string): DocKind {
 export function nextHeading(lines: string[], from: number, maxLevel = 6): number {
     let inFence = false;
     for (let i = from; i < lines.length; i++) {
-        if (FENCE.test(lines[i])) { inFence = !inFence; continue; }
+        if (FENCE.test(lines[i]!)) { inFence = !inFence; continue; }
         if (inFence) continue;
-        const m = lines[i].match(HEADING);
-        if (m && m[1].length <= maxLevel) return i;
+        const m = lines[i]!.match(HEADING);
+        if (m && m[1]!.length <= maxLevel) return i;
     }
     return lines.length;
 }
@@ -73,15 +73,15 @@ export function mapSections(
     let inFence = false;
     let index = 0;
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = lines[i]!;
         if (FENCE.test(line)) { inFence = !inFence; out.push(line); continue; }
         const m = inFence ? null : line.match(HEADING);
-        if (!m || m[1].length < levels[0] || m[1].length > levels[1]) { out.push(line); continue; }
-        const level = m[1].length;
+        if (!m || m[1]!.length < levels[0] || m[1]!.length > levels[1]) { out.push(line); continue; }
+        const level = m[1]!.length;
         const end = nextHeading(lines, i + 1, level);
         const body = lines.slice(i + 1, end);
         const direct = body.slice(0, nextHeading(body, 0));
-        const html = build({ heading: { level, text: m[2] }, direct, body }, index);
+        const html = build({ heading: { level, text: m[2]! }, direct, body }, index);
         if (html === null) { out.push(line); continue; }
         index++;
         out.push(html);
@@ -116,8 +116,8 @@ const isDivider = (l: string): boolean => /^[ \t]*\|?[ \t:|-]+\|[ \t:|-]*$/.test
 
 /** Parse consecutive table lines; null when there is no header and divider. */
 export function parseTable(lines: string[]): Table | null {
-    if (lines.length < 2 || !isDivider(lines[1])) return null;
-    const head = splitRow(lines[0]);
+    if (lines.length < 2 || !isDivider(lines[1]!)) return null;
+    const head = splitRow(lines[0]!);
     const rows = lines.slice(2).map((l) => {
         const cells = splitRow(l);
         while (cells.length < head.length) cells.push('');
@@ -155,13 +155,13 @@ export function renderBlocks(lines: string[], opts: BlockOptions = {}): string {
         para = [];
     };
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = lines[i]!;
         const fence = line.match(FENCE);
         if (fence) {
             flush();
             const code: string[] = [];
             i++;
-            while (i < lines.length && !lines[i].trim().startsWith(fence[1])) code.push(lines[i++]);
+            while (i < lines.length && !lines[i]!.trim().startsWith(fence[1]!)) code.push(lines[i++]!);
             out.push(codeBlock(code.join('\n').replace(/^\n+|\n+$/g, '')));
             continue;
         }
@@ -169,22 +169,22 @@ export function renderBlocks(lines: string[], opts: BlockOptions = {}): string {
         if (isTableLine(line)) {
             flush();
             const tbl: string[] = [];
-            while (i < lines.length && isTableLine(lines[i])) tbl.push(lines[i++]);
+            while (i < lines.length && isTableLine(lines[i]!)) tbl.push(lines[i++]!);
             i--;
             const t = parseTable(tbl);
             out.push((t && opts.table?.(t)) || (t ? genericTable(t) : `<p>${parseInline(tbl.join(' '))}</p>`));
             continue;
         }
         const h = line.match(HEADING);
-        if (h) { flush(); out.push(`<p class="lg-sub">${parseInline(h[2])}</p>`); continue; }
+        if (h) { flush(); out.push(`<p class="lg-sub">${parseInline(h[2]!)}</p>`); continue; }
         if (/^[ \t]*(?:[-*+]|\d+[.)])[ \t]+/.test(line)) {
             flush();
             const ordered = /^[ \t]*\d/.test(line);
             const items: string[] = [];
             while (i < lines.length) {
-                const m = lines[i].match(/^[ \t]*(?:[-*+]|\d+[.)])[ \t]+(.*)$/);
-                if (m) { items.push(m[1]); i++; continue; }
-                if (/^[ \t]+\S/.test(lines[i]) && items.length) { items[items.length - 1] += ' ' + lines[i].trim(); i++; continue; }
+                const m = lines[i]!.match(/^[ \t]*(?:[-*+]|\d+[.)])[ \t]+(.*)$/);
+                if (m) { items.push(m[1]!); i++; continue; }
+                if (/^[ \t]+\S/.test(lines[i]!) && items.length) { items[items.length - 1] += ' ' + lines[i]!.trim(); i++; continue; }
                 break;
             }
             i--;
@@ -214,11 +214,11 @@ export function splitFields(lines: string[], known: RegExp): { lead: string[]; f
     for (const line of lines) {
         if (FENCE.test(line)) inFence = !inFence;
         const m = inFence ? null : line.match(LABEL);
-        if (m && known.test(m[1].trim())) {
-            fields.push({ label: m[1].trim().toLowerCase(), lines: m[2] ? [m[2]] : [] });
+        if (m && known.test(m[1]!.trim())) {
+            fields.push({ label: m[1]!.trim().toLowerCase(), lines: m[2] ? [m[2]] : [] });
             continue;
         }
-        (fields.length ? fields[fields.length - 1].lines : lead).push(line);
+        (fields.length ? fields[fields.length - 1]!.lines : lead).push(line);
     }
     return { lead, fields };
 }

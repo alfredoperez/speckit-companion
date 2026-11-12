@@ -121,7 +121,7 @@ export function renderSpecHeader(model: SpecModel): string {
 function firstSentence(text: string, max = 120): string {
     const clean = text.replace(/\s+/g, ' ').trim();
     const cut = clean.match(/^(.+?[.!?])(\s|$)/);
-    const sentence = cut ? cut[1] : clean;
+    const sentence = cut ? cut[1]! : clean;
     return sentence.length > max ? `${sentence.slice(0, max - 1).trimEnd()}…` : sentence;
 }
 
@@ -305,8 +305,8 @@ function balanceBold(text: string): string {
 function continuation(lines: string[], from: number): { text: string; next: number } {
     let text = '';
     let j = from;
-    while (j < lines.length && /^\s{2,}\S/.test(lines[j]) && !/^\s*[-*]\s/.test(lines[j]) && !/^\s*\d+[.)]\s/.test(lines[j])) {
-        text += ` ${lines[j].trim()}`;
+    while (j < lines.length && /^\s{2,}\S/.test(lines[j]!) && !/^\s*[-*]\s/.test(lines[j]!) && !/^\s*\d+[.)]\s/.test(lines[j]!)) {
+        text += ` ${lines[j]!.trim()}`;
         j++;
     }
     return { text, next: j };
@@ -315,23 +315,23 @@ function continuation(lines: string[], from: number): { text: string; next: numb
 function parseStory(lines: string[], start: number, head: RegExpMatchArray): { story: SpecStory; next: number } {
     const n = Number(head[1]);
     const prio = head[3] ? Math.min(3, Math.max(1, Number(head[3]))) : 2;
-    const story: SpecStory = { n, id: `US${n}`, title: head[2].trim(), priority: prio as 1 | 2 | 3, desc: '', why: '', test: '', scenarios: [], raw: '' };
+    const story: SpecStory = { n, id: `US${n}`, title: head[2]!.trim(), priority: prio as 1 | 2 | 3, desc: '', why: '', test: '', scenarios: [], raw: '' };
     let mode: 'desc' | 'why' | 'test' | 'scen' = 'desc';
     let j = start + 1;
     const raw: string[] = [];
-    for (; j < lines.length && !/^#{1,3}[ \t]/.test(lines[j]); j++) {
-        const line = lines[j];
+    for (; j < lines.length && !/^#{1,3}[ \t]/.test(lines[j]!); j++) {
+        const line = lines[j]!;
         raw.push(line);
         if (/^-{3,}\s*$/.test(line)) continue;
         const label = line.match(/^\*\*(.+?)\*\*:?\s*(.*)$/);
-        const name = label ? label[1].toLowerCase().replace(/:$/, '') : '';
-        if (label && name.startsWith('why')) { mode = 'why'; story.why = label[2]; continue; }
-        if (label && name.startsWith('independent test')) { mode = 'test'; story.test = label[2]; continue; }
+        const name = label ? label[1]!.toLowerCase().replace(/:$/, '') : '';
+        if (label && name.startsWith('why')) { mode = 'why'; story.why = label[2]!; continue; }
+        if (label && name.startsWith('independent test')) { mode = 'test'; story.test = label[2]!; continue; }
         if (label && name.startsWith('acceptance scenario')) { mode = 'scen'; continue; }
         if (!line.trim()) { if (mode !== 'scen') mode = 'desc'; continue; }
         if (mode === 'scen') {
             const item = line.match(/^\s*(?:\d+[.)]|[-*])\s+(.*)$/);
-            if (item) story.scenarios.push(item[1]);
+            if (item) story.scenarios.push(item[1]!);
             else if (story.scenarios.length) story.scenarios[story.scenarios.length - 1] += ` ${line.trim()}`;
             continue;
         }
@@ -371,21 +371,21 @@ export function preprocessSpecLedger(markdown: string): string {
     };
 
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = lines[i]!;
         if (/^\s*(```|~~~)/.test(line)) { inFence = !inFence; out.push(line); continue; }
         if (inFence) { out.push(line); continue; }
 
         const h1 = !sawH1 && line.match(/^#[ \t]+(.+)$/);
         if (h1) {
             sawH1 = true;
-            model.title = cleanHeading(h1[1]).replace(/^(?:Feature )?Specification:\s*/i, '');
+            model.title = cleanHeading(h1[1]!).replace(/^(?:Feature )?Specification:\s*/i, '');
             let j = i + 1;
             for (; j < lines.length; j++) {
-                if (!lines[j].trim()) continue;
-                const meta = lines[j].match(/^\*\*([^*]+?):?\*\*:?\s*(.*)$/);
+                if (!lines[j]!.trim()) continue;
+                const meta = lines[j]!.match(/^\*\*([^*]+?):?\*\*:?\s*(.*)$/);
                 if (!meta) break;
-                const label = meta[1].trim().toLowerCase();
-                const value = meta[2].replace(/`/g, '').trim();
+                const label = meta[1]!.trim().toLowerCase();
+                const value = meta[2]!.replace(/`/g, '').trim();
                 if (label.startsWith('feature branch')) model.branch = value;
                 else if (label === 'created' || label === 'date') model.created = value;
                 else if (label === 'status') model.status = value;
@@ -398,8 +398,8 @@ export function preprocessSpecLedger(markdown: string): string {
 
         const head = line.match(/^(#{1,6})[ \t]+(.*)$/);
         if (head) {
-            const level = head[1].length;
-            const text = cleanHeading(head[2]);
+            const level = head[1]!.length;
+            const text = cleanHeading(head[2]!);
             const lower = text.toLowerCase();
             const story = level === 3 ? line.match(/^###[ \t]+User Story\s*(\d+)\s*[-–—:]\s*(.+?)(?:\s*\(Priority:\s*P(\d)\))?\s*$/i) : null;
             if (story) {
@@ -417,20 +417,20 @@ export function preprocessSpecLedger(markdown: string): string {
                 let session = { date: '', items: [] as { n: number; q: string; a?: string }[] };
                 const sessions = [session];
                 const rest: string[] = [];
-                for (; j < lines.length && !/^#{1,2}[ \t]/.test(lines[j]); j++) {
-                    const sm = lines[j].match(/^###[ \t]+Session\s*(.*)$/i);
-                    if (sm) { if (session.items.length || session.date) { session = { date: '', items: [] }; sessions.push(session); } session.date = sm[1].trim(); continue; }
-                    const bullet = lines[j].match(/^[-*]\s+\**Q\d*\**:?\**:?\s*(.+)$/);
+                for (; j < lines.length && !/^#{1,2}[ \t]/.test(lines[j]!); j++) {
+                    const sm = lines[j]!.match(/^###[ \t]+Session\s*(.*)$/i);
+                    if (sm) { if (session.items.length || session.date) { session = { date: '', items: [] }; sessions.push(session); } session.date = sm[1]!.trim(); continue; }
+                    const bullet = lines[j]!.match(/^[-*]\s+\**Q\d*\**:?\**:?\s*(.+)$/);
                     if (bullet) {
                         const c = continuation(lines, j + 1);
                         const joined = `${bullet[1]}${c.text}`;
                         const qa = joined.match(/^(.*?)\s*\**(?:->|\u2192|\u2014>)\s*\**A\**:?\**:?\s*(.*)$/);
                         j = c.next - 1;
-                        if (qa) session.items.push({ n: ++questionN, q: qa[1].replace(/\*\*/g, '').trim(), a: balanceBold(qa[2].trim()) });
+                        if (qa) session.items.push({ n: ++questionN, q: qa[1]!.replace(/\*\*/g, '').trim(), a: balanceBold(qa[2]!.trim()) });
                         else session.items.push({ n: ++questionN, q: joined.replace(/\*\*/g, '').trim() });
                         continue;
                     }
-                    if (lines[j].trim() && !/^###/.test(lines[j])) rest.push(lines[j]);
+                    if (lines[j]!.trim() && !/^###/.test(lines[j]!)) rest.push(lines[j]!);
                 }
                 model.sessions.push(...sessions.filter((s) => s.items.length));
                 slot(() => renderClarifications(model).join('\n'));
@@ -467,7 +467,7 @@ export function preprocessSpecLedger(markdown: string): string {
             if (m) {
                 const c = continuation(lines, i + 1);
                 const text = `${m[2]}${c.text}`.trim();
-                const id = m[1];
+                const id = m[1]!;
                 if (section === 'req') { model.reqs.push({ id, text }); slot(() => renderRequirement(id, text, model)); }
                 else { model.criteria.push({ id, text }); slot(() => renderCriterion(id, text, model)); }
                 i = c.next - 1;
@@ -480,10 +480,10 @@ export function preprocessSpecLedger(markdown: string): string {
                 const c = continuation(lines, i + 1);
                 let body = `${m[1]}${c.text}`.trim();
                 const idm = body.match(/^\*\*(EC-\d+)\*\*:?\s*/);
-                const id = idm ? idm[1] : `EC-${++edgeN}`;
+                const id = idm ? idm[1]! : `EC-${++edgeN}`;
                 if (idm) { body = body.slice(idm[0].length); edgeN++; }
                 const split = body.match(/^(.+?)(?::\s+|\?\s+(?=\S))(.*)$/);
-                const edge: SpecEdge = { id, trigger: split ? (body.includes('?') && !body.includes(': ') ? `${split[1]}?` : split[1]) : body, outcome: split ? split[2] : '' };
+                const edge: SpecEdge = { id, trigger: split ? (body.includes('?') && !body.includes(': ') ? `${split[1]}?` : split[1]!) : body, outcome: split ? split[2]! : '' };
                 model.edges.push(edge);
                 slot(() => renderEdge(edge, model));
                 i = c.next - 1;
@@ -508,7 +508,7 @@ export function preprocessSpecLedger(markdown: string): string {
             const m = line.match(/^[-*]\s+\*\*(.+?)\*\*\s*(\([^)]*\))?\s*[:—–-]?\s*(.*)$/);
             if (m) {
                 const c = continuation(lines, i + 1);
-                const entity = { name: m[1].replace(/:$/, ''), desc: `${m[2] ? `${m[2]} ` : ''}${m[3]}${c.text}`.trim() };
+                const entity = { name: m[1]!.replace(/:$/, ''), desc: `${m[2] ? `${m[2]} ` : ''}${m[3]}${c.text}`.trim() };
                 model.entities.push(entity);
                 slot(() => renderEntity(entity.name, entity.desc, model));
                 i = c.next - 1;

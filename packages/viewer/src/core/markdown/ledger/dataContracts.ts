@@ -27,12 +27,12 @@ interface Signature {
 
 function findSignature(lines: string[]): Signature | null {
     for (let i = 0; i < lines.length; i++) {
-        const m = lines[i].match(/^[ \t]*(```|~~~)[ \t]*([\w+-]*)/);
+        const m = lines[i]!.match(/^[ \t]*(```|~~~)[ \t]*([\w+-]*)/);
         if (!m) continue;
         let j = i + 1;
         const body: string[] = [];
-        while (j < lines.length && !lines[j].trim().startsWith(m[1])) body.push(lines[j++]);
-        return { lang: m[2], text: body.join('\n'), at: i, len: j - i + 1 };
+        while (j < lines.length && !lines[j]!.trim().startsWith(m[1]!)) body.push(lines[j++]!);
+        return { lang: m[2]!, text: body.join('\n'), at: i, len: j - i + 1 };
     }
     return null;
 }
@@ -46,7 +46,7 @@ function methodOf(verb: string | undefined, sig: Signature | null): string {
 
 function lanes(t: Table): string {
     const rows = t.rows.map((r) =>
-        `<div class="lg-plane"><span class="lg-plane__name">${escapeHtml(plain(r[0]))}</span><span class="lg-plane__text">${parseInline(r.slice(1).filter(Boolean).join(' · '))}</span></div>`).join('');
+        `<div class="lg-plane"><span class="lg-plane__name">${escapeHtml(plain(r[0]!))}</span><span class="lg-plane__text">${parseInline(r.slice(1).filter(Boolean).join(' · '))}</span></div>`).join('');
     return `<div class="lg-planes">${rows}</div>`;
 }
 
@@ -76,37 +76,37 @@ function contractCard(s: SectionCtx): string | null {
     };
 
     for (let i = 0; i < lines.length; i++) {
-        const l = lines[i];
+        const l = lines[i]!;
         if (sig && i >= sig.at && i < sig.at + sig.len) { i = sig.at + sig.len - 1; continue; }
         if (!l.trim()) continue;
         if (isTableLine(l)) {
             const run: string[] = [];
-            while (i < lines.length && isTableLine(lines[i])) run.push(lines[i++]);
+            while (i < lines.length && isTableLine(lines[i]!)) run.push(lines[i++]!);
             i--;
             const t = parseTable(run);
-            if (t && PARAM_HEAD.test(plain(t.head[0])) && t.head.length <= 4 && colIndex(t.head, /^type$/i) < 0) inputs.push(t);
-            else if (t && ERROR_HEAD.test(plain(t.head[0]))) errorTables.push(t);
+            if (t && PARAM_HEAD.test(plain(t.head[0]!)) && t.head.length <= 4 && colIndex(t.head, /^type$/i) < 0) inputs.push(t);
+            else if (t && ERROR_HEAD.test(plain(t.head[0]!))) errorTables.push(t);
             else rest.push(...run);
             continue;
         }
         const g = l.match(GROUP);
         if (g) {
             flush();
-            current = { label: g[1][0].toUpperCase() + g[1].slice(1), rows: [] };
-            if (g[2].trim()) current.rows.push(g[2].trim());
+            current = { label: g[1]![0]!.toUpperCase() + g[1]!.slice(1), rows: [] };
+            if (g[2]!.trim()) current.rows.push(g[2]!.trim());
             continue;
         }
         const bullet = l.match(/^[ \t]*[-*+][ \t]+(.*)$/);
-        if (current && bullet) { current.rows.push(bullet[1]); continue; }
+        if (current && bullet) { current.rows.push(bullet[1]!); continue; }
         const bold = l.match(BOLD_LINE);
-        if (bold) { flush(); groups.push(group('Promises', [bold[1]], false)); continue; }
+        if (bold) { flush(); groups.push(group('Promises', [bold[1]!], false)); continue; }
         flush();
         (!sig || i < sig.at ? lead : rest).push(l);
     }
     flush();
     if (!http && !inputs.length && !errorTables.length && !groups.length) return null;
 
-    const title = http ? http[2] : heading.replace(/^(?:Command|Endpoint|Function|Script):[ \t]*/i, '');
+    const title = http ? http[2]! : heading.replace(/^(?:Command|Endpoint|Function|Script):[ \t]*/i, '');
     const method = methodOf(http?.[1], sig);
     const count = inputs.reduce((n, t) => n + t.rows.length, 0);
     const meta = count ? `${count} ${count === 1 ? 'input' : 'inputs'}` : '';
@@ -124,6 +124,6 @@ export function preprocessContracts(markdown: string): string {
     const out = mapSections(markdown, (s) => contractCard(s)).split('\n');
     const idx = out.map((l, i) => (l.startsWith('<div class="lg-contract ') ? i : -1)).filter((i) => i >= 0);
     if (!idx.length) return markdown;
-    out.splice(idx[0], 0, `<div class="lg-data-head lg-fam-data">${eyebrow('data', 'Contracts', `${idx.length} ${idx.length === 1 ? 'contract' : 'contracts'}`)}</div>`);
+    out.splice(idx[0]!, 0, `<div class="lg-data-head lg-fam-data">${eyebrow('data', 'Contracts', `${idx.length} ${idx.length === 1 ? 'contract' : 'contracts'}`)}</div>`);
     return out.join('\n');
 }

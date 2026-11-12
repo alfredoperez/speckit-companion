@@ -92,8 +92,8 @@ export function parseTasks(markdown: string): SpecTask[] {
     for (const line of markdown.replace(/\r\n?/g, '\n').split('\n')) {
         const m = line.match(/^\s*-\s+\[([ xX])\]\s+\**(T\d+)\**\s*(.*)$/);
         if (!m) continue;
-        const us = m[3].match(/\[US(\d+)\]/i);
-        tasks.push({ id: m[2], done: m[1].toLowerCase() === 'x', story: us ? Number(us[1]) : null, refs: idsIn(m[3]) });
+        const us = m[3]!.match(/\[US(\d+)\]/i);
+        tasks.push({ id: m[2]!, done: m[1]!.toLowerCase() === 'x', story: us ? Number(us[1]) : null, refs: idsIn(m[3]!) });
     }
     return tasks;
 }
@@ -114,16 +114,16 @@ export function splitScenario(line: string): SpecScenarioStep[] {
     const hasBold = /\*\*(?:Given|When|Then)\*\*/i.test(text);
     for (let m = marker.exec(text); m; m = marker.exec(text)) {
         const bold = m[1] !== undefined;
-        const word = (m[1] ?? m[2]);
-        const lower = word[0] !== word[0].toUpperCase();
+        const word = (m[1] ?? m[2])!;
+        const lower = word[0] !== word[0]!.toUpperCase();
         const wordOk = !hasBold && (/^(?:when|then)$/i.test(word) || (/^(?:and|but)$/i.test(word) && hits.length >= 2));
         if (!bold && lower && !wordOk) { marker.lastIndex = m.index + 1; continue; }
         hits.push({ kw: word.toLowerCase(), start: m.index, end: marker.lastIndex });
     }
-    if (hits.length === 0 || hits[0].start !== 0) return [{ kw: '', text }];
+    if (hits.length === 0 || hits[0]!.start !== 0) return [{ kw: '', text }];
     return hits.map((h, i) => ({
         kw: h.kw as SpecScenarioStep['kw'],
-        text: text.slice(h.end, i + 1 < hits.length ? hits[i + 1].start : undefined).replace(/[,;\s]+$/, '').replace(/\*\*/g, '').trim(),
+        text: text.slice(h.end, i + 1 < hits.length ? hits[i + 1]!.start : undefined).replace(/[,;\s]+$/, '').replace(/\*\*/g, '').trim(),
     }));
 }
 

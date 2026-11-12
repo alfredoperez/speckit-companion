@@ -140,9 +140,9 @@ function checkpoint(p: LgPhase, text: string): string {
 function resolveStep(name: string, model: LgTasksModel): LgPhase | null {
     const n = name.trim().replace(/[.*_`]/g, '');
     const num = n.match(/\bPhase\s+(\d+[a-z]?)\b/i);
-    if (num) return model.phases.find((p) => p.key === num[1].toLowerCase()) ?? null;
+    if (num) return model.phases.find((p) => p.key === num[1]!.toLowerCase()) ?? null;
     const us = n.match(/^(US\d+)\b/i);
-    if (us) return model.phases.find((p) => p.story === us[1].toUpperCase()) ?? null;
+    if (us) return model.phases.find((p) => p.story === us[1]!.toUpperCase()) ?? null;
     const word = n.toLowerCase().replace(/\(.*?\)/g, '').trim().split(/\s+/)[0];
     if (!word) return null;
     return model.phases.find((p) => p.title.toLowerCase().startsWith(word)) ?? null;
@@ -162,11 +162,11 @@ function dependencyChain(body: string[], model: LgTasksModel): string | null {
         if (!line.trim()) continue;
         const m = line.match(/^[-*+]\s+(.+)$/);
         if (!m) return null;
-        bullets.push(m[1]);
+        bullets.push(m[1]!);
     }
     const arrow = bullets.findIndex((b) => /→|->/.test(b));
     if (arrow === -1) return null;
-    const steps = bullets[arrow].replace(/\.\s*$/, '').split(/\s*(?:→|->)\s*/);
+    const steps = bullets[arrow]!.replace(/\.\s*$/, '').split(/\s*(?:→|->)\s*/);
     const out: string[] = [];
     let known = 0;
     for (const step of steps) {
@@ -175,7 +175,7 @@ function dependencyChain(body: string[], model: LgTasksModel): string | null {
         if (phases.every(Boolean) && phases.length) {
             known++;
             const unique = [...new Set(phases as LgPhase[])];
-            if (unique.length === 1) out.push(`<span class="lg-step-group">${chainStep(unique[0])}</span>`);
+            if (unique.length === 1) out.push(`<span class="lg-step-group">${chainStep(unique[0]!)}</span>`);
             else out.push(`<span class="lg-step-group lg-step-group--par">${unique.map(chainStep).join('')}${/disjoint|parallel/i.test(step) ? '<span class="lg-step-note">disjoint files, may run together</span>' : ''}</span>`);
         } else {
             out.push(`<span class="lg-step-group"><span class="lg-step"><span class="lg-step-name">${parseInline(step.trim())}</span></span></span>`);
@@ -219,7 +219,7 @@ export function preprocessLedgerTasks(markdown: string, currentTaskId: string | 
     };
 
     for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
+        const line = lines[i]!;
         if (lineKinds.FENCE.test(line)) { inFence = !inFence; out.push(line); continue; }
         if (inFence) { out.push(line); continue; }
 
@@ -232,7 +232,7 @@ export function preprocessLedgerTasks(markdown: string, currentTaskId: string | 
         const ph = line.match(lineKinds.PHASE_HEADING);
         if (ph) {
             closePhase();
-            phase = model.phases[++phaseIdx];
+            phase = model.phases[++phaseIdx]!;
             out.push(phaseOpen(phase));
             continue;
         }
@@ -240,7 +240,7 @@ export function preprocessLedgerTasks(markdown: string, currentTaskId: string | 
         if (/^##\s/.test(line)) {
             closePhase();
             let end = i + 1;
-            while (end < lines.length && !/^#{1,2}\s/.test(lines[end])) end++;
+            while (end < lines.length && !/^#{1,2}\s/.test(lines[end]!)) end++;
             const body = lines.slice(i + 1, end);
             if (/^##\s+Dependencies\s*(?:&|and)\s*Execution Order/i.test(line)) {
                 const chain = dependencyChain(body, model);
@@ -252,7 +252,7 @@ export function preprocessLedgerTasks(markdown: string, currentTaskId: string | 
         }
 
         if (!phase) {
-            if (phaseIdx === -1 && /^\*\*[^*]+\*\*/.test(line) && out.length && out[out.length - 1].trim()) out.push('');
+            if (phaseIdx === -1 && /^\*\*[^*]+\*\*/.test(line) && out.length && out[out.length - 1]!.trim()) out.push('');
             out.push(line);
             continue;
         }
@@ -271,7 +271,7 @@ export function preprocessLedgerTasks(markdown: string, currentTaskId: string | 
         const cp = line.match(lineKinds.CHECKPOINT_LINE);
         if (cp) {
             closeWaves();
-            out.push(checkpoint(phase, cp[1]));
+            out.push(checkpoint(phase, cp[1]!));
             continue;
         }
 

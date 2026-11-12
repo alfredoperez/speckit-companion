@@ -44,7 +44,7 @@ function parseState(text: string, names: Set<string>): StateItem | string {
     let rest = text.slice(colon + 1).trim();
     const state: StateItem = { name, sentence: '', start: false, final: false, proposed: false, shows: null };
     for (let found = rest.match(TRAILER); found; found = rest.match(TRAILER)) {
-        const mark = found[1];
+        const mark = found[1]!;
         if (mark.startsWith('shows')) state.shows = mark.replace(/^shows\s+/, '');
         else state[mark.slice(1, -1) as 'start' | 'final' | 'proposed'] = true;
         rest = rest.slice(0, found.index).trim();
@@ -82,10 +82,10 @@ export function parseStates(body: string): StatesResult {
         const found = line.match(/^(.+?)\s*->\s*([^:]+?)\s*(?::\s*(.*))?$/);
         if (!found) return { ok: false, error: 'an arrow needs `from -> to: label`' };
         let label = (found[3] ?? '').trim();
-        const proposed = /\(proposed\)\s*$/.test(label) || (!label && /\(proposed\)\s*$/.test(found[2]));
+        const proposed = /\(proposed\)\s*$/.test(label) || (!label && /\(proposed\)\s*$/.test(found[2]!));
         label = label.replace(/\s*\(proposed\)\s*$/, '');
-        const toName = found[2].replace(/\s*\(proposed\)\s*$/, '');
-        const from = index.get(found[1].trim());
+        const toName = found[2]!.replace(/\s*\(proposed\)\s*$/, '');
+        const from = index.get(found[1]!.trim());
         const to = index.get(toName);
         if (from === undefined || to === undefined) return { ok: false, error: 'an arrow names a state that is not listed' };
         arrows.push({ from, to, label, proposed });
@@ -111,7 +111,7 @@ export function parseStates(body: string): StatesResult {
     const columns = Math.max(...grid.map((row) => row.length));
     if (columns > MAX_COLUMNS) return { ok: false, error: `more than ${MAX_COLUMNS} grid columns` };
     grid.forEach((row) => { while (row.length < columns) row.push(-1); });
-    while (grid.length > 1 && grid[grid.length - 1].every((cell) => cell === -1)) grid.pop();
+    while (grid.length > 1 && grid[grid.length - 1]!.every((cell) => cell === -1)) grid.pop();
     if (placed.size !== states.length) return { ok: false, error: 'a state is missing from the grid' };
 
     const starts = states.map((s, i) => (s.start ? i : -1)).filter((i) => i >= 0);
@@ -143,7 +143,7 @@ function boxWidth(states: StateItem[]): number {
 }
 
 function layout(grid: number[][], cellW: number): { width: number; height: number; centres: Map<number, Point> } {
-    const columns = grid[0].length;
+    const columns = grid[0]!.length;
     const width = PAD_X * 2 + columns * cellW + (columns - 1) * GAP_X;
     const height = PAD_Y * 2 + grid.length * CELL_H + (grid.length - 1) * GAP_Y;
     const centres = new Map<number, Point>();
@@ -351,7 +351,7 @@ function movesHtml(parsed: ParsedStates, from: number): string {
     const lines = moves.map((arrow) => {
         const label = arrow.label ? `: ${escapeHtml(arrow.label)}` : '';
         const tag = arrow.proposed ? ' <span class="states-move-tag">(proposed)</span>' : '';
-        return `<span class="states-move${arrow.proposed ? ' states-move--proposed' : ''}">→ <strong>${escapeHtml(parsed.states[arrow.to].name)}</strong>${label}${tag}</span>`;
+        return `<span class="states-move${arrow.proposed ? ' states-move--proposed' : ''}">→ <strong>${escapeHtml(parsed.states[arrow.to]!.name)}</strong>${label}${tag}</span>`;
     }).join('');
     return `<span class="states-moves">${lines}</span>`;
 }
@@ -374,7 +374,7 @@ export function renderStatesCard(body: string, info: FenceInfo, context: BlockCo
     const note = context.note ? `<div class="states-note">${escapeHtml(context.note)}</div>` : '';
     const card = `<div class="states-card"><div class="states-top"><span class="states-badge">states</span>${titleHtml}${legend}</div>`
         + `<div class="states-hint">${droppedLabels(parsed) ? 'Pick a state to read what it means and where it goes' : 'Pick a state to read what it means'}</div>${renderDiagram(parsed)}`
-        + `<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start].name)}</strong>: ${escapeHtml(states[start].sentence)}</div>${movesHtml(parsed, start)}${shown}${stash}`
+        + `<div class="states-caption" aria-live="polite"><strong>${escapeHtml(states[start]!.name)}</strong>: ${escapeHtml(states[start]!.sentence)}</div>${movesHtml(parsed, start)}${shown}${stash}`
         + `<ul class="states-list">${list}</ul>${note}<span class="line-content" hidden>${escapeHtml(body.trim())}</span></div>`;
     return context.wrapLine(card, context.firstLine);
 }
