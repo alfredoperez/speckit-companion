@@ -67,6 +67,33 @@ The sidebar and the viewer's rail show your steps under the labels you wrote.
 | `model` | No | Passed as `claude --model`. Claude Code only. |
 | `effort` | No | `low`, `medium` or `high`, passed as `claude --effort`. Claude Code only. |
 
+## Run Companion on spec-kit's workflow engine
+
+Companion auto is the usual way to run hands-off. The same pipeline also runs on spec-kit's own workflow engine. Register it once, then check that `specify workflow list` shows it:
+
+```bash
+specify workflow add .specify/extensions/companion/workflows/speckit-companion.workflow.yml
+```
+
+The doctor reports a missing or outdated registration, and `python3 .specify/extensions/companion/scripts/doctor.py --fix` registers it for you.
+
+Start a run with your request:
+
+```bash
+specify workflow run speckit-companion --input spec="Add a dark mode toggle"
+```
+
+The engine reads the size specify recorded. A simple change goes straight to implement. A normal or oversized one stops at a review gate after the spec and again after the plan. Outside a terminal the run pauses there, and you pass the gate with its input:
+
+```bash
+specify workflow resume <run id> --input review_spec=approve
+specify workflow resume <run id> --input review_plan=approve
+```
+
+`reject` stops the run. Each gate has its own input, so approving the spec never approves the plan.
+
+The engine runs each step as a headless agent with that agent's own permission settings, so a step that cannot write files stops. Pass the flags your agent needs through `SPECKIT_INTEGRATION_<AGENT>_EXTRA_ARGS`, for example `SPECKIT_INTEGRATION_CLAUDE_EXTRA_ARGS="--permission-mode acceptEdits"`.
+
 ## Custom commands
 
 Every entry in `speckit.customCommands` appears in **SpecKit: Run Custom Command**. An object entry also appears in the viewer footer's **Other actions** menu, on the step you set.

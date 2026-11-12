@@ -37,8 +37,8 @@ Print exactly one line so the size is visible in the run log:
 [companion] size=<simple|normal|oversized>
 ```
 
-Expose the same value as structured output `size` (so a `switch` node can read
-`steps.classify.output.size`). Routing contract:
+The Companion workflow on the engine routes on the size specify recorded, read back
+by a shell step, not on this command's output. Routing contract:
 
 <!-- speckit-companion:part routing -->
 - `simple` → the workflow folds toward implement (less ceremony). `simple` is the verdict

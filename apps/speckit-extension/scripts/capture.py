@@ -581,13 +581,19 @@ def append_decisions(feature_dir: Path, raws: list[str]) -> Path | None:
     return target
 
 
+#: What the Companion workflow appends to each step's input on spec-kit's engine;
+#: an instruction to the step, never part of what the person asked for.
+ENGINE_STEP_MARKER = "(workflow engine step: run this step only, the engine runs the next one)"
+
+
 def set_request(feature_dir: Path, text: str) -> tuple[Path | None, bool]:
     """Store the request the run started from, word for word, once.
 
-    Only outer blank space is trimmed. A stored request is never replaced, so the
-    first entry point to record it wins and later steps cannot paraphrase it.
-    Returns the record and whether this call wrote it; a blank request is (None, False)."""
-    request = text.strip()
+    Only outer blank space and the engine step marker are trimmed. A stored request
+    is never replaced, so the first entry point to record it wins and later steps
+    cannot paraphrase it. Returns the record and whether this call wrote it; a blank
+    request is (None, False)."""
+    request = text.replace(ENGINE_STEP_MARKER, "").strip()
     if not request:
         return None, False
     target = feature_dir / ".spec-context.json"
