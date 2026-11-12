@@ -497,8 +497,8 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
-      "commit": "ad097447",
-      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+      "commit": "7aa511a7",
+      "tree": "01d7eabdb6bf7513c35989a5434bef6a7417d45e"
     },
     {
       "what": "package manifest",
@@ -507,8 +507,8 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "[package-manifest] OK — 18 runtime scripts, closure matches the declared list",
-      "commit": "ad097447",
-      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+      "commit": "7aa511a7",
+      "tree": "01d7eabdb6bf7513c35989a5434bef6a7417d45e"
     },
     {
       "what": "command emissions",
@@ -517,8 +517,8 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "[command-emissions] OK — 19 commands agree across 1 install areas, 1 agent records, and 2 documents",
-      "commit": "ad097447",
-      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+      "commit": "7aa511a7",
+      "tree": "01d7eabdb6bf7513c35989a5434bef6a7417d45e"
     },
     {
       "what": "instruction budget",
@@ -527,8 +527,8 @@
       "exitCode": 0,
       "durationSeconds": 0.0,
       "result": "speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19 · speckit.companion.status.md                        0       0      0     214",
-      "commit": "ad097447",
-      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+      "commit": "7aa511a7",
+      "tree": "01d7eabdb6bf7513c35989a5434bef6a7417d45e"
     },
     {
       "what": "type-check",
@@ -537,8 +537,8 @@
       "exitCode": 0,
       "durationSeconds": 2.2,
       "result": "npm notice run speckit-companion@0.38.0 npx · npm notice run 'tsc' --noEmit -p ./",
-      "commit": "ad097447",
-      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+      "commit": "7aa511a7",
+      "tree": "01d7eabdb6bf7513c35989a5434bef6a7417d45e"
     },
     {
       "what": "acceptance grep",
@@ -555,20 +555,30 @@
       "command": "npm run test:all",
       "source": "derived",
       "exitCode": 0,
-      "durationSeconds": 195.0,
-      "result": "---------------------------------------------------------------------- · Ran 1494 tests in 103.906s · OK (skipped=14)",
-      "commit": "ad097447",
-      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+      "durationSeconds": 199.6,
+      "result": "---------------------------------------------------------------------- · Ran 1495 tests in 104.000s · OK (skipped=14)",
+      "commit": "7aa511a7",
+      "tree": "01d7eabdb6bf7513c35989a5434bef6a7417d45e"
     },
     {
       "what": "site build",
       "command": "bash -c 'cd apps/website && npm run build'",
       "source": "derived",
       "exitCode": 0,
-      "durationSeconds": 4.2,
+      "durationSeconds": 4.4,
       "result": "[changelog] vscode@0.36.0 \"Older releases are archived in [`apps/website/src/data/chang\" has no area tag, filed under other by keyword. · [changelog] speckit@0.24.0 \"Older releases are archived in [`apps/website/src/data/chang\" has no area tag, filed under other by keyword. · [changelog] 768 entries in older releases have no area tag and were filed by keyword.",
-      "commit": "ad097447",
-      "tree": "dee94115b27360075d46cbb10b3964f88ccf6afd"
+      "commit": "7aa511a7",
+      "tree": "01d7eabdb6bf7513c35989a5434bef6a7417d45e"
+    },
+    {
+      "what": "acceptance grep (changelog, plus the retired-node skip list and its test)",
+      "command": "bash -c '! grep -rl living- apps/speckit-extension | grep -v -e CHANGELOG -e build-pipeline.py -e test_build_pipeline.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "no output",
+      "commit": "7aa511a7",
+      "tree": "01d7eabdb6bf7513c35989a5434bef6a7417d45e"
     }
   ],
   "decisions": [
