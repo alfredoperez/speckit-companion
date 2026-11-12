@@ -34,9 +34,9 @@ build = importlib.import_module("build-pipeline")
 
 # plan/gather holds two nodes that read nothing from each other, so it is the
 # one phase in the shipped pipeline a reorder can legally touch.
-PLAN_DEFAULT = ["size-budget", "load-living-specs", "gather-context", "plan-doc", "pick-blocks",
+PLAN_DEFAULT = ["size-budget", "gather-context", "plan-doc", "pick-blocks",
                 "constitution-check", "side-files", "handoff"]
-PLAN_SWAPPED = ["gather-context", "load-living-specs", "size-budget", "plan-doc", "pick-blocks",
+PLAN_SWAPPED = ["gather-context", "size-budget", "plan-doc", "pick-blocks",
                 "constitution-check", "side-files", "handoff"]
 
 
@@ -47,7 +47,7 @@ class AReorderInsideAPhaseIsHonoured(unittest.TestCase):
     def test_the_phase_lists_the_nodes_in_the_order_that_was_asked_for(self):
         gather = next(p for p in assemble.phases_for("plan", PLAN_SWAPPED)
                       if p["name"] == "gather")
-        self.assertEqual(gather["nodes"], ["gather-context", "load-living-specs", "size-budget"])
+        self.assertEqual(gather["nodes"], ["gather-context", "size-budget"])
 
     def test_the_body_actually_changes(self):
         before = assemble.assemble_command("plan", order=PLAN_DEFAULT)
@@ -119,7 +119,7 @@ class ALockMeansHeldByADependency(unittest.TestCase):
             for n, why in assemble.movability(cmd, assemble.default_order(cmd)).items()
             if why
         ]
-        # Two boxed in by `reads:`, plus every step's handoff, which is held
+        # Three boxed in by `reads:`, plus every step's handoff, which is held
         # last because it dispatches the next step. `finalize` joins them for
         # the same reason: with the handoff pinned, the one slot it could
         # otherwise have taken was after it — recording the spec complete once
@@ -127,7 +127,7 @@ class ALockMeansHeldByADependency(unittest.TestCase):
         # first because `record-verified` records what it ran.
         self.assertEqual(
             sorted(locked),
-            ["finalize"] + ["handoff"] * 5 + ["implement-exec", "plan-doc", "resolve-dir"])
+            ["classify-size", "finalize"] + ["handoff"] * 5 + ["implement-exec", "plan-doc", "resolve-dir"])
 
 
 class AnOrderAcrossPhasesIsRefused(unittest.TestCase):
@@ -163,7 +163,7 @@ class TheOrderIsCheckedBeforeItIsWritten(unittest.TestCase):
         with self.assertRaises(config_write.ConfigWriteError) as caught:
             config_write.check_order(
                 "specify",
-                ["resolve-dir", "load-living-specs", "classify-size", "persist-size",
+                ["resolve-dir", "classify-size", "persist-size",
                  "quality-checklist", "draft-spec", "branch", "finalize", "handoff"],
             )
         self.assertIn("quality-checklist", str(caught.exception))
@@ -179,7 +179,7 @@ class TheOrderIsCheckedBeforeItIsWritten(unittest.TestCase):
         with self.assertRaises(config_write.ConfigWriteError) as caught:
             config_write.check_order(
                 "specify",
-                ["resolve-dir", "load-living-specs", "classify-size", "persist-size",
+                ["resolve-dir", "classify-size", "persist-size",
                  "draft-spec", "quality-checklist", "branch", "handoff", "finalize"],
             )
         said = str(caught.exception)

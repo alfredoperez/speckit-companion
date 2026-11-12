@@ -62,9 +62,6 @@ NEVER_PROMPT = [
     "speckit.companion.after-implement.md",
     "speckit.companion.before-converge.md",
     "speckit.companion.after-converge.md",
-    "speckit.companion.living-drift.md",
-    "speckit.companion.living-sync.md",
-    "speckit.companion.living-coverage.md",
     "speckit.companion.mark-complete.md",
     "speckit.companion.status.md",
     "speckit.companion.resume.md",
@@ -389,43 +386,6 @@ def check_prompting(r: Report, commands_dir: Path) -> None:
             r.add("PASS", cid, "no user-prompt instruction")
 
 
-def check_living_specs_accountability(r: Report, spec_dir: Path) -> None:
-    """A completed spec that loaded living-spec capabilities must account for each
-    one — a folded delta (synced) or an explicit skip note. A loaded capability
-    that is neither is the 'silently nothing' hole this closes: WARN, never fail."""
-    target = spec_dir / ".spec-context.json"
-    try:
-        ctx = json.loads(target.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError, UnicodeDecodeError, OSError):
-        return  # timing check already reports an unreadable context
-    if not isinstance(ctx, dict):
-        return
-    status = ctx.get("status")
-    if status not in ("completed", "archived"):
-        return  # accountability is a completion-time property
-    block = ctx.get("livingSpecs") if isinstance(ctx.get("livingSpecs"), dict) else {}
-    loaded = [c for c in (block.get("loaded") or []) if isinstance(c, str) and c.strip()]
-    if not loaded:
-        return  # nothing was loaded — nothing to account for
-    synced = {c for c in (block.get("synced") or []) if isinstance(c, str)}
-    skipped = {
-        str(e.get("name", "")).strip()
-        for e in (block.get("skipped") or [])
-        if isinstance(e, dict) and str(e.get("name", "")).strip()
-    }
-    unaccounted = [c for c in loaded if c not in synced and c not in skipped]
-    if unaccounted:
-        r.add("WARN", "living-specs-accountability",
-              f"{len(unaccounted)}/{len(loaded)} loaded capabilit"
-              f"{'y' if len(unaccounted) == 1 else 'ies'} neither folded nor "
-              f"skipped: {', '.join(unaccounted)} — author a delta or record a skip")
-    else:
-        r.add("PASS", "living-specs-accountability",
-              f"all {len(loaded)} loaded capabilit"
-              f"{'y is' if len(loaded) == 1 else 'ies are'} accounted for "
-              f"({len(synced)} folded, {len(skipped)} skipped)")
-
-
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--feature-dir", help="spec dir to score (verbosity + timing)")
@@ -444,7 +404,6 @@ def main(argv: list[str] | None = None) -> int:
         spec_dir = Path(args.feature_dir)
         check_verbosity(r, spec_dir)
         check_timing(r, spec_dir)
-        check_living_specs_accountability(r, spec_dir)
     if args.commands_dir:
         check_prompting(r, Path(args.commands_dir))
 

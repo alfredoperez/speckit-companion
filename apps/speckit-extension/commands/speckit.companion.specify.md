@@ -61,13 +61,6 @@ Produce a feature specification: prioritized user stories with acceptance scenar
    ```
    The record keeps the first request it is given, so when auto started this run and stored its own, this call changes nothing.
 <!-- /speckit-companion:node resolve-dir -->
-<!-- speckit-companion:node load-living-specs -->
-**Load living specs. Run the recorder; never judge the gate yourself.** Name the surface this change lands on from the request (a directory is enough) and run:
-```bash
-python3 .specify/extensions/companion/scripts/record-living-specs.py --feature-dir <feature_directory> --changed <in-scope files or directories…>
-```
-It is silent when the project keeps no living specs: then draft as usual. When it prints `Recorded living specs (…)`, read `.specify/extensions/companion/commands/reference/living-specify-load.md` and follow it before drafting. It must never fail or slow the command.
-<!-- /speckit-companion:node load-living-specs -->
 <!-- /speckit-companion:phase gather -->
 <!-- speckit-companion:phase classify -->
 <!-- speckit-companion:node classify-size -->
@@ -151,11 +144,11 @@ It is silent when the project keeps no living specs: then draft as usual. When i
 <!-- speckit-companion:node finalize -->
 **Output**: `<feature_directory>/spec.md`. In **simple** mode the spec additionally carries an **Approach** section, and two lean files sit alongside it: `plan.md` (a pointer to that Approach) and `tasks.md` (the real `- [ ] **T001** …` checklist; the task list lives here, not in the spec). In **normal** mode the spec holds the four sections only, and no `plan.md` / `tasks.md` are written here.
 
-**Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the living specs loaded above, the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity.
+**Capture the whole wrap-up in one call.** Everything this step learned goes in a single `--batch`: what it worked *from* (the areas investigated, the constraints honored), the distilled intent, the explicit non-goals, and the workflow identity.
 
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --batch '{
-  "context": ["living spec: <name>", "area: <path or subsystem>", "constraint: <rule honored>"],
+  "context": ["area: <path or subsystem>", "constraint: <rule honored>"],
   "expectations": ["<out-of-scope item>", "<another>"],
   "coverage": [{"req": "FR-001", "title": "<the requirement's one-line text>"}],
   "set": {"intent": "<one-line goal>", "workflow": "companion", "size": "<verdict>"},
@@ -171,8 +164,6 @@ Best-effort as a whole: skip silently if `python3` is unavailable. Omit `context
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step specify --status specified --kind complete --by extension
 ```
-
-**Fast-path living-spec load (simple mode only).** A `simple` run never reaches `plan`, where a full run loads them again. If the recorder before drafting recorded nothing, run it once more with the files the Approach names (`record-living-specs.py --feature-dir <feature_directory> --changed <files…>`); it stays silent when the project keeps no living specs.
 
 **Fast-path lifecycle fold (simple mode only).** When `verdict == "simple"`, record the folded `plan` and `tasks` steps so the history-driven panels read them as satisfied-by-fast-path and the spec lands ready for implement. One call, **after** the specify completion above, writes all four boundaries in order (plan start and complete, tasks start and complete) in a single write, so the fold lands whole or not at all. It is idempotent. Do not hand-write the boundaries, and do not run it for a `normal` verdict:
 ```bash
@@ -192,7 +183,7 @@ Record every boundary by **running the writer script**, never by editing `.spec-
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <this step> --advance --by ai
   ```
 
-- **One finish per substep, the moment it ends, when the step runs on its own**; inside an auto run, skip them. Plan records `research` and `design`, tasks `generate`, implement `living-review` and `living-fold` when living specs are on.
+- **One finish per substep, the moment it ends, when the step runs on its own**; inside an auto run, skip them. Plan records `research` and `design`, tasks `generate`.
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <step> --substep <name> --finish --by ai

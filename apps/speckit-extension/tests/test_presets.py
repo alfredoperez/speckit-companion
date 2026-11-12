@@ -133,7 +133,7 @@ class SeedingAPreset(unittest.TestCase):
         self.seed("brownfield")
         written = (self.project.root / ".specify" / "companion" / "workflows"
                    / "mine.yml").read_text(encoding="utf-8")
-        self.assertIn("draft-spec-delta", written)
+        self.assertIn("resolve-dir-git", written)
 
     def test_the_copy_drops_the_keys_that_only_describe_the_preset(self):
         """`preset:` and `summary:` document the preset, not the project's workflow."""
@@ -183,11 +183,11 @@ class WhatEachPresetChanges(unittest.TestCase):
         project.build_ok()
         return project
 
-    def test_brownfield_writes_the_spec_as_a_delta(self):
+    def test_brownfield_drafts_the_standard_spec(self):
         project = self.build_with("brownfield")
         nodes = project.nodes_in("specify")
-        self.assertIn("draft-spec-delta", nodes)
-        self.assertNotIn("draft-spec", nodes)
+        self.assertIn("draft-spec", nodes)
+        self.assertFalse([n for n in nodes if "living" in n or "delta" in n])
 
     def test_brownfield_numbers_the_folder_against_every_branch(self):
         project = self.build_with("brownfield")

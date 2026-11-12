@@ -189,7 +189,7 @@ commands:
   specify:
     phases:
       - name: set up
-        nodes: [resolve-dir, load-living-specs]
+        nodes: [resolve-dir]
       - name: size it
         nodes: [classify-size, persist-size]
       - name: our review

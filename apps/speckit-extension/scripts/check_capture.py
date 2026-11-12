@@ -406,21 +406,6 @@ def _fastpath(r: Report, history: list, ctx: dict) -> None:
           "approach recorded for the Overview card" if has_approach
           else "no approach on a fast-tracked spec — the Overview APPROACH card reads blank")
 
-    # livingSpecs.loaded is legitimately absent when no covered area matched (INFO); a present record must be a non-empty list of name strings.
-    living = ctx.get("livingSpecs")
-    if living is not None and not isinstance(living, dict):
-        r.add(False, "fast-path-living-specs", f"livingSpecs is malformed: {living!r} — expected an object with a loaded[] list")
-        return
-    loaded = (living or {}).get("loaded")
-    if loaded is None:
-        r.add(None, "fast-path-living-specs", "no living specs recorded (no covered area matched, or feature off)")
-    else:
-        well_formed = (isinstance(loaded, list) and len(loaded) > 0
-                       and all(isinstance(n, str) and n.strip() for n in loaded))
-        r.add(well_formed, "fast-path-living-specs",
-              f"livingSpecs.loaded recorded: {loaded}" if well_formed
-              else f"livingSpecs.loaded is malformed: {loaded!r} — expected a non-empty list of capability names")
-
 
 def _timing(r: Report, history: list) -> None:
     steps = list(dict.fromkeys(e.get("step") for e in history if isinstance(e.get("step"), str)))

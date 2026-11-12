@@ -55,7 +55,7 @@ If you're stuck on the stock PyPI build and can't reinstall, replicate what the 
 
 ## Command families (stock SpecKit + the Companion workflow)
 
-Two command families stay installed at once, and installing one never removes the other. The stock `/speckit.*` commands are exactly what spec-kit ships: the extension changes none of their text and records a plain SpecKit run through lifecycle hooks, one as each step starts and one when it finishes. The SpecKit Companion workflow is the namespaced `/speckit.companion.*` commands (lean — no user stories, trimmed plan, files/dependencies tasks). See the full reference in the `commands-*` and `workflows-*` living specs.
+Two command families stay installed at once, and installing one never removes the other. The stock `/speckit.*` commands are exactly what spec-kit ships: the extension changes none of their text and records a plain SpecKit run through lifecycle hooks, one as each step starts and one when it finishes. The SpecKit Companion workflow is the namespaced `/speckit.companion.*` commands (lean — no user stories, trimmed plan, files/dependencies tasks).
 
 The Companion workflow is available to everyone with this extension installed — there's no setting to turn on, and stock SpecKit is always available too. The extension installs no preset.
 

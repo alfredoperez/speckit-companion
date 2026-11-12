@@ -44,34 +44,22 @@ from _command_parts import declared_commands  # noqa: E402
 RUNTIME_SCRIPTS = frozenset({
     "write-context.py",
     "spec_context.py",
-    "spec_deltas.py",
     "capture.py",
     # The diff scan `--verify-run` records as concerns.
     "lowered_bar.py",
     "task_sync.py",
-    "living_spec_fold.py",
-    # The shape check, and the fold imports it: a gate a missing file can turn
-    # into "no findings" is not a gate, so it ships with the fold, not beside it.
-    "living_validate.py",
     "status-context.py",
     # Mints the next spec folder under a lock, so two runs never share a number.
     "mint-spec-dir.py",
     "derive-from-files.py",
-    "resolve-spec-paths.py",
-    "record-living-specs.py",
     "companion_config.py",
-    "register-capability.py",
-    "relocate-capability.py",
-    "drift.py",
-    "check-coverage.py",
     # Prints the briefs plan dispatches and records each worker's check-in.
     "dispatch-briefs.py",
     # Run tracing + the doctor. `run_trace` is reached from inside write-context
-    # and drift rather than from a command body, so it ships with them.
+    # rather than from a command body, so it ships with it.
     "run_trace.py",
     "doctor.py",
     "doctor_checks.py",
-    "doctor_drift.py",
     "doctor_bleed.py",
     "doctor_chat.py",
     # Named by the plan step's `pick-blocks` node and by the attachable plan-block parts.
@@ -121,8 +109,7 @@ BUILD_ONLY = frozenset({
     # The eval gates: CI runs them, a release never ships them.
     "check_quality.py",
     "check_capture.py",
-    "check_living_spec.py",
-    # Their shared PASS/FAIL/WARN/INFO Report, imported by all three.
+    # Their shared PASS/FAIL/WARN/INFO Report, imported by both.
     "check_report.py",
 })
 

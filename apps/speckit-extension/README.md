@@ -64,13 +64,6 @@ Then run plan, tasks and implement the same way, or all four at once with `/spec
 | `/speckit.companion.status` | Print the current step, the decisions and the next action |
 | `/speckit.companion.resume` | Continue from the recorded step |
 | `/speckit.companion.doctor` | Report on a run's health. Read-only |
-| `/speckit.companion.living-adopt` | Draft living specs for existing code |
-| `/speckit.companion.living-sync` | Update living specs from your current changes |
-| `/speckit.companion.living-drift` | List files changed since a living spec was committed |
-| `/speckit.companion.living-coverage` | Show which requirements have a test |
-| `/speckit.companion.living-show` | Print one slice of a living spec |
-| `/speckit.companion.living-validate` | Check the shape of every living spec |
-| `/speckit.companion.living-move` | Move a living spec between central and colocated storage |
 
 The rest run by themselves, so don't type them: `speckit.companion.classify`, and the hooks `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge` and `speckit.companion.after-converge`. Two more, `speckit.companion.on-prompt` and `speckit.companion.on-stop`, record step boundaries from spec-kit's runtime events with no model in the loop; agents without events keep the hooks.
 

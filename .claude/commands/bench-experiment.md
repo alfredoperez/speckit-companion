@@ -34,7 +34,7 @@ It sets `$SANDBOXES_REPO` (the sibling `speckit-sandboxes` checkout, whose `benc
 
 **`--preamble on` is a promise the drivers have to keep.** The bake records it, nothing enforces it: a round baked `on` whose drivers were handed nothing has a column that lies, which is worse than no column. When it is on, every driver prompt starts with the output of `node "$SANDBOXES_REPO"/bench/preamble.mjs creation <speckit|companion> <specDir>` — the same text the GUI sends — and the arm decides which workflow name it takes. When it is off, drivers dispatch the command bodies alone.
 
-Pass `--sizes`/`--modes` straight through to `sync-templates.mjs`, `prep` and `capture` — the same list at every step, or the round measures cells it never ran. Pass `--model` as the `model` option on each driver Agent. Everything else in `$ARGUMENTS` is what the experiment is testing. Turn it into a short label — "hook anchors", "living specs off", "fresh baseline". If there is nothing to name, use today's date and call it a baseline repeat, which is also useful: it is how the noise floor gets measured.
+Pass `--sizes`/`--modes` straight through to `sync-templates.mjs`, `prep` and `capture` — the same list at every step, or the round measures cells it never ran. Pass `--model` as the `model` option on each driver Agent. Everything else in `$ARGUMENTS` is what the experiment is testing. Turn it into a short label — "hook anchors", "hooks off", "fresh baseline". If there is nothing to name, use today's date and call it a baseline repeat, which is also useful: it is how the noise floor gets measured.
 
 ### 2. Check the machine first
 

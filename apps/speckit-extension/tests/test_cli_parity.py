@@ -59,8 +59,6 @@ MATRIX: list[tuple[str, list[str]]] = [
     ("classification", ["--classification", '{"projectedFiles": 3, "projectedTasks": 4, "scopeSignal": "none", "verdict": "simple"}']),
     ("classification-bad", ["--classification", "not json"]),
     ("classification-no-verdict", ["--classification", '{"projectedFiles": 1}']),
-    ("living-specs", ["--living-specs", "todos", "--living-specs", "todos-items"]),
-    ("fold-living-spec", ["--fold-living-spec", "--by", "ai"]),
     ("task-journal", ["--task", "T001", "--kind", "complete", "--by", "ai", "--did", "built it", "--files", "a.py,b.py"]),
     ("task-append", ["--task", "T002", "--kind", "complete", "--by", "ai", "--did", "built it too", "--append"]),
     ("materialize", ["--materialize", "--by", "ai"]),
@@ -174,7 +172,7 @@ class CliMatrixTests(unittest.TestCase):
     def test_a_capture_call_writes_no_lifecycle_history(self) -> None:
         seeded = 1
         for name in ("decision-text", "verified-text", "concern-text", "expectation", "context",
-                     "coverage-title", "assumes", "step-summary-text", "set-one", "living-specs"):
+                     "coverage-title", "assumes", "step-summary-text", "set-one"):
             with self.subTest(invocation=name):
                 ctx = self.results[name]["ctx"]
                 self.assertEqual(len(ctx.get("history") or []), seeded, name)

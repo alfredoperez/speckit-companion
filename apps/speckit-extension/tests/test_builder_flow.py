@@ -34,7 +34,7 @@ OURS = (
 )
 
 FOUR_PHASES = json.dumps([
-    {"name": "set up", "nodes": ["resolve-dir", "load-living-specs"]},
+    {"name": "set up", "nodes": ["resolve-dir"]},
     {"name": "size it", "nodes": ["classify-size", "persist-size"]},
     {"name": "our review", "nodes": ["draft-spec", "quality-checklist"]},
     {"name": "finish", "nodes": ["branch", "finalize", "handoff"]},
@@ -199,7 +199,7 @@ class MovingANodeToAnotherPhase(unittest.TestCase):
     """The shapes the panel's Move to phase… sends for specify's `branch`."""
 
     PHASES = [
-        {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
+        {"name": "gather", "nodes": ["resolve-dir"]},
         {"name": "classify", "nodes": ["classify-size", "persist-size"]},
         {"name": "author", "nodes": ["draft-spec", "quality-checklist"]},
         {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
@@ -308,15 +308,15 @@ class RunningADifferentBlockInANodesPlace(unittest.TestCase):
     written and validated together for that reason.
     """
 
-    #: specify with `draft-spec` swapped for its brownfield variant.
+    #: specify with `draft-spec` swapped for its bugfix variant.
     PHASES = json.dumps([
-        {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
+        {"name": "gather", "nodes": ["resolve-dir"]},
         {"name": "classify", "nodes": ["classify-size", "persist-size"]},
-        {"name": "author", "nodes": ["draft-spec-delta", "quality-checklist"]},
+        {"name": "author", "nodes": ["draft-spec-bugfix", "quality-checklist"]},
         {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
     ])
-    ORDER = ("resolve-dir,load-living-specs,classify-size,persist-size,"
-             "draft-spec-delta,quality-checklist,branch,finalize,handoff")
+    ORDER = ("resolve-dir,classify-size,persist-size,"
+             "draft-spec-bugfix,quality-checklist,branch,finalize,handoff")
 
     def setUp(self):
         self.project = Project()
@@ -330,13 +330,13 @@ class RunningADifferentBlockInANodesPlace(unittest.TestCase):
         specify = next(s for s in self.project.graph()["steps"] if s["name"] == "specify")
         draft = next(n for p in specify["phases"] for n in p["nodes"]
                      if n["id"] == "draft-spec")
-        self.assertIn("draft-spec-delta", [v["id"] for v in draft["variants"]])
+        self.assertIn("draft-spec-bugfix", [v["id"] for v in draft["variants"]])
 
     def test_the_swap_is_one_write(self):
         said = self.swap()
         self.assertIn("phases and order", said)
         config = self.project.config_text()
-        self.assertIn("draft-spec-delta", config)
+        self.assertIn("draft-spec-bugfix", config)
         self.assertIn("phases:", config)
         self.assertIn("nodes:", config)
 
@@ -344,7 +344,7 @@ class RunningADifferentBlockInANodesPlace(unittest.TestCase):
         self.swap()
         self.project.build_ok()
         order = self.project.nodes_in("specify")
-        self.assertIn("draft-spec-delta", order)
+        self.assertIn("draft-spec-bugfix", order)
         self.assertNotIn("draft-spec", order)
 
     def test_a_node_that_reads_the_slot_is_satisfied_by_the_variant(self):
@@ -464,21 +464,21 @@ class PointingATemplateSectionAtAFragment(unittest.TestCase):
         project.write("--command", "specify", "--when", "before", "--anchor", "draft-spec",
                       "--hook", "prompt", "--text", "Read the house rules first.")
         phases = [
-            {"name": "gather", "nodes": ["resolve-dir", "load-living-specs"]},
+            {"name": "gather", "nodes": ["resolve-dir"]},
             {"name": "classify", "nodes": ["classify-size", "persist-size"]},
-            {"name": "author", "nodes": ["draft-spec-delta", "quality-checklist"]},
+            {"name": "author", "nodes": ["draft-spec-bugfix", "quality-checklist"]},
             {"name": "wrap-up", "nodes": ["branch", "finalize", "handoff"]},
         ]
         order = [n for p in phases for n in p["nodes"]]
         project.write("--command", "specify", "--phases", json.dumps(phases),
                       "--nodes", ",".join(order),
-                      "--renamed", "draft-spec", "draft-spec-delta")
+                      "--renamed", "draft-spec", "draft-spec-bugfix")
         out = project.build_ok()
         body = project.body("specify")
         self.assertIn("Read the house rules first.", body)
         self.assertNotIn("not in active recipe", out)
         self.assertLess(body.index("Read the house rules first."),
-                        body.index("<!-- speckit-companion:node draft-spec-delta -->"))
+                        body.index("<!-- speckit-companion:node draft-spec-bugfix -->"))
 
     def test_the_command_tells_the_assistant_to_follow_it(self):
         self.point_at("outcomes")

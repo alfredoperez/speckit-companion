@@ -60,9 +60,6 @@ Produce an implementation plan and its design artifacts in phases: load context 
 
 This budget governs every step that follows. Where a later step would produce something the budget skips, omit it. Do not produce it and then delete it.
 <!-- /speckit-companion:node size-budget -->
-<!-- speckit-companion:node load-living-specs -->
-**Read what is already written down before sending anyone to rediscover it, when this project keeps living specs.** If the spec's `.spec-context.json` lists any `livingSpecs.loaded`, read `.specify/extensions/companion/commands/reference/living-plan-load.md` and follow it before investigating the codebase. An absent or empty list means skip this; never decide from the config yourself.
-<!-- /speckit-companion:node load-living-specs -->
 <!-- speckit-companion:node gather-context -->
 1. Read `.specify/feature.json` for the feature directory. The step's start is already stamped, above. Load the feature spec (`<feature_directory>/spec.md`, or `<short-name>.spec.md` in a project written before this) and `.specify/memory/constitution.md` if present. Those are the inputs the plan must satisfy. **Read what `specify` recorded before you open a file.** `specify` writes what it read onto `.spec-context.json` under `context`: the code areas it looked at and the constraints it found there. Read those entries first. They name where the feature attaches, so open the files they point at instead of rediscovering them. They carry locations, not content, so you still open the files that matter, filling gaps in a map you were handed. If no `context` entries were recorded, investigate from scratch as below. **Plan against the words the person used.** The record holds the request this run started from under `request`, word for word. Read it beside the spec, and where the two differ, the request is what was asked.
 
@@ -138,7 +135,7 @@ Record every boundary by **running the writer script**, never by editing `.spec-
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <this step> --advance --by ai
   ```
 
-- **One finish per substep, the moment it ends, when the step runs on its own**; inside an auto run, skip them. Plan records `research` and `design`, tasks `generate`, implement `living-review` and `living-fold` when living specs are on.
+- **One finish per substep, the moment it ends, when the step runs on its own**; inside an auto run, skip them. Plan records `research` and `design`, tasks `generate`.
 
   ```bash
   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_dir> --step <step> --substep <name> --finish --by ai

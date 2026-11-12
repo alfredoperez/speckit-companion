@@ -34,7 +34,7 @@ Two variants is the normal shape. Three or more only when the question genuinely
 Pick the arm the question is about. Cells are blind on disk; identify one by what is installed rather than by letter:
 
 ```bash
-for d in "$BENCH_CELLS_DIR"/conduit-*/; do n=$(basename "$d"); c=$([ -d "$d/.specify/extensions/companion" ] && echo companion || echo stock); l=$([ -f "$d/living-specs.yml" ] && echo "+living" || echo ""); echo "$n $c$l"; done
+for d in "$BENCH_CELLS_DIR"/conduit-*/; do n=$(basename "$d"); c=$([ -d "$d/.specify/extensions/companion" ] && echo companion || echo stock); echo "$n $c"; done
 ```
 
 A variant that changes the product needs the pinned build to carry it: `~/dev/GitHub/speckit-companion.worktrees/bench-main` is what a cell installs from. If the change is on `main` and not in the worktree, fast-forward it, then refresh the cell in place rather than re-baking:

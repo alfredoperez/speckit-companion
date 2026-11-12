@@ -105,16 +105,6 @@ class CauseTests(unittest.TestCase):
 
 
 class ContradictionTests(unittest.TestCase):
-    def test_a_drift_claim_contradicted_by_recomputation_is_surfaced(self):
-        report = doctor.Report("specs/x")
-        report.drift = [{"capability": "x", "class": "real",
-                         "claim": {"source": "verified[]", "text": "living specs in sync",
-                                   "at": "2026-08-01T10:01:00Z"}}]
-        _status, findings = audit(report=report)
-        hit = [f for f in findings if "contradicts" in f.title]
-        self.assertEqual(len(hit), 1)
-        self.assertIn("living specs in sync", hit[0].detail)
-
     def test_a_completion_that_never_arrived_is_surfaced_as_a_contradiction(self):
         report = doctor.Report("specs/x")
         report.completion = {"attempted": True, "outcome": "never-arrived", "reason": "x"}
