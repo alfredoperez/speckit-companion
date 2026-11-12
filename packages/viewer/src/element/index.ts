@@ -20,8 +20,9 @@ export type { SpecDocument, TaskCounts, ViewerAction } from '../contract/viewer'
 export type SpeckitActionEvent = CustomEvent<ViewerAction>;
 
 const STYLE_ID = 'speckit-viewer-element-style';
-// The host's slotted children sit above the view; the element never moves them, so a framework keeps owning them.
-const ELEMENT_CSS = 'speckit-viewer{display:flex;flex-direction:column;min-height:0}speckit-viewer>[slot="actions"]{order:0}speckit-viewer>.viewer-container{order:1;flex:1 1 auto;min-height:0}';
+// The host's slotted children sit above the view and outside `.sk-viewer`, so the viewer's styles never reach
+// them; the element never moves them, so a framework keeps owning them.
+const ELEMENT_CSS = 'speckit-viewer{display:flex;flex-direction:column;min-height:0}speckit-viewer>[slot="actions"]{order:0}speckit-viewer>.sk-viewer{order:1;flex:1 1 auto;min-height:0;display:flex;flex-direction:column}speckit-viewer>.sk-viewer>.viewer-container{flex:1 1 auto;min-height:0}';
 
 let linksWired = false;
 
@@ -40,6 +41,7 @@ export class SpeckitViewerElement extends HTMLElement {
     #live = false;
     #taskCounts: TaskCounts | null = null;
     #specTitle: string | null = null;
+    #shell: HTMLDivElement | null = null;
     #root: HTMLDivElement | null = null;
     #queued = false;
 
@@ -85,12 +87,15 @@ export class SpeckitViewerElement extends HTMLElement {
             style.textContent = ELEMENT_CSS;
             document.head.appendChild(style);
         }
-        this.classList.add('sk-viewer');
-        this.dataset.readOnly = 'true';
-        if (!this.#root) {
+        if (!this.#shell) {
+            // The extension's shape: `.sk-viewer` (its <body>) around `.viewer-container`.
+            this.#shell = document.createElement('div');
+            this.#shell.className = 'sk-viewer';
+            this.#shell.dataset.readOnly = 'true';
             this.#root = document.createElement('div');
             this.#root.className = 'viewer-container';
-            this.appendChild(this.#root);
+            this.#shell.appendChild(this.#root);
+            this.appendChild(this.#shell);
         }
         if (!linksWired) {
             setupDocumentLinkClickHandler();
@@ -145,8 +150,8 @@ export class SpeckitViewerElement extends HTMLElement {
         setHasSpecContext(!!this.#record);
         setCurrentTask(nav.currentTask ?? null);
         setTaskSummaries(vs?.taskSummaries ?? null);
-        this.dataset.hasSpecContext = String(!!this.#record);
-        this.dataset.specStatus = nav.specStatus ?? 'active';
+        this.#shell!.dataset.hasSpecContext = String(!!this.#record);
+        this.#shell!.dataset.specStatus = nav.specStatus ?? 'active';
 
         const doc = this.#documents.find((d) => d.type === nav.currentDoc);
         markdownHtml.value = this.#content !== null

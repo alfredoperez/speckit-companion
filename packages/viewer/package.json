@@ -9,6 +9,14 @@
     "url": "https://github.com/alfredoperez/speckit-companion",
     "directory": "packages/viewer"
   },
+  "files": [
+    "dist",
+    "src",
+    "styles",
+    "LICENSE",
+    "README.md",
+    "!**/__tests__"
+  ],
   "exports": {
     "./contract": {
       "types": "./src/contract/index.ts",

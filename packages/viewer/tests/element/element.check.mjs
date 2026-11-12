@@ -69,10 +69,12 @@ await tab.waitForSelector('#markdown-content .hljs-keyword');
 
 const first = await tab.evaluate(() => ({
     slotFirst: document.getElementById('host-actions').getBoundingClientRect().bottom <= document.querySelector('speckit-viewer .shell-grid').getBoundingClientRect().top + 1,
+    slotUnstyled: !document.getElementById('host-actions').closest('.sk-viewer'),
     tabs: [...document.querySelectorAll('.step-tab')].map((t) => t.dataset.phase),
     title: document.querySelector('.spec-header-title')?.textContent,
 }));
 assert.ok(first.slotFirst, 'the actions slot shows above the rail and document');
+assert.ok(first.slotUnstyled, 'the slotted host content sits outside the viewer styles');
 assert.deepEqual(first.tabs.slice(0, 3), ['spec', 'plan', 'tasks'], 'the rail lists the documents');
 assert.equal(first.title, 'Starred todos');
 const shot = process.argv[2];
