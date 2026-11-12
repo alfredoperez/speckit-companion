@@ -1,0 +1,543 @@
+/**
+ * Derive `stepHistory` from a spec's `transitions[]` array.
+ *
+ * The on-disk `stepHistory` written by AI assistants carries unreliable
+ * timestamps (round-minute strings the AI typed by hand). We derive a
+ * fresh `stepHistory` from `transitions[]` instead — extension-written
+ * boundaries (`by: "extension"`) are real `Date.now()` values, and even
+ * AI-typed substep `at` values preserve the correct *sequence* even
+ * when the absolute time is rough. The derived structure is what the
+ * spec viewer reads; the on-disk version is ignored.
+ *
+ * Rules:
+ *   - Consecutive identical `(step, substep)` transitions are collapsed
+ *     before any grouping/duration logic runs, so duplicated rows can't
+ *     distort durations or substep lists. Two adjacent transitions are
+ *     duplicates only when BOTH `step` and `substep` are equal (null and
+ *     undefined substep are treated as equal).
+ *   - For each step seen in (de-duplicated) transitions, in order of first
+ *     appearance, emit a `StepHistoryEntry`.
+ *   - `startedAt` = `at` of the first transition for that step.
+ *   - `completedAt` = `at` of the step's own first step-level complete after
+ *     its latest start (idle time before the next step is billed to no step);
+ *     without one, the first transition for the *next* step in the array,
+ *     OR `null` if this is the most recently seen step
+ *     and `currentStep` matches it (i.e. step is in flight). If the spec
+ *     is in a TERMINAL status (`completed`/`archived`), that last-seen
+ *     current step is finalized instead to the `at` of its own last
+ *     transition (best available real end timestamp). If the step has
+ *     been left behind without a successor in transitions[], fall back to
+ *     the last transition for that step (best available).
+ *   - `substeps[]` = transitions for that step where `substep` is
+ *     non-null, with `startedAt` = the transition's `at` and
+ *     `completedAt` = the next non-null-substep transition's `at` for
+ *     the same step (or the step's own `completedAt` if it's the last
+ *     substep).
+ */
+
+import {
+    HistoryEntry,
+    DEFAULT_PIPELINE_STEPS,
+    StepHistoryEntry,
+    STEP_NAMES,
+    StepName,
+    Status,
+    SubstepEntry,
+    TimingSummary,
+} from '../contract/specContext';
+import { SpecStatuses } from './statuses';
+import { isStepLevelEntry } from './historyHelpers';
+import type { DocumentState, DocumentStatus } from './statuses';
+
+/**
+ * Canonical spec-status derivation. Single entry point for "given a context
+ * + task completion %, what is the effective spec status?"
+ *
+ * Priority ladder (first match wins):
+ *   1. archived (status field OR legacy currentStep === 'archived')
+ *   2. completed (status field)
+ *   3. tasks-done (taskCompletionPercent === 100)
+ *   4. active (default)
+ *
+ * Lives here in `features/specs/` next to `isStepCompleted` because it's
+ * a pure status query, not a viewer concern. Both `panelStateComputer` and
+ * any other surface that needs the derived status import from this module.
+ *
+ * Accepts the loose `{ status?, currentStep? }` shape so callers using the
+ * legacy `FeatureWorkflowContext` and the canonical `SpecContext` can both
+ * pass without converting.
+ */
+export function getSpecStatus(
+    ctx: { status?: string; currentStep?: string } | undefined,
+    taskCompletionPercent: number,
+): typeof SpecStatuses[keyof typeof SpecStatuses] {
+    if (ctx?.status === SpecStatuses.ARCHIVED || ctx?.currentStep === SpecStatuses.ARCHIVED) {
+        return SpecStatuses.ARCHIVED;
+    }
+    if (ctx?.status === SpecStatuses.COMPLETED) {
+        return SpecStatuses.COMPLETED;
+    }
+    if (taskCompletionPercent === 100) {
+        return SpecStatuses.TASKS_DONE;
+    }
+    return SpecStatuses.ACTIVE;
+}
+
+/**
+ * Terminal statuses — the spec is done, no further workflow steps apply.
+ * Captures the recurring `status === COMPLETED || status === ARCHIVED`
+ * pattern at every call site that asks "is this spec closed?"
+ */
+export function isTerminalStatus(status: string | undefined | null): boolean {
+    return status === SpecStatuses.COMPLETED || status === SpecStatuses.ARCHIVED;
+}
+
+/**
+ * Determine whether a step should be treated as completed.
+ *
+ * Pure query over `stepHistory` + the current step. A step is completed when:
+ *   1. Its history entry has an explicit `completedAt`, OR
+ *   2. Its position in `STEP_NAMES` is *before* `currentStep` (the workflow
+ *      moved past it — inferred completion, used when the AI-written history
+ *      missed a `completedAt`).
+ *
+ * Lives here in `features/specs/` rather than in `spec-viewer/` because the
+ * sidebar query (specExplorerProvider) needs it and the sidebar shouldn't
+ * depend on the viewer module. The viewer also reads this function — both
+ * import from `specs/` now.
+ */
+export function isStepCompleted(
+    step: StepName,
+    currentStep: StepName,
+    stepHistory: Record<string, { startedAt?: string; completedAt?: string | null }>,
+): boolean {
+    const entry = stepHistory[step];
+    if (entry?.completedAt) return true;
+    const stepIdx = STEP_NAMES.indexOf(step);
+    const currentIdx = STEP_NAMES.indexOf(currentStep);
+    if (stepIdx >= 0 && currentIdx >= 0 && stepIdx < currentIdx) return true;
+    if (!entry?.startedAt) return false;
+    return false;
+}
+
+/**
+ * Single source of truth for how a spec document renders — the tree derives
+ * both its icon and its tooltip from this one value, so they can never
+ * disagree (a green check over an "In Progress" tooltip, say).
+ *
+ * A document only reads as complete when the workflow finished its step *and*
+ * the file itself holds more than a stub; a step the workflow finished but
+ * whose file is still a stub reads as in-progress, matching what it says.
+ */
+export function deriveDocumentState(
+    contentStatus: DocumentStatus | undefined,
+    documentType: string | undefined,
+    specContext: { status?: string; currentStep?: string; stepHistory?: Record<string, StepHistoryEntry> } | undefined,
+): DocumentState {
+    if (!contentStatus || contentStatus === 'empty') {
+        return 'missing';
+    }
+
+    const stepName = documentType as StepName;
+    if (!specContext || !documentType || !STEP_NAMES.includes(stepName)) {
+        return contentStatus === 'complete' ? 'complete' : 'in-progress';
+    }
+
+    const currentStep = (specContext.currentStep ?? 'specify') as StepName;
+    const stepDone = isTerminalStatus(specContext.status)
+        || isStepCompleted(stepName, currentStep, specContext.stepHistory ?? {});
+    if (stepDone) {
+        return contentStatus === 'complete' ? 'complete' : 'in-progress';
+    }
+    if (specContext.currentStep === documentType) {
+        return 'in-progress';
+    }
+    return 'pending';
+}
+
+interface RawStep {
+    step: string;
+    transitions: HistoryEntry[];
+    /** Index of the first transition for the *next* step, or -1 if this is the last seen step. */
+    nextStepFirstIdx: number;
+}
+
+/**
+ * Collapse CONSECUTIVE identical transitions. Two adjacent transitions are
+ * duplicates only when step, substep, AND `from` all match — comparing `from`
+ * keeps real boundaries that share (step, substep=null) but differ in origin
+ * (e.g. step-started vs step-completed) while still collapsing genuine
+ * redundant repeats (e.g. implement/phase1 written 3× with identical origin).
+ * null/undefined substep/from is treated as equal only to null/undefined. The
+ * first of each run is kept (preserving its real `at`), later duplicates are
+ * dropped so durations/substep lists aren't distorted.
+ */
+function dedupeConsecutive(transitions: HistoryEntry[]): HistoryEntry[] {
+    const out: HistoryEntry[] = [];
+    for (const t of transitions) {
+        const prev = out[out.length - 1];
+        const sameStep = prev !== undefined && prev.step === t.step;
+        const sameSubstep = (prev?.substep ?? null) === (t.substep ?? null);
+        // Per-task implement entries now carry a null `substep` and identify
+        // themselves via `task`. Comparing `task` keeps two distinct task
+        // finishes (both substep=null) from collapsing into one row. Legacy
+        // records that still mirror the id into `substep` compare equal anyway.
+        const sameTask = (prev?.task ?? null) === (t.task ?? null);
+        const sameKind = (prev?.kind ?? null) === (t.kind ?? null);
+        const sameFromStep = (prev?.from?.step ?? null) === (t.from?.step ?? null);
+        const sameFromSubstep = (prev?.from?.substep ?? null) === (t.from?.substep ?? null);
+        if (sameStep && sameSubstep && sameTask && sameKind && sameFromStep && sameFromSubstep) continue;
+        out.push(t);
+    }
+    return out;
+}
+
+/**
+ * The display name for a substep/task row. Per-task implement entries carry
+ * `substep: null` + `task: "<id>"`; legacy ones mirrored the id into `substep`.
+ * Prefer a real substep name, fall back to the task id, null when neither.
+ */
+function rowName(t: HistoryEntry): string | null {
+    if (t.substep !== null && t.substep !== undefined) return t.substep;
+    if (typeof t.task === 'string') return t.task;
+    return null;
+}
+
+function groupStepsInOrder(transitions: HistoryEntry[]): RawStep[] {
+    const out: RawStep[] = [];
+    const seen = new Map<string, RawStep>();
+    for (let i = 0; i < transitions.length; i++) {
+        const t = transitions[i]!;
+        let entry = seen.get(t.step);
+        if (!entry) {
+            entry = { step: t.step, transitions: [], nextStepFirstIdx: -1 };
+            seen.set(t.step, entry);
+            out.push(entry);
+        }
+        entry.transitions.push(t);
+    }
+    // Walk the transitions a second time to compute `nextStepFirstIdx`:
+    // for each step we already have, find the index of the first transition
+    // whose step is different *and* appears later than any of this step's
+    // own transitions in the absolute order. Simpler: linear scan.
+    for (let g = 0; g < out.length; g++) {
+        const cur = out[g]!;
+        // Index of the last own-transition in the global array.
+        const lastOwn = transitions.lastIndexOf(cur.transitions[cur.transitions.length - 1]!);
+        for (let j = lastOwn + 1; j < transitions.length; j++) {
+            if (transitions[j]!.step !== cur.step) {
+                cur.nextStepFirstIdx = j;
+                break;
+            }
+        }
+    }
+    return out;
+}
+
+/**
+ * Build substep/task rows under the finish-only model.
+ *
+ * Each substep or task records a single finish event (`kind: 'complete'`); its
+ * duration is the gap from the *previous* finish (or the step's start, for the
+ * first) to its own finish. This is what kills the `0s` tick (no start==complete
+ * pair) and the inter-task gap (no complete→start dead time).
+ *
+ * Handles three entry shapes in one pass:
+ *   - finish-only `complete` (the model)  → delta row: previousEnd → this finish
+ *   - legacy `start`+`complete` pair       → its real recorded span: start → complete
+ *   - legacy single boundary marker        → start → the next marker (old behavior)
+ * so migrated specs and fixtures still render their real spans.
+ */
+function buildSubsteps(
+    stepTxs: HistoryEntry[],
+    fallbackEnd: string | null,
+    stepStart: string,
+): SubstepEntry[] {
+    const subs = stepTxs.filter(t => rowName(t) !== null);
+    const out: SubstepEntry[] = [];
+    let previousEnd = stepStart;
+    for (let i = 0; i < subs.length; i++) {
+        const s = subs[i]!;
+        const name = rowName(s) as string;
+        const next = subs[i + 1];
+        if (s.kind === 'complete') {
+            // Finish-only (the model): a standalone finish. Its duration is the gap
+            // from the previous finish (or the step start) to this finish.
+            const completedAt = s.at ?? fallbackEnd;
+            out.push({ name, startedAt: previousEnd, completedAt });
+            previousEnd = completedAt ?? previousEnd;   // advance to the effective end, not just s.at
+            continue;
+        }
+        if (next && rowName(next) === name && next.kind === 'complete') {
+            // Legacy start+complete pair → render its real recorded span.
+            out.push({ name, startedAt: s.at, completedAt: next.at });
+            previousEnd = next.at;
+            i++; // consume the paired complete
+            continue;
+        }
+        // Legacy single boundary marker (start / no kind): ends at the next marker's
+        // timestamp, or the step's end if it's the last.
+        const completedAt = next ? next.at : fallbackEnd;
+        out.push({ name, startedAt: s.at, completedAt });
+        previousEnd = completedAt ?? previousEnd;
+    }
+    return out;
+}
+
+/** A fold's stamps land tens of ms apart in one hook run; a real phase takes multiple seconds. */
+const FOLD_WINDOW_MS = 1000;
+
+/** Writers whose clock the run trusts; `ai` counts because `write-context.py` stamps its time. */
+const TRUSTED_BOUNDARY_WRITERS = new Set(['extension', 'cli', 'derive', 'user', 'ai']);
+
+function isTrustedBoundaryWriter(by: string | undefined): boolean {
+    return by !== undefined && TRUSTED_BOUNDARY_WRITERS.has(by);
+}
+
+export function deriveStepHistory(
+    transitions: HistoryEntry[],
+    currentStep?: StepName,
+    status?: Status
+): Record<string, StepHistoryEntry> {
+    const out: Record<string, StepHistoryEntry> = {};
+    if (!transitions || transitions.length === 0) return out;
+
+    const deduped = dedupeConsecutive(transitions);
+    const isTerminal = isTerminalStatus(status);
+
+    const groups = groupStepsInOrder(deduped);
+
+    for (let i = 0; i < groups.length; i++) {
+        const g = groups[i]!;
+        const isCurrent = currentStep === g.step;
+        const isLastSeen = i === groups.length - 1;
+
+        const startedAt = g.transitions[0]!.at;
+
+        let completedAt: string | null = null;
+        // The entry whose clock closed the span — drives `durationTrusted`.
+        let closeEntry: HistoryEntry | null = null;
+        // A step ends at its latest attempt's first complete (a trusted one first), so idle time before the next step is billed to none.
+        const rawStepTransitions = transitions.filter(t => t.step === g.step);
+        let lastStartIdx = -1;
+        rawStepTransitions.forEach((t, idx) => {
+            if (isStepLevelEntry(t) && t.kind === 'start') lastStartIdx = idx;
+        });
+        const ownCompletes = rawStepTransitions.filter((t, idx) =>
+            idx > lastStartIdx && isStepLevelEntry(t) && t.kind === 'complete');
+        const ownCompletion = ownCompletes.find(t => isTrustedBoundaryWriter(t.by)) ?? ownCompletes[0] ?? null;
+
+        if (g.nextStepFirstIdx !== -1) {
+            // Another step's transition follows this group — normally that is
+            // this step's real close boundary. But when that boundary belongs to
+            // an EARLIER step (a force-status rollback), it must not
+            // finalize this step: close at this step's own last completion, or —
+            // if the trailing attempt never completed — treat the attempt as
+            // rolled back and emit no entry at all (the step reads not-started).
+            const boundary = deduped[g.nextStepFirstIdx]!;
+            const gIdx = STEP_NAMES.indexOf(g.step as StepName);
+            const bIdx = STEP_NAMES.indexOf(boundary.step as StepName);
+            const rolledBack = gIdx >= 0 && bIdx >= 0 && bIdx < gIdx && isStepLevelEntry(boundary);
+            if (rolledBack) {
+                if (!ownCompletion) continue;
+                closeEntry = ownCompletion;
+            } else {
+                // The first other-step entry after this attempt began; a finish stamped after it came too late to close the step.
+                let attemptIdx = deduped.indexOf(g.transitions[0]!);
+                deduped.forEach((t, idx) => {
+                    if (t.step === g.step && isStepLevelEntry(t) && t.kind === 'start') attemptIdx = idx;
+                });
+                const interruption = deduped.slice(attemptIdx + 1).find(t => t.step !== g.step) ?? boundary;
+                if (ownCompletion === null) closeEntry = boundary;
+                else closeEntry = Date.parse(ownCompletion.at) <= Date.parse(interruption.at) ? ownCompletion : interruption;
+            }
+            completedAt = closeEntry.at;
+        } else if (ownCompletion) {
+            // No later step yet, but this step has a real completion entry —
+            // honor it (covers `setStepCompleted` calls before the user has
+            // clicked the next-phase button).
+            closeEntry = ownCompletion;
+            completedAt = closeEntry.at;
+        } else if (isLastSeen && isCurrent && isTerminal) {
+            // Most recently seen step, currentStep matches, AND the spec is in
+            // a terminal status → finalize to this step's last real transition
+            // instead of leaving it in flight.
+            closeEntry = g.transitions[g.transitions.length - 1]!;
+            completedAt = closeEntry.at;
+        } else if (isLastSeen && isCurrent) {
+            // Most recently seen step, and currentStep matches → in flight.
+            completedAt = null;
+        } else if (isLastSeen) {
+            // Last seen step but we've already moved past it (currentStep
+            // points elsewhere or is undefined). Best fallback: the last
+            // transition for that step.
+            closeEntry = g.transitions[g.transitions.length - 1]!;
+            completedAt = closeEntry.at;
+        }
+
+        const substeps = buildSubsteps(g.transitions, completedAt, startedAt);
+
+        // Duration honesty is deliberately stricter than lifecycle derivation.
+        // A measured phase needs exactly one step-level start from a trusted
+        // writer and a trusted close after it (this step's own completion or the
+        // next lifecycle step's start). A phase with no start (advanced with only a
+        // complete) or a boundary from an unknown writer stays unmeasured.
+        // Trust checks use the raw append-only log, not the UI de-duplicated
+        // sequence: a repeated start is precisely one of the anomalies that
+        // must remain visible to the timing validator.
+        const explicitStarts = rawStepTransitions.filter(t =>
+            isStepLevelEntry(t) && t.kind === 'start' && isTrustedBoundaryWriter(t.by)
+        );
+        const trustedStart = explicitStarts.length === 1 ? explicitStarts[0] : null;
+        const startMs = trustedStart ? Date.parse(trustedStart.at) : NaN;
+        const closeMs = completedAt ? Date.parse(completedAt) : NaN;
+        const closeIsOwnCompletion = closeEntry !== null
+            && closeEntry.step === g.step
+            && isStepLevelEntry(closeEntry)
+            && closeEntry.kind === 'complete'
+            && isTrustedBoundaryWriter(closeEntry.by);
+        const closeIsNextStart = closeEntry !== null
+            && closeEntry.step !== g.step
+            && isStepLevelEntry(closeEntry)
+            && closeEntry.kind === 'start'
+            && isTrustedBoundaryWriter(closeEntry.by);
+        const completionBeforeStart = trustedStart !== null && rawStepTransitions.some(t =>
+            isStepLevelEntry(t)
+            && t.kind === 'complete'
+            && Number.isFinite(Date.parse(t.at))
+            && Date.parse(t.at) < startMs
+        );
+        const competingLaterStart = trustedStart !== null && completedAt !== null && rawStepTransitions.some(t =>
+            t !== trustedStart
+            && isStepLevelEntry(t)
+            && t.kind === 'start'
+            && Number.isFinite(Date.parse(t.at))
+            && Date.parse(t.at) > startMs
+            && Date.parse(t.at) <= closeMs
+        );
+        const spanTrusted = trustedStart !== null
+            && completedAt !== null
+            && (closeIsOwnCompletion || closeIsNextStart)
+            && Number.isFinite(startMs)
+            && Number.isFinite(closeMs)
+            && closeMs > startMs
+            && !completionBeforeStart
+            && !competingLaterStart;
+
+        const entry: StepHistoryEntry = {
+            startedAt: spanTrusted ? trustedStart!.at : startedAt,
+            completedAt,
+        };
+        entry.durationTrusted = spanTrusted;
+
+        // Fold detection is the fast-path extension fold specifically: its own
+        // EXTENSION-stamped step-level start/complete pair, sub-second and near
+        // the previous step's extension close. It anchors on that extension
+        // start — never the loosened `trustedStart` (which now also accepts an
+        // `ai` boundary) — so a CLI ai/ai span is trusted but never mislabeled
+        // folded, and on the stamped pair, not the derived close (a much later
+        // next-step start).
+        const foldStart = explicitStarts.length === 1 && explicitStarts[0]!.by === 'extension'
+            ? explicitStarts[0] : null;
+        const foldStartMs = foldStart ? Date.parse(foldStart.at) : NaN;
+        const foldClose = rawStepTransitions.find(t =>
+            isStepLevelEntry(t)
+            && t.kind === 'complete'
+            && t.by === 'extension'
+            && Number.isFinite(Date.parse(t.at))
+            && Date.parse(t.at) >= foldStartMs
+        );
+        const prevGroupClose = i > 0
+            ? [...groups[i - 1]!.transitions].reverse().find(t =>
+                isStepLevelEntry(t) && t.kind === 'complete' && t.by === 'extension')
+            : undefined;
+        const foldSpanMs = foldClose ? Date.parse(foldClose.at) - foldStartMs : NaN;
+        const foldGapMs = prevGroupClose ? foldStartMs - Date.parse(prevGroupClose.at) : NaN;
+        if (foldStart !== null
+            && foldSpanMs >= 0 && foldSpanMs < FOLD_WINDOW_MS
+            && foldGapMs >= 0 && foldGapMs < FOLD_WINDOW_MS) {
+            entry.folded = true;
+        }
+
+        if (substeps.length > 0) entry.substeps = substeps;
+        out[g.step] = entry;
+    }
+
+    // A trustworthy phase cannot overlap or run backwards relative to another
+    // trustworthy lifecycle phase. Mark both sides untrusted conservatively;
+    // this prevents one malformed boundary from becoming a whole-run total.
+    let previous: { name: string; start: number; end: number } | null = null;
+    for (const step of STEP_NAMES) {
+        const entry = out[step];
+        if (!entry?.durationTrusted || !entry.completedAt) continue;
+        const current = {
+            name: step,
+            start: Date.parse(entry.startedAt),
+            end: Date.parse(entry.completedAt),
+        };
+        if (previous && current.start < previous.end) {
+            out[previous.name]!.durationTrusted = false;
+            entry.durationTrusted = false;
+            // Both spans are now untrusted — neither may anchor the next comparison.
+            previous = null;
+        } else {
+            previous = current;
+        }
+    }
+
+    return out;
+}
+
+/** Derive timing coverage and, only for a complete sequence, the summed phase time (waits between phases excluded). */
+export function deriveTimingSummary(
+    stepHistory: Record<string, StepHistoryEntry>,
+    expectedPhases: readonly string[] = DEFAULT_PIPELINE_STEPS,
+): TimingSummary {
+    const expected = [...new Set(expectedPhases.filter(Boolean))];
+    const measured = expected.filter(name => {
+        const entry = stepHistory[name];
+        return entry?.durationTrusted === true && !!entry.completedAt;
+    });
+    const base: TimingSummary = {
+        measuredPhases: measured.length,
+        expectedPhases: expected.length,
+        complete: expected.length > 0 && measured.length === expected.length,
+    };
+    if (!base.complete) return base;
+
+    const entries = expected.map(name => stepHistory[name]!);
+    const spans = entries.map(entry => ({
+        start: Date.parse(entry.startedAt),
+        end: Date.parse(entry.completedAt as string),
+    }));
+    const sequenceValid = spans.every((span, index) =>
+        Number.isFinite(span.start)
+        && Number.isFinite(span.end)
+        && span.end > span.start
+        && (index === 0 || span.start >= spans[index - 1]!.end)
+    );
+    if (!sequenceValid) return { ...base, complete: false };
+
+    const startedAt = entries[0]!.startedAt;
+    let endedAt = entries[entries.length - 1]!.completedAt as string;
+    let runEnd = Date.parse(endedAt);
+    // A measured step ordered after the last expected phase (converge) extends the run; the wait before it is billed to none.
+    const lastExpectedIdx = Math.max(...expected.map(name => STEP_NAMES.indexOf(name as StepName)));
+    for (const name of lastExpectedIdx < 0 ? [] : STEP_NAMES.slice(lastExpectedIdx + 1)) {
+        const entry = stepHistory[name];
+        if (expected.includes(name) || entry?.durationTrusted !== true || !entry.completedAt) continue;
+        const [start, end] = [Date.parse(entry.startedAt), Date.parse(entry.completedAt)];
+        if (start < runEnd || !(end > start)) continue;
+        endedAt = entry.completedAt;
+        runEnd = end;
+    }
+    const runStart = Date.parse(startedAt);
+    // Every measured phase inside the run counts, clarify and analyze included; the waits between them do not.
+    const elapsedMs = Object.values(stepHistory).reduce((sum, entry) => {
+        if (entry?.durationTrusted !== true || !entry.completedAt) return sum;
+        const [start, end] = [Date.parse(entry.startedAt), Date.parse(entry.completedAt)];
+        return start >= runStart && end <= runEnd && end > start ? sum + (end - start) : sum;
+    }, 0);
+    if (!Number.isFinite(elapsedMs) || elapsedMs <= 0) return { ...base, complete: false };
+    return { ...base, startedAt, endedAt, elapsedMs };
+}
