@@ -37,7 +37,7 @@ Files: packages/viewer/src/view/** (except host, signals, slots), apps/vscode/we
 **⟶ Wait for Wave 1 to finish, then:**
 - [x] **T013** [US1] Extension webview: `signals.ts` re-exports the package's and installs the postMessage handler; `App.tsx` fills the slots; old component paths re-export the package · apps/vscode/webview/src/spec-viewer/**
 - [x] **T014** [US1] Link github-dark from the package and drop the highlight.js CDN tags, in the webview and in Storybook · apps/vscode/src/features/spec-viewer/html/generator.ts, .storybook/preview-head.html, webpack.config.js
-- [ ] **T015** [US1] FR-006: run the computed-style diff and the bundle diff against the main baseline and record both · specs/670-viewer-element/proof.md
+- [x] **T015** [US1] FR-006: run the computed-style diff and the bundle diff against the main baseline and record both · specs/670-viewer-element/proof.md
 
 **Checkpoint**: the VS Code viewer runs on the package view and matches main.
 
@@ -67,8 +67,8 @@ Files: packages/viewer/tests/strict.test.ts
 
 ## Phase 6: Polish
 
-- [ ] **T022** Docs: package README (both ways to plug in), CLAUDE.md repo map, surface map · packages/viewer/README.md, CLAUDE.md, .claude/skills/release-qa/surface-map.yml
-- [ ] **T023** Validate against Success Criteria: `npx tsc --noEmit -p ./`, `-p tsconfig.webview.json`, `npm run check:vsix`, `npm run test:all` · (no file)
+- [x] **T022** Docs: package README (both ways to plug in), CLAUDE.md repo map, surface map · packages/viewer/README.md, CLAUDE.md, .claude/skills/release-qa/surface-map.yml
+- [x] **T023** Validate against Success Criteria: `npx tsc --noEmit -p ./`, `-p tsconfig.webview.json`, `npm run check:vsix`, `npm run test:all` · (no file)
 
 ## Dependencies & Execution Order
 

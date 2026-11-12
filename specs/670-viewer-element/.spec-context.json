@@ -3,7 +3,7 @@
   "specName": "The spec viewer as an embeddable element",
   "branch": "feat/983-v5-v9-factory",
   "currentStep": "implement",
-  "status": "implementing",
+  "status": "implemented",
   "history": [
     {
       "step": "specify",
@@ -213,6 +213,37 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-12T22:20:36.851Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:53:54.374Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:53:54.498Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T23:09:05.993Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T23:09:06.021Z"
     }
   ],
   "unattended": true,
@@ -427,7 +458,7 @@
       "note": "check_plan.py reports malformed call-path lines: the blocks cite files that do not exist yet (moved view code), so lines cannot be verified"
     }
   ],
-  "currentTask": "T021",
+  "currentTask": "T023",
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -621,6 +652,29 @@
       "did": "Strict test: both package tsconfigs forbid unchecked index access and type-check clean",
       "files": [
         "packages/viewer/tests/strict.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Bundle diff: 3 bundles identical, spec-viewer.js +148 KB (highlighter); style diff 518/524 then 0 differences after the ActivityPanel fix and flake rerun",
+      "files": [
+        "tooling/scripts/viewer-style-diff.mjs",
+        "apps/vscode/webview/src/spec-viewer/components/ActivityPanel.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Package README (both ways to plug in), CLAUDE.md repo map and view rule",
+      "files": [
+        "packages/viewer/README.md",
+        "CLAUDE.md"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "tsc root/webview/package clean; check:vsix passes; Jest 4,680/4,681 (the 1 was the changelog placeholder, now 23/23); canvas 179/179; Python 1,495 OK",
+      "files": [
+        "-"
       ]
     }
   }

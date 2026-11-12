@@ -5178,6 +5178,12 @@
   top: var(--sk-space-2);
   right: var(--sk-space-2);
 }
+:where(.sk-viewer) #markdown-content .task-item__wave {
+  display: block;
+  font-size: var(--sk-text-xs);
+  color: var(--sk-text-muted);
+  margin-bottom: var(--sk-space-1);
+}
 :where(.sk-viewer) #markdown-content details.md-collapsible {
   margin: var(--sk-space-4) 0;
 }
