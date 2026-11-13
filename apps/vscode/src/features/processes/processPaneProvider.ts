@@ -3,7 +3,7 @@ import { Commands } from '../../core/constants';
 import { BaseTreeDataProvider } from '../../core/providers/BaseTreeDataProvider';
 import { getProjectRoot, hasSpecKitMarker } from '../../core/projectRoot';
 import type { ReportFile, ReportSet } from '../reports/reportSet';
-import { ProcessExtensionId, processExtensionState } from '../../speckit/processExtensions';
+import { ProcessExtensionId, ProcessExtensionInfo, processExtensionInfo, processExtensionState } from '../../speckit/processExtensions';
 
 const VIEW_DOCUMENT_COMMAND = 'speckit.viewSpecDocument';
 
@@ -43,7 +43,9 @@ export type ProcessRowKind =
     | 'process-report-missing'
     | 'process-install'
     | 'process-empty'
-    | 'process-setting-note';
+    | 'process-setting-note'
+    | 'process-extension-off'
+    | 'process-extension-foreign';
 
 export class ProcessRow extends vscode.TreeItem {
     constructor(
@@ -70,14 +72,46 @@ export class ProcessPaneProvider<K extends string, T extends ProcessItem<K>> ext
         const root = getProjectRoot();
         if (!root) return [];
 
-        const note = this.settingNoteRow(root);
+        const extension = processExtensionInfo(root, this.config.extensionId);
+        void vscode.commands.executeCommand('setContext', `speckit.${this.config.set.id}.extensionOff`, extension.disabled);
         const items = this.config.read(root);
-        if (items.length === 0) return hasSpecKitMarker(root) ? [...note, this.nothingToList(root)] : note;
+        const note = [...this.settingNoteRow(root), ...this.extensionNoteRow(extension, items.length)];
+        if (items.length === 0) {
+            if (!hasSpecKitMarker(root)) return note;
+            return extension.disabled ? note : [...note, this.nothingToList(root)];
+        }
 
         return [...note, ...this.config.groups
             .map(group => ({ group, members: items.filter(item => this.config.groupOf(item) === group.id) }))
             .filter(({ members }) => members.length > 0)
-            .map(({ group, members }) => this.groupRow(group, members))];
+            .map(({ group, members }) => this.groupRow(group, members, extension.disabled))];
+    }
+
+    private extensionNoteRow(extension: ProcessExtensionInfo, count: number): ProcessRow[] {
+        const id = this.config.extensionId;
+        const named = [id, extension.version].filter(Boolean).join(' ');
+        if (extension.disabled) {
+            const row = new ProcessRow(`The ${id} extension is turned off`, vscode.TreeItemCollapsibleState.None, 'process-extension-off');
+            row.id = `${this.config.set.id}:extension-off`;
+            row.iconPath = new vscode.ThemeIcon('circle-slash');
+            row.description = `${named} · Turn it on`;
+            const folders = count === 1 ? 'Its 1 folder is' : `Its ${count} folders are`;
+            row.tooltip = `${count > 0 ? `${folders} still here and you can read them. ` : ''}Its commands need the extension back on: specify extension enable ${id}`;
+            row.command = { command: Commands.processesEnableExtension, title: 'Turn it on', arguments: [id] };
+            return [row];
+        }
+        if (extension.foreign) {
+            const row = new ProcessRow(`A different ${id} extension is installed`, vscode.TreeItemCollapsibleState.None, 'process-extension-foreign');
+            row.id = `${this.config.set.id}:extension-foreign`;
+            row.iconPath = new vscode.ThemeIcon('warning', new vscode.ThemeColor('list.warningForeground'));
+            row.description = `${named} · not the bundled one`;
+            row.tooltip = `It uses the same name, but it comes from ${extension.author ? `"${extension.author}"` : 'another author'}, not spec-kit. Companion shows its folders, but its steps and fields may not match.`;
+            if (extension.manifestPath) {
+                row.command = { command: 'vscode.open', title: 'See where it came from', arguments: [vscode.Uri.file(extension.manifestPath)] };
+            }
+            return [row];
+        }
+        return [];
     }
 
     private settingNoteRow(root: string): ProcessRow[] {
@@ -110,9 +144,9 @@ export class ProcessPaneProvider<K extends string, T extends ProcessItem<K>> ext
         return row;
     }
 
-    private groupRow(group: ProcessGroup, members: T[]): ProcessRow {
+    private groupRow(group: ProcessGroup, members: T[], readOnly: boolean): ProcessRow {
         const row = new ProcessRow(
-            `${group.label} (${members.length})`,
+            `${group.label} (${members.length})${readOnly ? ' · read only' : ''}`,
             vscode.TreeItemCollapsibleState.Expanded,
             'process-group',
             members.map(item => this.itemRow(item)),
