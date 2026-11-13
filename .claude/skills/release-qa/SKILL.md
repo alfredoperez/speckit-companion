@@ -126,7 +126,7 @@ Sections, in this order:
 2. **What the release changed**: the surfaces that matched, the Unreleased claims, and the `no QA mapping` paths.
 3. **Checks**: one row per check, `check | PASS/FAIL/BLOCKED | one-line note`, automated and desktop together, in the order they ran.
 4. **Timing**: one row per step, one column per surface (VS Code, canvas, terminal), the recorded span with the wall clock in brackets. Build it from `timing.md`. A gap over about 10s or a missing span is a finding. A surface that did not run shows `-`.
-5. **Findings**, most severe first, one block each, every FAIL a fix candidate:
+5. **Findings**, most severe first, one block each, every FAIL a fix candidate. Before filing a product FAIL from an observation check, read the spec's `.spec-context.json` history and the transcript's tool names: a fold is plan and tasks boundaries `by: extension` within milliseconds, and a `view` of a skill file is a read, not a run, so the FAIL may be the check's own (#978, #1002).
 
 ```markdown
 ### F<n> — <one-line symptom>
