@@ -1459,6 +1459,8 @@ def main() -> int:
     _EVENT_NOOP = False
     event = _has_flag(argv, "--event")
     hook = event or _has_flag(argv, "--hook")
+    # Asking for the usage records nothing, so it leaves no trace line in whichever spec is active.
+    help_only = any(a in ("-h", "--help") for a in argv)
     # An event handler's stdout reaches the model and its stderr the person, so it keeps both to the trace.
     sys.stdout, sys.stderr = ((out_buf, err_buf) if event
                               else (_Tee(real_out, out_buf), _Tee(real_err, err_buf)))
@@ -1475,7 +1477,7 @@ def main() -> int:
         code = 1
     finally:
         sys.stdout, sys.stderr = real_out, real_err
-        if not _EVENT_NOOP:
+        if not _EVENT_NOOP and not help_only:
             _trace_call(argv, out_buf.getvalue(), err_buf.getvalue(),
                         int((time.monotonic() - started) * 1000))
     # A lifecycle hook is bookkeeping: it never fails the spec-kit command that fired it.
