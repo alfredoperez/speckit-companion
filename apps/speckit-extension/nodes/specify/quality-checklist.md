@@ -3,7 +3,6 @@ id: quality-checklist
 name: Self-check the spec
 kind: author
 command: specify
-may-write: checklists/requirements.md
 reads: [draft-spec]
 ---
 4. **Self-check the spec once, in place.** Do not write a checklist file. Read `spec.md` against these, fix each fail in the spec, and leave a genuine ambiguity as a `[NEEDS CLARIFICATION: …]` marker (max 3) for `clarify`. One pass, no rewrite loop, no option tables:
