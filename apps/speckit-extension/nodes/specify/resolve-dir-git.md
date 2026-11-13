@@ -11,7 +11,7 @@ reads: []
    ```bash
    git fetch --all --prune
    ```
-   Then derive a 2–4 word short-name from the description and run `python3 .specify/extensions/companion/scripts/mint-spec-dir.py --branches --short-name "<short-name>"`. It takes the next number across `specs/` and every local and remote branch, or a timestamp when this project's `feature_numbering` says so, creates the folder under a lock so a run started at the same time gets the next one, points `.specify/feature.json` at it and prints its path. Never pick the number yourself. The spec file is `<feature_directory>/spec.md`.
+   Then derive a 2–4 word short-name from the description and run `python3 .specify/extensions/companion/scripts/mint-spec-dir.py --branches --short-name "<short-name>"`. It takes the next number across `specs/` and every local and remote branch, or a timestamp when this project's `feature_numbering` says so, creates the folder under a lock so a run started at the same time gets the next one, points `.specify/feature.json` at it and prints its path. Never pick the number yourself; when the request names a spec number ("spec 671"), add `--number 671` and the script uses it, refusing a number another folder already holds. The spec file is `<feature_directory>/spec.md`.
 
    Create and check out the branch named after the folder:
    ```bash
