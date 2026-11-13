@@ -80,7 +80,9 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs"
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs",
+    "storybook": "npm run build && storybook dev -p 6007",
+    "build-storybook": "npm run build && storybook build"
   },
   "dependencies": {
     "@preact/signals": "^1.3.4",
