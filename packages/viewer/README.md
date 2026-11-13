@@ -1,6 +1,10 @@
 # speckit-viewer
 
-The SpecKit Companion spec viewer as a library, for any host: the data contract, the markdown renderer and derivations, the stylesheet, the Preact view and a `<speckit-viewer>` custom element. Private for now; the name is provisional until it is published.
+The SpecKit Companion spec viewer as a library, for any host: the data contract, the markdown renderer and derivations, the stylesheet, the Preact view and a `<speckit-viewer>` custom element. Not on npm yet: the package stays private until its name is confirmed.
+
+```sh
+npm install speckit-viewer
+```
 
 ## Entry points
 
@@ -36,4 +40,8 @@ The element moves between documents itself and emits every action. Children with
 
 ## Build
 
-`npm run build -w speckit-viewer` writes `dist/`: the CommonJS contract and core, declarations in `dist/types`, the styles, and `dist/element/index.js`. `node packages/viewer/tests/element/element.check.mjs` loads the element alone in headless Chrome and checks the rail, the slot, highlighting, navigation, events and that nothing comes from a CDN.
+`npm run build -w speckit-viewer` writes `dist/`: the CommonJS contract and core, declarations in `dist/types`, the styles, and `dist/element/index.js`. `node packages/viewer/tests/element/element.check.mjs` loads the element alone in headless Chrome and checks the rail, the slot, highlighting, navigation, events and that nothing comes from a CDN. `npm run storybook -w speckit-viewer` shows the element on a demo spec, one story per theme.
+
+## Release
+
+Add a changeset (`npx changeset`) with each change. `/publish-viewer` runs `npx changeset version` and pushes a `speckit-viewer-v<version>` tag; `.github/workflows/publish-viewer.yml` publishes from that tag with npm provenance.

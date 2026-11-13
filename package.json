@@ -1475,6 +1475,7 @@
     "preact": "^10.29.1"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.7",
     "@jest/globals": "^29.7.0",
     "@storybook/addon-docs": "9.1.20",
     "@storybook/preact-vite": "9.1.20",
