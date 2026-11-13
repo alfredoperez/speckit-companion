@@ -82,12 +82,14 @@ const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | unde
     bugs: directory => {
         const bug = readBugReport(directory);
         if (!bug) return undefined;
-        const actions = extensionOff('bug') ? [] : bugActions(bug);
+        const off = extensionOff('bug');
+        const actions = off ? [] : bugActions(bug);
         const page = buildBugStory(
             { assessment: textOf(bug.reports.assessment), fix: textOf(bug.reports.fix), test: textOf(bug.reports.test) },
             actions.find(action => action.primary)?.label,
             { engine: bug.engine, freshness: bug.freshness, writtenAt: writtenAt(bug.reports) },
         );
+        if (off && page?.engine?.paused) delete page.engine.paused.answerable;
         return {
             slug: bug.slug,
             title: bug.title,

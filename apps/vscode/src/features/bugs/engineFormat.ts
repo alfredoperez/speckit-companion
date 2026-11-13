@@ -21,6 +21,28 @@ export interface EngineRun {
     pausedAt?: string;
 }
 
+export type GateVerdict = 'approve' | 'reject';
+
+/** The bundled bugfix workflow's review gate, whose options are `[approve, reject]` in that order. */
+const BUNDLED_REVIEW_GATE = { workflow: 'bugfix', step: 'review-assessment', options: ['approve', 'reject'] as const };
+
+const RUN_ID = /^\w[\w.-]*$/;
+
+/**
+ * The number to type at the gate's prompt for a verdict, when the run waits at the bundled review gate
+ * and its id is safe to put on a command line. Any other gate gets no buttons.
+ */
+export function gateChoice(run: Pick<EngineRun, 'runId' | 'workflowId' | 'pausedAt'> | undefined, verdict: GateVerdict): string | undefined {
+    if (!run || run.workflowId !== BUNDLED_REVIEW_GATE.workflow || run.pausedAt !== BUNDLED_REVIEW_GATE.step) return undefined;
+    if (!RUN_ID.test(run.runId)) return undefined;
+    return String(BUNDLED_REVIEW_GATE.options.indexOf(verdict) + 1);
+}
+
+/** The command that picks a paused run back up; undefined when the id is not safe for a command line. */
+export function resumeCommand(runId: string): string | undefined {
+    return RUN_ID.test(runId) ? `specify workflow resume ${runId}` : undefined;
+}
+
 /** "39s", "1m 48s", "1h 02m". */
 export function formatSeconds(seconds: number): string {
     const whole = Math.max(0, Math.round(seconds));
