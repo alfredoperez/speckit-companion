@@ -336,6 +336,22 @@ export class SpecViewerProvider {
     }
   }
 
+  /** Re-render every open bug or idea page, for a change outside its folder (a workflow run, the extension registry). */
+  public async refreshReportPanels(reportSet?: string): Promise<void> {
+    const keys = [...this.panels]
+      .filter(([, inst]) => inst.state.bug && (!reportSet || (inst.state.reportSet ?? "bugs") === reportSet))
+      .map(([key]) => key);
+    for (const key of keys) {
+      const instance = this.panels.get(key);
+      if (!instance) continue;
+      try {
+        await this.updateReportContent(key, instance.state.currentDocument);
+      } catch (error) {
+        this.outputChannel.appendLine(`[SpecViewer] Report page refresh failed: ${String(error)}`);
+      }
+    }
+  }
+
   /**
    * Refresh content if currently displaying the specified file
    */

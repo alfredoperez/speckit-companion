@@ -41,6 +41,7 @@ import { suggestIntegrationProvider } from './speckit/integrationProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
 import { BUG_SET } from './features/bugs/bugReports';
 import { bugsPaneConfig } from './features/bugs/bugsPane';
+import { WORKFLOW_RUNS_DIR } from './features/bugs/engineRuns';
 import { IDEA_SET } from './features/ideas/ideaReports';
 import { ideasPaneConfig, ideasViewDescription } from './features/ideas/ideasPane';
 import { ProcessPaneProvider } from './features/processes/processPaneProvider';
@@ -481,17 +482,32 @@ export async function activate(context: vscode.ExtensionContext) {
             markerWatcher.onDidDelete(redetect.call);
             wiring.push(markerWatcher, redetect);
 
-            // An install row clears once its extension's folder appears.
+            // An install row clears once its extension's folder appears; turning one off or on rewrites the registry.
             const processExtensionsWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(root, `.specify/extensions/{${PROCESS_EXTENSION_IDS.flatMap(id => [id, `${id}/**`]).join(',')}}`)
+                new vscode.RelativePattern(root, `.specify/extensions/{.registry,${PROCESS_EXTENSION_IDS.flatMap(id => [id, `${id}/**`]).join(',')}}`)
             );
             const refreshPanes = trailing(() => {
                 bugsPane.refresh();
                 ideasPane.refresh();
+                void specViewer.refreshReportPanels();
             }, 300);
             processExtensionsWatcher.onDidCreate(refreshPanes.call);
+            processExtensionsWatcher.onDidChange(refreshPanes.call);
             processExtensionsWatcher.onDidDelete(refreshPanes.call);
             wiring.push(processExtensionsWatcher, refreshPanes);
+
+            // A bug run moving past its review gate rewrites its state.json.
+            const workflowRunsWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, `${WORKFLOW_RUNS_DIR}/*/state.json`)
+            );
+            const refreshBugs = trailing(() => {
+                bugsPane.refresh();
+                void specViewer.refreshReportPanels('bugs');
+            }, 300);
+            workflowRunsWatcher.onDidCreate(refreshBugs.call);
+            workflowRunsWatcher.onDidChange(refreshBugs.call);
+            workflowRunsWatcher.onDidDelete(refreshBugs.call);
+            wiring.push(workflowRunsWatcher, refreshBugs);
         };
         wireCompanionSurfaces();
         context.subscriptions.push(

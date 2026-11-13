@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Approve or reject a bug paused at review.** A bug waiting at Spec Kit's review gate offers ==Approve and fix and Reject==, each resuming the run in a terminal. ([#1015](https://github.com/alfredoperez/speckit-companion/pull/1015)) <!-- area: sidebar -->
+- **Bugs and Ideas know a turned-off extension.** A disabled extension shows ==read only with a way to turn it on==, and a same-name extension from another author is labelled. ([#1015](https://github.com/alfredoperez/speckit-companion/pull/1015)) <!-- area: sidebar -->
+
 ### Fixed
 - **Spec titles and task notes stop repeating.** Every tab keeps the spec's own title, and a wave's shared notes show ==once instead of on every task==. ([#1010](https://github.com/alfredoperez/speckit-companion/pull/1010)) <!-- area: spec-viewer -->
 

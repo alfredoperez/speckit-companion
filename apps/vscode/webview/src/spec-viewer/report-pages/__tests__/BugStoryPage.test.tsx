@@ -332,6 +332,31 @@ describe('BugStoryPage with a spec-kit run and report freshness', () => {
         expect(texts(page, '.rp-runlog li')).toEqual(['Assess1m 48s', 'ReviewWaiting for you']);
     });
 
+    it('offers Approve and Reject at the bundled review gate, each sending its verdict', () => {
+        const postMessage = jest.fn();
+        (globalThis as { vscode?: unknown }).vscode = { postMessage };
+        const story: BugStory = {
+            ...bare,
+            lead: 'in-review',
+            engine: {
+                runId: '3471d74b',
+                workflow: 'bugfix',
+                steps: [],
+                paused: { gate: 'review', resume: 'specify workflow resume 3471d74b', answerable: true },
+            },
+        };
+        const page = renderPage(story);
+        const buttons = Array.from(page.querySelectorAll<HTMLButtonElement>('.rp-paused button'));
+        expect(buttons.map(b => b.textContent)).toEqual(['Approve and fix', 'Reject']);
+        expect(page.querySelector('.rp-paused code')?.textContent).toBe('specify workflow resume 3471d74b');
+        buttons.forEach(b => b.click());
+        expect(postMessage.mock.calls).toEqual([
+            [{ type: 'reportAction', id: 'bug.approve' }],
+            [{ type: 'reportAction', id: 'bug.reject' }],
+        ]);
+        delete (globalThis as { vscode?: unknown }).vscode;
+    });
+
     it('shows no run log for a bug without a run', () => {
         const page = renderPage(bare);
         expect(page.querySelector('.rp-runlog')).toBeNull();

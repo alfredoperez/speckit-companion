@@ -312,13 +312,20 @@ describe('buildBugStory with a spec-kit run and report freshness', () => {
                 { label: 'Assess', detail: '1m 48s', state: 'done' },
                 { label: 'Review', detail: 'Waiting for you', state: 'waiting' },
             ],
-            paused: { gate: 'review', resume: 'specify workflow resume 3471d74b' },
+            paused: { gate: 'review', resume: 'specify workflow resume 3471d74b', answerable: true },
         });
     });
 
-    it('leaves out the resume command when the run id is not a plain id', () => {
-        const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: { ...paused, runId: 'x; echo hi' } });
-        expect(story?.engine?.paused).toEqual({ gate: 'review' });
+    it('leaves out the resume command and the answer when the run id is not a plain id', () => {
+        for (const runId of ['x; echo hi', '-rf']) {
+            const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: { ...paused, runId } });
+            expect(story?.engine?.paused).toEqual({ gate: 'review' });
+        }
+    });
+
+    it('offers no answer at a gate other than the bundled review gate', () => {
+        const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: { ...paused, pausedAt: 'sign-off' } });
+        expect(story?.engine?.paused).toEqual({ gate: 'sign', resume: 'specify workflow resume 3471d74b' });
     });
 
     it('has no run log for a bug typed in chat, and none when the log held no steps', () => {
@@ -328,7 +335,7 @@ describe('buildBugStory with a spec-kit run and report freshness', () => {
 
     it('keeps the paused notice and resume command when the log gave no steps', () => {
         const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: { ...paused, steps: [] } });
-        expect(story?.engine?.paused).toEqual({ gate: 'review', resume: 'specify workflow resume 3471d74b' });
+        expect(story?.engine?.paused).toEqual({ gate: 'review', resume: 'specify workflow resume 3471d74b', answerable: true });
         expect(story?.engine?.steps).toEqual([]);
     });
 
