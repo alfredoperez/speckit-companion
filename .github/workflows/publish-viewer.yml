@@ -1,0 +1,61 @@
+name: Publish speckit-viewer
+
+# Publishes packages/viewer to npm with provenance, only from a `speckit-viewer-v*` tag.
+# The tag cannot start with `v`: release.yml publishes the VS Code extension on `v*`.
+# A manual run is a rehearsal: it builds, tests and lists what the tarball would hold.
+on:
+  push:
+    tags:
+      - 'speckit-viewer-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-viewer
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build -w speckit-viewer
+
+      - name: Test
+        run: npx jest packages/viewer
+
+      - name: Check the tag, the version and the private flag
+        if: github.event_name == 'push'
+        run: |
+          version=$(node -p "require('./packages/viewer/package.json').version")
+          if [ "${GITHUB_REF_NAME}" != "speckit-viewer-v${version}" ]; then
+            echo "::error::The tag ${GITHUB_REF_NAME} does not match packages/viewer/package.json version ${version}. Run npx changeset version, commit, then tag speckit-viewer-v${version}."
+            exit 1
+          fi
+          if [ "$(node -p "require('./packages/viewer/package.json').private === true")" = "true" ]; then
+            echo "::error::packages/viewer is still private. Remove \"private\": true once the npm name is confirmed, then tag again."
+            exit 1
+          fi
+
+      - name: Publish
+        if: github.event_name == 'push'
+        run: npm publish -w speckit-viewer --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Rehearse the publish
+        if: github.event_name == 'workflow_dispatch'
+        run: npm pack -w speckit-viewer --dry-run
