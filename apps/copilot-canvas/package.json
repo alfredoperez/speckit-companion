@@ -1,6 +1,6 @@
 {
   "name": "speckit-companion",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
   "main": "com.github.copilot/extensions/speckit-companion/extension.mjs",
