@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **Name the spec number yourself.** Say "spec 671" to auto or specify and the folder takes ==the number you named==. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: pipeline -->
+
+### Changed
+- **Small waves stay with the main agent.** Foundational work goes to workers only across five files or more, ==two tasks each== at least. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: pipeline -->
+- **Commit prompts wait for converge.** Implement holds an optional commit or pull request hook until ==converge has finished== building. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: pipeline -->
+
+### Fixed
+- **Runs work from a worktree.** Plan's readers read ==the checkout you are in==, and specify cuts no second branch when one exists. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: pipeline -->
+- **Receipts stay current after a changelog line.** A changelog edit after the checks ran ==keeps them current== in the pull request. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: run-record -->
+- **A finished spec reads Converge.** A spec that converge completed shows ==converge as its step==, even when converge built a task. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: run-record -->
+- **The plan check accepts files the plan creates.** Mark a new file once and ==every call path naming it== passes. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: pipeline -->
+
 ## [0.27.0] - 2026-11-12
 
 Hands-off runs cost less and finish at Completed, they also run on Spec Kit's workflow engine, and living specs are retired.
