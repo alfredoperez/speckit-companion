@@ -36,6 +36,20 @@ class RecorderFlagsTests(unittest.TestCase):
         unknown = {flag: sorted(paths) for flag, paths in _flags_called().items() if flag not in known}
         self.assertEqual(unknown, {})
 
+    def test_asking_for_the_usage_leaves_no_trace_in_the_active_spec(self) -> None:
+        import json
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            spec = root / "specs" / "001-x"
+            spec.mkdir(parents=True)
+            (root / ".specify").mkdir()
+            (root / ".specify" / "feature.json").write_text(json.dumps({"feature_directory": "specs/001-x"}))
+            subprocess.run([sys.executable, str(RECORDER), "--help"], cwd=root, capture_output=True, check=True)
+            self.assertFalse((spec / ".trace.jsonl").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
