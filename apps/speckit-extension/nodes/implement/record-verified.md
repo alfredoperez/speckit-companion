@@ -20,7 +20,7 @@ reads: [implement-exec]
      "last_action": "<final breadcrumb>"
    }'; python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "<what>::<command>" --verify-run "<what>::<command>"
    ```
-   Every suite, build and lint goes through `--verify-run`, which runs the command and keeps its exit code. `verified` is only for what cannot be run, a manual pass or a judgement. A check you could not run is a `concerns` entry naming what was skipped; do **not** record a `--verified` for it.
+   Every suite, build and lint goes through `--verify-run`, which runs the command and keeps its exit code. `verified` is only for what cannot be run, a manual pass or a judgement. A check you could not run is a `concerns` entry naming what was skipped; do **not** record a `--verified` for it. Finish every edit, changelog included, before the `--verify-run` calls: a later non-spec edit marks the checks out of date in the receipts.
 
 8. **Set the review depth from the risk tier** in the same breath:
    ```bash
