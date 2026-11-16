@@ -64,6 +64,13 @@ class Receipts(unittest.TestCase):
         (self.root / "app.ts").write_text("two\n", encoding="utf-8")
         self.assertRegex(self.row(self.receipts(), "Unit tests"), r"exit 0 at [0-9a-f]+ · out of date")
 
+    def test_a_changelog_edit_after_the_checks_leaves_them_current(self):
+        self.write("--verify-run", "Unit tests::true")
+        (self.root / "CHANGELOG.md").write_text("- a line\n", encoding="utf-8")
+        (self.root / "apps" / "ext").mkdir(parents=True)
+        (self.root / "apps" / "ext" / "CHANGELOG.md").write_text("- a line\n", encoding="utf-8")
+        self.assertNotIn("out of date", self.row(self.receipts(), "Unit tests"))
+
     def test_a_same_size_edit_in_the_same_second_still_goes_out_of_date(self):
         app, index, second = self.root / "app.ts", self.root / ".git" / "index", 1_700_000_000
         self.git("config", "core.trustctime", "false")
