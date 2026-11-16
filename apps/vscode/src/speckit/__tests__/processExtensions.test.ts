@@ -4,6 +4,7 @@ import * as path from 'path';
 import {
     PROCESS_EXTENSION_IDS,
     coerceProcessExtensionId,
+    processExtensionInfo,
     processExtensionState,
     runSpecifyExtensionAdd,
     _resetForTests as resetInstalls,
@@ -92,6 +93,52 @@ describe('processExtensions', () => {
                 throw new Error('boom');
             });
             expect(processExtensionState(root, 'bug')).toBe('unknown');
+        });
+    });
+
+    describe('processExtensionInfo', () => {
+        let root: string;
+
+        beforeEach(() => {
+            root = fs.mkdtempSync(path.join(os.tmpdir(), 'process-ext-info-'));
+            fs.mkdirSync(path.join(root, '.specify', 'extensions', 'bug'), { recursive: true });
+        });
+
+        afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
+
+        const registry = (value: unknown) =>
+            fs.writeFileSync(path.join(root, '.specify', 'extensions', '.registry'), typeof value === 'string' ? value : JSON.stringify(value));
+        const manifest = (body: string) => fs.writeFileSync(path.join(root, '.specify', 'extensions', 'bug', 'extension.yml'), body);
+
+        it('reads a registry entry with enabled false as disabled', () => {
+            registry({ extensions: { bug: { version: '1.0.1', enabled: false } } });
+            expect(processExtensionInfo(root, 'bug')).toMatchObject({ state: 'present', disabled: true, foreign: false, version: '1.0.1' });
+        });
+
+        it('reads a manifest by another author as a look-alike', () => {
+            manifest('extension:\n  id: bug\n  version: "1.1.0"\n  author: someone-else\n');
+            expect(processExtensionInfo(root, 'bug')).toMatchObject({ disabled: false, foreign: true, author: 'someone-else', version: '1.1.0' });
+        });
+
+        it('reads the bundled manifest, turned on, as today', () => {
+            registry({ extensions: { bug: { enabled: true } } });
+            manifest('extension:\n  id: bug\n  author: spec-kit-core\n');
+            expect(processExtensionInfo(root, 'bug')).toMatchObject({ disabled: false, foreign: false });
+        });
+
+        it('treats an unreadable registry or manifest as the bundled extension, turned on', () => {
+            registry('{ not json');
+            manifest(': : :\n\t- [');
+            expect(processExtensionInfo(root, 'bug')).toMatchObject({ disabled: false, foreign: false });
+        });
+
+        it('reads an extension the registry does not list as turned on', () => {
+            registry({ extensions: { git: { enabled: false } } });
+            expect(processExtensionInfo(root, 'bug').disabled).toBe(false);
+        });
+
+        it('reports nothing more for an absent extension', () => {
+            expect(processExtensionInfo(root, 'assess')).toEqual({ state: 'absent', disabled: false, foreign: false });
         });
     });
 

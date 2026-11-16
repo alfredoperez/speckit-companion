@@ -7858,6 +7858,16 @@
   font-size: var(--sk-text-sm);
   color: var(--sk-review-ink);
 }
+:where(.sk-viewer) #markdown-content .rp-paused__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sk-space-3);
+}
+:where(.sk-viewer) #markdown-content .rp-paused__note {
+  font-size: var(--sk-text-sm);
+  color: var(--sk-text-secondary);
+}
 :where(.sk-viewer) #markdown-content .rp-runlog {
   margin: var(--sk-space-3) 0;
   padding: 0;

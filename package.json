@@ -611,12 +611,12 @@
         },
         {
           "command": "speckit.bugs.create",
-          "when": "view == speckit.views.bugs",
+          "when": "view == speckit.views.bugs && !speckit.bugs.extensionOff",
           "group": "navigation@2"
         },
         {
           "command": "speckit.ideas.create",
-          "when": "view == speckit.views.ideas",
+          "when": "view == speckit.views.ideas && !speckit.ideas.extensionOff",
           "group": "navigation@2"
         },
         {

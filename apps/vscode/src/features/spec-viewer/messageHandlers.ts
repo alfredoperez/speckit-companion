@@ -64,7 +64,9 @@ import { REPORT_SETS, readReportPanel } from "./reportPanels";
 import { commandForAction, ideaSpecDescription, repeatsFromFolder } from "../processes/processActions";
 import { reportFile } from "../reports/reportSet";
 import { ideaPageFile } from "../ideas/ideaReports";
-import type { IdeaDecision } from "../reports/reportPageModel";
+import type { BugStory, IdeaDecision } from "../reports/reportPageModel";
+import { readBugReport } from "../bugs/bugReports";
+import { answerReviewGate, coerceGateVerdict } from "../bugs/engineGate";
 import { clarificationsIn } from "../reports/clarifications";
 import { buildAnswerPrompt, stageReportAnswer } from "../reports/reportAnswers";
 import type { ReviewComment, ReviewCommentDoc } from "../../core/types/specContext";
@@ -906,6 +908,18 @@ async function handleReportAction(
   if (!state?.bug) return drop("not a bug or idea page");
   const item = readReportPanel(state.reportSet ?? "bugs", state.specDirectory);
   if (!item) return drop("the item has no reports on disk");
+  const verdict = typeof id === "string" && id.startsWith("bug.") ? coerceGateVerdict(id.slice(4)) : undefined;
+  if (verdict) {
+    const paused = item.kind === "bug" ? (item.page as BugStory | undefined)?.engine?.paused : undefined;
+    const root = getProjectRoot();
+    if (!paused?.answerable || !root) {
+      drop("the bug is not waiting at spec-kit's review gate");
+      await deps.updateContent(specDirectory, state.currentDocument);
+      return;
+    }
+    if (!(await answerReviewGate(root, readBugReport(state.specDirectory)?.engine, verdict))) drop("the run could not be resumed");
+    return;
+  }
   const action = typeof id === "string" ? item.actions.find(a => a.id === id) : undefined;
   if (!action) {
     drop("the item does not offer that action in its current state");

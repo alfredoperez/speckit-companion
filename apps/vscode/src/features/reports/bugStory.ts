@@ -10,7 +10,7 @@ import {
     BugVerdict,
 } from '../bugs/bugValues';
 import { ReportDoc, fencedBlocks, findSection, parseItems, parseReportDoc, parseTable, sectionProse } from './reportDoc';
-import { EngineRun, formatSeconds, gateLabel } from '../bugs/engineFormat';
+import { EngineRun, formatSeconds, gateChoice, gateLabel, resumeCommand } from '../bugs/engineFormat';
 import type { Freshness } from '../bugs/bugFreshness';
 import type { BugEngineView, BugLead, BugMeta, BugReportName, BugStep, BugStory, ChangedFile, CheckRow, DiffBlock, EngineStepView } from './reportPageModel';
 import { knownValue, parseReportHeader } from './reportValues';
@@ -109,8 +109,6 @@ function riskItems(sources: [Report | undefined, string][]): string[] {
     return risks;
 }
 
-const RUN_ID = /^[\w.-]+$/;
-
 function capitalised(word: string): string {
     return word.charAt(0).toUpperCase() + word.slice(1);
 }
@@ -127,7 +125,9 @@ function engineView(run: EngineRun): BugEngineView {
     const view: BugEngineView = { runId: run.runId, workflow: run.workflowId, steps };
     if (run.pausedAt) {
         view.paused = { gate: gateLabel(run.pausedAt) };
-        if (RUN_ID.test(run.runId)) view.paused.resume = `specify workflow resume ${run.runId}`;
+        const resume = resumeCommand(run.runId);
+        if (resume) view.paused.resume = resume;
+        if (gateChoice(run, 'approve')) view.paused.answerable = true;
     }
     return view;
 }
