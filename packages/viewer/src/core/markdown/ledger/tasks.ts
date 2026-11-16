@@ -6,7 +6,7 @@
  */
 
 import { escapeHtml, parseInline } from '../inline';
-import { codicon, eyebrow, priorityMark, refAnchor, statusDot } from './primitives';
+import { COMMENT_ICON_SVG, codicon, eyebrow, priorityMark, refAnchor, statusDot } from './primitives';
 import {
     type LgPhase,
     type LgTask,
@@ -89,7 +89,44 @@ function phaseChips(p: LgPhase): string {
     return p.mvp ? '<span class="lg-phase-chip">MVP</span>' : '';
 }
 
-function phaseOpen(p: LgPhase): string {
+const LINE_MARK = /@@lg:([^@]*)@@/g;
+
+/** A heading line is rewritten here, so its file line is found later by `resolveLedgerLines`; until then the line carries its own text. */
+function lineMark(source: string): string {
+    return `@@lg:${encodeURIComponent(source)}@@`;
+}
+
+function addButton(mark: string, what: string): string {
+    const name = attr(`Add comment to ${what}`);
+    return `<button class="line-add-btn" data-line="${mark}" title="${name}" aria-label="${name}">${COMMENT_ICON_SVG}</button>`;
+}
+
+/** Swap each heading's placeholder for its line in the file, reading the source forward so a repeated title keeps its own line. */
+export function resolveLedgerLines(lines: string[], source: string): void {
+    if (!lines.some((l) => l.includes('@@lg:'))) return;
+    const sourceLines = source.split('\n').map((l) => l.trim());
+    let cursor = 0;
+    for (let i = 0; i < lines.length; i++) {
+        if (!lines[i]!.includes('@@lg:')) continue;
+        const here = new Map<string, string>();
+        lines[i] = lines[i]!.replace(LINE_MARK, (_m, enc: string) => {
+            const seen = here.get(enc);
+            if (seen) return seen;
+            const found = sourceLines.indexOf(decodeURIComponent(enc).trim(), cursor);
+            if (found !== -1) cursor = found + 1;
+            const num = String(found + 1);
+            here.set(enc, num);
+            return num;
+        });
+        // A heading an earlier step rewrote cannot be found: it stays a plain, uncommentable header.
+        if (lines[i]!.includes('data-line="0"')) {
+            lines[i] = lines[i]!.replace(/<button class="line-add-btn" data-line="0"[^>]*>.*?<\/button>/, '').replace(/ line" data-line="0"/, '"');
+        }
+    }
+}
+
+function phaseOpen(p: LgPhase, sourceLine: string): string {
+    const at = lineMark(sourceLine);
     const c = counts(p.tasks);
     const done = phaseDone(p);
     const state = done ? 'done' : c.done || c.running ? 'active' : 'todo';
@@ -106,25 +143,28 @@ function phaseOpen(p: LgPhase): string {
         p.files.length ? `<span class="lg-phase-files" title="${attr(p.files.join('\n'))}">${plural(p.files.length, 'file')}</span>` : '',
     ].filter(Boolean).join(' · ');
     const goal = p.goal ? `<p class="lg-phase-goal"><span>Goal</span> ${parseInline(p.goal)}</p>` : '';
-    return `<details class="lg-phase" data-phase="${attr(p.key)}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ''}${done ? '' : 'open'}>` +
+    return `<details class="lg-phase line" data-line="${at}" data-phase="${attr(p.key)}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ''}${done ? '' : 'open'}>` +
         `<summary class="lg-phase-head"><span class="lg-phase-lane">${lane}</span>` +
-        `<span class="lg-phase-title">${codicon('chevron-right')}<span class="lg-phase-name" id="phase-${attr(p.key)}" data-toc="">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress}</summary>` +
-        `<div class="lg-phase-body">${bits ? `<p class="lg-phase-meta">${bits}</p>` : ''}${goal}`;
+        `<span class="lg-phase-title">${codicon('chevron-right')}<span class="lg-phase-name line-content" id="phase-${attr(p.key)}" data-toc="">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress}` +
+        `${addButton(at, `phase ${p.key}: ${p.title}`)}</summary>` +
+        `<div class="lg-phase-body"><div class="line-comment-slot"></div>${bits ? `<p class="lg-phase-meta">${bits}</p>` : ''}${goal}`;
 }
 
 const PHASE_CLOSE = '</div></details>';
 
-function waveOpen(p: LgPhase, num: number): string {
+function waveOpen(p: LgPhase, num: number, sourceLine: string): string {
     const w = p.waves.find((x) => x.num === num);
     if (!w) return '';
+    const at = lineMark(sourceLine);
     const c = counts(w.tasks);
     const done = w.tasks.length > 0 && c.done === c.total;
     const note = w.note.replace(/\s*\(.*?\)\s*/g, ' ').replace(/^independent\s*/i, '').trim();
     const gate = w.after ? `after Wave ${w.after}` : num === 1 ? 'starts first' : '';
     const meta = [`${w.tasks.length} together`, done ? 'all done' : gate, !done && note ? note : ''].filter(Boolean).join(' · ');
-    return `<details class="lg-wave" data-wave="${num}" data-state="${done ? 'done' : 'open'}"${done ? '' : ' open'}>` +
-        `<summary class="lg-wave-head">${codicon('chevron-right')}<span class="lg-wave-name">Wave ${num}</span><span class="lg-wave-meta">${escapeHtml(meta)}</span>` +
-        `<span class="lg-wave-count">${c.done}/${c.total}${done ? ` ${codicon('check')}` : ''}</span></summary><div class="lg-wave-body">`;
+    return `<details class="lg-wave line" data-line="${at}" data-wave="${num}" data-state="${done ? 'done' : 'open'}"${done ? '' : ' open'}>` +
+        `<summary class="lg-wave-head">${codicon('chevron-right')}<span class="lg-wave-name line-content">Wave ${num}</span><span class="lg-wave-meta">${escapeHtml(meta)}</span>` +
+        `<span class="lg-wave-count">${c.done}/${c.total}${done ? ` ${codicon('check')}` : ''}</span>${addButton(at, `wave ${num} of phase ${p.key}`)}</summary>` +
+        `<div class="lg-wave-body"><div class="line-comment-slot"></div>`;
 }
 
 function checkpoint(p: LgPhase, text: string): string {
@@ -233,7 +273,7 @@ export function preprocessLedgerTasks(markdown: string, currentTaskId: string | 
         if (ph) {
             closePhase();
             phase = model.phases[++phaseIdx]!;
-            out.push(phaseOpen(phase));
+            out.push(phaseOpen(phase, line));
             continue;
         }
 
@@ -262,7 +302,7 @@ export function preprocessLedgerTasks(markdown: string, currentTaskId: string | 
         const w = line.match(lineKinds.WAVE_LINE);
         if (w) {
             if (inWave) out.push(PHASE_CLOSE);
-            out.push(`${inLanes ? '' : '<div class="lg-lanes">'}${waveOpen(phase, Number(w[1]))}`);
+            out.push(`${inLanes ? '' : '<div class="lg-lanes">'}${waveOpen(phase, Number(w[1]), line)}`);
             inLanes = true;
             inWave = true;
             continue;

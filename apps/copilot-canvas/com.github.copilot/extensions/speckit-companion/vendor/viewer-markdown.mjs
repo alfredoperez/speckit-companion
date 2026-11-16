@@ -13,6 +13,7 @@ var ID_PATTERN = /^[A-Z]{1,4}-?\d{1,4}[a-z]?$/;
 function familyClass(family) {
   return `lg-fam-${family}`;
 }
+var COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
 function codicon(name) {
   return `<span class="codicon codicon-${name.replace(/[^a-z0-9-]/g, "")}" aria-hidden="true"></span>`;
 }
@@ -1988,7 +1989,37 @@ function tasksHeader(model) {
 function phaseChips(p) {
   return p.mvp ? '<span class="lg-phase-chip">MVP</span>' : "";
 }
-function phaseOpen(p) {
+var LINE_MARK = /@@lg:([^@]*)@@/g;
+function lineMark(source) {
+  return `@@lg:${encodeURIComponent(source)}@@`;
+}
+function addButton(mark, what) {
+  const name = attr(`Add comment to ${what}`);
+  return `<button class="line-add-btn" data-line="${mark}" title="${name}" aria-label="${name}">${COMMENT_ICON_SVG}</button>`;
+}
+function resolveLedgerLines(lines, source) {
+  if (!lines.some((l) => l.includes("@@lg:"))) return;
+  const sourceLines = source.split("\n").map((l) => l.trim());
+  let cursor = 0;
+  for (let i = 0; i < lines.length; i++) {
+    if (!lines[i].includes("@@lg:")) continue;
+    const here = /* @__PURE__ */ new Map();
+    lines[i] = lines[i].replace(LINE_MARK, (_m, enc) => {
+      const seen = here.get(enc);
+      if (seen) return seen;
+      const found = sourceLines.indexOf(decodeURIComponent(enc).trim(), cursor);
+      if (found !== -1) cursor = found + 1;
+      const num = String(found + 1);
+      here.set(enc, num);
+      return num;
+    });
+    if (lines[i].includes('data-line="0"')) {
+      lines[i] = lines[i].replace(/<button class="line-add-btn" data-line="0"[^>]*>.*?<\/button>/, "").replace(/ line" data-line="0"/, '"');
+    }
+  }
+}
+function phaseOpen(p, sourceLine) {
+  const at = lineMark(sourceLine);
   const c = counts(p.tasks);
   const done = phaseDone(p);
   const state = done ? "done" : c.done || c.running ? "active" : "todo";
@@ -2001,18 +2032,19 @@ function phaseOpen(p) {
     p.files.length ? `<span class="lg-phase-files" title="${attr(p.files.join("\n"))}">${plural(p.files.length, "file")}</span>` : ""
   ].filter(Boolean).join(" \xB7 ");
   const goal = p.goal ? `<p class="lg-phase-goal"><span>Goal</span> ${parseInline(p.goal)}</p>` : "";
-  return `<details class="lg-phase" data-phase="${attr(p.key)}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ""}${done ? "" : "open"}><summary class="lg-phase-head"><span class="lg-phase-lane">${lane}</span><span class="lg-phase-title">${codicon("chevron-right")}<span class="lg-phase-name" id="phase-${attr(p.key)}" data-toc="">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress2}</summary><div class="lg-phase-body">${bits ? `<p class="lg-phase-meta">${bits}</p>` : ""}${goal}`;
+  return `<details class="lg-phase line" data-line="${at}" data-phase="${attr(p.key)}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ""}${done ? "" : "open"}><summary class="lg-phase-head"><span class="lg-phase-lane">${lane}</span><span class="lg-phase-title">${codicon("chevron-right")}<span class="lg-phase-name line-content" id="phase-${attr(p.key)}" data-toc="">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress2}${addButton(at, `phase ${p.key}: ${p.title}`)}</summary><div class="lg-phase-body"><div class="line-comment-slot"></div>${bits ? `<p class="lg-phase-meta">${bits}</p>` : ""}${goal}`;
 }
 var PHASE_CLOSE = "</div></details>";
-function waveOpen(p, num) {
+function waveOpen(p, num, sourceLine) {
   const w = p.waves.find((x) => x.num === num);
   if (!w) return "";
+  const at = lineMark(sourceLine);
   const c = counts(w.tasks);
   const done = w.tasks.length > 0 && c.done === c.total;
   const note2 = w.note.replace(/\s*\(.*?\)\s*/g, " ").replace(/^independent\s*/i, "").trim();
   const gate = w.after ? `after Wave ${w.after}` : num === 1 ? "starts first" : "";
   const meta = [`${w.tasks.length} together`, done ? "all done" : gate, !done && note2 ? note2 : ""].filter(Boolean).join(" \xB7 ");
-  return `<details class="lg-wave" data-wave="${num}" data-state="${done ? "done" : "open"}"${done ? "" : " open"}><summary class="lg-wave-head">${codicon("chevron-right")}<span class="lg-wave-name">Wave ${num}</span><span class="lg-wave-meta">${escapeHtml(meta)}</span><span class="lg-wave-count">${c.done}/${c.total}${done ? ` ${codicon("check")}` : ""}</span></summary><div class="lg-wave-body">`;
+  return `<details class="lg-wave line" data-line="${at}" data-wave="${num}" data-state="${done ? "done" : "open"}"${done ? "" : " open"}><summary class="lg-wave-head">${codicon("chevron-right")}<span class="lg-wave-name line-content">Wave ${num}</span><span class="lg-wave-meta">${escapeHtml(meta)}</span><span class="lg-wave-count">${c.done}/${c.total}${done ? ` ${codicon("check")}` : ""}</span>${addButton(at, `wave ${num} of phase ${p.key}`)}</summary><div class="lg-wave-body"><div class="line-comment-slot"></div>`;
 }
 function checkpoint(p, text) {
   const done = phaseDone(p);
@@ -2113,7 +2145,7 @@ function preprocessLedgerTasks(markdown, currentTaskId2 = null) {
     if (ph) {
       closePhase();
       phase = model.phases[++phaseIdx];
-      out.push(phaseOpen(phase));
+      out.push(phaseOpen(phase, line));
       continue;
     }
     if (/^##\s/.test(line)) {
@@ -2145,7 +2177,7 @@ function preprocessLedgerTasks(markdown, currentTaskId2 = null) {
     const w = line.match(lineKinds.WAVE_LINE);
     if (w) {
       if (inWave) out.push(PHASE_CLOSE);
-      out.push(`${inLanes ? "" : '<div class="lg-lanes">'}${waveOpen(phase, Number(w[1]))}`);
+      out.push(`${inLanes ? "" : '<div class="lg-lanes">'}${waveOpen(phase, Number(w[1]), line)}`);
       inLanes = true;
       inWave = true;
       continue;
@@ -3464,7 +3496,6 @@ function highlightTree(text) {
     return m ? `${colorDirs(m[1])}<span class="tree-comment">${m[2]}</span>` : colorDirs(line);
   }).join("\n");
 }
-var COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
 function continuesParagraph(previous, next) {
   if (/( {2}|\\)$/.test(previous)) return false;
   return !/^\s*(\*\*|__|<|\||!\[|(Given|When|Then|And|But)\b|[A-Z][\w ]{0,24}:\s)/.test(next);
@@ -3546,6 +3577,7 @@ function renderMarkdown(markdown) {
   let html = "";
   const slugCounts = /* @__PURE__ */ new Map();
   const lines = markdown.split("\n");
+  resolveLedgerLines(lines, source);
   indexScreens(lines);
   const sourceLineOf = mapToSourceLines(source, markdown);
   let inCodeBlock = false;

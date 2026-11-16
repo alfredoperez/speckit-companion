@@ -58,7 +58,7 @@ describe('preprocessTaskPhases', () => {
         const html = renderMarkdown(tasks);
 
         // Phase header rendered (not a raw "## Phase" heading)…
-        expect(html).toContain('class="lg-phase"');
+        expect(html).toContain('class="lg-phase line"');
         expect(html).toContain('lg-phase-chip');
         expect(html).not.toContain('<h2>Phase 3');
         // …and the checkbox list below it still renders as task items.

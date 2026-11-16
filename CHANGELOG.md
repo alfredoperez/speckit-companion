@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - **Bugs and Ideas know a turned-off extension.** A disabled extension shows ==read only with a way to turn it on==, and a same-name extension from another author is labelled. ([#1015](https://github.com/alfredoperez/speckit-companion/pull/1015)) <!-- area: sidebar -->
 
 ### Fixed
+- **Task phases and waves take comments again.** Hover a phase or wave header and use ==the plus button==, and the phase stays open. ([#1018](https://github.com/alfredoperez/speckit-companion/pull/1018)) <!-- area: spec-viewer -->
 - **Spec titles and task notes stop repeating.** Every tab keeps the spec's own title, and a wave's shared notes show ==once instead of on every task==. ([#1010](https://github.com/alfredoperez/speckit-companion/pull/1010)) <!-- area: spec-viewer -->
 
 ## [0.39.0] - 2026-11-12
