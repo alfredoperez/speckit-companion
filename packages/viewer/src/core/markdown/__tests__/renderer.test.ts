@@ -234,7 +234,7 @@ describe('a callout line', () => {
 
     it('leaves a phase header that follows a checkpoint as a phase header', () => {
         const html = renderMarkdown('**Checkpoint**: done\n## Phase 2: Next\n\n- [ ] T001 first\n');
-        expect(html).toContain('class="lg-phase"');
+        expect(html).toContain('class="lg-phase line"');
         expect(html).not.toContain('&lt;details');
     });
 
