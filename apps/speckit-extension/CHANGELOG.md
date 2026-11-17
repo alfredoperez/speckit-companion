@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
-- **Doctor checks plugin freshness.** It flags each Claude Code plugin your Companion config calls that is ==behind its marketplace==, naming both versions. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: install -->
+- **Doctor checks plugin freshness.** It flags each Claude Code plugin your Companion config or project nodes call that is ==behind its marketplace==, naming both versions. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: install -->
 
 ### Changed
 - **Plan writes only the design docs needed.** A data model is written only for ==a new entity==, and contracts only for a new or changed API. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: pipeline -->

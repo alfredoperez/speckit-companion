@@ -939,7 +939,12 @@ def check_plugins(root: Path, plugins_dir: Path | None = None) -> tuple:
         place = (marketplaces.get(market) or {}).get("installLocation") if isinstance(marketplaces.get(market), dict) else None
         offered = _marketplace_version(place, name)
         have_t, offered_t = _version_tuple(have), _version_tuple(offered)
-        if have_t is None or offered_t is None:
+        if have is None and offered_t is not None:
+            findings.append(Finding("plugins", "note", f"{name}: not installed",
+                                    f"The project's Companion nodes call {name}, but it is not installed. "
+                                    f"Run `claude plugin install {key}`.",
+                                    {"plugin": key, "installed": None, "marketplace": offered}))
+        elif have_t is None or offered_t is None:
             missing = "installed version" if have_t is None else f"version in the {market} marketplace"
             findings.append(Finding("plugins", "note", f"{name}: version unknown",
                                     f"Could not read the {missing}, so freshness was not checked.",

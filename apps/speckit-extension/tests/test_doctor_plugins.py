@@ -57,12 +57,18 @@ class PluginFreshness(unittest.TestCase):
 
     def test_an_unreadable_version_is_reported_unknown_not_failed(self):
         self.node("Run alfredo-experiments:bench and angular-plugin:code-skill.")
-        self.installed(angular_plugin="3.38.3")
-        self.offered({"name": "angular-plugin"}, {"name": "alfredo-experiments", "version": "1.0.0"})
+        self.installed(angular_plugin="3.38.3", alfredo_experiments="1.0.0")
+        self.offered({"name": "angular-plugin"}, {"name": "alfredo-experiments"})
         status, found = self.findings()
         self.assertEqual(status.state, "ran")
         self.assertEqual(found, [("note", "alfredo-experiments: version unknown"),
                                  ("note", "angular-plugin: version unknown")])
+
+    def test_a_plugin_in_the_marketplace_but_not_installed_says_so(self):
+        self.node("Run alfredo-experiments:bench.")
+        self.installed()
+        self.offered({"name": "alfredo-experiments", "version": "1.0.0"})
+        self.assertEqual(self.findings()[1], [("note", "alfredo-experiments: not installed")])
 
     def test_nodes_that_name_no_plugin_are_not_applicable(self):
         self.node("No plugin here: just prose.")

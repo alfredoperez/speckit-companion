@@ -73,9 +73,9 @@ PLAN_CLOSED = [
 
 
 #: A spec that names a new entity and a new API, so plan calls for both design docs.
-SPEC_BOTH = "# spec\n\nFR-001: expose a `POST /things` endpoint.\n\n### Key Entities\n\n- **Thing**: new record.\n"
+SPEC_BOTH = "# spec\n\n## Functional Requirements\n\nFR-001: expose a `POST /things` endpoint.\n\n### Key Entities\n\n- **Thing**: new record.\n"
 #: The FIRM-12078 shape: a rename on an entity that already exists, no API.
-SPEC_RENAME = ("# spec\n\nFR-001: Staff MUST be able to rename a stage.\n\n### Key Entities\n\n"
+SPEC_RENAME = ("# spec\n\n## Functional Requirements\n\nFR-001: Staff MUST be able to rename a stage.\n\n### Key Entities\n\n"
                "- **Stage** *(existing)*: a named group of tasks.\n\n## Success Criteria\n\n- the rest holds\n")
 
 
@@ -141,11 +141,20 @@ class DispatchBriefs(unittest.TestCase):
 
     def test_each_design_doc_follows_its_own_signal(self):
         entity_only = "# spec\n\n## Key Entities\n\n- **Invoice**: a bill.\n- **Stage** *(existing)*: tasks.\n"
-        api_only = "# spec\n\nThe GraphQL mutation gains a field.\n\n### Key Entities\n\n- **Stage** *(existing)*: x\n"
+        api_only = "# spec\n\n## Functional Requirements\n\nThe GraphQL mutation gains a field.\n\n### Key Entities\n\n- **Stage** *(existing)*: x\n"
         self.assertEqual(dispatch_briefs.design_docs(self._feature(entity_only)), ["data-model.md"])
         self.assertEqual(dispatch_briefs.design_docs(self._feature(api_only)), ["contracts/"])
         out = self._run(self._feature(entity_only, size="normal"), "--docs").stdout
         self.assertIn("write data-model.md yourself; skip contracts/", out)
+
+    def test_a_nested_bullet_under_an_existing_entity_is_not_a_new_entity(self):
+        spec = "# spec\n\n### Key Entities\n\n- **Stage** *(existing)*: tasks.\n  - name: renamed\n"
+        self.assertEqual(dispatch_briefs.design_docs(self._feature(spec)), [])
+
+    def test_an_api_word_outside_requirements_does_not_call_for_contracts(self):
+        spec = ("# spec\n\n## Edge Cases\n\n- The CLI and API stay as they are.\n\n"
+                "## Functional Requirements\n\nFR-001: rename a stage.\n")
+        self.assertEqual(dispatch_briefs.design_docs(self._feature(spec)), [])
 
     def test_an_unreadable_spec_keeps_both_design_docs(self):
         with tempfile.TemporaryDirectory() as tmp:

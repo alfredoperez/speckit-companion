@@ -53,13 +53,27 @@ _API = re.compile(r"\b(?:API|REST|GraphQL|gRPC|RPC|CLI)\b|(?i:\bapis?\b|\bendpoi
                   r"|`--[\w-]+`|\b(?:GET|POST|PUT|PATCH|DELETE)\s+/")
 
 
+_INTERFACE_HEADING = re.compile(r"^#{2,4}\s+(?:Functional Requirements|Verbatim Constraints)\b", re.IGNORECASE)
+
+
+def _interface_text(text: str) -> str:
+    """The body of the Functional Requirements and Verbatim Constraints sections."""
+    out, inside = [], False
+    for line in text.splitlines():
+        if line.startswith("#"):
+            inside = bool(_INTERFACE_HEADING.match(line.strip()))
+        elif inside:
+            out.append(line)
+    return "\n".join(out)
+
+
 def _entity_lines(text: str) -> list:
-    """The bullet lines under the spec's Key Entities heading."""
+    """The top-level bullet lines under the spec's Key Entities heading."""
     lines, inside = [], False
     for line in text.splitlines():
         if line.startswith("#"):
             inside = bool(_ENTITIES_HEADING.match(line.strip()))
-        elif inside and line.lstrip().startswith(("- ", "* ")):
+        elif inside and line.startswith(("- ", "* ")):
             lines.append(line)
     return lines
 
@@ -76,7 +90,7 @@ def design_docs(feature_dir: Path) -> list:
     wanted = []
     if any(not _EXISTING.search(line) for line in _entity_lines(text)):
         wanted.append("data-model.md")
-    if _API.search(text):
+    if _API.search(_interface_text(text)):
         wanted.append("contracts/")
     return wanted
 
