@@ -1,12 +1,15 @@
 import * as vscode from 'vscode';
 import { registerProcessCreateCommands } from '../processCreateCommands';
-import { processExtensionState } from '../../../speckit/processExtensions';
+import { processExtensionInfo } from '../../../speckit/processExtensions';
 
 jest.mock('../../../speckit/processExtensions', () => ({
-    processExtensionState: jest.fn(),
+    processExtensionInfo: jest.fn(),
 }));
 
-const state = processExtensionState as jest.Mock;
+const info = processExtensionInfo as jest.Mock;
+const state = {
+    mockReturnValue: (found: string, disabled = false) => info.mockReturnValue({ state: found, disabled, foreign: false }),
+};
 const provider = { show: jest.fn() };
 
 function handlerFor(command: string): () => Promise<void> {
@@ -33,7 +36,7 @@ describe.each([
         state.mockReturnValue(found);
         await handlerFor(command)();
 
-        expect(state).toHaveBeenCalledWith('/ws', extensionId);
+        expect(info).toHaveBeenCalledWith('/ws', extensionId);
         expect(provider.show).toHaveBeenCalledWith(kind);
         expect(vscode.window.showWarningMessage).not.toHaveBeenCalled();
     });
@@ -56,12 +59,22 @@ describe.each([
         expect(provider.show).not.toHaveBeenCalled();
     });
 
+    it('offers to turn a disabled extension on and opens nothing', async () => {
+        state.mockReturnValue('present', true);
+        (vscode.window.showWarningMessage as jest.Mock).mockResolvedValue('Turn it on');
+        await handlerFor(command)();
+
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(`${warning} It is turned off.`, 'Turn it on');
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.processes.enableExtension', extensionId);
+        expect(provider.show).not.toHaveBeenCalled();
+    });
+
     it('says a project folder is needed and opens nothing without one', async () => {
         (vscode.workspace as { workspaceFolders: unknown }).workspaceFolders = undefined;
         await handlerFor(command)();
 
         expect(vscode.window.showErrorMessage).toHaveBeenCalled();
-        expect(state).not.toHaveBeenCalled();
+        expect(info).not.toHaveBeenCalled();
         expect(provider.show).not.toHaveBeenCalled();
     });
 

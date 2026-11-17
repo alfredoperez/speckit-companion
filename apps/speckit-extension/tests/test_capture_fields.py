@@ -126,19 +126,43 @@ class CaptureFieldTests(unittest.TestCase):
                            "speckit-extension/tests/test_living_validate.py,"
                            "src/features/specs/__tests__/requirementSlices.test.ts",
                            written["FR-003"]["title"])
+        wc.upsert_coverage(self.fd, "FR-004", written["FR-004"]["tasks"], None,
+                           assumes=written["FR-004"]["assumes"])
         rows = json.loads((fixtures / "expected-rows.json").read_text(encoding="utf-8"))
         produced = _ctx(self.fd)["coverage"]
         for row in rows:
             entry = produced[row["req"]]
             self.assertEqual(entry.get("title"), row.get("title"))
             self.assertEqual(entry["tasks"], row["tasks"])
-            self.assertEqual(entry["tests"], row["tests"])
+            self.assertEqual(entry.get("tests", []), row["tests"])
+            self.assertEqual(entry.get("assumes"), row.get("assumes"))
 
     def test_the_typescript_half_reads_the_same_fixture(self) -> None:
         twin = (Path(__file__).resolve().parents[3] / "apps" / "vscode" / "src" / "features" / "spec-viewer"
                 / "__tests__" / "stateDerivation.test.ts").read_text(encoding="utf-8")
         self.assertIn("coverage-shape", twin)
         self.assertIn("expected-rows.json", twin)
+
+    def test_an_assumption_alone_creates_the_entry(self) -> None:
+        wc.upsert_coverage(self.fd, "FR-004", None, None, assumes="  the clock, in UTC  ")
+        self.assertEqual(_ctx(self.fd)["coverage"]["FR-004"], {"assumes": "the clock, in UTC"})
+
+    def test_an_assumption_keeps_the_title_tasks_and_tests(self) -> None:
+        wc.upsert_coverage(self.fd, "FR-001", ["T001"], ["a.test.ts"], "Saves filters")
+        wc.upsert_coverage(self.fd, "FR-001", None, None, assumes="the orders index")
+        wc.upsert_coverage(self.fd, "FR-001", None, None, assumes="the orders index, warm")
+        self.assertEqual(_ctx(self.fd)["coverage"]["FR-001"], {
+            "title": "Saves filters", "tasks": ["T001"], "tests": ["a.test.ts"],
+            "assumes": "the orders index, warm",
+        })
+
+    def test_a_blank_or_non_text_assumption_writes_nothing(self) -> None:
+        self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", None, None, assumes="   "))
+        self.assertIsNone(wc.upsert_coverage(self.fd, "FR-001", None, None, assumes=["a list"]))
+
+    def test_the_batch_lands_an_assumption_like_the_flag(self) -> None:
+        wc.apply_batch(self.fd, json.dumps({"coverage": [{"req": "FR-002", "tasks": "T003", "assumes": "the database"}]}), "implement")
+        self.assertEqual(_ctx(self.fd)["coverage"]["FR-002"], {"tasks": ["T003"], "assumes": "the database"})
 
     def test_coverage_upsert_keeps_other_requirements(self) -> None:
         wc.upsert_coverage(self.fd, "FR-001", ["T001"], None)
@@ -378,37 +402,14 @@ class CloseTaskTests(unittest.TestCase):
         self.assertEqual(len(finishes), 1)
 
 
-class LivingSpecRulesRecordTests(unittest.TestCase):
-    """What a run was told, recorded beside what it read."""
+class RiskGlobTest(unittest.TestCase):
+    """The risk tier's glob matcher: `**` any depth, `*` one segment, case-insensitive."""
 
-    def setUp(self) -> None:
-        self._tmp = tempfile.TemporaryDirectory()
-        self.fd = Path(self._tmp.name) / "specs" / "_zzz-rules"
-        self.fd.mkdir(parents=True)
-
-    def tearDown(self) -> None:
-        self._tmp.cleanup()
-
-    def test_authored_rules_land_beside_the_loaded_capabilities(self) -> None:
-        capture.set_living_specs_loaded(self.fd, ["checkout"])
-        capture.set_living_specs_rules(self.fd, {"spec": ["one outcome per scenario"]})
-        block = _ctx(self.fd)["livingSpecs"]
-        self.assertEqual(block["loaded"], ["checkout"])
-        self.assertEqual(block["rules"]["spec"], ["one outcome per scenario"])
-
-    def test_a_project_with_no_rules_writes_nothing(self) -> None:
-        capture.set_living_specs_loaded(self.fd, ["checkout"])
-        self.assertIsNone(capture.set_living_specs_rules(self.fd, {"spec": [], "plan": []}))
-        self.assertNotIn("rules", _ctx(self.fd)["livingSpecs"])
-
-    def test_a_corrupt_prior_record_does_not_raise_inside_the_writer(self) -> None:
-        (self.fd / ".spec-context.json").write_text(
-            json.dumps({"livingSpecs": {"rules": {"spec": [["not a string"]]}}})
-        )
-        capture.set_living_specs_rules(self.fd, {"spec": ["a real rule"]})
-        self.assertIn("a real rule", _ctx(self.fd)["livingSpecs"]["rules"]["spec"])
-
-    def test_re_recording_the_same_rules_does_not_duplicate_them(self) -> None:
-        for _ in range(2):
-            capture.set_living_specs_rules(self.fd, {"plan": ["name the capability"]})
-        self.assertEqual(_ctx(self.fd)["livingSpecs"]["rules"]["plan"], ["name the capability"])
+    def test_globs_follow_posix_path_rules(self) -> None:
+        m = capture.glob_matches
+        self.assertTrue(m("src/checkout/**", "src/checkout/cart/x.ts"))
+        self.assertTrue(m("src/checkout/**", "src/checkout"))
+        self.assertTrue(m("src/**/*.test.ts", "src/a/b/c.test.ts"))
+        self.assertFalse(m("src/*.ts", "src/a/b.ts"))
+        self.assertTrue(m("src/?.ts", "src/a.ts"))
+        self.assertTrue(m("Apps/VSCode/**", "apps/vscode/x.ts"))

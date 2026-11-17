@@ -44,7 +44,7 @@ def _load_schema() -> dict | None:
                 continue
             try:
                 return json.loads(cand.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):
+            except (ValueError, OSError):
                 return None
     return None
 
@@ -132,7 +132,7 @@ def run_checks(spec_dir: Path) -> Report:
         return r
     try:
         ctx = json.loads(target.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError) as exc:
+    except (ValueError, OSError) as exc:
         r.add(False, "valid-json", f"could not parse: {exc}")
         return r
     r.add(True, "valid-json", "parses")
@@ -269,9 +269,21 @@ def run_checks(spec_dir: Path) -> Report:
         # the non-zero-gap check yet are clearly one end-of-step dump → FAIL. Only
         # by:ai finishes count; the by:extension backstop legitimately bursts.
         span = _step_span(history, "implement")
-        ai_finish_times = [at for e in history
-                            if isinstance(e.get("task"), str) and e.get("by") == "ai"
-                            and e.get("kind") == "complete" and (at := _parse_at(e.get("at")))]
+        # A wave closed in one call is one timed unit, so it counts as one finish.
+        summaries = ctx.get("task_summaries") if isinstance(ctx.get("task_summaries"), dict) else {}
+        wave_of = {t: s.get("wave") for t, s in summaries.items() if isinstance(s, dict) and s.get("wave")}
+        seen_waves: set = set()
+        ai_finish_times = []
+        for e in history:
+            if not (isinstance(e.get("task"), str) and e.get("by") == "ai" and e.get("kind") == "complete"):
+                continue
+            at = _parse_at(e.get("at"))
+            wave = wave_of.get(e["task"])
+            if at is None or (wave and wave in seen_waves):
+                continue
+            if wave:
+                seen_waves.add(wave)
+            ai_finish_times.append(at)
         if span is not None and span[2] > 0 and len(ai_finish_times) >= 3:
             step_span = span[2]
             ts = sorted(ai_finish_times)
@@ -393,21 +405,6 @@ def _fastpath(r: Report, history: list, ctx: dict) -> None:
     r.add(has_approach, "fast-path-approach",
           "approach recorded for the Overview card" if has_approach
           else "no approach on a fast-tracked spec — the Overview APPROACH card reads blank")
-
-    # livingSpecs.loaded is legitimately absent when no covered area matched (INFO); a present record must be a non-empty list of name strings.
-    living = ctx.get("livingSpecs")
-    if living is not None and not isinstance(living, dict):
-        r.add(False, "fast-path-living-specs", f"livingSpecs is malformed: {living!r} — expected an object with a loaded[] list")
-        return
-    loaded = (living or {}).get("loaded")
-    if loaded is None:
-        r.add(None, "fast-path-living-specs", "no living specs recorded (no covered area matched, or feature off)")
-    else:
-        well_formed = (isinstance(loaded, list) and len(loaded) > 0
-                       and all(isinstance(n, str) and n.strip() for n in loaded))
-        r.add(well_formed, "fast-path-living-specs",
-              f"livingSpecs.loaded recorded: {loaded}" if well_formed
-              else f"livingSpecs.loaded is malformed: {loaded!r} — expected a non-empty list of capability names")
 
 
 def _timing(r: Report, history: list) -> None:

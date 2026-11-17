@@ -57,15 +57,10 @@ Pictures and footage of the real product, and the scripted checks that take them
 | `converge-footer`, `converge-sent`, `converge-terminal` | A finished spec's footer, the viewer beside the terminal after Converge, the terminal alone |
 | `joined-paragraph` | A wrapped paragraph hovered, with its one comment button |
 | `tab-overview`, `tab-specification`, `tab-plan`, `tab-tasks` | Each tab of the tasked demo spec |
-| `living-specs-pane` | The Living Specs pane alone, with coverage counts, a drift flag and the update button |
-| `living-spec`, `living-spec-requirement`, `living-spec-colocated` | A capability's page, one requirement with its scenario, and a colocated spec |
-| `living-spec-drifted` | The requirement marked Drifted |
-| `living-specs-window`, `living-drift-window` | Whole window: the tree beside a capability's requirements, and beside the drifted one |
-| `overview-living-specs`, `overview-living-specs-window` | The Overview's living specs region, alone and in the whole window |
 | `overview-intent`, `overview-timing`, `overview-expectations`, `overview-verified`, `overview-decisions`, `overview-coverage`, `overview-run-log` | Each other region of a finished run's Overview |
 | `sidebar-hover`, `sidebar-more-actions` | A spec row hovered, and its More Actions menu open |
 | `plan-blocks-window`, `plan-blocks-calls`, `plan-blocks-states-picked`, `plan-blocks-screen`, `plan-blocks-code-pin`, `plan-blocks-state-shows-screen` | Plan block cards from three real Conduit plans (`apps/vscode/tests/fixtures/plan-blocks/`), one card per crop, each with a `_full-` whole-window capture. Step `shot-plan-blocks`; shot dark for the blog (`--theme dark`) |
-| `rich-spec-stories`, `rich-spec-scenarios`, `rich-spec-tasks`, `rich-overview`, `rich-overview-verified`, `rich-sidebar-specs`, `rich-sidebar-bugs-ideas` | A finished spec copied from this repository (`634-stock-hooks-only`), with five more completed ones beside it: the story card, its acceptance scenarios, the tasks with their files, the Overview's intent and Verified regions, and the side bar's Specs pane and its Bugs and Ideas panes. Step `shot-rich-specs` |
+| `rich-spec-stories`, `rich-spec-scenarios`, `rich-spec-tasks`, `rich-overview`, `rich-overview-verified`, `rich-sidebar-specs`, `rich-sidebar-bugs`, `rich-sidebar-ideas` | A finished spec copied from this repository (`634-stock-hooks-only`), with five more completed ones beside it: the story card, its acceptance scenarios, the tasks with their files, the Overview's intent and Verified regions, and the side bar's Specs, Bugs and Ideas panes, one picture each. Step `shot-rich-specs` |
 | `tall-viewer`, `tall-tasks`, `tall-overview-intent`, `tall-overview-expectations`, `tall-overview-verified`, `tall-overview-decisions`, `tall-overview-coverage`, `tall-block-states`, `tall-block-calls`, `tall-block-screen`, `tall-block-code` | Portrait crops for a carousel or brochure: the window as tall as the screen with about 860px of editor, the page header, rail and footer hidden, each Overview region and each plan block with its heading. Step `shot-tall` |
 
 ## Adding a step or a crop
@@ -129,7 +124,6 @@ Each writes `.record/<name>/` (gitignored): a numbered sequence of PNG frames pl
 
 | Recording | Script | What it films |
 | --- | --- | --- |
-| `living-spec-read` | `desktop-check.mjs` | A living spec scrolled from its counts past the requirement marked Drifted |
 | `tasks-ticking` | `desktop-check.mjs` | The Tasks tab repainting as three tasks finish |
 | `mod-tick-task` | `terminal-check.mjs` | The mod's pane and band counting tasks ticked from outside |
 | `mod-session-start` | `terminal-check.mjs` | Claude Code starting in a project with specs: the pane opens by itself and three tasks tick |
@@ -143,7 +137,7 @@ Each writes `.record/<name>/` (gitignored): a numbered sequence of PNG frames pl
 **One recording at a time.**
 
 - Terminal: `npm run record:terminal -- --only film-session-start`, or `-- --only start,film-tick-task` (`film-tick-task` types into the session, so it needs `start`).
-- Extension: `npm run record` already passes `--only`, and a second one is ignored. Call the script: `npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-living-spec` (or `film-tasks-ticking`).
+- Extension: `npm run record` already passes `--only`, and a second one is ignored. Call the script: `npm run compile && npm run compile-web && node tooling/scripts/desktop-check.mjs --record .record --only film-tasks-ticking`.
 - Board: `npm run record:board` always records all three.
 
 **Record only what moves on its own**: a long document going past, or a run advancing. A dialog opening is one state arriving, and a still says it better. A recording is tens of megabytes, so nothing under `.record/` is committed.

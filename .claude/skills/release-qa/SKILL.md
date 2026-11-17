@@ -87,6 +87,8 @@ Claude Code, on the Mac:
 
 Then the user pastes the handoff path into Claude Desktop, which clicks through the four parts that still need eyes (first open, the stock workspace and two roots, the timed run, the GitHub Copilot app) and replies with one line per step. The handoff is short on purpose: a computer-use grant lapses after thirty idle minutes, so nothing a script can decide is on it. When its reply reports a terminal question, answer it from Bash (the headless fallback) and tell the user to have Desktop carry on. Claude Code turns the reply into the report, runs `timing.py report` and `check_capture.py` on the timed spec (`TIMED` in `stage.env`), stops the recorder (`touch shots/STOP`), and picks screenshots from `shots/`.
 
+Run release QA from its own worktree (`tooling/scripts/new-worktree.sh`) and replace the linked `node_modules` there with a real `npm ci`, so a second session switching the main checkout cannot break the run. The Copilot canvas dev loader in `~/.copilot/extensions/speckit-companion/` still imports the board from the main checkout by absolute path, so keep the main checkout's branch steady during a canvas run.
+
 What staging has to get right, each learned the hard way:
 
 - Any folder with its own `.claude/` shows Claude Code's trust prompt, even with `bypassPermissions`. `trust-claude-folder.py` answers it once; Claude Code records the answer itself.
@@ -124,7 +126,7 @@ Sections, in this order:
 2. **What the release changed**: the surfaces that matched, the Unreleased claims, and the `no QA mapping` paths.
 3. **Checks**: one row per check, `check | PASS/FAIL/BLOCKED | one-line note`, automated and desktop together, in the order they ran.
 4. **Timing**: one row per step, one column per surface (VS Code, canvas, terminal), the recorded span with the wall clock in brackets. Build it from `timing.md`. A gap over about 10s or a missing span is a finding. A surface that did not run shows `-`.
-5. **Findings**, most severe first, one block each, every FAIL a fix candidate:
+5. **Findings**, most severe first, one block each, every FAIL a fix candidate. Before filing a product FAIL from an observation check, read the spec's `.spec-context.json` history and the transcript's tool names: a fold is plan and tasks boundaries `by: extension` within milliseconds, and a `view` of a skill file is a read, not a run, so the FAIL may be the check's own (#978, #1002).
 
 ```markdown
 ### F<n> — <one-line symptom>
@@ -151,7 +153,7 @@ Run each and stop with a one-line reason on the first failure. The two Copilot i
 - [ ] `specify extension --help` works (source build of spec-kit, see `apps/speckit-extension/docs/install.md`)
 - [ ] `claude --version` works and `claude -p "say ok"` answers (the VS Code provider shells out to it)
 - [ ] `code --version` works
-- [ ] `test -f ~/.copilot/extensions/speckit-companion/extension.mjs` (canvas loader, it imports `$REPO/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/extension.mjs`)
+- [ ] `test -f ~/.copilot/extensions/speckit-companion/extension.mjs` (canvas loader), and the path it imports exists: `grep -o "import('[^']*')" ~/.copilot/extensions/speckit-companion/extension.mjs` must name `$REPO/apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/extension.mjs`. A loader left on an old path makes every canvas check BLOCKED with "the canvas was never declared".
 - [ ] `gh api /copilot_internal/user --jq '[.copilot_plan, .chat_enabled, .copilot_app_enabled]'` shows chat enabled; a lapsed plan answers every canvas run with a 403, so stop here and say so
 - [ ] `ls "$SANDBOXES_REPO/seeds/todo/src"` (the app fixture) and `"$SANDBOXES_REPO/new-sandbox.sh" --list` names `vscode-qa` and `vscode-qa-stock`
 - [ ] `request_access` for **Visual Studio Code** and **GitHub Copilot**; confirm the returned tiers match the table above
@@ -326,7 +328,7 @@ Agent actions: in chat ask "what specs are still open?" and "show me the related
 ## Recipe: Website pages
 
 ```bash
-cd "$REPO/apps/website" && npm run preview
+cd "$REPO/apps/website" && npm run build && npm run preview
 ```
 
 Open each changed page in a browser (the `apps/website/src/content/docs/**` paths map to `/docs/...` routes) and look: images load, no layout break, links resolve. A page the diff changed only in text still gets one look. `shot.sh` a page when it fails or is docs-worthy.

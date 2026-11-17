@@ -150,7 +150,27 @@ export function reportKindOf<K extends string>(set: ReportSet<K>, filePath: stri
     return set.kinds.find(kind => fileName === `${kind}.md`);
 }
 
-/** The set's reports as viewer documents, in the set's order. */
+/** Any other markdown a bug folder holds, such as `evidence.md`: evidence first, then by name. */
+function extraReports<K extends string>(set: ReportSet<K>, directory: string): SpecDocument[] {
+    if (set.id !== 'bugs') return [];
+    let names: string[];
+    try {
+        names = fs.readdirSync(directory);
+    } catch {
+        return [];
+    }
+    const taken = new Set<string>([...set.kinds, set.overview?.type ?? '']);
+    return names
+        .filter(name => name.endsWith('.md') && !taken.has(name.slice(0, -3)) && isFileInside(directory, path.join(directory, name)))
+        .sort((a, b) => (a === 'evidence.md' ? -1 : b === 'evidence.md' ? 1 : a.localeCompare(b)))
+        .map(name => {
+            const stem = name.slice(0, -3);
+            const label = stem.replace(/[-_]+/g, ' ').replace(/^./, c => c.toUpperCase());
+            return { type: `extra-${stem}` as DocumentType, label, fileName: name, filePath: path.join(directory, name), exists: true, isCore: true, category: 'core' };
+        });
+}
+
+/** The set's reports as viewer documents, in the set's order, then any other report in a bug folder. */
 export function reportDocuments<K extends string>(set: ReportSet<K>, directory: string): SpecDocument[] {
     const overview: SpecDocument[] = set.overview
         ? [{ type: set.overview.type as DocumentType, label: set.overview.label, fileName: '', filePath: '', exists: true, isCore: true, category: 'core' }]
@@ -166,5 +186,5 @@ export function reportDocuments<K extends string>(set: ReportSet<K>, directory: 
             isCore: true,
             category: 'core',
         };
-    }));
+    })).concat(extraReports(set, directory));
 }

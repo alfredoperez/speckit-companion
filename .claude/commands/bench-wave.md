@@ -49,7 +49,7 @@ A red gate means the wave is not ready to bench. Say which one and stop.
 
 ```bash
 node "$SANDBOXES_REPO"/bench/sync-templates.mjs --sizes hard --speckit keep --ext code --sweep "wave <letter>"
-node "$SANDBOXES_REPO"/bench/run-all.mjs prep --sizes hard --modes companion,companion-living
+node "$SANDBOXES_REPO"/bench/run-all.mjs prep --sizes hard --modes companion
 node "$SANDBOXES_REPO"/bench/run-all.mjs --dry-run
 ```
 

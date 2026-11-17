@@ -1,0 +1,133 @@
+/**
+ * SpecKit Companion - Inline Markdown Parsing
+ * Handles inline markdown elements like bold, italic, code, links
+ */
+
+import { linkifyIds } from './ledger/refs';
+
+const KNOWN_EXTENSIONS = new Set<string>([
+    '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+    '.md', '.json', '.jsonc',
+    '.css', '.scss',
+    '.html', '.htm',
+    '.yml', '.yaml',
+    '.py', '.sh', '.bash', '.zsh',
+    '.toml', '.lock', '.txt',
+    '.svg', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico',
+    '.vsix',
+]);
+
+const MAX_LINE = 9999999;
+
+const SAFE_URL = /^(?:https?:|mailto:|#|\/|\.{0,2}\/|[^:]*$)/i;
+
+/**
+ * A link target from a spec is someone else's text. A quote would close the
+ * attribute it lands in, and a script scheme would run on click.
+ */
+export function safeUrl(target: string): string {
+    const url = target.trim();
+    return SAFE_URL.test(url) ? url.replace(/"/g, '&quot;') : '#';
+}
+
+/**
+ * Escape HTML entities
+ */
+export function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/**
+ * Simple HTML escape for scenario content (doesn't escape markdown bold)
+ */
+export function escapeHtmlInScenario(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+const basenameOf = (code: string): string => code.slice(Math.max(code.lastIndexOf('/'), code.lastIndexOf('\\')) + 1);
+
+const isLineNumber = (lineNo: number): boolean => Number.isInteger(lineNo) && lineNo >= 1 && lineNo <= MAX_LINE;
+
+/** The clickable file chip, or null when the path is not a file the viewer opens. `code` and `label` arrive with `&`, `<` and `>` already escaped. */
+export function fileRefHtml(code: string, lineNo: number, label: string): string | null {
+    const basename = basenameOf(code);
+    const extMatch = basename.match(/\.[a-zA-Z0-9]+$/);
+    const ext = extMatch ? extMatch[0].toLowerCase() : '';
+    if (!ext || !KNOWN_EXTENSIONS.has(ext)) return null;
+    // A quote inside a code span would close the attribute it lands in and let whatever followed become markup of its own.
+    const inAttr = code.replace(/"/g, '&quot;');
+    const titleAttr = code.includes('/') ? ` title="${inAttr}"` : '';
+    const lineAttr = isLineNumber(lineNo) ? ` data-line="${lineNo}"` : '';
+    return `<button class="file-ref" data-filename="${inAttr}"${lineAttr}${titleAttr}><code>${label}</code></button>`;
+}
+
+/**
+ * Parse inline markdown elements
+ */
+/** A code span is restored after links are built, so one inside a target or alt text would land unescaped in the attribute. */
+const inAttribute = (value: string): boolean => value.includes('\x00CODE');
+
+/** `linkIds: false` leaves ids as text, for a caller that reads the id out of the row before chipping the rest. */
+export function parseInline(text: string, linkIds = true): string {
+    if (!text) return '';
+
+    // Protect inline code first: extract backtick spans so their contents
+    // are not processed by emphasis/link regexes.
+    const codeSpans: string[] = [];
+    let result = text
+        // Escape HTML first
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        // Stash inline code
+        .replace(/`([^`]+)`/g, (_match, raw) => {
+            const lineMatch = raw.match(/^(.+?):(\d+)(?:-(\d+))?$/);
+            const code: string = lineMatch ? lineMatch[1] : raw;
+            const lineNo = lineMatch ? Number(lineMatch[2]) : NaN;
+            const label = isLineNumber(lineNo) ? raw.slice(code.length - basenameOf(code).length) : basenameOf(code);
+            codeSpans.push(fileRefHtml(code, lineNo, label) ?? `<code>${raw}</code>`);
+            return `\x00CODE${codeSpans.length - 1}\x00`;
+        })
+        // Bold + Italic
+        .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+        .replace(/___(.+?)___/g, '<strong><em>$1</em></strong>')
+        // Bold
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/__(.+?)__/g, '<strong>$1</strong>')
+        // Italic — asterisk variant works as before
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        // Italic — underscore variant: only match when not inside a word
+        .replace(/(?<!\w)_([^_]+)_(?!\w)/g, '<em>$1</em>')
+        // Strikethrough
+        .replace(/~~(.+?)~~/g, '<del>$1</del>')
+        // Images
+        // Stashed like a code span, so the link pass below cannot match across the tag just built.
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, target) => {
+            if (inAttribute(alt) || inAttribute(target)) return match;
+            codeSpans.push(`<img src="${safeUrl(target)}" alt="${alt.replace(/"/g, '&quot;')}">`);
+            return `\x00CODE${codeSpans.length - 1}\x00`;
+        })
+        // Links
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, text, target) =>
+            inAttribute(target) ? match : `<a href="${safeUrl(target)}" target="_blank">${text}</a>`)
+        // Ids in prose become chips; code spans are still stashed here
+        .replace(/^[\s\S]*$/, (html) => (linkIds ? linkifyIds(html) : html))
+        // Restore inline code spans
+        .replace(/\x00CODE(\d+)\x00/g, (_match, idx) => codeSpans[parseInt(idx)]!);
+
+    // Post-process: Style acceptance scenario keywords (Given/When/Then)
+    result = result
+        .replace(/<strong>Given<\/strong>/g, '<span class="scenario-keyword scenario-given">Given</span>')
+        .replace(/<strong>When<\/strong>/g, '<span class="scenario-keyword scenario-when">When</span>')
+        .replace(/<strong>Then<\/strong>/g, '<span class="scenario-keyword scenario-then">Then</span>');
+
+    return result;
+}

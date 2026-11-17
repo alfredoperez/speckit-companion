@@ -1,0 +1,15 @@
+/**
+ * The shared colour rules: info is the accent, never a blue hue; high priority is a warning,
+ * not red; requirement and outcome ids stay neutral. Status colours mean status only.
+ */
+.sk-viewer {
+    --sk-info: var(--sk-accent);
+    --sk-info-subtle: var(--sk-accent-subtle);
+    --sk-priority-high: var(--sk-warning);
+    --sk-priority-medium: var(--sk-text-muted);
+    --sk-priority-low: var(--sk-blue);
+    --sk-id-fr: var(--sk-text-muted);
+    --sk-id-fr-subtle: var(--sk-bg-inset);
+    --sk-id-sc: var(--sk-text-muted);
+    --sk-id-sc-subtle: var(--sk-bg-inset);
+}

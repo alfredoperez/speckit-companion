@@ -62,7 +62,8 @@ export interface BugEngineView {
     runId: string;
     workflow: string;
     steps: EngineStepView[];
-    paused?: { gate: string; resume?: string };
+    /** `answerable`: the gate is spec-kit's own review gate, so the page can offer Approve and Reject. */
+    paused?: { gate: string; resume?: string; answerable?: boolean };
 }
 
 export type BugReportName = 'fix' | 'test';
@@ -103,8 +104,16 @@ export interface IdeaDecision {
     closing?: IdeaClosing;
 }
 
+/** A spec made from an idea: its name and the absolute path of its spec document. */
+export interface LinkedSpec {
+    name: string;
+    path: string;
+}
+
 export interface ReportNav {
     kind: 'bug' | 'idea';
+    /** Specs whose record names this idea's folder as their source. */
+    specs?: LinkedSpec[];
     /** Colours the header badge when the bug is waiting for review or back in To fix. */
     badgeTone?: 'review' | 'to-fix';
     page?: BugStory | IdeaDecision;

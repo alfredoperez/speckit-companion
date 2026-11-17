@@ -78,20 +78,19 @@ const recordedContext = {
 
 describe('hasOverview', () => {
     it('is false for a spec with nothing recorded', () => {
-        expect(hasOverview({}, true, false)).toBe(false);
+        expect(hasOverview({}, true)).toBe(false);
     });
 
     it('is false before any viewer state exists', () => {
-        expect(hasOverview(undefined, true, false)).toBe(false);
+        expect(hasOverview(undefined, true)).toBe(false);
     });
 
-    it('is false when the Activity panel setting is off, or for a living spec', () => {
-        expect(hasOverview({ approach: 'x' }, false, false)).toBe(false);
-        expect(hasOverview({ approach: 'x' }, true, true)).toBe(false);
+    it('is false when the Activity panel setting is off', () => {
+        expect(hasOverview({ approach: 'x' }, false)).toBe(false);
     });
 
     it('is true once the spec has recorded activity', () => {
-        expect(hasOverview({ approach: 'x' }, true, false)).toBe(true);
+        expect(hasOverview({ approach: 'x' }, true)).toBe(true);
     });
 });
 

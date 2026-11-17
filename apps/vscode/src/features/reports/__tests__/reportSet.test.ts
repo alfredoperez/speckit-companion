@@ -276,6 +276,15 @@ describe('the path helpers', () => {
 });
 
 describe('reportDocuments', () => {
+    it('adds any other report in a bug folder as a tab, evidence first', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bug-extras-'));
+        for (const name of ['assessment.md', 'notes-from-agent.md', 'evidence.md', 'raw.log']) fs.writeFileSync(path.join(dir, name), '# x');
+        const docs = reportDocuments(BUGS, dir);
+        expect(docs.slice(3).map(d => [d.type, d.label])).toEqual([['extra-evidence', 'Evidence'], ['extra-notes-from-agent', 'Notes from agent']]);
+        expect(reportDocuments(IDEAS, dir).some(d => d.type === 'extra-evidence')).toBe(false);
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
     it('lists every bug kind with its label and whether it exists', () => {
         const docs = reportDocuments(BUGS, path.join(FIXTURE_BUGS, 'slug-keeps-spaces'));
         expect(docs.map(d => [d.type, d.label, d.exists])).toEqual([

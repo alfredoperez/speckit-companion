@@ -307,6 +307,90 @@ export const DossierRich: Story = {
     },
 };
 
+// Where the work came from: a ticket URL as a link, and the earlier spec it extends.
+export const DossierSourceAndLineage: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            source: 'https://github.com/acme/app/issues/42',
+            extends: 'specs/041-saved-filters',
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
+// A plain ticket id stays text.
+export const DossierSourceId: Story = {
+    render: () => {
+        viewerState.value = { ...richReasoningState, source: 'TODO-42', supersedes: 'specs/030-old-filters' };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
+// The verbatim request plus decisions: an agent's, a person's, and one reopened twice.
+export const DossierRequestAndDecisions: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            request: 'Add "dark mode" to settings.\nIt must keep <b>my</b> choice after a reload.',
+            decisions: [
+                { id: 'd1', decision: 'Store the choice in workspace state', why: 'It survives reloads.', by: 'agent', at: '2026-07-21T10:04:00Z' },
+                { id: 'd2', decision: 'Follow the editor theme by default', by: 'you', at: '2026-07-21T10:10:00Z' },
+                {
+                    id: 'd3',
+                    decision: 'Ship a toggle, no auto mode',
+                    by: 'you',
+                    at: '2026-07-22T09:00:00Z',
+                    earlier: [
+                        { decision: 'Ship auto mode only', by: 'agent', at: '2026-07-21T10:20:00Z' },
+                        { decision: 'Ship a three-way picker', by: 'you', at: '2026-07-21T15:00:00Z' },
+                    ],
+                },
+            ],
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
+// Coverage with an assumed requirement: tested, untraced, tested-with-assumption, assumed only.
+export const DossierAssumedCoverage: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            coverage: [
+                { req: 'FR-001', title: 'Persist the theme choice', tasks: ['T001'], tests: ['theme.test.ts'] },
+                { req: 'FR-002', title: 'Follow the editor theme', tasks: ['T002'], tests: [] },
+                { req: 'FR-003', title: 'Keep the choice after a reload', tasks: ['T003'], tests: ['reload.test.ts'], assumes: 'relies on VS Code workspace state surviving a reload' },
+                { req: 'FR-004', title: 'Load orders quickly', tasks: ['T040'], tests: [], assumes: 'relies on the orders index; not timed' },
+                { req: 'FR-005', title: 'A filter name is unique per user', tasks: ['T009'], tests: ['src/filters.test.ts'], weak: true },
+            ],
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
+// Verified ledger with a current check, one whose code moved on, and a reported one.
+export const DossierStaleCheck: Story = {
+    render: () => {
+        const tree = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678';
+        viewerState.value = {
+            ...richReasoningState,
+            verified: [
+                { what: 'Jest suite', command: 'npm test', result: 'passed', source: 'derived', exitCode: 0, commit: '4f2c9a1', tree, changedSince: 0 },
+                { what: 'TypeScript compile', command: 'npx tsc --noEmit', result: 'clean', source: 'derived', exitCode: 0, commit: '1b07e3c', tree, changedSince: 2 },
+                { what: 'Checked the empty state by hand', result: 'looked fine' },
+            ],
+            risk: { tier: 'high', computed: 'normal', reasons: ['12 files'], raised: { tier: 'high', reason: 'touches the orders query', by: 'ai', at: '2026-11-07T10:00:00Z' } },
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // Fully covered, no concerns: the coverage count pill reads as success and
 // no warning treatments render anywhere.
 export const DossierAllTraced: Story = {

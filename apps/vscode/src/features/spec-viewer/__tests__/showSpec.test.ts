@@ -118,6 +118,39 @@ describe('SpecViewerProvider.showSpec', () => {
         expect(renderedDocumentType()).toBe('spec');
     });
 
+    describe('the spec page gets the sibling tasks.md', () => {
+        // tasksMarkdown, the argument before the spec title.
+        const lastArg = () => {
+            const calls = (generateHtml as jest.Mock).mock.calls;
+            const call = calls[calls.length - 1];
+            return call[call.length - 2];
+        };
+        const fileBytes = (files: Record<string, string>) => (uri: vscode.Uri) =>
+            files[uri.fsPath] === undefined
+                ? Promise.reject(new Error('ENOENT'))
+                : Promise.resolve(Buffer.from(files[uri.fsPath]));
+
+        it('fills tasksMarkdown from tasks.md when it exists', async () => {
+            (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('tasks', true)]);
+            (vscode.workspace.fs.readFile as jest.Mock).mockImplementation(
+                fileBytes({ [`${SPEC_DIR}/spec.md`]: '# Spec', [`${SPEC_DIR}/tasks.md`]: '- [x] T001 [US1] a' }),
+            );
+
+            await provider.showSpec(SPEC_DIR);
+
+            expect(lastArg()).toBe('- [x] T001 [US1] a');
+        });
+
+        it('leaves it empty when there is no tasks.md', async () => {
+            (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('tasks', false)]);
+            (vscode.workspace.fs.readFile as jest.Mock).mockImplementation(fileBytes({ [`${SPEC_DIR}/spec.md`]: '# Spec' }));
+
+            await provider.showSpec(SPEC_DIR);
+
+            expect(lastArg()).toBe('');
+        });
+    });
+
     it('falls back to the first document that exists when the spec document is missing', async () => {
         (scanDocuments as jest.Mock).mockResolvedValue([
             coreDoc('spec', false),
@@ -150,6 +183,30 @@ describe('SpecViewerProvider.showSpec', () => {
         await provider.showSpec(SPEC_DIR);
 
         expect((generateHtml as jest.Mock).mock.calls.length).toBeGreaterThan(firstHtmlCalls);
+    });
+
+    it('opens a step document as soon as the run writes it, even from the Overview', async () => {
+        (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('plan', false)]);
+        await provider.showSpec(SPEC_DIR);
+        const state = (provider as any).panels.get(SPEC_DIR).state;
+        state.landing = 'overview';
+
+        (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('plan', true)]);
+        await provider.refreshIfDisplaying(`${SPEC_DIR}/plan.md`);
+
+        expect(renderedDocumentType()).toBe('plan');
+        expect((provider as any).panels.get(SPEC_DIR).state.landing).toBe('document');
+    });
+
+    it('stays on the Overview when an extra document such as research.md appears', async () => {
+        (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true)]);
+        await provider.showSpec(SPEC_DIR);
+        (provider as any).panels.get(SPEC_DIR).state.landing = 'overview';
+
+        (scanDocuments as jest.Mock).mockResolvedValue([coreDoc('spec', true), coreDoc('research', true)]);
+        await provider.refreshIfDisplaying(`${SPEC_DIR}/research.md`);
+
+        expect((provider as any).panels.get(SPEC_DIR).state.landing).toBe('overview');
     });
 
     it('opens a spec with no documents at all without failing', async () => {

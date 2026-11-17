@@ -1,17 +1,11 @@
 ---
 description: Create or update the project constitution from interactive or provided principle inputs.
 handoffs:
-- label: Build Specification
-  agent: speckit.specify
-  prompt: Implement the feature specification based on the updated constitution. I want to build...
-scripts:
-  sh: .specify/scripts/bash/resolve-template.sh constitution-template --json
-  ps: .specify/scripts/powershell/resolve-template.ps1 constitution-template -Json
-  py: .specify/scripts/python/resolve_template.py constitution-template --json
+  - label: Build Specification
+    agent: speckit.specify
+    prompt: Implement the feature specification based on the updated constitution. I want to build...
 ---
 
-
-<!-- Source: core (bundled) -->
 ## User Input
 
 ```text

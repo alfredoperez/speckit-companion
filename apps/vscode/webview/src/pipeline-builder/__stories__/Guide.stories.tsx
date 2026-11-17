@@ -92,9 +92,9 @@ const WHOLE = graph([SPECIFY, PLAN, TASKS, IMPLEMENT], {
 const HERO_SPECIFY = step('specify', [
     phase('gather', [
         node('resolve-dir', 'Resolve the spec folder', {
-            pinned: 'load-living-specs, draft-spec has to run after it',
+            pinned: 'load-context, draft-spec has to run after it',
         }),
-        node('load-living-specs', 'Load living specs', {
+        node('load-context', 'Load context', {
             kind: 'investigate', reads: ['resolve-dir'],
         }),
     ]),
@@ -169,7 +169,7 @@ export const AStepHeader: Story = {
             <Canvas graph={graph([step('specify', [
                 phase('gather', [
                     node('resolve-dir', 'Resolve the spec folder'),
-                    node('load-living-specs', 'Load living specs', { kind: 'investigate' }),
+                    node('load-context', 'Load context', { kind: 'investigate' }),
                 ]),
                 phase('author', [
                     node('draft-spec', 'Draft the spec', {

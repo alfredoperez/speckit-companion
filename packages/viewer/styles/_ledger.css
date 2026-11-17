@@ -1,0 +1,183 @@
+/**
+ * Ledger foundations: section-family hues and the shared primitives every
+ * Ledger component composes. Family hue marks (eyebrow, 2px rule, icon, faint
+ * wash); it never colours body text and never stands in for status.
+ */
+
+.lg-fam-story { --fam: var(--sk-fam-story); }
+.lg-fam-req { --fam: var(--sk-fam-req); }
+.lg-fam-decision { --fam: var(--sk-fam-decision); }
+.lg-fam-task { --fam: var(--sk-fam-task); }
+.lg-fam-data { --fam: var(--sk-fam-data); }
+.lg-fam-guard { --fam: var(--sk-fam-guard); }
+
+.lg-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--sk-font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fam, var(--sk-text-muted));
+}
+
+.lg-eyebrow .lg-eyebrow-count {
+    color: var(--sk-text-muted);
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+.lg-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    padding: 0 6px;
+    border-radius: var(--sk-radius-sm);
+    background: var(--sk-bg-inset);
+    color: var(--sk-text-primary);
+    font-family: var(--sk-font-mono);
+    font-size: 0.8em;
+    line-height: 1.7;
+    white-space: nowrap;
+    text-decoration: none;
+    vertical-align: baseline;
+}
+
+a.lg-chip:hover,
+a.lg-chip:focus-visible {
+    outline: 1px solid var(--sk-info);
+    outline-offset: 0;
+}
+
+.lg-chip--unresolved {
+    background: transparent;
+    color: var(--sk-text-muted);
+    text-decoration: underline dashed;
+    text-underline-offset: 3px;
+}
+
+.lg-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex: none;
+    background: var(--sk-text-muted);
+}
+
+.lg-dot--done { background: var(--sk-success); }
+.lg-dot--running { background: var(--sk-info); }
+.lg-dot--warn { background: var(--sk-warning); }
+.lg-dot--fail { background: var(--sk-error); }
+.lg-dot--todo { background: transparent; box-shadow: inset 0 0 0 1.5px var(--sk-text-muted); }
+
+.lg-priority {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 10px;
+    color: var(--sk-text-muted);
+    font-family: var(--sk-font-mono);
+    font-size: 11px;
+}
+
+.lg-priority i {
+    display: inline-block;
+    width: 3px;
+    background: var(--sk-border);
+}
+
+.lg-priority i:nth-child(1) { height: 4px; }
+.lg-priority i:nth-child(2) { height: 7px; }
+.lg-priority i:nth-child(3) { height: 10px; }
+.lg-priority i.on { background: var(--sk-text-body); }
+.lg-priority span { margin-left: 4px; }
+
+.lg-block {
+    border-left: 2px solid var(--fam, var(--sk-border));
+    padding-left: var(--sk-space-3);
+}
+
+.lg-wash {
+    background: color-mix(in srgb, var(--fam, var(--sk-text-muted)) var(--sk-ledger-wash), transparent);
+}
+
+.lg-flash {
+    animation: lg-flash 1.4s ease-out;
+}
+
+@keyframes lg-flash {
+    0%, 30% { background: color-mix(in srgb, var(--sk-info) 22%, transparent); box-shadow: 0 0 0 2px var(--sk-info); }
+    100% { background: transparent; box-shadow: 0 0 0 2px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lg-flash { animation: none; box-shadow: 0 0 0 2px var(--sk-info); }
+}
+
+.lg-refcard {
+    position: fixed;
+    z-index: 1000;
+    box-sizing: border-box;
+    width: max-content;
+    padding: var(--sk-space-2) var(--sk-space-3);
+    border: 1px solid var(--sk-border);
+    border-radius: var(--sk-radius-md);
+    background: var(--sk-bg-elevated, var(--sk-bg-inset));
+    color: var(--sk-text-body);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    font-size: var(--sk-text-sm);
+}
+
+.lg-refcard-eyebrow {
+    font-family: var(--sk-font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fam, var(--sk-text-muted));
+}
+
+.lg-refcard-text {
+    margin-top: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.lg-refcard-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    color: var(--sk-text-secondary);
+    font-size: 11px;
+}
+
+.lg-backpill {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--sk-border);
+    border-radius: 999px;
+    background: var(--sk-bg-elevated, var(--sk-bg-inset));
+    color: var(--sk-text-primary);
+    font-family: var(--sk-font-mono);
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.lg-backpill:hover,
+.lg-backpill:focus-visible {
+    outline: 1px solid var(--sk-info);
+}

@@ -1,6 +1,6 @@
 # SpecKit Companion — project config for speckit-companion itself.
 #
-# Run tracing needs no switch: every capture and drift call already records itself
+# Run tracing needs no switch: every capture call already records itself
 # to specs/<NNN>/.trace.jsonl, which the doctor reads at the end of implement.
 #
 # NOTE: this file is read by a constrained YAML parser. Block maps, block
@@ -17,7 +17,7 @@ commands:
           # block. This closes `execute` before the wrap-up nodes run, giving it two.
           - { type: node, ref: debug-timing }
           - { type: command, run: "python3 .specify/extensions/companion/scripts/doctor.py --chat || true" }
-          - { type: prompt, text: "Read the doctor report above and act on it by this rule. FIX IN THIS RUN only what is this run's own unfinished bookkeeping — tasks completed but never journaled, a living-spec delta not yet folded. Those are yours and they are cheap. DO NOT fix anything else here: drift, template violations, step bleed, and capture failures are separate work, and folding them into the tail of an unrelated spec produces a diff nobody can review. Some findings cannot be fixed at all — history is append-only, so a journal written in one burst stays that way. For everything you are not fixing, record one concern on the spec naming what the doctor found. Then, only if there are problem-severity findings that are not self-inflicted, open ONE GitHub issue for the run with the doctor's own output as the body — one issue per run, never one per finding. If every finding is clean or self-inflicted, say so and open nothing." }
+          - { type: prompt, text: "Read the doctor report above and act on it by this rule. FIX IN THIS RUN only what is this run's own unfinished bookkeeping — tasks completed but never journaled. That is yours and it is cheap. DO NOT fix anything else here: template violations, step bleed, and capture failures are separate work, and folding them into the tail of an unrelated spec produces a diff nobody can review. Some findings cannot be fixed at all — history is append-only, so a journal written in one burst stays that way. For everything you are not fixing, record one concern on the spec naming what the doctor found. Then, only if there are problem-severity findings that are not self-inflicted, open ONE GitHub issue for the run with the doctor's own output as the body — one issue per run, never one per finding. If every finding is clean or self-inflicted, say so and open nothing." }
         implement-exec:
           - { type: node, ref: debug-timing }
       after:
@@ -26,17 +26,16 @@ commands:
           # wall clock and found nothing the self-review below had not already caught.
           - { type: prompt, text: "Before this work is committed, self-review your full diff against the project conventions and the review checklist, and fix any violations you find." }
           # A reviewer other than the author, because the self-review above is the author marking their own work.
-          - { type: prompt, text: "Now have the diff reviewed by someone other than yourself, before the commit. Dispatch ONE subagent running the /code-review skill over the working diff. Add a second subagent, in the same message, running /codex:review over the same diff ONLY when the diff touches one of the three places where a second pair of eyes has earned its cost: the webview renderer, the writer of the run record, or a publish command. Everywhere else /code-review alone is the gate. Each subagent returns findings only, never file contents. Then judge every finding yourself: fix the real ones, and say in one line which you rejected and why. ONE ROUND. Review a second time only when your own fixes changed real logic, meaning control flow, a migration, a data-shape writer, an availability or auth gate, or a DOM or lifecycle refactor, and then review only what you changed. Never a third. Carry anything still open into the PR body as a gap. If a subagent tool is unavailable, run /code-review inline once and say so." }
-          - { type: prompt, text: "Commit the work and open a pull request using the create-pr skill, following the repo PR conventions. Do not merge. Leave the PR open for review. If you cannot run git or gh, report what you would do and continue." }
+          - { type: prompt, text: "Now have the diff reviewed by someone other than yourself, before the commit. Dispatch ONE subagent running the /code-review skill over the working diff. Add a second subagent, in the same message, running /codex:review over the same diff ONLY when the risk tier recorded by `write-context.py --risk` is high (no tier recorded: run `--risk` first) (the renderer, the run-record writer and the publish commands are listed as high below). Everywhere else /code-review alone is the gate. Each subagent returns findings only, never file contents. Then judge every finding yourself: fix the real ones, and say in one line which you rejected and why. ONE ROUND. Review a second time only when your own fixes changed real logic, meaning control flow, a migration, a data-shape writer, an availability or auth gate, or a DOM or lifecycle refactor, and then review only what you changed. Never a third. Carry anything still open into the PR body as a gap. If a subagent tool is unavailable, run /code-review inline once and say so." }
+          - { type: prompt, text: "Commit the work and open a pull request using the create-pr skill, following the repo PR conventions, and paste the output of `python3 .specify/extensions/companion/scripts/receipts.py --feature-dir <feature_directory>` into the body unedited, before the footer. Do not merge. Leave the PR open for review. If you cannot run git or gh, report what you would do and continue." }
 
   specify:
     nodes:
       - resolve-dir
-      - load-living-specs
-      - draft-spec
-      - quality-checklist
       - classify-size
       - persist-size
+      - draft-spec
+      - quality-checklist
       - branch
       - handoff
       - finalize
@@ -64,3 +63,12 @@ commands:
       before:
         tasks-doc:
           - { type: node, ref: debug-timing }
+
+# Paths that make a change high risk, on top of Companion's defaults.
+risk:
+  high:
+    - "apps/vscode/webview/src/**"
+    - "apps/speckit-extension/scripts/capture.py"
+    - "apps/speckit-extension/scripts/write-context.py"
+    - "apps/speckit-extension/scripts/spec_context.py"
+    - ".claude/commands/publish*.md"

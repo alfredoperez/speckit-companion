@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import { h, render } from 'preact';
-import { IntentSection, OverviewTiming, CoverageSection } from '../OverviewDossier';
+import { IntentSection, OverviewTiming, CoverageSection, DecisionsSection, VerifiedSection } from '../OverviewDossier';
 import type { HistoryEntry, ViewerState } from '../../types';
 import { deriveStepHistory, deriveTimingSummary } from '../../../../../src/features/specs/stepHistoryDerivation';
 import { deriveConvergeResult } from '../../../../../src/features/spec-viewer/convergeResult';
@@ -280,6 +280,99 @@ describe('OverviewTiming', () => {
 });
 
 describe('CoverageSection', () => {
+    const renderRows = (coverage: unknown[]) => {
+        const host = document.createElement('div');
+        render(h(CoverageSection, { state: base({ coverage } as never) }), host);
+        return host;
+    };
+
+    it('labels an assumed row and shows its assumption', () => {
+        const host = renderRows([{ req: 'FR-4', tasks: ['T4'], tests: [], assumes: 'relies on the index' }]);
+        expect(host.querySelector('.dossier-coverage__state.is-assumed')?.textContent).toContain('Assumed');
+        expect(host.querySelector('.dossier-coverage__assumes')?.textContent).toBe('relies on the index');
+    });
+
+    it('keeps the test count and shows the assumption on a tested row', () => {
+        const host = renderRows([{ req: 'FR-3', tasks: ['T3'], tests: ['a.test.ts'], assumes: 'relies on reload' }]);
+        expect(host.querySelector('.dossier-coverage__state.is-traced')?.textContent).toContain('1 test');
+        expect(host.querySelector('.dossier-coverage__assumes')?.textContent).toBe('relies on reload');
+    });
+
+    it('keeps a missing test marked missing even with an assumption', () => {
+        const host = renderRows([{ req: 'FR-1', tasks: ['T1'], tests: ['a.test.ts'], missingTests: ['a.test.ts'], assumes: 'x' }]);
+        expect(host.querySelector('.dossier-coverage__state.is-missing')).not.toBeNull();
+        expect(host.querySelector('.is-assumed')).toBeNull();
+    });
+
+    it('counts assumed rows as traced', () => {
+        const host = renderRows([
+            { req: 'FR-1', tasks: [], tests: ['a'] },
+            { req: 'FR-2', tasks: [], tests: [] },
+            { req: 'FR-3', tasks: [], tests: ['b'], assumes: 'x' },
+            { req: 'FR-4', tasks: [], tests: [], assumes: 'y' },
+        ]);
+        expect(host.textContent).toContain('3/4 traced');
+    });
+
+    it('stays a warning when every row is traced but some only by an assumption', () => {
+        const host = renderRows([
+            { req: 'FR-1', tasks: [], tests: ['a'] },
+            { req: 'FR-2', tasks: [], tests: [], assumes: 'y' },
+        ]);
+        expect(host.textContent).toContain('2/2 traced');
+        expect(host.querySelector('.dossier-count--warn')).not.toBeNull();
+    });
+
+    it('lists untraced rows first and assumed second', () => {
+        const host = renderRows([
+            { req: 'FR-1', tasks: [], tests: ['a'] },
+            { req: 'FR-2', tasks: [], tests: [], assumes: 'y' },
+            { req: 'FR-3', tasks: [], tests: [] },
+        ]);
+        const order = Array.from(host.querySelectorAll('.dossier-coverage__req b')).map(b => b.textContent);
+        expect(order).toEqual(['FR-3', 'FR-2', 'FR-1']);
+    });
+
+    it('labels a weak row and says a planted bug passed', () => {
+        const host = renderRows([{ req: 'FR-5', tasks: ['T5'], tests: ['a.test.ts'], weak: true }]);
+        expect(host.querySelector('.dossier-coverage__state.is-weak')?.textContent).toContain('Weak');
+        expect(host.querySelector('.dossier-coverage__assumes')?.textContent).toBe('tested, but a planted bug passed');
+    });
+
+    it('keeps the assumption line on a weak row', () => {
+        const host = renderRows([{ req: 'FR-5', tasks: [], tests: ['a'], weak: true, assumes: 'relies on the clock' }]);
+        const lines = Array.from(host.querySelectorAll('.dossier-coverage__assumes')).map(l => l.textContent);
+        expect(lines).toEqual(['tested, but a planted bug passed', 'relies on the clock']);
+    });
+
+    it('lets a missing test beat weak', () => {
+        const host = renderRows([{ req: 'FR-5', tasks: [], tests: ['a'], missingTests: ['a'], weak: true }]);
+        expect(host.querySelector('.is-missing')).not.toBeNull();
+        expect(host.querySelector('.is-weak')).toBeNull();
+    });
+
+    it('lists weak rows after untraced and before assumed', () => {
+        const host = renderRows([
+            { req: 'FR-1', tasks: [], tests: ['a'] },
+            { req: 'FR-2', tasks: [], tests: [], assumes: 'y' },
+            { req: 'FR-3', tasks: [], tests: ['c'], weak: true },
+            { req: 'FR-4', tasks: [], tests: [] },
+        ]);
+        const order = Array.from(host.querySelectorAll('.dossier-coverage__req b')).map(b => b.textContent);
+        expect(order).toEqual(['FR-4', 'FR-3', 'FR-2', 'FR-1']);
+    });
+
+    it('renders no assumption line for a row without one', () => {
+        const host = renderRows([{ req: 'FR-1', tasks: ['T1'], tests: ['a'] }]);
+        expect(host.querySelector('.dossier-coverage__assumes')).toBeNull();
+    });
+
+    it('renders assumption markup as text', () => {
+        const host = renderRows([{ req: 'FR-1', tasks: [], tests: [], assumes: '<b>x</b>' }]);
+        expect(host.querySelector('.dossier-coverage__assumes b')).toBeNull();
+        expect(host.querySelector('.dossier-coverage__assumes')?.textContent).toBe('<b>x</b>');
+    });
+
     it('renders when at least one requirement has a linked test', () => {
         const host = document.createElement('div');
         render(h(CoverageSection, {
@@ -446,5 +539,195 @@ describe('converge in the overview', () => {
         expect(pill(host)).toBeNull();
         expect(host.querySelector('.dossier-converge')).toBeNull();
         expect(host.querySelector('.is-waiting')).toBeNull();
+    });
+});
+
+describe('source ticket and lineage', () => {
+    const mount = (state: ViewerState) => {
+        const host = document.createElement('div');
+        render(h(IntentSection, { state }), host);
+        return host;
+    };
+    const row = (host: HTMLElement, label: string) => {
+        const el = Array.from(host.querySelectorAll('.dossier-meta-label')).find(l => l.textContent === label);
+        return el?.nextElementSibling as HTMLElement | undefined;
+    };
+
+    it('shows a plain ticket id as text', () => {
+        const value = row(mount(base({ source: 'TODO-42' })), 'Source');
+        expect(value?.textContent).toBe('TODO-42');
+        expect(value?.querySelector('a')).toBeNull();
+    });
+
+    it('links a ticket URL', () => {
+        const url = 'https://github.com/acme/app/issues/42';
+        const link = row(mount(base({ source: url })), 'Source')?.querySelector('a');
+        expect(link?.getAttribute('href')).toBe(url);
+    });
+
+    it('never links a script URL, and keeps markup as text', () => {
+        const value = row(mount(base({ source: 'javascript:alert(1)<b>x</b>' })), 'Source');
+        expect(value?.querySelector('a')).toBeNull();
+        expect(value?.querySelector('b')).toBeNull();
+        expect(value?.textContent).toBe('javascript:alert(1)<b>x</b>');
+    });
+
+    it('opens the idea page when the source is an idea folder', () => {
+        const postMessage = jest.fn();
+        (globalThis as { vscode?: unknown }).vscode = { postMessage };
+        try {
+            const button = row(mount(base({ source: '.specify/assessments/saved-filters/', sourceIsIdea: true })), 'Source')?.querySelector('button');
+            expect(button?.textContent).toBe('.specify/assessments/saved-filters/');
+            button?.click();
+            expect(postMessage).toHaveBeenCalledWith({ type: 'openIdea', folder: '.specify/assessments/saved-filters/' });
+        } finally {
+            delete (globalThis as { vscode?: unknown }).vscode;
+        }
+    });
+
+    it('keeps a path-like ticket that is not an idea as text', () => {
+        const value = row(mount(base({ source: 'ENG/42' })), 'Source');
+        expect(value?.querySelector('button, a')).toBeNull();
+        expect(value?.textContent).toBe('ENG/42');
+    });
+
+    it('shows the folder a spec extends and the one it replaces', () => {
+        const host = mount(base({ extends: 'specs/041-saved-filters', supersedes: 'specs/030-old' }));
+        expect(row(host, 'Extends')?.textContent).toBe('specs/041-saved-filters');
+        expect(row(host, 'Replaces')?.textContent).toBe('specs/030-old');
+    });
+});
+
+describe('request and decision provenance', () => {
+    const mount = (state: ViewerState, C: typeof IntentSection = IntentSection) => {
+        const host = document.createElement('div');
+        render(h(C, { state }), host);
+        return host;
+    };
+
+    it('shows the request as text with markup escaped', () => {
+        const host = mount(base({ intent: 'Do it.', request: 'Make <b>bold</b> "quotes"\nline two' }));
+        const el = host.querySelector('.dossier-intent__request');
+        expect(host.textContent).toContain('Your request, word for word');
+        expect(el?.textContent).toBe('Make <b>bold</b> "quotes"\nline two');
+        expect(host.querySelector('b')).toBeNull();
+    });
+
+    it('omits the request block without a request', () => {
+        const host = mount(base({ intent: 'Do it.' }));
+        expect(host.querySelector('.dossier-intent__request')).toBeNull();
+    });
+
+    it('shows answered-by meta whenever the author is known', () => {
+        const host = mount(base({
+            decisions: [
+                { decision: 'A', by: 'you', at: '2026-07-21T10:04:00Z' },
+                { decision: 'B', by: 'you' },
+                { decision: 'C', at: '2026-07-21T10:04:00Z' },
+            ],
+        }), DecisionsSection);
+        const metas = host.querySelectorAll('.dossier-decision__meta');
+        expect(metas).toHaveLength(2);
+        expect(metas[0].textContent).toMatch(/^answered by you · /);
+        expect(metas[1].textContent).toBe('answered by you');
+    });
+
+    it('lists earlier answers in order with reopened meta', () => {
+        const host = mount(base({
+            decisions: [{
+                id: 'x',
+                decision: 'Final',
+                earlier: [
+                    { decision: 'First', by: 'agent' },
+                    { decision: 'Second', by: 'you', at: '2026-07-21T10:04:00Z' },
+                ],
+            }],
+        }), DecisionsSection);
+        const items = Array.from(host.querySelectorAll('.dossier-decision__earlier li'));
+        expect(items.map(li => li.querySelector('s')?.textContent)).toEqual(['First', 'Second']);
+        expect(items[0].textContent).toContain('earlier answer · agent · reopened');
+        expect(items[1].textContent).toMatch(/earlier answer · you · .+ · reopened/);
+        expect(host.textContent).not.toContain('undefined');
+    });
+
+    it('renders a legacy decision without meta', () => {
+        const host = mount(base({ decisions: [{ decision: 'Old', why: 'Because' }] }), DecisionsSection);
+        expect(host.querySelector('.dossier-decision__meta')).toBeNull();
+        expect(host.querySelector('.dossier-decision__earlier')).toBeNull();
+        expect(host.querySelector('.dossier-decision__head')).toBeNull();
+        expect(host.querySelector('h3')?.textContent).toBe('Old');
+    });
+});
+
+describe('VerifiedSection', () => {
+    const mount = (verified: NonNullable<ViewerState['verified']>, extra: Partial<ViewerState> = {}) => {
+        const host = document.createElement('div');
+        render(h(VerifiedSection, { state: base({ verified, ...extra }) }), host);
+        return host;
+    };
+
+    it('shows the computed review depth', () => {
+        const host = mount([{ what: 'By hand', result: 'ok' }], { risk: { tier: 'normal', computed: 'normal', reasons: ['4 files'] } });
+        const pill = host.querySelector('.dossier-depth');
+        expect(pill?.textContent).toBe('Review depth: normal');
+        expect(pill?.getAttribute('title')).toBe('4 files');
+        expect(pill?.classList.contains('dossier-depth--high')).toBe(false);
+    });
+
+    it('says who raised the depth and why, in the amber style', () => {
+        const host = mount([{ what: 'By hand', result: 'ok' }], {
+            risk: { tier: 'high', computed: 'normal', reasons: [], raised: { tier: 'high', reason: 'touches the orders query', by: 'ai', at: '2026-11-07T10:00:00Z' } },
+        });
+        const pill = host.querySelector('.dossier-depth');
+        expect(pill?.textContent).toBe('Review depth: high · raised by the agent: "touches the orders query"');
+        expect(pill?.classList.contains('dossier-depth--high')).toBe(true);
+    });
+
+    it('stays hidden with a risk but nothing checked, so the depth does not read as verification', () => {
+        const host = mount([], { risk: { tier: 'low', computed: 'low', reasons: [] } });
+        expect(host.querySelector('.dossier-depth')).toBeNull();
+    });
+
+    it('shows no pill without a risk', () => {
+        const host = mount([{ what: 'By hand', result: 'ok' }]);
+        expect(host.querySelector('.dossier-depth')).toBeNull();
+    });
+
+    it('says which commit a derived check ran at', () => {
+        const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '4f2c9a1', changedSince: 0 }]);
+        expect(host.querySelector('.dossier-evidence__at')?.textContent).toBe('at 4f2c9a1');
+        expect(host.querySelector('.dossier-evidence__stale')).toBeNull();
+    });
+
+    it('marks a check out of date and counts the files', () => {
+        const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '1b07e3c', changedSince: 2 }]);
+        expect(host.querySelector('.dossier-evidence__stale')?.textContent).toBe('OUT OF DATE');
+        expect(host.querySelector('.dossier-evidence__row--stale')).not.toBeNull();
+        expect(host.querySelector('.dossier-evidence__at')?.textContent).toBe('at 1b07e3c, 2 files changed since');
+    });
+
+    it('uses the singular for one file', () => {
+        const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '1b07e3c', changedSince: 1 }]);
+        expect(host.querySelector('.dossier-evidence__at')?.textContent).toContain('1 file changed since');
+    });
+
+    it('turns the section tone to warn when a check is stale', () => {
+        const stale = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '1b07e3c', changedSince: 2 }]);
+        const fresh = mount([{ what: 'Jest', source: 'derived', exitCode: 0, commit: '1b07e3c', changedSince: 0 }]);
+        expect(stale.innerHTML).not.toBe(fresh.innerHTML);
+        expect(stale.querySelector('[class*="warn"]')).not.toBeNull();
+        expect(fresh.querySelector('.dossier-section [class*="--warn"]:not(.dossier-check)')).toBeNull();
+    });
+
+    it('shows no commit line for a derived check recorded before commits were kept', () => {
+        const host = mount([{ what: 'Jest', source: 'derived', exitCode: 0 }]);
+        expect(host.querySelector('.dossier-evidence__at')).toBeNull();
+    });
+
+    it('leaves a reported row as it was', () => {
+        const host = mount([{ what: 'By hand', result: 'looked fine' }]);
+        expect(host.querySelector('.dossier-evidence__at')).toBeNull();
+        expect(host.querySelector('.dossier-evidence__stale')).toBeNull();
+        expect(host.querySelector('.dossier-evidence__row--claimed')).not.toBeNull();
     });
 });

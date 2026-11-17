@@ -127,7 +127,8 @@ class ConvergePasses(unittest.TestCase):
         self.write("--hook", "finish", "--step", "converge")
         [p] = self.passes()
         self.assertEqual(p["added"], ["T002"])
-        self.assertNotEqual(self.ctx()["status"], "completed")
+        # The task converge added is checked, so the pass completes the spec.
+        self.assertEqual(self.ctx()["status"], "completed")
 
     def test_a_repeated_task_id_is_recorded_once(self):
         self.implemented("- [x] **T001** done")

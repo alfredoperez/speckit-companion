@@ -4,113 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-11-17
+
+Bugs paused at review get their answer from the pane, and task phases take comments again.
+
 ### Added
-- **The Ideas pane reads the folder you choose.** A new `speckit.assessmentsDirectory` setting points the pane at ==your own assessments folder==, such as `docs/assessments`. ([#958](https://github.com/alfredoperez/speckit-companion/pull/958)) <!-- area: sidebar -->
-- **The viewer shows what converge found.** The overview draws each converge pass, ==the tasks it added== or a clean finish, with a matching footer action. ([#944](https://github.com/alfredoperez/speckit-companion/pull/944)) <!-- area: overview -->
-- **The Bugs pane reads Spec Kit's bugfix runs.** Bugs show ==step times and a review pause==, re-assessed bugs mark old reports, and pages follow Spec Kit 1.2.5. ([#961](https://github.com/alfredoperez/speckit-companion/pull/961)) <!-- area: sidebar -->
+- **Approve or reject a bug paused at review.** A bug waiting at Spec Kit's review gate offers ==Approve and fix and Reject==, each resuming the run in a terminal. ([#1015](https://github.com/alfredoperez/speckit-companion/pull/1015)) <!-- area: sidebar -->
+- **Bugs and Ideas know a turned-off extension.** A disabled extension shows ==read only with a way to turn it on==, and a same-name extension from another author is labelled. ([#1015](https://github.com/alfredoperez/speckit-companion/pull/1015)) <!-- area: sidebar -->
 
 ### Fixed
-- **Spec Kit projects are offered Companion.** Opening a Spec Kit project without Companion's extension ==offers to add it==, until you say not for that project. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->
+- **Task phases and waves take comments again.** Hover a phase or wave header and use ==the plus button==, and the phase stays open. ([#1018](https://github.com/alfredoperez/speckit-companion/pull/1018)) <!-- area: spec-viewer -->
+- **Spec titles and task notes stop repeating.** Every tab keeps the spec's own title, and a wave's shared notes show ==once instead of on every task==. ([#1010](https://github.com/alfredoperez/speckit-companion/pull/1010)) <!-- area: spec-viewer -->
 
-### Fixed
-- **Upgrade follows Spec Kit's own steps.** Upgrade runs ==`specify self upgrade`, then each assistant's upgrade==, then re-adds Companion, so edited files survive. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->
-- **Answers refine the report in place.** Answering a question on a bug or idea ==edits that one report== instead of re-running the stage. ([#959](https://github.com/alfredoperez/speckit-companion/pull/959)) <!-- area: spec-viewer -->
-- **A reinstall keeps your pipeline.** Opening a project after a reinstall or update ==rebuilds its customised pipeline==, so the assistant never runs the shipped default. ([#950](https://github.com/alfredoperez/speckit-companion/pull/950)) <!-- area: pipeline -->
-- **Commands match what your project installed.** Companion spells each command ==the way Spec Kit recorded it== for your assistant, so Copilot projects get the dash names on disk. ([#948](https://github.com/alfredoperez/speckit-companion/pull/948), [#956](https://github.com/alfredoperez/speckit-companion/pull/956)) <!-- area: assistants -->
-- **Converge is timed without the add-on.** In a project without Companion's Spec Kit extension, ==converge records its start and finish== like every other step. ([#956](https://github.com/alfredoperez/speckit-companion/pull/956)) <!-- area: run-record -->
-- **A step works on the spec you clicked.** Terminals Companion opens for a spec carry ==its folder==, so steps stop picking another spec from `feature.json`. ([#946](https://github.com/alfredoperez/speckit-companion/pull/946)) <!-- area: spec-viewer -->
+## [0.39.0] - 2026-11-12
 
-## [0.37.0] - 2026-10-13
-
-A plan that draws what a change touches, and a Workflow Builder that works on plain Spec Kit.
+Spec documents get a new look, and the Living Specs view is retired.
 
 ### Highlights
 
-#### A plan draws its blocks
-A plan can now carry four kinds of block, and the viewer draws each one as a card: call paths as a tree, a lifecycle as boxes you can click through, a screen as ==a rough wireframe with numbered notes==, and code with a note pinned under the line it explains.
-<!-- area: spec-viewer; pr: 898, 904, 905; media: plan-calls, plan-states, plan-screen, plan-code -->
+#### A new look for spec documents
+Specs, plans, tasks and research read as ==cards and meters== with clickable ids, and each story shows how far it got.
+<!-- area: spec-viewer; pr: 999; media: spec-cards, task-progress, research-decisions -->
 
-#### The Workflow Builder opens on stock Spec Kit
-Renamed from Pipeline Builder, the board now draws a plain Spec Kit project's own workflow and edits ==what Spec Kit owns==: extension hooks, document templates and the constitution command. A decision block opens one row per answer so a verdict skips the steps you choose, and a header chip turns living specs on or off.
-<!-- area: pipeline-builder; pr: 883, 888, 889; media: builder-hooks -->
-
-#### Plain Spec Kit stays plain
-A project that still carries the retired Companion wrapper around the stock commands is ==cleaned up on the next start==, and the Steering view no longer lists its files.
-<!-- area: pipeline; pr: 906 -->
-
-### Added
-- **Hover a spec to see its branch.** The sidebar tooltip names ==the branch the work is on==, beside the status and the assistant. ([#895](https://github.com/alfredoperez/speckit-companion/pull/895)) <!-- area: sidebar -->
+### Removed
+- **Living Specs view and commands are gone.** The status bar item left too, and older specs still show ==their living specs card==. ([#1008](https://github.com/alfredoperez/speckit-companion/pull/1008)) <!-- area: living-specs -->
 
 ### Fixed
-- **The Run log reads cleanly.** Each task line in the Overview's Run log has ==space between its parts== and a badge for who recorded it. ([#912](https://github.com/alfredoperez/speckit-companion/pull/912)) <!-- area: overview -->
-- **Plan cards work on the Copilot board.** A `states` block is drawn as a diagram where ==a click shows that state==, and the buttons that did nothing are gone. ([#911](https://github.com/alfredoperez/speckit-companion/pull/911)) <!-- area: copilot-app -->
-- **A file link opens its own file.** A path in a spec opens ==the file it names== at its line, not a same-named file elsewhere. ([#897](https://github.com/alfredoperez/speckit-companion/pull/897)) <!-- area: spec-viewer -->
-- **The header and the Tasks tab agree.** The header counts ticked boxes out of every task in `tasks.md`, the same read the tab's percentage uses. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: spec-viewer -->
-- **A finished task never reads as in progress.** The chip shows only on an open task while the run is still implementing. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: spec-viewer -->
-- **A line action reaches the line you clicked.** Comments, edits and ticked boxes use the line's place in the file, so Refine names the right section. ([#882](https://github.com/alfredoperez/speckit-companion/pull/882)) <!-- area: spec-viewer -->
-- **The Copilot board unlocks the next step.** A step the agent wrote the document for but never closed in the run record is closed when the turn ends. ([#881](https://github.com/alfredoperez/speckit-companion/pull/881)) <!-- area: copilot-app -->
-
-## [0.36.0] - 2026-10-06
-
-Follow a Spec Kit run from inside Claude Code, and meet the moss mascot.
-
-### Highlights
-
-#### Follow a Spec Kit run from inside Claude Code
-A new Claude Code mod pins your spec ==above the prompt== and ticks off steps and tasks beside the transcript. Press Enter on a step to read its document, or `o` to open it in your editor.
-<!-- area: assistants; pr: 832, 852, 866; media: mod-run, mod-document -->
-
-#### The Copilot app board works with any Spec Kit project
-The board reads each step from your files, so it follows a stock Spec Kit run ==without Companion installed==. Its buttons send the command your project registers, and each step shows as running until the chat turn ends.
-<!-- area: copilot-app; pr: 854, 869; media: copilot-board, copilot-next-step -->
-
-#### A bug reads as a story, and a decided idea as a decision
-A bug opens on a Story tab: ==where it stands==, then what broke, what changed and how it was verified. A decided idea shows its verdict, the rationale, a scorecard and a closing section that fits the verdict.
-<!-- area: spec-viewer; pr: 847; media: bug-story, bug-story-failed, idea-decision -->
-
-#### Bugs and ideas have their own panes, and start without a command
-The sidebar gains a Bugs pane and an Ideas pane under Specs, grouped by ==where each stands==. Press **+** to describe a new one and send it to your assistant, then follow the next-step button on its page.
-<!-- area: sidebar; pr: 842, 843; media: bugs-ideas-panes, new-bug -->
-
-#### Answer an open question from the report
-Every open question on a bug report or idea stage has an **Answer** button. Type your reply and the report ==comes back settled==: your assistant reruns the command that wrote it with your answer.
-<!-- area: spec-viewer; pr: 850; media: answer-question -->
-
-#### Run Converge from Companion
-A spec whose build is done has a ==**Converge** button== in the viewer footer and on its sidebar row menu. It sends Spec Kit's `/speckit.converge` for that spec and leaves the timing to Spec Kit's own hooks.
-<!-- area: spec-viewer; pr: 845; media: converge-button, converge-sent -->
-
-#### Create GitHub issues from the task list
-**Other actions** on the Tasks tab gains **Create GitHub issues**: ==one issue per task==, sent as Spec Kit's `/speckit.taskstoissues`. Companion asks first since the issues are real, and it needs a GitHub remote and the GitHub MCP server.
-<!-- area: spec-viewer; pr: 844; media: create-issues-menu, create-issues-confirm -->
-
-### Security
-- **A crafted spec cannot inject markup attributes.** A link written across an image stays ==inert==, and a code fence keeps only its language name. ([#874](https://github.com/alfredoperez/speckit-companion/pull/874)) <!-- area: spec-viewer -->
-
-### Added
-- **The Copilot board helps you install Companion.** In a project without Companion, **Install it** shows the command to copy and **Ask Copilot to install it** ==runs it for you==. ([#854](https://github.com/alfredoperez/speckit-companion/pull/854)) <!-- area: copilot-app -->
-- **Read a step's document inside Claude Code.** Press a step to read its spec, plan or tasks, a new ==Overview tab== sums up the run, and `/speckit-tracker` joins `/spec`. ([#852](https://github.com/alfredoperez/speckit-companion/pull/852)) <!-- area: assistants -->
-- **Oh My Pi is a provider.** Set `speckit.aiProvider` to `omp` and spec commands ==run in an `omp` terminal==; the Steering view lists its agents, skills and hooks. ([#819](https://github.com/alfredoperez/speckit-companion/pull/819)) <!-- area: assistants -->
-
-- **See which assistant has a spec.** Its sidebar row and viewer header name the assistant, and **Show Terminal** ==jumps to its terminal== while it is open. ([#839](https://github.com/alfredoperez/speckit-companion/pull/839)) <!-- area: assistants -->
-- **Multi-root workspaces find the Spec Kit folder.** Companion picks ==your Spec Kit folder==, not always the first one, or the one you name in `speckit.projectFolder`. ([#840](https://github.com/alfredoperez/speckit-companion/pull/840)) <!-- area: sidebar -->
-
-### Changed
-- **The Copilot app board sends a short message.** The chat gets the command and ==one sentence==; the full run instructions wait in a file under `.speckit-companion/prompts/`, out of git. ([#854](https://github.com/alfredoperez/speckit-companion/pull/854)) <!-- area: copilot-app -->
-- **A report's facts read as one line.** Assessment, Fix, Test and idea stage tabs open with ==one quiet line== instead of a bullet list of fields. ([#850](https://github.com/alfredoperez/speckit-companion/pull/850)) <!-- area: spec-viewer -->
-- **The moss mascot is the new logo.** The ==small moss character== replaces the seedling in the activity bar and the double chevron on the Copilot app board. ([#831](https://github.com/alfredoperez/speckit-companion/pull/831)) <!-- area: other -->
-
-### Fixed
-- **Stock runs get no Companion-only instructions.** The board sends ==the command alone== where Companion's script is missing, so nothing tells the agent to hold a document back. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
-- **The board sends the command your project registers.** A project whose commands are skills gets `/speckit-plan`, and the card and **Show prompt** show ==that spelling==. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
-- **A sent step shows as running.** It stays ==Running== until the chat turn ends, and a stock run's Overview times only the steps the board watched. ([#869](https://github.com/alfredoperez/speckit-companion/pull/869)) <!-- area: copilot-app -->
-- **Other actions keeps its text inside the menu.** Each item's description ==wraps to fit== instead of running off the window. ([#858](https://github.com/alfredoperez/speckit-companion/pull/858)) <!-- area: spec-viewer -->
-- **The Copilot board shows your first spec.** In a project with no `specs/` folder, the first spec shows up ==without a refresh==. ([#854](https://github.com/alfredoperez/speckit-companion/pull/854)) <!-- area: copilot-app -->
-- **No blank band above a short document.** In a narrow viewer, a short document starts right ==under the outline box==, not halfway down the page. ([#850](https://github.com/alfredoperez/speckit-companion/pull/850)) <!-- area: spec-viewer -->
-- **Wrapped paragraphs stay whole.** A paragraph split across lines in the file is ==one paragraph, one comment button==. ([#846](https://github.com/alfredoperez/speckit-companion/pull/846)) <!-- area: spec-viewer -->
-- **Inline code renders in highlighted lines.** Purpose, Note and Checkpoint lines show code as code, ==not raw backticks==. ([#841](https://github.com/alfredoperez/speckit-companion/pull/841)) <!-- area: spec-viewer -->
-- **The sent prompt stays out of the way.** On the Copilot board, sending a step shows a ==short note that fades==, with the full prompt behind **Show prompt** and **Copy**. ([#827](https://github.com/alfredoperez/speckit-companion/pull/827)) <!-- area: copilot-app -->
-- **New spec on the Copilot board numbers itself.** The message names the next number, ==one past the highest== spec folder, so numbers are never reused. ([#837](https://github.com/alfredoperez/speckit-companion/pull/837)) <!-- area: copilot-app -->
-- **The Copilot agent answers from the board.** Ask about specs and it uses the board's list and focus actions, and ==moves the board== whenever you name a spec. ([#837](https://github.com/alfredoperez/speckit-companion/pull/837)) <!-- area: copilot-app -->
-
-Older releases are archived in [`apps/website/src/data/changelog-archive.md`](apps/website/src/data/changelog-archive.md), and the full history reads at [speckit-companion.dev/changelog](https://speckit-companion.dev/changelog).
+- **Create GitHub issues works on Spec Kit 1.4.** It sends the command from Spec Kit's ==github extension== when that extension is installed. ([#1001](https://github.com/alfredoperez/speckit-companion/pull/1001)) <!-- area: spec-viewer -->
+- **The viewer reads cleanly.** Wrapped lines stay with their list item, wide tables ==scroll inside the page==, and Given and Then mark keywords only. ([#988](https://github.com/alfredoperez/speckit-companion/pull/988)) <!-- area: spec-viewer -->
+- **The outline and header agree with the page.** The outline marks ==the section you are reading==, file chips stay on one line, and tasks always show as a percentage. ([#988](https://github.com/alfredoperez/speckit-companion/pull/988)) <!-- area: spec-viewer -->

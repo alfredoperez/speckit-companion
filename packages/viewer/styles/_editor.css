@@ -1,0 +1,188 @@
+/**
+ * SpecKit Companion - Inline Editor Styles
+ * GitHub-style inline comment composer card
+ */
+
+/* ============================================
+   Inline Editor Card (GitHub-style)
+   ============================================ */
+
+/* Single bordered card: header, body, footer all live inside one boundary */
+.inline-editor {
+    margin: 8px 0 4px 0;
+    background: var(--sk-bg-secondary);
+    border: 1px solid var(--sk-border);
+    border-radius: var(--sk-radius-md);
+    box-shadow: none;
+    overflow: hidden;
+    width: min(100%, 640px);
+    animation: slideDown var(--sk-transition-fast) ease-out;
+}
+
+/* Header - what's being commented on */
+.editor-header {
+    padding: var(--sk-space-2) var(--sk-space-3) 0;
+    font-size: var(--sk-text-sm);
+    color: var(--sk-text-muted);
+    overflow-wrap: anywhere;
+}
+
+.editor-header-target {
+    font-weight: 500;
+    color: var(--sk-text-secondary);
+}
+
+/* Row-mode scenario context shown in the header */
+.editor-context-label {
+    font-weight: 600;
+    color: var(--sk-text-secondary);
+    margin-right: 8px;
+}
+
+.editor-context-text {
+    font-style: italic;
+}
+
+/* Body - the existing textarea */
+.editor-body {
+    padding: var(--sk-space-2) var(--sk-space-3);
+}
+
+.editor-textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 12px;
+    background: var(--sk-bg-primary);
+    border: 1px solid var(--sk-border);
+    border-radius: var(--sk-radius-sm);
+    color: var(--sk-text-primary);
+    font-size: 13px;
+    font-family: var(--sk-font-family);
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--sk-transition-fast);
+}
+
+.editor-textarea:focus {
+    border-color: var(--sk-accent);
+}
+
+.editor-textarea::placeholder {
+    color: var(--sk-text-muted);
+}
+
+/* Footer - secondary actions left, primary actions right */
+.editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 var(--sk-space-3) var(--sk-space-2);
+}
+
+@media (max-width: 560px) {
+    .editor-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .editor-buttons {
+        align-self: flex-end;
+    }
+}
+
+.editor-footer-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.editor-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* Context action buttons - ghost style */
+.context-action {
+    padding: 4px 10px;
+    border: 1px solid var(--sk-border);
+    background: transparent;
+    color: var(--sk-text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--sk-radius-sm);
+    cursor: pointer;
+    transition: all var(--sk-transition-fast);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.context-action:hover {
+    background: var(--sk-bg-hover);
+    border-color: var(--sk-border);
+    color: var(--sk-text-primary);
+}
+
+/* Remove actions - subtle on hover */
+.context-action[data-action="remove-line"],
+.context-action[data-action="remove-story"],
+.context-action[data-action="remove-section"],
+.context-action[data-action="remove-scenario"],
+.context-action[data-action="remove-task"] {
+    color: var(--sk-text-muted);
+}
+
+.context-action[data-action="remove-line"]:hover,
+.context-action[data-action="remove-story"]:hover,
+.context-action[data-action="remove-section"]:hover,
+.context-action[data-action="remove-scenario"]:hover,
+.context-action[data-action="remove-task"]:hover {
+    background: var(--sk-bg-hover);
+    color: var(--sk-text-primary);
+}
+
+/* Toggle task action - subtle green on hover */
+.context-action[data-action="toggle-task"] {
+    color: var(--sk-text-muted);
+}
+
+.context-action[data-action="toggle-task"]:hover {
+    background: var(--sk-success-subtle);
+    color: var(--sk-success);
+}
+
+/* Primary actions */
+.editor-cancel,
+.editor-add {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--sk-radius-sm);
+    cursor: pointer;
+    transition: all var(--sk-transition-fast);
+}
+
+.editor-cancel {
+    background: transparent;
+    border: none;
+    color: var(--sk-text-muted);
+}
+
+.editor-cancel:hover {
+    color: var(--sk-text-primary);
+    background: var(--sk-bg-hover);
+}
+
+.editor-add {
+    background: var(--sk-accent);
+    border: none;
+    color: var(--sk-accent-ink);
+}
+
+.editor-add:hover {
+    background: var(--sk-accent-hover);
+}

@@ -62,7 +62,7 @@ function everyField(fields: Fields): Array<string | undefined> {
 /** The facts a report's header bullets state, as the short phrases of one line. Unrecognised values are left out. */
 export function reportHeaderFacts(kind: string, markdown: string): string[] {
     const { fields } = parseReportHeader(markdown);
-    const facts = (FACTS[kind] ?? everyField)(fields);
+    const facts = (Object.prototype.hasOwnProperty.call(FACTS, kind) ? FACTS[kind] : everyField)(fields);
     return facts.filter((fact): fact is string => !!fact);
 }
 

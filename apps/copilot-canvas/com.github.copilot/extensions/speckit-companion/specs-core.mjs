@@ -3,7 +3,7 @@
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, basename, relative, sep } from 'node:path';
 import { listTasks, phaseProgress } from './tasks.mjs';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setTaskSummaries } from './vendor/viewer-markdown.mjs';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './vendor/viewer-markdown.mjs';
 import { renderOverview } from './overview.mjs';
 import {
     DEFAULT_SPEC_DIRS,
@@ -166,7 +166,6 @@ export function readSpecDetail(root, id, { html = true } = {}) {
     const ctx = readSpecContext(dir) ?? {};
     const hasContext = spec.hasContext;
     setHasSpecContext(hasContext);
-    setLivingMode(false);
     setCurrentTask(currentTask(ctx));
     setTaskSummaries(ctx.task_summaries && typeof ctx.task_summaries === 'object' ? ctx.task_summaries : null);
     const documents = listDocuments(dir, featureSpecName(dir)).map(doc => {

@@ -1,0 +1,419 @@
+/**
+ * SpecKit Companion - Base Styles
+ * Reset, body, and layout styles
+ */
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--sk-font-family);
+    font-size: var(--sk-font-size);
+    background: var(--sk-bg-primary);
+    color: var(--sk-text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   Layout Container
+   ============================================ */
+
+.viewer-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    /* Responsive behavior keys off the VIEWER container, not the browser
+       viewport, so a VS Code split pane collapses correctly too. */
+    container-type: inline-size;
+    container-name: viewer;
+}
+
+/* Instant render - no animation delay */
+.viewer-container {
+    opacity: 1;
+}
+
+/* ============================================
+   Shell Grid
+   rail | main column (run strip + reading column)
+   ============================================ */
+
+.shell-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 208px minmax(0, 1fr);
+}
+
+.shell-grid--no-rail {
+    grid-template-columns: 1fr;
+}
+
+.doc-rail {
+    overflow-y: auto;
+    padding: var(--sk-space-4) var(--sk-space-3) var(--sk-space-8);
+    border-right: 1px solid var(--sk-border);
+    background: transparent;
+}
+
+.main-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* ── Run facts: the right half of the header band ── */
+
+.run-strip {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding-top: 5px;
+    color: var(--sk-text-secondary);
+    font-size: 12px;
+    flex: 0 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.run-strip__fact {
+    font-variant-numeric: tabular-nums;
+}
+
+.run-strip__fact--warning { color: var(--sk-warning); }
+
+.run-strip__fact + .run-strip__fact::before,
+.run-strip__fact + .run-strip__pr::before {
+    content: "·";
+    margin: 0 10px;
+    color: var(--sk-border-hover);
+}
+
+.run-strip__pr {
+    color: var(--sk-accent);
+    text-decoration: none;
+}
+
+.run-strip__pr:hover { text-decoration: underline; }
+
+/* The facts yield from the least important end as the pane narrows: first the
+   time and the checks, then everything but the way back to the Overview. */
+@container viewer (max-width: 1100px) {
+    .run-strip__fact[data-fact="timing"],
+    .run-strip__fact[data-fact="checks"],
+    .run-strip__pr {
+        display: none;
+    }
+}
+
+/* A split pane has no room for facts at all: the band shrinks to identity, and
+   the run's full story stays one click away on the rail's Overview entry. */
+@container viewer (max-width: 760px) {
+    .run-strip {
+        display: none;
+    }
+}
+
+/* The rail folds to a horizontal strip on narrow panes (pane width, not
+   window width — these are container queries against .viewer-container). */
+@container viewer (max-width: 900px) {
+    .shell-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .doc-rail {
+        display: flex;
+        gap: var(--sk-space-2);
+        align-items: center;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: var(--sk-space-2) var(--sk-space-3);
+        border-right: none;
+        border-bottom: 1px solid var(--sk-border);
+        flex-shrink: 0;
+        scrollbar-width: none;
+    }
+
+    .doc-rail .rail-overview {
+        width: auto;
+        background: var(--sk-bg-elevated);
+        flex: none;
+    }
+
+    .doc-rail .rail-overview.current {
+        background: var(--sk-bg-secondary);
+    }
+
+    .doc-rail .rail-group {
+        display: flex;
+        gap: var(--sk-space-2);
+        align-items: center;
+        flex: none;
+    }
+
+    .doc-rail .rail-group + .rail-group {
+        margin-top: 0;
+    }
+
+    .doc-rail .rail-label {
+        display: none;
+    }
+
+    /* The recovery strip is a rail sibling, so in the horizontal fold it has to
+       become a row too — stacked, it blows out the strip height and knocks the
+       step chips out of alignment (#451). It scrolls along with everything
+       else; the message truncates and keeps its full text in the title. */
+    .doc-rail .run-recovery {
+        flex: none;
+        flex-direction: row;
+        align-items: center;
+        gap: var(--sk-space-2);
+        max-width: 340px;
+        margin: 0;
+        padding: var(--sk-space-1) var(--sk-space-2);
+    }
+
+    .doc-rail .run-recovery__msg {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .doc-rail .run-recovery__actions {
+        flex-wrap: nowrap;
+    }
+
+    .doc-rail .run-recovery__btn {
+        white-space: nowrap;
+    }
+
+    .doc-rail .rail-group .step-tabs,
+    .doc-rail .rail-group .step-children-tabs {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
+        width: auto;
+    }
+
+    .doc-rail .rail-group .step-tab,
+    .doc-rail .rail-group .step-child {
+        width: auto;
+        min-height: 30px;
+        white-space: nowrap;
+        background: var(--sk-bg-elevated);
+    }
+
+    .doc-rail .rail-group .step-tab.current,
+    .doc-rail .rail-group .step-child.active {
+        background: var(--sk-bg-secondary);
+    }
+
+    /* Folded strip: each step and its own files form one inline unit — the
+       StepTab followed by a horizontal row of its file chips — and neighbouring
+       units are divided so a step reads with its own artifacts rather than
+       colliding with the next step's. The whole strip scrolls with the rail. */
+    .doc-rail .rail-group .step-tabs > .step-tab-group {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: var(--sk-space-2);
+        flex: none;
+    }
+
+    .doc-rail .rail-group .step-tabs > .step-tab-group + .step-tab-group {
+        padding-left: var(--sk-space-2);
+        border-left: 1px solid var(--sk-border);
+    }
+
+    .doc-rail .step-tab-group .step-substeps {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--sk-space-1);
+        margin: 0;
+        padding-left: 0;
+        width: auto;
+    }
+
+    .doc-rail .step-tab-group .step-substeps > li {
+        flex: none;
+    }
+
+    .doc-rail .step-tab-group .step-substeps .step-child {
+        width: auto;
+    }
+
+    .main-column {
+        flex: 1;
+    }
+}
+
+/* ============================================
+   Content Area (the reading column)
+   ============================================ */
+
+.content-area {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    /* Extra bottom room so the floating footer never covers the last lines. */
+    padding: var(--sk-content-padding) var(--sk-content-padding) 108px;
+    scroll-behavior: smooth;
+    /* A controlled grid, not flex: the reading column gets its 72ch and the
+       outline gets its fixed column, so the gutter is a decision rather than
+       whatever space happens to be left over. */
+    display: grid;
+    /* The reading track is sized in px, not ch: `ch` inside grid-template
+       resolves against the CONTAINER's font, while #markdown-content caps
+       itself at 72ch of its OWN (larger) font — so a ch-sized track is too
+       narrow and the prose spills over the outline. */
+    grid-template-columns:
+        minmax(0, var(--reading-column-width))
+        minmax(var(--toc-column-min), var(--toc-column-width));
+    justify-content: center;
+    column-gap: clamp(20px, 3vw, 56px);
+    align-items: start;
+    /* Rows take their content's height. Stretching them split the spare height of
+       a short document between the outline and the text, leaving a blank band. */
+    align-content: start;
+}
+
+/* width:100% stops auto margins from sizing the column to its widest code line. */
+.content-area > #markdown-content { grid-column: 1; width: 100%; }
+.content-area > aside.spec-toc { grid-column: 2; }
+
+/* The dossier is its own bounded page — it spans both tracks. */
+.overview-pane {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+/* Too narrow for a column: one track, and the outline (now a disclosure) sits
+   ABOVE the document rather than beside it. */
+.content-area--narrow {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.content-area--narrow > aside.spec-toc {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.content-area--narrow > #markdown-content {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    color: var(--sk-text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: var(--sk-content-padding);
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+.content-area::-webkit-scrollbar {
+    width: 10px;
+}
+
+.content-area::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.content-area::-webkit-scrollbar-thumb {
+    background: var(--sk-border);
+    border-radius: var(--sk-radius-sm);
+}
+
+.content-area::-webkit-scrollbar-thumb:hover {
+    background: var(--sk-border-hover);
+}
+
+/* ============================================
+   Focus States (Accessibility) — R029
+   ============================================ */
+
+:focus-visible {
+    outline: 2px solid var(--sk-accent);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   High Contrast Theme Adjustments
+   ============================================ */
+
+@media (prefers-contrast: more) {
+    .tab-button.active {
+        outline: 2px solid var(--sk-accent);
+        outline-offset: -2px;
+    }
+
+    .edit-button:focus {
+        outline: 2px solid var(--sk-accent);
+        outline-offset: 2px;
+    }
+
+    #markdown-content a {
+        text-decoration: underline;
+    }
+
+    .step-indicator {
+        border-width: 3px;
+    }
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+@container viewer (max-width: 500px) {
+    .actions {
+        padding: 8px 12px;
+    }
+
+    .actions button {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .actions-right .secondary {
+        display: none;
+    }
+
+    .phase-stepper {
+        padding: 12px 16px;
+    }
+
+    .step-connector {
+        width: 30px;
+    }
+
+    .step-indicator {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+}

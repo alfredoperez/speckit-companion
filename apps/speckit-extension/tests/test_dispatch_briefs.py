@@ -86,13 +86,26 @@ class DispatchBriefs(unittest.TestCase):
         return subprocess.run([sys.executable, str(SCRIPTS / "dispatch-briefs.py"),
                                "--feature-dir", str(d), *args], capture_output=True, text=True)
 
-    def test_two_areas_print_one_reader_brief_each(self):
-        d = self._feature(context=["area: src/a", "area: src/b", "constraint: x"])
+    def test_three_areas_print_one_reader_brief_each(self):
+        d = self._feature(context=["area: src/a", "area: src/b", "area: src/c", "constraint: x"])
         out = self._run(d).stdout
-        self.assertIn("Dispatch these 2 readers", out)
+        self.assertIn("Dispatch these 3 readers", out)
         self.assertIn("=== reader: 1 ===", out)
         self.assertIn("--checkin \"reader: 2\"", out)
         self.assertIn("`src/b`", out)
+
+    def test_a_reader_brief_names_the_checkout_and_asks_for_no_write(self):
+        d = self._feature(context=["area: src/a", "area: src/b", "area: src/c"])
+        out = self._run(d).stdout
+        brief = out.split("=== reader: 1 ===\n", 1)[1].split("\n", 1)[0]
+        self.assertIn(f"Work only in `{d.resolve().parent.parent}`", brief)
+        self.assertIn(f"`{d.resolve()}/.spec-context.json`", brief)
+        self.assertNotIn("--checkin", brief, "a read-only worker cannot be asked to write its check-in")
+        self.assertIn("As each reader returns its finding, record it:", out)
+
+    def test_two_areas_are_read_inline(self):
+        out = self._run(self._feature(context=["area: src/a", "area: src/b"])).stdout
+        self.assertIn("Working inline", out)
 
     def test_with_no_spec_file_the_brief_names_spec_md(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -113,12 +126,12 @@ class DispatchBriefs(unittest.TestCase):
         self.assertIn("Working inline", self._run(self._feature(size="simple"), "--docs").stdout)
 
     def test_a_closed_plan_with_no_checkins_is_named(self):
-        d = self._feature(context=["area: src/a", "area: src/b"], size="normal")
+        d = self._feature(context=["area: src/a", "area: src/b", "area: src/c"], size="normal")
         self._run(d)
         self._run(d, "--docs")
         _, findings = doctor_checks.check_dispatch(d, json.loads((d / ".spec-context.json").read_text()))
         titles = [f.title for f in findings]
-        self.assertIn("plan read the code inline instead of dispatching 2 readers", titles)
+        self.assertIn("plan read the code inline instead of dispatching 3 readers", titles)
         self.assertEqual(len(findings), 2)
 
     def test_checkins_from_an_earlier_run_do_not_count(self):
@@ -176,12 +189,26 @@ class FoundationalWaves(unittest.TestCase):
 
     def test_only_the_next_unfinished_wave_is_briefed(self):
         out = self._run(self._feature(FOUNDATIONAL_612), "--waves").stdout
-        for label in ("wave: 1.1", "wave: 1.4"):
+        for label in ("wave: 1.1", "wave: 1.3"):
             self.assertIn(f"=== {label} ===", out)
-        self.assertNotIn("wave: 1.5", out)
+        self.assertNotIn("wave: 1.4", out, "seven tasks make three workers of two tasks or more")
         self.assertNotIn("wave: 2.", out, "a later wave must wait for this one's join line")
-        self.assertIn("build T002, T006 from", out)
+        self.assertIn("build T002, T005, T008 from", out)
         self.assertIn("--by ai --did", out)
+
+    def test_four_edits_to_four_files_stay_inline(self):
+        small = "## Phase 2: Foundational\n\n" + _tasks(1, 4) + "\n\n## Phase 3: User Story 1 - x (P1)\n"
+        self.assertIn("Build Foundational wave 1 yourself: T001, T002, T003, T004",
+                      self._run(self._feature(small), "--waves").stdout)
+
+    def test_many_tasks_on_few_files_stay_inline(self):
+        same = "\n".join(f"- [ ] **T{i:03d}** edit · `src/config.ts`" for i in range(1, 7))
+        text = "## Phase 2: Foundational\n\n" + same + "\n\n## Phase 3: User Story 1 - x (P1)\n"
+        self.assertIn("yourself", self._run(self._feature(text), "--waves").stdout)
+
+    def test_files_are_read_from_code_spans_and_plain_paths(self):
+        text = "- [ ] **T001** a in `src/a.ts` and src/b/c.py\n- [ ] **T002** no file named here\n"
+        self.assertEqual(dispatch_briefs.task_files(text, ["T001", "T002"]), {"src/a.ts", "src/b/c.py", "T002"})
 
     def test_finished_tasks_move_it_to_the_next_wave_and_are_not_briefed_again(self):
         done = FOUNDATIONAL_612
@@ -221,82 +248,32 @@ class FoundationalWaves(unittest.TestCase):
             {"step": "implement", "kind": "start", "at": "2026-09-19T11:00:00Z", "by": "extension"},
             {"step": "implement", "kind": "complete", "at": "2026-09-19T11:30:00Z", "by": "ai"},
         ]
-        d = self._feature(FOUNDATIONAL_612, size="simple")
+        big = "## Phase 2: Foundational\n\n" + "\n\n**⟶ Wait, then:**\n\n".join(
+            _tasks(1 + 8 * w, 8) for w in range(2)) + "\n\n## Phase 3: User Story 1 - x (P1)\n"
+        d = self._feature(big, size="simple")
         ctx = {"history": history, "size": "simple"}
         (d / ".spec-context.json").write_text(json.dumps(ctx))
         _, findings = doctor_checks.check_dispatch(d, ctx)
         self.assertEqual(findings, [], "a spec never offered wave workers is not faulted")
-        for done_through in (0, 7, 11, 15):
-            text = FOUNDATIONAL_612
-            for n in range(2, 2 + done_through):
+        for done_through in (0, 8):
+            text = big
+            for n in range(1, 1 + done_through):
                 text = text.replace(f"- [ ] **T{n:03d}**", f"- [x] **T{n:03d}**")
             (d / "tasks.md").write_text(text)
             self._run(d, "--waves")
-        (d / "tasks.md").write_text(FOUNDATIONAL_612)
+        (d / "tasks.md").write_text(big)
         _, findings = doctor_checks.check_dispatch(d, ctx)
-        self.assertIn("implement built 4 Foundational waves inline instead of dispatching their workers",
+        self.assertIn("implement built 2 Foundational waves inline instead of dispatching their workers",
                       [f.title for f in findings])
-        for label in [f"wave: {w}.{n}" for w in (1, 2, 3, 4) for n in (1, 2, 3)]:
+        for label in [f"wave: {w}.{n}" for w in (1, 2) for n in (1, 2, 3)]:
             self._run(d, "--checkin", label)
         _, findings = doctor_checks.check_dispatch(d, ctx)
-        self.assertIn("implement built 4 Foundational waves inline instead of dispatching their workers",
+        self.assertIn("implement built 2 Foundational waves inline instead of dispatching their workers",
                       [f.title for f in findings], "three of four workers per wave is not all of them")
-        for label in ("wave: 1.4", "wave: 2.4", "wave: 3.4", "wave: 4.4"):
+        for label in ("wave: 1.4", "wave: 2.4"):
             self._run(d, "--checkin", label)
         _, findings = doctor_checks.check_dispatch(d, ctx)
         self.assertEqual(findings, [])
-
-
-DELTA = """# Thing
-
-## ADDED Requirements
-<!-- capability: demo -->
-
-### Installing the extension
-
-The install MUST run the add command. The target MUST live in one place. A first install MUST NOT pass the flag. An update MUST pass it. The probe SHOULD be retried.
-
-#### Scenario: the user installs
-- **WHEN** the install runs
-- **THEN** the add command is used
-"""
-
-
-class LivingReview(unittest.TestCase):
-    def _feature(self, spec):
-        tmp = tempfile.TemporaryDirectory()
-        self.addCleanup(tmp.cleanup)
-        d = Path(tmp.name) / "specs" / "001-thing"
-        d.mkdir(parents=True)
-        (d / "thing.spec.md").write_text(spec)
-        history = PLAN_CLOSED + [
-            {"step": "implement", "kind": "start", "at": "2000-01-01T00:00:00.000Z", "by": "extension"},
-            {"step": "implement", "kind": "complete", "at": "2999-01-01T00:00:00.000Z", "by": "ai"},
-        ]
-        (d / ".spec-context.json").write_text(json.dumps({"history": history, "size": "simple"}))
-        return d
-
-    def _run(self, d, *args):
-        return subprocess.run([sys.executable, str(SCRIPTS / "dispatch-briefs.py"),
-                               "--feature-dir", str(d), *args], capture_output=True, text=True)
-
-    def test_a_spec_with_no_delta_has_nothing_to_review(self):
-        self.assertIn("nothing to review", self._run(self._feature("# Thing\n"), "--living").stdout)
-
-    def test_a_delta_gets_one_reviewer_carrying_the_checker_findings(self):
-        out = self._run(self._feature(DELTA), "--living").stdout
-        self.assertIn("=== living: review ===", out)
-        self.assertIn("living specs of demo", out)
-        self.assertIn("states 5 rules under one heading", out)
-
-    def test_a_fold_without_the_reviewer_is_named_until_it_checks_in(self):
-        d = self._feature(DELTA)
-        self._run(d, "--living")
-        ctx = json.loads((d / ".spec-context.json").read_text())
-        titles = [f.title for f in doctor_checks.check_dispatch(d, ctx)[1]]
-        self.assertIn("implement folded its living-spec deltas without dispatching their reviewer", titles)
-        self._run(d, "--checkin", "living: review")
-        self.assertEqual(doctor_checks.check_dispatch(d, ctx)[1], [])
 
 
 if __name__ == "__main__":

@@ -48,19 +48,20 @@ class TheManifestDescribesTheAssembledPipeline(unittest.TestCase):
     def test_the_author_nodes_declarations_are_all_present(self):
         specify = manifest_mod.artifacts_for(self.manifest, "specify")
         self.assertIn("spec.md", specify)
-        self.assertIn("checklists/requirements.md", specify)
+        self.assertNotIn("checklists/requirements.md", specify, "the default self-check writes no checklist file")
         self.assertIn("plan.md", manifest_mod.artifacts_for(self.manifest, "plan"))
         self.assertIn("tasks.md", manifest_mod.artifacts_for(self.manifest, "tasks"))
 
-    def test_a_recipe_that_drops_a_node_drops_its_artifact(self):
+    def test_a_recipe_decides_the_artifacts(self):
         # What makes the manifest worth deriving: a project's order decides what
         # the pipeline produces, so the manifest has to follow the order.
         full = assemble.default_order("specify")
-        without = [n for n in full if n != "quality-checklist"]
+        blocking = ["quality-checklist-blocking" if n == "quality-checklist" else n for n in full]
+        gated = manifest_mod.build(orders={"specify": blocking})
+        self.assertIn("checklists/requirements.md", manifest_mod.artifacts_for(gated, "specify"))
+        without = [n for n in full if n != "draft-spec"]
         trimmed = manifest_mod.build(orders={"specify": without})
-        self.assertNotIn("checklists/requirements.md",
-                         manifest_mod.artifacts_for(trimmed, "specify"))
-        self.assertIn("spec.md", manifest_mod.artifacts_for(trimmed, "specify"))
+        self.assertNotIn("spec.md", manifest_mod.artifacts_for(trimmed, "specify"))
 
 
 class AnUnmetDeclarationIsReported(unittest.TestCase):

@@ -5,21 +5,27 @@ kind: control
 command: implement
 reads: [implement-exec]
 ---
-7. **Capture what was verified and decided** the moment validation ends (best-effort; JSON when you can, bare text when not; skip silently if `python3` is unavailable):
+6b. **Prove each requested rule where a reader meets it, before you call it verified.** For every requirement, at least one test drives the app's public surface (the rendered screen, the CLI, the API) in the exact condition the rule names, and none passes by reading internal state such as storage, a store or a private module. "Survives a reload" means building the app again from what storage kept and reading the screen; "sends in order" means counting the calls the app makes. A rule with no such test gets one now; if it fails, the code changes.
+
+   Then name the risk in one line of your summary, `Risk: <item> (<why>)` or `Risk: none`, against these items: stored data or a stored format, security, a contract others consume, concurrency or ordering, delivery or dependencies, or behavior no test would catch. Before writing `Risk: none`, check whether your change edits code that behavior the request did not mention also uses.
+
+7. **Capture what was verified and decided in one call** the moment validation ends (best-effort; skip silently if `python3` is unavailable). Include only the keys you have; on a clean run `concerns` is absent:
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step implement --batch '{
-     "verified":   [{"what": "<check>", "command": "<cmd>", "result": "<outcome>", "warnings": ["<seen-and-dismissed>"]}],
+     "verified":   [{"what": "<judgement>", "result": "<outcome>"}],
      "decisions":  [{"decision": "<implementation choice>", "why": "<why>", "rejected": "<alternative>"}],
-     "concerns":   [{"note": "<friction, residual risk, or a `// simplified:` ceiling you left in the code>", "step": "implement"}],
-     "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case,other.test.ts>"}],
+     "concerns":   [{"note": "<friction, residual risk, or a `// simplified:` ceiling>", "step": "implement"}],
+     "coverage":   [{"req": "FR-001", "tests": "<path.test.ts::case>"}, {"req": "FR-004", "assumes": "<what it relies on without a test>"}],
      "step_summary": {"summary": "<what shipped in one line>"},
-     "last_action": "<final breadcrumb, e.g. all tasks done, 18/18 tests pass>"
-   }'
+     "last_action": "<final breadcrumb>"
+   }'; python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --verify-run "<what>::<command>" --verify-run "<what>::<command>"
    ```
+   Every suite, build and lint goes through `--verify-run`, which runs the command and keeps its exit code. `verified` is only for what cannot be run, a manual pass or a judgement. A check you could not run is a `concerns` entry naming what was skipped; do **not** record a `--verified` for it. Finish every edit, changelog included, before the `--verify-run` calls: a later non-spec edit marks the checks out of date in the receipts.
 
-   **One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. Emit one `--batch`. Include only the keys you actually have: an empty list is not the same as an absent one, and on a clean run `concerns` is genuinely absent.
+8. **Set the review depth from the risk tier** in the same breath:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --risk
+   ```
+   It prints the tier the changed files call for; raise it with `--risk-raise <normal|high> "<reason>"` if you know more, never lower. Review the diff before it is committed at that depth: low is your own careful read, normal one independent review, high two. When the work becomes a pull request, paste `python3 .specify/extensions/companion/scripts/receipts.py --feature-dir <feature_directory>` into its body unedited.
 
-   Record a check that can be run with `--verify-run "<what>::<command>"`: it runs the command and keeps the exit code, rather than taking your word for it. Every suite, build, lint and script goes that way. `--verified` stays for what genuinely cannot be run — a manual pass, a judgement — and reads in the viewer as your account rather than as evidence, which is what it is. Never write a `--verified` describing a command you ran: that is the case `--verify-run` exists for, and a typed result is indistinguishable from an imagined one. If a check could not be run at all, record that as a `--concern` naming what was skipped and why, and do **not** record a `--verified` for it.
-
-   One `--verify-run` per runnable check and one `--verified` per judgement (a manual pass, a warning you saw and judged benign), one `--coverage-req … --tests …` per requirement a test covers, one `--decision` per genuine implementation choice. Record `--concern` only for real friction; on a clean run record none.
-
+9. **Mutation check, only when the project turned it on.** If `.specify/companion.yml` sets `mutation: { enabled: true }`, read `.specify/extensions/companion/commands/reference/mutation-check.md` and follow it. Otherwise skip this.

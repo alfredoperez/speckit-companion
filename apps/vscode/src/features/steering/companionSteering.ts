@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
-import { unsupportedForRuntime } from '../living-specs/livingSpecsModel';
+import { unsupportedForRuntime } from '../../core/utils/yamlSubset';
 
 const COMPANION_CONFIG_REL = '.specify/companion.yml';
 export const COMPANION_MANIFEST_REL = '.specify/extensions/companion/extension.yml';

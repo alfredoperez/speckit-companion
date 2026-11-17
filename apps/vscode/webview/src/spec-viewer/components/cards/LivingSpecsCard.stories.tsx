@@ -30,57 +30,7 @@ const baseState = (overrides: Partial<ViewerState>): ViewerState => ({
     ...overrides,
 });
 
-// Resolved capabilities: each renders a clickable chip that opens the Living
-// Specs viewer; one is folded back with delta counts.
-export const ResolvedChips: Story = {
-    render: () => (
-        <LivingSpecsCard
-            state={baseState({
-                livingSpecs: {
-                    loaded: ['todos', 'notes-ui'],
-                    synced: ['todos'],
-                    capabilities: [
-                        {
-                            name: 'todos',
-                            available: true,
-                            synced: true,
-                            delta: { added: 1, modified: 2 },
-                            specPath: 'capabilities/todos/spec.md',
-                        },
-                        {
-                            name: 'notes-ui',
-                            available: true,
-                            synced: false,
-                            specPath: 'capabilities/notes-ui/spec.md',
-                        },
-                    ],
-                },
-            })}
-        />
-    ),
-};
-
-// Capabilities that could not be resolved (unknown name / missing file) render
-// as plain, non-clickable names.
-export const Unresolved: Story = {
-    render: () => (
-        <LivingSpecsCard
-            state={baseState({
-                livingSpecs: {
-                    loaded: ['todos', 'notes-ui'],
-                    synced: ['todos'],
-                    capabilities: [
-                        { name: 'todos', available: false, synced: true },
-                        { name: 'notes-ui', available: false, synced: false },
-                    ],
-                },
-            })}
-        />
-    ),
-};
-
 // Loaded only: a single "Read for context" group.
-// (Names-only legacy payload — no `capabilities` field — keeps the chip list.)
 export const LoadedOnly: Story = {
     render: () => (
         <LivingSpecsCard state={baseState({ livingSpecs: { loaded: ['checkout', 'cart'], synced: [] } })} />

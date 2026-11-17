@@ -20,7 +20,7 @@ const OUT = resolve(REPO, at > -1 ? process.argv[at + 1] : '.shots');
 mkdirSync(OUT, { recursive: true });
 
 const root = join(mkdtempSync(join(tmpdir(), 'canvas-talk-')), 'conduit');
-cpSync(SANDBOX, root, { recursive: true, filter: (from) => !from.includes(`${SANDBOX}/node_modules`) && !from.includes(`${SANDBOX}/.git/`) });
+cpSync(SANDBOX, root, { recursive: true, filter: (from) => !from.includes(`${SANDBOX}/node_modules`) && from !== `${SANDBOX}/.git` && !from.includes(`${SANDBOX}/.git/`) });
 const state = (name) => execFileSync('node', [join(root, '.talk', 'state.mjs'), name], { stdio: 'pipe' });
 const AUTOSAVE = 'specs/003-article-draft-autosave';
 
@@ -40,22 +40,24 @@ const open = async (tab) => {
 const shot = (name) => page.screenshot({ path: join(OUT, `${name}.png`) });
 const written = [];
 
-state('implementing');
-await open('Tasks');
-await shot('talk-board-implementing');
-written.push('talk-board-implementing');
+try {
+    state('implementing');
+    await open('Tasks');
+    await shot('talk-board-implementing');
+    written.push('talk-board-implementing');
 
-state('planned');
-await open('Plan');
-await shot('talk-board-planned');
-written.push('talk-board-planned');
+    state('planned');
+    await open('Plan');
+    await shot('talk-board-planned');
+    written.push('talk-board-planned');
 
-state('completed');
-await open();
-await page.waitForSelector('.dossier-timing__duration');
-await shot('talk-board-overview');
-written.push('talk-board-overview');
-
-await browser.close();
-await board.close();
+    state('completed');
+    await open();
+    await page.waitForSelector('.dossier-timing__duration');
+    await shot('talk-board-overview');
+    written.push('talk-board-overview');
+} finally {
+    await browser.close();
+    await board.close();
+}
 console.log(`${written.length} board pictures in ${OUT}: ${written.join(', ')}`);

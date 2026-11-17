@@ -1,3 +1,7 @@
+import type { DocumentState } from 'speckit-viewer/core/statuses';
+
+export type { DocumentState, DocumentStatus } from 'speckit-viewer/core/statuses';
+
 const STATUS_LABELS: Record<string, string> = {
     draft: 'Draft',
     specifying: 'Specifying',
@@ -27,12 +31,6 @@ export function specStatusLabel(status: string | undefined): string | undefined 
         .map(part => part.charAt(0).toUpperCase() + part.slice(1))
         .join(' ');
 }
-
-/** What a document's file holds on disk. */
-export type DocumentStatus = 'empty' | 'partial' | 'complete';
-
-/** What a document row renders — one value drives both its icon and its tooltip. */
-export type DocumentState = 'missing' | 'pending' | 'in-progress' | 'complete';
 
 /** Friendly Title Case for a document's rendered state. */
 export function documentStateLabel(state: DocumentState): string {

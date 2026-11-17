@@ -97,5 +97,43 @@ class AppendingThem(unittest.TestCase):
         self.assertEqual(len(self._verified()), 1)
 
 
+class TheCodeACheckRanOn(unittest.TestCase):
+    def setUp(self):
+        import subprocess
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name).resolve()
+        self.git = lambda *a: subprocess.run(["git", "-C", str(self.root), *a], capture_output=True, text=True, check=True).stdout.strip()
+        self.git("init", "-q")
+        self.git("config", "user.email", "t@example.com")
+        self.git("config", "user.name", "t")
+        (self.root / "a.txt").write_text("one\n", encoding="utf-8")
+        self.git("add", "a.txt")
+        self.git("commit", "-qm", "first")
+        self.spec = self.root / "specs" / "001-x"
+        self.spec.mkdir(parents=True)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_records_the_commit_and_a_tree_holding_uncommitted_work(self):
+        (self.root / "b.txt").write_text("new\n", encoding="utf-8")
+        staged_before = self.git("diff", "--cached", "--name-only")
+        v = capture.run_verification("Echo", "echo ok", at=self.spec)
+        self.assertEqual(v["commit"], self.git("rev-parse", "--short", "HEAD"))
+        self.assertIn("b.txt", self.git("ls-tree", "-r", "--name-only", v["tree"]).splitlines())
+        self.assertEqual(self.git("diff", "--cached", "--name-only"), staged_before)
+
+    def test_outside_git_the_check_is_recorded_without_either(self):
+        with tempfile.TemporaryDirectory() as plain:
+            v = capture.run_verification("Echo", "echo ok", at=Path(plain))
+        self.assertEqual(v["exitCode"], 0)
+        self.assertNotIn("commit", v)
+        self.assertNotIn("tree", v)
+
+    def test_a_check_with_no_location_records_neither(self):
+        v = capture.run_verification("Echo", "echo ok")
+        self.assertNotIn("commit", v)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -45,7 +45,6 @@ import {
     restoreDecision,
     writeDecision,
     writeHook,
-    writeLivingSpecs,
     moveHook,
     removeHook,
     writeNodeOrder,
@@ -645,30 +644,6 @@ export class PipelineBuilderPanel {
                     undo: before ? { token } : undefined,
                 });
             if (ok && before) { this.offerUndo(token, () => this.putVerdictBack(message, before)); }
-        },
-
-        /**
-         * Turn living specs on or off, or choose where the specs live.
-         *
-         * The one write that does not go into `companion.yml` or a workflow
-         * file: the script sends it to whichever file the living-specs resolver
-         * reads, so the setting lands where it will be read from.
-         */
-        setLivingSpecs: async message => {
-            await this.write(
-                script => writeLivingSpecs(script, this.workspaceRoot, {
-                    enabled: message.enabled, layout: message.layout,
-                }),
-                'Changing living specs',
-                {
-                    tone: 'done',
-                    text: message.layout
-                        ? `Living specs are kept ${message.layout}`
-                        : `Living specs are ${message.enabled ? 'on' : 'off'}`,
-                    detail: message.enabled === false
-                        ? 'Nothing was deleted — the registry stays'
-                        : 'Build to apply',
-                });
         },
 
         /** Read once. The panel does not say it again in this workspace. */

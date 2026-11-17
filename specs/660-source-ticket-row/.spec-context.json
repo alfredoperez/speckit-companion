@@ -1,0 +1,287 @@
+{
+  "workflow": "speckit",
+  "specName": "The Overview names the ticket",
+  "branch": "660-source-ticket-row",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:18:11.122Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:22:25.378Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:22:25.502Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:22:25.812Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:22:25.946Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:22:26.322Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:22:26.432Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:22:26.592Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:22:26.723Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:22:26.863Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:22:27.019Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:24:13.390Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:24:13.414Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:24:13.536Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T11:24:13.736Z"
+    }
+  ],
+  "request": "#931 w29 · the viewer shows the source ticket (P3).\nProblem: The record already has a place for the PR end of a spec (prUrl, prNumber) but none for the ticket end, and the overview dossier shows intent, approach and non-goals with no row for where the work came from. Even once w11 records a source, the viewer won't show, link or search it.\nProposed: Show `source` as a link in apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx, make the specs filter (apps/vscode/src/features/specs/specExplorerProvider.ts, fuzzyMatch.ts) match the ticket id, and show `extends` or `supersedes` lineage in the dossier. Repository text reaches the panel as text, with links through safeUrl.\nAcceptance: A spec with source: TODO-42 shows a Source row in the dossier. A URL source opens through safeUrl; a plain id stays text. Filtering specs by TODO-42 finds the spec. The dossier shows the folder a spec extends.\nOwner: \"lets do them and reword\".",
+  "size": "simple",
+  "decisions": [
+    {
+      "decision": "Rows in the Intent card context column",
+      "why": "it already holds Working area and Size",
+      "rejected": "a new header line",
+      "by": "agent",
+      "at": "2026-11-08T11:22:25.676Z"
+    },
+    {
+      "decision": "Link only http(s) sources that pass safeUrl",
+      "why": "safeUrl alone treats TODO-42 as a relative link",
+      "rejected": "safeUrl as the only gate",
+      "by": "agent",
+      "at": "2026-11-08T11:22:25.676Z"
+    },
+    {
+      "decision": "Filter matches the source on its own",
+      "why": "joining it to the name lets a fuzzy query match across the boundary",
+      "rejected": "one joined haystack",
+      "by": "agent",
+      "at": "2026-11-08T11:22:25.676Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Viewer state carries source and lineage",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/stateDerivation.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Intent card shows Source, Extends, Replaces",
+      "tasks": [
+        "T002",
+        "T004"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    },
+    "FR-003": {
+      "title": "Specs filter matches the source",
+      "tasks": [
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/specExplorerProvider.test.ts"
+      ]
+    }
+  },
+  "step_summaries": {
+    "tasks": {
+      "summary": "5 tasks"
+    }
+  },
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "source, extends, supersedes in viewer state",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/stateDerivation.ts",
+        "apps/vscode/src/core/types/specContext.ts",
+        "apps/vscode/webview/src/spec-viewer/types.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Source, Extends, Replaces rows; long URLs wrap",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx",
+        "apps/vscode/webview/styles/spec-viewer/_overview-dossier.css"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Filter matches the source ticket",
+      "files": [
+        "apps/vscode/src/features/specs/specExplorerProvider.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "7 tests, 2 stories",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/ActivityPanel.stories.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Changelog, site doc, related Jest, tsc, webview build green",
+      "files": [
+        "CHANGELOG.md",
+        "apps/website/src/content/docs/docs/results/the-overview.mdx"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Related Jest suites",
+      "command": "npx jest apps/vscode/src/features/spec-viewer/__tests__/stateDerivation.test.ts apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx apps/vscode/src/features/specs/__tests__/specExplorerProvider.test.ts apps/vscode/src/features/specs/__tests__/fuzzyMatch.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.8,
+      "result": "Snapshots:   0 total · Time:        2.095 s, estimated 3 s · Ran all test suites matching /apps\\/vscode\\/src\\/features\\/spec-viewer\\/__tests__\\/stateDerivation.test.ts|apps\\/vscode\\/webview\\/src\\/spec-viewer\\/components\\/__tests__\\/OverviewDossier.test.tsx|apps\\/vscode\\/src\\/features\\/specs\\/__tests__\\/specExplorerProvider.test.ts|apps\\/vscode\\/src\\/features\\/specs\\/__tests__\\/fuzzyMatch.test.ts/i.",
+      "commit": "6a8989b9",
+      "tree": "02be8c5fcec438722bf59e4c5abb49f4df55e2f9"
+    },
+    {
+      "what": "Type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "6a8989b9",
+      "tree": "6302b4c15f2bf33f038125acee269a68799eabd6"
+    },
+    {
+      "what": "Docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 1.9,
+      "result": "Snapshots:   0 total · Time:        1.242 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "6a8989b9",
+      "tree": "e4484c24b91aec05a01e6e54b9b30ae4582a9cd9"
+    },
+    {
+      "what": "Webview build",
+      "command": "npm run --silent package-web",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 19.0,
+      "result": "    [webpack-cli] Compiler starting...  ·     [webpack-cli] Compiler is using config: '/Users/alfredoperez/dev/GitHub/speckit-companion/webpack.config.js' ·     [webpack-cli] Compiler finished",
+      "commit": "6a8989b9",
+      "tree": "38e8c18dfef3bc9ef13c3f7c684ab434d258675b"
+    },
+    {
+      "what": "Storybook at 1000px and 390px",
+      "command": "DossierSourceAndLineage, DossierSourceId",
+      "result": "Source link wraps inside its column; id stays text"
+    }
+  ],
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/vscode/webview/src/spec-viewer/components/ActivityPanel.stories.tsx, apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx, apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx and 1 more"
+    ]
+  },
+  "convergeStartedAt": "2026-11-08T11:24:13.577Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-08T11:24:13.623Z",
+      "by": "extension",
+      "finishedAt": "2026-11-08T11:24:13.809Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

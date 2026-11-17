@@ -61,13 +61,7 @@
  *   document missing   NO ICON AT ALL, plus a dim "not created" description
  *   related doc        no icon (the tree relies on indentation alone)
  *
- * Living Specs rows come from `livingSpecsExplorerProvider.ts`: `folder` for a
- * directory group (the tree mirrors where each spec lives, built by
- * `buildCapabilityTree`), no icon for a healthy capability,
- * `circle-outline` plus a "not created" suffix for one with no spec on disk,
- * `warning` in list.warningForeground plus a "drift" suffix when the sources moved on, and a
- * trailing `question` group holding the orphan `*.spec.md` files no capability
- * claims. Steering rows come from `steeringExplorerProvider.ts` (`library`,
+ * Steering rows come from `steeringExplorerProvider.ts` (`library`,
  * `law`, `terminal`, `files`; scripts and templates are icon-less leaves).
  *
  * ROW STATE

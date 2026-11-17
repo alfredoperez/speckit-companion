@@ -427,6 +427,53 @@ describe('reasoning-trail normalization', () => {
                 { decision: 'structured', why: 'w' },
             ]);
         });
+
+        it('keeps who answered, when, and the earlier answers of a reopened decision', () => {
+            const state = deriveViewerState(makeContext({
+                decisions: [{
+                    decision: 'Settings table', id: 'store', by: 'agent', at: '2026-11-03T10:12:00Z',
+                    earlier: [{ decision: 'A new table', by: 'you', at: '2026-11-03T09:58:00Z', why: 'w' }],
+                }],
+            } as never));
+            expect(state.decisions).toEqual([{
+                decision: 'Settings table', id: 'store', by: 'agent', at: '2026-11-03T10:12:00Z',
+                earlier: [{ decision: 'A new table', by: 'you', at: '2026-11-03T09:58:00Z' }],
+            }]);
+        });
+
+        it('drops a malformed author, an unreadable time and a broken earlier list', () => {
+            const state = deriveViewerState(makeContext({
+                decisions: [{ decision: 'd', by: 7, at: 'yesterday', earlier: 'nope' }],
+            } as never));
+            expect(state.decisions).toEqual([{ decision: 'd' }]);
+        });
+    });
+
+    describe('request', () => {
+        it('passes the request through word for word', () => {
+            const request = '  keep "this" <b>as is</b>\nsecond line';
+            expect(deriveViewerState(makeContext({ request } as never)).request).toBe(request);
+        });
+
+        it('drops a blank request, and is absent on older records', () => {
+            expect(deriveViewerState(makeContext({ request: '  \n' } as never)).request).toBeUndefined();
+            expect(deriveViewerState(makeContext()).request).toBeUndefined();
+        });
+    });
+
+    describe('source and lineage', () => {
+        it('passes the ticket and the folders it extends or replaces through', () => {
+            const state = deriveViewerState(makeContext({ source: 'TODO-42', extends: 'specs/041-saved-filters', supersedes: 'specs/030-old' } as never));
+            expect(state.source).toBe('TODO-42');
+            expect(state.extends).toBe('specs/041-saved-filters');
+            expect(state.supersedes).toBe('specs/030-old');
+        });
+
+        it('is absent on older records', () => {
+            const state = deriveViewerState(makeContext());
+            expect(state.source).toBeUndefined();
+            expect(state.extends).toBeUndefined();
+        });
     });
 
     describe('verified', () => {
@@ -473,9 +520,31 @@ describe('reasoning-trail normalization', () => {
             const state = deriveViewerState(makeContext({ coverage: read('written.json') } as never));
             expect(state.coverage).toEqual(
                 read('expected-rows.json').map((row: Record<string, unknown>) => ({
-                    req: row.req, title: row.title, tasks: row.tasks, tests: row.tests,
+                    req: row.req, title: row.title, tasks: row.tasks, tests: row.tests, assumes: row.assumes,
                 })),
             );
+        });
+
+        it('drops a blank assumption and trims a padded one', () => {
+            const state = deriveViewerState(makeContext({
+                coverage: {
+                    'FR-001': { tasks: ['T001'], tests: [], assumes: '   ' },
+                    'FR-002': { tasks: ['T002'], tests: [], assumes: '  relies on the index  ' },
+                },
+            } as never));
+            expect(state.coverage?.[0].assumes).toBeUndefined();
+            expect(state.coverage?.[1].assumes).toBe('relies on the index');
+        });
+
+        it('keeps weak only when it is exactly true', () => {
+            const state = deriveViewerState(makeContext({
+                coverage: {
+                    'FR-001': { tasks: ['T001'], tests: ['a'], weak: true },
+                    'FR-002': { tasks: ['T002'], tests: ['b'], weak: 'true' },
+                    'FR-003': { tasks: ['T003'], tests: ['c'], weak: false },
+                },
+            } as never));
+            expect(state.coverage?.map(r => r.weak)).toEqual([true, undefined, undefined]);
         });
 
         it('skips malformed entries and yields absent for an empty map', () => {
@@ -502,6 +571,21 @@ describe('reasoning-trail normalization', () => {
             const bad = deriveViewerState(makeContext({ classification: { projectedFiles: 9 } } as never));
             expect(bad.classification).toBeUndefined();
         });
+
+        it('keeps risk only when it carries a known tier, and the raise only when whole', () => {
+            const good = deriveViewerState(makeContext({
+                risk: { tier: 'high', computed: 'normal', reasons: ['12 files'], raised: { tier: 'high', reason: 'touches orders', by: 'ai', at: '2026-11-07T10:00:00Z' } },
+            } as never));
+            expect(good.risk?.tier).toBe('high');
+            expect(good.risk?.reasons).toEqual(['12 files']);
+            expect(good.risk?.raised?.reason).toBe('touches orders');
+            const partial = deriveViewerState(makeContext({
+                risk: { tier: 'low', computed: 'low', reasons: [], raised: { tier: 'high' } },
+            } as never));
+            expect(partial.risk?.raised).toBeUndefined();
+            const bad = deriveViewerState(makeContext({ risk: { tier: 'extreme' } } as never));
+            expect(bad.risk).toBeUndefined();
+        });
     });
 
     it('a pre-capture context yields every new field absent (legacy identical)', () => {
@@ -512,6 +596,7 @@ describe('reasoning-trail normalization', () => {
         expect(state.intent).toBeUndefined();
         expect(state.expectations).toBeUndefined();
         expect(state.classification).toBeUndefined();
+        expect(state.risk).toBeUndefined();
     });
 });
 

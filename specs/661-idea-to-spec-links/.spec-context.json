@@ -1,0 +1,327 @@
+{
+  "workflow": "speckit",
+  "specName": "A spec made from an idea keeps it",
+  "branch": "661-idea-to-spec-links",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:44:42.097Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:49:33.359Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:49:33.495Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:49:33.821Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:49:33.963Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:49:34.417Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:49:34.573Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:49:34.715Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:49:34.846Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:49:35.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:49:35.145Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T12:46:18.967Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T12:46:18.993Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T12:46:19.116Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T12:47:06.470Z"
+    }
+  ],
+  "request": "#931 w39 · create a spec from a go idea with its handoff and a link back (P3).\nProblem: Create spec from idea sends only the title and one rationale paragraph, though a go decision carries a handoff block written for exactly this step. Afterwards the idea and its spec lose each other, so neither page can point at the other.\nProposed: The create-spec action in apps/vscode/src/features/processes/processActions.ts passes the handoff fields to specify, and the new spec's record keeps the assessment path through apps/speckit-extension/scripts/write-context.py, so the viewer links back to the idea and the idea page links to the spec.\nAcceptance: The specify prompt carries every handoff field. The new spec's record names the idea's folder. Each page links to the other.\nOwner: \"lets do them and reword\".",
+  "size": "normal",
+  "decisions": [
+    {
+      "decision": "Reuse the record source field for the idea folder",
+      "why": "w29 already shows it",
+      "rejected": "a new ideaFolder field",
+      "by": "agent",
+      "at": "2026-11-08T11:49:33.678Z"
+    },
+    {
+      "decision": "A new openIdea message",
+      "why": "openFile opens the report as raw markdown",
+      "rejected": "special-casing openFile",
+      "by": "agent",
+      "at": "2026-11-08T11:49:33.678Z"
+    },
+    {
+      "decision": "The host decides what a folder is",
+      "why": "the webview only offers the click; the host checks the root and the idea set",
+      "rejected": "a webview-side idea check",
+      "by": "agent",
+      "at": "2026-11-08T11:49:33.678Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Create spec sends the whole handoff and a Source line",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "apps/vscode/src/features/processes/__tests__/processActions.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "Specify records a Source assessment folder",
+      "tasks": [
+        "T002"
+      ],
+      "assumes": "the specify node rule is prose an agent follows; build.py --check keeps the command in sync"
+    },
+    "FR-003": {
+      "title": "Idea page lists specs made from it",
+      "tasks": [
+        "T003",
+        "T005"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/specsFromIdea.test.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/IdeaDecisionPage.test.tsx"
+      ]
+    },
+    "FR-004": {
+      "title": "Source row opens the idea page, and only an idea",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/vscode/src/features/spec-viewer/__tests__/messageHandlers.test.ts",
+        "apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx"
+      ]
+    }
+  },
+  "step_summaries": {
+    "tasks": {
+      "summary": "5 tasks"
+    }
+  },
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "ideaSpecDescription and its use",
+      "files": [
+        "apps/vscode/src/features/processes/processActions.ts",
+        "apps/vscode/src/features/spec-viewer/messageHandlers.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "draft-spec accepts a Source assessment folder",
+      "files": [
+        "apps/speckit-extension/nodes/specify/draft-spec.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Idea page lists specs made from it",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/reportPanels.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/IdeaDecisionPage.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Source row opens the idea page",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx",
+        "apps/vscode/src/protocol/viewer.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Tests, stories, docs, changelog, CLAUDE.md line, canvas build; full suite green",
+      "files": [
+        "CHANGELOG.md",
+        "CLAUDE.md",
+        "apps/website/src/content/docs/docs/ide/bugs-and-ideas.mdx"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Related Jest suites",
+      "command": "npx jest apps/vscode/src/features/processes/__tests__/processActions.test.ts apps/vscode/src/features/spec-viewer/__tests__/messageHandlers.test.ts apps/vscode/src/features/spec-viewer/__tests__/specsFromIdea.test.ts apps/vscode/src/features/spec-viewer/__tests__/ideaPanel.test.ts apps/vscode/webview/src/spec-viewer/report-pages/__tests__/IdeaDecisionPage.test.tsx apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 4.2,
+      "result": "Snapshots:   0 total · Time:        3.191 s, estimated 8 s · Ran all test suites matching /apps\\/vscode\\/src\\/features\\/processes\\/__tests__\\/processActions.test.ts|apps\\/vscode\\/src\\/features\\/spec-viewer\\/__tests__\\/messageHandlers.test.ts|apps\\/vscode\\/src\\/features\\/spec-viewer\\/__tests__\\/specsFromIdea.test.ts|apps\\/vscode\\/src\\/features\\/spec-viewer\\/__tests__\\/ideaPanel.test.ts|apps\\/vscode\\/webview\\/src\\/spec-viewer\\/report-pages\\/__tests__\\/IdeaDecisionPage.test.tsx|apps\\/vscode\\/webview\\/src\\/spec-viewer\\/components\\/__tests__\\/OverviewDossier.test.tsx/i.",
+      "commit": "fae8610b",
+      "tree": "c3afec379d313854fe744721364980237b86272b"
+    },
+    {
+      "what": "Type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "npm notice run speckit-companion@0.37.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "fae8610b",
+      "tree": "01af9fb467cec81a77b186d75c3a41534200f2e5"
+    },
+    {
+      "what": "Webview build",
+      "command": "npm run --silent package-web",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 19.8,
+      "result": "    [webpack-cli] Compiler starting...  ·     [webpack-cli] Compiler is using config: '/Users/alfredoperez/dev/GitHub/speckit-companion/webpack.config.js' ·     [webpack-cli] Compiler finished",
+      "commit": "fae8610b",
+      "tree": "e2e995cfd1279fe0846016830dab017cfc23ad29"
+    },
+    {
+      "what": "Command bodies match their nodes",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "fae8610b",
+      "tree": "43b5258f410923ed064c078fa0559fdd3f3e3709"
+    },
+    {
+      "what": "Instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19 · speckit.companion.status.md                        0       0      0     214",
+      "commit": "30b3aeca",
+      "tree": "8f2d800d3cac75a973d7498871acfff757126f72"
+    },
+    {
+      "what": "Docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "Snapshots:   0 total · Time:        1.308 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "fae8610b",
+      "tree": "01a2d2ad308338d00780b0b31f50f2e037e152a1"
+    },
+    {
+      "what": "Canvas tests",
+      "command": "npm run --silent test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 16.6,
+      "result": "# skipped 0 · # todo 0 · # duration_ms 15755.30525",
+      "commit": "fae8610b",
+      "tree": "cb022ec901e888144c510653668db9abadf5c376"
+    },
+    {
+      "what": "Storybook idea page with a linked spec",
+      "command": "ReportPages / Idea go, with the spec made from it",
+      "result": "Specs made from this idea lists the spec under the handoff"
+    }
+  ],
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/vscode/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx, apps/vscode/webview/src/spec-viewer/components/OverviewDossier.tsx, apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx and 3 more"
+    ]
+  },
+  "convergeStartedAt": "2026-11-08T12:46:19.162Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-08T12:46:19.217Z",
+      "by": "extension",
+      "finishedAt": "2026-11-08T12:47:06.556Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

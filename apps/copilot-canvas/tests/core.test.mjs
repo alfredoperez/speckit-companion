@@ -763,6 +763,11 @@ describe('shared rules the Claude Code mod bundles', () => {
             { name: 'b', lastActivity: '2026-03-01T00:00:00.000Z', updatedAt: null },
         ]);
         assert.deepEqual(rows.map(r => r.name), ['b', 'a']);
+        const checkout = sortSpecs([
+            { name: 'fresh', hasContext: true, lastActivity: null, updatedAt: '2026-09-01T00:00:00.000Z' },
+            { name: 'worked', hasContext: true, lastActivity: '2026-03-01T00:00:00.000Z', updatedAt: null },
+        ]);
+        assert.deepEqual(checkout.map(r => r.name), ['worked', 'fresh'], 'a checkout time is not activity for a recorded spec');
         assert.equal(parseSpecContext('{"status": '), null);
         assert.equal(parseSpecContext('[]'), null);
     });

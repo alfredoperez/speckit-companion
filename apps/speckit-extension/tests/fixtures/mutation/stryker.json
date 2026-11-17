@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "2",
+  "thresholds": { "high": 80, "low": 60 },
+  "files": {
+    "src/filters.ts": {
+      "language": "typescript",
+      "source": "",
+      "mutants": [
+        { "id": "1", "mutatorName": "EqualityOperator", "location": { "start": { "line": 1, "column": 1 }, "end": { "line": 1, "column": 2 } }, "status": "Killed", "killedBy": ["t1"] },
+        { "id": "2", "mutatorName": "BooleanLiteral", "location": { "start": { "line": 2, "column": 1 }, "end": { "line": 2, "column": 2 } }, "status": "Survived", "coveredBy": ["t2"] },
+        { "id": "3", "mutatorName": "StringLiteral", "location": { "start": { "line": 3, "column": 1 }, "end": { "line": 3, "column": 2 } }, "status": "Timeout", "killedBy": ["t1"] },
+        { "id": "4", "mutatorName": "BlockStatement", "location": { "start": { "line": 4, "column": 1 }, "end": { "line": 4, "column": 2 } }, "status": "CompileError" },
+        { "id": "5", "mutatorName": "ArithmeticOperator", "location": { "start": { "line": 5, "column": 1 }, "end": { "line": 5, "column": 2 } }, "status": "NoCoverage" }
+      ]
+    }
+  },
+  "testFiles": {
+    "src/__tests__/save.test.ts": { "tests": [{ "id": "t1", "name": "saves a filter" }] },
+    "src/__tests__/unique.test.ts": { "tests": [{ "id": "t2", "name": "names are unique" }] }
+  }
+}

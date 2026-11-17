@@ -20,5 +20,5 @@ export function ReportPage({ report }: { report: ReportNav & { page: BugStory | 
 
     return report.kind === 'bug'
         ? <BugStoryPage story={report.page as BugStory} />
-        : <IdeaDecisionPage decision={report.page as IdeaDecision} />;
+        : <IdeaDecisionPage decision={report.page as IdeaDecision} specs={report.specs} />;
 }

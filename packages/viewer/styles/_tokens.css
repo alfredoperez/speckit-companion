@@ -1,0 +1,49 @@
+/**
+ * The tokens no theme changes: type scale, leading, spacing, motion and layout.
+ * Colours, fonts, radii and shadows come from a theme file.
+ */
+
+.sk-viewer {
+    --sk-text-xs: 0.694rem;
+    --sk-text-sm: 0.833rem;
+    --sk-text-base: 1rem;
+    --sk-text-lg: 1.2rem;
+    --sk-text-xl: 1.44rem;
+    --sk-text-2xl: 1.728rem;
+    --sk-text-3xl: 2.074rem;
+    --sk-leading-tight: 1.25;
+    --sk-leading-snug: 1.375;
+    --sk-leading-normal: 1.5;
+    --sk-leading-relaxed: 1.625;
+    --sk-leading-loose: 1.75;
+    --sk-space-1: 0.25rem;
+    --sk-space-2: 0.5rem;
+    --sk-space-3: 0.75rem;
+    --sk-space-4: 1rem;
+    --sk-space-5: 1.5rem;
+    --sk-space-6: 2rem;
+    --sk-space-8: 3rem;
+    --sk-transition-fast: 150ms;
+    --sk-transition-normal: 200ms;
+    --sk-transition-slow: 300ms;
+    --sk-tab-height: 40px;
+    --sk-header-height: 48px;
+    --sk-content-padding: 24px;
+    --sk-ledger-lane-id: 92px;
+    --sk-ledger-lane-trail: 96px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Hidden beats any author display. */
+[hidden] {
+    display: none !important;
+}

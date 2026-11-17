@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { useEffect, useState } from 'preact/hooks';
 import { App } from '../App';
 import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from '../signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode, setTaskSummaries } from '../markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setReportMode, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
 import { setupAnswerActions } from '../editor/answerEditor';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
@@ -20,7 +20,7 @@ import { buildBugStory } from '../../../../src/features/reports/bugStory';
 import { buildIdeaDecision } from '../../../../src/features/reports/ideaDecision';
 import { knownValue, parseReportHeader } from '../../../../src/features/reports/reportValues';
 import type { EngineRun } from '../../../../src/features/bugs/engineRuns';
-import type { ReportNav } from '../../../../src/features/reports/reportPageModel';
+import type { ReportNav, LinkedSpec } from '../../../../src/features/reports/reportPageModel';
 import { BUG_FIX_STATUSES, BUG_TEST_RESULTS, BUG_VERDICTS } from '../../../../src/features/bugs/bugValues';
 import { IDEA_STAGES, IDEA_VERDICTS } from '../../../../src/features/ideas/ideaValues';
 import { bugActions, ideaActions, type ReportAction } from '../../../../src/features/processes/processActions';
@@ -61,6 +61,8 @@ export interface ReportFixture {
     engine?: EngineRun;
     /** The freshness the reader would compute for the fix and test reports. */
     freshness?: Partial<Record<'fix' | 'test', 'current' | 'stale' | 'unknown'>>;
+    /** When each report was written on this machine, for headers that carry only a day. */
+    writtenAt?: Partial<Record<'assessment' | 'fix' | 'test', number>>;
 }
 
 interface SetShape {
@@ -137,7 +139,7 @@ function readPanel(fixture: ReportFixture): Panel {
         const page = buildBugStory(
             { assessment: fixture.texts.assessment, fix: fixture.texts.fix, test: fixture.texts.test },
             actions.find(action => action.primary)?.label,
-            { engine: fixture.engine, freshness: fixture.freshness },
+            { engine: fixture.engine, freshness: fixture.freshness, writtenAt: fixture.writtenAt },
         );
         return {
             title,
@@ -184,7 +186,7 @@ function documentsOf(fixture: ReportFixture): SpecDocument[] {
     })));
 }
 
-function hostState(fixture: ReportFixture, documentType: string): { nav: NavState; content: string } {
+function hostState(fixture: ReportFixture, documentType: string, specs?: LinkedSpec[]): { nav: NavState; content: string } {
     const panel = readPanel(fixture);
     const documents = documentsOf(fixture);
     const reports = documents.filter(d => d.filePath);
@@ -213,14 +215,14 @@ function hostState(fixture: ReportFixture, documentType: string): { nav: NavStat
         activityPanelEnabled: false,
         landing: 'document',
         ...(panel.actions.length > 0 ? { reportActions: panel.actions } : {}),
-        report: { kind: panel.kind, page, ...(panel.badgeTone && { badgeTone: panel.badgeTone }) },
+        report: { kind: panel.kind, page, ...(panel.badgeTone && { badgeTone: panel.badgeTone }), ...(specs && { specs }) },
     });
     return { nav, content: (doc.exists && fixture.texts[doc.type]) || '' };
 }
 
-export function ReportViewer({ fixture, initialDocument }: { fixture: ReportFixture; initialDocument?: string }) {
+export function ReportViewer({ fixture, initialDocument, specs }: { fixture: ReportFixture; initialDocument?: string; specs?: LinkedSpec[] }) {
     const [doc, setDoc] = useState(() => initialDocument ?? readPanel(fixture).defaultDocument);
-    const { nav, content } = hostState(fixture, doc);
+    const { nav, content } = hostState(fixture, doc, specs);
 
     useEffect(() => {
         document.body.dataset.readOnly = 'true';
@@ -252,7 +254,6 @@ export function ReportViewer({ fixture, initialDocument }: { fixture: ReportFixt
     viewerMode.value = 'document';
     viewerState.value = null;
     historyEntries.value = [];
-    setLivingMode(false);
     setReportMode(true);
     setHasSpecContext(true);
     setCurrentTask(null);
@@ -396,6 +397,21 @@ export const BugFixedNotTested: Story = {
     render: () => <ReportViewer fixture={cartFixedNotTested} />,
 };
 
+const trackedAt = new Date(2026, 9, 1, 10, 4).getTime();
+const cartTracked: ReportFixture = {
+    ...cartTotalSkipsFirst,
+    texts: {
+        ...cartTotalSkipsFirst.texts,
+        assessment: cartAssessment.replace('**Source**: pasted text', '**Source**: https://github.com/acme/shop/issues/88'),
+    },
+    writtenAt: { assessment: trackedAt, fix: trackedAt + 39_000, test: trackedAt + 2 * 60_000 },
+};
+
+export const BugTrackerAndTimes: Story = {
+    name: 'Bug with a tracker link and file times',
+    render: () => <ReportViewer fixture={cartTracked} />,
+};
+
 export const BugVerified: Story = {
     name: 'Bug verified',
     render: () => <ReportViewer fixture={cartTotalSkipsFirst} />,
@@ -439,6 +455,17 @@ export const IdeaAssessing: Story = {
 export const IdeaGo: Story = {
     name: 'Idea go',
     render: () => <ReportViewer fixture={savedFilters} />,
+};
+
+export const IdeaGoWithSpec: Story = {
+    name: 'Idea go, with the spec made from it',
+    render: () => (
+        <ReportViewer
+            fixture={savedFilters}
+            initialDocument="decision"
+            specs={[{ name: 'Saved filters stay after a reload', path: '/workspace/specs/042-saved-filters/spec.md' }]}
+        />
+    ),
 };
 
 export const IdeaNeedsClarification: Story = {

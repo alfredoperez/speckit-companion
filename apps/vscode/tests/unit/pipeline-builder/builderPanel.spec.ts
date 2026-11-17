@@ -1002,7 +1002,7 @@ describe('moving a node without dragging it', () => {
 
     it('writes an allowed move into another phase and says where it went', async () => {
         const phases = [
-            { name: 'gather', nodes: ['resolve-dir', 'load-living-specs'] },
+            { name: 'gather', nodes: ['resolve-dir', 'load-context'] },
             { name: 'author', nodes: ['draft-spec', 'quality-checklist'] },
             { name: 'classify', nodes: ['classify-size', 'persist-size', 'branch'] },
             { name: 'wrap-up', nodes: ['finalize', 'handoff'] },

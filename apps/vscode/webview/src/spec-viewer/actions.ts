@@ -26,42 +26,6 @@ export function setupFileRefClickHandler(): void {
     });
 }
 
-/** A requirement card's Approve button posts the heading the card is keyed on. */
-export function setupApproveRequirement(): void {
-    document.addEventListener('click', (e) => {
-        const btn = (e.target as HTMLElement).closest('[data-req-approve]');
-        const heading = btn?.closest<HTMLElement>('.living-req-card')?.dataset.req;
-        if (heading) vscode.postMessage({ type: 'approveRequirement', heading });
-    });
-}
-
-/** A card's Remove button posts the heading; the extension confirms and owns the delete. */
-export function setupRemoveRequirement(): void {
-    document.addEventListener('click', (e) => {
-        const btn = (e.target as HTMLElement).closest('[data-req-remove]');
-        const heading = btn?.closest<HTMLElement>('.living-req-card')?.dataset.req;
-        if (heading) vscode.postMessage({ type: 'removeRequirement', heading });
-    });
-}
-
-/** A card's file chips reveal the path they name. */
-export function setupRevealGlob(): void {
-    document.addEventListener('click', (e) => {
-        const glob = (e.target as HTMLElement).closest<HTMLElement>('[data-reveal-glob]')?.dataset.revealGlob;
-        if (glob) vscode.postMessage({ type: 'revealGlob', glob });
-    });
-}
-
-/** A card's Leans on and Leaned on by entries open the spec they name, at that requirement. */
-export function setupOpenLivingRequirement(): void {
-    document.addEventListener('click', (e) => {
-        const link = (e.target as HTMLElement).closest<HTMLElement>('[data-open-living-requirement]');
-        const { capability, specPath, heading } = link?.dataset ?? {};
-        if (!capability || !heading) return;
-        vscode.postMessage({ type: 'openLivingSpec', capabilityName: capability, specPath: specPath || undefined, requirement: heading });
-    });
-}
-
 /**
  * Setup checkbox toggle handler for task items
  */

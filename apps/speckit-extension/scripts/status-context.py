@@ -255,10 +255,32 @@ def resolve(feature_dir: Path) -> dict:
     return resolution
 
 
-def _print_summary(res: dict) -> None:
+#: Stand-ins for a console that cannot print the summary's arrow and dash (a legacy Windows code page).
+_ASCII_FALLBACK = str.maketrans({"→": "->", "—": "-"})
+
+
+def _console_safe() -> None:
+    """Never fail on a console that cannot encode a character: swap the arrow and dash, replace the rest."""
+    global print
+    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    try:
+        "→—".encode(encoding)
+        return
+    except (UnicodeEncodeError, LookupError):
+        pass
+    try:
+        sys.stdout.reconfigure(errors="replace")
+    except (AttributeError, ValueError):
+        pass
+    plain_print = print
+    print = lambda *args, **kwargs: plain_print(*(str(a).translate(_ASCII_FALLBACK) for a in args), **kwargs)  # noqa: E731
+
+
+def _print_summary(res: dict, plain: bool = False) -> None:
     if res.get("empty"):
         print("Nothing to summarize (no spec files or recorded state found).")
-        print(f"RESOLUTION: {json.dumps(res, ensure_ascii=False)}")
+        if not plain:
+            print(f"RESOLUTION: {json.dumps(res, ensure_ascii=True)}")
         return
 
     print(f"Spec: {res['specName']}   (source: {res['source']})")
@@ -280,7 +302,19 @@ def _print_summary(res: dict) -> None:
         nxt = res.get("nextCommand") or "—"
         print(f"Next: {res['nextActionLabel']}  →  {nxt}")
 
-    print(f"RESOLUTION: {json.dumps(res, ensure_ascii=False)}")
+    if not plain:
+        print(f"RESOLUTION: {json.dumps(res, ensure_ascii=True)}")
+
+
+def _print_size(feature_dir) -> int:
+    """Print the recorded size and nothing else; any gap prints nothing, so the engine takes its default route."""
+    try:
+        size = json.loads((feature_dir / ".spec-context.json").read_text(encoding="utf-8")).get("size")
+    except (OSError, ValueError, TypeError, AttributeError):
+        return 0
+    if size in ("simple", "normal", "oversized"):
+        print(size)
+    return 0
 
 
 def main() -> int:
@@ -288,10 +322,17 @@ def main() -> int:
         description="Resolve a feature's pipeline position and next action."
     )
     parser.add_argument("--feature-dir", default=None)
+    parser.add_argument("--plain", action="store_true",
+                        help="only the lines a person reads: no RESOLUTION line, and a missing spec said on stdout")
+    parser.add_argument("--size", action="store_true",
+                        help="print only the recorded size (simple|normal|oversized), or nothing; for the workflow engine's route step")
     args = parser.parse_args()
+    _console_safe()
 
     root = wc._repo_root()
     feature_dir = wc.resolve_feature_dir(root, args.feature_dir)
+    if args.size:
+        return _print_size(feature_dir)
     if feature_dir is None or not feature_dir.is_dir():
         print(
             "[companion] Could not resolve the active feature directory "
@@ -299,13 +340,17 @@ def main() -> int:
             ".specify/feature.json, git branch prefix). Skipping status.",
             file=sys.stderr,
         )
+        if args.plain:
+            print("No active spec found.")
         return 0  # best-effort: never fail the host command
 
     try:
         res = resolve(feature_dir)
-        _print_summary(res)
+        _print_summary(res, plain=args.plain)
     except Exception as exc:  # noqa: BLE001 - best-effort, swallow + report
         print(f"[companion] Warning: skipped status resolution: {exc}", file=sys.stderr)
+        if args.plain:
+            print(f"Could not read the run record: {exc}")
         return 0
 
     return 0

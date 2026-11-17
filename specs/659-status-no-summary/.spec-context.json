@@ -1,0 +1,304 @@
+{
+  "workflow": "speckit",
+  "specName": "Status is a script, not a summary",
+  "branch": "659-status-no-summary",
+  "currentStep": "implement",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:10:31.801Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:11:34.256Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:11:34.382Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:11:34.740Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:11:34.883Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:11:35.309Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:11:35.416Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:11:35.561Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:11:35.711Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:11:35.858Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:11:52.240Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:14:12.238Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-08T11:14:12.261Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-08T11:15:05.336Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-08T11:17:24.029Z"
+    }
+  ],
+  "request": "#928 w46 · status is a plain script over the run record (P3).\nProblem: `status` asks the AI to read `.spec-context.json` and summarise it. A script can print the same answer faster and the same way every time.\nProposed: Have the command run `scripts/status-context.py` and print its output, with no model summary.\nAcceptance: `/speckit.companion.status` prints the same fields as today without a model call. The script handles a missing record with one line.\nOwner: \"lets do them and reword\" (acceptance lines may be reworded to what is buildable).",
+  "size": "simple",
+  "decisions": [
+    {
+      "decision": "A --plain flag on the existing resolver",
+      "why": "it already builds the human lines",
+      "rejected": "a second script",
+      "by": "agent",
+      "at": "2026-11-08T11:11:34.582Z"
+    },
+    {
+      "decision": "Reword no model call to no model summary",
+      "why": "a slash command always passes through the agent",
+      "rejected": "host-specific pre-execution",
+      "by": "agent",
+      "at": "2026-11-08T11:11:34.582Z"
+    }
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "--plain prints human lines only",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_status_plain.py::test_plain_prints_the_same_fields_without_the_machine_line",
+        "apps/speckit-extension/tests/test_status_plain.py::test_nothing_recorded_is_one_line",
+        "apps/speckit-extension/tests/test_status_plain.py::test_no_spec_found_is_one_line_on_stdout"
+      ]
+    },
+    "FR-002": {
+      "title": "Status prints the output unchanged",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_status_plain.py::test_the_command_prints_the_output_unchanged"
+      ]
+    },
+    "FR-003": {
+      "title": "Resume keeps the RESOLUTION line",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_status_plain.py::test_plain_prints_the_same_fields_without_the_machine_line"
+      ]
+    }
+  },
+  "step_summaries": {
+    "tasks": {
+      "summary": "5 tasks"
+    }
+  },
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "--plain flag",
+      "files": [
+        "apps/speckit-extension/scripts/status-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Status body prints the script output unchanged",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.status.md"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "4 tests",
+      "files": [
+        "apps/speckit-extension/tests/test_status_plain.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Changelog folded into the doctor line; site status row",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md",
+        "apps/website/src/content/docs/docs/results/the-overview.mdx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Suite, build, emissions, quality, budget, docs green",
+      "files": [
+        "specs/659-status-no-summary/tasks.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "Status tests",
+      "command": "python3 -m unittest apps/speckit-extension/tests/test_status_plain.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.5,
+      "result": "---------------------------------------------------------------------- · Ran 5 tests in 0.463s · OK",
+      "commit": "6a8989b9",
+      "tree": "b49ae675b6b2d62a4fdbe33d6b235f7b81a80c8c"
+    },
+    {
+      "what": "Spec-kit extension suite",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 133.9,
+      "result": "---------------------------------------------------------------------- · Ran 1938 tests in 133.712s · OK (skipped=14)",
+      "commit": "6a8989b9",
+      "tree": "ebdcdee5235a7f98be2fb44b3dec66d438395030"
+    },
+    {
+      "what": "Command bodies match their nodes",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec), checklists/requirements.md (quality-checklist) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "6a8989b9",
+      "tree": "587cabb870d4af1bc1989b2344b8ed7c71da4f4a"
+    },
+    {
+      "what": "Command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 26 commands agree across 1 install areas, 1 agent records, and 2 documents",
+      "commit": "6a8989b9",
+      "tree": "b51ee86920501b2a1856cb91e3094355177cae40"
+    },
+    {
+      "what": "Command quality",
+      "command": "python3 apps/speckit-extension/scripts/check_quality.py --strict --commands-dir apps/speckit-extension/commands",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  ✓ [PASS] never-prompts-on-prompt: no user-prompt instruction ·   ✓ [PASS] never-prompts-on-stop: no user-prompt instruction ·   → 16 pass / 0 warn / 0 fail / 0 info",
+      "commit": "6a8989b9",
+      "tree": "31cb6e646f0f9d0f284e456ea4e0a7422d45b6c6"
+    },
+    {
+      "what": "Instruction budget",
+      "command": "python3 apps/speckit-extension/scripts/instruction-budget.py --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "speckit.companion.on-prompt.md                     0       0      0      20 · speckit.companion.on-stop.md                       0       0      0      19 · speckit.companion.status.md                        0       0      0     214",
+      "commit": "6a8989b9",
+      "tree": "f20a13cd2f2fdcdc41b36fd108e43aee90398fe9"
+    },
+    {
+      "what": "Docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.0,
+      "result": "Snapshots:   0 total · Time:        1.273 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "6a8989b9",
+      "tree": "642ffdea8bd1a5bf0d79da6609bb2732fc8ec7f9"
+    }
+  ],
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "6 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-08T11:15:05.377Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-08T11:15:05.426Z",
+      "by": "extension",
+      "finishedAt": "2026-11-08T11:17:24.100Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

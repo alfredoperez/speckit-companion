@@ -20,7 +20,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { App } from '../App';
 import { navState, viewerState, markdownHtml, historyEntries, viewerMode } from '../signals';
 import type { NavState, ViewerState, DocumentType, HistoryEntry, SerializedFooterAction } from '../types';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from '../markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setSpecLedgerTasks, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
 import { applyHighlighting } from '../highlighting';
 import { buildToc } from '../toc';
 import { mockDoc, mockRelatedDoc, mockNavState } from '../components/__stories__/mockData';
@@ -147,6 +147,7 @@ export function vsFromContext(
         taskSummaries: ctx.task_summaries,
         decisions: ctx.decisions,
         intent: ctx.intent,
+        request: ctx.request,
         expectations: ctx.expectations,
         context: ctx.context,
         verified: ctx.verified,
@@ -176,6 +177,7 @@ export function FullViewer({ md, nav, vs, view }: FullViewerProps) {
     setHasSpecContext(!!(nav.specContextName || nav.badgeText));
     setCurrentTask(nav.currentTask ?? null);
     setTaskSummaries(vs.taskSummaries ?? null);
+    setSpecLedgerTasks(nav.tasksMarkdown ?? null);
     markdownHtml.value = renderMarkdown(md);
 
     useEffect(() => {
@@ -211,25 +213,22 @@ export interface InteractiveViewerProps {
     vs: ViewerState;
     extraNav?: Partial<NavState>;
     view?: 'overview' | 'document';
-    livingDocs?: Record<string, DocEntry>;
 }
 
 /** FullViewer + working navigation: answers the nav's `stepperClick` /
  *  `switchDocument` messages in-story, standing in for messageHandlers.ts. */
-export function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view, livingDocs }: InteractiveViewerProps) {
+export function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view }: InteractiveViewerProps) {
     const [doc, setDoc] = useState(initialDoc);
 
     useEffect(() => {
         const host = window as unknown as { vscode: { postMessage: (msg: unknown) => void } };
         const original = host.vscode.postMessage;
         host.vscode.postMessage = (msg: unknown) => {
-            const m = msg as { type?: string; phase?: string; documentType?: string; capabilityName?: string };
+            const m = msg as { type?: string; phase?: string; documentType?: string };
             if (m?.type === 'stepperClick' && m.phase && docs[m.phase]) {
                 setDoc(m.phase);
             } else if (m?.type === 'switchDocument' && m.documentType && docs[m.documentType]) {
                 setDoc(m.documentType);
-            } else if (m?.type === 'openLivingSpec' && m.capabilityName && livingDocs?.[m.capabilityName]) {
-                setDoc(`living:${m.capabilityName}`);
             } else {
                 original(msg);
             }
@@ -237,18 +236,16 @@ export function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view, l
         return () => {
             host.vscode.postMessage = original;
         };
-    }, [docs, livingDocs]);
+    }, [docs]);
 
-    const livingName = doc.startsWith('living:') ? doc.slice('living:'.length) : null;
-    const activeDoc = livingName ? livingDocs?.[livingName] : docs[doc];
+    const activeDoc = docs[doc];
 
     const nav = navFromContext(ctx, {
-        currentDoc: (livingName ? 'spec' : doc) as DocumentType,
+        currentDoc: doc as DocumentType,
         relatedDocs: relatedDocsFor(docs),
-        isViewingRelatedDoc: livingName ? false : !CORE_DOCS.includes(doc),
+        isViewingRelatedDoc: !CORE_DOCS.includes(doc),
         docTypeLabel: activeDoc?.label,
-        livingMode: livingName !== null,
-        specContextName: livingName ?? ctx.specName,
+        specContextName: ctx.specName,
         ...extraNav,
     });
     const counts = docs.tasks ? countTaskCheckboxes(docs.tasks.md) : null;
@@ -256,5 +253,7 @@ export function InteractiveViewer({ ctx, docs, initialDoc, vs, extraNav, view, l
         nav.taskCounts = counts;
     }
 
-    return <FullViewer md={activeDoc?.md ?? docs[initialDoc].md} nav={nav} vs={vs} view={livingName ? 'document' : view} />;
+    if (doc === 'spec' && docs.tasks) nav.tasksMarkdown = docs.tasks.md;
+
+    return <FullViewer md={activeDoc?.md ?? docs[initialDoc].md} nav={nav} vs={vs} view={view} />;
 }

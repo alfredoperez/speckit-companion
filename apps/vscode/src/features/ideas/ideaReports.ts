@@ -116,3 +116,27 @@ export function readIdeaReports(workspaceRoot: string): IdeaReport[] {
 export function ideaDirectoryOf(filePath: string): string | undefined {
     return reportDirectoryOf(IDEA_SET, filePath);
 }
+
+/**
+ * The report file that opens an idea's page, latest stage first, when `folder` (relative to
+ * `root`) is an idea folder whose real path stays inside the project. Undefined otherwise.
+ */
+export function ideaPageFile(root: string, folder: string): string | undefined {
+    const real = (p: string): string | undefined => {
+        try {
+            return fs.realpathSync(p);
+        } catch {
+            return undefined;
+        }
+    };
+    const realRoot = real(root);
+    if (!realRoot || folder.includes(':')) return undefined;
+    const dir = path.resolve(root, folder);
+    return [...IDEA_SET.kinds].reverse().map(kind => path.join(dir, `${kind}.md`)).find(file => {
+        const target = real(file);
+        if (!ideaDirectoryOf(file) || !target) return false;
+        const rel = path.relative(realRoot, target);
+        if (rel === '..' || rel.startsWith('..' + path.sep) || path.isAbsolute(rel)) return false;
+        return fs.statSync(target, { throwIfNoEntry: false })?.isFile() ?? false;
+    });
+}

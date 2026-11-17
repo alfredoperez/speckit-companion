@@ -2,8 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { createMessageHandlers, MessageHandlerDependencies, LivingUndoAction } from '../messageHandlers';
-import { livingTierDocuments } from '../../living-specs/livingDocs';
+import { createMessageHandlers, MessageHandlerDependencies } from '../messageHandlers';
 
 // Mock stepLifecycle (canonical writer wrappers)
 jest.mock('../../specs/stepLifecycle', () => ({
@@ -77,193 +76,9 @@ function createMockDeps(overrides?: Partial<MessageHandlerDependencies>): Messag
             extensionPath: '/mock/extension',
             extensionUri: vscode.Uri.file('/mock/extension'),
         } as unknown as vscode.ExtensionContext,
-        offerLivingUndo: jest.fn(),
-        takeLivingUndo: jest.fn(),
         ...overrides,
     };
 }
-
-describe('messageHandlers - living spec navigation', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
-        (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file('/workspace') }];
-    });
-
-    afterEach(() => {
-        (vscode.workspace as any).workspaceFolders = undefined;
-    });
-
-    it('opens the exact enriched capability path in Living mode', async () => {
-        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
-
-        await handler({
-            type: 'openLivingSpec',
-            capabilityName: 'todos',
-            specPath: 'capabilities/todos/spec.md',
-        });
-
-        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
-            'speckit.viewSpecDocument',
-            '/workspace/capabilities/todos/spec.md',
-            { living: true },
-        );
-    });
-
-    it('resolves a historical names-only capability to its colocated spec', async () => {
-        (vscode.workspace.findFiles as jest.Mock).mockResolvedValueOnce([
-            vscode.Uri.file('/workspace/webview/src/spec-viewer/viewer-ui.spec.md'),
-        ]);
-        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
-
-        await handler({ type: 'openLivingSpec', capabilityName: 'viewer-ui' });
-
-        expect(vscode.workspace.findFiles).toHaveBeenCalledWith(
-            '**/viewer-ui.spec.md',
-            '**/{.git,node_modules,dist,storybook-static}/**',
-            1,
-        );
-        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
-            'speckit.viewSpecDocument',
-            '/workspace/webview/src/spec-viewer/viewer-ui.spec.md',
-            { living: true },
-        );
-    });
-});
-
-describe('messageHandlers - living Approve all, Remove and Undo', () => {
-    const LINKS = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'apps', 'speckit-extension', 'tests', 'fixtures', 'requirement-slices', 'links');
-    let root: string;
-
-    const specOf = (cap: string) => path.join(root, 'capabilities', cap, 'spec.md');
-    const ctxOf = (cap: string) => path.join(root, 'capabilities', cap, '.spec-context.json');
-    const warn = vscode.window.showWarningMessage as jest.Mock;
-
-    function panel(cap: string) {
-        let held: (LivingUndoAction & { token: string }) | undefined;
-        let n = 0;
-        const deps = createMockDeps({
-            getInstance: jest.fn().mockReturnValue({
-                state: {
-                    specDirectory: path.dirname(specOf(cap)),
-                    specName: cap,
-                    living: true,
-                    livingSourcePath: specOf(cap),
-                    currentDocument: 'spec',
-                    availableDocuments: livingTierDocuments(specOf(cap)),
-                },
-                debounceTimer: undefined,
-            }),
-            offerLivingUndo: jest.fn((_dir: string, action: LivingUndoAction) => { held = { ...action, token: `t${++n}` }; }),
-            takeLivingUndo: jest.fn((_dir: string, token: string) => {
-                if (held?.token !== token) return undefined;
-                const action = held;
-                held = undefined;
-                return action;
-            }),
-        });
-        return { deps, handler: createMessageHandlers(path.dirname(specOf(cap)), deps), token: () => held?.token ?? '' };
-    }
-
-    beforeEach(() => {
-        jest.clearAllMocks();
-        root = fs.mkdtempSync(path.join(os.tmpdir(), 'living-undo-'));
-        fs.cpSync(LINKS, root, { recursive: true });
-        (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(root) }];
-        warn.mockResolvedValue('Remove');
-    });
-
-    afterEach(() => {
-        (vscode.workspace as any).workspaceFolders = undefined;
-        fs.rmSync(root, { recursive: true, force: true });
-    });
-
-    const ADOPTED = '# Alpha\n\n> [DRAFT] Review before trusting.\n\n## Requirements\n\n### One\n<!-- adopted: CLAUDE.md:1 -->\n\nA.\n\n### Two\n<!-- adopted: developer -->\n\nB.\n';
-
-    it('Approve all stores a pending undo, and Undo restores the file byte for byte without a record', async () => {
-        fs.writeFileSync(specOf('alpha'), ADOPTED);
-        const { deps, handler, token } = panel('alpha');
-
-        await handler({ type: 'approveSpec' });
-        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).not.toContain('adopted:');
-        expect(deps.offerLivingUndo).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ kind: 'approve', before: ADOPTED }));
-
-        await handler({ type: 'undoLivingAction', token: token() });
-        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).toBe(ADOPTED);
-        expect(fs.existsSync(ctxOf('alpha'))).toBe(false);
-    });
-
-    it('Remove stores a pending undo, and Undo restores the file byte for byte without a record', async () => {
-        const before = fs.readFileSync(specOf('alpha'), 'utf-8');
-        const { deps, handler, token } = panel('alpha');
-
-        await handler({ type: 'removeRequirement', heading: 'Checks itself' });
-        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).not.toContain('### Checks itself');
-        expect(deps.offerLivingUndo).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ kind: 'remove', capability: 'alpha', heading: 'Checks itself' }));
-
-        await handler({ type: 'undoLivingAction', token: token() });
-        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).toBe(before);
-        expect(fs.existsSync(ctxOf('alpha'))).toBe(false);
-    });
-
-    it('Undo writes nothing and warns when the file changed, and the removal then stands with a record', async () => {
-        const { handler, token } = panel('alpha');
-        await handler({ type: 'removeRequirement', heading: 'Checks itself' });
-        fs.appendFileSync(specOf('alpha'), '\nEdited elsewhere.\n');
-        const edited = fs.readFileSync(specOf('alpha'), 'utf-8');
-        warn.mockClear();
-
-        await handler({ type: 'undoLivingAction', token: token() });
-
-        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).toBe(edited);
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining('changed after the removal'));
-        expect(JSON.parse(fs.readFileSync(ctxOf('alpha'), 'utf-8')).history).toEqual([
-            expect.objectContaining({ kind: 'requirement-removed', capability: 'alpha', requirement: 'Checks itself' }),
-        ]);
-    });
-
-    it('records the removal when the restore itself cannot be written', async () => {
-        const { handler, token } = panel('alpha');
-        await handler({ type: 'removeRequirement', heading: 'Checks itself' });
-        const write = jest.spyOn(fs.promises, 'writeFile').mockRejectedValueOnce(new Error('EROFS'));
-        warn.mockClear();
-
-        await handler({ type: 'undoLivingAction', token: token() });
-
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining('could not be written'));
-        expect(JSON.parse(fs.readFileSync(ctxOf('alpha'), 'utf-8')).history).toEqual([
-            expect.objectContaining({ kind: 'requirement-removed', requirement: 'Checks itself' }),
-        ]);
-        write.mockRestore();
-    });
-
-    it('ignores a stale token', async () => {
-        fs.writeFileSync(specOf('alpha'), ADOPTED);
-        const { handler } = panel('alpha');
-        await handler({ type: 'approveSpec' });
-        const approved = fs.readFileSync(specOf('alpha'), 'utf-8');
-
-        await handler({ type: 'undoLivingAction', token: 'stale' });
-
-        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).toBe(approved);
-    });
-
-    it('refuses Remove when another capability leans on the heading', async () => {
-        const before = fs.readFileSync(specOf('beta'), 'utf-8');
-        const { deps, handler } = panel('beta');
-
-        await handler({ type: 'removeRequirement', heading: 'Sessions expire' });
-
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining('alpha still aligns to it'));
-        expect(fs.readFileSync(specOf('beta'), 'utf-8')).toBe(before);
-        expect(deps.offerLivingUndo).not.toHaveBeenCalled();
-    });
-
-    it.each(['Reads the session', 'Checks itself'])('does not refuse Remove of "%s", leaned on only from its own capability', async heading => {
-        const { handler } = panel('alpha');
-        await handler({ type: 'removeRequirement', heading });
-        expect(fs.readFileSync(specOf('alpha'), 'utf-8')).not.toContain(`### ${heading}`);
-    });
-});
 
 describe('messageHandlers - lifecycle actions', () => {
     beforeEach(() => {
@@ -525,8 +340,6 @@ describe('messageHandlers - read-only bug and idea pages', () => {
         [{ type: 'clarify', command: 'speckit.clarify' }],
         [{ type: 'approve' }],
         [{ type: 'regenerate' }],
-        [{ type: 'livingUpdate' }],
-        [{ type: 'livingAdopt' }],
         [{ type: 'resumeRun' }],
         [{ type: 'setStatus' }],
         [{ type: 'installSpecKitExtension' }],
@@ -912,6 +725,66 @@ describe('messageHandlers - overviewChosen', () => {
 
         expect(instance.state.landing).toBe('overview');
         expect(deps.refreshPanelTitle).toHaveBeenCalledWith(SPEC_DIR);
+    });
+});
+
+describe('messageHandlers - openIdea', () => {
+    let root: string;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'open-idea-'));
+        (vscode.workspace as any).workspaceFolders = [{ uri: vscode.Uri.file(root), name: 'ws', index: 0 }];
+    });
+
+    afterEach(() => {
+        (vscode.workspace as any).workspaceFolders = undefined;
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('opens the idea page at its latest report', async () => {
+        const dir = path.join(root, '.specify', 'assessments', 'saved-filters');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'intake.md'), '# Intake');
+        fs.writeFileSync(path.join(dir, 'decision.md'), '# Decision');
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openIdea', folder: '.specify/assessments/saved-filters/' } as any);
+
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith(
+            'speckit.viewSpecDocument', path.join(dir, 'decision.md'), { report: 'ideas', landing: true });
+    });
+
+    it('refuses an idea folder that links outside the project', async () => {
+        const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'outside-idea-'));
+        fs.writeFileSync(path.join(outside, 'decision.md'), '# Decision');
+        fs.mkdirSync(path.join(root, '.specify', 'assessments'), { recursive: true });
+        fs.symlinkSync(outside, path.join(root, '.specify', 'assessments', 'escape'));
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        await handler({ type: 'openIdea', folder: '.specify/assessments/escape/' } as any);
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.viewSpecDocument', expect.anything(), expect.anything());
+        fs.rmSync(outside, { recursive: true, force: true });
+    });
+
+    it('says so for a folder that is not an idea, and never leaves the project', async () => {
+        const handler = createMessageHandlers(SPEC_DIR, createMockDeps());
+
+        const notIdea = path.join(root, 'specs', '042-x');
+        fs.mkdirSync(notIdea, { recursive: true });
+        fs.writeFileSync(path.join(notIdea, 'decision.md'), '# Not an idea');
+        const above = path.join(path.dirname(root), 'assessments-above');
+        fs.mkdirSync(above, { recursive: true });
+        fs.writeFileSync(path.join(above, 'decision.md'), '# Outside');
+
+        await handler({ type: 'openIdea', folder: `../${path.basename(above)}/` } as any);
+        await handler({ type: 'openIdea', folder: 'specs/042-x/' } as any);
+
+        expect(vscode.commands.executeCommand).not.toHaveBeenCalledWith('speckit.viewSpecDocument', expect.anything(), expect.anything());
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(`No idea page found at ../${path.basename(above)}/.`);
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith('No idea page found at specs/042-x/.');
+        fs.rmSync(above, { recursive: true, force: true });
     });
 });
 

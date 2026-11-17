@@ -102,6 +102,18 @@ class AGoodBlock(Repo):
     def test_crlf_input_reads_the_same(self):
         self.assertEqual(self.check(GOOD.replace("\n", "\r\n"))["findings"], [])
 
+    def test_other_lines_naming_a_file_the_plan_creates_pass(self):
+        moved = calls("  settle() @ src/server.mjs:10",
+                      "+   recordStep() **new** @ src/run-record.mjs",
+                      "~     reviewRuns() @ src/run-record.mjs", title="Moved")
+        second = calls("  recordStep() @ src/run-record.mjs", title="Second")
+        self.assertEqual(self.rules(moved + "\n" + second), [])
+
+    def test_a_line_number_in_a_file_the_plan_creates_is_refused(self):
+        text = calls("  settle() @ src/server.mjs:10", "+   recordStep() **new** @ src/run-record.mjs",
+                     "~     reviewRuns() @ src/run-record.mjs:4")
+        self.assertIn(("ERROR", "malformed"), self.rules(text))
+
     def test_a_note_line_under_the_block_is_allowed(self):
         self.assertEqual(self.rules(GOOD + "note: called, not changed.\n"), [])
 
