@@ -9,10 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
-- **Doctor checks plugin freshness.** It compares each Claude Code plugin your Companion config or nodes call with its marketplace and ==says when one is behind==, naming both versions; a version it cannot read is reported as unknown. <!-- area: install -->
+- **Doctor checks plugin freshness.** It flags each Claude Code plugin your Companion config calls that is ==behind its marketplace==, naming both versions. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: install -->
 
 ### Changed
-- **Plan writes design docs only when the spec needs them.** `data-model.md` is written only when the spec names ==a new entity==, and `contracts/` only for a new or changed API; specify marks entities that already exist *(existing)*. <!-- area: pipeline -->
+- **Plan writes only the design docs needed.** A data model is written only for ==a new entity==, and contracts only for a new or changed API. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: pipeline -->
 
 ## [0.28.0] - 2026-11-17
 
