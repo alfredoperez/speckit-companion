@@ -65,9 +65,12 @@ commands:
           - { type: node, ref: debug-timing }
 
 # Paths that make a change high risk, on top of Companion's defaults.
+# Only the code that turns repository text into markup, not the whole webview.
 risk:
   high:
-    - "apps/vscode/webview/src/**"
+    - "packages/viewer/src/core/markdown/**"
+    - "apps/vscode/webview/src/spec-viewer/markdown/**"
+    - "apps/vscode/webview/src/spec-viewer/editor/**"
     - "apps/speckit-extension/scripts/capture.py"
     - "apps/speckit-extension/scripts/write-context.py"
     - "apps/speckit-extension/scripts/spec_context.py"
