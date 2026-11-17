@@ -18,6 +18,8 @@ target="$(dirname "$main")/$(basename "$main").worktrees/$name"
 git -C "$main" fetch -q origin main
 git -C "$main" worktree add -q "$target" -b "$branch" refs/remotes/origin/main
 (cd "$target" && npm ci --no-audit --no-fund >&2)
+# The site is its own npm project, not a workspace; without this the docs build has no astro.
+(cd "$target/apps/website" && npm ci --no-audit --no-fund >&2)
 if command -v specify >/dev/null 2>&1; then
   # The dev install rewrites two tracked registry files; put them back so they never reach a commit.
   (cd "$target" && specify extension add --dev apps/speckit-extension --force >&2 \
