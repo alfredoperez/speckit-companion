@@ -2,6 +2,37 @@
 
 This holds SpecKit Companion release notes for every release but the two latest, moved out of the root `CHANGELOG.md` to keep that file to recent history; current entries (the two latest releases, plus Unreleased) live there.
 
+## [0.38.0] - 2026-11-08
+
+Every spec now says what was proven, assumed or only claimed, and Companion lines up with Spec Kit 1.2.5.
+
+### Highlights
+
+#### The Overview shows what backs each claim
+It quotes ==your request==, says who decided, marks assumed and weak requirements, flags stale checks, and shows review depth.
+<!-- area: spec-viewer; pr: 964, 965, 966, 967, 968; media: request-verbatim, decision-authors, assumed-weak, stale-check, review-depth -->
+
+#### The Overview names the ticket
+It shows ==the ticket a spec came from== and the spec it extends, and the specs filter finds that ticket.
+<!-- area: spec-viewer; pr: 972; media: source-ticket -->
+
+#### The Bugs pane reads Spec Kit's bugfix runs
+Bugs show ==step times and a review pause==, extra reports as tabs, a tracker link, and old reports after a re-assessment.
+<!-- area: sidebar; pr: 961, 976; media: bug-times -->
+
+### Added
+- **Ideas read your folder and keep their specs.** A `speckit.assessmentsDirectory` setting points at ==your assessments folder==, and a spec made from an idea links back to it. ([#958](https://github.com/alfredoperez/speckit-companion/pull/958), [#973](https://github.com/alfredoperez/speckit-companion/pull/973)) <!-- area: sidebar -->
+- **The viewer follows the run.** The overview draws each converge pass and ==the tasks it added==, and a step's new document opens as soon as it lands. ([#944](https://github.com/alfredoperez/speckit-companion/pull/944), [#979](https://github.com/alfredoperez/speckit-companion/pull/979)) <!-- area: overview -->
+- **Spec Kit projects are offered Companion.** Opening a Spec Kit project without Companion's extension ==offers to add it==, until you say not for that project. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957)) <!-- area: install -->
+
+### Fixed
+- **Upgrade follows Spec Kit's own steps.** Upgrade runs ==`specify self upgrade`, each assistant's upgrade==, then re-adds Companion, and a CLI before 1.2.5 keeps old presets. ([#957](https://github.com/alfredoperez/speckit-companion/pull/957), [#980](https://github.com/alfredoperez/speckit-companion/pull/980)) <!-- area: install -->
+- **Answers refine the report in place.** Answering a question on a bug or idea ==edits that one report== instead of re-running the stage. ([#959](https://github.com/alfredoperez/speckit-companion/pull/959)) <!-- area: spec-viewer -->
+- **A reinstall keeps your pipeline.** Opening a project after a reinstall or update ==rebuilds its customised pipeline==, so the assistant never runs the shipped default. ([#950](https://github.com/alfredoperez/speckit-companion/pull/950)) <!-- area: pipeline -->
+- **Commands match what your project installed.** Companion spells each command ==the way Spec Kit recorded it== for your assistant, so Copilot projects get the dash names on disk. ([#948](https://github.com/alfredoperez/speckit-companion/pull/948), [#956](https://github.com/alfredoperez/speckit-companion/pull/956)) <!-- area: assistants -->
+- **Converge is timed without the add-on.** In a project without Companion's Spec Kit extension, ==converge records its start and finish== like every other step. ([#956](https://github.com/alfredoperez/speckit-companion/pull/956)) <!-- area: run-record -->
+- **A step works on the spec you clicked.** Terminals Companion opens for a spec carry ==its folder==, so steps stop picking another spec from `feature.json`. ([#946](https://github.com/alfredoperez/speckit-companion/pull/946)) <!-- area: spec-viewer -->
+
 ## [0.37.0] - 2026-10-13
 
 A plan that draws what a change touches, and a Workflow Builder that works on plain Spec Kit.
