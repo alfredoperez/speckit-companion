@@ -59,8 +59,10 @@ export interface EngineStepView {
 
 /** What spec-kit's run log says about the bug, already worded for the page. */
 export interface BugEngineView {
-    runId: string;
-    workflow: string;
+    /** `record`: the times come from Companion's bug hooks, not from a spec-kit workflow run. */
+    source: 'engine' | 'record';
+    runId?: string;
+    workflow?: string;
     steps: EngineStepView[];
     /** `answerable`: the gate is spec-kit's own review gate, so the page can offer Approve and Reject. */
     paused?: { gate: string; resume?: string; answerable?: boolean };

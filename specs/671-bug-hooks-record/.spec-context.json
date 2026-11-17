@@ -1,0 +1,711 @@
+{
+  "workflow": "companion",
+  "specName": "Record bug runs through the bug hooks",
+  "branch": "feat/987-bug-hooks",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-17T16:02:49.896Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-17T16:05:16.641Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-17T16:05:37.577Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:07:34.005Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-17T16:07:44.052Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:08:35.401Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-17T16:08:48.229Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:09:58.580Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:09:58.772Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:11:20.734Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:11:20.735Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:11:20.992Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:11:20.993Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:11:21.174Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:11:59.962Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:11:59.963Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:12:00.133Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:15.223Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:15.223Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:15.377Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:15.378Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:15.587Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:15.587Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:15.588Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:15.588Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:48.948Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:14:49.151Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:18:11.101Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:18:11.132Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:18:12.068Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-17T16:24:58.834Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:25:52.643Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:25:52.644Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-17T16:26:20.001Z"
+    }
+  ],
+  "request": "Issue #987 slice w42: record bug runs through the six bug hooks. PR body must say `Closes #987` (this is the last open item).\n\nProblem. Nothing records a bug run typed in chat today: Companion registers no bug hooks and writes no record for bugs. spec-kit's bundled `bug` extension fires six bug hook events (since spec-kit v1.1.3). They are model-run like every hook and carry no variables. assess has no hooks, so ideas stay out.\n\nOwner decision 2026-11-17: the stamps go in a `.spec-context.json` per bug, the same store with the same guarantees as specs (history only grows, writes merge, status never moves backward, one cross-process lock; deterministic writes `by: extension`). Reuse the existing writer (`apps/speckit-extension/scripts/write-context.py` / `spec_context.py`); do not write a second writer.\n\nProposed. Register the six bug hooks in `apps/speckit-extension/extension.yml` with one-line commands under `apps/speckit-extension/commands/` that stamp the bug's boundaries for its slug into that bug's `.spec-context.json`, and have the Bugs pane (`apps/vscode/src/features/bugs/`) read them. Find the six hook event names and where the bug extension keeps a bug's folder/slug from the installed spec-kit bug extension (look under `.specify/extensions/bug*/` or the spec-kit source in the sandboxes/vault research) — do not guess them.\n\nAcceptance:\n- A chat bug run records assess, fix and test boundaries.\n- Partial and early-stop outcomes are recorded.\n- The slug stays continuous across stages.\n- Engine-run bugs (read today by `apps/vscode/src/features/bugs/engineRuns.ts`) are not counted twice.\n\nFollow-ons: a new command goes in `extension.yml` `provides.commands`; changelog line under `[Unreleased]` in `apps/speckit-extension/CHANGELOG.md` (and root CHANGELOG.md if the pane changes for users); no version bumps.",
+  "unattended": true,
+  "expectations": [
+    "no hooks or record for ideas (assess extension has none)",
+    "no change to the bug extension's own commands or reports",
+    "no engine log reader (w36 dropped)"
+  ],
+  "context": [
+    "area: apps/speckit-extension (extension.yml hooks, commands/, scripts/write-context.py, spec_context.py)",
+    "area: apps/vscode/src/features/bugs (bugReports.ts, engineRuns.ts)",
+    "constraint: one store, one writer: reuse write-context.py",
+    "constraint: bug folders are .specify/bugs/<slug>/ owned by spec-kit's bundled bug extension 1.0.2"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Register a hook on all six bug events",
+      "tasks": [
+        "T003",
+        "T006"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_bug_hooks.py::BugHooksRegistered"
+      ]
+    },
+    "FR-002": {
+      "title": "Each hook records the stage boundary through the existing writer",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_bug_hooks.py::test_a_chat_run_records_every_stage_boundary_in_order"
+      ]
+    },
+    "FR-003": {
+      "title": "After hooks record the stage outcome",
+      "tasks": [
+        "T002",
+        "T008"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_bug_hooks.py::test_partial_and_invalid_outcomes_are_kept"
+      ]
+    },
+    "FR-004": {
+      "title": "A started stage with no finish reads as stopped",
+      "tasks": [
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "apps/vscode/src/features/bugs/__tests__/bugRecord.test.ts::reads a stage with no finish as stopped once a later stage starts"
+      ]
+    },
+    "FR-005": {
+      "title": "The slug is the one the bug command resolved",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_bug_hooks.py::test_a_bad_slug_or_stage_writes_nothing"
+      ]
+    },
+    "FR-006": {
+      "title": "The bug page shows each stage time and outcome",
+      "tasks": [
+        "T011",
+        "T012",
+        "T016",
+        "T017"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts::builds the run log from the hooks record"
+      ]
+    },
+    "FR-007": {
+      "title": "Engine-run bugs show each stage once",
+      "tasks": [
+        "T011",
+        "T013",
+        "T016"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts::shows the engine run alone when a bug has both"
+      ]
+    },
+    "FR-008": {
+      "title": "Bugs without a record look as today",
+      "tasks": [
+        "T011",
+        "T013"
+      ],
+      "tests": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts::has no run log for a bug typed in chat"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 12,
+    "projectedTasks": 14,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Record chat bug runs through the six bug hooks into a per-bug .spec-context.json and show stage times in the Bugs pane",
+  "size": "normal",
+  "source": "#987",
+  "decisions": [
+    {
+      "decision": "Six hooks on before/after_bug_assess|fix|test calling two one-line commands",
+      "why": "the bundled bug extension 1.0.2 checks exactly these keys",
+      "rejected": "editing the bug extension",
+      "by": "agent",
+      "at": "2026-11-17T16:07:33.774Z"
+    },
+    {
+      "decision": "write-context.py gains --bug <slug> that targets .specify/bugs/<slug>/ and allows assess|fix|test as steps",
+      "why": "one writer, one lock; non-canonical steps already record without status",
+      "rejected": "adding bug stages to the canonical steps",
+      "by": "agent",
+      "at": "2026-11-17T16:07:33.774Z"
+    },
+    {
+      "decision": "The finish reads the outcome from the stage's report",
+      "why": "deterministic, the report already holds it",
+      "rejected": "model-passed --did",
+      "by": "agent",
+      "at": "2026-11-17T16:07:33.774Z"
+    },
+    {
+      "decision": "The page shows the engine run when one exists, else the record",
+      "why": "one source per page means each stage once",
+      "rejected": "merging the two sources",
+      "by": "agent",
+      "at": "2026-11-17T16:07:33.774Z"
+    },
+    {
+      "decision": "A bug start always opens a new round unless the stage's last entry is already a start",
+      "why": "a bug is re-fixed after a failed test; the spec rule of one start per step would drop the second round",
+      "rejected": "reusing update_context, which dedups starts per step",
+      "by": "agent",
+      "at": "2026-11-17T16:18:11.305Z"
+    },
+    {
+      "decision": "The pane reads the record only when there is no engine run",
+      "why": "an engine run fires the same hooks, so two sources would show each stage twice",
+      "rejected": "merging the two",
+      "by": "agent",
+      "at": "2026-11-17T16:18:11.305Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Writer flag + six hooks + record-to-run-log mapping in the pane",
+      "key_finding": "The bug commands skip after hooks on early stops, so a start without a finish is the stop signal"
+    },
+    "tasks": {
+      "summary": "20 tasks: foundational writer flag, 3 story phases, polish"
+    },
+    "implement": {
+      "summary": "Six bug hooks record assess/fix/test into the bug's .spec-context.json; the bug page shows those times when there is no engine run"
+    }
+  },
+  "approach": "Register the six bug hooks with one-line commands that call write-context.py --bug <slug>. The writer stamps start/finish into the bug's own .spec-context.json and reads the outcome from the report. The pane maps that record onto the existing Run log, used only when no engine run exists.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "write-context.py --bug: slug check, bug folder target, new round per start",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "finish reads Verdict/Status/Result from the stage's report into did",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "bug hook tests: manifest wiring, stage boundaries, rounds, bad slug",
+      "files": [
+        "apps/speckit-extension/tests/test_bug_hooks.py"
+      ],
+      "wave": "T003-T004"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "bug hook tests: manifest wiring, stage boundaries, rounds, bad slug",
+      "files": [
+        "apps/speckit-extension/tests/test_bug_hooks.py"
+      ],
+      "wave": "T003-T004"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "before-bug/after-bug commands and six hooks registered, documented",
+      "files": [
+        "apps/speckit-extension/commands/",
+        "apps/speckit-extension/extension.yml",
+        "apps/speckit-extension/README.md",
+        "apps/speckit-extension/docs/commands.md"
+      ],
+      "wave": "T005-T006"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "before-bug/after-bug commands and six hooks registered, documented",
+      "files": [
+        "apps/speckit-extension/commands/",
+        "apps/speckit-extension/extension.yml",
+        "apps/speckit-extension/README.md",
+        "apps/speckit-extension/docs/commands.md"
+      ],
+      "wave": "T005-T006"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "dev re-install, .registry kept for the emission gate",
+      "files": [
+        ".specify/extensions/.registry"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "outcome and stopped-stage tests",
+      "files": [
+        "apps/speckit-extension/tests/test_bug_hooks.py",
+        "apps/vscode/src/features/bugs/__tests__/bugRecord.test.ts"
+      ],
+      "wave": "T008-T009"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "outcome and stopped-stage tests",
+      "files": [
+        "apps/speckit-extension/tests/test_bug_hooks.py",
+        "apps/vscode/src/features/bugs/__tests__/bugRecord.test.ts"
+      ],
+      "wave": "T008-T009"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "recordStages maps the bug record to done/stopped/running rounds",
+      "files": [
+        "apps/vscode/src/features/bugs/bugRecord.ts"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "story and page tests: record run log, engine wins, caption",
+      "files": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx"
+      ],
+      "wave": "T011-T012"
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "story and page tests: record run log, engine wins, caption",
+      "files": [
+        "apps/vscode/src/features/reports/__tests__/bugStory.test.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/__tests__/BugStoryPage.test.tsx"
+      ],
+      "wave": "T011-T012"
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "BugReport.record when no engine run; BugEngineView.source",
+      "files": [
+        "apps/vscode/src/features/bugs/bugReports.ts",
+        "apps/vscode/src/features/reports/reportPageModel.ts"
+      ],
+      "wave": "T013-T014"
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "BugReport.record when no engine run; BugEngineView.source",
+      "files": [
+        "apps/vscode/src/features/bugs/bugReports.ts",
+        "apps/vscode/src/features/reports/reportPageModel.ts"
+      ],
+      "wave": "T013-T014"
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "record passed to the story, recordView, caption by source, recorded-run story",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/reportPanels.ts",
+        "apps/vscode/src/features/reports/bugStory.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx",
+        "apps/vscode/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx"
+      ],
+      "wave": "T015-T018"
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "record passed to the story, recordView, caption by source, recorded-run story",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/reportPanels.ts",
+        "apps/vscode/src/features/reports/bugStory.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx",
+        "apps/vscode/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx"
+      ],
+      "wave": "T015-T018"
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "record passed to the story, recordView, caption by source, recorded-run story",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/reportPanels.ts",
+        "apps/vscode/src/features/reports/bugStory.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx",
+        "apps/vscode/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx"
+      ],
+      "wave": "T015-T018"
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "record passed to the story, recordView, caption by source, recorded-run story",
+      "files": [
+        "apps/vscode/src/features/spec-viewer/reportPanels.ts",
+        "apps/vscode/src/features/reports/bugStory.ts",
+        "apps/vscode/webview/src/spec-viewer/report-pages/BugStoryPage.tsx",
+        "apps/vscode/webview/src/spec-viewer/__stories__/ReportPages.stories.tsx"
+      ],
+      "wave": "T015-T018"
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Unreleased lines in both changelogs (PR number filled after the PR opens)",
+      "files": [
+        "CHANGELOG.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "typecheck, related jest, spec-kit suite, shape parity all exit 0"
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "silent lone start reads stopped; missing-folder refusal recorded with evidence",
+      "files": [
+        "apps/vscode/src/features/bugs/bugRecord.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugRecord.test.ts",
+        "specs/671-bug-hooks-record/research.md"
+      ],
+      "wave": "T021-T022"
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "silent lone start reads stopped; missing-folder refusal recorded with evidence",
+      "files": [
+        "apps/vscode/src/features/bugs/bugRecord.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugRecord.test.ts",
+        "specs/671-bug-hooks-record/research.md"
+      ],
+      "wave": "T021-T022"
+    }
+  },
+  "verified": [
+    {
+      "what": "typecheck",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.2,
+      "result": "npm notice run speckit-companion@0.40.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "aad854aa",
+      "tree": "4f3e2f45b32903ce404f21df1811199c99269677"
+    },
+    {
+      "what": "related jest",
+      "command": "npx jest apps/vscode/src/features/bugs apps/vscode/src/features/reports apps/vscode/webview/src/spec-viewer/report-pages",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 14.8,
+      "result": "Snapshots:   0 total · Time:        14.015 s, estimated 20 s · Ran all test suites matching /apps\\/vscode\\/src\\/features\\/bugs|apps\\/vscode\\/src\\/features\\/reports|apps\\/vscode\\/webview\\/src\\/spec-viewer\\/report-pages/i.",
+      "commit": "aad854aa",
+      "tree": "4f3e2f45b32903ce404f21df1811199c99269677"
+    },
+    {
+      "what": "spec-kit extension suite",
+      "command": "python3 -m pytest -q apps/speckit-extension/tests",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 150.0,
+      "result": "........................................................................ [ 99%] · .                                                                        [100%] · 1499 passed, 14 skipped in 149.60s (0:02:29)",
+      "commit": "aad854aa",
+      "tree": "4f3e2f45b32903ce404f21df1811199c99269677"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[shape-parity] OK — 7 bodies match parts",
+      "commit": "aad854aa",
+      "tree": "4f3e2f45b32903ce404f21df1811199c99269677"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Phase 5 owns 6 files and was built inline rather than handed to a worker; the context was already loaded and the phase was one coherent change.",
+      "step": "implement"
+    },
+    {
+      "note": "Hooks are model-run: a chat that forgets the slug records nothing (by design, no guessing).",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: 0 problems; warnings are outside this run (workflow not registered in this worktree, three old specs share 634, implement timed as one wave).",
+      "step": "implement"
+    }
+  ],
+  "last_action": "checks green; doctor and review next",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-17T16:24:58.882Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-17T16:24:58.935Z",
+      "by": "extension",
+      "finishedAt": "2026-11-17T16:26:20.093Z",
+      "added": [
+        "T021",
+        "T022"
+      ],
+      "completed": true
+    }
+  ]
+}

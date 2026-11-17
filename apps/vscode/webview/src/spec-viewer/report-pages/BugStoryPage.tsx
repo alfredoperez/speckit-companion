@@ -166,7 +166,11 @@ function RunLog({ engine }: { engine: BugEngineView }) {
     return (
         <>
             <h2 id="run-log">Run log</h2>
-            <p class="rp-meta">{`Times from spec-kit's run log, workflow ${engine.workflow}, run ${engine.runId}`}</p>
+            <p class="rp-meta">
+                {engine.source === 'record'
+                    ? "Times from Companion's record of the bug commands"
+                    : `Times from spec-kit's run log, workflow ${engine.workflow}, run ${engine.runId}`}
+            </p>
             <ol class="rp-runlog">
                 {engine.steps.map((step, index) => (
                     <li key={index} class={`rp-runlog__step rp-runlog__step--${step.state}`}>

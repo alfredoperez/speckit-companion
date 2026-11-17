@@ -25,6 +25,7 @@ import {
     BugVerdict,
 } from './bugValues';
 import { EngineRun, readEngineRuns } from './engineRuns';
+import { RecordStage, recordStages } from './bugRecord';
 import { Freshness, referenceFreshness, worstFreshness } from './bugFreshness';
 
 export { parseReportHeader } from '../reports/reportSet';
@@ -75,6 +76,8 @@ export interface BugReport {
     freshness: Partial<Record<'fix' | 'test', Freshness>>;
     /** The newest spec-kit workflow run for this bug, when one exists. */
     engine?: EngineRun;
+    /** The stages Companion's bug hooks recorded, read only when there is no engine run. */
+    record?: RecordStage[];
 }
 
 export function bugState(
@@ -119,6 +122,7 @@ function toBugReport(folder: ReportFolder<BugReportKind>, engine?: EngineRun): B
     const { slug, directory, title, reports, stages } = folder;
     const freshness = bugFreshness(folder);
     const stale = Object.values(freshness).includes('stale');
+    const record = engine ? undefined : recordStages(directory);
     return {
         slug,
         directory,
@@ -133,6 +137,7 @@ function toBugReport(folder: ReportFolder<BugReportKind>, engine?: EngineRun): B
         state: bugState({ stages, verdict, fixStatus, testResult, stale, paused: !!engine?.pausedAt }),
         freshness,
         ...(engine && { engine }),
+        ...(record && { record }),
     };
 }
 

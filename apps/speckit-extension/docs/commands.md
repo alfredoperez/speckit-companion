@@ -16,7 +16,7 @@ Everything the extension declares, by family. The README's [Commands](../README.
 | [Pipeline](#pipeline-commands) | `speckit.companion.specify`, `speckit.companion.plan`, `speckit.companion.tasks`, `speckit.companion.implement`, `speckit.companion.auto`, `speckit.companion.classify`, `speckit.companion.mark-complete` |
 | [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
 | [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
-| [Hooks](#lifecycle-hooks) | `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge`, `speckit.companion.on-prompt`, `speckit.companion.on-stop` |
+| [Hooks](#lifecycle-hooks) | `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge`, `speckit.companion.before-bug`, `speckit.companion.after-bug`, `speckit.companion.on-prompt`, `speckit.companion.on-stop` |
 
 ## Diagnostics
 
@@ -73,6 +73,12 @@ Registered in the extension's `extension.yml` (and, once installed, in the proje
 | `after_implement` | `speckit.companion.after-implement` | `false` (auto-runs) | Sync implement progress from `tasks.md` |
 | `before_converge` | `speckit.companion.before-converge` | `false` (auto-runs) | Record the converge start |
 | `after_converge` | `speckit.companion.after-converge` | `false` (auto-runs) | Record the converge finish |
+| `before_bug_assess` | `speckit.companion.before-bug` | `false` (auto-runs) | Record the bug assess start |
+| `after_bug_assess` | `speckit.companion.after-bug` | `false` (auto-runs) | Record the bug assess finish and its outcome |
+| `before_bug_fix` | `speckit.companion.before-bug` | `false` (auto-runs) | Record the bug fix start |
+| `after_bug_fix` | `speckit.companion.after-bug` | `false` (auto-runs) | Record the bug fix finish and its outcome |
+| `before_bug_test` | `speckit.companion.before-bug` | `false` (auto-runs) | Record the bug test start |
+| `after_bug_test` | `speckit.companion.after-bug` | `false` (auto-runs) | Record the bug test finish and its outcome |
 
 `optional: false` means the agent runs it **automatically** with no prompt. (For contrast, the bundled `git` extension's `after_specify` commit hook is `optional: true`, so it only *offers* to run.)
 
@@ -167,6 +173,17 @@ Runs after `/speckit.converge`. Records converge's finish, again with no `--stat
 
 ```bash
 python3 .specify/extensions/companion/scripts/write-context.py --step converge --kind complete --by extension
+```
+
+## `speckit.companion.before-bug` and `speckit.companion.after-bug`
+
+Run around spec-kit's bundled bug commands (assess, fix and test). Each records the stage's start or finish in the bug's own `.specify/bugs/<slug>/.spec-context.json`, the same record a spec keeps. The finish reads the stage's outcome from the report it wrote: the assessment's verdict, the fix's status or the test's result. A stage that stops before writing its report runs no after hook, so it keeps a start with no finish. A slug that is not a plain folder name records nothing.
+
+**What the agent runs:**
+
+```bash
+python3 .specify/extensions/companion/scripts/write-context.py --hook start --bug <slug> --step <assess|fix|test>
+python3 .specify/extensions/companion/scripts/write-context.py --hook finish --bug <slug> --step <assess|fix|test>
 ```
 
 ## Derive-from-files fallback

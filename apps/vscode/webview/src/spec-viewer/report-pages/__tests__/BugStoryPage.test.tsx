@@ -315,6 +315,7 @@ describe('BugStoryPage with a spec-kit run and report freshness', () => {
             ...bare,
             lead: 'in-review',
             engine: {
+                source: 'engine',
                 runId: '3471d74b',
                 workflow: 'bugfix',
                 steps: [
@@ -339,6 +340,7 @@ describe('BugStoryPage with a spec-kit run and report freshness', () => {
             ...bare,
             lead: 'in-review',
             engine: {
+                source: 'engine',
                 runId: '3471d74b',
                 workflow: 'bugfix',
                 steps: [],
@@ -355,6 +357,22 @@ describe('BugStoryPage with a spec-kit run and report freshness', () => {
             [{ type: 'reportAction', id: 'bug.reject' }],
         ]);
         delete (globalThis as { vscode?: unknown }).vscode;
+    });
+
+    it('captions a recorded chat run as Companion record times, with a stopped stage', () => {
+        const story: BugStory = {
+            ...bare,
+            engine: {
+                source: 'record',
+                steps: [
+                    { label: 'Assess', detail: '1m 00s · valid', state: 'done' },
+                    { label: 'Fix', detail: 'Stopped before its report', state: 'failed' },
+                ],
+            },
+        };
+        const page = renderPage(story);
+        expect(page.querySelector('.rp-meta')?.textContent).toBe("Times from Companion's record of the bug commands");
+        expect(texts(page, '.rp-runlog li')).toEqual(['Assess1m 00s · valid', 'FixStopped before its report']);
     });
 
     it('shows no run log for a bug without a run', () => {
