@@ -12,6 +12,8 @@ export interface RecordStage {
 }
 
 const STAGES: readonly string[] = ['assess', 'fix', 'test'];
+// simplified: a stage silent this long has died without its report; raise it if a real stage ever runs longer
+const SILENT_MS = 2 * 60 * 60 * 1000;
 
 interface Boundary {
     step: BugStageId;
@@ -31,7 +33,7 @@ function boundaries(history: unknown): Boundary[] {
 }
 
 /** Each round of each stage the bug's hooks recorded, in order; undefined when the bug has no record. */
-export function recordStages(directory: string): RecordStage[] | undefined {
+export function recordStages(directory: string, now: number = Date.now()): RecordStage[] | undefined {
     let ctx: { history?: unknown };
     try {
         ctx = JSON.parse(fs.readFileSync(path.join(directory, '.spec-context.json'), 'utf-8'));
@@ -55,6 +57,9 @@ export function recordStages(directory: string): RecordStage[] | undefined {
         started.stage.seconds = Math.max(0, Math.round((b.at - started.at) / 1000));
         if (b.did) started.stage.outcome = b.did;
         open.delete(b.step);
+    }
+    for (const { stage, at } of open.values()) {
+        if (now - at > SILENT_MS) stage.state = 'stopped';
     }
     return stages.length ? stages : undefined;
 }

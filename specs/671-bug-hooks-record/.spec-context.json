@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Record bug runs through the bug hooks",
   "branch": "feat/987-bug-hooks",
-  "currentStep": "implement",
-  "status": "implemented",
+  "currentStep": "converge",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -234,6 +234,36 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-17T16:18:12.068Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-17T16:24:58.834Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:25:52.643Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-17T16:25:52.644Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-17T16:26:20.001Z"
     }
   ],
   "request": "Issue #987 slice w42: record bug runs through the six bug hooks. PR body must say `Closes #987` (this is the last open item).\n\nProblem. Nothing records a bug run typed in chat today: Companion registers no bug hooks and writes no record for bugs. spec-kit's bundled `bug` extension fires six bug hook events (since spec-kit v1.1.3). They are model-run like every hook and carry no variables. assess has no hooks, so ideas stay out.\n\nOwner decision 2026-11-17: the stamps go in a `.spec-context.json` per bug, the same store with the same guarantees as specs (history only grows, writes merge, status never moves backward, one cross-process lock; deterministic writes `by: extension`). Reuse the existing writer (`apps/speckit-extension/scripts/write-context.py` / `spec_context.py`); do not write a second writer.\n\nProposed. Register the six bug hooks in `apps/speckit-extension/extension.yml` with one-line commands under `apps/speckit-extension/commands/` that stamp the bug's boundaries for its slug into that bug's `.spec-context.json`, and have the Bugs pane (`apps/vscode/src/features/bugs/`) read them. Find the six hook event names and where the bug extension keeps a bug's folder/slug from the installed spec-kit bug extension (look under `.specify/extensions/bug*/` or the spec-kit source in the sandboxes/vault research) — do not guess them.\n\nAcceptance:\n- A chat bug run records assess, fix and test boundaries.\n- Partial and early-stop outcomes are recorded.\n- The slug stays continuous across stages.\n- Engine-run bugs (read today by `apps/vscode/src/features/bugs/engineRuns.ts`) are not counted twice.\n\nFollow-ons: a new command goes in `extension.yml` `provides.commands`; changelog line under `[Unreleased]` in `apps/speckit-extension/CHANGELOG.md` (and root CHANGELOG.md if the pane changes for users); no version bumps.",
@@ -402,7 +432,7 @@
     }
   },
   "approach": "Register the six bug hooks with one-line commands that call write-context.py --bug <slug>. The writer stamps start/finish into the bug's own .spec-context.json and reads the outcome from the report. The pane maps that record onto the existing Run log, used only when no engine run exists.",
-  "currentTask": "T020",
+  "currentTask": null,
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -579,6 +609,26 @@
     "T020": {
       "status": "DONE",
       "did": "typecheck, related jest, spec-kit suite, shape parity all exit 0"
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "silent lone start reads stopped; missing-folder refusal recorded with evidence",
+      "files": [
+        "apps/vscode/src/features/bugs/bugRecord.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugRecord.test.ts",
+        "specs/671-bug-hooks-record/research.md"
+      ],
+      "wave": "T021-T022"
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "silent lone start reads stopped; missing-folder refusal recorded with evidence",
+      "files": [
+        "apps/vscode/src/features/bugs/bugRecord.ts",
+        "apps/vscode/src/features/bugs/__tests__/bugRecord.test.ts",
+        "specs/671-bug-hooks-record/research.md"
+      ],
+      "wave": "T021-T022"
     }
   },
   "verified": [
@@ -644,5 +694,18 @@
     "reasons": [
       "touches apps/speckit-extension/scripts/write-context.py"
     ]
-  }
+  },
+  "convergeStartedAt": "2026-11-17T16:24:58.882Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-17T16:24:58.935Z",
+      "by": "extension",
+      "finishedAt": "2026-11-17T16:26:20.093Z",
+      "added": [
+        "T021",
+        "T022"
+      ],
+      "completed": true
+    }
+  ]
 }

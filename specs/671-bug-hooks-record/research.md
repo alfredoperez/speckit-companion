@@ -6,6 +6,12 @@
 **Rationale**: read from spec-kit's bundled `bug` extension 1.0.2 (`core_pack/extensions/bug/commands/*.md`). Each command resolves `BUG_SLUG` and `BUG_DIR = .specify/bugs/<BUG_SLUG>`, checks `hooks.before_bug_<stage>` before work and `hooks.after_bug_<stage>` only after it writes its report. Early stops skip the after hook.
 **Alternatives considered**: hooks in the bug extension itself (not ours to edit).
 
+## A missing bug folder
+
+**Decision**: a hook for a folder that does not exist records nothing.
+**Rationale**: spec-kit's assess creates `BUG_DIR` before it checks `hooks.before_bug_assess` (`speckit.bug.assess.md` line 78), and fix and test require an existing folder. So a missing folder means a wrong slug, and creating it would leave an orphan.
+**Alternatives considered**: creating the folder, as the spec's edge case first said.
+
 ## How the hook knows the slug
 
 **Decision**: the hook command tells the model to pass the slug the bug command just resolved.

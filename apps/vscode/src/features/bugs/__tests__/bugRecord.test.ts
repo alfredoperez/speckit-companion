@@ -31,11 +31,13 @@ describe('recordStages', () => {
             { step: 'fix', kind: 'start', at: at('10:02:00') },
             { step: 'test', kind: 'start', at: at('10:05:00') },
         ]);
-        expect(recordStages(dir)?.map(stage => `${stage.id}:${stage.state}`)).toEqual(['assess:done', 'fix:stopped', 'test:running']);
+        expect(recordStages(dir, Date.parse(at('10:06:00')))?.map(stage => `${stage.id}:${stage.state}`)).toEqual(['assess:done', 'fix:stopped', 'test:running']);
     });
 
-    it('reads a lone start as running', () => {
-        expect(recordStages(bugWith([{ step: 'fix', kind: 'start', at: at('10:00:00') }]))).toEqual([{ id: 'fix', state: 'running' }]);
+    it('reads a lone start as running, and as stopped once it has been silent for two hours', () => {
+        const dir = bugWith([{ step: 'fix', kind: 'start', at: at('10:00:00') }]);
+        expect(recordStages(dir, Date.parse(at('10:30:00')))).toEqual([{ id: 'fix', state: 'running' }]);
+        expect(recordStages(dir, Date.parse(at('12:30:00')))).toEqual([{ id: 'fix', state: 'stopped' }]);
     });
 
     it('keeps each round of a stage run twice', () => {

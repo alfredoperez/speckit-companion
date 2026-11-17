@@ -94,3 +94,8 @@ Files: `apps/vscode/src/features/reports/__tests__/bugStory.test.ts`, `apps/vsco
 ## Dependencies & Execution Order
 
 Foundational (T001 → T002) blocks every story. Phase 3: tests, then Wave 1 (T005, T006), then T007. Phase 4 needs Phase 3's test file and T002; T010 is its own file. Phase 5 needs T010: Wave 1 (T013, T014) blocks Wave 2 (T015–T018). Polish runs last.
+
+## Phase 7: Convergence
+
+- [x] **T021** Read a lone start with no finish as stopped once it has been silent for two hours, so a last stage that died does not read as running forever per FR-004 (partial) · `apps/vscode/src/features/bugs/bugRecord.ts`
+- [x] **T022** Keep refusing a missing bug folder and record why: spec-kit's assess creates `BUG_DIR` before it checks hooks (`speckit.bug.assess.md` line 78), so the spec's edge case of a before hook creating the folder never occurs per Edge Cases (contradicts) · `specs/671-bug-hooks-record/research.md`
