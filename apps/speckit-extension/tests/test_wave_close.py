@@ -74,6 +74,24 @@ class WaveClose(unittest.TestCase):
         _status, findings = check_record(self.spec, self.ctx())
         self.assertFalse(any("instead of one call each" in f.title for f in findings))
 
+    def _wave_close_row(self):
+        from check_capture import run_checks
+        rows = run_checks(self.spec).to_dict()["checks"]
+        return next(c for c in rows if c["id"] == "task-wave-close")
+
+    def test_the_bench_fails_a_close_that_spans_several_waves(self):
+        self._two_waves()
+        self.write("--close-task", "T001,T002,T003,T004,T005", "--by", "ai", "--did", "everything at the end")
+        row = self._wave_close_row()
+        self.assertEqual(row["status"], "FAIL")
+        self.assertIn("T001-T005 spans 3 waves", row["detail"])
+
+    def test_the_bench_passes_waves_closed_one_by_one(self):
+        self._two_waves()
+        self.write("--close-task", "T001,T002", "--by", "ai", "--did", "wave one")
+        self.write("--close-task", "T004,T005", "--by", "ai", "--did", "polish")
+        self.assertEqual(self._wave_close_row()["status"], "PASS")
+
     def test_a_close_names_the_next_wave_to_close(self):
         self._two_waves()
         out = subprocess.run([sys.executable, str(WRITER), "--close-task", "T001,T002", "--by", "ai",

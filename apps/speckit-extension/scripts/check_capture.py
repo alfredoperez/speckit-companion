@@ -23,6 +23,7 @@ from pathlib import Path
 
 from check_quality import _derive_trusted_spans
 from check_report import Report
+from task_sync import waves_spanned
 
 # Inline fallbacks (used only when the schema can't be read).
 _FALLBACK_STEPS = ["specify", "clarify", "plan", "tasks", "analyze", "implement", "converge"]
@@ -294,6 +295,20 @@ def run_checks(spec_dir: Path) -> Report:
                   f"{len(ai_finish_times)} ai finishes span {_fmt(finish_span)} = {pct:.2f}% of "
                   f"{_fmt(step_span)} implement step (need ≥ {MIN_CADENCE_SPAN_PCT}%)"
                   + ("" if ok else " — finishes clustered into one end-of-step burst"))
+
+        # task-wave-close — a --close-task unit is one timed unit, so one that spans several tasks.md
+        # waves hides their times behind one instant. The bench holds every unit to a single wave.
+        units: dict = {}
+        for tid, s in summaries.items():
+            if isinstance(s, dict) and isinstance(s.get("wave"), str):
+                units.setdefault(s["wave"], []).append(tid)
+        if units and tasks_md.is_file():
+            spans = {label: waves_spanned(tasks_md, tids) for label, tids in units.items()}
+            wide = {label: n for label, n in spans.items() if n > 1}
+            r.add(not wide, "task-wave-close",
+                  f"{len(units)} close unit(s), each one tasks.md wave" if not wide
+                  else "close units span several waves: "
+                  + ", ".join(f"{label} spans {n} waves" for label, n in sorted(wide.items())))
 
     # fast-path fold — only asserted when a spec was fast-tracked (substep="fast-path").
     _fastpath(r, history, ctx)
