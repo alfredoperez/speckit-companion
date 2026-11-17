@@ -23,6 +23,24 @@
         </button>
     </header>
 
+    <form class="new-spec" id="repository-form">
+        <label for="coordinated-session">Coordinated session</label>
+        <select class="search" id="coordinated-session" aria-describedby="coordinated-session-hint"></select>
+        <p id="coordinated-session-hint" role="status"></p>
+        <label for="repository-root">Repository directory</label>
+        <div class="new-spec-row">
+            <input class="search" id="repository-root" type="text" placeholder="/absolute/path/to/repository" required>
+            <button class="btn btn-quiet" type="button" id="repository-browse">Browse…</button>
+            <button class="btn btn-quiet" type="submit">Use repository</button>
+            <button class="btn btn-quiet" type="button" id="repository-follow" hidden>Follow session</button>
+        </div>
+        <p id="repository-warning" role="status" hidden></p>
+        <div id="repository-children" role="group" aria-label="Sessions owned by this chat" hidden>
+            <p id="repository-children-hint"></p>
+            <ul id="repository-children-list"></ul>
+        </div>
+    </form>
+
     <form class="new-spec" id="new-spec" hidden>
         <label for="new-spec-text">Describe the feature. Specify creates the spec folder and writes <code>spec.md</code>.</label>
         <div class="segmented new-spec-workflow" id="new-spec-workflow" role="radiogroup" aria-label="Workflow" aria-describedby="new-spec-hint"></div>
