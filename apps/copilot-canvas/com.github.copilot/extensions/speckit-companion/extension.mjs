@@ -21,7 +21,7 @@ function summary(spec) {
 }
 
 function specError(error) {
-    return new CanvasError(error.status === 404 ? 'spec_not_found' : 'spec_board_error', error.message);
+    return new CanvasError(error.status === 404 ? (error.sessionMissing ? 'session_not_found' : 'spec_not_found') : 'spec_board_error', error.message);
 }
 
 const specInput = {

@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, symlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -682,6 +682,37 @@ describe('parent chat following owned sessions', () => {
             await canvas.onClose({ instanceId: 'owned-a' });
             globalThis.__copilotManagementList = undefined;
             globalThis.__copilotWorkspacePath = undefined;
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('settles on a symlinked working directory without re-applying the root', async () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-symlink-'));
+        const real = join(base, 'real');
+        const link = join(base, 'link');
+        mkdirSync(real);
+        spec(real, '001-a', 'A');
+        symlinkSync(real, link);
+        const logs = [];
+        const server = await createSpecServer({ root: validateRoot(real), workingDirectory: link, log: message => logs.push(message) });
+        try {
+            assert.deepEqual(logs, []);
+            assert.equal(server.snapshot.root, validateRoot(real));
+        } finally {
+            await server.close();
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('treats a corrupt saved selection as empty', () => {
+        const base = mkdtempSync(join(tmpdir(), 'canvas-corrupt-'));
+        try {
+            mkdirSync(join(base, 'files', 'speckit-companion'), { recursive: true });
+            writeFileSync(join(base, 'files', 'speckit-companion', 'board.json'), '{ not json');
+            const selection = rootSelection(base);
+            assert.equal(selection.read(), null);
+            assert.deepEqual(selection.sessions(), []);
+        } finally {
             rmSync(base, { recursive: true });
         }
     });

@@ -239,7 +239,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
 
     function selectCoordinatedSession(sessionId) {
         const selected = state.coordinatedSessions.find(session => session.sessionId === sessionId);
-        if (!selected) throw Object.assign(new Error('The coordinated session is unavailable. Ask the coordinator to refresh the list.'), { status: 404 });
+        if (!selected) throw Object.assign(new Error('The coordinated session is unavailable. Ask the coordinator to refresh the list.'), { status: 404, sessionMissing: true });
         return bindSession(selected);
     }
 
@@ -287,9 +287,11 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
 
     function reconcile() {
         const target = desiredRoot();
-        if (state.manual || state.closed || !target || target === state.root || target === state.failed || !idle()) return false;
+        if (state.manual || state.closed || !target || target === state.failed || !idle()) return false;
         try {
-            applyRoot(validateRoot(target));
+            const resolved = validateRoot(target);
+            if (resolved === state.root) return false;
+            applyRoot(resolved);
         } catch (error) {
             log(`[speckit-canvas] could not follow ${target}: ${error.message}`);
             state.failed = target;
@@ -323,7 +325,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     /** Pick one of the sessions this one owns; only a listed session counts, never a path the caller names. */
     function selectChild(sessionId) {
         const child = state.children.find(candidate => candidate.sessionId === sessionId);
-        if (!child) throw Object.assign(new Error(`${sessionId} is not a session owned by this chat.`), { status: 404 });
+        if (!child) throw Object.assign(new Error(`${sessionId} is not a session owned by this chat.`), { status: 404, sessionMissing: true });
         return selectRoot(child.cwd);
     }
 

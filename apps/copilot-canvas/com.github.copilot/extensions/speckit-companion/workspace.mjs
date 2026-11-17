@@ -17,7 +17,7 @@ export function rootSelection(workspacePath) {
         try {
             return JSON.parse(readFileSync(file, 'utf8'));
         } catch (error) {
-            if (error.code === 'ENOENT') return {};
+            if (error.code === 'ENOENT' || error instanceof SyntaxError) return {};
             throw error;
         }
     }
