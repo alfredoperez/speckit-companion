@@ -147,7 +147,7 @@ export class SpecExplorerProvider extends BaseTreeDataProvider<SpecItem> {
         }
         reportInstallPromptShown('pinnedRow');
         const item = new SpecItem(
-            'Get Companion — living specs, capture, fast-path',
+            'Get Companion — lifecycle capture, fast-path',
             vscode.TreeItemCollapsibleState.None,
             'companion-install-cta',
             this.context,
@@ -684,7 +684,7 @@ class SpecItem extends vscode.TreeItem {
             this.tooltip = 'Loading specs...';
         } else if (contextValue === 'companion-install-cta') {
             this.iconPath = new vscode.ThemeIcon('rocket', new vscode.ThemeColor('charts.yellow'));
-            this.tooltip = 'Install SpecKit Companion — living specs, lifecycle capture, fast-path, and Auto';
+            this.tooltip = 'Install SpecKit Companion — lifecycle capture, fast-path, and Auto';
         } else if (isSpecGroupItem(contextValue)) {
             const groupIcons: Record<string, vscode.ThemeIcon> = {
                 'Active': new vscode.ThemeIcon('pulse'),

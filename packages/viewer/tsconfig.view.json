@@ -1,0 +1,24 @@
+{
+  // The Preact view and the custom element: DOM and JSX, declarations for strict consumers.
+  // /core and /contract are type-checked here too, through the view's imports.
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "rootDir": "./src",
+    "outDir": "./dist/types",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "types": []
+  },
+  "include": ["src/**/*"],
+  "exclude": ["**/__tests__/**"]
+}

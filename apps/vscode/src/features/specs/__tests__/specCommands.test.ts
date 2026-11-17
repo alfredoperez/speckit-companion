@@ -995,6 +995,24 @@ describe('the prompt for a Spec Kit command outside the pipeline', () => {
     });
 });
 
+describe('which issue-creation command a project has', () => {
+    const { tasksToIssuesCommand } = jest.requireActual('../specCommands') as typeof import('../specCommands');
+    const os = jest.requireActual('os') as typeof import('os');
+    const realFs = jest.requireActual('fs') as typeof import('fs');
+    const nodePath = jest.requireActual('path') as typeof import('path');
+
+    it('uses the github extension command when Spec Kit 1.4 installed it', () => {
+        const root = realFs.mkdtempSync(nodePath.join(os.tmpdir(), 'tti-'));
+        realFs.mkdirSync(nodePath.join(root, '.specify', 'extensions', 'github'), { recursive: true });
+        expect(tasksToIssuesCommand(root)).toBe('speckit.github.taskstoissues');
+    });
+
+    it('keeps the core command for a project without it', () => {
+        const root = realFs.mkdtempSync(nodePath.join(os.tmpdir(), 'tti-'));
+        expect(tasksToIssuesCommand(root)).toBe('speckit.taskstoissues');
+    });
+});
+
 describe('speckit.taskstoissues command handler', () => {
     const handlerFor = () => captureCommandHandlers(createMockContext()).get('speckit.taskstoissues')!;
     const { getAIProvider } = jest.requireMock('../../../extension');

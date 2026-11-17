@@ -1,0 +1,238 @@
+/**
+ * SpecKit Companion - Line Action Styles
+ * Line hover effects and "+" button
+ */
+
+/* ============================================
+   Line Styles with GitHub-style Review
+   ============================================ */
+
+.line {
+  position: relative;
+  padding: 2px 0; /* Minimal vertical padding */
+  margin-left: 0; /* No left margin - button now on right */
+  border-radius: var(--sk-radius-sm);
+  transition: all var(--sk-transition-fast);
+  min-height: 24px;
+  padding-right: 32px;
+}
+
+.line.empty {
+  padding: 2px 8px;
+  min-height: 8px;
+  pointer-events: none;
+}
+
+.line:hover {
+  background: var(--sk-bg-hover);
+}
+
+.line.empty:hover {
+  background: transparent;
+}
+
+/* Line with active editor - no background change */
+.line.editing {
+  background: transparent;
+}
+
+/* Prevent hover changes while editing */
+.line.editing:hover {
+  background: transparent;
+}
+
+/* Line with refinement comment - no border, comment card below is sufficient indicator */
+.line.has-refinement {
+  /* Border removed - rely on the inline comment card for indication */
+}
+
+.line-content {
+  color: var(--sk-text-secondary);
+  line-height: 1.6;
+}
+
+.line-content strong {
+  color: var(--sk-header-title);
+  font-weight: 600;
+}
+
+/* Line content that wraps p tags - high specificity to override #markdown-content p */
+#markdown-content .line .line-content p,
+#markdown-content .line-content p,
+.line-content p {
+  margin: 0;
+}
+
+/* Override any paragraph margin inside line wrappers */
+.line p {
+  margin: 0;
+}
+
+/* ============================================
+   Plus Button (GitHub-style gutter)
+   ============================================ */
+
+.line-add-btn {
+  position: absolute;
+  left: auto; /* Unset left positioning */
+  right: 4px; /* Neutral control inside the reserved 32px annotation gutter. */
+  top: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--sk-radius-sm);
+  border: 1px solid var(--sk-border);
+  background: var(--sk-bg-secondary);
+  color: var(--sk-text-secondary);
+  opacity: 0;
+  transition: all var(--sk-transition-fast);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.line-add-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Hover is not a discoverable affordance on its own — the button must also
+   surface when it takes keyboard focus, or there is no way to comment a line
+   without a mouse. */
+.line:hover .line-add-btn,
+.line-add-btn:focus-visible {
+  opacity: 1;
+}
+
+.line-add-btn:focus-visible {
+  outline: 2px solid var(--sk-accent);
+  outline-offset: 1px;
+}
+
+/* Hide button when editor is open */
+.line.editing .line-add-btn {
+  display: none;
+}
+
+.line-add-btn:hover {
+  background: var(--sk-bg-hover);
+  border-color: var(--sk-border-hover);
+  color: var(--sk-text-primary);
+}
+
+.line-add-btn:active {
+  transform: scale(0.95);
+}
+
+/* Hide + button on empty lines */
+.line.empty .line-add-btn {
+  display: none;
+}
+
+/* ============================================
+   List Items with Line Actions
+   ============================================ */
+
+li.line {
+  position: relative;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-right: 32px;
+  margin: 0;
+  min-height: unset;
+  list-style-position: outside;
+}
+
+li.line:hover {
+  background: var(--sk-bg-hover);
+  border-radius: var(--sk-radius-sm);
+}
+
+li.line .line-content {
+  display: inline;
+}
+
+li.line .line-add-btn {
+  left: auto; /* Unset left positioning */
+  right: 4px;
+  top: 4px;
+}
+
+li.line .line-comment-slot {
+  margin-top: var(--sk-space-2);
+}
+
+/* Comment slot container */
+.line-comment-slot {
+  margin-top: 0;
+}
+
+/* Suppress empty slot — no height or gap contribution when no comment is present */
+.line-comment-slot:empty {
+  display: none;
+}
+
+/* Full-width inline editor */
+.line .line-comment-slot .inline-editor {
+  margin-left: 0;
+  width: 100%;
+}
+
+/* ============================================
+   Legacy Line Actions (kept for compatibility)
+   ============================================ */
+
+.line-actions {
+  display: none; /* Hidden - replaced by + button */
+}
+
+/* Inline edit input (legacy) */
+.inline-edit-input {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--sk-bg-primary);
+  border: 1px solid var(--sk-accent);
+  border-radius: var(--sk-radius-sm);
+  color: var(--sk-text-primary);
+  font-size: inherit;
+  font-family: inherit;
+  line-height: inherit;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sk-accent-subtle);
+}
+
+.inline-edit-input:focus {
+  border-color: var(--sk-accent);
+  box-shadow:
+    0 0 0 2px var(--sk-accent-subtle),
+    var(--sk-accent-glow);
+}
+
+/* ============================================
+   State-based hiding (completed specs)
+   ============================================ */
+
+/* Hide add buttons when spec is completed or archived */
+body[data-spec-status="completed"] .line-add-btn,
+body[data-spec-status="completed"] .row-add-btn,
+body[data-spec-status="completed"] .calls-strike,
+body[data-spec-status="archived"] .line-add-btn,
+body[data-spec-status="archived"] .row-add-btn,
+body[data-spec-status="archived"] .calls-strike,
+body[data-read-only="true"] .line-add-btn,
+body[data-read-only="true"] .calls-strike,
+body[data-read-only="true"] .row-add-btn {
+  display: none !important;
+}
+
+/* Disable hover backgrounds when spec is completed or archived */
+body[data-spec-status="completed"] .line:hover,
+body[data-spec-status="completed"] li.line:hover,
+body[data-spec-status="archived"] .line:hover,
+body[data-spec-status="archived"] li.line:hover,
+body[data-read-only="true"] .line:hover,
+body[data-read-only="true"] li.line:hover {
+  background: transparent;
+}

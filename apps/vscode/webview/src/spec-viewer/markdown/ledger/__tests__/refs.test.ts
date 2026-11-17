@@ -2,9 +2,9 @@
  * @jest-environment jsdom
  */
 
-import { parseInline } from '../../inline';
-import { renderMarkdown } from '../../renderer';
-import { idChip, priorityMark, refAnchor, slugForId } from '../primitives';
+import { parseInline } from 'speckit-viewer/core/markdown/inline';
+import { renderMarkdown } from 'speckit-viewer/core/markdown/renderer';
+import { idChip, priorityMark, refAnchor, slugForId } from 'speckit-viewer/core/markdown/ledger/primitives';
 import { linkifyIds, resolveLedgerRefs } from '../refs';
 
 describe('ids in prose', () => {

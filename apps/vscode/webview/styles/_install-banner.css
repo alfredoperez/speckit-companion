@@ -1,0 +1,95 @@
+/**
+ * Install banner — shown in the Create-Spec and Activity panels when the
+ * companion spec-kit extension is missing, or (the `--update` variant) behind
+ * the version this build expects. Server-rendered markup; see
+ * src/features/spec-editor/installBanner.ts.
+ *
+ * Styled through semantic tokens, never `--vscode-*` directly: this sheet is
+ * imported by BOTH the spec editor (host-derived tokens) and the spec viewer
+ * (owned palette), so the same rules have to resolve correctly under each.
+ */
+
+.install-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    margin: 0 0 10px 0;
+    border: 1px solid color-mix(in srgb, var(--sk-info, var(--info)) 45%, transparent);
+    border-radius: var(--sk-radius-sm, var(--radius-sm));
+    background: var(--sk-info-subtle, var(--info-subtle));
+    color: var(--sk-text-body, var(--text-body));
+    font-size: 12px;
+}
+
+.install-banner--update {
+    border-color: color-mix(in srgb, var(--sk-warning, var(--warning)) 45%, transparent);
+    background: var(--sk-warning-subtle, var(--warning-subtle));
+}
+
+.install-banner__icon {
+    font-size: 14px;
+    flex: 0 0 auto;
+}
+
+.install-banner__text {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.install-banner__text code {
+    font-family: var(--sk-font-mono, var(--font-mono));
+    font-size: 11px;
+}
+
+.install-banner__btn {
+    flex: 0 0 auto;
+    font-size: 12px;
+    border: none;
+    border-radius: var(--sk-radius-sm, var(--radius-sm));
+    padding: 3px 10px;
+    cursor: pointer;
+}
+
+.install-banner__btn--primary {
+    background: var(--sk-accent, var(--accent));
+    color: var(--sk-accent-ink, var(--accent-ink));
+}
+
+.install-banner__btn--primary:hover {
+    background: var(--sk-accent-hover, var(--accent-hover));
+}
+
+.install-banner__btn--link {
+    background: transparent;
+    color: var(--sk-accent, var(--accent));
+    padding: 3px 4px;
+}
+
+.install-banner__btn--link:hover {
+    text-decoration: underline;
+}
+
+.install-banner__dismiss {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: var(--sk-radius-sm, var(--radius-sm));
+    background: transparent;
+    color: var(--sk-text-body, var(--text-body));
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+.install-banner__dismiss:hover {
+    opacity: 1;
+    background: var(--sk-bg-hover, var(--bg-hover));
+}

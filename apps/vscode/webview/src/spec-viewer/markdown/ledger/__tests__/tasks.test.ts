@@ -1,10 +1,10 @@
 /**
  * @jest-environment jsdom
  */
-import { parseTaskText, parseTasksModel, isTasksDocument, phaseDone } from '../tasksModel';
-import { preprocessLedgerTasks } from '../tasks';
+import { parseTaskText, parseTasksModel, isTasksDocument, phaseDone } from 'speckit-viewer/core/markdown/ledger/tasksModel';
+import { preprocessLedgerTasks } from 'speckit-viewer/core/markdown/ledger/tasks';
 import { applyTaskFilters } from '../tasksInteractions';
-import { renderMarkdown, setCurrentTask } from '../../renderer';
+import { renderMarkdown, setCurrentTask } from 'speckit-viewer/core/markdown/renderer';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
@@ -141,7 +141,7 @@ describe('preprocessLedgerTasks', () => {
 
     it('folds a done phase and opens the active one', () => {
         const out = preprocessLedgerTasks(OURS);
-        expect(out).toMatch(/<details class="lg-phase" data-phase="2" data-state="done" >/);
+        expect(out).toMatch(/<details class="lg-phase line" data-line="[^"]+" data-phase="2" data-state="done" >/);
         expect(out).toMatch(/data-phase="4" data-state="active" data-story="US2" open>/);
         expect(out).toContain('2 files');
     });
@@ -222,6 +222,55 @@ describe('task row (rendered)', () => {
         const html = renderMarkdown(OURS);
         expect(html).toMatch(/<input type="checkbox" [^>]*data-line="\d+"/);
         expect(html).toContain('line-add-btn');
+    });
+});
+
+describe('phase and wave comment buttons', () => {
+    const doc = document.implementation.createHTMLDocument('t');
+    const render = (md: string): Document => {
+        doc.body.innerHTML = renderMarkdown(md);
+        return doc;
+    };
+
+    it('puts a "+" in each phase and wave summary with its file line', () => {
+        const d = render(OURS);
+        const lineOf = (title: string) => OURS.split('\n').indexOf(title) + 1;
+        const phase = d.querySelector<HTMLElement>('details.lg-phase.line')!;
+        expect(phase.dataset.line).toBe(String(lineOf('## Phase 2: Foundational')));
+        const btn = phase.querySelector(':scope > summary > .line-add-btn') as HTMLElement;
+        expect(btn.dataset.line).toBe(phase.dataset.line);
+        expect(phase.querySelector(':scope > .lg-phase-body > .line-comment-slot')).not.toBeNull();
+        const wave = d.querySelector<HTMLElement>('details.lg-wave.line')!;
+        expect(wave.dataset.line).toBe(String(lineOf('**Wave 1 — independent (different files):**')));
+        expect(wave.querySelector(':scope > summary > .line-add-btn')).not.toBeNull();
+        expect(wave.querySelector(':scope > .lg-wave-body > .line-comment-slot')).not.toBeNull();
+    });
+
+    it('gives each repeated wave its own line', () => {
+        const waves = Array.from(render(OURS).querySelectorAll<HTMLElement>('details.lg-wave')).map((w) => w.dataset.line);
+        expect(new Set(waves).size).toBe(waves.length);
+        expect(waves.every((n) => Number(n) > 0)).toBe(true);
+    });
+
+    it('anchors a phase on its own title, not its first task', () => {
+        const phase = render(OURS).querySelector<HTMLElement>('details.lg-phase')!;
+        expect(phase.querySelector('.line-content')?.textContent).toBe('Foundational');
+    });
+
+    it('drops the button on a heading it cannot find in the file', () => {
+        const md = '# T\n\n## Phase 1: A\n\n- [ ] **T001** a · a.ts\n';
+        doc.body.innerHTML = renderMarkdown(md).replace('data-line="3"', 'data-line="0"');
+        const lines = ['<details class="lg-phase line" data-line="@@lg:zzz@@"><summary><button class="line-add-btn" data-line="@@lg:zzz@@" title="x">i</button></summary>'];
+        const { resolveLedgerLines } = jest.requireActual('speckit-viewer/core/markdown/ledger/tasks');
+        resolveLedgerLines(lines, md);
+        expect(lines[0]).not.toContain('line-add-btn');
+        expect(lines[0]).toContain('<details class="lg-phase"');
+    });
+
+    it('keeps the file line when frontmatter is stripped above it', () => {
+        const md = '---\nname: x\n---\n# T\n\n## Phase 1: A\n\n- [ ] **T001** a · a.ts\n';
+        const phase = render(md).querySelector<HTMLElement>('details.lg-phase')!;
+        expect(phase.dataset.line).toBe('6');
     });
 });
 

@@ -12,7 +12,8 @@
   "include": [
     "apps/vscode/src/**/*",
     "apps/vscode/tests/**/*",
-    "apps/vscode/webview/src/**/*"
+    "apps/vscode/webview/src/**/*",
+    "packages/viewer/src/**/*"
   ],
   "exclude": [
     "node_modules",

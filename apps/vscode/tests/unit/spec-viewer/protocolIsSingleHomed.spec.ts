@@ -15,12 +15,13 @@ const repoRoot = path.join(__dirname, '..', '..', '..', '..', '..');
 const read = (rel: string) => fs.readFileSync(path.join(repoRoot, rel), 'utf8');
 
 const PROTOCOL = 'apps/vscode/src/protocol/viewer.ts';
+const CONTRACT = 'packages/viewer/src/contract/viewer.ts';
 const EXTENSION_TYPES = 'apps/vscode/src/features/spec-viewer/types.ts';
 const WEBVIEW_TYPES = 'apps/vscode/webview/src/spec-viewer/types.ts';
 
 describe('the viewer protocol has one home', () => {
-    it('declares both message unions in the protocol module', () => {
-        const protocol = read(PROTOCOL);
+    it('declares both message unions in the viewer package contract', () => {
+        const protocol = read(CONTRACT);
         expect(protocol).toContain('export type ExtensionToViewerMessage');
         expect(protocol).toContain('export type ViewerToExtensionMessage');
     });
@@ -41,12 +42,13 @@ describe('the viewer protocol has one home', () => {
 
     it('stays free of vscode imports, since the webview compiles it', () => {
         expect(read(PROTOCOL)).not.toMatch(/from ['"]vscode['"]/);
+        expect(read(CONTRACT)).not.toMatch(/from ['"]vscode['"]/);
     });
 
     it('carries every variant the extension can post, including the install banner', () => {
         // These three were posted from an inline script in the HTML generator,
         // which bypassed the webview's copy of the union entirely.
-        const protocol = read(PROTOCOL);
+        const protocol = read(CONTRACT);
         for (const variant of ['installSpecKitExtension', 'openReadme', 'dismissInstallBanner']) {
             expect(protocol).toContain(`type: '${variant}'`);
         }
@@ -76,7 +78,7 @@ describe('the step vocabulary has one home', () => {
     });
 
     it('declares the step lists once, in the contract', () => {
-        const contract = read('apps/vscode/src/core/types/specContext.ts');
+        const contract = read('packages/viewer/src/contract/specContext.ts');
         expect(contract).toContain('export const DEFAULT_PIPELINE_STEPS');
         expect(contract).toContain('export const STEP_NAMES');
     });

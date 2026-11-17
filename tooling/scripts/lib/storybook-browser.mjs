@@ -18,7 +18,7 @@
  * which also forbids swapping in full `playwright`.
  */
 
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -50,6 +50,8 @@ export async function storybookIsUp() {
 /** Boot `storybook dev` and resolve once index.json answers. */
 export async function bootStorybook() {
     console.log(`No Storybook on :${port()}, booting one (first boot takes a minute)...`);
+    // The preview imports the viewer package's built stylesheet.
+    execFileSync('npm', ['run', 'viewer:build'], { cwd: REPO_ROOT, stdio: 'ignore' });
     const child = spawn('npx', ['storybook', 'dev', '-p', String(port()), '--no-open'], {
         cwd: REPO_ROOT,
         stdio: 'ignore',

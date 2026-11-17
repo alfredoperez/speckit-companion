@@ -14,7 +14,7 @@ NODES = ROOT / "nodes" / "specify"
 
 class SpecSource(unittest.TestCase):
     def test_every_draft_step_asks_for_a_verbatim_source_line_and_never_a_fetch(self):
-        for name in ("draft-spec.md", "draft-spec-delta.md", "draft-spec-bugfix.md"):
+        for name in ("draft-spec.md", "draft-spec-bugfix.md"):
             body = (NODES / name).read_text(encoding="utf-8")
             self.assertIn("`**Source**: <ticket>`", body, name)
             self.assertIn("never fetch the ticket", body, name)

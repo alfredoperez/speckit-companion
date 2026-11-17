@@ -49,6 +49,25 @@ class TestPackingList(unittest.TestCase):
         self.assertEqual(unclassified, set(), f"scripts with no ship decision: {sorted(unclassified)}")
 
 
+class TestNoLivingSurface(unittest.TestCase):
+    """FR-001: the manifest ships no living spec command and no living spec tag."""
+
+    def _manifest(self):
+        text = (SCRIPTS.parent / "extension.yml").read_text(encoding="utf-8")
+        import sys
+        sys.path.insert(0, str(SCRIPTS))
+        import companion_config as cc
+        return cc.load_yaml(text)
+
+    def test_no_command_is_a_living_command(self):
+        names = [c["name"] for c in self._manifest()["provides"]["commands"]]
+        self.assertEqual([n for n in names if "living" in n], [])
+
+    def test_no_tag_names_living_specs_or_drift(self):
+        tags = self._manifest()["tags"]
+        self.assertEqual([t for t in tags if "living" in t or t == "drift"], [])
+
+
 class TestClosureDerivation(unittest.TestCase):
     def test_indirect_dependencies_are_reached(self):
         """companion_config.py is named by no command — only the resolver imports it."""
@@ -57,11 +76,8 @@ class TestClosureDerivation(unittest.TestCase):
 
     def test_the_previously_missing_scripts_are_in_the_closure(self):
         for script in (
-            "resolve-spec-paths.py",
             "companion_config.py",
-            "register-capability.py",
-            "drift.py",
-            "check-coverage.py",
+            "capture.py",
         ):
             self.assertIn(script, pm.derive_closure())
 

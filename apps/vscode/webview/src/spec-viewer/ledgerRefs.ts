@@ -6,7 +6,7 @@
 import { navState } from './signals';
 import { openDocumentAtFragment } from './documentLinks';
 import { prefersReducedMotion } from './toc';
-import { slugForId } from './markdown/ledger/primitives';
+import { slugForId } from 'speckit-viewer/core/markdown/ledger/primitives';
 
 const HOVER_DELAY_MS = 300;
 const HIDE_DELAY_MS = 120;

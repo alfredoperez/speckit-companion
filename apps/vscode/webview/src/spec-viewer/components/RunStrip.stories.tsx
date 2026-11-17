@@ -95,7 +95,7 @@ export const NoFactsYet: Story = {
         viewerState.value = baseState({ status: 'specified', activeStep: '' });
         return (
             <div>
-                <p style="color: var(--text-muted); font-size: 12px; padding: 8px 0;">
+                <p style="color: var(--sk-text-muted); font-size: 12px; padding: 8px 0;">
                     (nothing renders below — the strip is absent, not empty)
                 </p>
                 <RunStrip />

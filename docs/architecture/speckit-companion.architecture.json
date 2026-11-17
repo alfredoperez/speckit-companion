@@ -38,10 +38,9 @@
         "label": "What is written down",
         "focus": [
           "skext",
-          "context",
-          "living"
+          "context"
         ],
-        "note": "Two files hold everything durable: run state per spec, and the capability registry for living specs."
+        "note": "One file holds everything durable: the run state per spec."
       }
     ]
   },
@@ -185,20 +184,6 @@
         180,
         68
       ]
-    },
-    {
-      "id": "living",
-      "type": "database",
-      "label": "living-specs.yml",
-      "sublabel": "Capability registry",
-      "pos": [
-        330,
-        780
-      ],
-      "size": [
-        180,
-        68
-      ]
     }
   ],
   "boundaries": [
@@ -263,12 +248,6 @@
       "from": "speckit",
       "to": "skext",
       "label": "loads"
-    },
-    {
-      "id": "skext-living",
-      "from": "skext",
-      "to": "living",
-      "label": "drift \u00b7 sync"
     },
     {
       "id": "skext-context",

@@ -8,7 +8,6 @@ import { IAIProvider, AIProviderFactory, isProviderConfigured, promptForProvider
 // Features
 import { SteeringManager, SteeringExplorerProvider, registerSteeringCommands } from './features/steering';
 import { SpecExplorerProvider, registerSpecKitCommands, updateSelectionContextKeys, SpecsFilterState, SpecsSortState } from './features/specs';
-import { LivingSpecsExplorerProvider, registerLivingSpecsCommands, registerLivingSpecsStatusBar } from './features/living-specs';
 import { register as registerTerminalStepTracker } from './features/specs/terminalStepTracker';
 import { registerSpecTerminals } from './features/specs/specTerminals';
 import { setLifecycleOutputChannel } from './features/specs/stepLifecycle';
@@ -40,9 +39,9 @@ import { TelemetryService, initTelemetry, sendTelemetryEvent, buildActivatedProp
 import { getConfiguredProviderType } from './ai-providers/aiProvider';
 import { suggestIntegrationProvider } from './speckit/integrationProvider';
 import { resolveSpecDirectories } from './core/specDirectoryResolver';
-import { registerSpecShapeDiagnostics } from './features/specs/specShapeDiagnostics';
 import { BUG_SET } from './features/bugs/bugReports';
 import { bugsPaneConfig } from './features/bugs/bugsPane';
+import { WORKFLOW_RUNS_DIR } from './features/bugs/engineRuns';
 import { IDEA_SET } from './features/ideas/ideaReports';
 import { ideasPaneConfig, ideasViewDescription } from './features/ideas/ideasPane';
 import { ProcessPaneProvider } from './features/processes/processPaneProvider';
@@ -78,7 +77,6 @@ export async function activate(context: vscode.ExtensionContext) {
     extensionContext = context;
     setLifecycleOutputChannel(outputChannel);
     context.subscriptions.push(registerTerminalStepTracker(context));
-    context.subscriptions.push(registerSpecShapeDiagnostics());
     context.subscriptions.push(watchProjectRoot(outputChannel));
 
     // Initialize SpecKit detector
@@ -208,7 +206,6 @@ export async function activate(context: vscode.ExtensionContext) {
     const sortState = new SpecsSortState(context, () => specExplorer.refresh());
     specExplorer = new SpecExplorerProvider(context, outputChannel, filterState, sortState);
     const steeringExplorer = new SteeringExplorerProvider(context);
-    const livingSpecsExplorer = new LivingSpecsExplorerProvider(context, outputChannel);
     const bugsPane = new ProcessPaneProvider(context, bugsPaneConfig, outputChannel);
     const ideasPane = new ProcessPaneProvider(context, ideasPaneConfig, outputChannel);
 
@@ -249,7 +246,6 @@ export async function activate(context: vscode.ExtensionContext) {
         specsTreeView,
         vscode.window.registerTreeDataProvider(Views.bugs, bugsPane),
         ideasView,
-        vscode.window.registerTreeDataProvider(Views.livingSpecs, livingSpecsExplorer),
         vscode.window.registerTreeDataProvider(Views.steering, steeringExplorer)
     );
 
@@ -268,10 +264,8 @@ export async function activate(context: vscode.ExtensionContext) {
     registerSpecKitExtensionInstallCommands(context);
     registerSteeringCommands(context, steeringManager, steeringExplorer, outputChannel);
     registerSpecKitCommands(context, specExplorer, outputChannel, specsTreeView, filterState, sortState);
-    registerLivingSpecsCommands(context, livingSpecsExplorer, outputChannel);
     registerProcessCommands(context, { bugs: bugsPane, ideas: ideasPane });
     registerProcessCreateCommands(context, new ProcessCreateProvider(context));
-    registerLivingSpecsStatusBar(context);
     registerUtilityCommands(context, updateChecker, outputChannel);
 
     // Spec viewer needs to exist before setupFileWatchers so the .spec-context.json
@@ -405,7 +399,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 if (gap) {
                     void noteInstallLanded(context, gap);
                 }
-                livingSpecsExplorer.refresh();
             }, 150);
             const extDirWatcher = vscode.workspace.createFileSystemWatcher(
                 new vscode.RelativePattern(root, '.specify/extensions/companion/**'),
@@ -435,23 +428,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 companionRefresh,
                 { dispose: () => clearTimeout(retry) },
             );
-
-            // Refresh the Living Specs view when the living-specs config or the
-            // capabilities tree changes on disk (no reload needed).
-            const livingSpecsWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(root, '{living-specs.yml,.specify/companion.yml,capabilities/**,**/*.spec.md}')
-            );
-            // Debounce: a rapid save sequence across the watched glob would
-            // otherwise re-run the full `**/*.spec.md` scan per event.
-            const refreshLivingSpecs = trailing(() => livingSpecsExplorer.refresh(), 150);
-            livingSpecsWatcher.onDidCreate(refreshLivingSpecs.call);
-            livingSpecsWatcher.onDidChange(refreshLivingSpecs.call);
-            livingSpecsWatcher.onDidDelete(refreshLivingSpecs.call);
-            // The viewer's own watcher only sees the spec directory, so an open capability would never redraw.
-            const refreshOpenLiving = (uri: vscode.Uri) => void specViewer.refreshIfDisplaying(uri.fsPath);
-            livingSpecsWatcher.onDidChange(refreshOpenLiving);
-            livingSpecsWatcher.onDidCreate(refreshOpenLiving);
-            wiring.push(livingSpecsWatcher, refreshLivingSpecs);
 
             // Bug and idea reports sit outside the spec directories the tree and viewer watchers cover.
             const watchReports = (set: ReportSet<string>, pane: { refresh(): void }, movable = false): void => {
@@ -506,17 +482,32 @@ export async function activate(context: vscode.ExtensionContext) {
             markerWatcher.onDidDelete(redetect.call);
             wiring.push(markerWatcher, redetect);
 
-            // An install row clears once its extension's folder appears.
+            // An install row clears once its extension's folder appears; turning one off or on rewrites the registry.
             const processExtensionsWatcher = vscode.workspace.createFileSystemWatcher(
-                new vscode.RelativePattern(root, `.specify/extensions/{${PROCESS_EXTENSION_IDS.flatMap(id => [id, `${id}/**`]).join(',')}}`)
+                new vscode.RelativePattern(root, `.specify/extensions/{.registry,${PROCESS_EXTENSION_IDS.flatMap(id => [id, `${id}/**`]).join(',')}}`)
             );
             const refreshPanes = trailing(() => {
                 bugsPane.refresh();
                 ideasPane.refresh();
+                void specViewer.refreshReportPanels();
             }, 300);
             processExtensionsWatcher.onDidCreate(refreshPanes.call);
+            processExtensionsWatcher.onDidChange(refreshPanes.call);
             processExtensionsWatcher.onDidDelete(refreshPanes.call);
             wiring.push(processExtensionsWatcher, refreshPanes);
+
+            // A bug run moving past its review gate rewrites its state.json.
+            const workflowRunsWatcher = vscode.workspace.createFileSystemWatcher(
+                new vscode.RelativePattern(root, `${WORKFLOW_RUNS_DIR}/*/state.json`)
+            );
+            const refreshBugs = trailing(() => {
+                bugsPane.refresh();
+                void specViewer.refreshReportPanels('bugs');
+            }, 300);
+            workflowRunsWatcher.onDidCreate(refreshBugs.call);
+            workflowRunsWatcher.onDidChange(refreshBugs.call);
+            workflowRunsWatcher.onDidDelete(refreshBugs.call);
+            wiring.push(workflowRunsWatcher, refreshBugs);
         };
         wireCompanionSurfaces();
         context.subscriptions.push(
@@ -526,7 +517,6 @@ export async function activate(context: vscode.ExtensionContext) {
                 steeringExplorer.rebuildProjectWatchers();
                 specExplorer.refresh();
                 steeringExplorer.refresh();
-                livingSpecsExplorer.refresh();
                 bugsPane.refresh();
                 ideasPane.refresh();
                 void specViewer.refreshOpenPanels();

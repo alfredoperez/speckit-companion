@@ -1,26 +1,9 @@
 /**
- * SpecKit Companion - Spec Viewer Styles
- * v0.3.0 - Enhanced with Rich Color System from Workflow Editor
- *
- * This file imports the modular CSS from spec-viewer/ directory.
- * For maintainability, styles are split into partials by component.
- *
- * Structure:
- *   spec-viewer/
- *   ├── _base.css         - Reset, body, layout
- *   ├── _navigation.css   - Step tabs, related bar
- *   ├── _content.css      - Markdown rendering base
- *   ├── _typography.css   - Headings, paragraphs
- *   ├── _code.css         - Code blocks, syntax highlighting
- *   ├── _tables.css       - Tables, scenario tables
- *   ├── _callouts.css     - Callout blocks
- *   ├── _tasks.css        - Task lists, progress bars
- *   ├── _line-actions.css - Line hover, "+" button
- *   ├── _editor.css       - Inline editor
- *   ├── _refinements.css  - Comment cards
- *   ├── _modal.css        - Refine input, loading overlay
- *   ├── _footer.css       - Footer actions
- *   └── _animations.css   - Keyframes
+ * The spec viewer's stylesheet: the `speckit-viewer` package's built CSS, its VS Code
+ * theme, and the install banner the extension shares with the spec editor.
+ * Webpack copies the package's dist/styles to dist/webview/viewer/.
  */
 
-@import 'spec-viewer/index.css';
+@import 'viewer/viewer.css';
+@import 'viewer/themes/vscode.css';
+@import '_install-banner.css';

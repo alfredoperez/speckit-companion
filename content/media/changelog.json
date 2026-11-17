@@ -1,5 +1,22 @@
 {
   "_readme": "Screenshots for the site's /changelog page, keyed by release (<product>@<version>, product vscode or speckit) then by the media id a highlight names in its <!-- area: …; pr: …; media: … --> comment. file is a repo-relative PNG under apps/website/public/ or docs/screenshots/generated/. alt is required. highlight is optional, in the image's own pixels, and is drawn over the image by the page. The site build fails on an unknown id, a missing alt or file, an unused shot, or a key that matches no release. See apps/website/src/components/changelog/releaseMedia.ts.",
+  "vscode@0.39.0": {
+    "spec-cards": {
+      "file": "apps/website/public/changelog/vscode-0.39.0-spec-cards.png",
+      "alt": "A spec's edge cases shown as cards, each with its id on the left and a No scenario status on the right.",
+      "caption": "Every item is a card with its id."
+    },
+    "task-progress": {
+      "file": "apps/website/public/changelog/vscode-0.39.0-task-progress.png",
+      "alt": "The tasks page with 5 of 9 tasks done, and each phase and story showing its own progress bar and count.",
+      "caption": "Each story shows how far it got."
+    },
+    "research-decisions": {
+      "file": "apps/website/public/changelog/vscode-0.39.0-research-decisions.png",
+      "alt": "A research decision card with its id, the decision, a Why box and a link to the two options turned down.",
+      "caption": "Each decision, why, and what was turned down."
+    }
+  },
   "vscode@0.38.0": {
     "request-verbatim": {
       "file": "apps/website/public/changelog/vscode-0.38.0-request-verbatim.png",

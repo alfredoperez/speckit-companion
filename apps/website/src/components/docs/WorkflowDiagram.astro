@@ -1,37 +1,16 @@
 ---
-// Every sentence restates shipped pipeline, living-spec, run-record or viewer behaviour: check the code before changing one.
+// Every sentence restates shipped pipeline, run-record or viewer behaviour: check the code before changing one.
 interface Props {
   caption?: string;
 }
 
 const {
-  caption = 'One Companion run, from a feature request to finished code. Living specs are read on the way in and written back on the way out; implement hands each large user story to its own worker.',
+  caption = 'One Companion run, from a feature request to finished code. Implement hands each large user story to its own worker.',
 } = Astro.props;
 ---
 
 <figure class="wfd not-content">
   <div class="wfd__frame">
-    <div class="wfd__band wfd__band--living">
-      <p class="wfd__eyebrow">Living specs, when the project turns them on</p>
-      <ol class="wfd__loop" role="list">
-        <li class="wfd__card wfd__card--in">
-          <p class="wfd__tag">Going in</p>
-          <p class="wfd__title">Load only what applies</p>
-          <p>Specify loads only the requirements for the files the change touches and records which capabilities they came from. Plan reuses that list. Each implement worker gets the requirements for its own files.</p>
-        </li>
-        <li class="wfd__card wfd__card--store">
-          <p class="wfd__tag">In the repo</p>
-          <p class="wfd__title">One lasting spec per capability</p>
-          <p>Requirements and scenarios that outlive any one change.</p>
-        </li>
-        <li class="wfd__card wfd__card--out">
-          <p class="wfd__tag">Coming out</p>
-          <p class="wfd__title">Fold the changes back</p>
-          <p>The feature spec says what the change added, modified, removed or renamed. At completion the fold writes that into each capability's spec. A malformed change is refused for its own capability only. Folding twice changes nothing.</p>
-        </li>
-      </ol>
-    </div>
-
     <ol class="wfd__steps" role="list">
       <li class="wfd__step">
         <p class="wfd__num">01</p>
@@ -89,7 +68,6 @@ const {
       <p class="wfd__num">Then</p>
       <p class="wfd__name">Completed</p>
       <p class="wfd__out">Once every task is checked and the checks pass, implement marks the spec completed. Mark-complete is the same path, for recovery.</p>
-      <p class="wfd__workers">Folds the living-spec changes back.</p>
     </div>
 
     <div class="wfd__card wfd__card--optional" role="group" aria-label="Optional: Spec Kit's converge">
@@ -171,17 +149,11 @@ const {
     border-radius: var(--radius-sm);
   }
 
-  .wfd__band--living {
-    background: var(--accent-a07);
-    border: 1px solid var(--border-accent);
-  }
-
   .wfd__band--fanout {
     background: var(--ground);
     border: 1px solid var(--border-card);
   }
 
-  .wfd__loop,
   .wfd__fan,
   .wfd__steps {
     display: grid;
@@ -196,10 +168,6 @@ const {
     background: var(--panel);
     border: 1px solid var(--border-card);
     border-radius: var(--radius-button-sm);
-  }
-
-  .wfd__card--store {
-    border-color: var(--border-accent-strong);
   }
 
   .wfd__card--optional {
@@ -317,7 +285,6 @@ const {
       column-gap: var(--space-12);
     }
 
-    .wfd__band--living,
     .wfd__band--fanout,
     .wfd__card--optional {
       grid-column: 1 / -1;
@@ -325,13 +292,13 @@ const {
 
     .wfd__steps {
       grid-column: 1 / 5;
-      grid-row: 2;
+      grid-row: 1;
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .wfd__step--done {
       grid-column: 5;
-      grid-row: 2;
+      grid-row: 1;
     }
 
     .wfd__step + .wfd__step::before,
@@ -343,37 +310,6 @@ const {
       left: calc(-1 * var(--space-12) / 2);
       transform: translate(-50%, -50%);
     }
-
-    .wfd__loop {
-      grid-template-columns: 2fr 1fr 2fr;
-    }
-
-    .wfd__card--in,
-    .wfd__card--out {
-      position: relative;
-    }
-
-    .wfd__card--in::after,
-    .wfd__card--out::after {
-      position: absolute;
-      bottom: calc(-1 * (var(--space-14) + var(--space-16)));
-      font-size: var(--fs-ui-sm);
-      line-height: 1;
-      color: var(--accent);
-    }
-
-    .wfd__card--in::after {
-      content: '↓ into the steps';
-      content: '↓ into the steps' / '';
-      left: var(--space-12);
-    }
-
-    .wfd__card--out::after {
-      content: '↑ from completion';
-      content: '↑ from completion' / '';
-      right: var(--space-12);
-    }
-
     .wfd__fan {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }

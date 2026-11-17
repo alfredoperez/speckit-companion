@@ -430,4 +430,19 @@ describe('board page', { concurrency: false }, async () => {
         await shot('07-light-overview');
         await page.emulateMedia({ colorScheme: 'dark' });
     });
+
+    it('shows no time for a recorded spec with no activity, and the file time for one with no record', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        for (const name of ['090-record-no-history', '091-no-record']) {
+            mkdirSync(join(root, 'specs', name));
+            writeFileSync(join(root, 'specs', name, 'spec.md'), `# ${name}\n`);
+        }
+        writeFileSync(join(root, 'specs/090-record-no-history/.spec-context.json'), '{"status": "planned", "history": []}');
+        const time = id => page.locator(`.spec-card[data-id="specs/${id}"] .card-time`);
+        await page.waitForSelector('.spec-card[data-id="specs/090-record-no-history"]', { timeout: 5000 });
+        await page.waitForSelector('.spec-card[data-id="specs/091-no-record"]', { timeout: 5000 });
+        assert.equal(await time('090-record-no-history').textContent(), '');
+        assert.equal(await time('091-no-record').textContent(), 'just now');
+        assert.match(await time('_01_demo-planned').textContent(), /ago$/);
+    });
 });

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import type { GitRunner } from '../living-specs/livingSpecsModel';
+import type { GitRunner } from '../../core/utils/git';
 
 export const FRESHNESS_TIMEOUT_MS = 1500;
 const REUSE_MS = 5000;

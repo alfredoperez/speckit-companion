@@ -1,7 +1,7 @@
 /** @jest-environment jsdom */
-import { registerBlockRenderer } from '../blockFences';
-import { MAX_LABELLED_ARROWS, diagramGeometry, parseStates, renderStatesCard } from '../statesCard';
-import { renderMarkdown } from '../renderer';
+import { registerBlockRenderer } from 'speckit-viewer/core/markdown/blockFences';
+import { MAX_LABELLED_ARROWS, diagramGeometry, parseStates, renderStatesCard } from 'speckit-viewer/core/markdown/statesCard';
+import { renderMarkdown } from 'speckit-viewer/core/markdown/renderer';
 import { setupStatesSelect } from '../../editor/statesSelect';
 
 const DENSE = [

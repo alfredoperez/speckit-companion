@@ -17,15 +17,9 @@ import {
     INSTALL_PROMPT_EVENT,
     POSTHOG_PROJECT_API_KEY,
     reportSpecOpened,
-    reportLivingSpecOpened,
-    reportLivingSpecDrift,
-    reportLivingSpecSync,
     reportSteeringOpened,
     __resetEngagementDedupe,
     SPEC_OPENED_EVENT,
-    LIVING_SPEC_OPENED_EVENT,
-    LIVING_SPEC_DRIFT_EVENT,
-    LIVING_SPEC_SYNC_EVENT,
     STEERING_OPENED_EVENT,
 } from '../telemetry';
 import {
@@ -246,16 +240,13 @@ describe('TelemetryService', () => {
             expect(props.platform).toBe(process.platform);
         });
 
-        it('the five bare engagement events carry the common facts and nothing else (privacy contract)', () => {
+        it('the two bare engagement events carry the common facts and nothing else (privacy contract)', () => {
             __resetEngagementDedupe();
             initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
             reportSpecOpened('/ws/specs/1');
-            reportLivingSpecOpened('/ws/src/a/spec.md');
-            reportLivingSpecDrift();
-            reportLivingSpecSync();
             reportSteeringOpened();
 
-            expect(capturedEvents()).toHaveLength(5);
+            expect(capturedEvents()).toHaveLength(2);
             for (const event of capturedEvents()) {
                 expect(Object.keys(event.properties).sort()).toEqual([
                     '$process_person_profile',
@@ -625,61 +616,6 @@ describe('engagement events', () => {
         });
     });
 
-    describe('livingSpec.opened', () => {
-        it('fires a bare event the first time a living spec opens', () => {
-            reportLivingSpecOpened('/ws/src/auth/spec.md');
-            expect(capturedEvents()).toHaveLength(1);
-            expect(capturedEvents()[0].name).toBe(LIVING_SPEC_OPENED_EVENT);
-        });
-
-        it('dedupes re-renders of the same capability within a session', () => {
-            reportLivingSpecOpened('/ws/src/auth/spec.md');
-            reportLivingSpecOpened('/ws/src/auth/spec.md');
-            expect(capturedEvents()).toHaveLength(1);
-        });
-
-        it('fires once per distinct capability', () => {
-            reportLivingSpecOpened('/ws/src/auth/spec.md');
-            reportLivingSpecOpened('/ws/src/billing/spec.md');
-            expect(capturedEvents()).toHaveLength(2);
-        });
-
-        it('sends nothing when telemetry is disabled', () => {
-            mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
-            reportLivingSpecOpened('/ws/src/auth/spec.md');
-            expect(fetchMock).not.toHaveBeenCalled();
-        });
-    });
-
-    describe('livingSpec.drift / livingSpec.sync', () => {
-        it('fires a bare drift event each run (not deduped)', () => {
-            reportLivingSpecDrift();
-            reportLivingSpecDrift();
-            expect(capturedEvents().map(e => e.name)).toEqual([
-                LIVING_SPEC_DRIFT_EVENT,
-                LIVING_SPEC_DRIFT_EVENT,
-            ]);
-        });
-
-        it('fires a bare sync event each run (not deduped)', () => {
-            reportLivingSpecSync();
-            reportLivingSpecSync();
-            expect(capturedEvents().map(e => e.name)).toEqual([
-                LIVING_SPEC_SYNC_EVENT,
-                LIVING_SPEC_SYNC_EVENT,
-            ]);
-        });
-
-        it('sends nothing when telemetry is disabled', () => {
-            mockConfig({ telemetry: false });
-            initTelemetry(new TelemetryService(TEST_POSTHOG_KEY));
-            reportLivingSpecDrift();
-            reportLivingSpecSync();
-            expect(fetchMock).not.toHaveBeenCalled();
-        });
-    });
-
     describe('steering.opened', () => {
         it('fires a bare event each time a steering doc opens (not deduped)', () => {
             reportSteeringOpened();
@@ -700,9 +636,6 @@ describe('engagement events', () => {
 
     it('every engagement event carries nothing event-specific at all', () => {
         reportSpecOpened('/ws/specs/1');
-        reportLivingSpecOpened('/ws/src/a/spec.md');
-        reportLivingSpecDrift();
-        reportLivingSpecSync();
         reportSteeringOpened();
         for (const event of capturedEvents()) {
             expect(specificProps(event.properties)).toEqual({});

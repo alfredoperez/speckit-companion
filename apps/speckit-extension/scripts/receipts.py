@@ -20,7 +20,8 @@ from capture import _code_at, _tier_rank  # noqa: E402
 from spec_context import read_ctx  # noqa: E402
 
 LEAD = "Recorded by the run, not typed by the agent, except where marked."
-SCOPE = ["--", ":(top)", ":(top,exclude)specs", ":(top,exclude).specify"]
+#: Spec folders and changelogs never stale a check: a changelog line is often written after the checks ran, or once the PR has a number.
+SCOPE = ["--", ":(top)", ":(top,exclude)specs", ":(top,exclude).specify", ":(top,exclude,glob)**/CHANGELOG.md"]
 
 
 def cell(text) -> str:
@@ -37,7 +38,7 @@ def code(text) -> str:
 
 
 def changed_since(feature_dir: Path, tree: str, now: str | None) -> int | None:
-    """Files changed between a check's snapshot and now, outside the spec folders."""
+    """Files changed between a check's snapshot and now, outside the spec folders and changelogs."""
     if not now or not tree or not all(c in "0123456789abcdef" for c in tree):
         return None
     if now == tree:
@@ -114,6 +115,11 @@ def receipts(feature_dir: Path) -> str:
                if isinstance(e, dict) and isinstance(e.get("assumes"), str) and e["assumes"].strip() and not e.get("tests")]
     if assumed:
         lines += ["", "**Assumed, not tested:** " + "; ".join(f"{cell(req)} {cell(text)}" for req, text in assumed) + "."]
+    concerns = ctx.get("concerns") if isinstance(ctx.get("concerns"), list) else []
+    lowered = [c["note"].removeprefix("Lowered the bar: ") for c in concerns
+               if isinstance(c, dict) and c.get("source") == "scan" and isinstance(c.get("note"), str)]
+    if lowered:
+        lines += ["", "**Lowered the bar:** " + "; ".join(cell(n) for n in lowered) + "."]
     return "\n".join(lines) + "\n"
 
 

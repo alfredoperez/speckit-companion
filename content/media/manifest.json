@@ -99,7 +99,7 @@
       "kind": "clip",
       "status": "shipped",
       "composition": "content/media/feature-clips/overview",
-      "films": "Reading the whole Overview top to bottom in ten beats: intent, the per-phase run timeline, approach, working area, size, living specs, the expectations fence, the verified checks with their commands, the decisions with what they rejected, and the coverage table.",
+      "films": "Reading the whole Overview top to bottom in ten beats: intent, the per-phase run timeline, approach, working area, size, the expectations fence, the verified checks with their commands, the decisions with what they rejected, and the coverage table.",
       "claim": "",
       "outputs": {
         "canonicalMp4": "content/media/feature-clips/overview/renders/overview.mp4",
@@ -116,9 +116,9 @@
       },
       "unnormalized": [],
       "alt": {
-        "docs/screenshots/generated/overview.gif": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
-        "content/media/web/overview-poster.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
-        "content/media/web/overview-x16x9.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the living specs it loaded before drafting, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
+        "docs/screenshots/generated/overview.gif": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
+        "content/media/web/overview-poster.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
+        "content/media/web/overview-x16x9.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
         "docs/screenshots/generated/overview.png": "The completed Overview page for the Teamboard fixture run",
         "docs/screenshots/generated/overview-annotated.png": "The completed Overview dossier with its honest per-phase timing called out: run status, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the coverage table",
         "content/media/web/panel-read.png": "The Overview's content column: the intent the run answers to, each phase with the time it took, the approach, the corner of the codebase it changed, how it was sized, and the expectations fence."
@@ -155,8 +155,8 @@
         "content/media/feature-clips/overview-readme/renders/overview-readme_2026-08-24_16-55-52.mp4"
       ],
       "alt": {
-        "content/media/web/overview-readme-poster.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, the living specs it loaded and where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table",
-        "content/media/web/overview-readme-x16x9.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, the living specs it loaded and where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table"
+        "content/media/web/overview-readme-poster.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table",
+        "content/media/web/overview-readme-x16x9.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table"
       },
       "referencedBy": {},
       "notes": "This composition no longer publishes. docs/screenshots/generated/overview.gif is now rendered from the faster ten-beat `overview` composition; see that entry. Kept as the long-form cut of the same page, with its establishing pull-back and closing end card."
@@ -266,7 +266,7 @@
       "kind": "clip",
       "status": "shipped",
       "composition": "content/media/feature-clips/specs-sidebar",
-      "films": "The Specs sidebar grouped by lifecycle, with the living-specs and steering views beneath.",
+      "films": "The Specs sidebar grouped by lifecycle, with the steering view beneath.",
       "claim": "",
       "outputs": {
         "canonicalMp4": "content/media/feature-clips/specs-sidebar/renders/specs-sidebar.mp4",
@@ -284,11 +284,11 @@
         "content/media/feature-clips/specs-sidebar/renders/specs-sidebar_2026-08-25_18-28-10.mp4"
       ],
       "alt": {
-        "docs/screenshots/generated/specs-sidebar.gif": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath",
+        "docs/screenshots/generated/specs-sidebar.gif": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the steering view beneath",
         "docs/screenshots/generated/specs-sidebar.png": "The full Specs sidebar",
-        "docs/screenshots/generated/sidebar-triptych.png": "The three-panel sidebar explainer: Specs, Steering and Living Specs as captioned cards",
-        "content/media/web/specs-sidebar-poster.png": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath",
-        "content/media/web/specs-sidebar-x16x9.png": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the living-specs and steering views beneath"
+        "docs/screenshots/generated/sidebar-triptych.png": "The three-panel sidebar explainer: the Specs and Steering views as captioned cards",
+        "content/media/web/specs-sidebar-poster.png": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the steering view beneath",
+        "content/media/web/specs-sidebar-x16x9.png": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the steering view beneath"
       },
       "referencedBy": {
         "docs/screenshots/generated/specs-sidebar.gif": [
@@ -411,35 +411,6 @@
       },
       "referencedBy": {},
       "notes": "No published still or GIF today. The clip exists and is a site and docs candidate."
-    },
-    {
-      "id": "living-specs",
-      "name": "Living Specs",
-      "kind": "clip",
-      "status": "shipped",
-      "composition": "content/media/feature-clips/living-specs",
-      "films": "Living Specs as a work tree: eight capabilities grouped where their specs actually live, some gathered under a capabilities root and some sitting beside the code they describe, then a click on one row and that capability's spec open in the viewer.",
-      "claim": "",
-      "outputs": {
-        "canonicalMp4": "content/media/feature-clips/living-specs/renders/living-specs.mp4",
-        "webWebm": "content/media/web/living-specs.webm",
-        "webMp4": "content/media/web/living-specs.mp4",
-        "poster": "content/media/web/living-specs-poster.png",
-        "xCrop": "content/media/web/living-specs-x16x9.png",
-        "readmeGif": null,
-        "docsStill": "docs/screenshots/generated/living-specs-pair.png",
-        "extraStills": []
-      },
-      "unnormalized": [
-        "content/media/feature-clips/living-specs/renders/living-specs_2026-08-28_10-29-43.mp4"
-      ],
-      "alt": {
-        "docs/screenshots/generated/living-specs-pair.png": "The Living Specs pair: the sidebar's Living Specs view with per-capability coverage counts and drift flags, beside the viewer open on the photo-storage capability with its LIVING badge, covered globs, purpose, and WHEN/THEN requirement rows",
-        "content/media/web/living-specs-poster.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished",
-        "content/media/web/living-specs-x16x9.png": "Living Specs: the SpecKit sidebar showing a work tree of capabilities, three under a capabilities root and five colocated under src in features, jobs and services, each row carrying its coverage count or drift flag, beside the viewer on the feature run that just finished"
-      },
-      "referencedBy": {},
-      "notes": "The still ships in both READMEs. The clip is cut and feeds the site's Living specs tab; it is not promoted to a published GIF, so no README points at it. The cut ends on the spec open in the viewer, which is what the click is for; the run's fold-back Overview was dropped from it deliberately and that is recorded in the composition's STORYBOARD. Beat wording is checked against the claim ledger there: the Update action is described as handing the changed files to your assistant, never as a rewrite."
     },
     {
       "id": "review",
@@ -570,7 +541,7 @@
       },
       "unnormalized": [],
       "alt": {
-        "docs/screenshots/generated/benefits-strip.png": "Four benefit panels: the Overview's run timing with two verified checks and their commands, the companion.yml hooks block that attaches custom steps, a change sized simple at 6 files and 6 tasks projected, and the photo-storage living spec header with coverage counts and a drift flag"
+        "docs/screenshots/generated/benefits-strip.png": "Four benefit panels: the Overview's run timing with two verified checks and their commands, the companion.yml hooks block that attaches custom steps, a change sized simple at 6 files and 6 tasks projected."
       },
       "referencedBy": {}
     },
@@ -679,31 +650,6 @@
       "notes": "Not a capture-script output. It is illustrated art committed under apps/speckit-extension/assets/, and it is also the ground the two cross-promo banners composite over. Its art direction lives in apps/speckit-extension/assets/HERO-PROMPT.md."
     },
     {
-      "id": "living-specs-explained",
-      "name": "Living specs, explained",
-      "kind": "clip",
-      "status": "shipped",
-      "composition": "content/media/feature-clips/living-specs-explained",
-      "films": "The argument for living specs as a drawn diagram: the spec folder fills in, the feature ships and the folder goes quiet, three capabilities lift out and dock beside the code they describe, coverage counts arrive, one row flips to drift, and the same three are shown again at a central root.",
-      "claim": "",
-      "outputs": {
-        "webWebm": "content/media/web/living-specs-explained.webm",
-        "webMp4": "content/media/web/living-specs-explained.mp4",
-        "poster": "content/media/web/living-specs-explained-poster.png",
-        "xCrop": "content/media/web/living-specs-explained-x16x9.png",
-        "canonicalMp4": "content/media/feature-clips/living-specs-explained/renders/living-specs-explained.mp4",
-        "panelStill": "content/media/web/panel-living.png"
-      },
-      "unnormalized": [],
-      "alt": {
-        "content/media/web/living-specs-explained-poster.png": "A drawn diagram: the specs folder for a shipped feature greys out, and three capability specs lift out of it and settle next to the source files they describe, each carrying a coverage count or a drift flag, then the same three shown at a central capabilities root.",
-        "content/media/web/living-specs-explained-x16x9.png": "A drawn diagram: the specs folder for a shipped feature greys out, and three capability specs lift out of it and settle next to the source files they describe, each carrying a coverage count or a drift flag, then the same three shown at a central capabilities root.",
-        "content/media/web/panel-living.png": "Two placements side by side: a capability's spec sitting among the source files it describes, and the same kind of spec kept with the others under one capabilities root, each carrying a coverage count or a drift flag."
-      },
-      "referencedBy": {},
-      "notes": "Hand-authored: no capture, no camera, every pixel drawn in index.html. Skipped by clip-storyboard by design. Re-themes from its own :root block."
-    },
-    {
       "id": "page-lightwell",
       "name": "Page lightwell",
       "kind": "still",
@@ -762,7 +708,7 @@
       "kind": "clip",
       "status": "shipped",
       "composition": "content/media/feature-clips/write-only-specs",
-      "films": "The hook already stamped at frame 0, the numbers stamped in fast, the confession, the tangled every-session re-read, the write-only-specs verdict, then the short emerald living-spec path and the blog lockup with the mascot.",
+      "films": "The hook already stamped at frame 0, the numbers stamped in fast, the confession, the tangled every-session re-read, the write-only-specs verdict, then the short emerald spec path and the blog lockup with the mascot.",
       "claim": "",
       "outputs": {
         "canonicalMp4": "content/media/feature-clips/write-only-specs/renders/write-only-specs.mp4",

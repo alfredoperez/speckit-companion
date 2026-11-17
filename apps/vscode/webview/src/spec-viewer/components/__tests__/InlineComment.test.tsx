@@ -6,7 +6,7 @@ import { InlineComment } from '../InlineComment';
 import type { Refinement } from '../../types';
 
 const refinementsCss = readFileSync(
-    join(__dirname, '../../../../styles/spec-viewer/_refinements.css'),
+    join(__dirname, '../../../../../../../packages/viewer/styles/_refinements.css'),
     'utf8',
 );
 

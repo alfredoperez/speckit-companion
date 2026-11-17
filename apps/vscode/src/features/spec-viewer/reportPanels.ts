@@ -10,6 +10,8 @@ import { resolveSpecDirectories } from '../../core/specDirectoryResolver';
 import { readSpecContextSyncSafe } from '../specs/specContextReader';
 import { featureSpecPath } from '../specs/featureSpecPath';
 import { bugActions, ideaActions, type ReportAction } from '../processes/processActions';
+import { getProjectRoot } from '../../core/projectRoot';
+import { processExtensionInfo, type ProcessExtensionId } from '../../speckit/processExtensions';
 
 export type ReportSetId = ReportSet<string>['id'];
 
@@ -70,16 +72,24 @@ export function bugBadge(bug: Pick<BugReport, 'state' | 'outcome' | 'freshness'>
     return { badge: bug.outcome };
 }
 
+/** A turned-off extension's commands don't run, so its pages offer none. */
+function extensionOff(id: ProcessExtensionId): boolean {
+    const root = getProjectRoot();
+    return !!root && processExtensionInfo(root, id).disabled;
+}
+
 const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | undefined> = {
     bugs: directory => {
         const bug = readBugReport(directory);
         if (!bug) return undefined;
-        const actions = bugActions(bug);
+        const off = extensionOff('bug');
+        const actions = off ? [] : bugActions(bug);
         const page = buildBugStory(
             { assessment: textOf(bug.reports.assessment), fix: textOf(bug.reports.fix), test: textOf(bug.reports.test) },
             actions.find(action => action.primary)?.label,
             { engine: bug.engine, freshness: bug.freshness, writtenAt: writtenAt(bug.reports) },
         );
+        if (off && page?.engine?.paused) delete page.engine.paused.answerable;
         return {
             slug: bug.slug,
             title: bug.title,
@@ -105,7 +115,7 @@ const READERS: Record<ReportSetId, (directory: string) => ReportPanelItem | unde
             title: idea.title,
             badge: idea.verdict,
             folder: folderOf(IDEA_SET.dir, idea.slug),
-            actions: ideaActions(idea),
+            actions: extensionOff('assess') ? [] : ideaActions(idea),
             decisionPath: idea.reports.decision.exists ? idea.reports.decision.path : undefined,
         };
     },

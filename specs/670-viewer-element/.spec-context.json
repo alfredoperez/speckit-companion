@@ -1,0 +1,681 @@
+{
+  "workflow": "companion",
+  "specName": "The spec viewer as an embeddable element",
+  "branch": "feat/983-v5-v9-factory",
+  "currentStep": "implement",
+  "status": "implemented",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T21:49:00.026Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-12T21:49:55.267Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T21:49:59.997Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T21:54:50.880Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T21:55:08.000Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T21:55:37.764Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-12T21:55:46.679Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T21:56:52.935Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T21:56:52.935Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T21:56:52.935Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T21:57:45.886Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:00:07.260Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:07.485Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:40.202Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:49.127Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:52.863Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:52.864Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:52.864Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:52.864Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:57.872Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:02:57.872Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.424Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.424Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.583Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.583Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.721Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:20:36.851Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:53:54.374Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T22:53:54.498Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T23:09:05.993Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-12T23:09:06.021Z"
+    }
+  ],
+  "unattended": true,
+  "request": "--number 670 Spec viewer as a library, slices V5, V6 (and the speckit-companion half of V9) of issue #983. Work ONLY in /Users/alfredoperez/dev/GitHub/speckit-companion.worktrees/feat-983-v5-v9 (branch feat/983-v5-v9-factory, already created; skip the before_specify branch hook). (1) V5: cut the spec viewer's view off from the VS Code host. Move the host-neutral Preact view (App shell, NavigationBar, StepTab, SpecHeader, PageChrome, ActivityPanel, ActivityErrorBoundary, OverviewDossier, RunStrip, TimelineEvent, ElapsedTimer, the read-only Overview cards, signals, toc, highlighting, documentLinks, the shared Badge/Button it needs) from apps/vscode/webview/src/spec-viewer into packages/viewer (a new /view entry, Preact components exported). Every vscode.postMessage in that view becomes one typed onAction(action) whose type is the existing ViewerToExtensionMessage union, exported from /contract as ViewerAction. Extension-only parts (inline editor and comments, footer actions, stale/removed/install banners, report pages, toast, message router, file-ref and checkbox handlers) stay in the extension and plug into the package App through slot props. The VS Code webview sets the action handler to vscode.postMessage. What a VS Code user sees must not change: prove it with tooling/scripts/viewer-style-diff.mjs (computed styles, every viewer story, vs a main build) and tooling/scripts/viewer-bundle-diff.mjs (report the diff; bundles will differ in code, behaviour must not), plus npm run check:vsix and npm run test:all. (2) V6: a /element entry registers <speckit-viewer> (Preact inside, light DOM so the scoped .sk-viewer CSS applies). Properties: record (the .spec-context.json, nullable), documents (the folder's documents: type, label, fileName, filePath, exists, core or related, parentStep), currentDoc, content (the current document's markdown text), landing (overview or document), live (boolean). The element derives NavState and ViewerState itself through /core, so the host-pure derivations it needs (phase calculation, step history derivation, viewer state derivation, badge/dates) move from apps/vscode/src into /core with the extension re-importing them. It emits every action as a bubbling, composed 'speckit-action' CustomEvent whose detail is the ViewerAction; navigation inside the viewer (rail clicks, document links between the folder's documents) is handled by the element itself and also emitted. Host-specific actions come in as slots: light-DOM children with slot=\"actions\" are shown above the rail and document. It bundles highlight.js (11.9.0, the same languages the webview loads from the CDN today, plus its github-dark stylesheet in /styles), so it needs no CDN; the VS Code webview switches to the bundled highlighter too and drops the highlight.js CDN tags (mermaid stays CDN, opt-in). The package builds an ESM element bundle with esbuild (preact and highlight.js inside) and ships .d.ts. (3) The package source must type-check under noUncheckedIndexedAccess (Factory's strict tsconfig reported ~471 unchecked-index errors): turn the flag on in packages/viewer/tsconfig.json and fix the code, not the flag. Out of scope: moving stories to the package (V7), publishing (V8), the Copilot canvas (V10), the Claude Code mod (V11). No version bumps. No real VS Code windows; Storybook/headless Chrome only.",
+  "expectations": [
+    "V7 stories move",
+    "V8 publishing",
+    "V10 Copilot canvas",
+    "V11 Claude Code mod",
+    "editing features in the element (inline editor, comments)"
+  ],
+  "context": [
+    "area: packages/viewer (contract, core, styles)",
+    "area: apps/vscode/webview/src/spec-viewer (Preact view, postMessage calls)",
+    "area: apps/vscode/src/features/spec-viewer (phaseCalculation, stateDerivation) and features/specs/stepHistoryDerivation",
+    "area: generator.ts loads highlight.js 11.9.0 from jsdelivr",
+    "constraint: VS Code viewer must not change; prove with viewer-style-diff and viewer-bundle-diff",
+    "constraint: no version bump, no real VS Code windows"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "View sends every message through one typed action function",
+      "tasks": [
+        "T009",
+        "T011"
+      ]
+    },
+    "FR-002": {
+      "title": "ViewerAction exported from the contract",
+      "tasks": [
+        "T006"
+      ]
+    },
+    "FR-003": {
+      "title": "Host-neutral view lives in the package",
+      "tasks": [
+        "T011"
+      ]
+    },
+    "FR-004": {
+      "title": "Extension-only parts plug in through slots",
+      "tasks": [
+        "T008",
+        "T013"
+      ]
+    },
+    "FR-005": {
+      "title": "Webview routes actions to postMessage",
+      "tasks": [
+        "T009",
+        "T013"
+      ]
+    },
+    "FR-006": {
+      "title": "Computed styles match main",
+      "tasks": [
+        "T015"
+      ]
+    },
+    "FR-007": {
+      "title": "speckit-viewer custom element in light DOM",
+      "tasks": [
+        "T017",
+        "T019"
+      ]
+    },
+    "FR-008": {
+      "title": "Element takes its properties and derives state",
+      "tasks": [
+        "T016",
+        "T018",
+        "T019"
+      ]
+    },
+    "FR-009": {
+      "title": "Pure derivations move into core",
+      "tasks": [
+        "T007",
+        "T016"
+      ]
+    },
+    "FR-010": {
+      "title": "Element emits speckit-action",
+      "tasks": [
+        "T017",
+        "T019"
+      ]
+    },
+    "FR-011": {
+      "title": "Element switches documents itself",
+      "tasks": [
+        "T017",
+        "T019"
+      ]
+    },
+    "FR-012": {
+      "title": "actions slot above the view",
+      "tasks": [
+        "T017",
+        "T019"
+      ]
+    },
+    "FR-013": {
+      "title": "Highlighting bundled, no CDN",
+      "tasks": [
+        "T010",
+        "T011",
+        "T012",
+        "T014"
+      ]
+    },
+    "FR-014": {
+      "title": "ESM element bundle plus declarations",
+      "tasks": [
+        "T017",
+        "T020"
+      ]
+    },
+    "FR-015": {
+      "title": "Package type-checks with noUncheckedIndexedAccess",
+      "tasks": [
+        "T002",
+        "T004",
+        "T005",
+        "T021"
+      ]
+    },
+    "FR-016": {
+      "title": "check:vsix and test:all pass",
+      "tasks": [
+        "T023"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 70,
+    "projectedTasks": 30,
+    "scopeSignal": "larger",
+    "verdict": "oversized"
+  },
+  "intent": "Ship the spec viewer as a host-neutral Preact view and a <speckit-viewer> element, with the VS Code viewer unchanged",
+  "size": "oversized",
+  "source": "#983",
+  "planBlocks": [
+    "calls"
+  ],
+  "planBlocksPicked": [
+    "calls"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/670-viewer-element --strict",
+      "source": "derived",
+      "exitCode": 1,
+      "durationSeconds": 0.0,
+      "result": "  ERROR   plan.md:62  indented more than one level past the line above (malformed) ·   WARNING plan.md:62  `apps/vscode/src/features/spec-viewer/footerActions.ts` has no `:line`, so it is unverified (no-line) ·   9 error(s), 3 warning(s)",
+      "warnings": [
+        "exited 1"
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Action handler installed by the extension signals module, reading global vscode at call time",
+      "why": "18 tests/stories mock globalThis.vscode; they keep passing unedited",
+      "rejected": "Jest setup file plus edits to every mock",
+      "by": "agent",
+      "at": "2026-11-12T21:54:50.643Z"
+    },
+    {
+      "decision": "ViewerSlots Preact context for extension-only parts",
+      "why": "install banner is deep in ActivityPanel",
+      "rejected": "App props only",
+      "by": "agent",
+      "at": "2026-11-12T21:54:50.643Z"
+    },
+    {
+      "decision": "highlight.js/lib/common 11.9.0 plus github-dark copied as a separate sheet",
+      "why": "CDN core is the common build; separate sheet keeps spec-viewer.css (the diffed sheet) unchanged",
+      "rejected": "Factory nine-language set",
+      "by": "agent",
+      "at": "2026-11-12T21:54:50.643Z"
+    },
+    {
+      "decision": "Light-DOM element with CSS-ordered slot children",
+      "why": "view uses document-level lookups; host keeps owning slotted nodes",
+      "rejected": "shadow DOM with real slots",
+      "by": "agent",
+      "at": "2026-11-12T21:54:50.643Z"
+    },
+    {
+      "decision": "deriveViewerState takes the footer builder as a parameter",
+      "why": "footer stays in the extension; output unchanged",
+      "rejected": "Factory hard-coded empty footer copy",
+      "by": "agent",
+      "at": "2026-11-12T21:54:50.643Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Plan: move view to packages/viewer/src/view, derivations to core, element via esbuild, strict-index fixes",
+      "key_finding": "The CDN highlight.js is the common build, and the style diff page loads only spec-viewer.css"
+    },
+    "tasks": {
+      "summary": "23 tasks: setup, foundational (strict fixes, derivations, host), US1 view move, US2 element, US3 strict test, polish"
+    }
+  },
+  "approach": "Move the host-neutral Preact view into the package behind one onAction function and a slots context; the extension forwards actions to postMessage. A light-DOM <speckit-viewer> derives state through core and re-emits actions as events. highlight.js is bundled from the common build.",
+  "concerns": [
+    {
+      "note": "check_plan.py reports malformed call-path lines: the blocks cite files that do not exist yet (moved view code), so lines cannot be verified"
+    }
+  ],
+  "currentTask": "T023",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Package deps (highlight.js 11.9.0, preact, signals) hand-added to the lockfile; /view and /element exports; strict-index flag; tsconfig.view.json; Jest maps /view and /element",
+      "files": [
+        "packages/viewer/package.json",
+        "package-lock.json",
+        "packages/viewer/tsconfig.json",
+        "packages/viewer/tsconfig.view.json",
+        "jest.config.js"
+      ],
+      "wave": "T001-T003"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Package deps (highlight.js 11.9.0, preact, signals) hand-added to the lockfile; /view and /element exports; strict-index flag; tsconfig.view.json; Jest maps /view and /element",
+      "files": [
+        "packages/viewer/package.json",
+        "package-lock.json",
+        "packages/viewer/tsconfig.json",
+        "packages/viewer/tsconfig.view.json",
+        "jest.config.js"
+      ],
+      "wave": "T001-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Package deps (highlight.js 11.9.0, preact, signals) hand-added to the lockfile; /view and /element exports; strict-index flag; tsconfig.view.json; Jest maps /view and /element",
+      "files": [
+        "packages/viewer/package.json",
+        "package-lock.json",
+        "packages/viewer/tsconfig.json",
+        "packages/viewer/tsconfig.view.json",
+        "jest.config.js"
+      ],
+      "wave": "T001-T003"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Exported ViewerAction as an alias of ViewerToExtensionMessage",
+      "files": [
+        "packages/viewer/src/contract/viewer.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Moved phase, step-history, state derivation, history helpers, task checkboxes, capability names and status constants into viewer core; old paths re-export; canvas build repointed",
+      "files": [
+        "packages/viewer/src/core/*.ts",
+        "apps/vscode/src/features/spec-viewer/{phaseCalculation",
+        "stateDerivation}.ts",
+        "apps/vscode/src/features/specs/{stepHistoryDerivation",
+        "historyHelpers",
+        "specStatusLabel}.ts",
+        "apps/vscode/src/core/utils/{taskCheckboxes",
+        "capabilityNames}.ts",
+        "apps/vscode/src/core/constants.ts",
+        "apps/copilot-canvas/build.mjs"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Fixed unchecked-index errors in the ledger with non-null assertions; no behaviour change",
+      "files": [
+        "packages/viewer/src/core/markdown/ledger/blocks.ts",
+        "data.ts",
+        "dataContracts.ts",
+        "dataQuickstart.ts",
+        "plan.ts",
+        "research.ts",
+        "specDoc.ts",
+        "specModel.ts",
+        "tasks.ts",
+        "tasksModel.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Unchecked-index fixes in renderer and cards (non-null assertions where bounds prove presence)",
+      "files": [
+        "packages/viewer/src/core/markdown/*.ts",
+        "packages/viewer/src/core/relativeTime.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "View host (onAction/setActionHandler), package signals, ViewerSlots context",
+      "files": [
+        "packages/viewer/src/view/host.ts",
+        "packages/viewer/src/view/signals.ts",
+        "packages/viewer/src/view/slots.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "View moved into packages/viewer/src/view behind onAction and slots; bundled highlight.js/lib/common; github-dark copied to dist/styles/highlight; action and highlighting tests",
+      "files": [
+        "packages/viewer/src/view",
+        "packages/viewer/scripts/build-css.mjs"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "View moved into packages/viewer/src/view behind onAction and slots; bundled highlight.js/lib/common; github-dark copied to dist/styles/highlight; action and highlighting tests",
+      "files": [
+        "packages/viewer/src/view",
+        "packages/viewer/scripts/build-css.mjs"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "View moved into packages/viewer/src/view behind onAction and slots; bundled highlight.js/lib/common; github-dark copied to dist/styles/highlight; action and highlighting tests",
+      "files": [
+        "packages/viewer/src/view",
+        "packages/viewer/scripts/build-css.mjs"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "View moved into packages/viewer/src/view behind onAction and slots; bundled highlight.js/lib/common; github-dark copied to dist/styles/highlight; action and highlighting tests",
+      "files": [
+        "packages/viewer/src/view",
+        "packages/viewer/scripts/build-css.mjs"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Extension App fills the slots; signals re-export the package's and forward actions to postMessage; old paths re-export; highlight.js CDN tags gone in webview and Storybook",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer",
+        "apps/vscode/src/features/spec-viewer/html/generator.ts",
+        ".storybook/preview.tsx"
+      ],
+      "wave": "T013-T014"
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Extension App fills the slots; signals re-export the package's and forward actions to postMessage; old paths re-export; highlight.js CDN tags gone in webview and Storybook",
+      "files": [
+        "apps/vscode/webview/src/spec-viewer",
+        "apps/vscode/src/features/spec-viewer/html/generator.ts",
+        ".storybook/preview.tsx"
+      ],
+      "wave": "T013-T014"
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "buildNavState in core (action steps on the rail, implement on Tasks, unknown doc falls back) with tests",
+      "files": [
+        "packages/viewer/src/core/navState.ts",
+        "packages/viewer/src/core/__tests__/navState.test.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "buildNavState in core (action steps on the rail, implement on Tasks, unknown doc falls back) with tests",
+      "files": [
+        "packages/viewer/src/core/navState.ts",
+        "packages/viewer/src/core/__tests__/navState.test.ts"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "speckit-viewer element (light DOM, own navigation, speckit-action events, actions slot) and its esbuild ESM bundle plus declarations",
+      "files": [
+        "packages/viewer/src/element/index.ts",
+        "packages/viewer/scripts/build-element.mjs",
+        "packages/viewer/package.json"
+      ],
+      "wave": "T019-T020"
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "speckit-viewer element (light DOM, own navigation, speckit-action events, actions slot) and its esbuild ESM bundle plus declarations",
+      "files": [
+        "packages/viewer/src/element/index.ts",
+        "packages/viewer/scripts/build-element.mjs",
+        "packages/viewer/package.json"
+      ],
+      "wave": "T019-T020"
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Headless Chrome check of the element bundle alone: rail, slot, highlighting, navigation, events, no CDN",
+      "files": [
+        "packages/viewer/tests/element/element.check.mjs"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Strict test: both package tsconfigs forbid unchecked index access and type-check clean",
+      "files": [
+        "packages/viewer/tests/strict.test.ts"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Bundle diff: 3 bundles identical, spec-viewer.js +148 KB (highlighter); style diff 518/524 then 0 differences after the ActivityPanel fix and flake rerun",
+      "files": [
+        "tooling/scripts/viewer-style-diff.mjs",
+        "apps/vscode/webview/src/spec-viewer/components/ActivityPanel.tsx"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Package README (both ways to plug in), CLAUDE.md repo map and view rule",
+      "files": [
+        "packages/viewer/README.md",
+        "CLAUDE.md"
+      ]
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "tsc root/webview/package clean; check:vsix passes; Jest 4,680/4,681 (the 1 was the changelog placeholder, now 23/23); canvas 179/179; Python 1,495 OK",
+      "files": [
+        "-"
+      ]
+    }
+  }
+}

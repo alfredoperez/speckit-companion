@@ -3,8 +3,8 @@
  */
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { mapToSourceLines } from '../sourceLines';
-import { renderMarkdown, setCurrentTask, setHasSpecContext } from '../renderer';
+import { mapToSourceLines } from 'speckit-viewer/core/markdown/sourceLines';
+import { renderMarkdown, setCurrentTask, setHasSpecContext } from 'speckit-viewer/core/markdown/renderer';
 import { extractBlock } from '../../../../../src/features/spec-viewer/extractBlock';
 
 const TEAMBOARD = join(__dirname, '../../__fixtures__/teamboard/041-profile-photo-upload');

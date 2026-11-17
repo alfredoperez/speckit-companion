@@ -1,0 +1,83 @@
+/**
+ * SpecKit Companion - Staleness Warning Styles
+ * A document-local notice (it lives inside the reading column, over the document
+ * it describes) plus the matching mark on the rail item.
+ */
+
+/* ============================================
+   Stale notice — document-scoped
+   ============================================ */
+
+.stale-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sk-space-3);
+    margin: var(--sk-space-4) var(--sk-content-padding) 0;
+    padding: 10px 14px;
+    background: var(--sk-warning-subtle);
+    border: 1px solid color-mix(in srgb, var(--sk-warning) 40%, transparent);
+    border-radius: var(--sk-radius-md);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.stale-banner__icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--sk-warning);
+    font-size: 14px;
+}
+
+.stale-banner__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.stale-banner__title {
+    margin: 0;
+    color: var(--sk-warning);
+    font-size: 12.5px;
+    font-weight: 650;
+}
+
+.stale-banner__detail {
+    margin: 2px 0 0;
+    color: var(--sk-text-body);
+    max-width: 72ch;
+}
+
+.stale-regen-btn {
+    flex-shrink: 0;
+    align-self: center;
+}
+
+/* ============================================
+   Stale mark on a rail item
+   ============================================ */
+
+.stale-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    border-radius: 50%;
+    background: var(--sk-warning);
+    color: var(--sk-bg-primary);
+    margin-left: 4px;
+    position: relative;
+    top: -1px;
+}
+
+.stale-badge--old {
+    width: auto;
+    height: auto;
+    padding: 2px 5px;
+    border-radius: var(--sk-radius-sm);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}

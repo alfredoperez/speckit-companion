@@ -247,7 +247,7 @@ export function buildSpecRow({ id, ctx, specText, files, written = null, tasksTe
 }
 
 // The run record's last event is the real "last touched"; file times only mean something without one (a checkout resets them).
-const sortKey = spec => spec.lastActivity ?? spec.updatedAt ?? '';
+const sortKey = spec => spec.lastActivity ?? (spec.hasContext ? null : spec.updatedAt) ?? '';
 
 /** Rows most recently touched first, in place. */
 export function sortSpecs(rows) {

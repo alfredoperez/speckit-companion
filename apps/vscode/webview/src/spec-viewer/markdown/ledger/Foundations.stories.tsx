@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/preact';
 import { MarkdownDoc } from '../storyDoc';
-import { eyebrow, fileChip, idChip, priorityMark, statusDot, type Family, type Status } from './primitives';
+import { eyebrow, fileChip, idChip, priorityMark, statusDot, type Family, type Status } from 'speckit-viewer/core/markdown/ledger/primitives';
 
 const families: Family[] = ['story', 'req', 'decision', 'task', 'data', 'guard'];
 const statuses: Status[] = ['done', 'running', 'warn', 'fail', 'todo'];

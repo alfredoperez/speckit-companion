@@ -50,13 +50,6 @@
           "speckit.companion.mark-complete",
           "speckit.companion.auto",
           "speckit.companion.doctor",
-          "speckit.companion.living-adopt",
-          "speckit.companion.living-move",
-          "speckit.companion.living-drift",
-          "speckit.companion.living-show",
-          "speckit.companion.living-validate",
-          "speckit.companion.living-coverage",
-          "speckit.companion.living-sync",
           "speckit.companion.on-prompt",
           "speckit.companion.on-stop"
         ]
@@ -79,13 +72,6 @@
         "speckit-companion-mark-complete",
         "speckit-companion-auto",
         "speckit-companion-doctor",
-        "speckit-companion-living-adopt",
-        "speckit-companion-living-move",
-        "speckit-companion-living-drift",
-        "speckit-companion-living-show",
-        "speckit-companion-living-validate",
-        "speckit-companion-living-coverage",
-        "speckit-companion-living-sync",
         "speckit-companion-on-prompt",
         "speckit-companion-on-stop"
       ],

@@ -66,18 +66,6 @@ const STILLS = [
     width: 1500,
   },
   {
-    // Drawn, not captured: the two-up payoff of the explainer clip, held at the
-    // moment both placements are on screen with their coverage and drift. The
-    // crop stops above the caption band — a band sized to be read as video is
-    // enormous as a figure, and the sentence is already in the row's copy.
-    id: 'panel-living',
-    fromRender: 'living-specs-explained',
-    at: 17.5,
-    crop: { x: 156, y: 0, w: 1522 },
-    aspect: ASPECT,
-    width: 1500,
-  },
-  {
     // The step rail with every earlier step ticked. Cut from the CAPTURE, not
     // the render: step-rail and run-in-flight open on the same shot, so their
     // frame-zero posters are byte-identical and one picture was serving two
@@ -141,7 +129,7 @@ if (missing.length) {
     console.error(`  ${s.id.padEnd(20)} ${s.parts?.map((part) => part.fromFile).join(' + ') || s.fromFile || s.from || `${s.fromRender} (no render yet)`}`);
   }
   console.error(
-    '\n  Captures:  npm run clips:capture -- --clips overview,living-specs,review' +
+    '\n  Captures:  npm run clips:capture -- --clips overview,review' +
       '\n  Renders:   npm run render, inside the composition directory' +
       '\n\n  Both are gitignored, so a fresh clone always needs this.',
   );

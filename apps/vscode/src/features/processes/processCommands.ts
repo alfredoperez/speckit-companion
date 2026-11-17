@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Commands } from '../../core/constants';
 import { getProjectRoot } from '../../core/projectRoot';
-import { coerceProcessExtensionId, runSpecifyExtensionAdd } from '../../speckit/processExtensions';
+import { coerceProcessExtensionId, runSpecifyExtensionAdd, runSpecifyExtensionEnable } from '../../speckit/processExtensions';
 
 interface Refreshable {
     refresh(): void;
@@ -17,6 +17,10 @@ export function registerProcessCommands(
         vscode.commands.registerCommand(Commands.processesInstallExtension, (requested?: unknown) => {
             const id = coerceProcessExtensionId(requested);
             return id ? runSpecifyExtensionAdd(id, getProjectRoot()) : undefined;
+        }),
+        vscode.commands.registerCommand(Commands.processesEnableExtension, (requested?: unknown) => {
+            const id = coerceProcessExtensionId(requested);
+            return id ? runSpecifyExtensionEnable(id, getProjectRoot()) : undefined;
         }),
     );
 }

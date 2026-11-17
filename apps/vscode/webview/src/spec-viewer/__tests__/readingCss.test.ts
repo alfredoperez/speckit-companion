@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const read = (file: string): string => fs.readFileSync(path.join(__dirname, '../../../styles/spec-viewer', file), 'utf8');
+const read = (file: string): string => fs.readFileSync(path.join(__dirname, '../../../../../../packages/viewer/styles', file), 'utf8');
 const rule = (css: string, selector: string): string => {
     const at = css.indexOf(`${selector} {`);
     if (at === -1) throw new Error(`no rule for ${selector}`);
@@ -28,6 +28,6 @@ describe('reading column', () => {
     });
 
     it('draws links no dimmer than body text by leaning the accent toward primary ink', () => {
-        expect(rule(read('_content.css'), '#markdown-content a')).toContain('color-mix(in srgb, var(--accent) 60%, var(--text-primary))');
+        expect(rule(read('_content.css'), '#markdown-content a')).toContain('color-mix(in srgb, var(--sk-accent) 60%, var(--sk-text-primary))');
     });
 });

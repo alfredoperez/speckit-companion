@@ -1,0 +1,78 @@
+/**
+ * SpecKit Companion - Task Phase Headers
+ * Rich headers for tasks.md "## Phase N: …" sections, emitted by
+ * preprocessTaskPhases (phase number chip + MVP / priority chips).
+ */
+
+/* Quiet phase boundary: structure without a competing filled panel. */
+#markdown-content .phase-header {
+  margin: var(--sk-space-6) 0 var(--sk-space-3);
+  padding: 14px 0 0;
+  border: none;
+  border-top: 1px solid var(--sk-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+#markdown-content .phase-header:first-child {
+  margin-top: 0;
+}
+
+#markdown-content .phase-header-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sk-space-2);
+  margin-bottom: var(--sk-space-1);
+}
+
+#markdown-content .phase-num {
+  font-size: var(--sk-text-xs);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sk-accent);
+  background: var(--sk-accent-subtle);
+  border: none;
+  padding: 2px var(--sk-space-2);
+  border-radius: var(--sk-radius-sm);
+}
+
+#markdown-content .phase-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--sk-radius-sm);
+}
+
+#markdown-content .phase-chip.mvp {
+  color: var(--sk-warning);
+  background: color-mix(in srgb, var(--sk-warning) 14%, transparent);
+  border-color: color-mix(in srgb, var(--sk-warning) 55%, transparent);
+}
+
+#markdown-content .phase-chip.prio.p1 {
+  color: var(--sk-priority-high);
+  background: color-mix(in srgb, var(--sk-priority-high) 14%, transparent);
+  border-color: color-mix(in srgb, var(--sk-priority-high) 55%, transparent);
+}
+
+#markdown-content .phase-chip.prio.p2 {
+  color: var(--sk-priority-medium);
+  background: color-mix(in srgb, var(--sk-priority-medium) 14%, transparent);
+  border-color: color-mix(in srgb, var(--sk-priority-medium) 55%, transparent);
+}
+
+#markdown-content .phase-chip.prio.p3 {
+  color: var(--sk-priority-low);
+  background: color-mix(in srgb, var(--sk-priority-low) 14%, transparent);
+  border-color: color-mix(in srgb, var(--sk-priority-low) 55%, transparent);
+}
+
+#markdown-content .phase-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--sk-text-primary);
+}

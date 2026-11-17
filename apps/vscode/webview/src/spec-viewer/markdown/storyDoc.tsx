@@ -1,5 +1,5 @@
 import { useEffect } from 'preact/hooks';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './index';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from 'speckit-viewer/core/markdown/index';
 import { setupLedgerTasks } from './ledger/tasksInteractions';
 import { applyHighlighting } from '../highlighting';
 import { resolveLedgerRefs } from './ledger/refs';

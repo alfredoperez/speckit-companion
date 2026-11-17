@@ -4,7 +4,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { _clearFreshnessCacheForTests, filesChangedSince, staleCounts } from '../checkFreshness';
 import { markStaleChecks } from '../stateDerivation';
-import { makeDefaultGitRunner, type GitRunner } from '../../living-specs/livingSpecsModel';
+import { makeDefaultGitRunner, type GitRunner } from '../../../core/utils/git';
 
 const TREE = 'a1b2c3d4e5f6';
 
