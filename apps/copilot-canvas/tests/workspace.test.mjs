@@ -1,24 +1,30 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, symlinkSync, rmSync, writeFileSync } from 'node:fs';
+import { realpathSync, mkdtempSync, mkdirSync, readFileSync, symlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { rootSelection, validateRoot } from '../com.github.copilot/extensions/speckit-companion/workspace.mjs';
+import { rootSelection, validateRepositoryRoot, validateRoot } from '../com.github.copilot/extensions/speckit-companion/workspace.mjs';
 import { buildSnapshot } from '../com.github.copilot/extensions/speckit-companion/specs-core.mjs';
 import { createSpecServer } from '../com.github.copilot/extensions/speckit-companion/server.mjs';
 import { pickerStartDirectory, pickFolder } from '../com.github.copilot/extensions/speckit-companion/folder-picker.mjs';
 
+const temp = prefix => realpathSync(mkdtempSync(join(tmpdir(), prefix)));
+function repo(path) {
+    mkdirSync(join(path, '.git'), { recursive: true });
+}
+
 function spec(root, id, title) {
+    repo(root);
     mkdirSync(join(root, 'specs', id), { recursive: true });
     writeFileSync(join(root, 'specs', id, 'spec.md'), `# ${title}\n`);
 }
 
 describe('repository root selection', () => {
     it('starts the native picker at the main worktree, falling back to the current directory', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-picker-start-'));
+        const base = temp('canvas-picker-start-');
         const tree = join(base, 'tree');
-        mkdirSync(tree);
+        repo(tree);
         try {
             const git = async () => ({ stdout: `worktree ${base}\0HEAD abc\0\0worktree ${tree}\0HEAD def\0\0` });
             assert.equal(await pickerStartDirectory(tree, git), base);
@@ -46,7 +52,7 @@ describe('repository root selection', () => {
     });
 
     it('browses through the protected root handler, preserving state on cancel, error and races', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-picker-server-'));
+        const base = temp('canvas-picker-server-');
         const first = join(base, 'first');
         const second = join(base, 'second');
         spec(first, '001-one', 'First');
@@ -99,7 +105,7 @@ describe('repository root selection', () => {
     });
 
     it('validates paths and restores the session selection independently of the panel', () => {
-        const workspace = mkdtempSync(join(tmpdir(), 'canvas-root-storage-'));
+        const workspace = temp('canvas-root-storage-');
         try {
             assert.throws(() => validateRoot('relative/path'), /absolute/);
             assert.throws(() => validateRoot(''), /absolute/);
@@ -110,7 +116,7 @@ describe('repository root selection', () => {
             rootSelection(workspace).write(workspace);
             assert.equal(rootSelection(workspace).read(), workspace);
             writeFileSync(join(workspace, 'files/speckit-companion/board.json'), 'broken');
-            assert.throws(() => rootSelection(workspace).read(), SyntaxError);
+            assert.equal(rootSelection(workspace).read(), null);
             assert.throws(() => rootSelection().write(workspace), /storage is unavailable/);
         } finally {
             rmSync(workspace, { recursive: true });
@@ -118,7 +124,7 @@ describe('repository root selection', () => {
     });
 
     it('distinguishes a missing spec directory from an empty one', () => {
-        const root = mkdtempSync(join(tmpdir(), 'canvas-root-empty-'));
+        const root = temp('canvas-root-empty-');
         try {
             assert.equal(buildSnapshot(root).missingSpecDirectories, true);
             mkdirSync(join(root, 'specs'));
@@ -129,7 +135,7 @@ describe('repository root selection', () => {
     });
 
     it('switches the existing server, resets focus, persists selection and watches the new root', async () => {
-        const workspace = mkdtempSync(join(tmpdir(), 'canvas-root-switch-'));
+        const workspace = temp('canvas-root-switch-');
         const first = join(workspace, 'first');
         const second = join(workspace, 'second');
         spec(first, '001-one', 'First');
@@ -168,7 +174,7 @@ describe('repository root selection', () => {
     });
 
     it('keeps the existing board when saving fails and refuses a switch during a run', async () => {
-        const root = mkdtempSync(join(tmpdir(), 'canvas-root-busy-'));
+        const root = temp('canvas-root-busy-');
         spec(root, '001-one', 'First');
         const board = await createSpecServer({ root, saveRoot: () => { throw new Error('disk full'); }, send: async () => true });
         try {
@@ -183,10 +189,10 @@ describe('repository root selection', () => {
     });
 
     it('opens a chat board at an explicit root and restores it in a fresh panel', async () => {
-        const workspace = mkdtempSync(join(tmpdir(), 'canvas-root-extension-'));
+        const workspace = temp('canvas-root-extension-');
         const chat = join(workspace, 'chat');
         const repository = join(workspace, 'repository');
-        mkdirSync(chat);
+        repo(chat);
         spec(repository, '001-one', 'Repository spec');
         globalThis.__copilotWorkspacePath = workspace;
         await import('../com.github.copilot/extensions/speckit-companion/extension.mjs');
@@ -223,7 +229,7 @@ describe('session worktree following', () => {
     };
 
     it('follows its own session without touching a sibling board, and rebinds watchers', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-follow-'));
+        const base = temp('canvas-follow-');
         const [parent, childA, childB] = ['parent', 'child-a', 'child-b'].map(name => join(base, name));
         spec(parent, '001-parent', 'Parent');
         spec(childA, '002-a', 'A');
@@ -253,7 +259,7 @@ describe('session worktree following', () => {
     });
 
     it('lets an explicit selection win and returns to the session on request', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-follow-manual-'));
+        const base = temp('canvas-follow-manual-');
         const [chat, picked, moved] = ['chat', 'picked', 'moved'].map(name => join(base, name));
         [chat, picked, moved].forEach((root, i) => spec(root, `00${i}-x`, root));
         let cleared = 0;
@@ -274,7 +280,7 @@ describe('session worktree following', () => {
     });
 
     it('waits for a running step before moving to the new directory', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-follow-run-'));
+        const base = temp('canvas-follow-run-');
         const [first, second] = ['first', 'second'].map(name => join(base, name));
         spec(first, '001-one', 'One');
         spec(second, '002-two', 'Two');
@@ -294,7 +300,7 @@ describe('session worktree following', () => {
     });
 
     it('follows runtime context changes per session, ignores preliminary ones and stale saved roots', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-follow-extension-'));
+        const base = temp('canvas-follow-extension-');
         const [chat, tree, gone] = ['chat', 'tree', 'gone'].map(name => join(base, name));
         [chat, tree].forEach((root, i) => spec(root, `00${i}-x`, root));
         mkdirSync(join(tree, 'src'));
@@ -332,9 +338,9 @@ describe('session worktree following', () => {
 
 describe('coordinator-bound source session', () => {
     it('updates and restores a coordinator list, selects over HTTP, and never guesses a replacement', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-coordinated-list-'));
+        const base = temp('canvas-coordinated-list-');
         const [chat, first, second, moved] = ['chat', 'first', 'second', 'moved'].map(name => join(base, name));
-        mkdirSync(chat);
+        repo(chat);
         spec(first, '001-a', 'First');
         spec(second, '002-b', 'Second');
         spec(moved, '003-c', 'Moved');
@@ -395,7 +401,7 @@ describe('coordinator-bound source session', () => {
     });
 
     it('does not replace the list or source when session storage fails', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-coordinated-failure-'));
+        const base = temp('canvas-coordinated-failure-');
         const [first, moved] = ['first', 'moved'].map(name => join(base, name));
         spec(first, '001-a', 'First');
         spec(moved, '002-b', 'Moved');
@@ -416,7 +422,7 @@ describe('coordinator-bound source session', () => {
     });
 
     it('rejects a moved selected worktree while a run is in flight without changing the saved list', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-coordinated-busy-'));
+        const base = temp('canvas-coordinated-busy-');
         const [first, moved] = ['first', 'moved'].map(name => join(base, name));
         spec(first, '001-a', 'First');
         spec(moved, '002-b', 'Moved');
@@ -438,9 +444,9 @@ describe('coordinator-bound source session', () => {
     });
 
     it('binds, rebinds the same session to a new worktree, persists, and rolls back on failure', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-bind-'));
+        const base = temp('canvas-bind-');
         const [chat, treeA, treeB] = ['chat', 'tree-a', 'tree-b'].map(name => join(base, name));
-        mkdirSync(chat);
+        repo(chat);
         spec(treeA, '001-a', 'A');
         spec(treeB, '002-b', 'B');
         globalThis.__copilotWorkspacePath = base;
@@ -478,9 +484,9 @@ describe('coordinator-bound source session', () => {
     });
 
     it('keeps the binding through the board\'s ordinary buttons and drops it only on an explicit disconnect', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-bind-buttons-'));
+        const base = temp('canvas-bind-buttons-');
         const [chat, tree, other] = ['chat', 'tree', 'other'].map(name => join(base, name));
-        mkdirSync(chat);
+        repo(chat);
         spec(tree, '001-t', 'T');
         spec(other, '002-o', 'O');
         const board = await createSpecServer({ root: chat, saveRoot: () => {}, clearRoot: () => {}, send: async () => true });
@@ -514,7 +520,7 @@ describe('coordinator-bound source session', () => {
     });
 
     it('refuses a bind while a step is running and keeps commands in the owning chat', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-bind-run-'));
+        const base = temp('canvas-bind-run-');
         const [chat, tree] = ['chat', 'tree'].map(name => join(base, name));
         spec(chat, '001-c', 'C');
         spec(tree, '002-t', 'T');
@@ -539,9 +545,9 @@ describe('parent chat following owned sessions', () => {
     const child = (sessionId, cwd) => ({ sessionId, name: sessionId, cwd, state: 'idle' });
 
     it('shows the only owned session\'s worktree, follows its changes and falls back when it goes away', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-'));
+        const base = temp('canvas-owned-');
         const [chat, treeA, treeB] = ['chat', 'tree-a', 'tree-b'].map(name => join(base, name));
-        mkdirSync(chat);
+        repo(chat);
         spec(treeA, '001-a', 'A');
         spec(treeB, '002-b', 'B');
         let owned = [child('c1', treeA)];
@@ -564,9 +570,9 @@ describe('parent chat following owned sessions', () => {
     });
 
     it('never guesses between several sessions and only accepts a listed one', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-many-'));
+        const base = temp('canvas-owned-many-');
         const [chat, treeA, treeB] = ['chat', 'tree-a', 'tree-b'].map(name => join(base, name));
-        mkdirSync(chat);
+        repo(chat);
         spec(treeA, '001-a', 'A');
         spec(treeB, '002-b', 'B');
         const saved = [];
@@ -592,11 +598,11 @@ describe('parent chat following owned sessions', () => {
     });
 
     it('keeps a chat that holds specs, honours a manual choice and defers during a run', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-keep-'));
+        const base = temp('canvas-owned-keep-');
         const [chat, tree, empty] = ['chat', 'tree', 'empty'].map(name => join(base, name));
         spec(chat, '001-chat', 'Chat');
         spec(tree, '002-tree', 'Tree');
-        mkdirSync(empty);
+        repo(empty);
         const discover = async () => ({ children: [child('c1', tree)], note: null });
         const withSpecs = await createSpecServer({ root: chat, discoverChildren: discover });
         const manual = await createSpecServer({ root: empty, manual: true, discoverChildren: discover });
@@ -626,9 +632,9 @@ describe('parent chat following owned sessions', () => {
     });
 
     it('surfaces a runtime that cannot list sessions and names the repository on commands', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-note-'));
+        const base = temp('canvas-owned-note-');
         const [chat, tree] = ['chat', 'tree'].map(name => join(base, name));
-        mkdirSync(chat);
+        repo(chat);
         spec(tree, '001-t', 'T');
         let unavailable = true;
         const board = await createSpecServer({
@@ -655,9 +661,9 @@ describe('parent chat following owned sessions', () => {
     });
 
     it('lists only sessions whose parent is this session through the runtime', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-owned-rpc-'));
+        const base = temp('canvas-owned-rpc-');
         const [chat, mine, other] = ['chat', 'mine', 'other'].map(name => join(base, name));
-        mkdirSync(chat);
+        repo(chat);
         spec(mine, '001-m', 'Mine');
         spec(other, '002-o', 'Other');
         const calls = [];
@@ -687,10 +693,10 @@ describe('parent chat following owned sessions', () => {
     });
 
     it('settles on a symlinked working directory without re-applying the root', async () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-symlink-'));
+        const base = temp('canvas-symlink-');
         const real = join(base, 'real');
         const link = join(base, 'link');
-        mkdirSync(real);
+        repo(real);
         spec(real, '001-a', 'A');
         symlinkSync(real, link);
         const logs = [];
@@ -705,7 +711,7 @@ describe('parent chat following owned sessions', () => {
     });
 
     it('treats a corrupt saved selection as empty', () => {
-        const base = mkdtempSync(join(tmpdir(), 'canvas-corrupt-'));
+        const base = temp('canvas-corrupt-');
         try {
             mkdirSync(join(base, 'files', 'speckit-companion'), { recursive: true });
             writeFileSync(join(base, 'files', 'speckit-companion', 'board.json'), '{ not json');
@@ -713,6 +719,29 @@ describe('parent chat following owned sessions', () => {
             assert.equal(selection.read(), null);
             assert.deepEqual(selection.sessions(), []);
         } finally {
+            rmSync(base, { recursive: true });
+        }
+    });
+
+    it('accepts only a git repository root or a .specify folder as the board root', async () => {
+        const base = temp('canvas-repo-root-');
+        const plain = join(base, 'plain');
+        const git = join(base, 'git');
+        const specify = join(base, 'specify');
+        mkdirSync(plain);
+        mkdirSync(join(git, '.git'), { recursive: true });
+        mkdirSync(join(specify, '.specify'), { recursive: true });
+        const board = await createSpecServer({ root: git, saveRoot: () => {} });
+        try {
+            assert.equal(validateRepositoryRoot(git), git);
+            assert.equal(validateRepositoryRoot(specify), specify);
+            assert.throws(() => validateRepositoryRoot(plain), /root of a repository/);
+            assert.throws(() => board.selectRoot(plain), /root of a repository/);
+            assert.throws(() => board.bindSession({ sessionId: 's', cwd: plain }), /root of a repository/);
+            assert.equal(board.selectRoot(specify).root, specify);
+            assert.equal(board.snapshot.root, specify);
+        } finally {
+            await board.close();
             rmSync(base, { recursive: true });
         }
     });

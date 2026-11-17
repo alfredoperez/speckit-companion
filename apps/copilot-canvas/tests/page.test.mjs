@@ -3,12 +3,17 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { realpathSync, mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createSpecServer } from '../com.github.copilot/extensions/speckit-companion/server.mjs';
 import { rootSelection } from '../com.github.copilot/extensions/speckit-companion/workspace.mjs';
+
+const temp = prefix => realpathSync(mkdtempSync(join(tmpdir(), prefix)));
+function repo(path) {
+    mkdirSync(join(path, '.git'), { recursive: true });
+}
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const TEAMBOARD = join(REPO, 'apps/vscode/webview/src/spec-viewer/__fixtures__/teamboard/041-profile-photo-upload');
@@ -38,7 +43,7 @@ describe('board page', { concurrency: false }, async () => {
     let sessionUp = true;
 
     before(async () => {
-        root = mkdtempSync(join(tmpdir(), 'canvas-page-'));
+        root = temp('canvas-page-');
         mkdirSync(join(root, 'specs'));
         for (const demo of ['_00_demo-specified', '_01_demo-planned', '_02_demo-tasked', '_03_demo-living']) {
             cpSync(join(REPO, 'specs', demo), join(root, 'specs', demo), { recursive: true });
@@ -217,7 +222,7 @@ describe('board page', { concurrency: false }, async () => {
 
     it('disables Companion and Auto and says how to install it when the extension is not installed', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-stock-'));
+        const stockRoot = temp('canvas-page-stock-');
         mkdirSync(join(stockRoot, 'specs/001-starred-todos'), { recursive: true });
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
         const stockSent = [];
@@ -277,7 +282,7 @@ describe('board page', { concurrency: false }, async () => {
 
     it('keeps the nodes it has through a rescan that changed nothing, and a "Copied" through one that did', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-redraw-'));
+        const stockRoot = temp('canvas-page-redraw-');
         mkdirSync(join(stockRoot, 'specs/001-starred-todos'), { recursive: true });
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/.spec-context.json'), JSON.stringify({ workflow: 'speckit', specName: 'Starred todos', currentStep: 'specify', status: 'specified', history: [] }));
@@ -320,7 +325,7 @@ describe('board page', { concurrency: false }, async () => {
 
     it('follows a stock run from the files: a record stuck on specifying, the dashed command, and the step it sent shown as running', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-stock-run-'));
+        const stockRoot = temp('canvas-page-stock-run-');
         const spec = join(stockRoot, 'specs/001-todo-stars');
         mkdirSync(spec, { recursive: true });
         for (const name of ['spec.md', 'plan.md']) writeFileSync(join(spec, name), `# Todo stars: ${name}\n`);
@@ -369,7 +374,7 @@ describe('board page', { concurrency: false }, async () => {
 
     it('picks a state in a plan\'s states card, and draws a file name as a name', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const planRoot = mkdtempSync(join(tmpdir(), 'canvas-page-plan-'));
+        const planRoot = temp('canvas-page-plan-');
         const folder = join(planRoot, 'specs/001-review');
         mkdirSync(folder, { recursive: true });
         writeFileSync(join(folder, 'spec.md'), '# Review\n');
@@ -434,10 +439,11 @@ describe('board page', { concurrency: false }, async () => {
 
     it('selects a repository from a chat and replaces same-id details and file watchers', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const workspace = mkdtempSync(join(tmpdir(), 'canvas-page-root-'));
+        const workspace = temp('canvas-page-root-');
         const chat = join(workspace, 'chat');
         const repository = join(workspace, 'repository');
-        mkdirSync(chat);
+        repo(chat);
+        repo(repository);
         mkdirSync(join(repository, 'specs/001-shared'), { recursive: true });
         writeFileSync(join(repository, 'specs/001-shared/spec.md'), '# Selected repository\n');
         const selection = rootSelection(workspace);

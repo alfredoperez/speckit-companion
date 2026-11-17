@@ -4,14 +4,14 @@
 import { createServer } from 'node:http';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { statSync, watch } from 'node:fs';
+import { realpathSync, statSync, watch } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildSnapshot, findSpec, readSpecDetail, recordLive, resolveSpecDirs } from './specs-core.mjs';
 import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
 import { BUSY, recordStep } from './run-record.mjs';
 import { stepEvidence, withRunningStep } from './spec-rules.mjs';
-import { validateRoot } from './workspace.mjs';
+import { validateRepositoryRoot, validateRoot } from './workspace.mjs';
 import { pickFolder } from './folder-picker.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
@@ -60,9 +60,16 @@ function tokenMatches(given, expected) {
  * `checkoutWriter` (null for none) is the context writer outside the workspace; `quietMs`, `ceilingMs` and the clock `now` bound a sent step with no word from the session.
  */
 export async function createSpecServer({ root, workingDirectory = root, manual = false, bound = null, coordinatedSessions = [], saveCoordinatedSessions, discoverChildren, childPollMs = 0, specDirs, saveRoot, clearRoot, browseFolder = pickFolder, send = async () => false, log = () => {}, checkoutWriter, quietMs = QUIET_MS, ceilingMs = CEILING_MS, now = Date.now }) {
+    const canonical = directory => {
+        try {
+            return realpathSync(directory);
+        } catch {
+            return directory;
+        }
+    };
     const state = {
         root,
-        workingDirectory,
+        workingDirectory: workingDirectory && canonical(workingDirectory),
         manual,
         bound: manual ? bound : null,
         coordinatedSessions,
@@ -174,7 +181,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     const idle = () => !state.runs.size && !state.pendingSpecify && !state.retries.size;
 
     function selectRoot(root) {
-        const nextRoot = validateRoot(root);
+        const nextRoot = validateRepositoryRoot(root);
         if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
         const nextDirs = resolveSpecDirs(nextRoot);
         const nextSnapshot = buildSnapshot(nextRoot, nextDirs);
@@ -193,7 +200,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
      */
     function bindSession({ sessionId, cwd, name }) {
         if (typeof sessionId !== 'string' || !sessionId.trim()) throw new Error('A source session id is required.');
-        const nextRoot = validateRoot(cwd);
+        const nextRoot = validateRepositoryRoot(cwd);
         if (!idle()) throw new Error('Wait for the current spec step to finish before changing repositories.');
         if (!saveRoot) throw new Error('Repository selection is unavailable without session storage.');
         const nextDirs = resolveSpecDirs(nextRoot);

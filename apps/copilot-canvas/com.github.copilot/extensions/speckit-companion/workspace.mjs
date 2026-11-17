@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 
 export function validateRoot(root) {
@@ -7,6 +7,14 @@ export function validateRoot(root) {
     }
     const resolved = realpathSync(root);
     if (!statSync(resolved).isDirectory()) throw new Error('The repository path must be a directory.');
+    return resolved;
+}
+
+export function validateRepositoryRoot(root) {
+    const resolved = validateRoot(root);
+    if (!existsSync(join(resolved, '.git')) && !existsSync(join(resolved, '.specify'))) {
+        throw new Error('Choose the root of a repository: a folder with .git or .specify in it.');
+    }
     return resolved;
 }
 

@@ -4,7 +4,7 @@
 import { joinSession, createCanvas, CanvasError } from '@github/copilot-sdk/extension';
 import { createSpecServer } from './server.mjs';
 import { CANVAS_DESCRIPTION, SPEC_COMMANDS, SYSTEM_RULE, openStatus } from './prompts.mjs';
-import { rootSelection, validateRoot } from './workspace.mjs';
+import { rootSelection, validateRepositoryRoot, validateRoot } from './workspace.mjs';
 
 const CANVAS_ID = 'speckit-spec-board';
 const servers = new Map();
@@ -257,7 +257,7 @@ const session = await joinSession({
                 if (!entry) {
                     const root = savedRoot ?? ctx.input?.root ?? current;
                     if (!root) throw new CanvasError('workspace_unavailable', 'The session has no working directory.');
-                    const resolvedRoot = validateRoot(root);
+                    const resolvedRoot = !savedRoot && ctx.input?.root ? validateRepositoryRoot(root) : validateRoot(root);
                     if (!savedRoot && ctx.input?.root) selection.write(resolvedRoot);
                     entry = await createSpecServer({
                         root: resolvedRoot,
