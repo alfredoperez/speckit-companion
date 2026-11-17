@@ -46,6 +46,12 @@ provides:
     - name: speckit.companion.after-converge
       file: commands/speckit.companion.after-converge.md
       description: "Record the converge finish in .spec-context.json for the Companion GUI"
+    - name: speckit.companion.before-bug
+      file: commands/speckit.companion.before-bug.md
+      description: "Record a spec-kit bug stage's start in the bug's .spec-context.json for the Companion GUI"
+    - name: speckit.companion.after-bug
+      file: commands/speckit.companion.after-bug.md
+      description: "Record a spec-kit bug stage's finish and outcome in the bug's .spec-context.json for the Companion GUI"
     - name: speckit.companion.status
       file: commands/speckit.companion.status.md
       description: "Report where the active spec stands — current step, status, recorded decisions, and the next action — from .spec-context.json"
@@ -124,6 +130,30 @@ hooks:
     command: speckit.companion.after-converge
     optional: false
     description: "Record the converge finish"
+  before_bug_assess:
+    command: speckit.companion.before-bug
+    optional: false
+    description: "Record the bug assess start"
+  after_bug_assess:
+    command: speckit.companion.after-bug
+    optional: false
+    description: "Record the bug assess finish and verdict"
+  before_bug_fix:
+    command: speckit.companion.before-bug
+    optional: false
+    description: "Record the bug fix start"
+  after_bug_fix:
+    command: speckit.companion.after-bug
+    optional: false
+    description: "Record the bug fix finish and status"
+  before_bug_test:
+    command: speckit.companion.before-bug
+    optional: false
+    description: "Record the bug test start"
+  after_bug_test:
+    command: speckit.companion.after-bug
+    optional: false
+    description: "Record the bug test finish and result"
 
 events:
   user_prompt_submit:

@@ -306,6 +306,7 @@ describe('buildBugStory with a spec-kit run and report freshness', () => {
         const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: paused });
         expect(story?.lead).toBe('in-review');
         expect(story?.engine).toEqual({
+            source: 'engine',
             runId: '3471d74b',
             workflow: 'bugfix',
             steps: [
@@ -326,6 +327,29 @@ describe('buildBugStory with a spec-kit run and report freshness', () => {
     it('offers no answer at a gate other than the bundled review gate', () => {
         const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: { ...paused, pausedAt: 'sign-off' } });
         expect(story?.engine?.paused).toEqual({ gate: 'sign', resume: 'specify workflow resume 3471d74b' });
+    });
+
+    const recorded = [
+        { id: 'assess' as const, state: 'done' as const, seconds: 60, outcome: 'valid' },
+        { id: 'fix' as const, state: 'stopped' as const },
+        { id: 'test' as const, state: 'running' as const },
+    ];
+
+    it('builds the run log from the hooks record for a bug typed in chat', () => {
+        expect(buildBugStory(texts(CART), undefined, { record: recorded })?.engine).toEqual({
+            source: 'record',
+            steps: [
+                { label: 'Assess', detail: '1m 00s · valid', state: 'done' },
+                { label: 'Fix', detail: 'Stopped before its report', state: 'failed' },
+                { label: 'Test', detail: 'Running', state: 'running' },
+            ],
+        });
+    });
+
+    it('shows the engine run alone when a bug has both, so no stage appears twice', () => {
+        const story = buildBugStory({ assessment: read(DISCOUNT, 'assessment.md') }, undefined, { engine: paused, record: recorded });
+        expect(story?.engine?.source).toBe('engine');
+        expect(story?.engine?.steps.map(step => step.label)).toEqual(['Assess', 'Review']);
     });
 
     it('has no run log for a bug typed in chat, and none when the log held no steps', () => {

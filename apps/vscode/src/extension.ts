@@ -444,7 +444,7 @@ export async function activate(context: vscode.ExtensionContext) {
                     const name = path.basename(uri.fsPath);
                     const isFolderEvent = name === setFolder || name === '.specify' || path.basename(path.dirname(uri.fsPath)) === setFolder;
                     // Any other report a bug folder gains, such as evidence.md, redraws its folder.
-                    const extra = set.id === 'bugs' && name.endsWith('.md') && path.basename(path.dirname(path.dirname(uri.fsPath))) === setFolder
+                    const extra = set.id === 'bugs' && (name.endsWith('.md') || name === '.spec-context.json') && path.basename(path.dirname(path.dirname(uri.fsPath))) === setFolder
                         ? path.dirname(uri.fsPath)
                         : undefined;
                     const item = reportDirectoryOf(set, uri.fsPath) ?? extra ?? (isFolderEvent ? uri.fsPath : undefined);

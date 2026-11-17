@@ -65,7 +65,7 @@ Then run plan, tasks and implement the same way, or all four at once with `/spec
 | `/speckit.companion.resume` | Continue from the recorded step |
 | `/speckit.companion.doctor` | Report on a run's health. Read-only |
 
-The rest run by themselves, so don't type them: `speckit.companion.classify`, and the hooks `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge` and `speckit.companion.after-converge`. Two more, `speckit.companion.on-prompt` and `speckit.companion.on-stop`, record step boundaries from spec-kit's runtime events with no model in the loop; agents without events keep the hooks.
+The rest run by themselves, so don't type them: `speckit.companion.classify`, and the hooks `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge`, and `speckit.companion.before-bug` and `speckit.companion.after-bug` around spec-kit's bug commands. Two more, `speckit.companion.on-prompt` and `speckit.companion.on-stop`, record step boundaries from spec-kit's runtime events with no model in the loop; agents without events keep the hooks.
 
 `speckit.companion.mark-complete` marks a spec complete by hand; a clean converge pass normally does it for you.
 

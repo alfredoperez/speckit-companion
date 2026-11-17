@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **Bug runs typed in chat leave a record.** Assess, fix and test each record ==their start, finish and outcome== in the bug's own folder. ([#PR](https://github.com/alfredoperez/speckit-companion/pull/PR)) <!-- area: capture -->
+
 ## [0.28.0] - 2026-11-17
 
 Runs work from a worktree, take the spec number you name, and keep small waves with the main agent.

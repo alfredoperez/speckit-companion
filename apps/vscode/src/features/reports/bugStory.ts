@@ -11,6 +11,7 @@ import {
 } from '../bugs/bugValues';
 import { ReportDoc, fencedBlocks, findSection, parseItems, parseReportDoc, parseTable, sectionProse } from './reportDoc';
 import { EngineRun, formatSeconds, gateChoice, gateLabel, resumeCommand } from '../bugs/engineFormat';
+import type { RecordStage } from '../bugs/bugRecord';
 import type { Freshness } from '../bugs/bugFreshness';
 import type { BugEngineView, BugLead, BugMeta, BugReportName, BugStep, BugStory, ChangedFile, CheckRow, DiffBlock, EngineStepView } from './reportPageModel';
 import { knownValue, parseReportHeader } from './reportValues';
@@ -23,6 +24,8 @@ export interface BugReportTexts {
 
 export interface BugStoryExtras {
     engine?: EngineRun;
+    /** Used only when there is no engine run, so a stage is never shown twice. */
+    record?: RecordStage[];
     /** When each report file was last written on this machine, in ms. Used only when its header has a day and no time. */
     writtenAt?: Partial<Record<'assessment' | BugReportName, number>>;
     freshness?: Partial<Record<BugReportName, Freshness>>;
@@ -122,7 +125,7 @@ function engineView(run: EngineRun): BugEngineView {
         if (step.state === 'running') return { label, detail: 'Running', state: 'running' };
         return { label, detail: step.gate ? 'Approved' : took, state: 'done' };
     });
-    const view: BugEngineView = { runId: run.runId, workflow: run.workflowId, steps };
+    const view: BugEngineView = { source: 'engine', runId: run.runId, workflow: run.workflowId, steps };
     if (run.pausedAt) {
         view.paused = { gate: gateLabel(run.pausedAt) };
         const resume = resumeCommand(run.runId);
@@ -130,6 +133,17 @@ function engineView(run: EngineRun): BugEngineView {
         if (gateChoice(run, 'approve')) view.paused.answerable = true;
     }
     return view;
+}
+
+function recordView(stages: RecordStage[]): BugEngineView {
+    const steps: EngineStepView[] = stages.map(stage => {
+        const label = capitalised(stage.id);
+        if (stage.state === 'stopped') return { label, detail: 'Stopped before its report', state: 'failed' };
+        if (stage.state === 'running') return { label, detail: 'Running', state: 'running' };
+        const took = stage.seconds === undefined ? '' : formatSeconds(stage.seconds);
+        return { label, detail: [took, stage.outcome].filter(Boolean).join(' · '), state: 'done' };
+    });
+    return { source: 'record', steps };
 }
 
 function leadOf(
@@ -244,6 +258,7 @@ function build(texts: BugReportTexts, nextAction?: string, extras?: BugStoryExtr
     const action = typeof nextAction === 'string' ? nextAction.trim() : '';
     if (action) story.nextAction = action;
     if (extras?.engine && (extras.engine.steps.length > 0 || extras.engine.pausedAt)) story.engine = engineView(extras.engine);
+    else if (!extras?.engine && extras?.record?.length) story.engine = recordView(extras.record);
     if (stale.length > 0) story.stale = stale;
     return story;
 }

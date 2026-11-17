@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **Stage times for bugs run in chat.** A bug's page shows ==how long assess, fix and test took== and marks a stage that stopped early. ([#PR](https://github.com/alfredoperez/speckit-companion/pull/PR)) <!-- area: spec-viewer -->
+
 ## [0.40.0] - 2026-11-17
 
 Bugs paused at review get their answer from the pane, and task phases take comments again.

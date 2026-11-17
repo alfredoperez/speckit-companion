@@ -20,6 +20,7 @@ import { buildBugStory } from '../../../../src/features/reports/bugStory';
 import { buildIdeaDecision } from '../../../../src/features/reports/ideaDecision';
 import { knownValue, parseReportHeader } from '../../../../src/features/reports/reportValues';
 import type { EngineRun } from '../../../../src/features/bugs/engineRuns';
+import type { RecordStage } from '../../../../src/features/bugs/bugRecord';
 import type { ReportNav, LinkedSpec } from '../../../../src/features/reports/reportPageModel';
 import { BUG_FIX_STATUSES, BUG_TEST_RESULTS, BUG_VERDICTS } from '../../../../src/features/bugs/bugValues';
 import { IDEA_STAGES, IDEA_VERDICTS } from '../../../../src/features/ideas/ideaValues';
@@ -59,6 +60,8 @@ export interface ReportFixture {
     texts: Record<string, string | undefined>;
     /** A spec-kit workflow run for the bug, as the run-log reader would return it. */
     engine?: EngineRun;
+    /** The stages Companion's bug hooks recorded, as the record reader would return them. */
+    record?: RecordStage[];
     /** The freshness the reader would compute for the fix and test reports. */
     freshness?: Partial<Record<'fix' | 'test', 'current' | 'stale' | 'unknown'>>;
     /** When each report was written on this machine, for headers that carry only a day. */
@@ -139,7 +142,7 @@ function readPanel(fixture: ReportFixture): Panel {
         const page = buildBugStory(
             { assessment: fixture.texts.assessment, fix: fixture.texts.fix, test: fixture.texts.test },
             actions.find(action => action.primary)?.label,
-            { engine: fixture.engine, freshness: fixture.freshness, writtenAt: fixture.writtenAt },
+            { engine: fixture.engine, record: fixture.record, freshness: fixture.freshness, writtenAt: fixture.writtenAt },
         );
         return {
             title,
@@ -357,6 +360,17 @@ const pausedAtReview: ReportFixture = {
     },
 };
 
+const recordedInChat: ReportFixture = {
+    set: 'bugs',
+    slug: 'search-ignores-case',
+    texts: { assessment: searchAssessment, fix: searchFix, test: searchTest },
+    record: [
+        { id: 'assess', state: 'done', seconds: 64, outcome: 'valid' },
+        { id: 'fix', state: 'done', seconds: 212, outcome: 'applied' },
+        { id: 'test', state: 'done', seconds: 95, outcome: 'partial' },
+    ],
+};
+
 const reassessed: ReportFixture = {
     ...cartTotalSkipsFirst,
     freshness: { fix: 'stale', test: 'stale' },
@@ -435,6 +449,11 @@ export const BugClosedInvalid: Story = {
 export const BugPausedAtReview: Story = {
     name: 'Bug paused at review',
     render: () => <ReportViewer fixture={pausedAtReview} />,
+};
+
+export const BugRecordedInChat: Story = {
+    name: 'Bug, stage times recorded in chat',
+    render: () => <ReportViewer fixture={recordedInChat} />,
 };
 
 export const BugReassessedOldReports: Story = {
