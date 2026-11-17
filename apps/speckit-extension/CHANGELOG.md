@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **Doctor checks plugin freshness.** It flags each Claude Code plugin your Companion config or project nodes call that is ==behind its marketplace==, naming both versions. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: install -->
+
+### Changed
+- **Plan writes only the design docs needed.** A data model is written only for ==a new entity==, and contracts only for a new or changed API. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: pipeline -->
+
 ### Fixed
 - **Wave times stay honest when tasks close late.** Tasks closed together share ==one time== instead of each showing zero, and each close names the next wave to close. ([#1019](https://github.com/alfredoperez/speckit-companion/issues/1019)) <!-- area: run-record -->
 
