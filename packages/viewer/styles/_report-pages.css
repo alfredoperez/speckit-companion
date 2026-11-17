@@ -199,6 +199,15 @@
 
 #markdown-content .rp-paused__title { text-transform: uppercase; letter-spacing: 0.04em; font-size: var(--sk-text-sm); color: var(--sk-review-ink); }
 
+#markdown-content .rp-paused__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sk-space-3);
+}
+
+#markdown-content .rp-paused__note { font-size: var(--sk-text-sm); color: var(--sk-text-secondary); }
+
 #markdown-content .rp-runlog {
     margin: var(--sk-space-3) 0;
     padding: 0;

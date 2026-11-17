@@ -22,7 +22,8 @@ import {
 import { parseAcceptanceScenarios } from './scenarios';
 import { markClarifications, rememberClarifications } from './clarifications';
 import { mapToSourceLines } from './sourceLines';
-import { preprocessLedgerTasks, renderTaskRow } from './ledger/tasks';
+import { preprocessLedgerTasks, renderTaskRow, resolveLedgerLines } from './ledger/tasks';
+import { COMMENT_ICON_SVG } from './ledger/primitives';
 import { parseFenceInfo, type FenceInfo } from './fenceInfo';
 import { isBlockFence, PIN_LINE, registerBlockRenderer, renderBlockFence, type BlockPin } from './blockFences';
 import { renderCallsCard } from './callsCard';
@@ -154,8 +155,6 @@ function highlightTree(text: string): string {
  * Wrap content with line action buttons for hover editing
  * Uses single "+" button for GitHub-style inline review
  */
-// Comment icon SVG for line action buttons
-const COMMENT_ICON_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 6h8m-4-4v8M6.099 19.5q-1.949-.192-2.927-1.172C2 17.157 2 15.271 2 11.5V11c0-3.771 0-5.657 1.172-6.828S6.229 3 10 3h1.5m-5 15c-.205 1.002-1.122 3.166-.184 3.865c.49.357 1.271-.024 2.834-.786c1.096-.535 2.206-1.148 3.405-1.424c.438-.1.885-.143 1.445-.155c3.771 0 5.657 0 6.828-1.172C21.947 17.21 21.998 15.44 22 12M8 14h6M8 9h3"/></svg>`;
 
 /** A field, label, step or image line stands on its own; a trailing double space or backslash is a deliberate break. */
 function continuesParagraph(previous: string, next: string): boolean {
@@ -280,6 +279,7 @@ export function renderMarkdown(markdown: string): string {
     let html = '';
     const slugCounts = new Map<string, number>();
     const lines = markdown.split('\n');
+    resolveLedgerLines(lines, source);
     indexScreens(lines);
     const sourceLineOf = mapToSourceLines(source, markdown);
     let inCodeBlock = false;

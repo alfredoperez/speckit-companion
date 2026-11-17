@@ -1,6 +1,9 @@
 import type { BugEngineView, BugLead, BugMeta, BugReportName, BugStep, BugStepId, BugStory } from '../../../../src/features/reports/reportPageModel';
 import { Inline, Prose } from './fragments';
 import { safeUrl } from 'speckit-viewer/core/markdown/inline';
+import type { VSCodeApi } from '../types';
+
+declare const vscode: VSCodeApi;
 
 const LEADS: Record<BugLead, string> = {
     assessed: 'Assessed, not fixed yet.',
@@ -138,7 +141,19 @@ function PausedNotice({ paused }: { paused: NonNullable<BugEngineView['paused']>
                 Spec-kit's bug workflow stopped after the assessment so a person checks the diagnosis before any code changes. Read the
                 assessment, then approve it to start the fix, or reject it to stop here.
             </p>
-            {paused.resume ? (
+            {paused.answerable && paused.resume ? (
+                <div class="rp-paused__actions">
+                    <button type="button" class="primary" onClick={() => vscode.postMessage({ type: 'reportAction', id: 'bug.approve' })}>
+                        Approve and fix
+                    </button>
+                    <button type="button" class="secondary" onClick={() => vscode.postMessage({ type: 'reportAction', id: 'bug.reject' })}>
+                        Reject
+                    </button>
+                    <span class="rp-paused__note">
+                        Each runs <code>{paused.resume}</code> in a terminal, since the gate only takes an answer typed there.
+                    </span>
+                </div>
+            ) : paused.resume ? (
                 <p>
                     To continue, run <code>{paused.resume}</code> in a terminal.
                 </p>

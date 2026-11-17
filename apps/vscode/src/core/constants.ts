@@ -50,6 +50,7 @@ export const Commands = {
     ideasCreate: 'speckit.ideas.create',
     ideasRefresh: 'speckit.ideas.refresh',
     processesInstallExtension: 'speckit.processes.installExtension',
+    processesEnableExtension: 'speckit.processes.enableExtension',
 } as const;
 
 /**

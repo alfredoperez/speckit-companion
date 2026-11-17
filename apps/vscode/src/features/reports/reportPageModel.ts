@@ -62,7 +62,8 @@ export interface BugEngineView {
     runId: string;
     workflow: string;
     steps: EngineStepView[];
-    paused?: { gate: string; resume?: string };
+    /** `answerable`: the gate is spec-kit's own review gate, so the page can offer Approve and Reject. */
+    paused?: { gate: string; resume?: string; answerable?: boolean };
 }
 
 export type BugReportName = 'fix' | 'test';

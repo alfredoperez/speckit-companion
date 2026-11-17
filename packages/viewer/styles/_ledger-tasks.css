@@ -65,6 +65,16 @@
 
 /* ── Phase ── */
 
+/* A phase or wave is a commentable line holding commentable rows: its "+" follows its own heading only, never the rows inside. */
+#markdown-content .lg-phase-head,
+#markdown-content .lg-wave-head { position: relative; }
+#markdown-content details.line:hover > summary > .line-add-btn { opacity: 0; }
+#markdown-content details.line > summary:hover > .line-add-btn,
+#markdown-content details.line > summary > .line-add-btn:focus-visible { opacity: 1; }
+#markdown-content details.line:hover { background: transparent; }
+#markdown-content details.line.editing .line-add-btn { display: flex; }
+#markdown-content details.line.editing > summary > .line-add-btn { display: none; }
+
 #markdown-content .lg-phase { border-top: 1px solid var(--sk-border); margin: 0; }
 #markdown-content .lg-phase-body > hr,
 #markdown-content .lg-phase + hr { display: none; }

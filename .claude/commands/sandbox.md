@@ -41,6 +41,8 @@ Shell state does not persist between Bash calls, so start each one with `. .clau
 
   A recipe with no Companion (`vscode-qa-stock`, `copilot-stock`, `claude-mod-stock`) refuses `--dev`; say so and build nothing.
 
+  The `--dev` install is a copy, not a link: `.specify/extensions/companion/` does not follow later edits. After editing `apps/speckit-extension/`, rerun `specify extension add --dev <checkout>/apps/speckit-extension --force` in every sandbox you test the change in.
+
 Anything else after the name goes to the recipe after `--`, unchanged: a recipe takes its scenario that way. An unknown recipe prints the list; relay it.
 
 ### Report

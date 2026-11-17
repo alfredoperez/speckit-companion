@@ -1528,6 +1528,26 @@
 :where(.sk-viewer) #markdown-content .lg-toggle[aria-checked=true] .lg-toggle-track::after {
   transform: translateX(12px);
 }
+:where(.sk-viewer) #markdown-content .lg-phase-head,
+:where(.sk-viewer) #markdown-content .lg-wave-head {
+  position: relative;
+}
+:where(.sk-viewer) #markdown-content details.line:hover > summary > .line-add-btn {
+  opacity: 0;
+}
+:where(.sk-viewer) #markdown-content details.line > summary:hover > .line-add-btn,
+:where(.sk-viewer) #markdown-content details.line > summary > .line-add-btn:focus-visible {
+  opacity: 1;
+}
+:where(.sk-viewer) #markdown-content details.line:hover {
+  background: transparent;
+}
+:where(.sk-viewer) #markdown-content details.line.editing .line-add-btn {
+  display: flex;
+}
+:where(.sk-viewer) #markdown-content details.line.editing > summary > .line-add-btn {
+  display: none;
+}
 :where(.sk-viewer) #markdown-content .lg-phase {
   border-top: 1px solid var(--sk-border);
   margin: 0;
@@ -7857,6 +7877,16 @@
   letter-spacing: 0.04em;
   font-size: var(--sk-text-sm);
   color: var(--sk-review-ink);
+}
+:where(.sk-viewer) #markdown-content .rp-paused__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sk-space-3);
+}
+:where(.sk-viewer) #markdown-content .rp-paused__note {
+  font-size: var(--sk-text-sm);
+  color: var(--sk-text-secondary);
 }
 :where(.sk-viewer) #markdown-content .rp-runlog {
   margin: var(--sk-space-3) 0;

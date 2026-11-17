@@ -146,6 +146,7 @@ speckit-extension/**
 .qwen/**
 .windsurf/**
 .storybook/**
+.changeset/**
 content/design/**
 storybook-static/**
 **/*.stories.tsx

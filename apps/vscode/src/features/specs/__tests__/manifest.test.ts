@@ -68,15 +68,15 @@ describe('sidebar contributions', () => {
         });
 
         it.each([
-            ['speckit.views.bugs', 'speckit.bugs.refresh', 'speckit.bugs.create'],
-            ['speckit.views.ideas', 'speckit.ideas.refresh', 'speckit.ideas.create'],
-        ])('%s has Refresh then New as its title actions', (view, refresh, create) => {
+            ['speckit.views.bugs', 'speckit.bugs.refresh', 'speckit.bugs.create', 'speckit.bugs.extensionOff'],
+            ['speckit.views.ideas', 'speckit.ideas.refresh', 'speckit.ideas.create', 'speckit.ideas.extensionOff'],
+        ])('%s has Refresh then New as its title actions, New hidden while its extension is off', (view, refresh, create, off) => {
             const actions = viewTitle
                 .filter(e => e.when.includes(`view == ${view}`))
                 .sort((x, y) => x.group.localeCompare(y.group));
             expect(actions).toEqual([
                 { command: refresh, when: `view == ${view}`, group: 'navigation@1' },
-                { command: create, when: `view == ${view}`, group: 'navigation@2' },
+                { command: create, when: `view == ${view} && !${off}`, group: 'navigation@2' },
             ]);
             expect(commands.find(c => c.command === refresh)!.icon).toBe('$(refresh)');
             expect(commands.find(c => c.command === create)!.icon).toBe('$(plus)');

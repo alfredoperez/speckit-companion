@@ -51,7 +51,7 @@ The example is this repo's Copilot board, written the way a plan for adding its 
 | Indent | Two spaces per level after that, and never more than one level deeper than the line above. No tabs. |
 | Name | The function, with `()` if you like. Nothing else. |
 | `@ path:line` | Where it lives, as a path from the repo root. A `+` in a file that exists cites the line it goes after. |
-| `**new** @ path` | The file does not exist yet. Only on a `+` line, and with no line number. |
+| `**new** @ path` | The file does not exist yet. Only on a `+` line, and with no line number. Mark it once: any other line naming that file, in any block, passes without a line number. |
 | `note:` | One optional line straight after the block |
 
 The budget is 3 blocks a plan, 12 lines a block and one `note:` line. A change sized `simple` writes none, and a change inside one function or file says so in a sentence.

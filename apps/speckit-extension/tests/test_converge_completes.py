@@ -122,6 +122,14 @@ class ConvergeCompletes(unittest.TestCase):
         self.write("--hook", "finish", "--step", "converge")
         self.assertEqual(self.status()[0], "completed")
 
+    def test_a_task_converge_appended_leaves_the_step_at_converge(self):
+        self.implemented("- [x] **T001** done")
+        self.write("--hook", "start", "--step", "converge")
+        self.tasks.write_text("- [x] **T001** done\n- [x] **T002** found and built\n", encoding="utf-8")
+        self.write("--task", "T002", "--kind", "complete", "--by", "ai", "--did", "built", "--append")
+        self.write("--hook", "finish", "--step", "converge")
+        self.assertEqual((self.ctx()["status"], self.ctx()["currentStep"]), ("completed", "converge"))
+
     def test_an_implementing_spec_with_every_task_checked_completes(self):
         self.tasks.write_text("- [x] **T001** done\n", encoding="utf-8")
         os.utime(self.tasks, (OLD, OLD))
