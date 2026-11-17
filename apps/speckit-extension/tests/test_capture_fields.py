@@ -402,37 +402,14 @@ class CloseTaskTests(unittest.TestCase):
         self.assertEqual(len(finishes), 1)
 
 
-class LivingSpecRulesRecordTests(unittest.TestCase):
-    """What a run was told, recorded beside what it read."""
+class RiskGlobTest(unittest.TestCase):
+    """The risk tier's glob matcher: `**` any depth, `*` one segment, case-insensitive."""
 
-    def setUp(self) -> None:
-        self._tmp = tempfile.TemporaryDirectory()
-        self.fd = Path(self._tmp.name) / "specs" / "_zzz-rules"
-        self.fd.mkdir(parents=True)
-
-    def tearDown(self) -> None:
-        self._tmp.cleanup()
-
-    def test_authored_rules_land_beside_the_loaded_capabilities(self) -> None:
-        capture.set_living_specs_loaded(self.fd, ["checkout"])
-        capture.set_living_specs_rules(self.fd, {"spec": ["one outcome per scenario"]})
-        block = _ctx(self.fd)["livingSpecs"]
-        self.assertEqual(block["loaded"], ["checkout"])
-        self.assertEqual(block["rules"]["spec"], ["one outcome per scenario"])
-
-    def test_a_project_with_no_rules_writes_nothing(self) -> None:
-        capture.set_living_specs_loaded(self.fd, ["checkout"])
-        self.assertIsNone(capture.set_living_specs_rules(self.fd, {"spec": [], "plan": []}))
-        self.assertNotIn("rules", _ctx(self.fd)["livingSpecs"])
-
-    def test_a_corrupt_prior_record_does_not_raise_inside_the_writer(self) -> None:
-        (self.fd / ".spec-context.json").write_text(
-            json.dumps({"livingSpecs": {"rules": {"spec": [["not a string"]]}}})
-        )
-        capture.set_living_specs_rules(self.fd, {"spec": ["a real rule"]})
-        self.assertIn("a real rule", _ctx(self.fd)["livingSpecs"]["rules"]["spec"])
-
-    def test_re_recording_the_same_rules_does_not_duplicate_them(self) -> None:
-        for _ in range(2):
-            capture.set_living_specs_rules(self.fd, {"plan": ["name the capability"]})
-        self.assertEqual(_ctx(self.fd)["livingSpecs"]["rules"]["plan"], ["name the capability"])
+    def test_globs_follow_posix_path_rules(self) -> None:
+        m = capture.glob_matches
+        self.assertTrue(m("src/checkout/**", "src/checkout/cart/x.ts"))
+        self.assertTrue(m("src/checkout/**", "src/checkout"))
+        self.assertTrue(m("src/**/*.test.ts", "src/a/b/c.test.ts"))
+        self.assertFalse(m("src/*.ts", "src/a/b.ts"))
+        self.assertTrue(m("src/?.ts", "src/a.ts"))
+        self.assertTrue(m("Apps/VSCode/**", "apps/vscode/x.ts"))

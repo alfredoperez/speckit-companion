@@ -12,6 +12,12 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 - **A coordinator can bind a child session's worktree.** The agent passes the child's id and path from its session details, and the board keeps it through ordinary buttons. <!-- area: copilot-app -->
 - **A Project chat shows its session's worktree.** With session management on, the board follows the only session the chat owns and lists several for you to pick. <!-- area: copilot-app -->
 
+## [0.2.2] - 2026-11-12
+
+### Fixed
+
+- **No made-up recent time on a fresh checkout.** A spec with a run record but no activity shows ==no time== instead of the checkout's file time. ([#1003](https://github.com/alfredoperez/speckit-companion/pull/1003)) <!-- area: copilot-app -->
+
 ## [0.2.1] - 2026-11-08
 
 ### Fixed

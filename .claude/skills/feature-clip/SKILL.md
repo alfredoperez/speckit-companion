@@ -114,8 +114,8 @@ surface on the site's near-black ground.
 **The composition chrome.** The marker, scrim and caption band a clip draws over the
 screenshot live in the `:root` block of its own `index.html`, named by role.
 
-The trap is a composition that is **drawn rather than captured**: `make-it-yours`,
-`living-specs-explained`, `write-only-specs`. Those have no screenshot under them, so the capture palette
+The trap is a composition that is **drawn rather than captured**: `make-it-yours` and
+`write-only-specs`. Those have no screenshot under them, so the capture palette
 cannot reach them at all and they have to be re-themed by hand or they end up as the one
 dark thing in a light set. The same trap caught the README composite stories, which had
 hardcoded a dark theme's neutrals instead of reading the derived variables; they read

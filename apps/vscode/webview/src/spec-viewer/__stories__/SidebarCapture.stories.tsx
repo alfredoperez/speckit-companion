@@ -60,7 +60,6 @@ import { CaptureFrame, STAGE_HEIGHT } from './captureFrame';
 import {
     SidebarShell,
     SIDEBAR_WIDTH,
-    type RowState,
     type SidebarPane,
     type SidebarRow,
 } from './sidebarTree';
@@ -184,184 +183,6 @@ function specsRows(expandProfilePhoto: boolean): SidebarRow[] {
     ];
 }
 
-/**
- * Living Specs. Directory groups carry `folder`; a healthy capability carries no
- * icon, and a drifted one carries `warning` in list.warningForeground with a
- * "drift" suffix once its sources moved on past the spec's last commit
- * (`livingSpecsExplorerProvider.ts`).
- */
-const livingSpecsRows: SidebarRow[] = [
-    { id: 'ls-capabilities', depth: 0, label: 'Capabilities', icon: 'folder', twistie: 'expanded' },
-    {
-        id: 'ls-member-profiles',
-        depth: 1,
-        label: 'Member Profiles',
-        description: '9/9 covered',
-        tone: 'foreground',
-    },
-    {
-        id: 'ls-photo-storage',
-        depth: 1,
-        label: 'Photo Storage',
-        description: '7/9 covered · drift',
-        icon: 'warning',
-        tone: 'warning',
-    },
-    {
-        id: 'ls-team-invites',
-        depth: 1,
-        label: 'Team Invites',
-        description: '4/4 covered',
-        tone: 'foreground',
-    },
-    { id: 'ls-src', depth: 0, label: 'Src', icon: 'folder', twistie: 'expanded' },
-    {
-        id: 'ls-directory-search',
-        depth: 1,
-        label: 'Directory Search',
-        description: '6/6 covered',
-        tone: 'foreground',
-    },
-    {
-        id: 'ls-avatar-rendering',
-        depth: 1,
-        label: 'Avatar Rendering',
-        description: 'drift',
-        icon: 'warning',
-        tone: 'warning',
-    },
-];
-
-/**
- * The DEEPER Living Specs fixture, for the `living-specs` clip.
- *
- * Same provider, more of it. `livingSpecsRows` above is the short version the
- * small README frames use; this one is a whole repository's worth, because the
- * clip has to read as a work tree rather than as two rows, and because the
- * thing it films only shows up once there is depth to see.
- *
- * SHAPE, AND WHY IT IS THE SHAPE
- * `buildCapabilityTree` (livingSpecsModel.ts) groups a capability under the
- * PARENT of the folder its spec sits in, then sorts groups and leaves together
- * by name at every level. So the layout below is not a taste decision, it is
- * what these eight registered capabilities produce:
- *
- *   capabilities/member-profiles/spec.md            -> capabilities > member-profiles
- *   capabilities/photo-storage/spec.md              -> capabilities > photo-storage
- *   capabilities/team-invites/spec.md               -> capabilities > team-invites
- *   src/features/directory-search/directory-search.spec.md  -> src > features > ...
- *   src/features/saved-views/saved-views.spec.md            -> src > features > ...
- *   src/jobs/thumbnail-queue/thumbnail-queue.spec.md        -> src > jobs > ...
- *   src/services/avatar-rendering/avatar-rendering.spec.md  -> src > services > ...
- *   src/services/email-delivery/email-delivery.spec.md      -> src > services > ...
- *
- * The first three are `_location()` CENTRALIZED (resolve-spec-paths.py): their
- * spec is exactly `capabilities/<name>/spec.md`, the default when a capability
- * names no `spec:` path. The other five are COLOCATED: they named a path, so the
- * spec sits in the code and the tree puts it there. That contrast is the whole
- * reason this fixture is deep.
- *
- * Every row type here is one the provider really renders:
- *   folder group        `folder`, expanded (LivingSpecItem.dirGroup)
- *   capability          no icon when healthy, `warning` when drifted; coverage and drift joined with " · "
- *   drifted capability  the same in list.warningForeground
- *   registered, unwritten  `circle-outline` and "not created" (cap.exists false)
- *   Orphans             a `question` group of `*.spec.md` files no capability
- *                       claims, appended after the tree
- *
- * A capability row is a LEAF: `capabilityItem` gives it a twistie only when it
- * has a tier sibling, and nothing in the product generates `.rules.md` or
- * `.coverage.md`, so none is drawn here.
- */
-const livingWorkTreeRows: SidebarRow[] = [
-    { id: 'lw-capabilities', depth: 0, label: 'Capabilities', icon: 'folder', twistie: 'expanded' },
-    {
-        id: 'lw-member-profiles',
-        depth: 1,
-        label: 'Member Profiles',
-        description: '9/9 covered',
-        tone: 'foreground',
-    },
-    {
-        id: 'lw-photo-storage',
-        depth: 1,
-        label: 'Photo Storage',
-        description: '7/9 covered · drift',
-        icon: 'warning',
-        tone: 'warning',
-    },
-    {
-        id: 'lw-team-invites',
-        depth: 1,
-        label: 'Team Invites',
-        description: '4/4 covered',
-        tone: 'foreground',
-    },
-    { id: 'lw-src', depth: 0, label: 'Src', icon: 'folder', twistie: 'expanded' },
-    { id: 'lw-features', depth: 1, label: 'Features', icon: 'folder', twistie: 'expanded' },
-    {
-        id: 'lw-directory-search',
-        depth: 2,
-        label: 'Directory Search',
-        description: '6/6 covered',
-        tone: 'foreground',
-    },
-    {
-        // Registered in the capability list, spec not written yet: no icon tint,
-        // `circle-outline`, and the "not created" suffix.
-        id: 'lw-saved-views',
-        depth: 2,
-        label: 'saved-views',
-        description: 'not created',
-        icon: 'circle-outline',
-    },
-    { id: 'lw-jobs', depth: 1, label: 'Jobs', icon: 'folder', twistie: 'expanded' },
-    {
-        id: 'lw-thumbnail-queue',
-        depth: 2,
-        label: 'Thumbnail Queue',
-        description: '5/5 covered',
-        tone: 'foreground',
-    },
-    { id: 'lw-services', depth: 1, label: 'Services', icon: 'folder', twistie: 'expanded' },
-    {
-        id: 'lw-avatar-rendering',
-        depth: 2,
-        label: 'Avatar Rendering',
-        description: 'drift',
-        icon: 'warning',
-        tone: 'warning',
-    },
-    {
-        id: 'lw-email-delivery',
-        depth: 2,
-        label: 'Email Delivery',
-        description: '3/3 covered',
-        tone: 'foreground',
-    },
-    { id: 'lw-orphans', depth: 0, label: 'Orphans', icon: 'question', twistie: 'expanded' },
-    { id: 'lw-orphan-legacy-import', depth: 1, label: 'legacy-import.spec.md', icon: 'file' },
-];
-
-/**
- * The deep tree as a pane, optionally with one row under the pointer or picked.
- * `emphasis` is how the clip films a click without inventing chrome: the two
- * washes are the list's own (see sidebarTree.tsx ROW STATE).
- */
-export function livingSpecsWorkTreePane(
-    emphasis?: { row: string; state: RowState },
-    fill = false,
-): SidebarPane {
-    return {
-        id: 'living-specs',
-        title: 'Living Specs',
-        rows: emphasis
-            ? livingWorkTreeRows.map(r => (r.id === emphasis.row ? { ...r, state: emphasis.state } : r))
-            : livingWorkTreeRows,
-        fill,
-    };
-}
-
 /** Steering. Categories carry an icon; the files under them never do. */
 const steeringRows: SidebarRow[] = [
     {
@@ -406,13 +227,6 @@ export function specsPane(expandProfilePhoto: boolean, fill = true): SidebarPane
     };
 }
 
-export const livingSpecsPane = (fill = false): SidebarPane => ({
-    id: 'living-specs',
-    title: 'Living Specs',
-    rows: livingSpecsRows,
-    fill,
-});
-
 export const steeringPane = (fill = false): SidebarPane => ({
     id: 'steering',
     title: 'Steering',
@@ -422,7 +236,7 @@ export const steeringPane = (fill = false): SidebarPane => ({
 
 const meta: Meta = {
     title: 'VS Code Extension/Sidebar',
-    excludeStories: ['specsPane', 'livingSpecsPane', 'livingSpecsWorkTreePane', 'steeringPane'],
+    excludeStories: ['specsPane', 'steeringPane'],
     parameters: {
         layout: 'fullscreen',
         capture: { width: SIDEBAR_WIDTH, height: STAGE_HEIGHT },
@@ -453,7 +267,6 @@ export const B1Collapsed: Story = {
             <SidebarShell
                 panes={[
                     specsPane(false),
-                    { ...livingSpecsPane(), collapsed: true },
                     { ...steeringPane(), collapsed: true },
                 ]}
             />
@@ -473,7 +286,6 @@ export const B2Expanded: Story = {
             <SidebarShell
                 panes={[
                     specsPane(true),
-                    { ...livingSpecsPane(), collapsed: true },
                     { ...steeringPane(), collapsed: true },
                 ]}
             />
@@ -481,34 +293,16 @@ export const B2Expanded: Story = {
     ),
 };
 
-// ── B3 · the other two sections ───────────────────────────────────────────
-// Specs collapsed out of the way so Living Specs and Steering carry the frame.
-
-export const B3LivingSpecsAndSteering: Story = {
-    name: 'B3 · Living Specs and Steering',
-    render: () => (
-        <CaptureFrame>
-            <SidebarShell
-                panes={[
-                    { ...specsPane(false), collapsed: true },
-                    livingSpecsPane(),
-                    steeringPane(true),
-                ]}
-            />
-        </CaptureFrame>
-    ),
-};
-
 // ── B4 · the whole sidebar ────────────────────────────────────────────────
-// All three sections open at once, which is the establishing shot: this is
+// Both sections open at once, which is the establishing shot: this is
 // what the extension puts in the activity bar.
 
 export const B4FullSidebar: Story = {
-    name: 'B4 · All three sections',
+    name: 'B4 · Both sections',
     render: () => (
         <CaptureFrame>
             <SidebarShell
-                panes={[specsPane(true, false), livingSpecsPane(), steeringPane(true)]}
+                panes={[specsPane(true, false), steeringPane(true)]}
             />
         </CaptureFrame>
     ),
@@ -517,7 +311,7 @@ export const B4FullSidebar: Story = {
 
 // ── B5 · README triptych ──────────────────────────────────────────────────
 // The landscape sidebar image for the README's "A sidebar that scales"
-// section: the three sections side by side as cards, each with a heading and
+// section: the sections side by side as cards, each with a heading and
 // one explainer line, instead of one tall silent portrait. Captured by
 // scripts/capture-docs-images.mjs into docs/screenshots/generated/
 // sidebar-triptych.png. One highlight per panel at most.
@@ -621,12 +415,6 @@ export const B5ReadmeTriptych: Story = {
                     caption="Steering holds the standing files every run obeys: the constitution, the project scripts, and the templates specs are built from."
                     pane={steeringPane(false)}
                 />
-                <TriptychPanel
-                    heading="Docs that track the code"
-                    caption="Living Specs are durable, one per capability, with test coverage counts and a drift flag the moment the code moves on."
-                    pane={livingSpecsPane(false)}
-                    highlight={<PanelHighlight rowIds={['ls-photo-storage']} />}
-                />
             </div>
         </CaptureFrame>
     ),
@@ -668,7 +456,6 @@ export const B6BugReports: Story = {
                 panes={[
                     specsPane(false, false),
                     { id: 'bugs', title: 'Bugs', rows: bugRows, fill: true, actions: ['refresh'] },
-                    { ...livingSpecsPane(), collapsed: true },
                     { ...steeringPane(), collapsed: true },
                 ]}
             />

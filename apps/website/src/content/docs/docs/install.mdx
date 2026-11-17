@@ -38,7 +38,7 @@ The first command installs the GitHub build and changes your global `uv` tools. 
 
 Run it from your project root and copy it whole, because the short catalog form doesn't work. It needs Spec Kit 1.2.5 or newer, and it installs under `.specify/extensions/companion`.
 
-This step is optional. Skip it and you keep stock Spec Kit, but nothing records your runs, so you lose step times, decisions and checks, along with the `/speckit.companion.*` commands, Auto and living specs.
+This step is optional. Skip it and you keep stock Spec Kit, but nothing records your runs, so you lose step times, decisions and checks, along with the `/speckit.companion.*` commands and Auto.
 
 <YouSee label="You should see">
 
@@ -85,7 +85,7 @@ Cursor, Windsurf and other editors built on VS Code work the same way.
 
    <YouSee label="You should see">
 
-   The **Specs** view with a button to create a spec. The **Living Specs** view offers to install the Companion extension for Spec Kit if step 2 didn't reach this project.
+   The **Specs** view with a button to create a spec.
 
    </YouSee>
 
@@ -205,7 +205,6 @@ In VS Code, **SpecKit: Upgrade…** runs these in order: the CLI, each assistant
 | Companion's commands vanished from one assistant after an update | Spec Kit re-added Companion for the active assistant only. Run `specify integration use <that assistant>`. |
 | Stuck on an old build of the Companion extension | Run `specify extension remove companion`, then add it again. |
 | No `/speckit.companion.*` commands | Run `specify extension list` from the repo root, not your home directory. Then reload the window, or start a new session, so your assistant re-reads its commands. |
-| VS Code: Living Specs still asks you to install Companion | The install went somewhere other than this workspace. Run step 2 again from this project's root. |
 | Copilot app: the board does not open | Accept the repository content, then start a new session. If the agent opens an empty `speckit-companion.md` in the editor, you are in a session from before you accepted. |
 | Copilot app: the board is missing from a project copy | Commit the copy and get it onto your default branch. |
 | Copilot app: the buttons send stock commands though Companion is installed | Commit the files the Companion install added. A session cannot see uncommitted commands. |

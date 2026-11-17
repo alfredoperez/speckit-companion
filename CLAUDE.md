@@ -6,6 +6,7 @@ SpecKit Companion is a VS Code extension that gives AI assistants (terminal CLIs
 
 Five deliverables live under `apps/`: the VS Code extension (`apps/vscode/src/`, `apps/vscode/webview/`, its own `package.json`), the spec-kit extension (`apps/speckit-extension/`), the GitHub Copilot app canvas (`apps/copilot-canvas/`, an Agent Plugin whose board lives under `com.github.copilot/extensions/speckit-companion/`, loaded in this repo through `.github/extensions/speckit-companion/`), the Claude Code mod (`apps/claude-mod/`, listed by the repo-root `.claude-plugin/marketplace.json`; its `hooks/vendor/` is bundled from the canvas's `spec-rules.mjs` by `npm run mod:build`), and the marketing site (`apps/website/`).
 
+- `packages/` — npm workspace packages. `packages/viewer` is `speckit-viewer`: the viewer's contract, core, styles, its Preact view (`/view`) and the `<speckit-viewer>` element (`/element`). The extension's spec viewer is the package view plus its own parts in slots; Factory renders the element.
 - `specs/` — historical feature folders plus the pinned `_0N_demo-*` viewer fixtures.
 - `docs/` — images only: the screenshots the READMEs and the site load, the architecture diagram, the walkthrough video. No prose lives here; a test fails on a new markdown file.
 - `apps/vscode/tests/` — integration, eval and shared fixtures, including the VS Code mock. Unit tests live in `__tests__` beside the code they cover.
@@ -26,10 +27,8 @@ Behaviour is documented by the code and its tests first. User-facing reference l
 - `.claude/commands/changelog-entry.md` — the changelog voice and the shape of a release. `.claude/commands/publish.md` — the release checklist.
 - `THEME.md` — the marketing look (the site's Constellation colours, type, mascot and motifs) for anything promotional; `DESIGN.md` — the viewer's tokens and the taste rules for figures and captures.
 - `.claude/review-checklist.md` — webview/CSS correctness invariants review scans for (`.sr-only` vs `hidden`, ellipsis trio, Preact string styles, etc.).
-- `apps/speckit-extension/docs/` — the spec-kit extension's own notes: `node-model.md` (how commands are built from nodes), `living-specs.md`, `publishing.md` (its release flow).
+- `apps/speckit-extension/docs/` — the spec-kit extension's own notes: `node-model.md` (how commands are built from nodes), `publishing.md` (its release flow).
 - `apps/vscode/docs/telemetry.md` and `apps/website/docs/analytics.md` — the event catalogs and how to read them in PostHog.
-
-This repo does not keep living specs of its own; the feature it ships is unaffected.
 
 ## One fact, one owner
 
@@ -60,6 +59,7 @@ A few changes carry a follow-on that is easy to miss:
 
 `docs/architecture/diagram.html` draws how a command travels (generated from the JSON beside it by archify; edit the JSON, never the HTML). These are the rules it cannot show.
 
+- **The package view never talks to VS Code.** Everything it asks for goes through `onAction` (typed by `ViewerAction`); the webview's `signals.ts` forwards it to `postMessage`, the element re-emits it as a `speckit-action` event. Extension-only parts (editor, footer, banners, report pages) plug in through `ViewerSlotsContext`, never by importing into `packages/viewer`.
 - **The host owns the filesystem.** `apps/vscode/src/` reads and writes; the webview under `apps/vscode/webview/src/` gets state by `postMessage` and never touches a file.
 - **`core/` imports nothing from `features/` or `ai-providers/`.** A test holds the two grandfathered files to an exact allowlist, so the list only shrinks.
 - **Ask `getProjectRoot()` for the project folder.** Never read the first workspace folder; a test fails on a direct read.
@@ -67,7 +67,7 @@ A few changes carry a follow-on that is easy to miss:
 - **A step closes itself as its last action.** Leaving the close to the hook that follows strands the step on a provider that can only print the hook for a person to run.
 - **Everything a repository controls reaches a panel as text, never markup.** Document text, filenames, run-record notes and version strings go through `escapeHtml` for element content, DOM APIs for attributes and `safeUrl` for links, in the viewer, the editor and the builder alike. Fenced code and diagrams are escaped before highlighting sees them.
 - **The pipeline's shape is derived once.** `apps/speckit-extension/scripts/pipeline-graph.py` resolves it with the same code the build uses, and the Workflow Builder reads that JSON. Do not write a second derivation in TypeScript.
-- **A new capture script goes on two packing lists.** Add it to `RUNTIME_SCRIPTS` in `package-manifest.py` and give it a `!` rule in `.vscodeignore`, and import it by plain name; `package-manifest.py --check` fails when either list falls behind.
+- **A new capture script goes on two packing lists.** Add it to `RUNTIME_SCRIPTS` in `package-manifest.py` and give it a `!` rule in `.vscodeignore`, and import it by plain name; `package-manifest.py --check` fails when either list falls behind. The .vsix ships the webpack bundle and the webview's `.js`, `.css` and `.ttf` files, not tsc's output, so anything else a runtime reads needs its own `!` rule; `npm run check:vsix` fails on a shipped `require` of a file the .vsix does not carry.
 - **The Copilot canvas and the Claude Code mod share no code with `apps/vscode/`.** They read the same `.spec-context.json` contract through `spec-rules.mjs`. The mod only reads. The canvas writes the record only in a project without the Companion writer, plus the one missing step finish it appends when a turn ended with the document written.
 - **Adding a provider** → implement `IAIProvider`, register it in `aiProviderFactory.ts`, add its `PROVIDER_PATHS` entry, add the enum value in `package.json`, add its row to the provider table on the site. Terminal CLIs extend `cliTerminalProvider.ts`; Gemini and Wibey stay outside it because both run interactively.
 - **Retired, do not reintroduce:** the `templateProfile`, `turboWorkflowPicker` and `complexityFastPath` toggles and the `companion-turbo` preset. `speckit.companion.templateProfile` survives only in `apps/vscode/src/core/settingsMigration.ts`, to migrate old values.
@@ -76,7 +76,7 @@ A few changes carry a follow-on that is easy to miss:
 
 ### Two extensions, two sets of docs
 
-The two extensions each have their **own** README, CHANGELOG, version, release flow, and tag namespace: VS Code extension = root `README.md`/`CHANGELOG.md`, `package.json` `version`, `/publish` → `v*` tag; spec-kit extension = `apps/speckit-extension/README.md`/`CHANGELOG.md`, `extension.yml` `extension.version`, `/publish-speckit-ext` → `speckit-ext-v*` tag (`/publish-all` runs every deliverable's flow in the safe order, with `/publish-mod` for the Claude Code mod and `/publish-canvas` for the Copilot canvas; `/release-loop` runs the whole release, fixes through `/release-qa` to publish). A change under `apps/speckit-extension/` updates **its** docs, never the root ones (and vice-versa); overlapping entries for a feature spanning both halves are expected. **Never edit `.specify/extensions/companion/CHANGELOG.md`** — generated, gitignored, overwritten on install. **The release flow owns the version bump — feature branches do not.** A branch touching `apps/speckit-extension/` writes under `## [Unreleased]` and leaves `extension.yml` `version`, the README badge, and `publishing.md` alone; bumping on a branch is what produces version/changelog/badge drift.
+The two extensions each have their **own** README, CHANGELOG, version, release flow, and tag namespace: VS Code extension = root `README.md`/`CHANGELOG.md`, `package.json` `version`, `/publish` → `v*` tag; spec-kit extension = `apps/speckit-extension/README.md`/`CHANGELOG.md`, `extension.yml` `extension.version`, `/publish-speckit-ext` → `speckit-ext-v*` tag (`/publish-all` runs every deliverable's flow in the safe order, with `/publish-mod` for the Claude Code mod and `/publish-canvas` for the Copilot canvas; `/release-loop` runs the whole release, fixes through `/release-qa` to publish). The `speckit-viewer` npm package (`packages/viewer`) versions through changesets (`npx changeset` with each change) and publishes only from a `speckit-viewer-v*` tag via `/publish-viewer`; a viewer tag never starts with `v`, or it would trigger the extension release. A change under `apps/speckit-extension/` updates **its** docs, never the root ones (and vice-versa); overlapping entries for a feature spanning both halves are expected. **Never edit `.specify/extensions/companion/CHANGELOG.md`** — generated, gitignored, overwritten on install. **The release flow owns the version bump — feature branches do not.** A branch touching `apps/speckit-extension/` writes under `## [Unreleased]` and leaves `extension.yml` `version`, the README badge, and `publishing.md` alone; bumping on a branch is what produces version/changelog/badge drift.
 
 ### `/releases/latest` resolves across both tag namespaces
 
@@ -102,15 +102,21 @@ The shipped extension is ONLY what's in the `.vsix`. `.claude/**`, `.specify/**`
 
 A pull request from a fork runs no CI until a maintainer approves it: `gh run list --branch <head>` shows `action_required`. Read the diff, then `gh api -X POST repos/alfredoperez/speckit-companion/actions/runs/<id>/approve`; a push to the fork branch needs approving again.
 
+### Seeded review comments anchor on the exact line
+
+When a capture step seeds `reviewComments`, read `anchor.blockText` and `anchor.line` from the document on disk (the whole first line of the block, byte for byte); a shortened `blockText` falls back to the heading's first line, so comments pile onto one line and Refine shows the wrong count.
+
 ## Conventions
 
 - **No hard-wrapped paragraphs** in any `.md` file — one logical line per paragraph.
 - **Comments: default none**, one line max, no spec/PR identifiers (`// per PR #182`); strip diagnostic `console.log`s before commit.
 - **Verify a backlog issue still reproduces on `main` before fixing** — queued issues are frequently already fixed or dups.
-- Design tokens: readable content uses `--text-body`/`--text-primary`; `--text-secondary`/`--text-muted` are below WCAG AA on dark — metadata only (#254). The review hue marks, it does not fill: `--review` is for rules, borders and tints, and every purple *word* takes `--review-ink`, which is derived per theme.
+- Design tokens: readable content uses `--text-body`/`--text-primary`; `--text-secondary`/`--text-muted` are below WCAG AA on dark — metadata only (#254). The review hue marks, it does not fill: `--review` is for rules, borders and tints, and every purple *word* takes `--review-ink`, which is derived per theme. The viewer reads the same names with an `sk-` prefix (`--sk-text-body`), set only by the theme files in `packages/viewer/styles/themes/`.
 - Tests: BDD `describe`/`it`; VS Code API mocked at `apps/vscode/tests/__mocks__/vscode.ts` — extend it there. Known gap: config-dependent webview paths have no config-mock harness.
 - Run the extension: F5 → Extension Development Host.
 - **Check in three levels; the whole suite runs once.** After each batch of edits, `npx tsc --noEmit -p ./`. After a substantial chunk works, only the related tests (`npx jest --findRelatedTests <changed files>`), in the background. Before the push, `npm run test:all` once, in the background. `test:visual:ci`, the live e2e and the desktop check run before a release, not per feature. Never sit idle on a run, and never wait on CI in the chat (`gh pr checks --watch`): push and move on.
+- `tooling/scripts/viewer-style-diff.mjs` over every viewer story takes more than ten minutes. Run it in the background, and recheck the flagged stories with `STORIES=<id,…>` instead of a full rerun.
+- A new worktree has no `.specify/extensions/companion/` (it is gitignored). Before running a `speckit-companion-*` command there, run `specify extension add --dev apps/speckit-extension --force` from the worktree, and leave its changes to `.specify/extensions.yml` and `.specify/extensions/.registry` uncommitted.
 - A changelog edit also runs `npx jest apps/vscode/tests/integration/docs-consistency.test.ts` before the push: it enforces the 12-bullet cap, one sentence a bullet, at most 22 words a sentence, and no "now" or "previously".
 - Edit files with the edit tool, not with a Python or shell script that rewrites them.
 

@@ -22,9 +22,9 @@ reads: [plan-doc]
    ```bash
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --step plan --batch '{
      "decisions": [{"decision": "<what you chose>", "why": "<why>", "rejected": "<the alternative not taken>"}],
-     "step_summary": {"summary": "<one-line rollup>", "key_finding": "<the most load-bearing thing you learned>"}
+     "step_summary": {"summary": "<one-line rollup>", "key_finding": "<the most load-bearing thing you learned>"},
+     "set": {"approach": "<2-3 sentence how-summary>"}
    }'
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --set approach="<2-3 sentence how-summary>"
    ```
    Record one `decisions` entry per genuine choice from Phase 0; skip trivia. These are additive and de-duped, so re-running them never duplicates. **One call, not one per item.** `--batch` takes the whole volley as a single JSON object and applies each writer additively, so the shared context file is read and rewritten once instead of once per entry. Emit one `--batch`.
 

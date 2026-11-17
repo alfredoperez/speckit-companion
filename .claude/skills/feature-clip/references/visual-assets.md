@@ -35,7 +35,7 @@ All paths are under `apps/vscode/webview/src/`.
 ```
 npm run clips:capture                            documentation images (STORIES)
 npm run clips:capture -- --clips                 every clip state (CLIP_CAPTURES)
-npm run clips:capture -- --clips living-specs    one composition's states
+npm run clips:capture -- --clips overview    one composition's states
 node tooling/scripts/capture-docs-images.mjs --only <prefix>   documentation images whose filename starts with the prefix
 ```
 

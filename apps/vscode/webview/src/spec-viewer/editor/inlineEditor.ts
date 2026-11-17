@@ -150,12 +150,15 @@ export function setupLineActions(): void {
         const addBtn = target.closest<HTMLElement>('.line-add-btn');
 
         if (addBtn) {
+            // A button inside a <summary> would also toggle its <details>.
+            if (addBtn.closest('summary')) e.preventDefault();
             const lineNum = parseInt(addBtn.dataset.line || '0', 10);
             const listId = addBtn.dataset.listId;
             const selector = listId
                 ? `.line[data-line="${lineNum}"][data-list-id="${listId}"]`
                 : `.line[data-line="${lineNum}"]`;
             const lineEl = document.querySelector(selector) as HTMLElement;
+            if (lineEl instanceof HTMLDetailsElement) lineEl.open = true;
             if (lineEl) showInlineEditor(lineEl);
             return;
         }

@@ -1,0 +1,49 @@
+/**
+ * SpecKit Companion - Requirement / Criteria Rows
+ * ID-badged rows for `- **FR-001** …`, `- **SC-001** …`, `- **NFR-…** …`
+ * bullets, emitted by preprocessRequirements. The badge hue keys off the
+ * requirement kind (FR/NFR = accent, SC = success).
+ */
+
+#markdown-content .req-row {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--sk-space-3);
+  align-items: baseline;
+  padding: var(--sk-space-3) 0;
+  border-bottom: 1px solid var(--sk-border);
+}
+
+#markdown-content .req-row:hover {
+  background: var(--sk-bg-hover);
+}
+
+/* Requirement and outcome ids take their own roles, so a theme can keep them neutral. */
+#markdown-content .req-badge {
+  min-width: 58px;
+  text-align: center;
+  font-family: var(--sk-font-mono);
+  font-size: var(--sk-text-xs);
+  font-weight: 650;
+  color: var(--sk-id-fr);
+  background: var(--sk-id-fr-subtle);
+  border: none;
+  padding: 2px var(--sk-space-2);
+  border-radius: var(--sk-radius-sm);
+  white-space: nowrap;
+}
+
+#markdown-content .req-row[data-kind="sc"] .req-badge {
+  color: var(--sk-id-sc);
+  background: var(--sk-id-sc-subtle);
+}
+
+#markdown-content .req-text {
+  color: var(--sk-text-body);
+  line-height: var(--sk-leading-normal);
+}
+
+#markdown-content .req-text code {
+  font-family: var(--sk-font-mono);
+  font-size: 0.9em;
+}

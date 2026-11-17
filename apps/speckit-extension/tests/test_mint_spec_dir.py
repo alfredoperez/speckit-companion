@@ -64,6 +64,19 @@ class MintSpecDir(unittest.TestCase):
         (self.root / "specs" / "008-notes.md").write_text("", encoding="utf-8")
         self.assertEqual(self.run_mint("next"), "specs/009-next")
 
+    def test_a_named_number_is_used_as_given(self):
+        out = subprocess.run([sys.executable, str(MINT), "--short-name", "pipeline fixup", "--number", "671"],
+                             cwd=self.root, capture_output=True, text=True, check=True).stdout.strip()
+        self.assertEqual(out, "specs/671-pipeline-fixup")
+        pointer = json.loads((self.root / ".specify" / "feature.json").read_text(encoding="utf-8"))
+        self.assertEqual(pointer, {"feature_directory": "specs/671-pipeline-fixup"})
+        self.assertEqual(self.run_mint("after"), "specs/672-after")
+
+    def test_a_named_number_another_folder_holds_is_refused(self):
+        with self.assertRaises(SystemExit):
+            mint_mod.mint(self.root, "clash", number=7)
+        self.assertFalse((self.root / "specs" / "007-clash").exists())
+
     def test_branches_claim_numbers_when_asked(self):
         subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "--allow-empty", "-m", "a"], cwd=self.root, check=True)
         subprocess.run(["git", "branch", "014-teammate"], cwd=self.root, check=True)

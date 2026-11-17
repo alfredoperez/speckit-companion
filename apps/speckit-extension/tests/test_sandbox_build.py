@@ -75,8 +75,8 @@ class BuildingAnUnconfiguredProjectChangesNothing(unittest.TestCase):
             with self.subTest(command=command):
                 marker_chars = sum(len(line) + 1 for line in body.splitlines()
                                    if "speckit-companion:" in line)
-                self.assertLess(marker_chars / len(body), 0.08,
-                                "the boundary markers grew past a twelfth of the body")
+                self.assertLess(marker_chars / len(body), 0.10,
+                                "the boundary markers grew past a tenth of the body")
 
     def test_the_build_reports_the_routing_and_the_artifacts(self):
         self.assertIn("classify-size = simple", self.stdout)

@@ -1,0 +1,62 @@
+/**
+ * SpecKit Companion - Callout Styles
+ * Callout blocks for notes, warnings, etc.
+ */
+
+/* ============================================
+   Callout Blocks
+   ============================================ */
+
+/* Soft-fill callouts: a borderless tinted surface keyed to the type,
+   with the colored uppercase label carrying the type signal. */
+.callout {
+    --callout-c: var(--sk-info);
+    --callout-bg: var(--sk-info-subtle);
+    padding: 12px 14px;
+    margin: 0 0 10px 0;
+    border-radius: var(--sk-radius-md);
+    border: none;
+    background: var(--callout-bg);
+}
+
+.callout-icon {
+    display: none;
+}
+
+.callout-content {
+    line-height: var(--sk-leading-relaxed);
+    color: var(--sk-text-body);
+}
+
+.callout-content strong {
+    color: var(--sk-text-primary);
+}
+
+.callout-label {
+    display: block;
+    font-weight: 650;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    color: var(--callout-c);
+}
+
+.callout-purpose    { --callout-c: var(--sk-accent);  --callout-bg: var(--sk-accent-subtle); }
+.callout-note       { --callout-c: var(--sk-info);    --callout-bg: var(--sk-info-subtle); }
+.callout-tip        { --callout-c: var(--sk-success); --callout-bg: var(--sk-success-subtle); }
+.callout-checkpoint { --callout-c: var(--sk-success); --callout-bg: var(--sk-success-subtle); }
+.callout-warning    { --callout-c: var(--sk-warning); --callout-bg: var(--sk-warning-subtle); }
+.callout-important  { --callout-c: var(--sk-warning); --callout-bg: var(--sk-warning-subtle); }
+.callout-critical   { --callout-c: var(--sk-error);   --callout-bg: var(--sk-error-subtle); }
+
+
+/* ============================================
+   Template Instructions (collapsed HTML comments)
+   ============================================ */
+
+/* Template scaffolding is authoring noise — removed from the reading view
+   entirely. */
+details.template-instructions {
+    display: none;
+}

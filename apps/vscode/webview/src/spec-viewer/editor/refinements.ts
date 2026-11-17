@@ -243,11 +243,7 @@ export function submitAllRefinements(): void {
     if (!doc) return;
 
     // Comments are already persisted on add; the extension dispatches the doc's pending ones and marks them applied, and the refreshed context re-restores the cards cleared below.
-    // A living spec has nowhere to persist them, so they travel with the request.
-    const comments = navState.value?.livingMode
-        ? refinements.map(({ lineNum, lineContent, comment }) => ({ lineNum, lineContent, comment }))
-        : undefined;
-    vscode.postMessage({ type: 'runDocRefinement', doc, comments });
+    vscode.postMessage({ type: 'runDocRefinement', doc });
 
     clearAllRefinements();
 }

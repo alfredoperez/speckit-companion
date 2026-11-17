@@ -53,8 +53,9 @@ const MOVED = {
   '/docs/guides/reading-the-overview': OVERVIEW,
   '/docs/guides/check-a-run': OVERVIEW,
   '/docs/results/track-progress': OVERVIEW,
-  '/docs/guides/living-specs': '/docs/results/living-specs',
-  '/docs/discussions/living-specs': '/docs/results/living-specs',
+  '/docs/guides/living-specs': `${STEPS}#how-companion-keeps-specs`,
+  '/docs/results/living-specs': `${STEPS}#how-companion-keeps-specs`,
+  '/docs/discussions/living-specs': `${STEPS}#how-companion-keeps-specs`,
 
   '/docs/processes/fix-a-bug': BUGS,
   '/docs/processes/assess-an-idea': BUGS,
@@ -202,7 +203,6 @@ export default defineConfig({
           items: [
             { label: 'Viewer and sidebar', slug: 'docs/navigate/viewer-and-sidebar' },
             { label: 'Overview and progress', slug: 'docs/results/the-overview' },
-            { label: 'Living specs', slug: 'docs/results/living-specs' },
           ],
         },
         {

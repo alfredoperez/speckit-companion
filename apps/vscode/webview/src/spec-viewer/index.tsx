@@ -6,15 +6,18 @@
 import { render } from 'preact';
 import type { VSCodeApi, NavState } from './types';
 import { navState, markdownHtml } from './signals';
-import { renderMarkdown, setCurrentTask, setHasSpecContext, setLivingMode, setReportMode } from './markdown';
+import { renderMarkdown, setCurrentTask, setHasSpecContext, setReportMode, setSpecLedgerTasks } from 'speckit-viewer/core/markdown/index';
 import { applyHighlighting, initializeMermaid } from './highlighting';
 import { setupCallsStrike, setupLineActions, setupStatesSelect } from './editor';
 import { setupAnswerActions } from './editor/answerEditor';
-import { setupApproveRequirement, setupCheckboxToggle, setupFileRefClickHandler, setupOpenLivingRequirement, setupRemoveRequirement, setupRevealGlob } from './actions';
+import { setupLedgerTasks } from './markdown/ledger/tasksInteractions';
+import { setupCheckboxToggle, setupFileRefClickHandler } from './actions';
 import { applyPendingFragment, setupDocumentLinkClickHandler } from './documentLinks';
 import { createMessageRouter } from './messageHandlers';
 import { App } from './App';
 import { buildToc } from './toc';
+import { resolveLedgerRefs } from './markdown/ledger/refs';
+import { setupLedgerRefs } from './ledgerRefs';
 
 declare global {
     interface Window {
@@ -54,6 +57,8 @@ function updateContent(content: string): void {
             document.getElementById('markdown-content'),
             document.getElementById('spec-toc')
         );
+        const root = document.getElementById('markdown-content');
+        if (root) resolveLedgerRefs(root, navState.value?.currentDoc);
         applyPendingFragment();
     });
 }
@@ -100,14 +105,13 @@ function init(): void {
     const initialNav = window.__INITIAL_NAV_STATE__;
     if (initialNav) {
         navState.value = initialNav;
-        // Set renderer flags before the first updateContent below, or a living
-        // spec's first paint renders in feature-spec mode until a later message.
-        setLivingMode(!!initialNav.livingMode);
+        // Set renderer flags before the first updateContent below, or a report's first paint renders as a spec.
         setReportMode(!!initialNav.report);
         setHasSpecContext(!!(initialNav.specContextName || initialNav.badgeText));
         if (initialNav.currentTask !== undefined) {
             setCurrentTask(initialNav.currentTask);
         }
+        if (initialNav.tasksMarkdown !== undefined) setSpecLedgerTasks(initialNav.tasksMarkdown || null);
     }
 
     // Wire message listener before render
@@ -123,11 +127,9 @@ function init(): void {
     setupAnswerActions();
     setupCheckboxToggle();
     setupFileRefClickHandler();
+    setupLedgerTasks();
+    setupLedgerRefs();
     setupDocumentLinkClickHandler();
-    setupApproveRequirement();
-    setupRevealGlob();
-    setupOpenLivingRequirement();
-    setupRemoveRequirement();
     restoreScrollPosition();
 
     // Handle initial raw content from template

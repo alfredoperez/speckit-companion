@@ -3,39 +3,25 @@ id: classify-size
 name: Classify the change size
 kind: control
 command: specify
-reads: [draft-spec]
+reads: [resolve-dir]
 ---
-5. **Classify the change, to right-size the ceremony.** After the spec content is drafted, decide whether this change is small enough to fast-track straight to implement, or large enough to keep the full specify → plan → tasks → implement pipeline. Apply the shared size definition below. This is a best-effort heuristic and **MUST err toward `normal`** on weak or conflicting signals.
+**Classify the change before drafting, to right-size the ceremony.** Decide now, from the request and **one bounded look at the code** (at most three reads or searches, enough to know what and where to change), whether this change can go straight to implement or needs the full specify → plan → tasks → implement pipeline. Deciding first means a small change never pays for documents it does not need. This is a best-effort heuristic and **MUST err toward `normal`** only where it matters: when a high-risk item might apply, or the outcome or where to change it is still unclear after the bounded look. Being cautious about an understood, contained change is not a reason to call it normal.
 
 <!-- speckit-companion:part sizing -->
 
 <!-- /speckit-companion:part sizing -->
 
-   Estimate `projectedFiles` and `projectedTasks` for the drafted requirements, and read a `scopeSignal` from the wording (`"larger"` for rewrite | overhaul | new system | migration | redesign | …; `"smaller"` for one-line | rename | typo | tweak | copy change | …; else `"none"`). Then map the size definition above to a verdict:
+   Record your estimates as you go: `projectedFiles` and `projectedTasks`, and a `scopeSignal` from the wording (`"larger"` for rewrite | overhaul | new system | migration | redesign | …; `"smaller"` for one-line | rename | typo | tweak | copy change | …; else `"none"`). They are context for a later reader, not the rule. Then:
 
    ```
-   crossedGuardrail = the change exceeds the **small** bar above (more files or tasks than it allows)
-   riskyToShip      = the change is hard to undo or hard to check, as the small bar above defines
-
-   verdict = "simple"    if  the change is **small** by the definition above
+   verdict = "simple"    if  the change is **small** by all three tests above
                          and scopeSignal != "larger"
-                         and not riskyToShip
-             "oversized" if  the change exceeds the small bar by a wide margin —
-                             roughly double it (more than 10 files or more than 20
-                             tasks), or spans multiple subsystems
+             "oversized" if  the oversized bar above holds
              else "normal"
    ```
 
-   - **Guardrail warning.** When `crossedGuardrail == true` OR `scopeSignal == "larger"`, print this line verbatim, then run the **normal** branch (never a silent fast-track):
+   When the verdict is not `simple` because a high-risk item applies, print this line verbatim, naming the item, then run the branch the verdict names:
 
-     ```
-     [companion] Change exceeds the small-change guardrail (5 files / 10 tasks) — running the full pipeline as <normal|oversized>.
-     ```
-
-     Exactly at the threshold (`projectedFiles == 5` / `projectedTasks == 10`) is the simple ceiling: it does **not** warn and stays eligible for `simple`.
-
-     When `riskyToShip == true` and neither of those holds, print this line instead, verbatim, and run the branch the verdict names. Print one line or the other, never both:
-
-     ```
-     [companion] Change is hard to undo or hard to check — running the full pipeline as <normal|oversized>.
-     ```
+   ```
+   [companion] Change touches <the high-risk item> — running the full pipeline as <normal|oversized>.
+   ```

@@ -36,11 +36,20 @@ const journaled = (ids: string[]): ViewerState => ({
 } as unknown as ViewerState);
 
 describe('the header task count', () => {
-    it('counts ticked boxes out of every task, not out of the tasks journaled so far', () => {
+    it('reads ticked boxes out of every task, not out of the tasks journaled so far', () => {
         navState.value = mockNavState({ taskCompletionPercent: 50, taskCounts: { checked: 3, total: 6 } });
         viewerState.value = journaled(['T001', 'T002', 'T003']);
 
-        expect(tasksFact()).toBe('3/6 tasks');
+        expect(tasksFact()).toBe('50% tasks');
+    });
+
+    it('uses the same percentage format when every task is done, with or without counts', () => {
+        navState.value = mockNavState({ taskCompletionPercent: 100, taskCounts: { checked: 62, total: 62 } });
+        viewerState.value = journaled(['T001']);
+        expect(tasksFact()).toBe('100% tasks');
+
+        navState.value = mockNavState({ taskCompletionPercent: 100 });
+        expect(tasksFact()).toBe('100% tasks');
     });
 
     it('falls back to the percentage the rail shows when no counts were sent', () => {

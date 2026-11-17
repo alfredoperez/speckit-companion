@@ -144,6 +144,52 @@ describe('a process pane with nothing to list', () => {
     });
 });
 
+describe('a process pane whose extension is turned off or a look-alike', () => {
+    function withExtension(registry: object | undefined, author?: string): string {
+        const root = emptyProject('.specify/extensions/bug', '.specify/bugs/one');
+        fs.writeFileSync(path.join(root, '.specify/bugs/one/assessment.md'), '# Bug Assessment: One\n\n- **Verdict**: valid\n');
+        if (registry) fs.writeFileSync(path.join(root, '.specify/extensions/.registry'), JSON.stringify(registry));
+        if (author) {
+            fs.writeFileSync(
+                path.join(root, '.specify/extensions/bug/extension.yml'),
+                `extension:\n  id: bug\n  version: "1.1.0"\n  author: ${author}\n`,
+            );
+        }
+        return root;
+    }
+
+    it('says a disabled extension is off, offers to turn it on, and marks the groups read only', () => {
+        open(withExtension({ extensions: { bug: { version: '1.0.1', enabled: false } } }, 'spec-kit-core'));
+        const [note, group] = pane().getChildren();
+        expect(note.contextValue).toBe('process-extension-off');
+        expect(note.label).toBe('The bug extension is turned off');
+        expect(note.command?.command).toBe('speckit.processes.enableExtension');
+        expect(note.command?.arguments).toEqual(['bug']);
+        expect(group.label).toBe('To fix (1) · read only');
+    });
+
+    it('labels a same-id extension from another author as not the bundled one', () => {
+        open(withExtension({ extensions: { bug: { enabled: true } } }, 'someone-else'));
+        const [note, group] = pane().getChildren();
+        expect(note.contextValue).toBe('process-extension-foreign');
+        expect(note.description).toBe('bug 1.1.0 · not the bundled one');
+        expect(note.command?.command).toBe('vscode.open');
+        expect(group.label).toBe('To fix (1)');
+    });
+
+    it('shows the bundled extension as today', () => {
+        open(withExtension({ extensions: { bug: { enabled: true } } }, 'spec-kit-core'));
+        expect(pane().getChildren().map(r => r.contextValue)).toEqual(['process-group']);
+    });
+
+    it('shows only the note, not the empty row, when a disabled extension has no folders', () => {
+        const root = emptyProject('.specify/extensions/bug');
+        fs.writeFileSync(path.join(root, '.specify/extensions/.registry'), JSON.stringify({ extensions: { bug: { enabled: false } } }));
+        open(root);
+        expect(pane().getChildren().map(r => r.contextValue)).toEqual(['process-extension-off']);
+    });
+});
+
 describe('refreshing a process pane', () => {
     it('tells the tree to redraw', () => {
         const provider = pane();

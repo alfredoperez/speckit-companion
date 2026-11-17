@@ -45,6 +45,9 @@ jobs:
       - name: Build VSIX
         run: vsce package
 
+      - name: The packaged extension carries what it requires
+        run: node tooling/scripts/check-vsix.mjs *.vsix
+
       - name: Get version from tag
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT

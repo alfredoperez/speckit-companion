@@ -171,7 +171,7 @@ export const DragAcrossPhases: Story = {
             'a drag across a phase boundary saves the whole grouping');
         const [, phases] = sent[0].with as [string, Array<{ name: string; nodes: string[] }>];
         const holds = (name: string) =>
-            phases.find(p => p.name === name)?.nodes.includes('load-living-specs');
+            phases.find(p => p.name === name)?.nodes.includes('load-context');
         assert(holds('author') === true, 'the node landed in the phase it was dropped on');
         assert(holds('gather') === false, 'and left the one it came from');
     },

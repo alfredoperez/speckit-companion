@@ -2,7 +2,6 @@
 # nodes: [...] replaces this list.
 order:
   - size-budget
-  - load-living-specs
   - gather-context
   - plan-doc
   - pick-blocks
@@ -17,7 +16,7 @@ order:
 
 phases:
   - name: gather
-    nodes: [size-budget, load-living-specs, gather-context]
+    nodes: [size-budget, gather-context]
   - name: author
     nodes: [plan-doc, pick-blocks]
   - name: check
