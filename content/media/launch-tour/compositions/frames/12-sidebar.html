@@ -1,0 +1,51 @@
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f12 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f12 .f12-ground { position:absolute; inset:0; background:#0a0913; }
+#f12 .f12-bg { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f12 .f12-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f12 .f12-stage { position:absolute; inset:0; }
+#f12 .f12-kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f12 .f12-rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:0 50%; }
+#f12 .f12-h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f12 .f12-h i { font-style:normal; color:#a78bfa; }
+#f12 .f12-pane { position:absolute; left:0; top:0; width:100%; height:100%; }
+#f12 .f12-win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f12 .f12-win img { position:absolute; display:block; }
+#f12 .f12-lbl { position:absolute; font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.1em; text-transform:uppercase; color:#b6b0d2; }
+#f12 .f12-glow { position:absolute; left:1508px; top:340px; width:338px; height:700px; border-radius:18px; box-shadow:0 0 0 3px #a78bfa, 0 0 60px rgba(139,92,246,.55); opacity:0; }
+</style>
+<div id="f12" data-composition-id="f12" data-width="1920" data-height="1080" data-duration="3.5">
+  <div id="f12-ground" class="clip f12-ground" data-start="0" data-duration="3.5" data-track-index="0">
+    <div class="f12-bg"></div><div class="f12-dots"></div>
+  </div>
+  <div id="f12-stage" class="clip f12-stage" data-start="0" data-duration="3.5" data-track-index="1">
+    <div style="position:absolute;left:96px;top:70px;width:1700px">
+      <div id="f12-kicker" class="f12-kicker">The sidebar</div>
+      <div id="f12-rule" class="f12-rule"></div>
+      <div id="f12-head" class="f12-h" style="font-size:64px;margin-top:22px">Specs, bugs, ideas, living specs, <i>steering</i>.</div>
+    </div>
+    <div id="f12-p1" class="f12-pane"><div class="f12-lbl" style="left:76px;top:290px">Specs</div><div class="f12-win" style="left:76px;top:340px;width:338px;height:700px;"><img src="assets/rich-sidebar-specs.png" alt="" style="left:0px;top:0px;width:338px" /></div></div>
+    <div id="f12-p2" class="f12-pane"><div class="f12-lbl" style="left:434px;top:290px">Bugs</div><div class="f12-win" style="left:434px;top:340px;width:338px;height:700px;"><img src="assets/rich-sidebar-bugs.png" alt="" style="left:0px;top:0px;width:338px" /></div></div>
+    <div id="f12-p3" class="f12-pane"><div class="f12-lbl" style="left:792px;top:290px">Ideas</div><div class="f12-win" style="left:792px;top:340px;width:338px;height:700px;"><img src="assets/rich-sidebar-ideas.png" alt="" style="left:0px;top:0px;width:338px" /></div></div>
+    <div id="f12-p4" class="f12-pane"><div class="f12-lbl" style="left:1150px;top:290px">Living specs</div><div class="f12-win" style="left:1150px;top:340px;width:338px;height:700px;"><img src="assets/rich-sidebar-living.png" alt="" style="left:0px;top:0px;width:338px" /></div></div>
+    <div id="f12-p5" class="f12-pane"><div class="f12-lbl" style="left:1508px;top:290px">Steering</div><div class="f12-win" style="left:1508px;top:340px;width:338px;height:700px;"><img src="assets/rich-sidebar-steering.png" alt="" style="left:0px;top:0px;width:338px" /></div><div id="f12-glow" class="f12-glow"></div></div>
+  </div>
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#f12-kicker", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 0);
+  tl.fromTo("#f12-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power2.out" }, 0.08);
+  tl.fromTo("#f12-head", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 0.1);
+  ["#f12-p1", "#f12-p2", "#f12-p3", "#f12-p4", "#f12-p5"].forEach(function (sel, i) {
+    tl.fromTo(sel, { y: 90, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power3.out" }, 0.5 + i * 0.3);
+  });
+  tl.fromTo("#f12-glow", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 2.3);
+  tl.fromTo("#f12-stage", { scale: 1 }, { scale: 1.015, duration: 3.5, ease: "none", transformOrigin: "50% 40%" }, 0);
+  window.__timelines["f12"] = tl;
+</script>
+</template>

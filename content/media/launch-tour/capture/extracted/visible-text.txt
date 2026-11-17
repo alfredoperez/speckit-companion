@@ -1,0 +1,29 @@
+SpecKit Companion. See and steer everything your AI builds.
+
+Problem: you write the spec with GitHub Spec Kit, the AI builds from it, and nobody opens the spec again. It becomes a folder of markdown nobody reads.
+
+What it is: SpecKit Companion gives spec-kit a face. One run, read from four places: a VS Code extension, a spec-kit extension, a GitHub Copilot app and a Claude Code mod. They all read the same run record, so the terminal, the editor and the chat agree on where a spec stands.
+
+The viewer: a spec opens as a document, not raw markdown. Each step and its documents sit in a bar on top. User stories become cards with their priority. Under each story: why it has its priority, how to test it on its own, and acceptance scenarios with Given, When and Then in colour.
+
+Tasks: every task shows its tick, its phase and the files it touched. A file chip opens the file. Under each task sits what the assistant did.
+
+The footer runs spec-kit: it always offers the next step (Next: Plan) and runs it in your assistant. While a step runs, actions wait. When the run is complete it offers Converge, Archive and Reactivate.
+
+Comments: hover a line and leave a note. Pending and applied comments stay on the page. Refine sends the pending ones back to the assistant.
+
+The Overview: a finished run on one page. What was asked (intent), how long each step took (timing), the approach, the working area and size, the fence around the work (must stay true, deliberately out of scope), what was checked and what happened with the command each check ran, the decisions with what they rejected, and requirement to task to test coverage.
+
+The sidebar: five panes. Specs (active and completed), Bugs (with severity and verdict), Ideas (go, kill or open question), Living Specs (coverage and drift per capability), Steering (Companion, the provider, spec-kit's constitution, scripts and templates).
+
+Living specs: specs that stay next to the code and say when the code moved on without them. One per capability, with the files it covers and a test behind each requirement. A requirement is marked Drifted after a code change. Sync it back, or adopt a new area.
+
+Workflow builder: the pipeline as nodes. Move a step, add a hook, swap a template. Anything your project changed carries the same colour.
+
+Four new plan components: States (a lifecycle you click through, each state can show its screen), Calls (the functions a change reaches, marked new, changed or removed), Screen (a rough sketch of what a person will see, with numbered notes), Code (a few lines of real or sketched code with a note pinned under one line).
+
+The Copilot app: the same run as a board inside GitHub Copilot. Every spec with its progress, and the next step one click away.
+
+The Claude Code mod: a band above the prompt says where the run stands. A pane beside the transcript holds the steps, their times, the documents and the tasks. Read only, works with stock spec-kit.
+
+Free and open source under MIT. Works with Claude, Copilot, Gemini, Codex and more. speckit-companion.dev
