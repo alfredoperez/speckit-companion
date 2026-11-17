@@ -1,0 +1,43 @@
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f12 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f12-ground { position:absolute; inset:0; background:#0a0913; }
+#f12-glow { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f12-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f12-head { position:absolute; left:96px; top:22px; right:96px; display:flex; align-items:baseline; gap:28px; }
+#f12-kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; white-space:nowrap; }
+#f12-title { font-weight:800; font-size:52px; letter-spacing:-.03em; line-height:1.15; }
+#f12-title i { font-style:normal; color:#a78bfa; }
+#f12-win { position:absolute; overflow:hidden; border-radius:16px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f12-win.full { border-radius:0; box-shadow:none; }
+#f12-shade { position:absolute; left:0; right:0; bottom:0; height:420px; background:linear-gradient(0deg, rgba(10,9,19,.94) 0%, rgba(10,9,19,.78) 45%, rgba(10,9,19,0) 100%); }
+#f12-cap { position:absolute; left:96px; bottom:84px; right:96px; }
+#f12-cap .k { font-family:"JetBrains Mono",monospace; font-size:30px; letter-spacing:.14em; text-transform:uppercase; color:#c4b5fd; }
+#f12-cap .t { font-weight:800; font-size:92px; letter-spacing:-.035em; line-height:1.02; margin-top:14px; }
+#f12-cap .t i { font-style:normal; color:#a78bfa; }
+</style>
+<div id="f12" data-composition-id="f12" data-width="1920" data-height="1080" data-duration="14">
+    <div id="f12-ground" class="clip" data-start="0" data-duration="14" data-track-index="0"></div>
+  <div id="f12-glow"></div><div id="f12-dots"></div>
+  <div id="f12-win" class="" style="left:264px;top:133px;width:1391px;height:920px"><div id="f12-cam" style="position:absolute;left:0;top:0;width:1391px;height:920px;transform-origin:0 0"><video id="v12" src="assets/tour-overview.mp4" muted playsinline data-start="0" data-duration="14" data-media-start="1.0" style="position:absolute;left:-107px;top:-19px;width:1528px;height:958px;object-fit:fill"></video><div id="f12-ring" style="position:absolute;left:0;top:0;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:3px solid #8b5cf6;opacity:0"></div><div id="f12-cur" style="position:absolute;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:rgba(139,92,246,.85);border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.35);opacity:0"></div></div></div>
+  <div id="f12-head"><div id="f12-kicker">The Overview</div><div id="f12-title">When it finishes, it keeps the <i>record</i>: checks, decisions, tests.</div></div>
+</div>
+<script>
+    window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo('#f12-kicker', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0);
+  tl.fromTo('#f12-title', { opacity: 0, y: -14 }, { opacity: 1, y: 0, duration: 0.55, ease: 'power3.out' }, 0.12);
+  tl.fromTo('#f12-win', { opacity: 0, y: 36, scale: 0.985 }, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'power3.out' }, 0.25);
+  tl.set('#f12-cam', { scale: 1, x: 0, y: 0 }, 0);
+  tl.set('#f12-cur', { x: 695, y: 880 }, 0);
+  tl.set('#f12-ring', { opacity: 0 }, 0);
+  tl.to('#f12-cur', { opacity: 1, duration: 0.3 }, 0.4);
+  tl.to('#f12-cur', { x: 657, y: 268, duration: 0.55, ease: 'power2.inOut' }, 0.4);
+  tl.set('#f12-ring', { x: 657, y: 268, scale: 0.4, opacity: 0.9 }, 1.0);
+  tl.to('#f12-ring', { scale: 1.6, opacity: 0, duration: 0.6, ease: 'power2.out' }, 1.0);
+  tl.to('#f12-glow', { opacity: 0.75, duration: 14, ease: 'sine.inOut' }, 0);
+  window.__timelines["f12"] = tl;
+</script>
+</template>

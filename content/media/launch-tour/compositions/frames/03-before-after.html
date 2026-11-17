@@ -1,0 +1,66 @@
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f03 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; perspective:1800px; }
+#f03 .f03-bg { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%), #0a0913; }
+#f03 .f03-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f03 .f03-kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f03 .f03-rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:left center; }
+#f03 .f03-h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f03 .f03-h i { font-style:normal; color:#a78bfa; }
+#f03 .f03-win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); transform-style:preserve-3d; will-change:transform; }
+#f03 .f03-win img { position:absolute; display:block; }
+#f03 .f03-lbl { position:absolute; font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.1em; text-transform:uppercase; color:#b6b0d2; }
+</style>
+<div id="f03" data-composition-id="f03" data-width="1920" data-height="1080" data-duration="3">
+<div id="f03-bg" class="clip f03-bg" data-start="0" data-duration="3" data-track-index="0"></div>
+<div class="f03-dots"></div>
+
+<div style="position:absolute;left:96px;top:82px;width:1700px"><div id="f03-kicker" class="f03-kicker">Same spec</div><div id="f03-rule" class="f03-rule"></div><div id="f03-head" class="f03-h" style="font-size:70px;margin-top:22px">Now you can <i>read</i> it.</div></div>
+<div id="f03-lbl-l" class="f03-lbl" style="left:96px;top:300px">Before: spec.md</div>
+<div id="f03-lbl-r" class="f03-lbl" style="left:990px;top:300px">After: SpecKit Companion</div>
+<div id="f03-win-l" class="f03-win" style="left:96px;top:340px;width:834px;height:640px;"><img src="assets/raw-spec.png" alt="" style="left:0px;top:0px;width:1250px" /></div>
+<div id="f03-win-r" class="f03-win" style="left:990px;top:340px;width:834px;height:640px;"><img src="assets/tall-viewer.png" alt="" style="left:-20px;top:0px;width:980px" /></div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<script>
+(function () {
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  const SHADOW_L = "0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6)";
+
+  tl.fromTo("#f03-bg", { opacity: 0.75 }, { opacity: 1, duration: 3, ease: "sine.inOut" }, 0);
+
+  // Scene 1: kicker + headline settle down from above
+  tl.fromTo("#f03-kicker", { y: -26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 0.02);
+  tl.fromTo("#f03-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 0.12);
+  tl.fromTo("#f03-head", { y: -34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 0.1);
+
+  // Scene 2: raw spec swings in from the left wing, tilted open
+  tl.fromTo("#f03-win-l",
+    { x: -420, rotateY: 24, scale: 0.86, opacity: 0, boxShadow: "-30px 40px 90px rgba(0,0,0,.6)" },
+    { x: 0, rotateY: 13, scale: 1, opacity: 1, boxShadow: "18px 40px 90px rgba(0,0,0,.6)", duration: 0.85, ease: "power3.out" }, 0.6);
+  tl.fromTo("#f03-lbl-l", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power2.out" }, 0.78);
+
+  // Scene 3: rendered viewer swings in from the right wing, mirrored tilt
+  tl.fromTo("#f03-win-r",
+    { x: 420, rotateY: -24, scale: 0.86, opacity: 0, boxShadow: "30px 40px 90px rgba(0,0,0,.6)" },
+    { x: 0, rotateY: -13, scale: 1, opacity: 1, boxShadow: "-18px 40px 90px rgba(0,0,0,.6)", duration: 0.75, ease: "power3.out" }, 1.6);
+  tl.fromTo("#f03-lbl-r", { x: 40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.45, ease: "power2.out" }, 1.75);
+
+  // Both settle flat; the rendered side ends brighter
+  tl.to("#f03-win-l", { rotateY: 0, boxShadow: SHADOW_L, filter: "brightness(0.78)", duration: 0.5, ease: "power2.inOut" }, 2.25);
+  tl.to("#f03-win-r", { rotateY: 0, boxShadow: "0 0 0 2px rgba(167,139,250,.95), 0 40px 110px rgba(139,92,246,.35)", filter: "brightness(1.06)", duration: 0.5, ease: "power2.inOut" }, 2.35);
+  tl.to("#f03-lbl-l", { opacity: 0.6, duration: 0.5, ease: "power2.inOut" }, 2.25);
+  tl.fromTo("#f03-lbl-r", { color: "#b6b0d2" }, { color: "#a78bfa", duration: 0.5, ease: "power2.inOut", immediateRender: false }, 2.25);
+
+  // Counter-phase idle drift during the hold
+  tl.fromTo("#f03-win-l", { y: 0 }, { y: -4, duration: 0.75, ease: "sine.inOut", immediateRender: false }, 2.25);
+  tl.fromTo("#f03-win-r", { y: 0 }, { y: 4, duration: 0.75, ease: "sine.inOut", immediateRender: false }, 2.25);
+
+  window.__timelines["f03"] = tl;
+})();
+</script>
+</template>

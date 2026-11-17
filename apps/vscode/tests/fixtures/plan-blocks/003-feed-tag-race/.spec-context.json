@@ -1,0 +1,135 @@
+{
+  "workflow": "companion",
+  "specName": "Feed always matches the selected tag",
+  "branch": "main",
+  "currentStep": "plan",
+  "status": "planned",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T15:26:41.254Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-10T15:27:04.556Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T15:27:15.905Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T15:28:26.281Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T15:28:43.775Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T15:28:44.149Z"
+    }
+  ],
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "expectations": [
+    "No new UI or reader-visible state",
+    "No change to API responses or URL format"
+  ],
+  "context": [
+    "area: src/entities/article (feed query, article.api.ts)",
+    "area: src/features/article/filter-article (tag filter)",
+    "area: src/shared/api (axios instance and service)",
+    "constraint: no barrels, ~ aliases, TanStack Query for server state"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "List shows only articles for the selected tag, source and page"
+    },
+    "FR-002": {
+      "title": "A response for a no-longer-selected tag, source or page never changes the list"
+    },
+    "FR-003": {
+      "title": "Cancel the previous selection request where the client allows"
+    },
+    "FR-004": {
+      "title": "A cancelled or superseded request shows no error"
+    },
+    "FR-005": {
+      "title": "A failed request for the current selection still shows its error"
+    },
+    "FR-006": {
+      "title": "Cancellation works for every article-fetching call"
+    },
+    "FR-007": {
+      "title": "No new screen, control, message or state for the reader"
+    }
+  },
+  "intent": "The article list always matches the selected tag; stale responses are ignored and their requests cancelled",
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 6,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "planBlocks": [
+    "calls",
+    "code"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "code"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/001-feed-tag-race --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 1 call path, 3 lines, 1 code block. Every cited file and line checks out."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Remove placeholderData: keepPreviousData from articlesQueryOptions",
+      "why": "It renders the previous key's articles under the new selection, breaking FR-001/FR-002; without it Suspense shows the existing skeleton",
+      "rejected": "Keep it for page changes only, or add a request counter in the widget"
+    },
+    {
+      "decision": "No new cancellation plumbing; test it instead",
+      "why": "Every read already forwards TanStack signal to axios",
+      "rejected": "Custom AbortController per selection"
+    },
+    {
+      "decision": "No CanceledError handling unless a test shows a cancel reaching ErrorHandler",
+      "why": "TanStack reverts aborted queries without an error state",
+      "rejected": "Pre-emptive filter in logError"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One-line fix in article.api.ts plus widget tests for race, cancel, error",
+      "key_finding": "Cancellation already works; the stale list comes from keepPreviousData"
+    }
+  },
+  "approach": "Drop keepPreviousData so the feed widget only renders data under the current selection key. Pin the behaviour with a widget test for out-of-order responses, cancellation and error display."
+}

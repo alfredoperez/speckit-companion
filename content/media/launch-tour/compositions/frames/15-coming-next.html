@@ -1,0 +1,35 @@
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f15 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f15 .f15-ground { position:absolute; inset:0; background:#0a0913; }
+#f15 .f15-bg { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f15 .f15-dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f15 .f15-stack { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+#f15 .f15-kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f15 .f15-rule { width:44px; height:3px; background:#8b5cf6; margin:18px auto 0; transform-origin:50% 50%; }
+#f15 .f15-h { font-weight:800; letter-spacing:-.03em; line-height:1.04; font-size:150px; margin-top:26px; }
+#f15 .f15-h i { font-style:normal; color:#a78bfa; }
+</style>
+<div id="f15" data-composition-id="f15" data-width="1920" data-height="1080" data-duration="1.5">
+  <div id="f15-ground" class="clip f15-ground" data-start="0" data-duration="1.5" data-track-index="0">
+    <div class="f15-bg"></div><div class="f15-dots"></div>
+  </div>
+  <div id="f15-stack" class="clip f15-stack" data-start="0" data-duration="1.5" data-track-index="1">
+    <div id="f15-kicker" class="f15-kicker">Work in progress</div>
+    <div id="f15-rule" class="f15-rule"></div>
+    <div id="f15-h" class="f15-h">Coming <i>next</i>.</div>
+  </div>
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#f15-kicker", { y: 22, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 0);
+  tl.fromTo("#f15-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power2.out" }, 0.08);
+  tl.fromTo("#f15-h", { y: 46, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.5, ease: "power3.out" }, 0.05);
+  tl.fromTo("#f15-stack", { scale: 1 }, { scale: 1.012, duration: 1.5, ease: "none" }, 0);
+  window.__timelines["f15"] = tl;
+</script>
+</template>

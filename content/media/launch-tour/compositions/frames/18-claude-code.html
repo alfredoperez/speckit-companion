@@ -1,0 +1,44 @@
+<template>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f18 { position:absolute; inset:0; overflow:hidden; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f18 .bg { position:absolute; inset:0; background-color:#0a0913; background-image:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%); }
+#f18 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f18 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f18 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:0 50%; }
+#f18 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f18 .h i { font-style:normal; color:#a78bfa; }
+#f18 .h span { display:inline-block; }
+#f18 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f18 .win img, #f18 .win video { position:absolute; display:block; }
+#f18 .f18-ring { position:absolute; left:800px; top:8px; width:650px; height:692px; border-radius:10px; border:2px solid #a78bfa; transform-origin:50% 50%; pointer-events:none; }
+</style>
+<div id="f18" data-composition-id="f18" data-width="1920" data-height="1080" data-duration="3.5">
+<div id="f18-bg" class="bg clip" data-start="0" data-duration="3.5" data-track-index="0"></div><div id="f18-dots" class="dots clip" data-start="0" data-duration="3.5" data-track-index="1"></div>
+
+<div style="position:absolute;left:96px;top:70px;width:1700px"><div class="kicker" id="f18-kicker">Claude Code mod</div><div class="rule" id="f18-rule"></div><div class="h" style="font-size:64px;margin-top:22px"><span class="f18-w">And</span> <span class="f18-w">beside</span> <span class="f18-w f18-w2"><i>Claude</i></span> <span class="f18-w f18-w2"><i>Code</i>.</span></div></div>
+<div class="win" id="f18-win" style="left:230px;top:260px;width:1460px;height:790px;background:#0d0b1a"><video id="v-mod-session-start-mp4" src="assets/mod-session-start.mp4" muted playsinline data-start="0" data-duration="3.5" data-media-start="0.55" data-track-index="2" style="left:0px;top:0px;width:1460px"></video><div class="f18-ring" id="f18-ring"></div></div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+
+  // Scene 1 (0.0–0.6s): kicker, headline, window rises while the session boots
+  tl.fromTo("#f18-kicker", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 0);
+  tl.fromTo("#f18-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: "power3.out" }, 0.08);
+  tl.fromTo("#f18 .f18-w:not(.f18-w2)", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.06 }, 0.1);
+  tl.fromTo("#f18-win", { opacity: 0, y: 70, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" }, 0.02);
+
+  // "Claude Code" lands on the VO
+  tl.fromTo("#f18 .f18-w2", { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out", stagger: 0.08 }, 0.6);
+
+  // Scene 2 (0.6–3.5s): the mod's pane is open beside the transcript; mark it, then hold
+  tl.fromTo("#f18-ring", { opacity: 0, scale: 1.03 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power3.out" }, 0.95);
+  tl.to("#f18-ring", { opacity: 0.7, duration: 2.0, ease: "sine.inOut" }, 1.5);
+
+  window.__timelines["f18"] = tl;
+</script>
+</template>

@@ -1,0 +1,64 @@
+---
+/*
+  One animated Sprout loop (Masko, "Sprout Article"), as a transparent video.
+
+  Safari gets the HEVC .mov with alpha; every other browser gets the VP9
+  .webm. The file is picked in the script, not by <source> order: Chrome on a
+  Mac also claims HEVC support but draws it without alpha, as a black box. The poster is the loop's first frame, so the box is drawn before a
+  byte of video arrives, and it is all a visitor with reduced motion sees.
+
+  Nothing downloads until the loop scrolls near the viewport (preload="none"
+  plus the observer below), and it pauses again once it scrolls away.
+  Files live in public/mascot/loops/, 400px square.
+*/
+interface Props {
+  loop: 'wave' | 'blocks' | 'magnifier';
+  width: number;
+  class?: string;
+}
+const { loop, width, class: className } = Astro.props;
+const base = `/mascot/loops/sprout-${loop}`;
+---
+
+<video
+  class:list={['sprout-loop', className]}
+  width={width}
+  height={width}
+  poster={`${base}.webp`}
+  muted
+  loop
+  playsinline
+  preload="none"
+  aria-hidden="true"
+  data-sprout-loop
+  data-webm={`${base}.webm`}
+  data-hevc={`${base}.mov`}
+></video>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const safari = /Apple/.test(navigator.vendor) && !/Chrome|Chromium|CriOS/.test(navigator.userAgent);
+  const loops = document.querySelectorAll<HTMLVideoElement>('video[data-sprout-loop]');
+  const seen = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        const video = entry.target as HTMLVideoElement;
+        if (entry.isIntersecting && !reduce.matches) {
+          if (!video.src) video.src = (safari ? video.dataset.hevc : video.dataset.webm) ?? '';
+          video.play().catch(() => {});
+        }
+        else video.pause();
+      }
+    },
+    { rootMargin: '200px 0px' },
+  );
+  loops.forEach((video) => seen.observe(video));
+</script>
+
+<style>
+  .sprout-loop {
+    display: block;
+    height: auto;
+    pointer-events: none;
+  }
+</style>

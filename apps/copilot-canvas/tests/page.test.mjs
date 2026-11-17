@@ -3,11 +3,17 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync } from 'node:fs';
+import { realpathSync, mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createSpecServer } from '../com.github.copilot/extensions/speckit-companion/server.mjs';
+import { rootSelection } from '../com.github.copilot/extensions/speckit-companion/workspace.mjs';
+
+const temp = prefix => realpathSync(mkdtempSync(join(tmpdir(), prefix)));
+function repo(path) {
+    mkdirSync(join(path, '.git'), { recursive: true });
+}
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const TEAMBOARD = join(REPO, 'apps/vscode/webview/src/spec-viewer/__fixtures__/teamboard/041-profile-photo-upload');
@@ -37,7 +43,7 @@ describe('board page', { concurrency: false }, async () => {
     let sessionUp = true;
 
     before(async () => {
-        root = mkdtempSync(join(tmpdir(), 'canvas-page-'));
+        root = temp('canvas-page-');
         mkdirSync(join(root, 'specs'));
         for (const demo of ['_00_demo-specified', '_01_demo-planned', '_02_demo-tasked', '_03_demo-living']) {
             cpSync(join(REPO, 'specs', demo), join(root, 'specs', demo), { recursive: true });
@@ -216,7 +222,7 @@ describe('board page', { concurrency: false }, async () => {
 
     it('disables Companion and Auto and says how to install it when the extension is not installed', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-stock-'));
+        const stockRoot = temp('canvas-page-stock-');
         mkdirSync(join(stockRoot, 'specs/001-starred-todos'), { recursive: true });
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
         const stockSent = [];
@@ -276,7 +282,7 @@ describe('board page', { concurrency: false }, async () => {
 
     it('keeps the nodes it has through a rescan that changed nothing, and a "Copied" through one that did', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-redraw-'));
+        const stockRoot = temp('canvas-page-redraw-');
         mkdirSync(join(stockRoot, 'specs/001-starred-todos'), { recursive: true });
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/spec.md'), '# Starred todos\n');
         writeFileSync(join(stockRoot, 'specs/001-starred-todos/.spec-context.json'), JSON.stringify({ workflow: 'speckit', specName: 'Starred todos', currentStep: 'specify', status: 'specified', history: [] }));
@@ -319,7 +325,7 @@ describe('board page', { concurrency: false }, async () => {
 
     it('follows a stock run from the files: a record stuck on specifying, the dashed command, and the step it sent shown as running', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const stockRoot = mkdtempSync(join(tmpdir(), 'canvas-page-stock-run-'));
+        const stockRoot = temp('canvas-page-stock-run-');
         const spec = join(stockRoot, 'specs/001-todo-stars');
         mkdirSync(spec, { recursive: true });
         for (const name of ['spec.md', 'plan.md']) writeFileSync(join(spec, name), `# Todo stars: ${name}\n`);
@@ -368,7 +374,7 @@ describe('board page', { concurrency: false }, async () => {
 
     it('picks a state in a plan\'s states card, and draws a file name as a name', async (t) => {
         if (skipWithoutChrome(t)) return;
-        const planRoot = mkdtempSync(join(tmpdir(), 'canvas-page-plan-'));
+        const planRoot = temp('canvas-page-plan-');
         const folder = join(planRoot, 'specs/001-review');
         mkdirSync(folder, { recursive: true });
         writeFileSync(join(folder, 'spec.md'), '# Review\n');
@@ -429,6 +435,76 @@ describe('board page', { concurrency: false }, async () => {
         await page.waitForSelector('.dossier');
         await shot('07-light-overview');
         await page.emulateMedia({ colorScheme: 'dark' });
+    });
+
+    it('selects a repository from a chat and replaces same-id details and file watchers', async (t) => {
+        if (skipWithoutChrome(t)) return;
+        const workspace = temp('canvas-page-root-');
+        const chat = join(workspace, 'chat');
+        const repository = join(workspace, 'repository');
+        repo(chat);
+        repo(repository);
+        mkdirSync(join(repository, 'specs/001-shared'), { recursive: true });
+        writeFileSync(join(repository, 'specs/001-shared/spec.md'), '# Selected repository\n');
+        const selection = rootSelection(workspace);
+        let picked = null;
+        const server = await createSpecServer({ root: chat, saveRoot: selection.write, browseFolder: async () => {
+            if (picked instanceof Error) throw picked;
+            return picked;
+        } });
+        const view = await browser.newPage({ viewport: { width: 1280, height: 860 } });
+        try {
+            await view.goto(server.url);
+            await view.waitForSelector('#repository-warning:visible');
+            assert.equal(await view.inputValue('#repository-root'), chat);
+            if (SHOTS) await view.screenshot({ path: join(SHOTS, '08-repository-warning.png'), fullPage: false });
+            if (SHOTS) {
+                await view.fill('#repository-root', REPO);
+                const form = await view.locator('#repository-form').boundingBox();
+                const warning = await view.locator('#repository-warning').boundingBox();
+                await view.screenshot({ path: join(SHOTS, 'repository-controls.png'), clip: { x: form.x, y: form.y, width: form.width, height: warning.y - form.y } });
+                await view.fill('#repository-root', chat);
+            }
+            await view.click('#repository-browse');
+            assert.equal(await view.inputValue('#repository-root'), chat);
+            assert.equal(selection.read(), null);
+            picked = new Error('dialog unavailable');
+            await view.click('#repository-browse');
+            await view.waitForSelector('.toast.is-visible:has-text("dialog unavailable")');
+            picked = repository;
+            await view.click('#repository-browse');
+            await view.waitForSelector('.detail h2:has-text("Selected repository")');
+            assert.equal(selection.read(), repository);
+            await view.fill('#repository-root', chat);
+            await view.click('#repository-form button[type="submit"]');
+            await view.waitForSelector('#repository-warning:visible');
+            await view.fill('#repository-root', repository);
+            await view.click('#repository-form button[type="submit"]');
+            await view.waitForSelector('.spec-card');
+            await view.waitForSelector('.detail h2:has-text("Selected repository")');
+            assert.equal(await view.locator('#repository-warning').isVisible(), false);
+            assert.equal(selection.read(), repository);
+            await view.reload();
+            await view.waitForSelector('.spec-card');
+            assert.equal(await view.inputValue('#repository-root'), repository);
+            writeFileSync(join(repository, 'specs/001-shared/spec.md'), '# Updated by watcher\n');
+            await view.waitForSelector('.detail h2:has-text("Updated by watcher")');
+            mkdirSync(join(chat, 'specs/001-shared'), { recursive: true });
+            writeFileSync(join(chat, 'specs/001-shared/spec.md'), '# Different repository\n');
+            await view.fill('#repository-root', chat);
+            await view.click('#repository-form button[type="submit"]');
+            await view.waitForSelector('.detail h2:has-text("Different repository")');
+            assert.equal(selection.read(), chat);
+            if (SHOTS) await view.screenshot({ path: join(SHOTS, '09-repository-selection.png'), fullPage: false });
+            await view.fill('#repository-root', join(workspace, 'missing'));
+            await view.click('#repository-form button[type="submit"]');
+            await view.waitForSelector('.toast.is-visible:has-text("Could not select repository")');
+            assert.equal(selection.read(), chat);
+        } finally {
+            await view.close();
+            await server.close();
+            rmSync(workspace, { recursive: true });
+        }
     });
 
     it('shows no time for a recorded spec with no activity, and the file time for one with no record', async (t) => {

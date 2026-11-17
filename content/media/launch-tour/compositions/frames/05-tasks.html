@@ -1,0 +1,37 @@
+<template>
+<style>
+@font-face { font-family:"Figtree"; src:url("assets/fonts/Figtree.ttf") format("truetype"); font-weight:300 900; font-display:block; }
+@font-face { font-family:"JetBrains Mono"; src:url("assets/fonts/JetBrainsMono-400.woff2") format("woff2"); font-weight:400 600; font-display:block; }
+#f05 { position:absolute; inset:0; overflow:hidden; background:#0a0913; color:#edeaf6; font-family:"Figtree",sans-serif; }
+#f05 .bg { position:absolute; inset:0; background:radial-gradient(900px 620px at 92% 0%, rgba(139,92,246,.20), transparent 70%), radial-gradient(760px 560px at 4% 100%, rgba(139,92,246,.12), transparent 70%), #0a0913; }
+#f05 .dots { position:absolute; inset:0; background-image:radial-gradient(rgba(167,139,250,.08) 1px, transparent 1px); background-size:26px 26px; }
+#f05 .kicker { font-family:"JetBrains Mono",monospace; font-size:28px; letter-spacing:.14em; text-transform:uppercase; color:#a78bfa; }
+#f05 .rule { width:44px; height:3px; background:#8b5cf6; margin:18px 0 0; transform-origin:0 50%; }
+#f05 .h { font-weight:800; letter-spacing:-.03em; line-height:1.04; }
+#f05 .h i { font-style:normal; color:#a78bfa; }
+#f05 .win { position:absolute; overflow:hidden; border-radius:18px; background:#f3f4f5; box-shadow:0 0 0 1.5px rgba(167,139,250,.7), 0 40px 90px rgba(0,0,0,.6); }
+#f05 .win img { position:absolute; display:block; }
+#f05 .f05-fade { position:absolute; left:0; right:0; height:70px; pointer-events:none; }
+#f05 .f05-fade-top { top:0; background:linear-gradient(#f3f4f5, rgba(243,244,245,0)); }
+#f05 .f05-fade-bot { bottom:0; background:linear-gradient(rgba(243,244,245,0), #f3f4f5); }
+</style>
+<div id="f05" data-composition-id="f05" data-width="1920" data-height="1080" data-duration="3.5">
+<div class="bg clip" id="f05-bg" data-start="0" data-duration="3.5" data-track-index="0"></div><div class="dots"></div>
+
+<div style="position:absolute;left:96px;top:70px;width:1700px"><div class="kicker" id="f05-kicker">Tasks</div><div class="rule" id="f05-rule"></div><div class="h" id="f05-head" style="font-size:64px;margin-top:22px">Every task, its files, and <i id="f05-accent">what the AI did</i>.</div></div>
+<div class="win" id="f05-win" style="left:230px;top:260px;width:1460px;height:790px;"><img id="f05-page" data-layout-allow-overflow src="assets/tall-tasks.png" alt="" style="left:0px;top:-60px;width:1460px" /><div class="f05-fade f05-fade-top" id="f05-fade-top"></div><div class="f05-fade f05-fade-bot"></div></div>
+
+</div>
+<script>
+  window.__timelines = window.__timelines || {};
+  const tl = gsap.timeline({ paused: true });
+  tl.fromTo("#f05-kicker", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 0);
+  tl.fromTo("#f05-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, 0.08);
+  tl.fromTo("#f05-head", { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.42, ease: "power3.out" }, 0.1);
+  tl.fromTo("#f05-win", { opacity: 0, y: 90, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "power3.out" }, 0.05);
+  tl.fromTo("#f05-fade-top", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 0.7);
+  tl.fromTo("#f05-page", { y: 0 }, { y: -540, duration: 2.8, ease: "power2.inOut" }, 0.6);
+  tl.fromTo("#f05-accent", { opacity: 0.35 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 1.7);
+  window.__timelines["f05"] = tl;
+</script>
+</template>

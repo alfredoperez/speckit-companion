@@ -1,0 +1,183 @@
+{
+  "workflow": "companion",
+  "specName": "Article Drafts and Review",
+  "branch": "main",
+  "currentStep": "plan",
+  "status": "planned",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T15:26:42.332Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-10T15:27:17.831Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T15:27:29.364Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T15:28:29.916Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T15:28:52.693Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T15:28:53.096Z"
+    }
+  ],
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "Every article has one status of five"
+    },
+    "FR-002": {
+      "title": "New article starts as Draft"
+    },
+    "FR-003": {
+      "title": "Unpublished articles visible only to author (and reviewers when In review)"
+    },
+    "FR-004": {
+      "title": "Public lists and links never expose unpublished articles"
+    },
+    "FR-005": {
+      "title": "Author sends Draft or Changes requested to review"
+    },
+    "FR-006": {
+      "title": "Non-author reviewer approves In review article"
+    },
+    "FR-007": {
+      "title": "Reviewer requests changes with non-empty note"
+    },
+    "FR-008": {
+      "title": "Author publishes Approved article"
+    },
+    "FR-009": {
+      "title": "Author unpublishes Published article back to Draft"
+    },
+    "FR-010": {
+      "title": "Unlisted status changes are refused"
+    },
+    "FR-011": {
+      "title": "Draft editor shows Save and Send for review"
+    },
+    "FR-012": {
+      "title": "In review editor is read-only with banner"
+    },
+    "FR-013": {
+      "title": "Changes requested editor shows note above editable form"
+    },
+    "FR-014": {
+      "title": "Published editor shows Unpublish"
+    },
+    "FR-015": {
+      "title": "Approved editor shows Publish and read-only form"
+    },
+    "FR-016": {
+      "title": "List shows status label on own unpublished articles only"
+    },
+    "FR-017": {
+      "title": "Permission rules are the single source of action rights"
+    },
+    "FR-018": {
+      "title": "Articles without status treated as Published"
+    }
+  },
+  "expectations": [
+    "How users get the reviewer role",
+    "Notifications to author or reviewer",
+    "Review history beyond the latest note"
+  ],
+  "context": [
+    "area: src/pages/editor",
+    "area: src/features/article (create/update slices)",
+    "area: src/entities/article (contracts, types)",
+    "area: src/features/permission (permission.service.ts)",
+    "area: src/widgets/articles-feed",
+    "constraint: FSD layers import downward only; no barrels"
+  ],
+  "intent": "Articles start as private drafts and go through review before publishing",
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 20,
+    "projectedTasks": 18,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "planBlocks": [
+    "calls",
+    "states",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "states",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/001-article-drafts --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "  WARNING plan.md:44  `src/features/permission/permission.service.ts` has no `:line`, so it is unverified (no-line) ·   WARNING plan.md:52  `src/widgets/articles-feed/articles-feed.ui.tsx` has no `:line`, so it is unverified (no-line) ·   0 error(s), 4 warning(s)"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Status and reviewer note live in a persisted client slice keyed by slug",
+      "why": "RealWorld API has no status, note or reviewer; matches injected-slice pattern",
+      "rejected": "Extending the backend contract; a second store"
+    },
+    {
+      "decision": "Missing slice entry means Published",
+      "why": "ArticleSchema.safeParse on cache would drop entries if status were required",
+      "rejected": "Zod default or required field"
+    },
+    {
+      "decision": "Reviewer is an optional session flag, combined with a not-the-author check",
+      "why": "Roles are mutually exclusive; author-reviewer must not self-review",
+      "rejected": "New reviewer role in the permission table"
+    },
+    {
+      "decision": "One slice per status action, composed by the editor page",
+      "why": "Slices cannot import siblings",
+      "rejected": "Single change-status slice"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "Visibility is enforced in the client only; another browser or direct API call still sees unpublished articles"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Client-side status overlay with status-aware permissions and five action slices",
+      "key_finding": "The API cannot store or hide status, so visibility is client-only"
+    }
+  },
+  "approach": "Persisted client slice overlays API articles with status and review note. Permission service gains status-aware actions and a reviewer flag. Five action slices are composed by the editor page, which branches by status."
+}

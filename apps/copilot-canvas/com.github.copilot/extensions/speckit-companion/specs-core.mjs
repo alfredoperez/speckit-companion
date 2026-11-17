@@ -126,6 +126,7 @@ export function buildSnapshot(root, specDirs = resolveSpecDirs(root)) {
         root,
         repoName: repoName(root),
         specDirs,
+        missingSpecDirectories: !specDirs.some(dir => statSync(join(root, dir), { throwIfNoEntry: false })?.isDirectory()),
         specs: sortSpecs(listSpecFolders(root, specDirs).map(id => scanSpec(root, id, templates))),
     };
 }

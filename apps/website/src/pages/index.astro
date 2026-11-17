@@ -21,6 +21,7 @@ import SiteFooter from '../components/SiteFooter.astro';
 import Button from '../components/Button.astro';
 import CodeLine from '../components/CodeLine.astro';
 import CourseSignup from '../components/CourseSignup.astro';
+import SproutLoop from '../components/SproutLoop.astro';
 import SoonChip from '../components/SoonChip.astro';
 import manifest from '../../../../content/media/manifest.json';
 import { COMPANION_COMMAND as INSTALL_COMMAND, SOURCE_CLI } from '../data/installCommands';
@@ -852,6 +853,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   <!-- QUICK START -->
   <section class="section section--quickstart" id="quick-start">
+    <SproutLoop loop="wave" width={150} class="sprout-spot sprout-spot--qs" />
     <div class="inner qs">
       <div class="pills pills--paths" role="tablist" aria-label="Where you work" data-path-tabs>
         {
@@ -940,6 +942,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   <!-- WORKFLOW BUILDER -->
   <section class="section section--builder" id="pipeline-builder">
+    <SproutLoop loop="blocks" width={150} class="sprout-spot sprout-spot--pb" />
     <div class="inner pb">
       <div class="qs-say">
         <h2>
@@ -1053,6 +1056,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     <span class="cta-glow" aria-hidden="true"></span>
 
     <div class="inner cta">
+      <SproutLoop loop="magnifier" width={140} class="sprout-spot--cta" />
       <h2>A vague requirement dies here, <em>before</em> it becomes wrong code</h2>
       <Button
         href="#quick-start"
@@ -2200,6 +2204,27 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   .claim-link:hover {
     color: var(--accent-hover);
+  }
+
+  /* ---------------------------------------------------------- sprout loops */
+
+  /* Sprout sits in the top-right corner of the section, outside the content
+     column; below 1100px there is no free corner, so it stays out. */
+  .section :global(.sprout-spot) {
+    position: absolute;
+    top: 8px;
+    right: max(16px, calc(50% - 700px));
+    z-index: 1;
+  }
+
+  @media (max-width: 1100px) {
+    .section :global(.sprout-spot) {
+      display: none;
+    }
+  }
+
+  .cta :global(.sprout-spot--cta) {
+    margin-bottom: calc(-1 * var(--space-12, 12px));
   }
 
   /* ------------------------------------------------------------ footer cta */

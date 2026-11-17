@@ -1,0 +1,155 @@
+{
+  "workflow": "companion",
+  "specName": "Offline Favorites",
+  "branch": "main",
+  "currentStep": "plan",
+  "status": "planned",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T14:35:32.777Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-10-10T14:36:02.243Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-10-10T14:36:12.758Z"
+    },
+    {
+      "step": "plan",
+      "substep": "research",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T14:37:27.403Z"
+    },
+    {
+      "step": "plan",
+      "substep": "design",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T14:37:49.525Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-10-10T14:37:49.897Z"
+    }
+  ],
+  "last_action": "living specs evaluated — skipped (not configured)",
+  "coverage": {
+    "FR-001": {
+      "title": "Keep optimistic change on screen on network failure"
+    },
+    "FR-002": {
+      "title": "Store each failed change as waiting, keyed by article, ordered"
+    },
+    "FR-003": {
+      "title": "Server-answered errors undo on screen and store nothing"
+    },
+    "FR-004": {
+      "title": "Header shows waiting count, nothing at zero"
+    },
+    "FR-005": {
+      "title": "Send waiting changes in order when browser is back online"
+    },
+    "FR-006": {
+      "title": "Accepted change leaves the waiting list"
+    },
+    "FR-007": {
+      "title": "Opposite change on same article cancels the waiting one"
+    },
+    "FR-008": {
+      "title": "Waiting changes persist across reload"
+    },
+    "FR-009": {
+      "title": "Server-rejected waiting change is dropped, catch-up continues"
+    },
+    "FR-010": {
+      "title": "Unreachable send keeps unsent changes waiting"
+    },
+    "FR-011": {
+      "title": "Catch up on launch when online with changes waiting"
+    },
+    "FR-012": {
+      "title": "Logout clears waiting changes"
+    },
+    "FR-013": {
+      "title": "Refresh article data after catch-up"
+    }
+  },
+  "size": "normal",
+  "classification": {
+    "projectedFiles": 8,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "expectations": [
+    "offline support for actions other than favorite/unfavorite",
+    "notifying the reader about dropped changes"
+  ],
+  "context": [
+    "area: src/features/article/favorite-article and unfavorite-article (mutations)",
+    "area: src/pages/layout (header)",
+    "constraint: new client state follows the injected Redux slice pattern, persisted via redux-persist",
+    "constraint: routing and API access conventions from CLAUDE.md"
+  ],
+  "intent": "Keep favorite/unfavorite working offline with a persisted queue and a header count, synced on reconnect",
+  "planBlocks": [
+    "calls",
+    "states",
+    "screens"
+  ],
+  "decisions": [
+    {
+      "decision": "networkMode always on both favorite mutations",
+      "why": "default online mode pauses offline mutations so onError never fires",
+      "rejected": "enqueue from onMutate on navigator.onLine"
+    },
+    {
+      "decision": "Queue is an injected slice in entities/favorite-queue",
+      "why": "both mutation features write it and cannot import siblings; root persist has no whitelist so it persists free",
+      "rejected": "slice per feature"
+    },
+    {
+      "decision": "Replay in features/favorite-sync, started from BootstrappedRouter after rehydration",
+      "why": "launch catch-up must wait for rehydrate; replay needs no component",
+      "rejected": "layout loader, mutation hooks"
+    },
+    {
+      "decision": "Clear queue in logout onSuccess",
+      "why": "keeps the entity free of a session import",
+      "rejected": "extraReducers on resetSession"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Offline favorites via persisted queue slice, network-error branch in both mutations, online/launch replay, header count",
+      "key_finding": "React Query pauses mutations offline, so networkMode always is required for any offline queueing"
+    }
+  },
+  "approach": "Keep the optimistic change when a favorite gets no response and enqueue it in a persisted injected slice. A sync service replays the queue in order on online and on launch, and the header shows the count.",
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/001-offline-favorites --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 call paths, 8 lines, 1 screen, 4 parts, 1 state block (5 states). Every cited file and line checks out."
+    }
+  ]
+}
