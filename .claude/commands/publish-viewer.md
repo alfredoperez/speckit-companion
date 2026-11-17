@@ -19,7 +19,7 @@ Release **speckit-viewer** (`packages/viewer/`) to npm. Nothing here publishes: 
 ### Steps
 
 1. **Preflight.** The working tree is clean and the branch is `main`, or abort. With no pending changeset, stop: there is nothing to release.
-2. **First release only.** While `packages/viewer/package.json` has `"private": true`, the package has never been published. Ask the user to confirm the name `speckit-viewer` and that the `NPM_TOKEN` secret is set; on a yes, remove `"private": true`. On anything else, stop.
+2. **Publishing is trusted, not by token.** npm accepts the workflow through the trusted publisher linked on the package's settings page (`alfredoperez/speckit-companion`, `publish-viewer.yml`); there is no token secret. A publish that fails with `EOTP` or `ENEEDAUTH` means that link is missing or names another workflow file.
 3. **Version.** `npx changeset version`: it consumes the changesets, bumps `packages/viewer/package.json` and writes `packages/viewer/CHANGELOG.md`.
 4. **Build and test**, and stop on the first failure: `npm run viewer:build` and `npx jest packages/viewer`.
 5. **Commit and push** to `main` as `chore(viewer): release speckit-viewer v<X.Y.Z>`, with only `.changeset/` and `packages/viewer/` in it.

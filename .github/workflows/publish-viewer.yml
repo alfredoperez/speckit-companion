@@ -50,11 +50,12 @@ jobs:
             exit 1
           fi
 
+      # Trusted publishing: npm takes the job's OIDC identity, so no token is stored. Needs npm 11.5.1 or newer.
       - name: Publish
         if: github.event_name == 'push'
-        run: npm publish -w speckit-viewer --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm install -g npm@^11.5.1
+          npm publish -w speckit-viewer --provenance --access public
 
       - name: Rehearse the publish
         if: github.event_name == 'workflow_dispatch'
