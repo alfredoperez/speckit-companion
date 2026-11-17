@@ -42,13 +42,43 @@ class WaveClose(unittest.TestCase):
         tasks = (self.spec / "tasks.md").read_text(encoding="utf-8")
         self.assertEqual(tasks.count("- [x]"), 3)
 
-    def test_tasks_from_two_waves_closed_together_get_no_wave(self):
+    def _two_waves(self):
         (self.spec / "tasks.md").write_text(
-            "- [ ] **T001** a\n- [ ] **T002** b\n**⟶ Wait for Wave 1 to finish, then:**\n- [ ] **T003** c\n",
+            "## Phase 1: Setup\n- [ ] **T001** a\n- [ ] **T002** b\n**⟶ Wait for Wave 1 to finish, then:**\n"
+            "- [ ] **T003** c\n## Phase 2: Polish\n- [ ] **T004** d\n- [ ] **T005** e\n",
             encoding="utf-8")
-        self.write("--close-task", "T001,T002,T003", "--by", "ai", "--did", "everything at the end")
+
+    def test_tasks_from_several_waves_closed_together_are_one_unit(self):
+        self._two_waves()
+        self.write("--close-task", "T001,T002,T003,T004,T005", "--by", "ai", "--did", "everything at the end")
         summaries = self.ctx()["task_summaries"]
-        self.assertFalse(any(summaries[t].get("wave") for t in ("T001", "T002", "T003")))
+        self.assertEqual({summaries[t].get("wave") for t in ("T001", "T002", "T003", "T004", "T005")},
+                         {"T001-T005"})
+
+    def test_a_deferred_close_passes_cadence_but_the_doctor_reports_it(self):
+        from check_capture import run_checks
+        self._two_waves()
+        self.write("--close-task", "T001,T002,T003,T004,T005", "--by", "ai", "--did", "everything at the end")
+        rows = run_checks(self.spec).to_dict()["checks"]
+        self.assertNotIn("task-cadence-span", [c["id"] for c in rows if c["status"] == "FAIL"])
+        _status, findings = check_record(self.spec, self.ctx())
+        titles = [f.title for f in findings]
+        self.assertTrue(any("3 waves closed in 1 call" in t for t in titles), titles)
+        self.assertFalse(any("journaling was batched" in t for t in titles), titles)
+
+    def test_waves_closed_one_by_one_raise_no_deferred_finding(self):
+        self._two_waves()
+        self.write("--close-task", "T001,T002", "--by", "ai", "--did", "wave one")
+        self.write("--close-task", "T003", "--by", "ai", "--did", "wave two")
+        self.write("--close-task", "T004,T005", "--by", "ai", "--did", "polish")
+        _status, findings = check_record(self.spec, self.ctx())
+        self.assertFalse(any("instead of one call each" in f.title for f in findings))
+
+    def test_a_close_names_the_next_wave_to_close(self):
+        self._two_waves()
+        out = subprocess.run([sys.executable, str(WRITER), "--close-task", "T001,T002", "--by", "ai",
+                              "--did", "wave one"], cwd=self.root, capture_output=True, text=True, check=True)
+        self.assertIn("--close-task T003", out.stdout + out.stderr)
 
     def test_a_single_id_still_closes_one_task_without_a_wave(self):
         self.write("--close-task", "T004", "--by", "ai", "--did", "one task")

@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Fixed
+- **Wave times stay honest when tasks close late.** Tasks closed together share ==one time== instead of each showing zero, and each close names the next wave to close. ([#1019](https://github.com/alfredoperez/speckit-companion/issues/1019)) <!-- area: run-record -->
+
 ## [0.28.0] - 2026-11-17
 
 Runs work from a worktree, take the spec number you name, and keep small waves with the main agent.

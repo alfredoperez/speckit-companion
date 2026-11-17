@@ -8,18 +8,17 @@ reads: []
 ---
 1. Read `.specify/feature.json` for the feature directory. Load `<feature_directory>/tasks.md`, `plan.md`, and the feature spec (`spec.md`, or `<short-name>.spec.md` in a project written before this), plus `data-model.md` and `contracts/` if present. The step's start is already stamped, above.
 
-2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. `tasks.md` lays each phase out as ordered **waves** separated by `**⟶ Wait …**` join lines. The waves are a **dependency map**: tasks inside one wave are independent of each other, so any order is safe, and a `⟶ Wait` line marks where the next tasks depend on everything above it. **Execute wave by wave, in order, and stop at each `⟶ Wait` line until the wave above is done.** Halt on a failed task and report the cause.
+2. Work `tasks.md` **phase by phase, in dependency order**: **Setup**, then **Foundational** (which blocks every story), then each **user-story** phase in priority order (P1 first), then **Polish**. `tasks.md` lays each phase out as ordered **waves** separated by `**⟶ Wait …**` join lines. The waves are a **dependency map**: tasks inside one wave are independent of each other, so any order is safe, and a `⟶ Wait` line marks where the next tasks depend on everything above it. **Execute wave by wave, in order, and stop at each `⟶ Wait` line until the wave above is done.** Crossing a `⟶ Wait` line or a phase heading means closing the wave above it first (step 4). Halt on a failed task and report the cause.
 
 3. **Dispatch one worker per user-story phase that owns five or more files**, when you have a subagent tool (Claude Code's `Agent`/`Task` tool or your host's equivalent): read `.specify/extensions/companion/commands/reference/fan-out.md` first and follow it, including the check at each join line. Count the phase's own `Files:` line, and that alone decides it. It holds in an auto run too. Every other phase, Setup, Polish, and everything without a subagent tool, you build yourself. **In Foundational, before each wave, run `python3 .specify/extensions/companion/scripts/dispatch-briefs.py --feature-dir <feature_directory> --waves` and do exactly what it prints.** Setup and Polish stay with you.
 
-4. **What you build yourself** (Setup, Polish, small phases and waves, or everything without a subagent tool), **close each wave with one call the moment its last task is done**, listing its tasks:
+4. **What you build yourself** (Setup, Polish, small phases and waves, or everything without a subagent tool), **close each wave with one call the moment its last task is done**, listing that wave's tasks and no others:
    ```bash
-   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --close-task <T001,T002,…> --by ai --did "<one line for the wave>" --files "<files>"
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --close-task <this wave's ids, e.g. T001,T002> --by ai --did "<one line for the wave>" --files "<files>"
    ```
-   One call folds the finishes, checks the boxes and times the wave as one unit. Never hand-edit a checkbox.
+   One call folds the finishes, checks the boxes and times the wave as one unit, then prints the next wave's ids to close. A list saved for the end of the step is still one unit: every wave in it shares one time, and the doctor reports it. Never hand-edit a checkbox.
 
-
-6. **Run the project's own checks before you call this done.** Validating against the spec's **Functional Requirements** and **Success Criteria** by reading is not validation. Run the suite and the type-check or build the project actually uses, read from its `package.json` scripts, `Makefile`, or the repo's own instructions, and do not invent a command: a test you wrote and never executed is a guess about your own code.
+5. **Run the project's own checks before you call this done.** Validating against the spec's **Functional Requirements** and **Success Criteria** by reading is not validation. Run the suite and the type-check or build the project actually uses, read from its `package.json` scripts, `Makefile`, or the repo's own instructions, and do not invent a command: a test you wrote and never executed is a guess about your own code.
 
    - **A test you authored that fails is your task, not a follow-up.** Fix it now.
    - **A pre-existing test your change invalidated is also yours.** Renaming what a component shows breaks the test asserting the old text. Updating it is part of the change, not scope creep.
