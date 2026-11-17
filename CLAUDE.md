@@ -102,6 +102,10 @@ The shipped extension is ONLY what's in the `.vsix`. `.claude/**`, `.specify/**`
 
 A pull request from a fork runs no CI until a maintainer approves it: `gh run list --branch <head>` shows `action_required`. Read the diff, then `gh api -X POST repos/alfredoperez/speckit-companion/actions/runs/<id>/approve`; a push to the fork branch needs approving again.
 
+### Seeded review comments anchor on the exact line
+
+When a capture step seeds `reviewComments`, read `anchor.blockText` and `anchor.line` from the document on disk (the whole first line of the block, byte for byte); a shortened `blockText` falls back to the heading's first line, so comments pile onto one line and Refine shows the wrong count.
+
 ## Conventions
 
 - **No hard-wrapped paragraphs** in any `.md` file — one logical line per paragraph.
