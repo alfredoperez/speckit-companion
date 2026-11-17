@@ -109,8 +109,10 @@ from task_sync import (  # noqa: E402,F401
     close_task,
     journal_task_finish,
     materialize_log,
+    next_open_wave,
     parse_task_markers,
     sync_tasks,
+    waves_spanned,
 )
 
 
@@ -1371,6 +1373,7 @@ def _main() -> int:
             print(f"[companion] Materialized append-log into {target}")
         elif args.close_task:
             print(f"[companion] Closed task {args.close_task} in {target} (by={args.by})")
+            _print_wave_hint(feature_dir, args.close_task)
         elif args.task and args.append:
             print(f"[companion] Appended finish for task {args.task} to {target} (by={args.by})")
         elif args.task:
@@ -1511,6 +1514,20 @@ def _last_companion_line(text: str) -> str | None:
     """The most recent `[companion]` line — for a decline, the complaint itself."""
     lines = _companion_lines(text)
     return lines[-1] if lines else None
+
+
+def _print_wave_hint(feature_dir: Path, closed: str) -> None:
+    """After a close, say which wave to close next, so the next close is one copied line away."""
+    tasks_md = feature_dir / "tasks.md"
+    ids = [t.strip() for t in closed.split(",") if t.strip()]
+    spanned = waves_spanned(tasks_md, ids)
+    if spanned > 1:
+        print(f"[companion] That call closed {spanned} waves at once, so they share one time. "
+              "Close each wave the moment its last task is done.")
+    upcoming = next_open_wave(tasks_md)
+    if upcoming:
+        print(f"[companion] Next wave: {', '.join(upcoming)}. When its last task is done, close it: "
+              f"--close-task {','.join(upcoming)}")
 
 
 def main() -> int:
