@@ -38,7 +38,7 @@ from spec_context import (  # noqa: E402
     _is_per_task,
     _is_step_level,
 )
-from task_sync import parse_task_markers  # noqa: E402
+from task_sync import parse_task_markers, waves_spanned  # noqa: E402
 
 #: Steps whose boundaries the extension stamps; an `ai` complete there is an
 #: anomaly, because it lands first and permanently blocks the hook's close.
@@ -288,6 +288,25 @@ def check_record(feature_dir: Path, ctx: dict, now: datetime | None = None) -> t
             "took, so the summaries are still trustworthy and the durations are not",
             {"tasks": [t for c in bursts for t, _ in c],
              "batches": len(bursts), "largest_batch": len(worst), "span_seconds": span},
+        ))
+
+    # The other half of a deferred close: a list that spans several tasks.md waves is recorded as one
+    # unit, so it never reads as a burst above, and only its span says the waves went unclosed.
+    units: dict = {}
+    for tid, s in summaries.items():
+        if isinstance(s, dict) and isinstance(s.get("wave"), str):
+            units.setdefault(s["wave"], []).append(tid)
+    deferred = {label: n for label, tids in units.items()
+                if (n := waves_spanned(feature_dir / "tasks.md", tids)) > 1}
+    if deferred:
+        label, spanned = max(deferred.items(), key=lambda kv: kv[1])
+        findings.append(Finding(
+            "record", "warning",
+            f"{plural(sum(deferred.values()), 'wave')} closed in "
+            f"{plural(len(deferred), 'call')} instead of one call each",
+            f"{label} closed {spanned} waves together, so the viewer shows one time for all of "
+            "them; close each wave the moment its last task is done",
+            {"units": deferred},
         ))
 
     for step, by, at, why in _attribution_anomalies(ctx, _tasks_all_checked(feature_dir)):
