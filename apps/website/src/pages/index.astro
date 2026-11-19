@@ -642,6 +642,9 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
             ))
           }
 
+          {/* Sprout stacking blocks, perched on the frame's top-left corner. */}
+          <SproutLoop loop="blocks" width={150} class="sprout-hero" />
+
           <div class="hero-stagebox">
             <img
               class="lightwell lightwell--hero"
@@ -942,7 +945,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   <!-- WORKFLOW BUILDER -->
   <section class="section section--builder" id="pipeline-builder">
-    <SproutLoop loop="blocks" width={150} class="sprout-spot sprout-spot--pb" />
     <div class="inner pb">
       <div class="qs-say">
         <h2>
@@ -2219,6 +2221,22 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
 
   @media (max-width: 1100px) {
     .section :global(.sprout-spot) {
+      display: none;
+    }
+  }
+
+  /* In the hero, Sprout sits on the product frame's top-left edge, half over
+     it, above the chips. Phones have no room beside the frame, so it hides. */
+  .hero-orbit :global(.sprout-hero) {
+    position: absolute;
+    top: -96px;
+    left: -36px;
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  @media (max-width: 900px) {
+    .hero-orbit :global(.sprout-hero) {
       display: none;
     }
   }
