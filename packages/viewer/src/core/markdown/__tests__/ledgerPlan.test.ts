@@ -199,6 +199,13 @@ describe('SummaryLede', () => {
         expect(html).toContain('pl-summary');
         expect(html).toContain('pl-gate-row');
     });
+
+    it('is a commentable line whose hidden text is the summary\'s first source line', () => {
+        const html = renderMarkdown(plan);
+        const card = html.match(/<div class="line component-line" data-line="\d+">[^]*?<div class="pl-card pl-summary"/);
+        expect(card).not.toBeNull();
+        expect(html).toContain('<span class="line-content" hidden>Implement stops building the whole phase itself. The decision lives in the script. One more. Two more. Three more.</span>');
+    });
 });
 
 describe('plain bullet plans', () => {

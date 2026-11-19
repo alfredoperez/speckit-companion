@@ -578,7 +578,8 @@ export function renderMarkdown(markdown: string): string {
             line.includes('<div class="entity-row') ||
             line.includes('<div class="con-row') ||
             line.includes('<div class="phase-header') ||
-            line.includes('<div class="user-story-header')) {
+            line.includes('<div class="user-story-header') ||
+            line.includes('<div class="pl-card pl-summary')) {
             html += wrapComponentLine(line, sourceLineNum) + '\n';
             continue;
         }
