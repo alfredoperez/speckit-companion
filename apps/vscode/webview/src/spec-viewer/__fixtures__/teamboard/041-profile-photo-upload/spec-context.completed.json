@@ -269,14 +269,5 @@
         "src/api/avatar.resize.test.ts"
       ]
     }
-  },
-  "livingSpecs": {
-    "loaded": [
-      "profiles",
-      "media-storage"
-    ],
-    "synced": [
-      "profiles"
-    ]
   }
 }

@@ -14,9 +14,9 @@ One capture, no state changes. It comes from the `B4 · All three sections` stor
 
 | Shot | File | State on screen |
 |---|---|---|
-| sh0 | `sb-b4.png` | The full sidebar: Specs with Active (3) and Completed (2), Profile Photo Upload expanded onto its documents, then the Living Specs and Steering sections beneath. |
+| sh0 | `sb-b4.png` | The full sidebar: Specs with Active (3) and Completed (2), Profile Photo Upload expanded onto its documents, then the Steering section beneath. |
 
-The sidebar is 340 CSS px wide and the frame is 1836, so the capture is scaled 5.4x to fill the width and only its top band fits the 1164 px height. What the clip actually shows is capture rows y 8 through 223: the SpecKit title down to Member Status Badges, with Export Directory List cut off at the bottom edge. The Living Specs and Steering sections are in the file but never in frame.
+The sidebar is 340 CSS px wide and the frame is 1836, so the capture is scaled 5.4x to fill the width and only its top band fits the 1164 px height. What the clip actually shows is capture rows y 8 through 223: the SpecKit title down to Member Status Badges, with Export Directory List cut off at the bottom edge. The Steering section is in the file but never in frame.
 
 ## Beats
 
