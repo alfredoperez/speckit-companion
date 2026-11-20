@@ -14,7 +14,7 @@ One capture, one camera, no state changes. The whole dossier is a single tall im
 
 | Shot | File | State on screen |
 |---|---|---|
-| sh0 | `overview-tall.png` | Completed. "Profile photo upload", COMPLETED badge, the pipeline rail with Specification, Plan and Tasks all checked, and the entire dossier in one image: intent, the run overview strip (Specify 6m 52s, Plan 8m 2s, Tasks 4m 56s, Implement 34m 45s, 54m 36s elapsed), the approach and living specs card beside working area and size, the expectations fence in two columns, five verified checks each with the command it ran, three numbered decisions with their WHY and REJECTED lines, and the coverage table with a "4/4 traced" badge. |
+| sh0 | `overview-tall.png` | Completed. "Profile photo upload", COMPLETED badge, the pipeline rail with Specification, Plan and Tasks all checked, and the entire dossier in one image: intent, the run overview strip (Specify 6m 52s, Plan 8m 2s, Tasks 4m 56s, Implement 34m 45s, 54m 36s elapsed), the approach beside working area and size, the expectations fence in two columns, five verified checks each with the command it ran, three numbered decisions with their WHY and REJECTED lines, and the coverage table with a "4/4 traced" badge. |
 
 The 2430 px height is a contract shared with `overview-readme` and `overview-engine`: all three read the same A6c story, and every rect in all three is measured in that space. Changing the story's `parameters.capture` height silently aims every camera move in three compositions at the wrong element.
 
@@ -22,7 +22,7 @@ At scale 1 the page is 1836 x 3645 frame px, so the frame shows 776 CSS px of it
 
 ## Beats
 
-34.9 s at 30 fps, 1836 x 1164.
+31.9 s at 30 fps, 1836 x 1164.
 
 | t | Region | Label |
 |---|---|---|
@@ -31,28 +31,27 @@ At scale 1 the page is 1836 x 3645 frame px, so the frame shows 776 CSS px of it
 | 7.6 | approach label and paragraph, left of the meta card | The shape it took, without reading the diff |
 | 10.6 | working area label and paragraph, right column | Which corner of the codebase it changed |
 | 13.6 | size label and paragraph, right column | How big the run judged it, before starting |
-| 16.6 | living specs block and its chip row, left of the meta card | The standing knowledge it loaded before drafting |
-| 19.6 | the whole expectations section, head and both fence columns | What it held to, and what it left alone |
-| 22.6 | the whole verified section, head and all five checks with their commands | Each claim carries the command that produced it |
-| 25.6 | decisions head through decision 02, both REJECTED lines in frame | The losing option, kept so nobody argues it twice |
-| 28.6 | the whole coverage section, head through the FR-004 row | Gaps sort to the top, when there are any |
-| 31.6 | rest | — |
+| 16.6 | the whole expectations section, head and both fence columns | What it held to, and what it left alone |
+| 19.6 | the whole verified section, head and all five checks with their commands | Each claim carries the command that produced it |
+| 22.6 | decisions head through decision 02, both REJECTED lines in frame | The losing option, kept so nobody argues it twice |
+| 25.6 | the whole coverage section, head through the FR-004 row | Gaps sort to the top, when there are any |
+| 28.6 | rest | — |
 
-Every region is a real element box measured with `getBoundingClientRect` against the capture box, in the capture's own CSS pixels, taken off the live A6c story rather than read off the image. The selectors, in beat order: `.dossier-intent > .dossier-kicker` united with `.dossier-intent__statement`; `.dossier-timing`; the label and paragraph inside `.dossier-intent__approach`; the first and then the second label-and-paragraph pair inside `.dossier-intent__context`; `.dossier-intent__living-specs`; and the four sections `section[aria-label="Expectations"]`, `[aria-label="Verified"]`, `[aria-label="Decisions"]` (united with its first two decisions) and `[aria-label="Coverage"]`.
+Every region is a real element box measured with `getBoundingClientRect` against the capture box, in the capture's own CSS pixels, taken off the live A6c story rather than read off the image. The selectors, in beat order: `.dossier-intent > .dossier-kicker` united with `.dossier-intent__statement`; `.dossier-timing`; the label and paragraph inside `.dossier-intent__approach`; the first and then the second label-and-paragraph pair inside `.dossier-intent__context`; and the four sections `section[aria-label="Expectations"]`, `[aria-label="Verified"]`, `[aria-label="Decisions"]` (united with its first two decisions) and `[aria-label="Coverage"]`.
 
-The camera solves each one with `camFit` at `pad` 130 and `maxS` 1.9. The six full-width sections are width-limited by the 776 px reading column and settle at scale 1.35 (1.24 for verified, which is the tallest section on the page), so those six beats hold one steady reading scale and the clip only travels. The four beats inside the meta card punch to 1.9, which is the one place the page needs a closer look. `CLAMP` is on and generalised to the capture's real height, so the frame never sees past the page: the intent beat pins to the top edge and the two right-column beats pin to the right edge.
+The camera solves each one with `camFit` at `pad` 130 and `maxS` 1.9. The six full-width sections are width-limited by the 776 px reading column and settle at scale 1.35 (1.24 for verified, which is the tallest section on the page), so those six beats hold one steady reading scale and the clip only travels. The three beats inside the meta card punch to 1.9, which is the one place the page needs a closer look. `CLAMP` is on and generalised to the capture's real height, so the frame never sees past the page: the intent beat pins to the top edge and the two right-column beats pin to the right edge.
 
 The last beat has no rect. It is `rest: true` with a 1.3 s move, longer than the 0.72 s used elsewhere because it travels the full height of the page back to the opening pose while the marker and label fade out under it.
 
 ## State cuts and dissolves
 
-The `CUTS` array is empty. There is one capture on screen from the first frame to the last, so there are no state cuts and no dissolves. The only transitions are the ten camera moves and the marker handoff, which clears the outline for 0.24 s while the camera travels rather than morphing it between regions.
+The `CUTS` array is empty. There is one capture on screen from the first frame to the last, so there are no state cuts and no dissolves. The only transitions are the nine camera moves and the marker handoff, which clears the outline for 0.24 s while the camera travels rather than morphing it between regions.
 
 Frame zero is the top of the page at scale 1, unannotated and unzoomed: the header, the intent statement, the run overview strip, the meta card and the first hairline of the expectations section, which is what the viewer shows on opening. The clip closes on the same pose.
 
 ## Not filmed
 
-Nothing on the ten-region list was dropped. All ten are inside the single A6c capture and all ten are filmed.
+Nothing on the nine-region list was dropped. All nine are inside the single A6c capture and all nine are filmed.
 
 Two things about this page are deliberately outside the clip. The floating action footer is hidden in the A6c story, so no footer beat is possible here; `run-in-flight` and `step-rail` are where footer state belongs, and both of those record the same footer's absence from their own captures. The collapsed "Run log and 6 task records" disclosure at the foot of the page is in the capture but closed, so there is nothing behind it to film; opening it needs a new story, and the `coverage` composition is the one that would grow it.
 

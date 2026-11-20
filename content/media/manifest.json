@@ -99,7 +99,7 @@
       "kind": "clip",
       "status": "shipped",
       "composition": "content/media/feature-clips/overview",
-      "films": "Reading the whole Overview top to bottom in ten beats: intent, the per-phase run timeline, approach, working area, size, the expectations fence, the verified checks with their commands, the decisions with what they rejected, and the coverage table.",
+      "films": "Reading the whole Overview top to bottom in nine beats: intent, the per-phase run timeline, approach, working area, size, the expectations fence, the verified checks with their commands, the decisions with what they rejected, and the coverage table.",
       "claim": "",
       "outputs": {
         "canonicalMp4": "content/media/feature-clips/overview/renders/overview.mp4",
@@ -159,7 +159,7 @@
         "content/media/web/overview-readme-x16x9.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table"
       },
       "referencedBy": {},
-      "notes": "This composition no longer publishes. docs/screenshots/generated/overview.gif is now rendered from the faster ten-beat `overview` composition; see that entry. Kept as the long-form cut of the same page, with its establishing pull-back and closing end card."
+      "notes": "This composition no longer publishes. docs/screenshots/generated/overview.gif is now rendered from the faster nine-beat `overview` composition; see that entry. Kept as the long-form cut of the same page, with its establishing pull-back and closing end card."
     },
     {
       "id": "overview-engine",
