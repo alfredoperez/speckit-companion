@@ -1563,10 +1563,13 @@ try {
     };
     /** One picture per commented line: the line with its comment card under it. */
     const commentShots = async (prefix) => {
+        // A Summary folds its later sentences; open it so an answer written there shows.
+        await webview().locator('.pl-summary details.pl-more').evaluateAll((folds) => folds.forEach((fold) => { fold.open = true; }));
         const lines = webview().locator('.line.has-refinement');
         const count = await lines.count();
         for (let i = 0; i < count; i++) {
             await scrollTo(lines.nth(i), 'center');
+            await page.mouse.move(2, 2);
             await page.waitForTimeout(400);
             await capture(`${prefix}-${i + 1}`, { target: lines.nth(i), padding: 20, within: 'editor' });
         }
@@ -1605,8 +1608,9 @@ try {
             await capture('talk-spec', { target: 'editor', ratio: 16 / 9 });
             await scrollTo(webview().locator('h2', { hasText: /User Scenarios/ }), 'start', 24);
             await capture('talk-spec-stories', { target: 'editor', ratio: 16 / 9 });
-            await scrollTo(webview().locator('p', { hasText: /^Acceptance Scenarios/ }), 'start', 130);
+            await scrollTo(webview().locator('.lg-sp-scn'), 'start', 130);
             await capture('talk-spec-scenarios', { target: 'editor', ratio: 16 / 9 });
+            await capture('talk-spec-scenarios-window', { target: 'window' });
             const footer = webview().locator('footer.actions');
             if (await footer.first().isVisible().catch(() => false)) await capture('talk-footer-next-plan', { target: footer, padding: 10 });
             return 'talk-spec, talk-spec-stories, talk-spec-scenarios';

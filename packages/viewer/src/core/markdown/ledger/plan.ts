@@ -393,7 +393,9 @@ export function preprocessPlanSummary(markdown: string): string {
     }
     const strip = stats.length ? `<div class="pl-stats">${stats.join('')}</div>` : '';
     const head = `<span class="lg-eyebrow">${codicon('dash')}Summary</span>`;
-    const html = `<div class="pl-card pl-summary" data-toc="Summary"><div class="pl-head">${head}</div><div class="pl-lede">${first}${restHtml}</div>${strip}</div>`;
+    // The Summary's first source line, hidden: a review comment on the Summary anchors to it, as it does on the screen card.
+    const quote = `<span class="line-content" hidden>${escapeHtml(prose[0]!.trim())}</span>`;
+    const html = `<div class="pl-card pl-summary" data-toc="Summary"><div class="pl-head">${head}</div>${quote}<div class="pl-lede">${first}${restHtml}</div>${strip}</div>`;
     return [...lines.slice(0, range.start), html, ...lines.slice(range.end)].join('\n');
 }
 
