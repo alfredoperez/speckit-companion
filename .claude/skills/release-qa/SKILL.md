@@ -194,7 +194,7 @@ Then: `open_application` Visual Studio Code, click the SpecKit activity-bar icon
 
 ### Navigation matrix
 
-Scripted: the `nav-matrix` check. The real-window check walks rows N1 to N15 as steps `nav-n1` to `nav-n15` on demo specs it derives itself (`_00` to `_07`, the same set the `vscode-qa` recipe builds), plus `nav-links` (the Links section), `nav-missing-file` (a link to a file not in the project warns once) and `nav-empty-record` (the tab title of a spec with no recorded activity). Each step's name says the row's expected state; expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/viewer-and-sidebar.mdx`), so quote it in a FAIL.
+Scripted: the `nav-matrix` check. The real-window check walks rows N1 to N15 as steps `nav-n1` to `nav-n15` on demo specs it derives itself (`_00` to `_07`, the same set the `vscode-qa` recipe builds), plus `nav-links` (the Links section), `nav-missing-file` (a file chip for a path not in the project warns once) and `nav-empty-record` (the tab title of a spec with no recorded activity). Each step's name says the row's expected state; expected behaviour comes from the site's spec viewer anatomy (`apps/website/src/content/docs/docs/navigate/viewer-and-sidebar.mdx`), so quote it in a FAIL.
 
 ### Full run, timed
 

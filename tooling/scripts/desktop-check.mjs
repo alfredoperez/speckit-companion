@@ -112,7 +112,7 @@ function addDemoSpecs(project) {
     writeFileSync(links, [
         title, '', '## Links', '',
         '- [Approach](plan.md#approach)', '- [Tasks](tasks.md)', '- [Far heading](#far-heading)',
-        '- [Other spec](../_01_demo-planned/spec.md)', '- [Source file](../../src/App.tsx)', '- [Missing file](src/gone/Gone.tsx)', '- [Web link](https://speckit-companion.dev)', '',
+        '- [Other spec](../_01_demo-planned/spec.md)', '- [Source file](../../src/App.tsx)', '- Missing file: `src/gone/Gone.tsx`', '- [Web link](https://speckit-companion.dev)', '',
         ...rest, '', '## Notes', '',
         ...Array.from({ length: 60 }, (_, i) => `Note line ${i + 1}: padding so the next heading starts off screen.`),
         '', '## Far heading', '', 'The Far heading link lands here.', '',
@@ -2129,18 +2129,23 @@ try {
         return `plan, tasks, far heading, Demo — Planned, App.tsx beside the viewer in ${groups} groups`;
     }, { needs: 'fixtures', check: true });
 
-    await step('nav-missing-file', 'A link to a file that is not in the project warns once and opens nothing', async () => {
-        await command('Notifications: Clear All Notifications').catch(() => undefined);
+    await step('nav-missing-file', 'A file chip for a path that is not in the project warns once and opens nothing', async () => {
+        await freshSpecs();
         await openSpec('Demo — Links', 'Specification');
+        await command('Notifications: Clear All Notifications').catch(() => undefined);
+        await page.waitForTimeout(500);
         const tabs = await page.locator('.tab').count();
-        await webview().locator('#markdown-content a', { hasText: 'Missing file' }).first().click();
-        const toast = page.locator('.notifications-toasts .notification-list-item', { hasText: 'File not found in project: Gone.tsx' });
-        await toast.first().waitFor({ timeout: 15000 });
-        await page.waitForTimeout(800);
-        if ((await toast.count()) !== 1) throw new Error(`${await toast.count()} warnings`);
-        if ((await page.locator('.tab').count()) !== tabs) throw new Error('a tab opened for a file that does not exist');
-        await toast.first().locator('.codicon-notifications-clear').click();
-        return 'one warning naming Gone.tsx, no tab opened';
+        try {
+            await webview().locator('#markdown-content .file-ref[data-filename="src/gone/Gone.tsx"]').first().click();
+            const toast = page.locator('.notifications-toasts .notification-list-item', { hasText: 'File not found in project: Gone.tsx' });
+            await toast.first().waitFor({ timeout: 15000 });
+            await page.waitForTimeout(1500);
+            if ((await toast.count()) !== 1) throw new Error(`${await toast.count()} warnings`);
+            if ((await page.locator('.tab').count()) !== tabs) throw new Error('a tab opened for a file that does not exist');
+            return 'one warning naming Gone.tsx, no tab opened';
+        } finally {
+            await command('Notifications: Clear All Notifications').catch(() => undefined);
+        }
     }, { needs: 'fixtures', check: true });
 
     await step('nav-empty-record', 'A spec with no recorded activity titles its tab with the document it shows', async () => {
