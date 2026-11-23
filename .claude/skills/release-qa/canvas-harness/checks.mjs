@@ -235,6 +235,34 @@ async function autoFolds() {
     return { ...verdict, evidence: `${verdict.evidence}; ${facts}` };
 }
 
+const WANDER_PROMPT = 'Add a small footer to the app that says "Made with care". Just make the change.';
+
+/** A session that already started building on its own, then gets New spec: the agent must run the pipeline, not keep improvising. */
+async function newSpecAfterWander() {
+    if (!COMPANION) throw new Blocked('SpecKit Companion is not installed in this sandbox, so the board cannot offer the Companion workflow');
+    const description = 'Show a count of done todos next to the list title.';
+    const run = await inSession('6-new-spec-after-wander', async ({ session, log }) => {
+        const wanderSince = Date.now();
+        await session.send({ prompt: WANDER_PROMPT });
+        await waitSettled(log, { since: wanderSince, label: 'wander' });
+        const { url, headers } = await openBoardInstance(session, '6-board');
+        const before = specDirs();
+        await sleep(3000);
+        const since = Date.now();
+        const res = await fetch(new URL('/api/specify', url), { method: 'POST', headers, body: JSON.stringify({ description, workflow: 'companion' }) });
+        if (!res.ok) throw new Error(`/api/specify ${res.status}`);
+        await waitSettled(log, { since, timeoutMs: 900_000, label: 'specify after wander' });
+        return { created: [...specDirs()].filter((d) => !before.has(d)), tools: [...log.tools], seconds: Math.round((Date.now() - since) / 1000) };
+    });
+    const ctx = run.created.length === 1 ? readContext(run.created[0]) : null;
+    const specified = (ctx?.history ?? []).some((h) => h?.step === 'specify' && h?.kind === 'complete');
+    const loaded = run.tools.some((t) => /speckit[.-]companion[.-]specify/.test(t.detail));
+    const facts = `${created(run)}, record ${ctx ? `status=${ctx.status}` : 'none'}, command ${loaded ? 'loaded' : 'not loaded'}, ${run.seconds}s`;
+    if (run.created.length !== 1) return { result: 'FAIL', evidence: `${run.created.length} new spec folders after the wander; ${facts}` };
+    if (!specified) return { result: 'FAIL', evidence: `the spec was written without the pipeline: the record has no specify finish; ${facts}` };
+    return { result: 'PASS', evidence: facts };
+}
+
 const CHECKS = [
     ['bare-open-x3', 'three new sessions send only "Open the SpecKit Companion canvas"; the board opens; workspace stays clean', bareOpens],
     ['new-spec-speckit', 'New spec (Spec Kit) sends the stock specify command as this sandbox spells it, with one run-instructions pointer when the recorder exists and no inline lifecycle text', stockSpecify],
@@ -243,10 +271,12 @@ const CHECKS = [
     ['canvas-new-spec-stays-in-specify', 'product observation: specify changes nothing outside specs/', staysInSpecify],
     ['stock-commandset', 'GET /api/spec returns the stock commandSet for a spec recorded as speckit', stockCommandSet],
     ['canvas-auto-folds', 'product observation: Auto on a one-file change records plan and tasks as done without running either command', autoFolds],
+    ['canvas-new-spec-after-wander', 'product observation: in a session that already built something on its own, New spec (Companion) still runs the specify pipeline and records its finish', newSpecAfterWander],
 ];
+const ONLY = (process.env.CANVAS_ONLY ?? '').split(',').map((s) => s.trim()).filter(Boolean);
 
 const checks = [];
-for (const [id, what, run] of CHECKS) {
+for (const [id, what, run] of CHECKS.filter(([id]) => !ONLY.length || ONLY.includes(id))) {
     let row;
     try {
         row = await run();
