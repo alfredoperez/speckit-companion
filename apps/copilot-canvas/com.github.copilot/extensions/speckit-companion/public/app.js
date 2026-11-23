@@ -58,6 +58,7 @@ const els = {
     repositoryRoot: $('repository-root'),
     repositoryBrowse: $('repository-browse'),
     repositoryWarning: $('repository-warning'),
+    health: $('project-health'),
     repositoryFollow: $('repository-follow'),
     constitution: $('constitution-card'),
     coordinatedSession: $('coordinated-session'),
@@ -369,6 +370,32 @@ function renderConstitution() {
         }, 'Run constitution') : null);
 }
 
+function renderHealth() {
+    const items = state.snapshot?.health ?? [];
+    const panel = els.health;
+    panel.hidden = items.length === 0;
+    if (!items.length) return;
+    const problems = items.filter(item => !item.ok);
+    const pending = items.some(item => item.pending);
+    const wasPending = panel.dataset.pending === '1';
+    if (!problems.length) panel.open = false;
+    else if (!panel.dataset.seen || (wasPending && !pending && !panel.dataset.folded)) panel.open = true;
+    panel.dataset.seen = '1';
+    panel.dataset.pending = pending ? '1' : '';
+    if (!panel.dataset.bound) {
+        panel.dataset.bound = '1';
+        panel.addEventListener('click', (event) => { if (event.target.closest?.('summary') && panel.open) panel.dataset.folded = '1'; });
+    }
+    panel.replaceChildren(
+        el('summary', { text: problems.length ? `Project health: ${problems.length} to fix` : pending ? 'Project health: checking\u2026' : 'Project health: all ready' }),
+        el('ul', {}, items.map(item => el('li', { class: item.pending ? 'health-pending' : item.ok ? 'health-ok' : 'health-warn' },
+            el('span', { text: item.pending ? '\u2026 ' : item.ok ? '\u2713 ' : '\u26A0 ' }),
+            el('strong', { text: item.label }),
+            el('span', { text: ` ${item.detail}` }),
+            item.fix ? el('span', { class: 'health-fix', text: ` \u2014 ${item.fix}` }) : null))),
+    );
+}
+
 function renderBoard() {
     const specs = state.snapshot?.specs ?? [];
     const active = specs.filter(s => !s.done).length;
@@ -385,6 +412,7 @@ function renderBoard() {
     els.repoLine.textContent += state.snapshot.boundSession ? ` · from ${state.snapshot.boundSession.name}` : '';
     els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
     renderConstitution();
+    renderHealth();
     renderChildren();
     renderCoordinatedSessions();
 

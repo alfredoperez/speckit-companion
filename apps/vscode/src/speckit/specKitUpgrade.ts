@@ -63,6 +63,11 @@ export function specifyVersion(): Promise<SpecifyVersion | undefined> {
     return asked;
 }
 
+/** Forget the cached version so the next ask runs the CLI again. */
+export function resetSpecifyVersion(): void {
+    asked = undefined;
+}
+
 export function _resetSpecifyVersionForTests(): void {
     asked = undefined;
 }

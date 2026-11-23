@@ -12,6 +12,7 @@ import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildConstitutionProm
 import { BUSY, recordStep } from './run-record.mjs';
 import { stepEvidence, withRunningStep } from './spec-rules.mjs';
 import { validateRepositoryRoot, validateRoot } from './workspace.mjs';
+import { checkCli, recheckCli, projectHealth } from './health.mjs';
 import { pickFolder } from './folder-picker.mjs';
 
 const PUBLIC_DIR = fileURLToPath(new URL('./public/', import.meta.url));
@@ -82,6 +83,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         token: randomBytes(24).toString('base64url'),
         clients: new Set(),
         snapshot: null,
+        cli: null,
         selected: null,
         watchers: new Set(),
         closed: false,
@@ -121,7 +123,9 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     }
 
     function snapshot() {
-        return { ...state.snapshot, rootSource: state.bound ? 'bound' : state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', boundSession: state.bound, coordinatedSessions: state.coordinatedSessions, children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root), constitution: readConstitution(state.root) };
+        const again = recheckCli(state.cli);
+        if (again) void again.then((cli) => { state.cli = cli; if (!state.closed) rescan({ asked: false }); });
+        return { ...state.snapshot, rootSource: state.bound ? 'bound' : state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', boundSession: state.bound, coordinatedSessions: state.coordinatedSessions, children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root), constitution: readConstitution(state.root), health: projectHealth(state.root, state.cli) };
     }
 
     /** The step's document as it is on disk right now, so a later look can tell whether the run touched it. */
@@ -681,6 +685,10 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     state.origin = `http://${state.host}`;
 
     rescan();
+    void checkCli().then((cli) => {
+        state.cli = cli;
+        if (!state.closed) rescan({ asked: false });
+    });
     startWatching();
     if (discoverChildren) {
         refreshChildren();

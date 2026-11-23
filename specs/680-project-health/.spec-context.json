@@ -1,0 +1,307 @@
+{
+  "workflow": "companion",
+  "specName": "A project health view",
+  "branch": "main",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:51:04.515Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T17:51:28.620Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:51:28.778Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:51:29.020Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:51:29.195Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:51:29.439Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:51:29.566Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:52:33.312Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:58:02.193Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:58:02.325Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:58:24.715Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T18:00:54.016Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T18:00:54.296Z"
+    }
+  ],
+  "request": "Issue #1033, part 1: a setup / health view. The PR body says `Closes #1033` (the last part).\n\nSettled scope: VS Code: a collapsible \"Project health\" item at the top of the settings overview tree (apps/vscode/src/features/settings/overviewProvider.ts), with rows for the Spec Kit CLI version (specifyVersion() in apps/vscode/src/speckit/specKitUpgrade.ts), Companion installed (isCompanionInstalled), the constitution (present, template or filled: constitutionNeedsSetup from packages/viewer core if #1047 merged, else the detector's check) and the AI agent configured (installedAgents). Each row shows a check or a warning, and a row that needs fixing carries the command that fixes it (as a tooltip and a click that runs it in a visible terminal, reusing the existing upgrade/init commands where they exist). Copilot canvas: a health panel the board folds away, beside the existing repository warning, listing the same items plus the session-worktree traps from apps/copilot-canvas/README.md (no node_modules where the board needs them, Companion commands that are not committed files), each missing item with its fixing command. No new runtime dependency. Update tests, stories if a webview component is touched, `npm run canvas:build` + `npm run mod:build`, changelogs (root and canvas), docs (install page or the viewer page, copilot-app/index.mdx), and keep the Get Started walkthrough consistent with viewsWelcome. No version bump.",
+  "unattended": true,
+  "expectations": [
+    "Fixing anything automatically",
+    "A doctor run from the health view"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/settings/overviewProvider.ts",
+    "area: apps/copilot-canvas"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "VS Code Project health item with four rows",
+      "tests": [
+        "apps/vscode/src/features/settings/__tests__/projectHealth.test.ts"
+      ]
+    },
+    "FR-002": {
+      "title": "A not-ready row warns and carries its fix command",
+      "tests": [
+        "projectHealth.test.ts (fix commands)"
+      ]
+    },
+    "FR-003": {
+      "title": "Board foldable health panel with worktree traps",
+      "tests": [
+        "apps/copilot-canvas/tests/health.test.mjs"
+      ]
+    },
+    "FR-004": {
+      "title": "Checks never block loading or write files",
+      "assumes": "checks are read-only and async; reviewed"
+    },
+    "FR-005": {
+      "title": "Tests, bundles, changelogs, docs",
+      "tests": [
+        "stale-bundle diff",
+        "changelog test"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 10,
+    "projectedTasks": 3,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "See whether the project is ready for Spec Kit and Companion, with the command that fixes each gap",
+  "size": "normal",
+  "source": "#1033",
+  "workingBranch": "680-project-health",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Project health tree item with four checks and fix commands",
+      "files": [
+        "apps/vscode/src/features/settings/projectHealth.ts",
+        "apps/vscode/src/features/settings/overviewProvider.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Board health on the snapshot and foldable panel",
+      "files": [
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/health.mjs",
+        "server.mjs",
+        "public/app.js",
+        "tests/health.test.mjs"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Changelogs, docs, bundles, suites",
+      "files": [
+        "CHANGELOG.md",
+        "apps/copilot-canvas/CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.1,
+      "result": "npm notice run speckit-companion@0.40.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "7920e24f",
+      "tree": "a9915036b6b4270c8c71fa9523ead889110958db"
+    },
+    {
+      "what": "related jest",
+      "command": "npx jest --findRelatedTests apps/vscode/src/features/settings/__tests__/projectHealth.test.ts apps/vscode/src/features/settings/overviewProvider.ts apps/vscode/src/features/settings/projectHealth.ts apps/vscode/src/speckit/specKitUpgrade.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 85.4,
+      "result": "Snapshots:   0 total · Time:        84.178 s, estimated 88 s · Ran all test suites related to files matching /apps\\/vscode\\/src\\/features\\/settings\\/__tests__\\/projectHealth.test.ts|apps\\/vscode\\/src\\/features\\/settings\\/overviewProvider.ts|apps\\/vscode\\/src\\/features\\/settings\\/projectHealth.ts|apps\\/vscode\\/src\\/speckit\\/specKitUpgrade.ts/i.",
+      "commit": "7920e24f",
+      "tree": "a9915036b6b4270c8c71fa9523ead889110958db"
+    },
+    {
+      "what": "webview build",
+      "command": "npm run compile-web",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 24.4,
+      "result": "    [webpack-cli] Compiler starting...  ·     [webpack-cli] Compiler is using config: '/Users/alfredoperez/dev/GitHub/speckit-companion/webpack.config.js' ·     [webpack-cli] Compiler finished",
+      "commit": "7920e24f",
+      "tree": "a9915036b6b4270c8c71fa9523ead889110958db"
+    },
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 26.4,
+      "result": "npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs · npm notice run speckit-companion@0.40.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "7920e24f",
+      "tree": "a9915036b6b4270c8c71fa9523ead889110958db"
+    },
+    {
+      "what": "mod tests",
+      "command": "npm run test:mod",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 6.1,
+      "result": "npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs · npm notice run speckit-companion@0.40.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "7920e24f",
+      "tree": "a9915036b6b4270c8c71fa9523ead889110958db"
+    },
+    {
+      "what": "changelog consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "Snapshots:   0 total · Time:        1.544 s, estimated 3 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "7920e24f",
+      "tree": "a9915036b6b4270c8c71fa9523ead889110958db"
+    },
+    {
+      "what": "stale bundles",
+      "command": "git diff --exit-code --stat -- apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor apps/claude-mod/hooks/vendor apps/claude-mod/tests/fixtures",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "no output",
+      "commit": "7920e24f",
+      "tree": "a9915036b6b4270c8c71fa9523ead889110958db"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Health checks run when the tree item is expanded",
+      "why": "The overview must never wait on the CLI",
+      "rejected": "Checking at activation",
+      "by": "agent",
+      "at": "2026-11-23T18:00:53.078Z"
+    },
+    {
+      "decision": "Fixes reuse existing commands",
+      "why": "Install, init, constitution and the Companion install already exist",
+      "rejected": "New terminal commands",
+      "by": "agent",
+      "at": "2026-11-23T18:00:53.078Z"
+    },
+    {
+      "decision": "The board panel lives in its own health.mjs",
+      "why": "Eases the merge with the constitution card PR",
+      "rejected": "Folding it into specs-core.mjs",
+      "by": "agent",
+      "at": "2026-11-23T18:00:53.078Z"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "The constitution placeholder check is copied here; once #1047 merges both should read the core constitutionNeedsSetup.",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "A Project health item in VS Code and a foldable health panel on the board"
+    }
+  },
+  "last_action": "checks pass",
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "14 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-23T18:00:54.073Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-23T18:00:54.136Z",
+      "by": "extension",
+      "finishedAt": "2026-11-23T18:00:54.399Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}
