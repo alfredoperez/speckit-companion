@@ -2,6 +2,7 @@
 # nodes: [...] replaces this list.
 order:
   - implement-exec
+  - check-requirements
   - record-verified
   - complete
   - handoff
@@ -13,11 +14,10 @@ order:
 
 phases:
   - name: execute
-    nodes: [implement-exec, record-verified]
+    nodes: [implement-exec, check-requirements, record-verified]
   - name: wrap-up
     nodes: [complete, handoff]
 
 # Shipped nodes this step does NOT run by default — what the panel can offer.
 optional:
   - verify-manually
-  - check-requirements

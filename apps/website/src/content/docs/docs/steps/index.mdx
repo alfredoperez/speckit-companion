@@ -131,6 +131,8 @@ Implement works through `tasks.md` and writes the code. In the Companion workflo
 
 The Companion command records each task the moment it finishes, with one line on what it did and the files it touched, so a run that stops halfway picks up at the next unchecked task. Where your assistant can run work in parallel, large user stories are built side by side.
 
+Before it records what it verified, a change sized normal or oversized gets its requirements checked by a worker that never saw the plan. It reads each requirement against the diff and calls it met, missing or at risk. A missing requirement gets built and an at-risk one gets a test. A simple change skips this check.
+
 For a run that stopped, [Overview and progress](/docs/results/the-overview) has Resume, status and doctor.
 
 ## Converge
