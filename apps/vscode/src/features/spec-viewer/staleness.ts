@@ -1,97 +1,33 @@
 /**
  * SpecKit Companion - Staleness Detection
- * Compares file modification timestamps across workflow documents
- * to detect when downstream artifacts are outdated.
+ * Reads file modification times for the core workflow documents and hands them
+ * to the shared rule in the viewer core.
  */
 
 import * as vscode from 'vscode';
-import type { SpecDocument, StalenessMap, StalenessInfo } from './types';
-import { SpecStatuses } from '../../core/constants';
+import type { SpecDocument, StalenessMap } from './types';
+import { stalenessFrom } from 'speckit-viewer/core/staleness';
 
-/**
- * A settled spec cannot be stale: "regenerate the plan, the spec moved on" is
- * advice about work still to do, and there is none. Suppressing it here keeps
- * the banner AND the per-tab stale badge quiet on a finished spec, since both
- * read the same map.
- */
-export function isStalenessRelevant(status: string | undefined): boolean {
-    return status !== SpecStatuses.COMPLETED && status !== SpecStatuses.ARCHIVED;
-}
+export { isStalenessRelevant } from 'speckit-viewer/core/staleness';
 
-/** A checkout or copy writes a spec's files in a burst, so mtimes that close are the same generation. */
-const SAME_GENERATION_MS = 1000;
-
-/**
- * Compute staleness for all core workflow documents.
- * A document is stale if any preceding document in the workflow
- * is newer by more than a second.
- */
+/** Compute staleness for all core workflow documents. */
 export async function computeStaleness(
     documents: SpecDocument[]
 ): Promise<StalenessMap> {
     const coreDocs = documents.filter(d => d.isCore);
-    const stalenessMap: StalenessMap = {};
-
-    // Collect mtimes for all existing core docs
-    const mtimes = new Map<string, number>();
-    const labels = new Map<string, string>();
+    const docs = [];
 
     for (const doc of coreDocs) {
-        labels.set(doc.type, doc.label);
-        if (!doc.exists) continue;
-
-        try {
-            const stat = await vscode.workspace.fs.stat(vscode.Uri.file(doc.filePath));
-            mtimes.set(doc.type, stat.mtime);
-        } catch {
-            // File not accessible — treat as non-existent
-        }
-    }
-
-    // Check each core doc against all preceding docs
-    for (let i = 0; i < coreDocs.length; i++) {
-        const doc = coreDocs[i];
-        const docMtime = mtimes.get(doc.type);
-
-        // First doc is never stale; non-existent docs are not stale
-        if (i === 0 || !doc.exists || docMtime === undefined) {
-            stalenessMap[doc.type] = {
-                isStale: false,
-                staleReason: '',
-                newerUpstream: ''
-            };
-            continue;
-        }
-
-        // Find the newest upstream that is strictly newer than this doc
-        let newestUpstreamType = '';
-        let newestUpstreamMtime = 0;
-
-        for (let j = 0; j < i; j++) {
-            const upstreamType = coreDocs[j].type;
-            const upstreamMtime = mtimes.get(upstreamType);
-            if (upstreamMtime !== undefined && upstreamMtime - docMtime > SAME_GENERATION_MS && upstreamMtime > newestUpstreamMtime) {
-                newestUpstreamType = upstreamType;
-                newestUpstreamMtime = upstreamMtime;
+        let mtime: number | undefined;
+        if (doc.exists) {
+            try {
+                mtime = (await vscode.workspace.fs.stat(vscode.Uri.file(doc.filePath))).mtime;
+            } catch {
+                // File not accessible: treat as non-existent
             }
         }
-
-        if (newestUpstreamType) {
-            const upstreamLabel = labels.get(newestUpstreamType) || newestUpstreamType;
-            const docLabel = doc.label.toLowerCase();
-            stalenessMap[doc.type] = {
-                isStale: true,
-                staleReason: `${doc.label} was generated before the current ${upstreamLabel.toLowerCase()}. Consider regenerating.`,
-                newerUpstream: upstreamLabel
-            };
-        } else {
-            stalenessMap[doc.type] = {
-                isStale: false,
-                staleReason: '',
-                newerUpstream: ''
-            };
-        }
+        docs.push({ type: doc.type, label: doc.label, exists: doc.exists, mtime });
     }
 
-    return stalenessMap;
+    return stalenessFrom(docs) as StalenessMap;
 }

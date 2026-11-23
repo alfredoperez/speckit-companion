@@ -1,0 +1,327 @@
+{
+  "workflow": "companion",
+  "specName": "Constitution card and stale documents on the Copilot board",
+  "branch": "main",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:41:37.014Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T17:41:59.190Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:41:59.320Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:41:59.508Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:41:59.625Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:41:59.817Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:41:59.915Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:42:49.837Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:44:29.634Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:44:29.764Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:44:29.871Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:44:59.813Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:45:14.394Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:47:18.583Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T17:47:18.810Z"
+    }
+  ],
+  "request": "Issue #1033, part 3: constitution card and stale documents on the Copilot board. The PR body says `Part of #1033`.\n\nSettled scope: move the pure part of VS Code's staleness check (apps/vscode/src/features/spec-viewer/staleness.ts: a document older than the one it derives from — plan older than spec, tasks older than plan) into packages/viewer/src/core as a pure function over {type, exists, mtime} documents, keep a thin VS Code wrapper that reads file times (behaviour unchanged, tests still pass), and bundle the core function into the canvas's vendor/viewer-core.mjs. On the Copilot board: (1) a constitution card in the board header area showing whether .specify/memory/constitution.md exists and is filled in (not the template; reuse the same placeholder test VS Code's detector uses), when it last changed, and a \"Run constitution\" action when missing or still a template; (2) a stale mark on a spec whose plan is older than its spec or tasks older than its plan, shown on the spec detail (the document tab) with a line saying which document is behind. Repository text reaches the page as text. Update canvas tests, `npm run canvas:build` + `npm run mod:build`, a speckit-viewer changeset, apps/copilot-canvas/CHANGELOG.md, and docs copilot-app/index.mdx. No version bump.",
+  "unattended": true,
+  "expectations": [
+    "A constitution card in VS Code",
+    "Changing the staleness rule"
+  ],
+  "context": [
+    "area: packages/viewer/src/core",
+    "area: apps/vscode/src/features/spec-viewer/staleness.ts",
+    "area: apps/copilot-canvas"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "One pure staleness rule in core, used by VS Code and the board",
+      "tests": [
+        "packages/viewer core staleness tests; apps/vscode staleness tests unchanged"
+      ]
+    },
+    "FR-002": {
+      "title": "Board constitution card with a run action",
+      "tests": [
+        "apps/copilot-canvas/tests/board-health.test.mjs (constitution cases)"
+      ]
+    },
+    "FR-003": {
+      "title": "Board stale mark naming the document behind",
+      "tests": [
+        "board-health.test.mjs (stale cases)"
+      ]
+    },
+    "FR-004": {
+      "title": "Bundles, changeset, changelog, docs",
+      "tests": [
+        "stale-bundle diff",
+        "changelog test"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 11,
+    "projectedTasks": 5,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "The board shows the constitution and which spec documents are behind",
+  "size": "normal",
+  "source": "#1033",
+  "workingBranch": "679-board-constitution-stale",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Moved the pure staleness rule to the viewer core; VS Code wraps it",
+      "files": [
+        "packages/viewer/src/core/staleness.ts",
+        "apps/vscode/src/features/spec-viewer/staleness.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Board tests for constitution states and stale documents",
+      "files": [
+        "apps/copilot-canvas/tests/board-health.test.mjs"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Constitution state on the snapshot, header card and run-constitution action",
+      "files": [
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/specs-core.mjs",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/server.mjs",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/prompts.mjs",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/public/app.js",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/public/index.html",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/public/styles.css",
+        "packages/viewer/src/core/constitution.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Stale notes on the spec detail from the bundled staleness rule",
+      "files": [
+        "apps/copilot-canvas/build.mjs",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/specs-core.mjs",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/public/app.js"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Changeset, canvas changelog, docs; builds and suites pass",
+      "files": [
+        ".changeset/stale-rule-in-core.md",
+        "apps/copilot-canvas/CHANGELOG.md",
+        "apps/website/src/content/docs/docs/copilot-app/index.mdx"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "npm notice run speckit-companion@0.40.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "f52d6ccb",
+      "tree": "dfba6c94c795f90c91ff180916a13ab0dd84be0b"
+    },
+    {
+      "what": "related jest",
+      "command": "npx jest --findRelatedTests apps/vscode/src/features/spec-viewer/staleness.ts apps/vscode/src/speckit/detector.ts packages/viewer/src/core/__tests__/constitution.test.ts packages/viewer/src/core/__tests__/staleness.test.ts packages/viewer/src/core/constitution.ts packages/viewer/src/core/index.ts packages/viewer/src/core/staleness.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 72.7,
+      "result": "Snapshots:   0 total · Time:        71.867 s, estimated 76 s · Ran all test suites related to files matching /apps\\/vscode\\/src\\/features\\/spec-viewer\\/staleness.ts|apps\\/vscode\\/src\\/speckit\\/detector.ts|packages\\/viewer\\/src\\/core\\/__tests__\\/constitution.test.ts|packages\\/viewer\\/src\\/core\\/__tests__\\/staleness.test.ts|packages\\/viewer\\/src\\/core\\/constitution.ts|packages\\/viewer\\/src\\/core\\/index.ts|packages\\/viewer\\/src\\/core\\/staleness.ts/i.",
+      "commit": "f52d6ccb",
+      "tree": "dfba6c94c795f90c91ff180916a13ab0dd84be0b"
+    },
+    {
+      "what": "viewer build",
+      "command": "npm run viewer:build",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "npm notice run npm run build -w speckit-viewer · npm notice run speckit-viewer@0.1.0 build · npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs",
+      "commit": "f52d6ccb",
+      "tree": "dfba6c94c795f90c91ff180916a13ab0dd84be0b"
+    },
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 22.7,
+      "result": "npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs · npm notice run speckit-companion@0.40.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "f52d6ccb",
+      "tree": "dfba6c94c795f90c91ff180916a13ab0dd84be0b"
+    },
+    {
+      "what": "mod tests",
+      "command": "npm run test:mod",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 6.7,
+      "result": "npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs · npm notice run speckit-companion@0.40.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "f52d6ccb",
+      "tree": "dfba6c94c795f90c91ff180916a13ab0dd84be0b"
+    },
+    {
+      "what": "changelog consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "Snapshots:   0 total · Time:        1.554 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "f52d6ccb",
+      "tree": "dfba6c94c795f90c91ff180916a13ab0dd84be0b"
+    },
+    {
+      "what": "stale bundles",
+      "command": "git diff --exit-code --stat -- apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor apps/claude-mod/hooks/vendor apps/claude-mod/tests/fixtures",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "no output",
+      "commit": "f52d6ccb",
+      "tree": "dfba6c94c795f90c91ff180916a13ab0dd84be0b"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Constitution runs through its own route, not a spec command",
+      "why": "It belongs to the project, not to a spec, so a spec chip would be wrong",
+      "rejected": "Adding constitution to SPEC_COMMANDS",
+      "by": "agent",
+      "at": "2026-11-23T17:47:17.866Z"
+    },
+    {
+      "decision": "The constitution placeholder rule moved to core too",
+      "why": "The board and VS Code apply the same test",
+      "rejected": "Copying the rule into the canvas",
+      "by": "agent",
+      "at": "2026-11-23T17:47:17.866Z"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Staleness and the constitution check in core; the board shows a constitution card and stale lines"
+    }
+  },
+  "last_action": "checks pass",
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "19 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-23T17:47:18.623Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-23T17:47:18.667Z",
+      "by": "extension",
+      "finishedAt": "2026-11-23T17:47:18.887Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

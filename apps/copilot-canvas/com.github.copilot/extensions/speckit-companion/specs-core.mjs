@@ -5,6 +5,7 @@ import { join, basename, relative, sep } from 'node:path';
 import { listTasks, phaseProgress } from './tasks.mjs';
 import { renderMarkdown, setCurrentTask, setHasSpecContext, setTaskSummaries } from './vendor/viewer-markdown.mjs';
 import { renderOverview } from './overview.mjs';
+import { constitutionNeedsSetup, isStalenessRelevant, stalenessFrom } from './vendor/viewer-core.mjs';
 import {
     DEFAULT_SPEC_DIRS,
     buildSpecRow,
@@ -74,6 +75,26 @@ function readText(path) {
     } catch {
         return null;
     }
+}
+
+/** The project's constitution: `missing`, `template` while it still holds placeholders, else `in-place` with when it last changed. */
+export function readConstitution(root) {
+    const file = join(root, '.specify', 'memory', 'constitution.md');
+    const text = readText(file);
+    if (text == null) return { state: 'missing', changedAt: null };
+    if (constitutionNeedsSetup(text)) return { state: 'template', changedAt: null };
+    return { state: 'in-place', changedAt: statSync(file, { throwIfNoEntry: false })?.mtime.toISOString() ?? null };
+}
+
+/** Plain lines for the documents that are older than one before them in the pipeline; none for a settled spec. */
+function staleNotes(dir, specFile, status) {
+    if (!isStalenessRelevant(status)) return [];
+    const docs = [['spec', 'Spec', specFile], ['plan', 'Plan', 'plan.md'], ['tasks', 'Task list', 'tasks.md']].map(([type, label, file]) => {
+        const mtime = statSync(join(dir, file), { throwIfNoEntry: false })?.mtimeMs;
+        return { type, label, exists: mtime !== undefined, mtime };
+    });
+    const map = stalenessFrom(docs);
+    return docs.filter(d => map[d.type].isStale).map(d => `The ${d.label.toLowerCase()} is older than the ${map[d.type].newerUpstream.toLowerCase()}; run ${d.type} again to catch up.`);
 }
 
 function latestMtime(dir) {
@@ -183,6 +204,7 @@ export function readSpecDetail(root, id, { html = true } = {}) {
     return {
         spec,
         documents,
+        staleNotes: staleNotes(dir, featureSpecName(dir), spec.status),
         taskList: listTasks(tasksText),
         phases: phaseProgress(tasksText),
         overviewHtml,
