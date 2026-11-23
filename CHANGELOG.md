@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **See a spec's open questions.** The spec header counts the ==open questions left== in the spec, and pressing it runs Clarify. ([#1046](https://github.com/alfredoperez/speckit-companion/pull/1046)) <!-- area: spec-viewer -->
 - **Stage times for bugs run in chat.** A bug's page shows ==how long assess, fix and test took== and marks a stage that stopped early. ([#1023](https://github.com/alfredoperez/speckit-companion/pull/1023)) <!-- area: spec-viewer -->
 
 ## [0.40.0] - 2026-11-17

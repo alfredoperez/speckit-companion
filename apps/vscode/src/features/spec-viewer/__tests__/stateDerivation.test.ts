@@ -707,3 +707,15 @@ describe('context (ICE C) passthrough', () => {
         expect(deriveViewerState(makeContext()).context).toBeUndefined();
     });
 });
+
+describe('openQuestionsOf', () => {
+    it('counts the open markers in the spec text', () => {
+        const { openQuestionsOf } = require('../stateDerivation');
+        expect(openQuestionsOf('a [NEEDS CLARIFICATION: one?] b\n[NEEDS CLARIFICATION: two?]')).toBe(2);
+    });
+
+    it('says nothing when the spec has no markers', () => {
+        const { openQuestionsOf } = require('../stateDerivation');
+        expect(openQuestionsOf('# Spec\n\nAll settled.')).toBeUndefined();
+    });
+});

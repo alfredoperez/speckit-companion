@@ -215,3 +215,49 @@ describe('the header title', () => {
         cleanup(container);
     });
 });
+
+describe('the open questions button', () => {
+    const withQuestions = (n: number | undefined) => {
+        viewerState.value = {
+            status: 'specifying', activeStep: 'specify', steps: {}, pulse: null, highlights: [],
+            activeSubstep: null, footer: [], history: [], stepHistory: {}, openQuestions: n,
+        } as never;
+    };
+    afterEach(() => { viewerState.value = null; });
+
+    it('names the count and asks the extension to clarify', () => {
+        const postMessage = jest.fn();
+        (globalThis as unknown as { vscode: unknown }).vscode = { postMessage };
+        navState.value = mockNavState({ specContextName: 'Payments Core' });
+        withQuestions(3);
+        const container = renderInto();
+        const button = container.querySelector<HTMLButtonElement>('.spec-header-questions-btn');
+
+        expect(button?.textContent).toContain('3 open questions');
+        button?.click();
+        expect(postMessage).toHaveBeenCalledWith({ type: 'clarify', command: 'speckit.clarify' });
+
+        cleanup(container);
+    });
+
+    it('uses the singular for one question', () => {
+        navState.value = mockNavState({ specContextName: 'Payments Core' });
+        withQuestions(1);
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-questions-btn')?.textContent).toContain('1 open question');
+        expect(container.querySelector('.spec-header-questions-btn')?.textContent).not.toContain('questions');
+
+        cleanup(container);
+    });
+
+    it('shows nothing without markers', () => {
+        navState.value = mockNavState({ specContextName: 'Payments Core' });
+        withQuestions(undefined);
+        const container = renderInto();
+
+        expect(container.querySelector('.spec-header-questions-btn')).toBeNull();
+
+        cleanup(container);
+    });
+});

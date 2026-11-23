@@ -4,6 +4,10 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+### Added
+
+- **Clarify a spec's open questions.** A spec that still carries open questions shows a Clarify chip with ==how many are left==. <!-- area: copilot-app -->
+
 ### Fixed
 
 - **Concerns show in the Overview.** The board's run log lists the concerns a run recorded, as the VS Code viewer does. <!-- area: copilot-app -->

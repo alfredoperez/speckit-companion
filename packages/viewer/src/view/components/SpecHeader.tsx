@@ -39,6 +39,7 @@ export function SpecHeader() {
 
     const assistantName = ns.assistantName;
     const hasTerminal = !!ns.hasTerminal;
+    const openQuestions = vs?.openQuestions ?? 0;
 
     // The folder slug is an id, not a title. The spec's own title leads on every tab, so the
     // header does not change with the open document; a spec without one names itself by the document.
@@ -48,6 +49,7 @@ export function SpecHeader() {
 
     const hasContext = !!(badgeText || ns.specContextName);
     if (!badgeText && !ns.createdDate && !ns.specContextName) return null;
+    const showBadges = !!(badgeText || ns.branch || ns.createdDate || assistantName || hasTerminal || openQuestions > 0);
 
     return (
         <div class="spec-header" data-has-context={String(hasContext)}>
@@ -58,7 +60,7 @@ export function SpecHeader() {
                             {title}
                         </h1>
                     )}
-                    {(badgeText || ns.branch || ns.createdDate || assistantName || hasTerminal) && (
+                    {showBadges && (
                         <div class="spec-header-badges">
                             {badgeText && (
                                 <span
@@ -90,6 +92,17 @@ export function SpecHeader() {
                                     <span class="codicon codicon-hubot" aria-hidden="true"></span>
                                     <span class="spec-header-branch__name">{assistantName}</span>
                                 </span>
+                            )}
+                            {openQuestions > 0 && (
+                                <button
+                                    type="button"
+                                    class="spec-header-update-btn spec-header-questions-btn"
+                                    title="Resolve the open questions with Clarify"
+                                    onClick={() => onAction({ type: 'clarify', command: 'speckit.clarify' })}
+                                >
+                                    <span class="codicon codicon-comment-discussion" aria-hidden="true"></span>
+                                    {openQuestions === 1 ? '1 open question' : `${openQuestions} open questions`}
+                                </button>
                             )}
                             {hasTerminal && (
                                 <button

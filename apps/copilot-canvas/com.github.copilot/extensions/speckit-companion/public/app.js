@@ -445,6 +445,11 @@ function renderNext(spec) {
         .filter(([command]) => command === 'ask' || commands.includes(command))
         .filter(([command]) => command !== next.command && !(command === 'resume' && spec.done))
         .map(([command, label, title]) => el('button', { class: 'btn btn-chip', type: 'button', title, onclick: (e) => run(command, e.currentTarget) }, label));
+    const questions = spec.openQuestions ?? 0;
+    if (questions > 0 && commands.includes('clarify')) {
+        more.unshift(el('button', { class: 'btn btn-chip', type: 'button', title: 'Answer the spec\'s open questions', onclick: (e) => run('clarify', e.currentTarget) },
+            `Clarify · ${questions} open question${questions === 1 ? '' : 's'}`));
+    }
     const pattern = state.detail?.commandHint ?? (commandSet === 'companion' ? '/speckit.companion.<step>' : '/speckit.<step>');
     const hint = installHint('card');
     const stockNote = commandSet === 'companion' || hint

@@ -328,6 +328,30 @@ function countTaskCheckboxes(content) {
   }
   return { checked, total };
 }
+var FENCE = /^\s*(```|~~~)/;
+var MARKER_OR_CODE = /`[^`\n]*`|\[NEEDS CLARIFICATION:?\s*([^\]]*)\]/gi;
+function clarificationsIn(markdown) {
+  let fence;
+  const prose = [];
+  for (const line of markdown.split(/\r?\n/)) {
+    const marker = FENCE.exec(line)?.[1];
+    if (fence) {
+      if (marker === fence) fence = void 0;
+      continue;
+    }
+    if (marker) {
+      fence = marker;
+      continue;
+    }
+    prose.push(line);
+  }
+  const questions = [];
+  for (const match of prose.join("\n").matchAll(MARKER_OR_CODE)) {
+    const question = match[1]?.replace(/\s+/g, " ").trim();
+    if (question) questions.push(question);
+  }
+  return questions;
+}
 function asString(v) {
   return typeof v === "string" && v.length > 0 ? v : void 0;
 }
@@ -839,6 +863,7 @@ function buildSpecRow({ id, ctx, specText, files, written = null, tasksText, upd
     number: name.match(/^(\d+)-/)?.[1] ?? null,
     local: name.startsWith("_"),
     title: typeof ctx?.specName === "string" && ctx.specName || firstHeading2(specText) || name,
+    openQuestions: specText ? clarificationsIn(specText).length : 0,
     workflow: typeof ctx?.workflow === "string" ? ctx.workflow : null,
     branch: typeof ctx?.branch === "string" ? ctx.branch : null,
     hasContext: ctx != null,

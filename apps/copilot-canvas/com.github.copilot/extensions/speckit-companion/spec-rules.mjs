@@ -1,7 +1,7 @@
 // The board's rules with no IO, ported from the VS Code viewer and bundled into apps/claude-mod by its build.
 
 import { countTaskCheckboxes, firstHeading as documentTitle, hasCheckboxLine, listTasks, phaseProgress } from './tasks.mjs';
-import { DEFAULT_PIPELINE_STEPS, STATUSES, STEP_STATUS, deriveStepHistory, deriveTimingSummary, deriveViewerState, formatElapsed } from './vendor/viewer-core.mjs';
+import { DEFAULT_PIPELINE_STEPS, STATUSES, STEP_STATUS, clarificationsIn, deriveStepHistory, deriveTimingSummary, deriveViewerState, formatElapsed } from './vendor/viewer-core.mjs';
 
 export { countTaskCheckboxes, listTasks, phaseProgress, formatElapsed, deriveViewerState };
 
@@ -229,6 +229,7 @@ export function buildSpecRow({ id, ctx, specText, files, written = null, tasksTe
         number: name.match(/^(\d+)-/)?.[1] ?? null,
         local: name.startsWith('_'),
         title: (typeof ctx?.specName === 'string' && ctx.specName) || firstHeading(specText) || name,
+        openQuestions: specText ? clarificationsIn(specText).length : 0,
         workflow: typeof ctx?.workflow === 'string' ? ctx.workflow : null,
         branch: typeof ctx?.branch === 'string' ? ctx.branch : null,
         hasContext: ctx != null,
