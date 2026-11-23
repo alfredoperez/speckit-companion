@@ -70,6 +70,19 @@ RUNTIME_SCRIPTS = frozenset({
     "receipts.py",
 })
 
+# The plan-block grammars `plan-blocks.py` reads at run time from `presets/_parts/`.
+# They ship beside the scripts, or the plan step crashes on a real install.
+RUNTIME_PARTS = frozenset({"call-paths.md", "code-pins.md", "states.md", "screens.md"})
+PARTS_DIR = os.path.join(EXT_ROOT, "presets", "_parts")
+
+
+def plan_block_parts() -> set[str]:
+    """The part files `plan-blocks.py` names in its PARTS table."""
+    text = open(os.path.join(HERE, "plan-blocks.py"), encoding="utf-8").read()
+    table = re.search(r"^PARTS = \{(.*?)\}", text, re.M | re.S)
+    return {f"{name}.md" for name in re.findall(r':\s*"([^"]+)"', table.group(1))} if table else set()
+
+
 BUILD_ONLY = frozenset({
     # Build-time analysis. It could ship — stdlib-only and read-only — but nothing
     # shipped invokes it, and the gate is right that a packaged script no command
@@ -317,6 +330,15 @@ def check() -> list[str]:
             f"referenced but missing: {script} — a shipped command calls it, "
             f"but no such file exists in scripts/"
         )
+    for part in sorted(plan_block_parts() - RUNTIME_PARTS):
+        problems.append(
+            f"part read but not packaged: {part} — plan-blocks.py reads it at run time, "
+            f"but it is not in RUNTIME_PARTS, so the plan step would crash on a real install"
+        )
+    for part in sorted(RUNTIME_PARTS - plan_block_parts()):
+        problems.append(f"part packaged but unread: {part} — plan-blocks.py does not name it")
+    for part in sorted(p for p in RUNTIME_PARTS if not os.path.isfile(os.path.join(PARTS_DIR, p))):
+        problems.append(f"declared part absent: {part} — no such file in presets/_parts/")
     for rel in missing_command_files():
         problems.append(
             f"command file absent: {rel} — extension.yml declares it under "
@@ -368,8 +390,15 @@ def _copy_to(dest: str) -> int:
     os.makedirs(dest, exist_ok=True)
     for script in sorted(RUNTIME_SCRIPTS):
         shutil.copy2(os.path.join(HERE, script), os.path.join(dest, script))
+    parts = os.path.join(os.path.dirname(os.path.abspath(dest)), "presets", "_parts")
+    os.makedirs(parts, exist_ok=True)
+    for part in sorted(RUNTIME_PARTS):
+        shutil.copy2(os.path.join(PARTS_DIR, part), os.path.join(parts, part))
     note = f" (cleared {cleared} pre-existing script(s))" if cleared else ""
-    print(f"[package-manifest] copied {len(RUNTIME_SCRIPTS)} runtime scripts to {dest}{note}")
+    print(
+        f"[package-manifest] copied {len(RUNTIME_SCRIPTS)} runtime scripts to {dest}{note} "
+        f"and {len(RUNTIME_PARTS)} plan-block parts to {parts}"
+    )
     return 0
 
 

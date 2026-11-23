@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ### Fixed
 - **Wave times stay honest when tasks close late.** Tasks closed together share ==one time== instead of each showing zero, and each close names the next wave to close. ([#1019](https://github.com/alfredoperez/speckit-companion/issues/1019)) <!-- area: run-record -->
+- **Plan blocks work on an installed extension.** Picking call paths, code pins, states or screens in the plan step ==finds its guides== instead of crashing. ([#1039](https://github.com/alfredoperez/speckit-companion/pull/1039)) <!-- area: install -->
 
 ## [0.28.0] - 2026-11-17
 
