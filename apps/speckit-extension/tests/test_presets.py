@@ -201,6 +201,11 @@ class WhatEachPresetChanges(unittest.TestCase):
         project = self.build_with("brownfield")
         self.assertIn("verify-manually", project.nodes_in("implement"))
 
+    def test_brownfield_checks_the_requirements_between_build_and_record(self):
+        nodes = self.build_with("brownfield").nodes_in("implement")
+        self.assertLess(nodes.index("implement-exec"), nodes.index("check-requirements"))
+        self.assertLess(nodes.index("check-requirements"), nodes.index("record-verified"))
+
     def test_brownfield_keeps_the_dependency_a_variant_stands_in_for(self):
         """`quality-checklist` reads `draft-spec`; the delta variant stands in for it."""
         project = self.build_with("brownfield")

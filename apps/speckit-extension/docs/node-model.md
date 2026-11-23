@@ -88,6 +88,7 @@ A node declares its output two ways. `writes:` is what the step always produces;
 | tasks | `handoff` | control | new file — absorbs `timing` + `self-advance` |
 | implement | `_frame` | — | new file |
 | implement | `implement-exec` | author | new file (executes tasks.md and runs the checks) — single author node |
+| implement | `check-requirements` | gate | runs by default above `simple` size: a worker with only the requirements and the diff calls each met, missing or at risk |
 | implement | `record-verified` | control | records what was verified, decided and left open, split out of `implement-exec` to keep nodes under the word limit |
 | implement | `handoff` | control | new file — absorbs `timing` + `self-advance` |
 | classify | — | — | **existing command** (`speckit.companion.classify.md`) — stays separately dispatchable; not decomposed in v1 |

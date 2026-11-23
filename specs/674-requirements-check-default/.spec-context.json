@@ -1,0 +1,448 @@
+{
+  "workflow": "companion",
+  "specName": "Check the requirements by default above small size",
+  "branch": "main",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:04:02.521Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T16:04:23.920Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:04:28.507Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:07:40.139Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:07:55.761Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:07:56.295Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:07:56.420Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:08:16.357Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:08:25.111Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:08:25.112Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:08:32.672Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:08:37.089Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:09:06.977Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:09:06.978Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:09:06.978Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:09:06.979Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:11:49.684Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:11:49.719Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:11:51.010Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T16:11:54.553Z"
+    }
+  ],
+  "request": "Issue #1028: Investigate: make independent review the default above small size. The PR body must carry `Closes #1028`.\n\nOwner's settled decisions (do not re-ask):\n- Turn `check-requirements` (apps/speckit-extension/nodes/implement/check-requirements.md) on by default whenever the recorded size is above `simple` (that is `normal` or `oversized`; a missing size counts as `normal`). A `simple` run skips it.\n- It never waits for a person, so it runs the same in auto. Its worker dispatch and its rule that an `at risk` closes with a test stay as they are.\n- `verify-manually` stays opt-in (it stops for a person, which auto must never do). No new red-first record. No second independent review: `check-requirements` checks requirements against the diff, while the risk-tier review at handoff looks for bugs, so they do not double up.\n- Put it in implement's default order after `implement-exec` and before `record-verified` (it may add tests, which record-verified then records), in `nodes/implement/_order.yml` order and phases; remove it from `optional`. The shipped `workflows/presets/brownfield.yml` lists its own implement nodes, so add it there too.\n- Rebuild the assembled commands with `apps/speckit-extension/scripts/build.py`, commit the output, keep `build.py --check` and the extension test suite green, and update tests that pin the implement order.\n- Docs: the Implement section of apps/website/src/content/docs/docs/steps/index.mdx, and wherever the Workflow Builder docs list check-requirements as optional (apps/website/src/content/docs/docs/customize/workflow-builder.mdx). One `[Unreleased]` line in apps/speckit-extension/CHANGELOG.md (`<!-- area: pipeline -->`, one sentence body, PR link). No version bump.\n- After merge, the issue's other ideas are answered in a closing comment: verify-manually stays opt-in, red-first is not recorded, review before tasks is already review-gaps.",
+  "unattended": true,
+  "expectations": [
+    "Turning on the manual click-through check by default",
+    "Recording a test that failed before the code was written",
+    "A second independent review on top of the risk-tier review"
+  ],
+  "context": [
+    "area: apps/speckit-extension/nodes/implement",
+    "area: apps/speckit-extension/workflows/presets/brownfield.yml",
+    "area: apps/website/src/content/docs/docs",
+    "constraint: auto never pauses"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Implement runs the requirements check after the build and before the verified record",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_requirements_check.py::test_it_runs_after_the_build_and_before_the_verified_record"
+      ]
+    },
+    "FR-002": {
+      "title": "The check skips simple runs and runs for normal, oversized or missing size",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_requirements_check.py::test_it_skips_a_simple_run_and_treats_a_missing_size_as_normal"
+      ]
+    },
+    "FR-003": {
+      "title": "The check never waits for a person",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_requirements_check.py::test_it_never_stops_for_a_person_and_works_without_subagents"
+      ]
+    },
+    "FR-004": {
+      "title": "Brownfield includes the check in implement",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_presets.py::test_brownfield_checks_the_requirements_between_build_and_record"
+      ]
+    },
+    "FR-005": {
+      "title": "The check is no longer an optional extra",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_requirements_check.py::test_the_panel_no_longer_offers_it_as_an_add_on"
+      ]
+    },
+    "FR-006": {
+      "title": "Shipped commands match sources; docs and changelog describe the default",
+      "tasks": [
+        "T006",
+        "T007",
+        "T009",
+        "T010"
+      ],
+      "tests": [
+        "build.py --check and docs-consistency.test.ts"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 8,
+    "projectedTasks": 9,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "An independent requirements check runs by default on every implement above small size",
+  "size": "normal",
+  "source": "#1028",
+  "workingBranch": "674-requirements-check-default",
+  "decisions": [
+    {
+      "decision": "Gate the check on size in its own first line",
+      "why": "No mechanism skips a node by size and simple runs still reach implement",
+      "rejected": "A size key in _order.yml",
+      "by": "agent",
+      "at": "2026-11-23T16:07:39.891Z"
+    },
+    {
+      "decision": "Add an inline fallback for hosts without subagents",
+      "why": "The check runs by default now, so it must work on Copilot and one-shot hosts",
+      "rejected": "No fallback",
+      "by": "agent",
+      "at": "2026-11-23T16:07:39.891Z"
+    },
+    {
+      "decision": "Keep the risk-tier review alongside the check",
+      "why": "One checks requirements against the diff, the other hunts bugs",
+      "rejected": "Folding the check into the review",
+      "by": "agent",
+      "at": "2026-11-23T16:07:39.891Z"
+    },
+    {
+      "decision": "Kept kind: gate",
+      "why": "constitution-check is a gate in plan's default order already; the kind is a builder label and nothing pauses on it",
+      "rejected": "Relabelling the node",
+      "by": "agent",
+      "at": "2026-11-23T16:11:49.881Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Order edits in two files, a gate and fallback in one node, a rebuild, tests and docs",
+      "key_finding": "No node is skipped by size anywhere, so the gate must live in the node text"
+    },
+    "tasks": {
+      "summary": "10 tasks: two story phases on disjoint files, then rebuild, docs, changelog and validation"
+    },
+    "implement": {
+      "summary": "check-requirements runs by default above simple size, in implement and brownfield"
+    }
+  },
+  "approach": "Move check-requirements into implement's default order and brownfield's, gate it on size in its first line, add a no-subagent fallback, rebuild and document.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Tests for the check's slot, gate, fallback and add-ons; failing first",
+      "files": [
+        "apps/speckit-extension/tests/test_requirements_check.py"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Check moved into implement's default order with a size gate and an inline fallback",
+      "files": [
+        "apps/speckit-extension/nodes/implement/_order.yml",
+        "apps/speckit-extension/nodes/implement/check-requirements.md"
+      ],
+      "wave": "T002-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Check moved into implement's default order with a size gate and an inline fallback",
+      "files": [
+        "apps/speckit-extension/nodes/implement/_order.yml",
+        "apps/speckit-extension/nodes/implement/check-requirements.md"
+      ],
+      "wave": "T002-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Brownfield test: the check sits between build and record; failing first",
+      "files": [
+        "apps/speckit-extension/tests/test_presets.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Brownfield implement runs the check after the build",
+      "files": [
+        "apps/speckit-extension/workflows/presets/brownfield.yml"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Rebuilt implement; docs, node table and changelog describe the default check",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.implement.md",
+        "apps/website/src/content/docs/docs/steps/index.mdx",
+        "apps/speckit-extension/docs/node-model.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ],
+      "wave": "T006-T009"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Rebuilt implement; docs, node table and changelog describe the default check",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.implement.md",
+        "apps/website/src/content/docs/docs/steps/index.mdx",
+        "apps/speckit-extension/docs/node-model.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ],
+      "wave": "T006-T009"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Rebuilt implement; docs, node table and changelog describe the default check",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.implement.md",
+        "apps/website/src/content/docs/docs/steps/index.mdx",
+        "apps/speckit-extension/docs/node-model.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ],
+      "wave": "T006-T009"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Rebuilt implement; docs, node table and changelog describe the default check",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.implement.md",
+        "apps/website/src/content/docs/docs/steps/index.mdx",
+        "apps/speckit-extension/docs/node-model.md",
+        "apps/speckit-extension/CHANGELOG.md"
+      ],
+      "wave": "T006-T009"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Suite, drift, parity and changelog checks pass",
+      "files": [
+        "apps/speckit-extension/tests"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "speckit-extension tests",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 470.4,
+      "result": "---------------------------------------------------------------------- · Ran 1546 tests in 469.972s · OK (skipped=14)",
+      "commit": "620389d0",
+      "tree": "002b6e0922248e5c3140d795fa488542b9de88a0"
+    },
+    {
+      "what": "build drift",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.2,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "620389d0",
+      "tree": "002b6e0922248e5c3140d795fa488542b9de88a0"
+    },
+    {
+      "what": "shape parity",
+      "command": "python3 apps/speckit-extension/scripts/check_shape_parity.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[shape-parity] OK — 7 bodies match parts",
+      "commit": "620389d0",
+      "tree": "002b6e0922248e5c3140d795fa488542b9de88a0"
+    },
+    {
+      "what": "changelog consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 9.5,
+      "result": "Snapshots:   0 total · Time:        5.786 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "620389d0",
+      "tree": "002b6e0922248e5c3140d795fa488542b9de88a0"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "No live agent run yet: the default check is proven on the built command and the builder graph only. The batched sandbox run after #1030 covers it.",
+      "step": "implement"
+    }
+  ],
+  "last_action": "all checks pass",
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "9 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-23T16:11:51.058Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-23T16:11:51.115Z",
+      "by": "extension",
+      "finishedAt": "2026-11-23T16:11:54.648Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}
