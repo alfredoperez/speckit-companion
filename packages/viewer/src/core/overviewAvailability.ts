@@ -10,6 +10,7 @@ export interface RecordedActivity {
     verified?: readonly unknown[];
     coverage?: readonly unknown[];
     concerns?: readonly unknown[];
+    amendments?: readonly unknown[];
     filesModified?: readonly unknown[];
     livingSpecs?: unknown;
     history?: readonly unknown[];
@@ -25,6 +26,7 @@ export function hasAnyData(state: RecordedActivity): boolean {
     if (state.verified && state.verified.length > 0) return true;
     if (state.coverage && state.coverage.length > 0) return true;
     if (state.concerns && state.concerns.length > 0) return true;
+    if (state.amendments && state.amendments.length > 0) return true;
     if (state.filesModified && state.filesModified.length > 0) return true;
     if (state.livingSpecs) return true;
     if (state.history && state.history.length > 0) return true;

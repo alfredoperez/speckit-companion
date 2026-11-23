@@ -596,6 +596,17 @@ describe('source ticket and lineage', () => {
         expect(row(host, 'Extends')?.textContent).toBe('specs/041-saved-filters');
         expect(row(host, 'Replaces')?.textContent).toBe('specs/030-old');
     });
+
+    it('shows how many times a spec was amended and the last change', () => {
+        const host = mount(base({ amendments: [{ what: 'Add export' }, { what: 'Drop the limit' }] } as never));
+        expect(row(host, 'Amended')?.textContent).toBe('2 times · last: Drop the limit');
+        expect(row(mount(base({ amendments: [{ what: 'Add export' }] } as never)), 'Amended')?.textContent).toBe('1 time · last: Add export');
+    });
+
+    it('shows no Amended row without amendments, and renders one when it is the only lineage', () => {
+        expect(row(mount(base({})), 'Amended')).toBeFalsy();
+        expect(row(mount(base({ source: undefined, extends: undefined, supersedes: undefined, amendments: [{ what: 'Only change' }] } as never)), 'Amended')?.textContent).toBe('1 time · last: Only change');
+    });
 });
 
 describe('request and decision provenance', () => {

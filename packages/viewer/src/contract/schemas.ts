@@ -37,6 +37,13 @@ const idList = z.union([
     z.string().transform((ids) => ids.split(',').map((id) => id.trim()).filter(Boolean)),
 ]);
 const concern = z.looseObject({ task: z.string().optional(), note: z.string() });
+const amendment = z.looseObject({
+    what: z.string(),
+    why: z.string().optional(),
+    at: z.string().optional(),
+    by: z.string().optional(),
+    replanned: z.boolean().optional(),
+});
 const verification = z.looseObject({
     what: z.string(),
     result: z.string().optional(),
@@ -93,6 +100,7 @@ export const SpecContextSchema = z.looseObject({
     approach: z.string().optional(),
     decisions: z.array(z.union([decision, z.string()])).optional(),
     concerns: z.array(z.union([concern, z.string()])).optional(),
+    amendments: z.array(amendment).optional(),
     verified: z.array(z.union([verification, z.string()])).optional(),
     coverage: z
         .record(

@@ -48,6 +48,7 @@ MATRIX: list[tuple[str, list[str]]] = [
     ("verified-text", ["--verified", "tests pass"]),
     ("verified-json", ["--verified", '{"what": "suite", "result": "green"}']),
     ("concern-text", ["--concern", "flaky on windows"]),
+    ("amend-json", ["--amend", '{"what": "dropped the export button", "why": "out of scope", "replanned": true}']),
     ("expectation", ["--expectation", "no version bump"]),
     ("context", ["--context", "area: scripts/"]),
     ("coverage-title", ["--coverage-req", "FR-001", "--title", "the requirement text"]),
@@ -171,11 +172,20 @@ class CliMatrixTests(unittest.TestCase):
 
     def test_a_capture_call_writes_no_lifecycle_history(self) -> None:
         seeded = 1
-        for name in ("decision-text", "verified-text", "concern-text", "expectation", "context",
+        for name in ("decision-text", "verified-text", "concern-text", "amend-json", "expectation", "context",
                      "coverage-title", "assumes", "step-summary-text", "set-one"):
             with self.subTest(invocation=name):
                 ctx = self.results[name]["ctx"]
                 self.assertEqual(len(ctx.get("history") or []), seeded, name)
+
+    def test_an_amendment_lands_on_the_record_and_leaves_status_alone(self) -> None:
+        ctx = self.results["amend-json"]["ctx"]
+        entry = ctx["amendments"][0]
+        self.assertEqual(entry["what"], "dropped the export button")
+        self.assertEqual(entry["why"], "out of scope")
+        self.assertIs(entry["replanned"], True)
+        self.assertTrue(entry.get("at"))
+        self.assertEqual(ctx.get("status"), self.results["concern-text"]["ctx"].get("status"))
 
     def test_a_multi_flag_capture_call_records_every_flag(self) -> None:
         ctx = run_one(["--decision", "d-from-multi", "--verified", "v-from-multi"])["ctx"]

@@ -197,6 +197,8 @@ In the stock workflow a spec stays at **Implemented**, with a yellow beaker in t
 
 Specs flow forward. Each change gets its own spec folder, and a completed spec is final. When a later change builds on or replaces an earlier one, it starts a new folder and links back, so the history reads as a chain.
 
+When you change your mind after work has started, `/speckit.companion.amend` edits the spec in place and records the change. If a requirement was added or removed, it re-plans and adds the new tasks. It never moves the spec's status: on a completed spec the new tasks wait until you reopen it with **Set status** in VS Code.
+
 **Reactivate** is the one exception. It reopens a completed or archived spec in place, for work that belongs to that same change.
 
 Companion doesn't write changes back into a long-lived spec per capability. Living specs, the sidebar view, and the seven `living-*` commands were retired; the [loss list](https://github.com/alfredoperez/speckit-companion/blob/main/specs/669-retire-living-specs/loss-list.md) names what went and why. Teams that want flow-back can use the community [`reconcile`](https://github.com/stn1slv/spec-kit-reconcile) extension for Spec Kit, which reconciles drift into the feature's own spec, plan and tasks.

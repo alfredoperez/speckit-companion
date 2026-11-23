@@ -413,3 +413,60 @@ class RiskGlobTest(unittest.TestCase):
         self.assertFalse(m("src/*.ts", "src/a/b.ts"))
         self.assertTrue(m("src/?.ts", "src/a.ts"))
         self.assertTrue(m("Apps/VSCode/**", "apps/vscode/x.ts"))
+
+
+class AmendmentTests(unittest.TestCase):
+    """`amendments` is the one capture list that appends without de-dupe."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        (self.dir / ".spec-context.json").write_text(
+            json.dumps({"workflow": "companion", "status": "implemented", "currentStep": "implement", "history": []}),
+            encoding="utf-8")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def ctx(self):
+        return json.loads((self.dir / ".spec-context.json").read_text(encoding="utf-8"))
+
+    def test_an_amendment_is_stamped_and_defaults_to_not_replanned(self):
+        capture.append_amendments(self.dir, [json.dumps({"what": "renamed the filter", "why": "clearer"})])
+        entry = self.ctx()["amendments"][0]
+        self.assertEqual(entry["what"], "renamed the filter")
+        self.assertEqual(entry["why"], "clearer")
+        self.assertIs(entry["replanned"], False)
+        self.assertEqual(entry["by"], "ai")
+        self.assertTrue(entry["at"])
+
+    def test_loose_values_are_stored_in_the_shape_the_viewer_reads(self):
+        capture.append_amendments(self.dir, [json.dumps({"what": "added export", "why": 123, "replanned": "true"})])
+        entry = self.ctx()["amendments"][0]
+        self.assertEqual(entry["why"], "123")
+        self.assertIs(entry["replanned"], True)
+
+    def test_plain_text_becomes_the_what(self):
+        capture.append_amendments(self.dir, ["dropped CSV export"])
+        self.assertEqual(self.ctx()["amendments"][0]["what"], "dropped CSV export")
+
+    def test_two_identical_amendments_both_stay(self):
+        same = json.dumps({"what": "dropped CSV export"})
+        capture.append_amendments(self.dir, [same])
+        capture.append_amendments(self.dir, [same])
+        self.assertEqual(len(self.ctx()["amendments"]), 2)
+
+    def test_an_amendment_never_moves_the_lifecycle(self):
+        capture.append_amendments(self.dir, [json.dumps({"what": "x", "replanned": True})])
+        c = self.ctx()
+        self.assertEqual((c["status"], c["currentStep"], c["history"]), ("implemented", "implement", []))
+
+    def test_the_batch_appends_amendments_every_time_it_runs(self):
+        doc = json.dumps({"amendments": [{"what": "added FR-009", "replanned": True}]})
+        capture.apply_batch(self.dir, doc, "implement")
+        capture.apply_batch(self.dir, doc, "implement")
+        self.assertEqual(len(self.ctx()["amendments"]), 2)
+
+    def test_a_malformed_amendments_batch_is_refused(self):
+        with self.assertRaises(ValueError):
+            capture._parsed_batch('{"amendments": "text"}')
