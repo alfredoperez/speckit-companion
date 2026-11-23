@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 - **Doctor checks plugin freshness.** It flags each Claude Code plugin your Companion config or project nodes call that is ==behind its marketplace==, naming both versions. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: install -->
 
 ### Changed
+- **Specify asks its open questions before plan.** Auto assumes an answer and ==records a concern for each==, and every spec states its non-goals and verification plan. ([#1037](https://github.com/alfredoperez/speckit-companion/pull/1037)) <!-- area: pipeline -->
 - **Plan writes only the design docs needed.** A data model is written only for ==a new entity==, and contracts only for a new or changed API. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: pipeline -->
 
 ### Fixed
