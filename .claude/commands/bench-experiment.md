@@ -48,6 +48,8 @@ If it is missing, or if `ps aux | grep mds_stores` shows Spotlight busy, tell th
 
 ### 3. Bake
 
+Before baking, move the bench's Companion checkout to the code under test: `git -C ~/dev/GitHub/speckit-companion.worktrees/bench-main checkout --detach origin/main`, then `npm ci && npm run compile`; `COMPANION_DIR` points there, so stop if the printed `speckitExtBuild` is not the commit you meant to measure.
+
 ```bash
 npm run compile                          # the driver dispatches the GUI preamble from dist/
 node "$SANDBOXES_REPO"/bench/sync-templates.mjs --sizes <sizes> --ext <ext> --speckit <speckit> --sweep "<label>"
