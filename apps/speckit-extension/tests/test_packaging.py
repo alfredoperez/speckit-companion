@@ -180,6 +180,18 @@ class TestGateFailsOnDrift(unittest.TestCase):
             self.assertEqual(pm._copy_to(dest), 0)
             self.assertEqual(set(os.listdir(dest)), set(pm.RUNTIME_SCRIPTS))
 
+    def test_copy_to_ships_the_parts_the_plan_step_reads(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = os.path.join(tmp, "scripts")
+            self.assertEqual(pm._copy_to(dest), 0)
+            shipped = set(os.listdir(os.path.join(tmp, "presets", "_parts")))
+            self.assertEqual(shipped, pm.plan_block_parts())
+
+    def test_a_part_the_plan_step_reads_but_the_list_misses_fails_the_check(self):
+        short = frozenset(pm.RUNTIME_PARTS - {"call-paths.md"})
+        with mock.patch.object(pm, "RUNTIME_PARTS", short):
+            self.assertProblem(pm.check(), "part read but not packaged: call-paths.md")
+
 
 class TestCopyToLeavesExactlyTheList(unittest.TestCase):
     """The archive must carry the packing list and nothing else, however dest arrived."""

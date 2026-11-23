@@ -30,7 +30,7 @@ Release the **spec-kit extension** (`apps/speckit-extension/`, `id: companion`) 
    - **Every `provides.commands[].file` exists** AND every command markdown directly under `apps/speckit-extension/commands/` is listed in `provides.commands` (files in `commands/reference/` are read on demand, not commands).
    - README is current (it's the catalog listing page).
 4. **Commit + push** to `main` (`chore(speckit-ext): release v<X.Y.Z>`).
-5. **Build the archive** — **allow-list, runtime files only**. Copy just what the installed extension runs (manifest, dispatched commands, the workflow, the runtime scripts, license). Do NOT ship docs, CHANGELOG, ROADMAP, README, `examples/`, or the build-only `nodes/`+`presets/` sources — the catalog renders README/CHANGELOG from GitHub blob URLs, not the zip. (Don't "restore" a `tar --exclude` deny-list here: an allow-list is what keeps future doc/source additions out of the package.)
+5. **Build the archive** — **allow-list, runtime files only**. Copy just what the installed extension runs (manifest, dispatched commands, the workflow, the runtime scripts and the plan-block parts `package-manifest.py --copy-to` lays beside them, license). Do NOT ship docs, CHANGELOG, ROADMAP, README, `examples/`, or the rest of the build-only `nodes/`+`presets/` sources — the catalog renders README/CHANGELOG from GitHub blob URLs, not the zip. (Don't "restore" a `tar --exclude` deny-list here: an allow-list is what keeps future doc/source additions out of the package.)
    ```bash
    V=<X.Y.Z>
    rm -rf /tmp/cb && mkdir -p /tmp/cb/companion-$V/scripts
