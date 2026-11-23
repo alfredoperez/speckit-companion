@@ -50,9 +50,9 @@ The plan step checks its design against the constitution and records the result 
   <p>Or click <code>+</code> in the Specs view, write the brief and press <strong>Create Spec</strong>.</p>
 </Actions>
 
-Specify creates a `specs/<number>-<name>/` folder and writes the spec in it, named `spec.md` like the stock workflow's (specs written before Companion switched keep their `<name>.spec.md` name and still open). The assistant checks the spec once against a short quality list and fixes what fails in place.
+Specify creates a `specs/<number>-<name>/` folder and writes the spec in it, named `spec.md` like the stock workflow's (specs written before Companion switched keep their `<name>.spec.md` name and still open). The assistant checks the spec once against a short quality list and fixes what fails in place. Every spec also says what it leaves out (Non-goals), any rules for this change only, and how you'll know it works (Verification plan); a small change can say "None".
 
-Where the brief leaves a question open, the spec marks it in the text. **Clarify**, under **Other actions** in the footer, has your assistant ask you those questions and write the answers in.
+Where the brief leaves a question open, specify asks you before plan: up to three questions in one numbered table, each with options. Your answers go into the spec and onto the spec's record as your decisions. **Clarify**, under **Other actions** in the footer, runs a fresh round of questions on the spec whenever you want one.
 
 The Companion command sizes the change before it writes the spec. There's no setting for this.
 
@@ -171,10 +171,11 @@ Auto runs specify, plan, tasks, implement and converge in order without stopping
 
 It needs the Companion Spec Kit extension, the SpecKit Companion workflow, and an assistant that keeps working after a step finishes. In a terminal that runs one command and stops, auto runs the first step and stops there.
 
-Three things differ from running the steps yourself:
+Four things differ from running the steps yourself:
 
 - A change sized simple goes from specify straight to implement.
 - The run is marked unattended, so a [hook](/docs/customize/workflow-builder) that would stop and ask a person records the checkpoint and carries on.
+- Specify doesn't ask its open questions. It picks the most reasonable answer, writes it under Assumptions and records a concern for each, so you can check every guess afterwards.
 - You can't pause it from the editor. To stop it, stop your assistant.
 
 To read the spec before it becomes code, run the steps one at a time and [review with comments](/docs/steps/review-with-comments).

@@ -21,7 +21,12 @@ reads: [draft-spec]
    python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --decision '{"decision": "<the option they chose, in their terms>", "id": "spec-question-<row number>", "by": "you"}'
    ```
 
-   Do not proceed to the next step on an unanswered table. The advisory checklist records what it could not settle and moves on, deferring to `clarify`; this one holds the step until the spec is clean. Pick it when a wrong spec is more expensive than a slow one.
+   Do not proceed to the next step on an unanswered table. The default self-check asks only the open questions; this one holds the step until every checklist item passes. Pick it when a wrong spec is more expensive than a slow one.
+
+   **Unattended** (the dispatched prompt or `.spec-context.json` says `unattended: true`): never ask. Replace each unresolved item with the most reasonable answer, write it under Assumptions, and record one concern per question:
+   ```bash
+   python3 .specify/extensions/companion/scripts/write-context.py --feature-dir <feature_directory> --concern '{"note": "Question <n>: assumed <answer> for: <question>", "step": "specify"}'
+   ```
 
    ```markdown
    # Specification Quality Checklist: [FEATURE NAME]

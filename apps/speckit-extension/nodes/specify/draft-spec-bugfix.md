@@ -20,6 +20,8 @@ reads: [resolve-dir]
      - `WHEN [condition] THEN the system SHALL CONTINUE TO [existing behaviour]`
      Name the behaviour near the defect that must survive the fix. A fix that breaks its neighbour is a worse outcome than the defect, and this is the only place anyone writes that down before it happens.
    - **Root cause** *(when known)*: one or two sentences. If it isn't known yet, say so. Don't guess in the spec and then design against the guess.
+   - **Non-goals** *(mandatory, "None" allowed)*: what the fix deliberately leaves alone.
+   - **Verification plan** *(mandatory)*: how a person or a test proves the defect is gone and the unchanged behaviour holds.
    - **Success Criteria › Measurable Outcomes** *(mandatory)*: measurable `SC-001…` outcomes. For a fix these are usually "the reproduction no longer reproduces" plus the unchanged behaviours still holding.
    - **Verbatim Constraints** *(include only when the report pins exact values)*: an error string, a route, a column name, recorded **verbatim, in backticks, exactly as written**.
 

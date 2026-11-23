@@ -15,7 +15,10 @@ reads: [resolve-dir]
    - **Requirements › Functional Requirements** *(mandatory)*: numbered `FR-001…`, each one testable MUST/SHOULD statement. A genuinely unresolvable choice is `[NEEDS CLARIFICATION: …]` (max 3); prefer an informed default recorded under Assumptions.
    - **Key Entities** *(when the feature involves data)*: what each represents, its key attributes and relationships, no implementation detail. Mark an entity that already exists and that this feature does not reshape with *(existing)* after its name, so plan writes no data model for it.
    - **Success Criteria › Measurable Outcomes** *(mandatory)*: technology-agnostic `SC-001…` outcomes (time, count, percentage, pass/fail).
+   - **Non-goals**: what this change deliberately leaves out.
+   - **Change-level rules**: constraints that hold for this change only ("no new dependency", "keep the public API").
+   - **Verification plan**: how a person or a test proves it works, in a few steps.
    - **Assumptions**: the defaults you chose for anything the request left open.
    - **Verbatim Constraints** *(only when the request pins exact values)*: every literal the result must match (a `data-testid`, route, endpoint, CLI flag, env var, config key, exact UI copy, column name), in backticks, exactly as written. Never paraphrase, recase or rename them; downstream steps use these exact strings. This is the one place implementation detail belongs in a spec.
 
-3. Tighten every requirement until it is testable and unambiguous, and remove a section that does not apply. Carry the Functional Requirements into the wrap-up call as `coverage`, each with its one-line text as `title`.
+3. Tighten every requirement until it is testable and unambiguous. Remove an optional section that does not apply; Non-goals, Change-level rules and Verification plan stay and say "None" when a small change has nothing for them. Carry the Functional Requirements into the wrap-up call as `coverage`, each with its one-line text as `title`.
