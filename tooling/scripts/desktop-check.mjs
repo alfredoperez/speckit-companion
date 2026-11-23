@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Drives a real VS Code window with this extension and a throwaway project (or an existing one, --sandbox), and saves a screenshot per step.
-// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark|bearded|anthracite] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet] [--record <dir>]
+// usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark|bearded|anthracite] [--scale 2|3] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet] [--record <dir>]
 // --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
 // --sheet also writes every picture of the run onto one reduced sheet (_sheet.png), the file to look at first.
 // --record also runs the recording steps, each saving its frames and one JSON of facts under <dir>/<name>/.
@@ -37,6 +37,8 @@ const RECORD = recordDir();
 const SHEET = process.argv.includes('--sheet');
 // A still and a piece of footage want the same window: small enough to read, drawn at twice the pixel density.
 const FILM_WINDOW = Boolean(SHOTS || RECORD);
+// Pixel density of a film window. 2 by default; --scale 3 gives pictures sharp enough for a 2x zoom in a talk or a clip.
+const SCALE = Number(arg('scale', '2'));
 // A crop is read in a docs column about 650px wide, so the capture window is kept small enough for its text to survive that.
 const SHOT_WINDOW = { width: 1240, height: 800 };
 const CHECK_WINDOW = { width: 1680, height: 1050 };
@@ -207,7 +209,7 @@ async function launch({ root, project, user, bin }) {
             '--skip-release-notes',
             '--disable-updates',
             '--window-size=1680,1050',
-            ...(FILM_WINDOW ? ['--force-device-scale-factor=2'] : []),
+            ...(FILM_WINDOW ? [`--force-device-scale-factor=${SCALE}`] : []),
         ],
         // In a sandbox, keep `specify` off the extension's PATH so opening the folder cannot run a preset command in it.
         ...(SANDBOX ? { env: { ...process.env, PATH: `${bin}:/usr/bin:/bin:/usr/sbin:/sbin` } } : {}),
