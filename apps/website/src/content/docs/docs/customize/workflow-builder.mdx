@@ -210,6 +210,14 @@ A workflow is a whole named configuration. Switching swaps node order, hooks, te
 | `risk.high`, `risk.low` | Paths that make a change high or low risk, on top of the defaults. The tier sets how deep implement reviews the work. |
 | `mutation.enabled` | `true` runs a mutation check at the end of implement and marks requirements whose tests catch no planted bug as weak. Off by default; it adds minutes. |
 
+## Spec Kit presets
+
+Spec Kit presets are not the workflow presets above. A workflow preset is a starting point for your own Companion workflow; a Spec Kit preset, added with `specify preset add`, replaces or wraps Spec Kit's commands and templates for the whole project.
+
+The **Spec Kit presets** panel lists each one installed here: its version, where it came from, whether it is on, its priority, and every command, template or script it provides with what it replaces. Open it from the board's menu; on a stock project it sits on the board itself.
+
+A preset that replaces or wraps a command Companion hooks into, or a template Companion writes from, is marked with a warning, because Companion can stop recording that step. From the panel you can search the catalog and add, update or remove a preset. Each runs `specify preset` in a terminal you can see, and adding, updating or removing asks first, naming the files it replaces and any clash. A clash warns; it never blocks.
+
 ## On a stock Spec Kit project
 
 Without the Companion extension for Spec Kit, the board draws the project's own workflow: `.specify/workflows/` when one is installed, otherwise the `/speckit.*` commands your assistant has. **Build** is disabled and nothing is written under `.specify/companion/`. A hook's checkbox sets `enabled` for it in `.specify/extensions.yml`, and a document shape row opens that template from `.specify/templates/`.

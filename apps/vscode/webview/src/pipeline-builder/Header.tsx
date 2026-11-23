@@ -34,6 +34,8 @@ interface Props {
     onNewWorkflow: () => void;
     /** Append a step to the run. The board's seams pass the step to follow. */
     onNewStep?: () => void;
+    /** Open the Spec Kit presets installed here. */
+    onOpenPresets?: () => void;
     /** Take the reader to a changed lane. The DOM lookup belongs to the panel. */
     onShowChanged?: (step: string) => void;
     /** The first-run line has been read. Absent outside the panel. */
@@ -310,6 +312,10 @@ export function Header(props: Props) {
                         Open companion.yml
                     </button>
                 )}
+                <button class="builder-action builder-action--quiet"
+                    onClick={() => props.onOpenPresets?.()}>
+                    Spec Kit presets
+                </button>
                 <button class="builder-action builder-action--quiet" disabled={busy}
                     onClick={onPreview}>
                     Preview build
@@ -341,10 +347,12 @@ export function Header(props: Props) {
                             ...(graph.configured || onShipped
                                 ? [{ id: 'open', label: 'Open companion.yml' }] : []),
                             { id: 'preview', label: 'Preview build', disabled: busy },
+                            { id: 'presets', label: 'Spec Kit presets' },
                         ]}
                         onPick={id => {
                             if (id === 'step') { props.onNewStep?.(); }
                             else if (id === 'open') { onOpenConfig(); }
+                            else if (id === 'presets') { props.onOpenPresets?.(); }
                             else { onPreview(); }
                         }} />
                 </div>

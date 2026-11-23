@@ -12,6 +12,7 @@ import type {
     PipelineNode,
     PipelinePhase,
     PipelineStep,
+    SpecPreset,
     StockHook,
 } from '../../../../src/protocol/pipeline';
 
@@ -313,3 +314,27 @@ export const WHOLE = graph([AUTO, SPECIFY, PLAN, TASKS, IMPLEMENT], {
     customised: true,
     workflows: { available: ['shipped', 'bugfix'], active: '' },
 });
+
+/** Spec Kit presets as the host sends them, one of which overlaps a command the Companion hooks. */
+export const SPEC_PRESETS: SpecPreset[] = [
+    {
+        id: 'acme-house-style', name: 'Acme House Style', version: '1.2.0',
+        description: 'The team\'s own spec and plan templates.', source: 'catalog',
+        enabled: true, priority: 10, clashes: ['speckit.specify', 'spec-template'],
+        items: [
+            {
+                type: 'command', name: 'speckit.specify', replaces: 'speckit.specify',
+                strategy: 'replace', file: 'commands/speckit.specify.md',
+            },
+            {
+                type: 'template', name: 'spec-template', replaces: 'spec-template',
+                strategy: 'wrap', file: 'templates/spec-template.md',
+            },
+        ],
+    },
+    {
+        id: 'strict-plans', name: '', version: '0.3.0', description: '', source: 'local',
+        enabled: false, priority: 20, clashes: [], problem: 'manifest has no items list',
+        items: [],
+    },
+];

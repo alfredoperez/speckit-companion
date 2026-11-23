@@ -738,13 +738,13 @@ describe('the header at a docked width', () => {
     it('folds the actions row two cannot hold into one menu', async () => {
         const host = await overflow();
         const said = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => el.textContent);
-        expect(said).toEqual(['Add step', 'Open companion.yml', 'Preview build']);
+        expect(said).toEqual(['Add step', 'Open companion.yml', 'Preview build', 'Spec Kit presets']);
     });
 
     it('offers no companion.yml the project does not have', async () => {
         const host = await overflow(graph({ configured: false }));
         const said = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => el.textContent);
-        expect(said).toEqual(['Add step', 'Preview build']);
+        expect(said).toEqual(['Add step', 'Preview build', 'Spec Kit presets']);
     });
 
     it('names the fold for a screen reader, since it is drawn as a mark', () => {

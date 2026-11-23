@@ -38,7 +38,6 @@ function view(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
             command: 'speckit-specify',
         }],
         constitution: { command: 'speckit-constitution', written: true },
-        presets: [],
         registry: { path: '.specify/extensions.yml' },
         buildBlocked: 'Nothing here is built.',
         ...over,
@@ -178,18 +177,22 @@ describe('the board on a stock Spec Kit project', () => {
             .toContain('no workflow file');
     });
 
-    it('lists a preset that is applied to the project', () => {
+    it('draws the Spec Kit presets panel with the presets it is given', () => {
         const host = mount(
-            <StockBoard
-                view={view({
-                    presets: [{
-                        id: 'companion-standard', name: 'Companion Standard',
-                        description: 'Stock commands with timing capture',
-                    }],
-                })}
-                status={null} {...ACTIONS} />);
+            <StockBoard view={view()} status={null} {...ACTIONS}
+                presets={[{
+                    id: 'acme-style', name: 'Acme Style', version: '1.0.0', description: '',
+                    source: 'catalog', enabled: true, priority: 10, clashes: ['speckit.specify'],
+                    items: [],
+                }]} />);
 
-        expect(host.querySelector('.pb-stock-preset-name')!.textContent)
-            .toBe('Companion Standard');
+        expect(host.querySelector('.pb-spec-preset')!.textContent).toContain('Acme Style');
+        expect(host.querySelector('.pb-spec-preset-clash')).not.toBeNull();
+    });
+
+    it('says no Spec Kit presets are installed when there are none', () => {
+        const host = mount(<StockBoard view={view()} status={null} {...ACTIONS} />);
+
+        expect(host.textContent).toContain('No Spec Kit presets installed here.');
     });
 });

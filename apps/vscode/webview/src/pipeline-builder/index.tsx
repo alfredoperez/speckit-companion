@@ -20,10 +20,13 @@ import {
     HookWhen,
     PipelineNode,
     PipelineStatus,
+    SpecPreset,
     StockWorkflowView,
     isGraphError,
 } from '../../../src/protocol/pipeline';
 import { StockBoard } from './StockBoard';
+import { PresetsPanel } from './PresetsPanel';
+import { SidePanel } from './SidePanel';
 import { BrokenPipeline } from './BrokenPipeline';
 import { Canvas, hooksAt, withoutNode as withoutNodeOf } from './Canvas';
 import { Header } from './Header';
@@ -57,6 +60,7 @@ type Side =
     | { kind: 'new-workflow' }
     | { kind: 'new-step'; after?: string }
     | { kind: 'template'; command: string }
+    | { kind: 'presets' }
     /** Where one node's verdicts route. `node` is the node that decides. */
     | { kind: 'decision'; command: string; node: string }
     | null;
@@ -133,6 +137,7 @@ function App() {
     const [graph, setGraph] = useState<PipelineGraphResult | null>(null);
     // A stock project is a different board, not a graph with things missing.
     const [stock, setStock] = useState<StockWorkflowView | null>(null);
+    const [specPresets, setSpecPresets] = useState<SpecPreset[]>([]);
     const [buildState, setBuildState] = useState<PipelineBuildKind>('unconfigured');
     const [busy, setBusy] = useState(false);
     const [side, setSide] = useState<Side>(null);
@@ -160,6 +165,8 @@ function App() {
             } else if (message.type === 'stock') {
                 setStock(message.view);
                 setGraph(null);
+            } else if (message.type === 'specPresets') {
+                setSpecPresets(message.presets);
             } else if (message.type === 'busy') {
                 setBusy(message.busy);
             } else if (message.type === 'notice') {
@@ -196,6 +203,13 @@ function App() {
         return () => window.removeEventListener('message', onMessage);
     }, []);
 
+    const presetActions = {
+        onPresetSearch: (query: string) => vscode.postMessage({ type: 'presetSearch', query }),
+        onPresetAdd: (id: string) => vscode.postMessage({ type: 'presetAdd', id }),
+        onPresetUpdate: (id: string) => vscode.postMessage({ type: 'presetUpdate', id }),
+        onPresetRemove: (id: string) => vscode.postMessage({ type: 'presetRemove', id }),
+    };
+
     if (stock) {
         return (
             <StockBoard
@@ -211,6 +225,8 @@ function App() {
                     vscode.postMessage({ type: 'selectStockWorkflow', id });
                 }}
                 onRunCommand={command => vscode.postMessage({ type: 'runStockCommand', command })}
+                presets={specPresets}
+                {...presetActions}
             />
         );
     }
@@ -297,6 +313,7 @@ function App() {
                 onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
                 onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
                 onNewStep={newStep}
+                onOpenPresets={() => { setNotice(null); setSide({ kind: 'presets' }); }}
                 // Matched on the property rather than through a selector, since
                 // a step is named by whoever wrote the workflow.
                 onShowChanged={name => {
@@ -480,6 +497,18 @@ function App() {
                         />
                     ) : null;
                 })()}
+
+                {side?.kind === 'presets' && (
+                    <SidePanel label="Spec Kit presets" title="Spec Kit presets"
+                        where="Installed under .specify/presets, and what each one replaces."
+                        onClose={() => setSide(null)}>
+                        <PresetsPanel presets={specPresets}
+                            onSearch={presetActions.onPresetSearch}
+                            onAdd={presetActions.onPresetAdd}
+                            onUpdate={presetActions.onPresetUpdate}
+                            onRemove={presetActions.onPresetRemove} />
+                    </SidePanel>
+                )}
 
                 {side?.kind === 'new-step' && (
                     <NewStepForm

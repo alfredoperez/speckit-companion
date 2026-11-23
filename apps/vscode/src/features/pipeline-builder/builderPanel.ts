@@ -28,6 +28,8 @@ import { createDispatcher, DispatcherMap } from '../../core/utils/dispatcher';
 import { getProjectRoot } from '../../core/projectRoot';
 import { nodeFile, readableNode } from './readableNode';
 import { projectKind } from './projectKind';
+import { cleanQuery, isPresetId, presetCommandLine, readSpecPresets } from './specPresets';
+import { runSpecifyPreset } from '../../speckit/processExtensions';
 import { stockRefusal } from './stockGuard';
 import { setHookEnabled } from './stockHooks';
 import { formatStockCommands, readStockWorkflow, stockFileToOpen } from './stockWorkflow';
@@ -142,6 +144,7 @@ export class PipelineBuilderPanel {
             '.specify/extensions.yml',
             '.specify/workflows/**/*.yml',
             '.specify/presets/**/preset.yml',
+            '.specify/presets/.registry',
             '.specify/extensions/companion/**',
         ]) {
             const watcher = vscode.workspace.createFileSystemWatcher(
@@ -181,6 +184,14 @@ export class PipelineBuilderPanel {
 
     private readonly handlers: DispatcherMap<BuilderToExtensionMessage, []> = {
         ready: () => this.send(),
+        presetSearch: async message => {
+            const query = cleanQuery(message.query);
+            if (!query) { this.say('That search has characters a preset search cannot take.'); return; }
+            await this.runPreset('search', query);
+        },
+        presetAdd: message => this.changePreset('add', message.id),
+        presetUpdate: message => this.changePreset('update', message.id),
+        presetRemove: message => this.changePreset('remove', message.id),
         build: () => this.run(BUILD_COMMAND),
         preview: () => this.run('speckit.companion.previewPipelineBuild'),
 
@@ -964,7 +975,45 @@ export class PipelineBuilderPanel {
         }
     }
 
+    private async runPreset(verb: 'search' | 'add' | 'update' | 'remove', arg: string): Promise<void> {
+        const line = presetCommandLine(verb, arg);
+        if (!line) { this.say('That is not a preset name.'); return; }
+        await runSpecifyPreset(this.workspaceRoot, line);
+    }
+
+    private async changePreset(verb: 'add' | 'update' | 'remove', id: string): Promise<void> {
+        if (!isPresetId(id)) { this.say('That is not a preset name.'); return; }
+        const installed = readSpecPresets(this.workspaceRoot).find(preset => preset.id === id);
+        const lines: string[] = [];
+        if (installed) {
+            const files = installed.items.map(item => item.replaces);
+            const what = files.length ? files.join(', ') : 'no files';
+            lines.push(verb === 'update'
+                ? `The installed version replaces: ${what}; the new version may differ.`
+                : `It replaces or changes: ${what}.`);
+            if (installed.clashes.length) {
+                lines.push(`Companion relies on: ${installed.clashes.join(', ')}. Changing this preset can affect them.`);
+            }
+        } else {
+            lines.push('This panel cannot see what a catalog preset replaces before it is installed.');
+            lines.push('If it clashes with something Companion relies on, the panel will warn you after the install.');
+        }
+        const action = verb === 'add' ? 'Add preset' : verb === 'update' ? 'Update preset' : 'Remove preset';
+        const choice = await vscode.window.showWarningMessage(
+            `${action} ${id}?`, { modal: true, detail: lines.join('\n') }, action);
+        if (choice !== action) { return; }
+        await this.runPreset(verb, id);
+    }
+
     private async send(): Promise<void> {
+        try {
+            await this.sendBoard();
+        } finally {
+            await this.post({ type: 'specPresets', presets: readSpecPresets(this.workspaceRoot) });
+        }
+    }
+
+    private async sendBoard(): Promise<void> {
         // A stock project is drawn from its own files. The graph script would
         // otherwise fall back to the copy bundled here and draw Companion's
         // pipeline over a project that cannot run a single node of it.
