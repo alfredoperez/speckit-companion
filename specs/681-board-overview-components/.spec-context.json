@@ -1,0 +1,299 @@
+{
+  "workflow": "companion",
+  "specName": "The board's Overview from the viewer's own components",
+  "branch": "main",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T18:22:08.617Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T18:22:28.137Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T18:22:28.341Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T18:22:28.575Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T18:22:28.735Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T18:22:28.975Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T18:22:29.089Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T18:25:05.553Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T18:25:05.700Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T18:25:05.825Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T18:25:05.955Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T18:25:22.211Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T18:27:30.850Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T18:27:31.107Z"
+    }
+  ],
+  "request": "Issue #1031, slice M (Overview): the Copilot board renders a spec's Overview with the viewer package's own dossier section components (IntentSection, ExpectationsSection, VerifiedSection, DecisionsSection, CoverageSection, OverviewTiming from packages/viewer/src/view/components/OverviewDossier.tsx), rendered to an HTML string on the canvas server at request time from a bundle esbuild builds at build time (add preact-render-to-string as a devDependency; jsx automatic with preact; one new vendor/viewer-overview.mjs). overview.mjs keeps only the board-only parts (board timing note, missing-test marks on disk, run log) and its hand-written section HTML goes. The rendered dossier keeps working inside the board's existing viewerScope wrapper and CSP (no inline style). The PR body says `Part of #1031` and `Part of #983`. The document tabs and Activity panel (slice L) are out of scope and go to a follow-up issue only after the owner agrees.",
+  "unattended": true,
+  "expectations": [
+    "The document tabs and Activity panel"
+  ],
+  "context": [
+    "area: apps/copilot-canvas (build.mjs, overview.mjs)",
+    "area: packages/viewer/src/view/components/OverviewDossier.tsx"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Board Overview from the viewer components, server rendered",
+      "tests": [
+        "apps/copilot-canvas/tests/render.test.mjs (sections in order)"
+      ]
+    },
+    "FR-002": {
+      "title": "Board keeps timing note, missing tests, run log",
+      "tests": [
+        "render.test.mjs (board timing note",
+        "missing test file)"
+      ]
+    },
+    "FR-003": {
+      "title": "No runtime dependency, no inline style",
+      "tests": [
+        "render.test.mjs (no inline style)"
+      ]
+    },
+    "FR-004": {
+      "title": "Tests, bundles, changelog",
+      "tests": [
+        "stale-bundle diff",
+        "changelog test"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 7,
+    "projectedTasks": 4,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "The board shows the same Overview as the viewer, from the same components",
+  "size": "normal",
+  "source": "#1031",
+  "workingBranch": "681-board-overview-components",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Added preact-render-to-string devDependency",
+      "files": [
+        "package.json",
+        "package-lock.json"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Render tests: no inline style, board timing note",
+      "files": [
+        "apps/copilot-canvas/tests/render.test.mjs"
+      ]
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "viewer-overview bundle; overview.mjs renders through it",
+      "files": [
+        "apps/copilot-canvas/build.mjs",
+        "apps/copilot-canvas/overview-entry.tsx",
+        "apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/overview.mjs"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Changelog, builds and suites green",
+      "files": [
+        "apps/copilot-canvas/CHANGELOG.md"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.8,
+      "result": "npm notice run speckit-companion@0.40.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "3dfa5972",
+      "tree": "49b4c62cfc66fec7e100bb31fe2d0733668d490c"
+    },
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 25.1,
+      "result": "npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs · npm notice run speckit-companion@0.40.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "3dfa5972",
+      "tree": "49b4c62cfc66fec7e100bb31fe2d0733668d490c"
+    },
+    {
+      "what": "mod tests",
+      "command": "npm run test:mod",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 6.3,
+      "result": "npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs · npm notice run speckit-companion@0.40.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "3dfa5972",
+      "tree": "49b4c62cfc66fec7e100bb31fe2d0733668d490c"
+    },
+    {
+      "what": "changelog consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "Snapshots:   0 total · Time:        1.512 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "3dfa5972",
+      "tree": "49b4c62cfc66fec7e100bb31fe2d0733668d490c"
+    },
+    {
+      "what": "lockfile installs",
+      "command": "npm ci --dry-run",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.6,
+      "result": "npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js) · npm warn install-scripts · npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.",
+      "commit": "3dfa5972",
+      "tree": "49b4c62cfc66fec7e100bb31fe2d0733668d490c"
+    },
+    {
+      "what": "stale bundles",
+      "command": "git diff --exit-code --stat -- apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor apps/claude-mod/hooks/vendor apps/claude-mod/tests/fixtures",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "no output",
+      "commit": "3dfa5972",
+      "tree": "49b4c62cfc66fec7e100bb31fe2d0733668d490c"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Server-render the viewer dossier sections into the board",
+      "why": "The board shows the same Overview as the viewer and keeps its CSP and plain-JS page",
+      "rejected": "Embedding the speckit-viewer element, which brings the whole app shell and an inline style",
+      "by": "agent",
+      "at": "2026-11-23T18:27:30.038Z"
+    },
+    {
+      "decision": "Tabs and the Activity panel stay the board own for now",
+      "why": "Adopting them is a design change the owner reviews first",
+      "rejected": "Doing slice L in this batch",
+      "by": "agent",
+      "at": "2026-11-23T18:27:30.038Z"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "One canvas suite run failed once and passed on rerun; the flaky test was not identified.",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "The board Overview renders from the viewer components, server side"
+    }
+  },
+  "last_action": "checks pass",
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "8 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-23T18:27:30.898Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-23T18:27:30.952Z",
+      "by": "extension",
+      "finishedAt": "2026-11-23T18:27:31.197Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}
