@@ -1,0 +1,278 @@
+{
+  "workflow": "companion",
+  "specName": "Landing copy pass and still hero tab buttons",
+  "branch": "main",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T15:38:45.306Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T15:39:22.676Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T15:39:43.867Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T15:39:44.333Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T15:39:44.515Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T15:39:44.516Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T15:39:44.517Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T15:39:44.518Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T15:39:51.528Z"
+    },
+    {
+      "step": "implement",
+      "substep": "implement-exec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T15:40:02.855Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T15:40:02.972Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T15:41:21.325Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T15:41:21.325Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T15:41:21.353Z"
+    },
+    {
+      "step": "implement",
+      "substep": "record-verified",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T15:41:32.448Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T15:41:37.579Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T15:41:48.700Z"
+    }
+  ],
+  "request": "Issue #1027: Investigate: 2 ideas from the Watch Later review (landing copy pass + stop the hero tab buttons drifting). The PR body must carry `Closes #1027`.\n\nOwner's decisions (settled, do not re-ask):\n- The H1 \"Spec-driven development, one level up.\" stays unchanged.\n- Rewrite the four-fragment ownership line at apps/website/src/pages/index.astro:603 (\"Your specs. Your pipeline. Your record. Your repo.\") into one plain sentence a visitor reads as a fact, e.g. that specs, pipeline and run record stay as files in their own repo.\n- Remove the em dash from the Understand tab body (line 207, \"...what it decided against — with a coverage table...\") by rewriting the sentence, not swapping punctuation.\n- Rewrite the two headings that use an \"X, not Y\" frame: line 227 'The workflow is yours, not the tool’s' and line 236 'Say it in the margin, not in the chat box'. Keep each heading's meaning, drop the contrast frame. Leave body copy at lines 599 and 1049 and the CTA heading at 1062 alone. Respect the comment at lines 193-199 (three tab phrasings are deliberate; do not touch those).\n- Stop the hero tab buttons (.hero-pip, ~line 1397) from drifting: remove the mote-drift animation from .hero-pip only. .mote and .spore keep their drift. The pips stay still (no replacement animation); keep any existing hover/focus styles. Update the comment at ~1372 that says the drift is deliberate.\n\nScope: apps/website only. Site changes get no changelog line (CLAUDE.md). Follow the writing rules: plain, human sentences, no em dashes, no \"not X, it's Y\" frames, no fragment runs. Verify with the site build (`npm run build` in apps/website or the repo's site build script) and any site tests. This is a visual change: the PR waits for the owner's review, do not merge.",
+  "unattended": true,
+  "expectations": [
+    "The H1 stays unchanged",
+    "No replacement animation for the tab buttons",
+    "No changelog line for a site change"
+  ],
+  "context": [
+    "area: apps/website/src/pages/index.astro",
+    "constraint: three tab phrasings named in the page comment stay unchanged"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Ownership line is one plain sentence about files in the visitor's own repo",
+      "assumes": "read in the diff; copy has no automated test"
+    },
+    "FR-002": {
+      "title": "Understand tab body has no em dash and still names the coverage table",
+      "tests": [
+        "verify-run: no em dash in visible copy"
+      ]
+    },
+    "FR-003": {
+      "title": "Customize and Review headings drop the X, not Y frame and keep their meaning",
+      "assumes": "read in the diff"
+    },
+    "FR-004": {
+      "title": "Hero tab buttons do not animate; motes and spores keep drifting",
+      "assumes": "the .hero-pip animation rule is deleted; motes and spores keep theirs"
+    },
+    "FR-005": {
+      "title": "The H1 and the out-of-scope copy stay unchanged",
+      "assumes": "read in the diff"
+    }
+  },
+  "classification": {
+    "projectedFiles": 1,
+    "projectedTasks": 3,
+    "scopeSignal": "smaller",
+    "verdict": "simple"
+  },
+  "intent": "Landing copy reads like a person wrote it, and the hero tab buttons hold still",
+  "size": "simple",
+  "source": "#1027",
+  "approach": "Edit index.astro only: four copy lines and the .hero-pip motion rule",
+  "workingBranch": "673-landing-copy-pips",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Rewrote the ownership line, the Understand body and the Customize and Review headings",
+      "files": [
+        "apps/website/src/pages/index.astro"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Pips hold still; copy checks pass; site builds after fixing two breaks already on main",
+      "files": [
+        "apps/website/src/pages/index.astro",
+        "apps/website/src/content/docs/docs/copilot-app/index.mdx",
+        "apps/speckit-extension/CHANGELOG.md"
+      ],
+      "wave": "T002-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Pips hold still; copy checks pass; site builds after fixing two breaks already on main",
+      "files": [
+        "apps/website/src/pages/index.astro",
+        "apps/website/src/content/docs/docs/copilot-app/index.mdx",
+        "apps/speckit-extension/CHANGELOG.md"
+      ],
+      "wave": "T002-T003"
+    }
+  },
+  "verified": [
+    {
+      "what": "site build",
+      "command": "cd apps/website && npm run build",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 4.4,
+      "result": "[changelog] vscode@0.36.0 \"Older releases are archived in [`apps/website/src/data/chang\" has no area tag, filed under other by keyword. · [changelog] speckit@0.24.0 \"Older releases are archived in [`apps/website/src/data/chang\" has no area tag, filed under other by keyword. · [changelog] 768 entries in older releases have no area tag and were filed by keyword.",
+      "commit": "01d82655",
+      "tree": "69aac08f5dac5f75c7a61459efe2c1e0bf5e5bc5"
+    },
+    {
+      "what": "H1, lead paragraph, lines 599/1049/1062 and the three deliberate tab phrasings unchanged",
+      "result": "confirmed by diff read"
+    },
+    {
+      "what": "no em dash in visible copy",
+      "command": "bash -c '! head -1075 apps/website/src/pages/index.astro | grep -q —'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "no output",
+      "commit": "01d82655",
+      "tree": "69aac08f5dac5f75c7a61459efe2c1e0bf5e5bc5"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Removed the pips' inline --pdur/--pdelay too",
+      "why": "Nothing reads them once the drift rule is gone",
+      "rejected": "Leaving dead style attributes on the buttons",
+      "by": "agent",
+      "at": "2026-11-23T15:41:21.503Z"
+    },
+    {
+      "decision": "Fixed two site build breaks already on main in this PR",
+      "why": "The site build could not pass without them: an unescaped <name> in the Copilot app docs (#989) and an unknown changelog area 'capture' (#1023)",
+      "rejected": "A separate PR, which would leave this one unverifiable",
+      "by": "agent",
+      "at": "2026-11-23T15:41:21.503Z"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "CI never builds the site, so both breaks reached main unnoticed. A site build job goes in its own PR.",
+      "step": "implement"
+    }
+  ],
+  "step_summaries": {
+    "implement": {
+      "summary": "Landing copy rewritten in plain sentences and the hero tab buttons hold still"
+    }
+  },
+  "last_action": "site build passes",
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "3 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-23T15:41:37.625Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-23T15:41:37.675Z",
+      "by": "extension",
+      "finishedAt": "2026-11-23T15:41:48.789Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}
