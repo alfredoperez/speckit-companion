@@ -1,4 +1,6 @@
-// Port of apps/vscode/src/core/utils/taskCheckboxes.ts; both read apps/vscode/tests/fixtures/task-grammar/.
+// The board's task list, which keeps raw text and phases; counting comes from the viewer core. Both read apps/vscode/tests/fixtures/task-grammar/.
+
+export { countTaskCheckboxes } from './vendor/viewer-core.mjs';
 
 const FENCE_PATTERN = /^\s*(`{3,}|~{3,})/;
 const INLINE_CODE_PATTERN = /(`+)[^`]*?\1/g;
@@ -36,16 +38,6 @@ export function firstHeading(content) {
         if (heading) return heading[1];
     }
     return null;
-}
-
-export function countTaskCheckboxes(content) {
-    let checked = 0;
-    let total = 0;
-    for (const task of listTasks(content)) {
-        total++;
-        if (task.checked) checked++;
-    }
-    return { checked, total };
 }
 
 /** Every task in document order, with the phase heading it sits under. */

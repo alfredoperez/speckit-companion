@@ -1,6 +1,6 @@
 // What the band, the pane and the text replies say, from rows the shared board rules built. No IO.
 
-import { PIPELINE_STEPS, currentTask, formatElapsed, listTasks, phaseTimings, stepTiming, timingSummaryText } from './vendor/board-rules.mjs'
+import { PIPELINE_STEPS, currentTask, deriveViewerState, formatElapsed, listTasks, phaseTimings, stepTiming, timingSummaryText } from './vendor/board-rules.mjs'
 
 const SEP = ' · '
 // Optional Spec Kit phases, in the order they run around the pipeline; other history steps are not phases.
@@ -279,10 +279,18 @@ const names = value => (Array.isArray(value) ? value : typeof value === 'string'
 /** What the Overview tab shows, each part only when the record has it; null with no record. */
 export function overviewModel(row, ctx) {
   if (!ctx) return null
+  let vs = {}
+  try { vs = deriveViewerState(ctx) } catch { /* a malformed record still shows what it holds */ }
   const size = typeof ctx.size === 'string' ? ctx.size : typeof ctx.classification?.verdict === 'string' ? ctx.classification.verdict : null
-  const facts = [size ? `Size: ${oneLine(size)}` : null, row?.workflow ? `Workflow: ${oneLine(row.workflow)}` : null].filter(Boolean)
-  const decisions = list(ctx.decisions)
-    .map(d => (typeof d === 'string' ? { decision: clip(d), why: null } : { decision: clip(d?.decision), why: d?.why ? 'because ' + clip(d.why) : null }))
+  const facts = [
+    size ? `Size: ${oneLine(size)}` : null,
+    row?.workflow ? `Workflow: ${oneLine(row.workflow)}` : null,
+    vs.source ? `Source: ${oneLine(vs.source)}` : null,
+    vs.risk ? `Review depth: ${vs.risk.tier}` : null,
+  ].filter(Boolean)
+  const decided = by => (by && !['ai', 'agent', 'extension'].includes(by) ? ` (decided by ${by})` : '')
+  const decisions = (vs.decisions ?? list(ctx.decisions).map(d => (typeof d === 'string' ? { decision: d } : d ?? {})))
+    .map(d => ({ decision: d.decision ? clip(d.decision) + decided(d.by) : null, why: d.why ? 'because ' + clip(d.why) : null }))
     .filter(d => d.decision)
   const verified = list(ctx.verified)
     .map(v => {

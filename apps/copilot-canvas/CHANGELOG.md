@@ -6,6 +6,7 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ### Fixed
 
+- **Concerns show in the Overview.** The board's run log lists the concerns a run recorded, as the VS Code viewer does. <!-- area: copilot-app -->
 - **Choose coordinated sessions from a list.** The coordinating agent maintains the session options and updates the selected worktree. <!-- area: copilot-app -->
 - **Project chats can select their repository.** Browse for a checkout or enter its path; the board remembers it and watches its specs. <!-- area: copilot-app -->
 - **The board follows each session's worktree.** Without a saved choice, each session's board moves to its own working directory when the runtime reports a change. <!-- area: copilot-app -->
