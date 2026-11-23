@@ -1,0 +1,461 @@
+{
+  "workflow": "companion",
+  "specName": "The canvas and the mod read the shared viewer core",
+  "branch": "main",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:00:39.165Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T17:01:00.474Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:01:00.581Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:01:32.164Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:01:32.261Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:01:32.700Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:01:32.790Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:02:38.514Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:02:38.629Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:02:38.629Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:03:24.586Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:03:24.705Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:04:09.111Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:04:09.111Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:04:25.509Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:04:25.509Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:05:14.730Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T17:05:14.752Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T17:05:19.246Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T17:05:19.470Z"
+    }
+  ],
+  "request": "Issue #1031 (slices S and M, logic only) and #983 V11: the Copilot canvas and the Claude Code mod use speckit-viewer/core instead of hand-written duplicates. The PR body says `Part of #1031` and `Part of #983` (the canvas Overview render and the L slice follow in later PRs).\n\nOwner's settled decisions (do not re-ask):\n- \"Import instead of vendor\" means bundled at build time: the canvas ships as a copied folder with no node_modules, so apps/copilot-canvas/build.mjs bundles one `vendor/viewer-core.mjs` from packages/viewer/src/core subpaths (conditions ['source']), folding in today's vendor/step-history.mjs.\n- Replace only what matches core exactly: tasks.mjs countTaskCheckboxes → core; PIPELINE_STEPS, statusRank and the running/done status tables built from core's DEFAULT_PIPELINE_STEPS, STATUSES and STEP_STATUS. Keep the canvas's own deriveStepBadges, specStatusLabel, listTasks (needs raw text and phase), phaseProgress and every board-only rule (live run, board timing, file reconciliation): core behaves differently there.\n- The canvas Overview (overview.mjs) reads its data from core's deriveViewerState(ctx) and markMissingTests instead of the raw record, keeping its current HTML. This fixes concerns read from `what` instead of `note`.\n- The Claude Code mod (apps/claude-mod/build.mjs gains conditions ['source']) gets core through the bundle chain, and its Overview model (hooks/board.js overviewModel) reads deriveViewerState so the pane shows the same proof rows (#983 V11).\n- Update CLAUDE.md's \"share no code with apps/vscode/\" rule to say the canvas and the mod bundle packages/viewer (and the two apps/vscode files build.mjs already bundles) at build time.\n- Run `npm run canvas:build` and `npm run mod:build` and commit the regenerated vendor bundles and mod fixtures; `npm run test:canvas` and the mod tests must pass; CI fails on a stale bundle. Changelog lines only where a user sees a change (the canvas concerns fix, the mod's richer Overview) in apps/copilot-canvas/CHANGELOG.md and apps/claude-mod/CHANGELOG.md. No version bumps.",
+  "unattended": true,
+  "expectations": [
+    "Rendering the board Overview with the viewer's own components",
+    "The document tabs and Activity panel",
+    "Changing the board's badges, labels or task list"
+  ],
+  "context": [
+    "area: apps/copilot-canvas (build.mjs, tasks.mjs, spec-rules.mjs, overview.mjs)",
+    "area: apps/claude-mod (build.mjs, hooks/board.js)",
+    "constraint: the canvas ships a folder with no node_modules",
+    "constraint: keep board-only rules"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "The canvas build bundles one shared-core module",
+      "tasks": [
+        "T001"
+      ],
+      "tests": [
+        "npm run test:canvas (builds vendor/viewer-core.mjs)"
+      ]
+    },
+    "FR-002": {
+      "title": "Task counting, status order, pipeline steps and step tables come from it",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/core.test.mjs (task grammar",
+        "badges)"
+      ]
+    },
+    "FR-003": {
+      "title": "Board badges, labels, task list and board-only rules stay",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/core.test.mjs"
+      ]
+    },
+    "FR-004": {
+      "title": "The canvas Overview reads the shared derivation",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/copilot-canvas/tests/render.test.mjs::shows the concerns the record wrote under note; ::flags a named test file that is not on disk"
+      ]
+    },
+    "FR-005": {
+      "title": "The mod builds from source and reads the shared derivation",
+      "tasks": [
+        "T006",
+        "T007"
+      ],
+      "tests": [
+        "apps/claude-mod/tests/overview.test.ts::the overview names the source",
+        "the review depth and who decided"
+      ]
+    },
+    "FR-006": {
+      "title": "Bundles regenerated; canvas and mod tests pass",
+      "tasks": [
+        "T010"
+      ],
+      "tests": [
+        "test:canvas",
+        "test:mod",
+        "the CI stale-bundle diff"
+      ]
+    },
+    "FR-007": {
+      "title": "Project rules say both bundle the viewer at build time",
+      "tasks": [
+        "T008"
+      ],
+      "assumes": "CLAUDE.md reworded; prose has no test"
+    }
+  },
+  "classification": {
+    "projectedFiles": 10,
+    "projectedTasks": 10,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "The Copilot canvas and the Claude Code mod read the shared viewer core instead of copies",
+  "size": "normal",
+  "source": "#1031",
+  "workingBranch": "676-canvas-viewer-core",
+  "decisions": [
+    {
+      "decision": "Replace only exact matches with core",
+      "why": "Core badges, task titles and labels behave differently",
+      "rejected": "A full swap",
+      "by": "agent",
+      "at": "2026-11-23T17:01:31.997Z"
+    },
+    {
+      "decision": "One bundled viewer-core module from subpaths",
+      "why": "Avoids pulling the whole core index",
+      "rejected": "Bundling speckit-viewer/core whole",
+      "by": "agent",
+      "at": "2026-11-23T17:01:31.997Z"
+    },
+    {
+      "decision": "Overview reads the derivation but keeps its HTML",
+      "why": "Rendering with viewer components is the next PR",
+      "rejected": "Doing both at once",
+      "by": "agent",
+      "at": "2026-11-23T17:01:31.997Z"
+    },
+    {
+      "decision": "The board Overview feeds derived rows into its existing HTML",
+      "why": "Keeps the markup and its tests; the viewer-component render is the next PR",
+      "rejected": "Rewriting every section on the derived shape",
+      "by": "agent",
+      "at": "2026-11-23T17:05:14.885Z"
+    },
+    {
+      "decision": "The mod keeps its own failed-check logic",
+      "why": "The derivation keeps exit codes only for run checks, so recorded failures would lose their mark",
+      "rejected": "Reading verified from the derivation",
+      "by": "agent",
+      "at": "2026-11-23T17:05:14.885Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "One shared-core bundle, then counting, Overview and the mod on it"
+    },
+    "tasks": {
+      "summary": "10 tasks: a bundle, three small story phases, polish"
+    },
+    "implement": {
+      "summary": "One viewer-core bundle; the board counts, labels and Overview from it; the mod's Overview names source, review depth and deciders"
+    }
+  },
+  "approach": "Bundle vendor/viewer-core.mjs from core subpaths; take exact-match logic from it; Overview and mod read deriveViewerState.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "One viewer-core bundle replaces step-history",
+      "files": [
+        "apps/copilot-canvas/build.mjs"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Counting, status order, pipeline steps and step tables from the core",
+      "files": [
+        "tasks.mjs",
+        "spec-rules.mjs"
+      ],
+      "wave": "T002-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Counting, status order, pipeline steps and step tables from the core",
+      "files": [
+        "tasks.mjs",
+        "spec-rules.mjs"
+      ],
+      "wave": "T002-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Render test for concerns written under note",
+      "files": [
+        "apps/copilot-canvas/tests/render.test.mjs"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Board Overview reads the viewer derivation and markMissingTests",
+      "files": [
+        "overview.mjs"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Mod builds from source; its Overview names source, review depth and who decided",
+      "files": [
+        "apps/claude-mod/build.mjs",
+        "apps/claude-mod/hooks/board.js",
+        "apps/claude-mod/tests/overview.test.ts"
+      ],
+      "wave": "T006-T007"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Mod builds from source; its Overview names source, review depth and who decided",
+      "files": [
+        "apps/claude-mod/build.mjs",
+        "apps/claude-mod/hooks/board.js",
+        "apps/claude-mod/tests/overview.test.ts"
+      ],
+      "wave": "T006-T007"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "CLAUDE.md rule and two changelog lines",
+      "files": [
+        "CLAUDE.md",
+        "apps/copilot-canvas/CHANGELOG.md",
+        "apps/claude-mod/CHANGELOG.md"
+      ],
+      "wave": "T008-T009"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "CLAUDE.md rule and two changelog lines",
+      "files": [
+        "CLAUDE.md",
+        "apps/copilot-canvas/CHANGELOG.md",
+        "apps/claude-mod/CHANGELOG.md"
+      ],
+      "wave": "T008-T009"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Bundles regenerated; canvas, mod, tsc and changelog checks pass",
+      "files": [
+        "vendor bundles"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "canvas tests",
+      "command": "npm run test:canvas",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 24.5,
+      "result": "npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs · npm notice run speckit-companion@0.40.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "c92ff54a",
+      "tree": "31fef1bed5eebe62a9a8239978390d08d8ec3002"
+    },
+    {
+      "what": "mod tests",
+      "command": "npm run test:mod",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 5.1,
+      "result": "npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs · npm notice run speckit-companion@0.40.0 mod:build · npm notice run node apps/claude-mod/build.mjs",
+      "commit": "c92ff54a",
+      "tree": "31fef1bed5eebe62a9a8239978390d08d8ec3002"
+    },
+    {
+      "what": "type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "npm notice run speckit-companion@0.40.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "c92ff54a",
+      "tree": "31fef1bed5eebe62a9a8239978390d08d8ec3002"
+    },
+    {
+      "what": "changelog consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.0,
+      "result": "Snapshots:   0 total · Time:        1.269 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "c92ff54a",
+      "tree": "97db63e2ba902bf3983e4d83404a3b38f1dd2bf7"
+    },
+    {
+      "what": "stale bundles",
+      "command": "git diff --exit-code --stat -- apps/copilot-canvas/com.github.copilot/extensions/speckit-companion/vendor apps/claude-mod/hooks/vendor apps/claude-mod/tests/fixtures",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "no output",
+      "commit": "120a2c53",
+      "tree": "9bf1be82f01ebfcc4ab8a62e6a8ff698fe29fa73"
+    }
+  ],
+  "last_action": "checks pass",
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "14 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-23T17:05:19.280Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-23T17:05:19.317Z",
+      "by": "extension",
+      "finishedAt": "2026-11-23T17:05:19.534Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

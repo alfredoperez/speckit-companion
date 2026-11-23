@@ -4,6 +4,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { escapeHtml } from './vendor/viewer-markdown.mjs';
+import { deriveViewerState, markMissingTests } from './vendor/viewer-core.mjs';
 import { formatElapsed, phaseTimings, timingSummaryText } from './spec-rules.mjs';
 
 export { stepTiming } from './spec-rules.mjs';
@@ -128,21 +129,20 @@ function decisionsSection(ctx) {
         + '</section>';
 }
 
-const names = v => (typeof v === 'string' ? v.split(',').map(s => s.trim()).filter(Boolean) : list(v).filter(s => typeof s === 'string'));
-const looksLikePath = ref => /[\\/]/.test(ref) && /\.[a-z]{2,4}$/i.test(ref.split('::')[0].split('#')[0].trim());
-
-/** Coverage rows in the viewer's shape, with named test files checked against the workspace. */
-export function coverageRows(ctx, root) {
-    const v = ctx?.coverage;
-    if (!v || typeof v !== 'object' || Array.isArray(v)) return [];
-    const rows = [];
-    for (const [req, entry] of Object.entries(v)) {
-        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) continue;
-        const tests = names(entry.tests);
-        const missing = root ? tests.filter(t => looksLikePath(t) && !existsSync(join(root, t.split('::')[0].split('#')[0].trim()))) : [];
-        rows.push({ req, title: text(entry.title) || undefined, tasks: names(entry.tasks), tests, missingTests: missing.length ? missing : undefined });
+/** The viewer's derived rows, or null for a record too malformed to derive (the board then reads it as written). */
+function derived(ctx) {
+    try {
+        return deriveViewerState(ctx);
+    } catch {
+        return null;
     }
-    return rows.sort((a, b) => a.req.localeCompare(b.req, undefined, { numeric: true }));
+}
+
+/** Coverage rows from the viewer's derivation, with named test files checked against the workspace. */
+export function coverageRows(ctx, root) {
+    const rows = derived(ctx ?? {})?.coverage ?? [];
+    const checked = root ? markMissingTests(rows, p => existsSync(join(root, p))) : rows;
+    return [...checked].sort((a, b) => a.req.localeCompare(b.req, undefined, { numeric: true }));
 }
 
 function coverageRow(row) {
@@ -169,7 +169,7 @@ function coverageSection(ctx, root) {
 
 function runLog(ctx) {
     const lastAction = text(ctx.last_action);
-    const concerns = list(ctx.concerns).map(c => (typeof c === 'string' ? c : c?.what)).filter(c => typeof c === 'string');
+    const concerns = list(ctx.concerns).map(c => (typeof c === 'string' ? c : c?.note)).filter(c => typeof c === 'string');
     const files = list(ctx.files_modified).filter(f => typeof f === 'string');
     if (!lastAction && !concerns.length && !files.length) return '';
     return '<details class="dossier-log"><summary>Run log</summary><div class="dossier-log__body">'
@@ -182,6 +182,9 @@ function runLog(ctx) {
 /** The whole dossier, or an empty string when the record carries nothing worth a page. */
 export function renderOverview(ctx, root, options = {}) {
     if (!ctx || typeof ctx !== 'object') return '';
-    const body = [intentSection(ctx, options), expectationsSection(ctx), verifiedSection(ctx), decisionsSection(ctx), coverageSection(ctx, root), runLog(ctx)].join('');
+    // The rows the viewer derives from the record; history and the board-only fields stay as written.
+    const vs = derived(ctx);
+    const view = vs ? { ...ctx, intent: vs.intent, expectations: vs.expectations, context: vs.context, decisions: vs.decisions, verified: vs.verified, concerns: vs.concerns, classification: vs.classification } : ctx;
+    const body = [intentSection(view, options), expectationsSection(view), verifiedSection(view), decisionsSection(view), coverageSection(ctx, root), runLog(view)].join('');
     return body ? `<div class="dossier">${body}</div>` : '';
 }

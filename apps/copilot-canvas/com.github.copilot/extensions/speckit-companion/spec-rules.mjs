@@ -1,11 +1,11 @@
 // The board's rules with no IO, ported from the VS Code viewer and bundled into apps/claude-mod by its build.
 
 import { countTaskCheckboxes, firstHeading as documentTitle, hasCheckboxLine, listTasks, phaseProgress } from './tasks.mjs';
-import { deriveStepHistory, deriveTimingSummary, formatElapsed } from './vendor/step-history.mjs';
+import { DEFAULT_PIPELINE_STEPS, STATUSES, STEP_STATUS, deriveStepHistory, deriveTimingSummary, deriveViewerState, formatElapsed } from './vendor/viewer-core.mjs';
 
-export { countTaskCheckboxes, listTasks, phaseProgress, formatElapsed };
+export { countTaskCheckboxes, listTasks, phaseProgress, formatElapsed, deriveViewerState };
 
-export const PIPELINE_STEPS = ['specify', 'plan', 'tasks', 'implement'];
+export const PIPELINE_STEPS = [...DEFAULT_PIPELINE_STEPS];
 export const DEFAULT_SPEC_DIRS = ['specs', '.specify/specs'];
 
 const STATUS_LABELS = {
@@ -123,8 +123,8 @@ function firstHeading(markdown) {
 
 const FILE_STEPS = ['specify', 'plan', 'tasks'];
 const DOC_OF_STEP = { specify: 'spec', plan: 'plan', tasks: 'tasks' };
-const DONE_STATUS = { specify: 'specified', plan: 'planned', tasks: 'ready-to-implement', implement: 'implemented' };
-const RUNNING_STATUS = { specify: 'specifying', plan: 'planning', tasks: 'tasking', implement: 'implementing' };
+const DONE_STATUS = Object.fromEntries(PIPELINE_STEPS.map(step => [step, STEP_STATUS[step].completed]));
+const RUNNING_STATUS = Object.fromEntries(PIPELINE_STEPS.map(step => [step, STEP_STATUS[step].inFlight]));
 // The title of a stock Spec Kit template nobody has filled in, such as `Implementation Plan: [FEATURE]`.
 const UNFILLED_TITLE = /^[^[\]]*:\s*\[FEATURE(?: NAME)?\]$/;
 const squash = text => text.replace(/\s+/g, ' ').trim();
@@ -152,7 +152,7 @@ export function writtenDocs(texts, templates = {}) {
 
 /** How far along a status is, for a writer that must never move a record backwards; -1 for a status it does not know. */
 export function statusRank(status) {
-    return Object.keys(STATUS_REACH).indexOf(status);
+    return STATUSES.indexOf(status);
 }
 
 /** The status a set of step badges amounts to. */

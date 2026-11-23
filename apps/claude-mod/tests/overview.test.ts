@@ -92,3 +92,15 @@ test('a spec with no record gets an Overview from its files, and the model of th
   expect(await ui.find({ type: 'Text', text: 'INTENT' })).toBeUndefined()
   expect(overviewModel(buildSpecRow({ id: 'specs/x', ctx: null, specText: null, files: {}, tasksText: null, updatedAt: null }), null)).toBe(null)
 })
+
+test('the overview names the source, the review depth and who decided', async () => {
+  const model = overviewModel({ workflow: 'speckit-companion' }, {
+    ...FULL,
+    source: '#931',
+    risk: { tier: 'high', computed: 'normal', reasons: ['touches auth'], raised: { tier: 'high', reason: 'payments code', by: 'ai', at: '2026-11-23T00:00:00Z' } },
+    decisions: [{ decision: 'Stream the rows', by: 'you' }],
+  })
+  expect(model.facts).toContain('Source: #931')
+  expect(model.facts).toContain('Review depth: high')
+  expect(model.decisions[0].decision).toBe('Stream the rows (decided by you)')
+})

@@ -4,6 +4,9 @@ Changes to the **Claude Code mod** are listed here. It is versioned on its own i
 
 ## [Unreleased]
 
+### Added
+- **The Overview names its proof.** The pane shows the spec's source ticket, its review depth and who made each decision.
+
 ## [0.2.0] - 2026-10-06
 
 ### Added

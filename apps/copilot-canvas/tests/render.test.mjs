@@ -49,6 +49,12 @@ describe('overview dossier', () => {
         assert.ok(!html.includes('>Intent<'));
     });
 
+    it('shows the concerns the record wrote under note', () => {
+        const html = renderOverview({ intent: 'x', concerns: [{ note: 'Flaky on Windows', step: 'implement' }, 'A plain concern'] }, null);
+        assert.match(html, /Flaky on Windows/);
+        assert.match(html, /A plain concern/);
+    });
+
     it('is empty for a record with nothing to say', () => {
         assert.equal(renderOverview({ status: 'planned', history: [] }, null), '');
     });
@@ -97,5 +103,12 @@ describe('overview dossier', () => {
         assert.equal(duration('Specify'), '22s');
         assert.equal(duration('Plan'), '2m 58s');
         assert.match(html, /Timing coverage: 2 of 4 phases/);
+    });
+});
+
+describe('a malformed record', () => {
+    it('still renders what it holds', () => {
+        const html = renderOverview({ intent: 'Keep going', history: [null, 'x'] }, null);
+        assert.match(html, /Keep going/);
     });
 });
