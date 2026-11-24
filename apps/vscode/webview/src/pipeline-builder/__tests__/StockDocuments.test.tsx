@@ -60,14 +60,27 @@ describe('the documents modal', () => {
         expect(opened).toEqual(['.specify/templates/agent-file-template.md']);
     });
 
-    it('runs the constitution command from Revise', () => {
+    it('opens the constitution and runs its command from Revise (FR-012)', () => {
         let revised = 0;
+        const opened: string[] = [];
         const host = mount(<StockDocuments templates={[LAYERED]}
-            constitution={{ command: 'speckit-constitution', written: true }}
-            onOpenFile={noop} onRevise={() => { revised += 1; }} onClose={noop} />);
+            constitution={{ command: 'speckit-constitution', written: true, path: '.specify/memory/constitution.md' }}
+            onOpenFile={p => opened.push(p)} onRevise={() => { revised += 1; }} onClose={noop} />);
 
-        (host.querySelector('.pb-sd-revise') as HTMLButtonElement).click();
+        const [open, revise] = Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-sd-memory button'));
+        open.click();
+        revise.click();
+        expect(opened).toEqual(['.specify/memory/constitution.md']);
         expect(revised).toBe(1);
+    });
+
+    it('offers no Open for a constitution not written yet', () => {
+        const host = mount(<StockDocuments templates={[LAYERED]}
+            constitution={{ command: 'speckit-constitution', written: false }}
+            onOpenFile={noop} onRevise={noop} onClose={noop} />);
+
+        expect(Array.from(host.querySelectorAll('.pb-sd-memory button')).map(b => b.textContent))
+            .toEqual(['Write it']);
     });
 });
 

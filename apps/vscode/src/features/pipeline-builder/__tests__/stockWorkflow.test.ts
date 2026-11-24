@@ -278,6 +278,19 @@ describe('the files the board will open', () => {
         }
     });
 
+    it('opens the constitution once it is written, and not before', () => {
+        const root = project();
+        fs.mkdirSync(path.join(root, '.specify'), { recursive: true });
+        const rel = '.specify/memory/constitution.md';
+
+        expect(readStockWorkflow(root).constitution).toEqual({ command: 'speckit.constitution', written: false });
+        expect(stockFileToOpen(root, rel)).toBeNull();
+
+        write(root, rel, '# Principles');
+        expect(readStockWorkflow(root).constitution!.path).toBe(rel);
+        expect(stockFileToOpen(root, rel)).toBe(path.join(root, rel));
+    });
+
     it('refuses anything it did not draw', () => {
         const root = project();
         write(root, '.specify/templates/spec-template.md', '# shape');

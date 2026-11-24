@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Workflow Builder on stock Spec Kit",
   "branch": "feat/builder-redesign-core",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "converge",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -46,6 +46,170 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-24T19:24:57.305Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:25:06.089Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.327Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.327Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.509Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.510Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.660Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.661Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.661Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.661Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.821Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:36.821Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:37.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:37.154Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:37.154Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:37.155Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:37.332Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:59.328Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:36:59.357Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:37:05.988Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:39:21.922Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T19:39:28.087Z"
     }
   ],
   "request": "Workflow Builder on stock Spec Kit: the same lanes and cards, your own hooks through the add modal, and which template layer is in force.",
@@ -69,6 +233,9 @@
       "tasks": [
         "T012",
         "T013"
+      ],
+      "tests": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockBoard.test.tsx::draws one lane per command"
       ]
     },
     "FR-002": {
@@ -83,6 +250,9 @@
       "tasks": [
         "T012",
         "T013"
+      ],
+      "tests": [
+        "StockBoard.test.tsx::draws a review gate as a chip on the join"
       ]
     },
     "FR-004": {
@@ -100,6 +270,9 @@
         "T004",
         "T013",
         "T014"
+      ],
+      "tests": [
+        "StockBoard.test.tsx::offers one Add Companion button; stockGuard.test.ts::refuses every message but the stock ones"
       ]
     },
     "FR-006": {
@@ -136,6 +309,9 @@
         "T005",
         "T007",
         "T014"
+      ],
+      "tests": [
+        "StockBoard.test.tsx::opens the add modal; StockHooks.test.tsx::the stock add modal"
       ]
     },
     "FR-011": {
@@ -144,6 +320,9 @@
         "T006",
         "T008",
         "T014"
+      ],
+      "tests": [
+        "StockBoard.test.tsx::opens your own hook with Edit and Remove"
       ]
     },
     "FR-012": {
@@ -151,6 +330,9 @@
       "tasks": [
         "T009",
         "T010"
+      ],
+      "tests": [
+        "StockDocuments.test.tsx::lists the layers top first"
       ]
     },
     "FR-013": {
@@ -168,7 +350,8 @@
         "T007",
         "T008",
         "T010"
-      ]
+      ],
+      "assumes": "narrow layout by container query, checked by the sheet's aria-modal test only"
     },
     "FR-015": {
       "title": "Every prior stock action remains reachable",
@@ -202,6 +385,40 @@
       "exitCode": 0,
       "durationSeconds": 0.0,
       "result": "[plan-check] plan.md: 2 call paths, 6 lines, 1 screen, 12 parts. Every cited file and line checks out."
+    },
+    {
+      "what": "Requirements check against the diff, run inline (no subagent tool in this session)",
+      "result": "FR-001..FR-015 met; no pixel check run, deferred to the run's final capture stage"
+    },
+    {
+      "what": "typecheck",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.8,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "2f58a24e",
+      "tree": "3692edb5db263655e26c8cfdb3f2d7c72051ec88"
+    },
+    {
+      "what": "webview typecheck",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.7,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json",
+      "commit": "2f58a24e",
+      "tree": "3692edb5db263655e26c8cfdb3f2d7c72051ec88"
+    },
+    {
+      "what": "related tests",
+      "command": "npx jest apps/vscode/webview/src/pipeline-builder/__tests__/StockBoard.test.tsx apps/vscode/webview/src/pipeline-builder/__tests__/StockHooks.test.tsx apps/vscode/webview/src/pipeline-builder/__tests__/StockDocuments.test.tsx apps/vscode/src/features/pipeline-builder/__tests__/stockGuard.test.ts apps/vscode/src/features/pipeline-builder/__tests__/stockWorkflow.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.9,
+      "result": "Snapshots:   0 total · Time:        1.956 s · Ran all test suites matching /apps\\/vscode\\/webview\\/src\\/pipeline-builder\\/__tests__\\/StockBoard.test.tsx|apps\\/vscode\\/webview\\/src\\/pipeline-builder\\/__tests__\\/StockHooks.test.tsx|apps\\/vscode\\/webview\\/src\\/pipeline-builder\\/__tests__\\/StockDocuments.test.tsx|apps\\/vscode\\/src\\/features\\/pipeline-builder\\/__tests__\\/stockGuard.test.ts|apps\\/vscode\\/src\\/features\\/pipeline-builder\\/__tests__\\/stockWorkflow.test.ts/i.",
+      "commit": "2f58a24e",
+      "tree": "3692edb5db263655e26c8cfdb3f2d7c72051ec88"
     }
   ],
   "decisions": [
@@ -225,6 +442,20 @@
       "rejected": "reading the shipped graph on stock",
       "by": "agent",
       "at": "2026-11-24T19:24:22.670Z"
+    },
+    {
+      "decision": "Host sends hookStep on each stock command step",
+      "why": "a step with no hooks had no registry step name to add under",
+      "rejected": "re-deriving the step name from the command in the webview",
+      "by": "agent",
+      "at": "2026-11-24T19:36:48.810Z"
+    },
+    {
+      "decision": "Fixed With Companion copy with no counts",
+      "why": "the stock view carries no node counts",
+      "rejected": "per-step counts from the shipped graph",
+      "by": "agent",
+      "at": "2026-11-24T19:36:48.810Z"
     }
   ],
   "step_summaries": {
@@ -234,7 +465,201 @@
     },
     "tasks": {
       "summary": "16 tasks: foundational protocol and CSS, three standalone surfaces, then the board and polish"
+    },
+    "implement": {
+      "summary": "Stock board rebuilt as lanes of 2B cards with your own hooks, a hook popover, a documents modal and a workflows modal"
     }
   },
-  "approach": "Rewrite StockBoard as lanes of 2B cards reusing the board CSS. Add a stock hook modal, a hook popover and a documents modal; wire installCompanion through the stock guard to the existing install command."
+  "approach": "Rewrite StockBoard as lanes of 2B cards reusing the board CSS. Add a stock hook modal, a hook popover and a documents modal; wire installCompanion through the stock guard to the existing install command.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "installCompanion message and the stock board stylesheet",
+      "files": [
+        "apps/vscode/src/protocol/pipeline.ts",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "installCompanion message and the stock board stylesheet",
+      "files": [
+        "apps/vscode/src/protocol/pipeline.ts",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "stock guard allows installCompanion; host runs the install command; hookStep on stock steps",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/stockGuard.ts",
+        "apps/vscode/src/features/pipeline-builder/builderPanel.ts",
+        "apps/vscode/src/features/pipeline-builder/stockWorkflow.ts"
+      ],
+      "wave": "T003-T004"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "stock guard allows installCompanion; host runs the install command; hookStep on stock steps",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/stockGuard.ts",
+        "apps/vscode/src/features/pipeline-builder/builderPanel.ts",
+        "apps/vscode/src/features/pipeline-builder/stockWorkflow.ts"
+      ],
+      "wave": "T003-T004"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "stock add/edit modal and hook popover with tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockHookModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/StockHookPopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockHooks.test.tsx"
+      ],
+      "wave": "T005-T008"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "stock add/edit modal and hook popover with tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockHookModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/StockHookPopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockHooks.test.tsx"
+      ],
+      "wave": "T005-T008"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "stock add/edit modal and hook popover with tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockHookModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/StockHookPopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockHooks.test.tsx"
+      ],
+      "wave": "T005-T008"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "stock add/edit modal and hook popover with tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockHookModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/StockHookPopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockHooks.test.tsx"
+      ],
+      "wave": "T005-T008"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "documents modal with layers in force",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockDocuments.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockDocuments.test.tsx"
+      ],
+      "wave": "T009-T010"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "documents modal with layers in force",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockDocuments.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockDocuments.test.tsx"
+      ],
+      "wave": "T009-T010"
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "workflows and presets modal",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockSetup.tsx"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "board rebuilt as lanes of cards and wired to the host",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockBoard.tsx",
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockBoard.test.tsx"
+      ],
+      "wave": "T012-T014"
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "board rebuilt as lanes of cards and wired to the host",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockBoard.tsx",
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockBoard.test.tsx"
+      ],
+      "wave": "T012-T014"
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "board rebuilt as lanes of cards and wired to the host",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/StockBoard.tsx",
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/StockBoard.test.tsx"
+      ],
+      "wave": "T012-T014"
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "stock stories: every hook kind, popover, add, edit, documents, setup, narrow",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__stories__/PipelineBuilder.stories.tsx"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "type checks and related tests pass"
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "constitution path sent, openable, Open drawn beside Revise",
+      "files": [
+        "apps/vscode/src/protocol/pipeline.ts",
+        "apps/vscode/src/features/pipeline-builder/stockWorkflow.ts",
+        "apps/vscode/webview/src/pipeline-builder/StockBoard.tsx",
+        "apps/vscode/webview/src/pipeline-builder/StockDocuments.tsx"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "No visual check of the new board in a browser; the run's final stage regenerates the baselines and clips",
+      "step": "implement"
+    },
+    {
+      "note": "Preset search/add/update/remove are still refused by the stock guard (pre-existing), so the presets panel on stock cannot act",
+      "step": "implement"
+    },
+    {
+      "note": "Constitution has Revise but no Open: the stock view sends no constitution path",
+      "step": "implement"
+    }
+  ],
+  "last_action": "related tests and both type checks green",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-24T19:37:06.039Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T19:37:06.098Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T19:39:28.186Z",
+      "added": [
+        "T017"
+      ],
+      "completed": true
+    }
+  ]
 }

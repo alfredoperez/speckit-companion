@@ -327,6 +327,13 @@ export function StockBoard(props: Props) {
                                 <li class="pb-sb-doc pb-sb-doc--memory">
                                     <FileIcon />
                                     <span class="pb-sb-doc-file">constitution.md</span>
+                                    {view.constitution.path && (
+                                        <button type="button" class="pb-sb-revise"
+                                            aria-label={`Open ${view.constitution.path}`}
+                                            onClick={() => onOpenFile(view.constitution!.path!)}>
+                                            Open
+                                        </button>
+                                    )}
                                     <button type="button" class="pb-sb-revise"
                                         title={`Sends /${view.constitution.command} to your assistant`}
                                         onClick={() => onRunCommand('constitution')}>

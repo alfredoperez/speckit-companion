@@ -767,7 +767,7 @@ function stock(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
         }],
         steps: STOCK_STEPS,
         templates: STOCK_TEMPLATES,
-        constitution: { command: 'speckit-constitution', written: true },
+        constitution: { command: 'speckit-constitution', written: true, path: '.specify/memory/constitution.md' },
         registry: { path: '.specify/extensions.yml' },
         buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
         ...over,

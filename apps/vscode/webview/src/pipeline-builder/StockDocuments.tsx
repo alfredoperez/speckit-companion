@@ -145,6 +145,11 @@ export function StockDocuments({ templates, constitution, open, onOpenFile, onRe
                                 <div class="pb-sd-memory">
                                     <FileIcon />
                                     <span class="pb-sd-pick-file">constitution.md</span>
+                                    {constitution.path && (
+                                        <button type="button" class="pb-sd-revise"
+                                            aria-label={`Open ${constitution.path}`}
+                                            onClick={() => onOpenFile(constitution.path!)}>Open</button>
+                                    )}
                                     <button type="button" class="pb-sd-revise" onClick={onRevise}
                                         title={`Sends /${constitution.command} to your assistant`}>
                                         {constitution.written ? 'Revise' : 'Write it'}

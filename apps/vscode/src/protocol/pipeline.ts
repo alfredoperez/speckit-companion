@@ -158,7 +158,7 @@ export interface StockWorkflowView {
      * `command` is the spelling this project registers, so the row names what
      * the run will actually name.
      */
-    constitution: { command: string; written: boolean } | null;
+    constitution: { command: string; written: boolean; path?: string } | null;
     /** The extension registry, when this project has one. */
     registry: { path: string } | null;
     /** Why Build does nothing here, said once. */

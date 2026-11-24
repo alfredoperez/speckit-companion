@@ -253,6 +253,7 @@ export function stockFileToOpen(
             template.path, ...(template.layers ?? []).map(layer => layer.path)]),
         ...view.workflows.map(choice => choice.path),
         ...(view.registry ? [view.registry.path] : []),
+        ...(view.constitution?.path ? [view.constitution.path] : []),
     ];
     if (!offered.includes(rel)) { return null; }
     const file = path.join(workspaceRoot, rel);
@@ -499,10 +500,9 @@ export function readStockWorkflow(workspaceRoot: string, drawing?: string): Stoc
         workflows: choices,
         steps,
         templates: templates(workspaceRoot),
-        constitution: {
-            command: 'speckit.constitution',
-            written: fs.existsSync(path.join(workspaceRoot, CONSTITUTION_REL)),
-        },
+        constitution: fs.existsSync(path.join(workspaceRoot, CONSTITUTION_REL))
+            ? { command: 'speckit.constitution', written: true, path: CONSTITUTION_REL.split(path.sep).join('/') }
+            : { command: 'speckit.constitution', written: false },
         registry: registry !== null ? { path: EXTENSIONS_REL } : null,
         buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
     };
