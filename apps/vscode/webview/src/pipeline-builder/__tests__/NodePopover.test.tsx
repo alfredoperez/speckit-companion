@@ -297,6 +297,17 @@ describe('the sheet, when the builder is narrow', () => {
         Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024 });
     });
 
+    it('goes Back from the move list to the node\'s details', async () => {
+        await open();
+        await moveList();
+        expect(places().length).toBeGreaterThan(0);
+        const back = Array.from(popover()!.querySelectorAll<HTMLButtonElement>('.pb-pop-back'))[0];
+        back.click();
+        await flush();
+        expect(places()).toHaveLength(0);
+        expect(popover()!.querySelector('[aria-label="Its hooks"]')).not.toBeNull();
+    });
+
     it('opens from the bottom and keeps Tab inside until it closes', async () => {
         await open();
         const sheet = popover()!;
