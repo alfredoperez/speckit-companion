@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Workflow Builder: where each skill comes from, and which skill hooks cannot run",
   "branch": "feat/builder-hook-data",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "converge",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -81,6 +81,106 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-24T16:34:35.415Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T16:35:17.116Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:37:04.514Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:37:04.515Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:38:05.742Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:39:59.876Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:39:59.878Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:40:00.291Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:41:23.517Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:58:07.329Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:58:37.657Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:58:37.686Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T16:58:43.485Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T16:58:52.787Z"
     }
   ],
   "request": "Workflow Builder: say where each skill comes from, and flag a hook whose skill is missing or cannot be called. (Work ONLY in the worktree /Users/alfredoperez/dev/GitHub/speckit-companion-wb-data; branch feat/builder-hook-data already exists, do not create a new branch.)",
@@ -105,6 +205,9 @@
       "tasks": [
         "T001",
         "T007"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_skill_catalog.py"
       ]
     },
     "FR-002": {
@@ -112,6 +215,9 @@
       "tasks": [
         "T001",
         "T007"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_skill_catalog.py::test_a_plugin_installed_for_another_project_is_not_offered"
       ]
     },
     "FR-003": {
@@ -119,6 +225,9 @@
       "tasks": [
         "T001",
         "T007"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_skill_catalog.py::test_disable_model_invocation_marks_a_skill_a_hook_cannot_call"
       ]
     },
     "FR-004": {
@@ -126,6 +235,9 @@
       "tasks": [
         "T003",
         "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_skill_hook_problems.py"
       ]
     },
     "FR-005": {
@@ -133,6 +245,9 @@
       "tasks": [
         "T001",
         "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_skill_hook_problems.py::test_the_build_preview_warns_with_the_same_words_and_still_succeeds"
       ]
     },
     "FR-006": {
@@ -140,6 +255,9 @@
       "tasks": [
         "T005",
         "T006"
+      ],
+      "tests": [
+        "apps/vscode/src/features/specs/__tests__/buildReport.test.ts"
       ]
     },
     "FR-007": {
@@ -147,13 +265,15 @@
       "tasks": [
         "T001",
         "T003"
-      ]
+      ],
+      "assumes": "one function skill_problem called by both build and graph; asserted by the same-words test"
     },
     "FR-008": {
       "title": "Existing fields and messages keep their shape",
       "tasks": [
         "T002"
-      ]
+      ],
+      "assumes": "tsc passes with webview files untouched"
     }
   },
   "classification": {
@@ -179,6 +299,50 @@
       "exitCode": 0,
       "durationSeconds": 0.1,
       "result": "[plan-check] plan.md: 3 call paths, 9 lines. Every cited file and line checks out."
+    },
+    {
+      "what": "typecheck",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.0,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "297e581c",
+      "tree": "e1942144a15356f7f958b11af18d889b95c1d4fa"
+    },
+    {
+      "what": "new python tests",
+      "command": "python3 -m pytest apps/speckit-extension/tests/test_skill_catalog.py apps/speckit-extension/tests/test_skill_hook_problems.py -q",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.9,
+      "result": ".................                                                        [100%] · 17 passed in 0.65s",
+      "commit": "297e581c",
+      "tree": "e1942144a15356f7f958b11af18d889b95c1d4fa"
+    },
+    {
+      "what": "build report jest",
+      "command": "npx jest apps/vscode/src/features/specs/__tests__/buildReport.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "Snapshots:   0 total · Time:        1.906 s · Ran all test suites matching /apps\\/vscode\\/src\\/features\\/specs\\/__tests__\\/buildReport.test.ts/i.",
+      "commit": "297e581c",
+      "tree": "e1942144a15356f7f958b11af18d889b95c1d4fa"
+    },
+    {
+      "what": "docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "Snapshots:   0 total · Time:        1.418 s, estimated 91 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "297e581c",
+      "tree": "e1942144a15356f7f958b11af18d889b95c1d4fa"
+    },
+    {
+      "what": "Requirements check against the diff, run inline (no subagent tool in this host)",
+      "result": "FR-001..FR-008 met; one at-risk (an unreadable skill folder or undecodable SKILL.md could crash the build) closed with a guard and a test"
     }
   ],
   "decisions": [
@@ -209,6 +373,20 @@
       "rejected": "A new warning prefix that could break readers",
       "by": "agent",
       "at": "2026-11-24T16:34:06.617Z"
+    },
+    {
+      "decision": "Treat ~/.claude/skills as source user and never flag it",
+      "why": "Claude Code loads it, so the hook runs for this developer",
+      "rejected": "Project-only catalog, which would flag working hooks",
+      "by": "agent",
+      "at": "2026-11-24T16:58:37.859Z"
+    },
+    {
+      "decision": "BuildReport.warnings and the new graph fields are optional in the protocol",
+      "why": "Webview stories and older installs build report and graph literals without them",
+      "rejected": "Required fields, which break the other team's files",
+      "by": "agent",
+      "at": "2026-11-24T16:58:37.859Z"
     }
   ],
   "step_summaries": {
@@ -218,7 +396,118 @@
     },
     "tasks": {
       "summary": "9 tasks: foundational (3), US1 (3), US2 (1), polish (2)"
+    },
+    "implement": {
+      "summary": "Skill catalog with sources, per-hook problem, build warnings, BuildReport.warnings"
     }
   },
-  "approach": "build-pipeline.py gains skill_catalog and skill_problem; the build warns per bad skill hook and the graph carries choices.skillCatalog and hook.problem. The protocol adds those fields and BuildReport.warnings, lifted from the build log."
+  "approach": "build-pipeline.py gains skill_catalog and skill_problem; the build warns per bad skill hook and the graph carries choices.skillCatalog and hook.problem. The protocol adds those fields and BuildReport.warnings, lifted from the build log.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Skill catalog, problem and build warnings in build-pipeline.py; protocol fields added",
+      "files": [
+        "apps/speckit-extension/scripts/build-pipeline.py",
+        "apps/vscode/src/protocol/pipeline.ts"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Skill catalog, problem and build warnings in build-pipeline.py; protocol fields added",
+      "files": [
+        "apps/speckit-extension/scripts/build-pipeline.py",
+        "apps/vscode/src/protocol/pipeline.ts"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Graph carries skillCatalog, pluginsRead and per-hook problem",
+      "files": [
+        "apps/speckit-extension/scripts/pipeline-graph.py"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Tests for hook problems, build warnings and build report warnings",
+      "files": [
+        "apps/speckit-extension/tests/test_skill_hook_problems.py",
+        "apps/vscode/src/features/specs/__tests__/buildReport.test.ts"
+      ],
+      "wave": "T004-T005"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Tests for hook problems, build warnings and build report warnings",
+      "files": [
+        "apps/speckit-extension/tests/test_skill_hook_problems.py",
+        "apps/vscode/src/features/specs/__tests__/buildReport.test.ts"
+      ],
+      "wave": "T004-T005"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "readBuildReport lifts warnings from the log",
+      "files": [
+        "apps/vscode/src/features/specs/pipelineBuildCommands.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Catalog tests: sources, plugins, scopes, switches, unreadable registry, graph",
+      "files": [
+        "apps/speckit-extension/tests/test_skill_catalog.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Changelog lines drafted into a concern; they need the PR link the voice test requires"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "tsc, related jest (1030 pass), 6 pytest files (144 pass), docs-consistency all green"
+    }
+  },
+  "concerns": [
+    {
+      "note": "Changelog lines not committed: the voice test requires a PR link and this branch has no PR. Root: '**The Workflow Builder learns where skills come from.** Each skill carries its project, personal or plugin source, and ==skill hooks that cannot run carry a reason==.' spec-kit ext: '**Builds warn about skill hooks that cannot run.** A hook naming a missing skill, or one marked ==disable-model-invocation==, prints the reason and still builds.'",
+      "step": "implement"
+    },
+    {
+      "note": "Plugin discovery reads Claude Code's installed_plugins.json v2 and enabledPlugins; an unknown registry version drops plugin skills (pluginsRead false) rather than guessing",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor: numbering warning (three folders share 634) is pre-existing and not touched here; the open implement step it flagged closes with this step",
+      "step": "implement"
+    },
+    {
+      "note": "Skipped the implement after-hooks that commit-and-open a PR: the orchestrating task forbids push and PR",
+      "step": "implement"
+    },
+    {
+      "note": "First related-jest run had 1 failure out of 1030 that did not reproduce on rerun (1030 passed); suite not identified",
+      "step": "implement"
+    }
+  ],
+  "last_action": "implement validated and committed",
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "7 files changed"
+    ]
+  },
+  "convergeStartedAt": "2026-11-24T16:58:43.531Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T16:58:43.585Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T16:58:52.878Z",
+      "added": [],
+      "completed": true
+    }
+  ]
 }
