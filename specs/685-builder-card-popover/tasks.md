@@ -67,8 +67,12 @@ Files: `NodePopover.tsx`, `index.tsx`, `__tests__/NodePopover.test.tsx`, `__test
 
 ## Phase 5: Polish
 
-- [ ] **T013** Validate against Success Criteria: `npx tsc --noEmit -p ./` and `npx jest --findRelatedTests` on the changed files
+- [x] **T013** Validate against Success Criteria: `npx tsc --noEmit -p ./` and `npx jest --findRelatedTests` on the changed files
 
 ## Dependencies & Execution Order
 
 Phase 2 blocks Phases 3 and 4. Phase 3 and Phase 4 own disjoint files and can run in parallel. Within Phase 2, Wave 1 (T001, T002) blocks T003. Within Phase 4, Wave 1 (T009, T010) blocks T011 and T012. Polish runs last.
+
+## Phase 6: Convergence
+
+- [x] T014 Close the popover when its node is gone after a rebuild, rather than keeping a hidden selection, per spec Edge Cases (partial)

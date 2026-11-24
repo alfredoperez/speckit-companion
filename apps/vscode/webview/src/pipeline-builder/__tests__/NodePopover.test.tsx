@@ -188,6 +188,16 @@ describe("a node's popover", () => {
         expect(popover()).toBeNull();
     });
 
+    it('closes when a rebuild takes its node away', async () => {
+        await open();
+        const without = { ...HOOKED, phases: HOOKED.phases.map(p => ({
+            ...p, nodes: p.nodes.filter(n => n.id !== 'draft-spec'),
+        })) };
+        await deliver({ type: 'graph', graph: graph({ steps: [without] }), buildState: 'stale' });
+        await deliver({ type: 'graph', graph: graph({ steps: [HOOKED] }), buildState: 'stale' });
+        expect(popover()).toBeNull();
+    });
+
     it('says why the first node cannot move up, rather than offering it', async () => {
         await open('Resolve the spec folder');
         const up = await more('Move up');

@@ -221,6 +221,11 @@ function App() {
         };
     }, []);
 
+    // A rebuild that took the node away takes its details with it.
+    useEffect(() => {
+        if (pop && graph && !isGraphError(graph) && !findNode(graph, pop)) { setPop(null); }
+    }, [graph, pop]);
+
     const presetActions = {
         onPresetSearch: (query: string) => vscode.postMessage({ type: 'presetSearch', query }),
         onPresetAdd: (id: string) => vscode.postMessage({ type: 'presetAdd', id }),

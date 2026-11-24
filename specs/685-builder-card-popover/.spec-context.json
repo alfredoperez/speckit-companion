@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Builder card with its hooks inside, and a node popover",
   "branch": "feat/builder-redesign-core",
-  "currentStep": "implement",
-  "status": "implementing",
+  "currentStep": "converge",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -149,6 +149,43 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-24T17:59:38.504Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:01:28.128Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:01:28.157Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:02:09.656Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:02:50.282Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:02:56.041Z"
     }
   ],
   "request": "Workflow Builder: a node card with its hooks inside it, each showing whether it ran, and a popover for the details.",
@@ -170,6 +207,9 @@
       "tasks": [
         "T004",
         "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::holds the node and its hooks in one card"
       ]
     },
     "FR-002": {
@@ -177,6 +217,9 @@
       "tasks": [
         "T004",
         "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::carries at most two marks"
       ]
     },
     "FR-003": {
@@ -185,6 +228,9 @@
         "T002",
         "T004",
         "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::marks the kind with an icon"
       ]
     },
     "FR-004": {
@@ -192,6 +238,9 @@
       "tasks": [
         "T004",
         "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::draws a phase's own rows at its top"
       ]
     },
     "FR-005": {
@@ -200,12 +249,18 @@
         "T001",
         "T003",
         "T006"
+      ],
+      "tests": [
+        "HookStatus.test.tsx; Board.test.tsx::each hook says whether it ran"
       ]
     },
     "FR-006": {
       "title": "Builder asks for hook runs on each graph",
       "tasks": [
         "T011"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::asks for the run record with every graph"
       ]
     },
     "FR-007": {
@@ -213,6 +268,9 @@
       "tasks": [
         "T005",
         "T006"
+      ],
+      "tests": [
+        "HookDrag.test.tsx"
       ]
     },
     "FR-008": {
@@ -221,6 +279,9 @@
         "T008",
         "T009",
         "T011"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::opens beside the node"
       ]
     },
     "FR-009": {
@@ -228,6 +289,9 @@
       "tasks": [
         "T008",
         "T011"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::keeps every action the side pane had under More"
       ]
     },
     "FR-010": {
@@ -235,6 +299,9 @@
       "tasks": [
         "T008",
         "T009"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::keeps Tab inside"
       ]
     },
     "FR-011": {
@@ -242,13 +309,17 @@
       "tasks": [
         "T008",
         "T009"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::closes on Escape and hands the keyboard back"
       ]
     },
     "FR-012": {
       "title": "Host theme tokens only",
       "tasks": [
         "T007"
-      ]
+      ],
+      "assumes": "CSS review: only host tokens in the new section"
     }
   },
   "classification": {
@@ -275,6 +346,40 @@
       "exitCode": 0,
       "durationSeconds": 0.0,
       "result": "[plan-check] plan.md: 3 call paths, 8 lines, 1 screen, 10 parts. Every cited file and line checks out."
+    },
+    {
+      "what": "Requirements read against the diff inline (no subagent tool in this session)",
+      "result": "FR-001..FR-012 met; drag, edit and remove of hooks covered by HookDrag, Board and NodePopover tests"
+    },
+    {
+      "what": "webview types",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.1,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json",
+      "commit": "0f91e514",
+      "tree": "6eb44dacfc57b9363f5e6e8cda0e9cdaaa0ff011"
+    },
+    {
+      "what": "extension types",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "0f91e514",
+      "tree": "6eb44dacfc57b9363f5e6e8cda0e9cdaaa0ff011"
+    },
+    {
+      "what": "builder tests",
+      "command": "npx jest apps/vscode/webview/src/pipeline-builder",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 9.6,
+      "result": "Snapshots:   0 total · Time:        8.836 s, estimated 10 s · Ran all test suites matching /apps\\/vscode\\/webview\\/src\\/pipeline-builder/i.",
+      "commit": "0f91e514",
+      "tree": "6eb44dacfc57b9363f5e6e8cda0e9cdaaa0ff011"
     }
   ],
   "decisions": [
@@ -305,6 +410,27 @@
       "rejected": "inline textarea in the popover",
       "by": "agent",
       "at": "2026-11-24T17:44:57.549Z"
+    },
+    {
+      "decision": "The card drops the trash button; removal lives in the popover's More",
+      "why": "the picked card carries a name and at most two marks",
+      "rejected": "keeping a bin on every card",
+      "by": "agent",
+      "at": "2026-11-24T18:01:39.447Z"
+    },
+    {
+      "decision": "Phase after-hooks sit at the top of the phase with a before/after word",
+      "why": "the slice asks for slim rows at the top; the word keeps the order honest",
+      "rejected": "after-hooks below the nodes",
+      "by": "agent",
+      "at": "2026-11-24T18:01:39.447Z"
+    },
+    {
+      "decision": "Step-level hooks are read-only rows",
+      "why": "the hook form has no step anchor",
+      "rejected": "rows that open a form that cannot place them",
+      "by": "agent",
+      "at": "2026-11-24T18:01:39.447Z"
     }
   ],
   "step_summaries": {
@@ -314,10 +440,13 @@
     },
     "tasks": {
       "summary": "13 tasks: foundational status and icons, card phase, popover phase, polish"
+    },
+    "implement": {
+      "summary": "Card with hooks inside and run statuses, node popover and sheet, every Inspector action under More"
     }
   },
   "approach": "Restructure Canvas Node into one card with hook slots and status rows from a pure hookStatus module; add NodePopover rendered from index.tsx with every Inspector action in More; Edit node opens the Inspector.",
-  "currentTask": "T012",
+  "currentTask": null,
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -422,6 +551,59 @@
         "apps/vscode/webview/src/pipeline-builder/__tests__/MoveAnnouncement.test.tsx"
       ],
       "wave": "T011-T012"
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Type-check and related builder tests pass",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Popover closes when a rebuild removes its node",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/NodePopover.test.tsx"
+      ]
     }
-  }
+  },
+  "concerns": [
+    {
+      "note": "No per-hook Move button in the popover; moving a hook stays in the hook form and by drag",
+      "step": "implement"
+    },
+    {
+      "note": "Requirement check ran inline: no subagent tool in this session",
+      "step": "implement"
+    },
+    {
+      "note": "Pixel baselines and clips not regenerated, by instruction; the final stage of the run does that",
+      "step": "implement"
+    },
+    {
+      "note": "Independent /code-review not run: no subagent tool here and the run asked for fast checks; high tier comes from earlier branch commits (capture scripts), not this slice",
+      "step": "implement"
+    }
+  ],
+  "last_action": "Committed 0f91e514",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-24T18:02:50.513Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T18:02:09.761Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T18:02:56.132Z",
+      "added": [
+        "T014"
+      ],
+      "completed": true
+    }
+  ]
 }
