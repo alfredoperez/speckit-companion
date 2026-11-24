@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { Inspector } from '../Inspector';
-import { Attachment, NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { Attachment, NewWorkflowForm } from '../AttachForm';
 import { HookModal } from '../HookModal';
 import { TemplateForm } from '../TemplateForm';
 import type { PipelineNode } from '../../../../src/protocol/pipeline';
@@ -247,10 +247,6 @@ describe('every side pane wears one shell', () => {
         ['the document shape',
             <TemplateForm step={TEMPLATE} fragments={[]} onCancel={noop} onPick={noop} />,
             'What specify writes'],
-        ['a new step',
-            <NewStepForm sequence={['specify']} taken={['specify']}
-                onCancel={noop} onCreate={noop} />,
-            'New step'],
         ['a new workflow',
             <NewWorkflowForm from="" taken={[]} presets={[]} onCancel={noop} onCreate={noop} />,
             'New workflow'],
@@ -267,10 +263,9 @@ describe('every side pane wears one shell', () => {
 
     it('names the close button rather than leaving it a bare mark', () => {
         const host = mount(
-            <NewStepForm sequence={['specify']} taken={['specify']}
-                onCancel={noop} onCreate={noop} />);
+            <NewWorkflowForm from="" taken={[]} presets={[]} onCancel={noop} onCreate={noop} />);
         const close = host.querySelector('.pb-side-close')!;
-        expect(close.getAttribute('aria-label')).toBe('Cancel');
+        expect(close.getAttribute('aria-label')).toBeTruthy();
     });
 
     it('lets the inspector keep its own rows on the shared aside', () => {
@@ -529,115 +524,6 @@ describe('starting a workflow from something', () => {
     it('offers only what you run now when nothing else ships', () => {
         const { host } = form([]);
         expect(cards(host)).toEqual(['The pipeline as shipped']);
-    });
-});
-
-describe('naming a new step', () => {
-    const noop = () => undefined;
-    const SEQUENCE = ['specify', 'plan', 'tasks', 'implement'];
-
-    function form() {
-        const made: Array<Record<string, string>> = [];
-        const host = mount(
-            <NewStepForm sequence={SEQUENCE} taken={[...SEQUENCE, 'auto']}
-                onCancel={noop} onCreate={step => made.push(step)} />,
-        );
-        return { host, made };
-    }
-
-    const type = (host: HTMLElement, value: string) => {
-        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-
-    const submit = (host: HTMLElement) =>
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-
-    it('places it after the last step in the run by default', async () => {
-        const { host, made } = form();
-        type(host, 'review');
-        await flush();
-        submit(host);
-        expect(made[0].after).toBe('implement');
-    });
-
-    // A seam between two lanes IS the answer to "runs after", so arriving from
-    // one must not ask again.
-    it('seeds Runs after from the seam it was opened at', async () => {
-        const made: Array<Record<string, string>> = [];
-        const host = mount(
-            <NewStepForm sequence={SEQUENCE} taken={[...SEQUENCE, 'auto']} initialAfter="tasks"
-                onCancel={noop} onCreate={step => made.push(step)} />,
-        );
-        expect((host.querySelector('select') as HTMLSelectElement).value).toBe('tasks');
-        type(host, 'review');
-        await flush();
-        submit(host);
-        expect(made[0].after).toBe('tasks');
-    });
-
-    it('offers to leave it out of the run', () => {
-        const { host } = form();
-        const options = Array.from(host.querySelectorAll('select option'));
-        expect(options[options.length - 1].textContent).toContain('I launch it myself');
-    });
-
-    // The name becomes a command, so a space or a capital produces something
-    // nobody can type.
-    it('refuses a name that cannot be a command', async () => {
-        const { host } = form();
-        type(host, 'Review This');
-        await flush();
-        expect(host.querySelector('.pb-field-problem')?.textContent)
-            .toContain('it becomes a command');
-        expect((host.querySelector('.pb-action--primary') as HTMLButtonElement).disabled)
-            .toBe(true);
-    });
-
-    it('refuses a name a step already has', async () => {
-        const { host } = form();
-        type(host, 'plan');
-        await flush();
-        expect(host.querySelector('.pb-field-problem')?.textContent)
-            .toContain('already a step called plan');
-    });
-
-    it('says what it will write and what the assistant will be able to run', async () => {
-        const { host } = form();
-        type(host, 'review');
-        await flush();
-        const preview = host.querySelector('.pb-form-preview')?.textContent ?? '';
-        expect(preview).toContain('.specify/companion/nodes/review/');
-        expect(preview).toContain('/speckit.companion.review');
-    });
-
-    it('names the display name, and derives it from the name', async () => {
-        const { host, made } = form();
-        type(host, 'review');
-        await flush();
-        const labels = Array.from(host.querySelectorAll('.pb-field-label'))
-            .map(el => el.textContent);
-        expect(labels).toContain('Display name');
-        expect(labels).not.toContain('Reads as');
-        expect((host.querySelectorAll('.pb-input')[1] as HTMLInputElement).placeholder)
-            .toBe('Review');
-
-        submit(host);
-        expect(made[0].label).toBe('');
-    });
-
-    // A placeholder is an example; the instruction belongs under the field.
-    it('gives Writes an example, and says how several files separate', () => {
-        const { host } = form();
-        const writes = Array.from(host.querySelectorAll('.pb-input--mono'))
-            .at(-1) as HTMLInputElement;
-        expect(writes.placeholder).toBe('review.md');
-        const help = Array.from(host.querySelectorAll('.pb-field-note'))
-            .map(el => el.textContent ?? '');
-        expect(help.some(line => line.includes('[review.md, notes.md]'))).toBe(true);
-        expect(help.some(line => line.includes('empty if the step writes nothing'))).toBe(true);
     });
 });
 

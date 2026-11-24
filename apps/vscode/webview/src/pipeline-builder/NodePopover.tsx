@@ -9,11 +9,11 @@ import { HookIcon } from './HookIcon';
 import { KIND_LABELS } from './hookKinds';
 import { hookStatus } from './hookStatus';
 import { StatusMark, hookName } from './Canvas';
-import { MoveTarget } from './moves';
+import { MovePlaces } from './moves';
 import { HookRunsAnswer, PipelineHook, PipelineNode } from '../../../src/protocol/pipeline';
 
 export type NodeAction =
-    | 'open-file' | 'up' | 'down' | 'remove' | 'shipped'
+    | 'open-file' | 'up' | 'down' | 'remove' | 'shipped' | 'add-hook'
     | `phase:${string}` | `variant:${string}`;
 
 interface Props {
@@ -25,8 +25,8 @@ interface Props {
     /** The `data-node` of the card this hangs beside; absent in a story, where it sits in the flow. */
     anchorKey?: string;
     narrow?: boolean;
-    moveTargets: MoveTarget[];
-    canMove: { up: boolean; down: boolean };
+    /** Where the node can go, and why the writer would refuse the rest. */
+    moves: MovePlaces;
     /** Why the node cannot leave the run, or empty when it can. */
     removeBlocked: string;
     announce?: string;
@@ -38,6 +38,62 @@ interface Props {
     onAction: (action: NodeAction) => void;
     /** Render with More already open, for a story or a capture. */
     moreOpen?: boolean;
+    /** Render with the move list showing, for a story or a capture. */
+    moveOpen?: boolean;
+}
+
+function Arrow({ direction }: { direction: 'up' | 'down' }) {
+    return (
+        <svg class="pb-move-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true" focusable="false">
+            <path d={direction === 'up' ? 'M7 11.5V2.5M3.5 6L7 2.5L10.5 6' : 'M7 2.5V11.5M3.5 8L7 11.5L10.5 8'} />
+        </svg>
+    );
+}
+
+function Lock() {
+    return (
+        <svg class="pb-move-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"
+            stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+            <rect x="3" y="6.5" width="8" height="5.5" rx="1" />
+            <path d="M5 6.5V4.5a2 2 0 0 1 4 0v2" />
+        </svg>
+    );
+}
+
+/** The places a node can go; a refused one stays focusable so its reason is read. */
+function MoveList({ moves, onPick }: { moves: MovePlaces; onPick: (id: string) => void }) {
+    return (
+        <section class="pb-pop-section" aria-label="Move to">
+            <h3 class="pb-pop-label">Move to</h3>
+            {moves.pinned ? (
+                <p class="pb-move-held"><Lock />{`Held in place: ${moves.pinned}.`}</p>
+            ) : (
+                <ul class="pb-move-list">
+                    {moves.places.map(place => (
+                        <li key={place.id}>
+                            <button type="button"
+                                class={`pb-move-place${place.refused ? ' pb-move-place--refused' : ''}`}
+                                aria-disabled={place.refused ? 'true' : undefined}
+                                onClick={() => { if (!place.refused) { onPick(place.id); } }}>
+                                <Arrow direction={place.direction} />
+                                <span class="pb-move-text">
+                                    <span class="pb-move-label">{place.label}</span>
+                                    {place.refused && <span class="pb-move-reason">{place.refused}</span>}
+                                </span>
+                            </button>
+                        </li>
+                    ))}
+                    {moves.places.length === 0 && (
+                        <li class="pb-pop-empty">It is the only node in this step, so there is nowhere to move it.</li>
+                    )}
+                </ul>
+            )}
+            {moves.held.map(line => <p key={line} class="pb-move-held"><Lock />{line}</p>)}
+            <p class="pb-pop-empty">Or hold the grip and drag within the lane.</p>
+        </section>
+    );
 }
 
 const WIDTH = 372;
@@ -46,34 +102,17 @@ const EDGE = 8;
 
 const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
-/** Every node action the side pane used to carry, said the same way. */
-export function moreOptions(props: Pick<Props, 'node' | 'moveTargets' | 'canMove' | 'removeBlocked'>): MenuOption[] {
-    const { node, moveTargets, canMove, removeBlocked } = props;
-    const held = node.pinned ? `held in place: ${node.pinned}` : '';
+/** The node actions that are not in the footer, said the same way. */
+export function moreOptions(props: Pick<Props, 'node'>): MenuOption[] {
+    const { node } = props;
     const options: MenuOption[] = [
+        { id: 'add-hook', label: 'Add hook', note: 'A skill, an instruction or a command, before or after it.' },
         { id: 'open-file', label: 'Open the file', note: 'In the editor, frontmatter and all.' },
-        {
-            id: 'up', label: 'Move up', disabled: Boolean(held) || !canMove.up,
-            note: held || (canMove.up ? 'One place earlier in its phase.' : 'Already first in its phase.'),
-        },
-        {
-            id: 'down', label: 'Move down', disabled: Boolean(held) || !canMove.down,
-            note: held || (canMove.down ? 'One place later in its phase.' : 'Already last in its phase.'),
-        },
-        ...(held ? [] : moveTargets.map(target => ({
-            id: `phase:${target.phase}`,
-            label: `Move to ${target.phase}`,
-            note: target.joins === 'end' ? 'Joins the end of it.' : 'Joins the start of it.',
-        }))),
         ...node.variants.map(variant => ({
             id: `variant:${variant.id}`,
             label: `Replace with ${variant.name}`,
             note: variant.summary,
         })),
-        {
-            id: 'remove', label: 'Remove from the run', disabled: Boolean(removeBlocked),
-            note: removeBlocked || 'Keeps the file: it stays on offer under Add node.',
-        },
     ];
     if (node.replaced && node.shipped) {
         options.push({
@@ -132,6 +171,14 @@ export function NodePopover(props: Props) {
     const box = useRef<HTMLDivElement>(null);
     const opener = useRef<Element | null>(null);
     const [place, setPlace] = useState<{ top: number; left: number; side: 'left' | 'right'; arrow: number } | null>(null);
+    const [moving, setMoving] = useState(Boolean(props.moveOpen));
+
+    // The list takes the keyboard when it opens, on its first place that can be taken.
+    useLayoutEffect(() => {
+        if (!moving || props.moveOpen) { return; }
+        (box.current?.querySelector<HTMLElement>('.pb-move-place:not([aria-disabled])')
+            ?? box.current?.querySelector<HTMLElement>('.pb-move-place'))?.focus();
+    }, [moving]);
 
     useLayoutEffect(() => {
         if (narrow || !anchorKey || !box.current) { setPlace(null); return undefined; }
@@ -155,7 +202,7 @@ export function NodePopover(props: Props) {
             window.removeEventListener('resize', position);
             document.removeEventListener('scroll', position, true);
         };
-    }, [anchorKey, narrow, node.hooks.length]);
+    }, [anchorKey, narrow, node.hooks.length, moving]);
 
     useLayoutEffect(() => {
         opener.current = document.activeElement;
@@ -234,6 +281,10 @@ export function NodePopover(props: Props) {
                 <span class={`pb-pop-source${node.replaced ? ' pb-pop-source--yours' : ''}`}>
                     {node.replaced ? 'Yours' : 'As shipped'}
                 </span>
+                {narrow && moving && (
+                    <button type="button" class="pb-pop-button pb-pop-back"
+                        onClick={() => setMoving(false)}>Back</button>
+                )}
                 <button type="button" class="pb-pop-close" aria-label="Close" title="Close"
                     onClick={props.onClose}>
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
@@ -243,6 +294,7 @@ export function NodePopover(props: Props) {
                 </button>
             </header>
 
+            {moving ? <MoveList moves={props.moves} onPick={id => props.onAction(id as NodeAction)} /> : <>
             <section class="pb-pop-section" aria-label="This node">
                 <h3 class="pb-pop-label">This node</h3>
                 <dl class="pb-pop-facts">
@@ -286,14 +338,16 @@ export function NodePopover(props: Props) {
                     <p class="pb-pop-empty">Nothing runs before or after it yet.</p>
                 )}
             </section>
+            </>}
 
             <footer class="pb-pop-actions">
                 <p class="pb-live" role="status" aria-live="polite">{props.announce ?? ''}</p>
+                <button type="button" class={`pb-pop-button${moving ? ' pb-pop-button--on' : ''}`}
+                    aria-pressed={moving} onClick={() => setMoving(!moving)}>
+                    Move…
+                </button>
                 <button type="button" class="pb-pop-button" onClick={props.onEditNode}>
                     Edit node
-                </button>
-                <button type="button" class="pb-pop-button" onClick={props.onAddHook}>
-                    Add hook
                 </button>
                 <Menu
                     class="pb-pop-more"
@@ -302,9 +356,16 @@ export function NodePopover(props: Props) {
                     floating
                     title={`Everything else ${node.name} can do`}
                     options={moreOptions(props)}
-                    onPick={id => props.onAction(id as NodeAction)}
+                    onPick={id => (id === 'add-hook' ? props.onAddHook() : props.onAction(id as NodeAction))}
                     defaultOpen={props.moreOpen}
                 />
+                <button type="button" class="pb-pop-remove"
+                    aria-disabled={props.removeBlocked ? 'true' : undefined}
+                    title={props.removeBlocked || 'Keeps the file: it stays on offer under Add node.'}
+                    onClick={() => { if (!props.removeBlocked) { props.onAction('remove'); } }}>
+                    Remove from the run
+                    {props.removeBlocked && <span class="sr-only">{`, ${props.removeBlocked}`}</span>}
+                </button>
             </footer>
         </div>
     );

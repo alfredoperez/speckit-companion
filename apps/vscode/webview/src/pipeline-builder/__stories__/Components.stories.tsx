@@ -12,10 +12,10 @@ import { Header } from '../Header';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { Inspector } from '../Inspector';
-import { NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { NewWorkflowForm } from '../AttachForm';
 import { HookModal } from '../HookModal';
 import { TemplateForm } from '../TemplateForm';
-import { moveTargets } from '../moves';
+import { movePlaces, moveTargets } from '../moves';
 import { NodePopover } from '../NodePopover';
 import type { HookRunsAnswer } from '../../../../src/protocol/pipeline';
 import {
@@ -256,8 +256,40 @@ export const NodePopoverOpen: Story = {
     render: () => (
         <One>
             <NodePopover node={EXECUTE} step="implement" runs={RUNS} hooksIn="companion.yml"
-                moveTargets={moveTargets(RAN, 'execute')} canMove={{ up: false, down: true }}
-                removeBlocked="" {...POPOVER} />
+                moves={movePlaces(RAN, 'execute')} removeBlocked="" {...POPOVER} />
+        </One>
+    ),
+};
+
+/** A node that reads the one above it, beside a held node: one place refused, one lock. */
+const MOVING = step('plan', [
+    phase('author', [
+        node('write-plan', 'Write the plan', { writes: ['plan.md'] }),
+        node('pick-blocks', "Pick the plan's blocks", { reads: ['write-plan'] }),
+    ]),
+    phase('check', [node('constitution', 'Check against the constitution', { kind: 'gate' })]),
+    phase('wrap-up', [node('handoff', 'Hand off', {
+        pinned: 'it hands off to the next step, so nothing can run after it',
+    })]),
+]);
+
+export const NodePopoverMove: Story = {
+    name: 'Node popover · Move…, one place refused',
+    render: () => (
+        <One>
+            <NodePopover node={MOVING.phases[0].nodes[1]} step="plan" hooksIn="companion.yml"
+                moves={movePlaces(MOVING, 'pick-blocks')} removeBlocked="" moveOpen {...POPOVER} />
+        </One>
+    ),
+};
+
+export const NodePopoverLastNode: Story = {
+    name: 'Node popover · the last node cannot leave',
+    render: () => (
+        <One>
+            <NodePopover node={node('only', 'The only node')} step="doctor" hooksIn="companion.yml"
+                moves={{ places: [], held: [], pinned: '' }}
+                removeBlocked="The last node doctor has: a step needs at least one." {...POPOVER} />
         </One>
     ),
 };
@@ -270,8 +302,7 @@ export const NodePopoverMore: Story = {
                 kind: 'author', writes: ['spec.md'], replaced: true,
                 variants: [{ id: 'draft-lean', name: 'Lean draft', summary: 'A shorter spec' }],
             })} step="implement" runs={RUNS} hooksIn="companion.yml"
-            moveTargets={moveTargets(RAN, 'draft')} canMove={{ up: true, down: false }}
-            removeBlocked="" moreOpen {...POPOVER} />
+            moves={movePlaces(RAN, 'draft')} removeBlocked="" moreOpen {...POPOVER} />
         </One>
     ),
 };
@@ -281,8 +312,7 @@ export const NodePopoverSheet: Story = {
     render: () => (
         <div class="builder" style="max-width: 380px; height: 640px; position: relative">
             <NodePopover node={EXECUTE} step="implement" runs={RUNS} hooksIn="companion.yml"
-                moveTargets={[]} canMove={{ up: false, down: true }} narrow
-                removeBlocked="" {...POPOVER} />
+                moves={movePlaces(RAN, 'execute')} narrow removeBlocked="" {...POPOVER} />
         </div>
     ),
 };
@@ -460,6 +490,33 @@ export const PhaseWithTools: Story = {
             phase('author', [node('c', 'Third node')]),
             phase('wrap-up', [node('d', 'Fourth node')]),
         ], { dropped: ['branch', 'finalize'] })])} {...CANVAS} /></One>
+    ),
+};
+
+export const PhaseMenuOpen: Story = {
+    name: 'Phase · its label menu',
+    render: () => (
+        <One><Canvas graph={graph([step('specify', [
+            phase('gather', [node('a', 'First node')]),
+            phase('classify', [node('b', 'Second node'), node('c', 'Third node')]),
+            phase('author', [node('d', 'Fourth node')]),
+        ])])} {...CANVAS} /></One>
+    ),
+    play: async ({ canvasElement }) => {
+        (canvasElement.querySelectorAll('.pb-phase-name')[1] as HTMLButtonElement | undefined)?.click();
+    },
+};
+
+export const LaneAddAndRemoved: Story = {
+    name: 'Lane · Add to, and a removed node with Undo',
+    render: () => (
+        <One><Canvas graph={graph([step('implement', [
+            phase('execute', [node('execute', 'Execute the tasks'), node('check', 'Check the requirements')]),
+        ])])} {...CANVAS} onAddTo={noop} adding="implement" onUndo={noop}
+        removed={{
+            command: 'implement', phase: 'execute', index: 2,
+            name: 'Record what was verified', token: 'remove:implement:record-verified',
+        }} /></One>
     ),
 };
 
@@ -1166,22 +1223,59 @@ export const NewWorkflowNoPresets: Story = {
     ),
 };
 
-export const NewStep: Story = {
-    name: 'New step',
+const STEP_FORM = {
+    sequence: ['specify', 'plan', 'tasks', 'implement'],
+    taken: ['specify', 'plan', 'tasks', 'implement', 'auto'],
+    autoRuns: ['specify', 'plan', 'tasks', 'implement'],
+};
+
+const OFFERING = step('implement', [
+    phase('execute', [node('execute', 'Execute the tasks'), node('check', 'Check the requirements')]),
+    phase('wrap-up', [node('handoff', 'Hand off', { pinned: 'it hands off to the next step, so nothing can run after it' })]),
+], {
+    dropped: ['review-gaps', 'verify-manually', 'record-verified'],
+    addOns: ['review-gaps', 'verify-manually'],
+    offers: {
+        'review-gaps': { name: 'Review the gaps', summary: 'Lists what the spec asked for and the code skipped' },
+        'verify-manually': { name: 'Verify by hand', summary: 'Asks you to try it before it closes' },
+        'record-verified': { name: 'Record what was verified', summary: '' },
+    },
+});
+
+export const AddModalNode: Story = {
+    name: 'Add modal · a node from the lane',
     render: () => (
-        <One><NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
-            taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
-            onCancel={noop} onCreate={noop} /></One>
+        <One><HookModal step={OFFERING} anchor="execute" choices={CHOICES} mode="node"
+            modes={['hook', 'node', 'step']} stepForm={STEP_FORM}
+            onCancel={noop} onAttach={noop} onAddNode={noop} onNewStep={noop} /></One>
+    ),
+};
+
+export const AddModalNothingOnOffer: Story = {
+    name: 'Add modal · nothing on offer',
+    render: () => (
+        <One><HookModal step={step('tasks', [phase('author', [node('tasks-doc', 'Write the tasks')])])}
+            anchor="author" choices={CHOICES} mode="node" modes={['hook', 'node', 'step']}
+            stepForm={STEP_FORM} onCancel={noop} onAttach={noop} /></One>
+    ),
+};
+
+export const NewStep: Story = {
+    name: 'Add modal · a step, with the auto warning',
+    render: () => (
+        <One><HookModal step={OFFERING} anchor="execute" choices={CHOICES} mode="step"
+            modes={['hook', 'node', 'step']} stepForm={{ ...STEP_FORM, after: 'implement' }}
+            onCancel={noop} onAttach={noop} onNewStep={noop} /></One>
     ),
 };
 
 // Opened from the seam between two lanes, which is already the answer to
 // "runs after" — so the form does not ask again.
 export const NewStepAfterTasks: Story = {
-    name: 'New step · opened at the seam after tasks',
+    name: 'Add modal · a step opened at the seam after tasks',
     render: () => (
-        <One><NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
-            taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
-            initialAfter="tasks" onCancel={noop} onCreate={noop} /></One>
+        <One><HookModal step={OFFERING} anchor="execute" choices={CHOICES} mode="step"
+            modes={['step']} title="Add a step" stepForm={{ ...STEP_FORM, after: 'tasks' }}
+            onCancel={noop} onAttach={noop} onNewStep={noop} /></One>
     ),
 };

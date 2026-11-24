@@ -10,6 +10,7 @@
  * rather than run.
  */
 import { render } from 'preact';
+import type { ComponentProps } from 'preact';
 import { Canvas } from '../Canvas';
 import type {
     HookRunsAnswer, PipelineGraph, PipelineNode, PipelineStep,
@@ -90,7 +91,10 @@ export type Calls = string[][];
 export function canvas(
     g: PipelineGraph = graph(), selected?: { command: string; nodeId: string },
     runs?: HookRunsAnswer,
+    more: Partial<ComponentProps<typeof Canvas>> = {},
 ) {
+    const addTo: string[] = [];
+    const undone: string[] = [];
     const opened: Calls = [], replaced: Calls = [], restored: Calls = [], added: Calls = [];
     const orders: Array<[string, string[]]> = [];
     const grouped: Array<[string, Array<{ name: string; nodes: string[] }>]> = [];
@@ -116,9 +120,10 @@ export function canvas(
             onOpenDecision={(c, n) => decisions.push([c, n])}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
-            onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
+            onAddHook={(c, anchor, when) => added.push([c, anchor, when])}
+            onAddTo={c => addTo.push(c)} onUndo={token => undone.push(token)} {...more} />,
     );
-    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes,
+    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes, addTo, undone,
         removedNodes, movedNodes, decisions,
         frames, replacedSteps, templates, newStepAfter, newSteps: () => newSteps };
 }

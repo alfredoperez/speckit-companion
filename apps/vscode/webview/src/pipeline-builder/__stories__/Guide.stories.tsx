@@ -23,7 +23,7 @@ import { Inspector } from '../Inspector';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { BrokenPipeline } from '../BrokenPipeline';
-import { NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { NewWorkflowForm } from '../AttachForm';
 import { HookModal } from '../HookModal';
 import { TemplateForm } from '../TemplateForm';
 import { moveTargets } from '../moves';
@@ -190,13 +190,9 @@ export const AStepHeader: Story = {
 };
 
 /**
- * The one control every phase carries, open.
- *
- * Everything a phase can do used to be a separate button that was invisible
- * until the pointer arrived. It is one `+` on the rule now, and the rows it
- * cannot run are shown inert with the reason — which is what teaches the
- * capability. The rows and notes here are the ones `Canvas.tsx` builds for a
- * phase holding a single node.
+ * A phase's label, open. The rows it cannot run are shown inert with the
+ * reason, which is what teaches the capability. The rows and notes here are
+ * the ones `Canvas.tsx` builds for a middle phase holding a single node.
  */
 export const ThePhaseMenu: Story = {
     parameters: { capture: { width: 440, height: 320 } },
@@ -204,21 +200,17 @@ export const ThePhaseMenu: Story = {
     render: () => (
         <div class="builder" style="width: 420px; padding: 16px">
             <Menu
-                class="pb-phase-add"
-                trigger="+"
-                caret={false}
+                class="pb-phase-name"
+                trigger={<span class="pb-trigger-text">author</span>}
+                heading="Phase author · 1 node"
                 defaultOpen
-                title="Add or change author"
+                title="Rename, split or merge author"
                 options={[
-                    { id: 'hook', label: 'Add hook',
-                      note: 'a skill, an instruction or a command' },
-                    { id: 'node', label: 'Add node', note: '2 on offer' },
-                    { id: 'rename', label: 'Rename phase',
-                      note: 'its hooks follow the new name' },
-                    { id: 'split', label: 'Split phase', disabled: true,
-                      note: 'one node here, so there is nothing to split off' },
-                    { id: 'merge', label: 'Merge into the phase above',
-                      note: 'its nodes go with it' },
+                    { id: 'rename', label: 'Rename…', note: 'Its hooks follow the new name.' },
+                    { id: 'split', label: 'Split', disabled: true,
+                      note: 'One node here, so there is nothing to split off.' },
+                    { id: 'merge-above', label: 'Merge into gather, above' },
+                    { id: 'merge-below', label: 'Merge into wrap-up, below' },
                 ]}
                 onPick={noop} />
         </div>
@@ -569,9 +561,14 @@ export const AddingAStep: Story = {
     name: 'Adding a step of your own',
     render: () => (
         <Pane>
-            <NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
-                taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
-                onCancel={noop} onCreate={noop} />
+            <HookModal step={IMPLEMENT} anchor={IMPLEMENT.phases[0]?.name ?? 'implement'}
+                choices={CHOICES} mode="step" modes={['step']} title="Add a step"
+                stepForm={{
+                    sequence: ['specify', 'plan', 'tasks', 'implement'],
+                    taken: ['specify', 'plan', 'tasks', 'implement', 'auto'],
+                    autoRuns: ['specify', 'plan', 'tasks', 'implement'],
+                }}
+                onCancel={noop} onAttach={noop} onNewStep={noop} />
         </Pane>
     ),
 };

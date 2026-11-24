@@ -55,6 +55,14 @@ async function more(label: string) {
     return row;
 }
 
+const places = () => Array.from(popover()?.querySelectorAll<HTMLButtonElement>('.pb-move-place') ?? []);
+
+async function moveList() {
+    Array.from(popover()!.querySelectorAll<HTMLButtonElement>('.pb-pop-button'))
+        .find(el => el.textContent?.startsWith('Move'))!.click();
+    await flush();
+}
+
 beforeEach(async () => {
     posted.length = 0;
     document.body.innerHTML = '';
@@ -158,27 +166,45 @@ describe("a node's popover", () => {
         expect(posted.at(-1)).toEqual({ type: 'readNode', command: 'specify', nodeId: 'draft-spec' });
     });
 
-    it('keeps every action the side pane had under More', async () => {
+    it('keeps every other action under More', async () => {
         await open();
         (await more('Open the file')).click();
         expect(posted.at(-1)).toEqual({ type: 'openNode', command: 'specify', nodeId: 'draft-spec' });
-
-        (await more('Move down')).click();
-        expect(posted.at(-1)).toMatchObject({ type: 'moveNode', nodeId: 'draft-spec' });
-
-        (await more('Move to gather')).click();
-        expect(posted.at(-1)).toMatchObject({ type: 'moveNode', nodeId: 'draft-spec', phase: 'gather' });
 
         (await more('Use the shipped node')).click();
         expect(posted.at(-1)).toEqual({ type: 'restoreNode', command: 'specify', nodeId: 'draft-spec' });
 
         (await more('Replace with Lean draft')).click();
         expect(posted.at(-1)).toMatchObject({ type: 'useVariant', replaces: 'draft-spec', variant: 'draft-lean' });
+
+        await open('Quality checklist');
+        (await more('Add hook')).click();
+        await flush();
+        expect(root.querySelector('.pb-modal')).not.toBeNull();
     });
 
-    it('removes the node from the run, with the shape to write', async () => {
+    it('moves the node through Move…, by place', async () => {
         await open();
-        (await more('Remove from the run')).click();
+        await moveList();
+        const labels = places().map(p => p.querySelector('.pb-move-label')?.textContent);
+        expect(labels).toEqual(['Down, below Quality checklist', 'To phase gather, last']);
+        places()[0].click();
+        expect(posted.at(-1)).toMatchObject({ type: 'moveNode', nodeId: 'draft-spec' });
+        expect(posted.at(-1)!.phase).toBeUndefined();
+
+        places()[1].click();
+        expect(posted.at(-1)).toMatchObject({ type: 'moveNode', nodeId: 'draft-spec', phase: 'gather' });
+    });
+
+    it('takes the keyboard to the first place it can go', async () => {
+        await open();
+        await moveList();
+        expect(document.activeElement).toBe(places()[0]);
+    });
+
+    it('removes the node from the run, with the shape to write, and leaves a struck row with Undo', async () => {
+        await open();
+        popover()!.querySelector<HTMLButtonElement>('.pb-pop-remove')!.click();
         await flush();
         expect(posted.at(-1)).toEqual({
             type: 'removeNode', command: 'specify', nodeId: 'draft-spec',
@@ -186,6 +212,35 @@ describe("a node's popover", () => {
             phases: [{ name: 'gather', nodes: ['resolve-dir'] }, { name: 'author', nodes: ['checklist'] }],
         });
         expect(popover()).toBeNull();
+
+        const without = { ...HOOKED, phases: HOOKED.phases.map(p => ({
+            ...p, nodes: p.nodes.filter(n => n.id !== 'draft-spec'),
+        })) };
+        await deliver({ type: 'graph', graph: graph({ steps: [without] }), buildState: 'stale' });
+        expect(root.querySelector('.pb-removed')).toBeNull();
+        await deliver({ type: 'status', status: {
+            tone: 'done', text: 'draft-spec no longer runs in specify',
+            undo: { token: 'remove:specify:draft-spec' },
+        } });
+        const row = root.querySelector('.pb-removed')!;
+        expect(row.textContent).toContain('Draft the spec');
+        expect(row.previousElementSibling).toBeNull();
+
+        row.querySelector<HTMLButtonElement>('.pb-removed-undo')!.click();
+        await flush();
+        expect(posted.at(-1)).toEqual({ type: 'undo', token: 'remove:specify:draft-spec' });
+        expect(root.querySelector('.pb-removed')).toBeNull();
+    });
+
+    it('drops the struck row once the status moves on', async () => {
+        await open();
+        popover()!.querySelector<HTMLButtonElement>('.pb-pop-remove')!.click();
+        await deliver({ type: 'status', status: {
+            tone: 'done', text: 'gone', undo: { token: 'remove:specify:draft-spec' },
+        } });
+        expect(root.querySelector('.pb-removed')).not.toBeNull();
+        await deliver({ type: 'status', status: { tone: 'done', text: 'Hook added' } });
+        expect(root.querySelector('.pb-removed')).toBeNull();
     });
 
     it('closes when a rebuild takes its node away', async () => {
@@ -198,10 +253,36 @@ describe("a node's popover", () => {
         expect(popover()).toBeNull();
     });
 
-    it('says why the first node cannot move up, rather than offering it', async () => {
-        await open('Resolve the spec folder');
-        const up = await more('Move up');
-        expect(up.getAttribute('aria-disabled')).toBe('true');
+    it('greys a place the writer would refuse, and says why', async () => {
+        await deliver({ type: 'graph', graph: graph({ steps: [step({
+            phases: [{ name: 'author', hooks: [], nodes: [
+                node({ id: 'write-plan', name: 'Write the plan' }),
+                node({ id: 'pick', name: 'Pick the blocks', reads: ['write-plan'] }),
+            ] }],
+        })] }), buildState: 'built' });
+        await open('Pick the blocks');
+        await moveList();
+        const into = places()[0];
+        expect(into.querySelector('.pb-move-label')?.textContent).toBe('Up, above Write the plan');
+        expect(into.getAttribute('aria-disabled')).toBe('true');
+        expect(into.querySelector('.pb-move-reason')?.textContent)
+            .toBe('It reads Write the plan, so it cannot run before it.');
+        const before = posted.length;
+        into.click();
+        expect(posted.length).toBe(before);
+    });
+
+    it('cannot remove the last node a step has, and says why', async () => {
+        await deliver({ type: 'graph', graph: graph({ steps: [step({
+            phases: [{ name: 'only', hooks: [], nodes: [node({ id: 'one', name: 'The one' })] }],
+        })] }), buildState: 'built' });
+        await open('The one');
+        const remove = popover()!.querySelector<HTMLButtonElement>('.pb-pop-remove')!;
+        expect(remove.getAttribute('aria-disabled')).toBe('true');
+        expect(remove.textContent).toContain('a step needs at least one');
+        const before = posted.length;
+        remove.click();
+        expect(posted.length).toBe(before);
     });
 });
 

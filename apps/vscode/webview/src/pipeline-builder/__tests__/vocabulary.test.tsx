@@ -10,11 +10,9 @@ describe('one action keeps one name through the flow', () => {
     const noop = () => undefined;
     const CHOICES = { skills: [], nodes: [], commands: [], fragments: [], presets: [] };
 
-    it('says "Add hook" on the phase, "Add" in the modal\'s title and on the confirm', async () => {
+    it('says "Add to" on the lane, "Add" in the modal\'s title and on the confirm', () => {
         const { host } = canvas();
-        (host.querySelector('.pb-phase-add') as HTMLButtonElement).click();
-        await flush();
-        expect(host.querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
+        expect(host.querySelector('.pb-lane-add')?.textContent).toBe('Add to specify');
 
         document.body.innerHTML = '';
         const sheet = mount(
@@ -22,6 +20,13 @@ describe('one action keeps one name through the flow', () => {
         );
         expect(sheet.querySelector('.pb-modal-title')?.textContent).toBe('Add before the gather phase');
         expect(sheet.querySelector('.pb-action--primary')?.textContent).toBe('Add');
+
+        document.body.innerHTML = '';
+        const lane = mount(
+            <HookModal step={step()} anchor="gather" choices={CHOICES} modes={['hook', 'node', 'step']}
+                onCancel={noop} onAttach={noop} />,
+        );
+        expect(lane.querySelector('.pb-modal-title')?.textContent).toBe('Add to specify');
     });
 
     it('names the place line for when and where it goes, not what it is', () => {

@@ -16,6 +16,7 @@ import { Header } from '../Header';
 import { HookModal } from '../HookModal';
 import { Inspector } from '../Inspector';
 import { NodePopover } from '../NodePopover';
+import { movePlaces } from '../moves';
 import { CHOICES, IMPLEMENT, NO_CHANGES, SPECIFY, graph, hook, node, phase, step } from './fixtures';
 
 const noop = () => undefined;
@@ -89,18 +90,21 @@ function assert(condition: boolean, said: string) {
     if (!condition) { throw new Error(said); }
 }
 
-/** Open a phase's one resting control and read back what it offers. */
+/** Open a phase's label menu and read back what it offers. */
 async function phaseMenu(root: HTMLElement, at: number) {
     const phase = root.querySelectorAll('.pb-phase')[at];
-    (phase.querySelector('.pb-phase-add') as HTMLButtonElement).click();
+    (phase.querySelector('.pb-phase-name') as HTMLButtonElement).click();
     await new Promise(resolve => setTimeout(resolve, 0));
     return Array.from(phase.querySelectorAll('.pb-menu-option')) as HTMLButtonElement[];
 }
 
 /** Open it and take the entry with this label. */
-async function fromPhaseMenu(root: HTMLElement, at: number, label: string) {
+async function fromPhaseMenu(root: HTMLElement, at: number, label: string | RegExp) {
     const options = await phaseMenu(root, at);
-    const hit = options.find(o => o.querySelector('.pb-menu-label')?.textContent === label);
+    const hit = options.find(o => {
+        const text = o.querySelector('.pb-menu-label')?.textContent ?? '';
+        return typeof label === 'string' ? text === label : label.test(text);
+    });
     assert(Boolean(hit), `the phase menu offers "${label}"`);
     hit!.click();
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -196,14 +200,13 @@ export const RenameAPhase: Story = {
     name: 'Rename a phase',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const name = canvasElement.querySelector('.pb-phase-name') as HTMLElement;
-        assert(name.getAttribute('contenteditable') === 'true', 'a phase name is editable');
-        // Labelled, since contentEditable on its own reads to a screen reader
-        // as the heading it also looks like.
-        assert(name.getAttribute('role') === 'textbox', 'and says it is a field');
-        await fromPhaseMenu(canvasElement, 0, 'Rename phase');
-        assert(document.activeElement === name, 'the menu puts the caret in it');
-        name.textContent = 'set up';
+        const label = canvasElement.querySelector('.pb-phase-name') as HTMLElement;
+        assert(label.tagName === 'BUTTON', 'a phase name is a button that opens its menu');
+        await fromPhaseMenu(canvasElement, 0, 'Rename…');
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const name = canvasElement.querySelector('.pb-phase-input') as HTMLInputElement;
+        assert(document.activeElement === name, 'Rename… turns the label into a field with the caret in it');
+        name.value = 'set up';
         name.dispatchEvent(new Event('blur', { bubbles: true }));
         const sent = sentFrom(canvasElement);
         assert(sent.length === 1 && sent[0].what === 'setPhases',
@@ -227,18 +230,17 @@ export const APhaseOffersOnlyWhatWorks: Story = {
         // survives the `reads:` dependencies. The arrows could only ever fire,
         // be refused, and redraw unchanged.
         assert(!labels.some(l => /move/i.test(l ?? '')), 'nothing claims to move a phase');
-        assert(labels.includes('Split phase'), 'a phase can be split');
-        assert(labels.includes('Merge into the phase above'),
-            'and merged into the one above');
-        assert(labels[0] === 'Add hook', 'and the commonest change is first');
+        assert(labels.includes('Split'), 'a phase can be split');
+        assert(labels.includes('Merge into gather, above') && labels.includes('Merge into classify, below'),
+            'and merged into either neighbour, each named');
+        assert(labels[0] === 'Rename…', 'and renaming comes first');
 
-        // The first phase has nothing above it, and says which way its nodes
-        // would actually go.
+        // The first phase has nothing above it, so it offers only the way its nodes can go.
         const first = await phaseMenu(canvasElement, 0);
         const firstLabels = first.map(o => o.querySelector('.pb-menu-label')?.textContent);
-        assert(firstLabels.includes('Merge into the phase below'),
+        assert(firstLabels.includes('Merge into author, below'),
             'the first phase merges downward, and says so');
-        assert(!firstLabels.includes('Merge into the phase above'),
+        assert(!firstLabels.some(l => /above/.test(l ?? '')),
             'and never claims a direction it does not go');
 
         // A row that cannot run here is inert rather than absent: its note is
@@ -253,7 +255,24 @@ export const MergeAPhase: Story = {
     name: 'Merge a phase into the one above',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        await fromPhaseMenu(canvasElement, 1, 'Merge into the phase above');
+        await fromPhaseMenu(canvasElement, 1, /, above$/);
+        const sent = sentFrom(canvasElement);
+        const [, phases] = sent[0].with as [string, Array<{ name: string; nodes: string[] }>];
+        assert(phases[0].nodes.join(',') === 'resolve-dir,load-context,draft-spec,quality-checklist',
+            'its nodes join the end of the phase above');
+    },
+};
+
+export const MergeAPhaseDown: Story = {
+    name: 'Merge a phase into the one below',
+    render: () => board().view,
+    play: async ({ canvasElement }) => {
+        await fromPhaseMenu(canvasElement, 1, /, below$/);
+        const sent = sentFrom(canvasElement);
+        const [, phases] = sent[0].with as [string, Array<{ name: string; nodes: string[] }>];
+        assert(phases[1].name === 'classify'
+            && phases[1].nodes.join(',') === 'draft-spec,quality-checklist,classify-size,persist-size',
+        'its nodes join the start of the phase below');
     },
 };
 
@@ -261,7 +280,7 @@ export const SplitAPhase: Story = {
     name: 'Split a phase in two',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        await fromPhaseMenu(canvasElement, 0, 'Split phase');
+        await fromPhaseMenu(canvasElement, 0, 'Split');
     },
 };
 
@@ -270,20 +289,29 @@ export const SplitAPhase: Story = {
 export const PutADroppedNodeBack: Story = {
     name: 'Put a dropped node back',
     render: () => {
-        const g = graph([step('specify', [
-            phase('gather', [node('resolve-dir', 'Resolve the spec folder')]),
-        ], { dropped: ['branch', 'finalize'] })]);
-        return board(g).view;
+        const sent: Sent = [];
+        return (
+            <div class="builder"
+                ref={(el: HTMLElement | null) => {
+                    if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+                }}>
+                <HookModal step={step('specify', [
+                    phase('gather', [node('resolve-dir', 'Resolve the spec folder')]),
+                ], { dropped: ['branch', 'finalize'] })} anchor="gather" choices={CHOICES}
+                mode="node" modes={['hook', 'node', 'step']} onCancel={noop} onAttach={noop}
+                onAddNode={(phase, id) => sent.push({ what: 'addNode', with: [phase, id] })} />
+            </div>
+        );
     },
     play: async ({ canvasElement }) => {
-        // The panel's own menu, not a native select: a `<select>` is drawn by
-        // the operating system, so those two pickers arrived in a different
-        // visual language from everything around them. Reached from the phase's
-        // one resting control, which is where every phase change starts.
-        await fromPhaseMenu(canvasElement, 0, 'Add node');
-        const options = canvasElement.querySelectorAll('.pb-menu-option');
-        assert(options.length === 2, 'the two dropped nodes, with no placeholder row');
-        (options[0] as HTMLButtonElement).click();
+        const rows = canvasElement.querySelectorAll('.pb-modal-row');
+        assert(rows.length === 2, 'the two dropped nodes, with no placeholder row');
+        (rows[1] as HTMLElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        (canvasElement.querySelector('.pb-action--primary') as HTMLButtonElement).click();
+        const sent = sentFrom(canvasElement);
+        assert(JSON.stringify(sent[0]?.with) === '["gather","finalize"]',
+            'Add node puts the picked node at the end of the phase shown');
     },
 };
 
@@ -315,8 +343,8 @@ export const TakeANodeOutOfTheRun: Story = {
                     if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
                 }}>
                 <NodePopover node={node('draft-spec', 'Draft the spec')}
-                    step="specify" hooksIn="companion.yml" moveTargets={[]}
-                    canMove={{ up: false, down: true }} removeBlocked=""
+                    step="specify" hooksIn="companion.yml"
+                    moves={{ places: [], held: [], pinned: '' }} removeBlocked=""
                     onClose={noop} onEditNode={noop} onAddHook={noop}
                     onEditHook={noop} onRemoveHook={noop}
                     onAction={action => sent.push({ what: 'nodeAction', with: action })} />
@@ -324,16 +352,54 @@ export const TakeANodeOutOfTheRun: Story = {
         );
     },
     play: async ({ canvasElement }) => {
-        // The node's own details carry it: the More menu says the file survives.
-        (canvasElement.querySelector('.pb-pop-more') as HTMLButtonElement).click();
-        await new Promise(resolve => setTimeout(resolve, 0));
-        const remove = Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
-            .find(row => row.textContent?.includes('Remove from the run'))!;
-        assert(remove.textContent?.includes('Keeps the file') ?? false,
-            'it stops the node running, and says the file survives it');
+        // In the popover's footer, saying the file survives.
+        const remove = canvasElement.querySelector('.pb-pop-remove') as HTMLButtonElement;
+        assert(remove.textContent === 'Remove from the run', 'the footer carries the removal');
+        assert(remove.title.includes('Keeps the file'), 'and says the file survives it');
         remove.click();
         const sent = sentFrom(canvasElement);
         assert(sent.at(-1)?.with === 'remove', 'and asks for the removal');
+    },
+};
+
+export const MoveANodeOnePlaceRefused: Story = {
+    name: 'Move a node, one place refused',
+    render: () => {
+        const sent: Sent = [];
+        const plan = step('plan', [
+            phase('author', [
+                node('write-plan', 'Write the plan'),
+                node('pick-blocks', "Pick the plan's blocks", { reads: ['write-plan'] }),
+            ]),
+            phase('check', [node('constitution', 'Check against the constitution')]),
+        ]);
+        return (
+            <div class="builder"
+                ref={(el: HTMLElement | null) => {
+                    if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+                }}>
+                <NodePopover node={plan.phases[0].nodes[1]} step="plan" hooksIn="companion.yml"
+                    moves={movePlaces(plan, 'pick-blocks')} removeBlocked=""
+                    onClose={noop} onEditNode={noop} onAddHook={noop}
+                    onEditHook={noop} onRemoveHook={noop}
+                    onAction={action => sent.push({ what: 'nodeAction', with: action })} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        (Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-pop-button'))
+            .find(b => b.textContent?.startsWith('Move'))!).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const places = Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-move-place'));
+        const up = places.find(p => p.textContent?.startsWith('Up'))!;
+        assert(up.getAttribute('aria-disabled') === 'true'
+            && (up.textContent ?? '').includes('It reads Write the plan, so it cannot run before it.'),
+        'the place the writer would refuse is inert and says why');
+        up.click();
+        const legal = places.find(p => p.getAttribute('aria-disabled') !== 'true')!;
+        legal.click();
+        const sent = sentFrom(canvasElement);
+        assert(sent.length === 1 && sent[0].with === 'phase:check', 'only the legal place is sent');
     },
 };
 
@@ -343,7 +409,33 @@ export const AddAHook: Story = {
     name: 'Add a hook',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        await fromPhaseMenu(canvasElement, 0, 'Add hook');
+        (canvasElement.querySelector('.pb-edge-add--before') as HTMLButtonElement).click();
+        const sent = sentFrom(canvasElement);
+        assert(sent[0]?.what === 'addHook', 'the "+" before a node opens the hook form there');
+    },
+};
+
+export const AddToALane: Story = {
+    name: 'Add to a lane',
+    render: () => {
+        const { sent } = recorder();
+        return (
+            <div class="builder"
+                ref={(el: HTMLElement | null) => {
+                    if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+                }}>
+                <Canvas graph={graph([SPECIFY])} onOpenNode={noop} onReorder={noop}
+                    onAddHook={noop} onEditHook={noop} onSetPhases={noop} onAddNode={noop}
+                    onOpenFrame={noop} onOpenTemplate={noop} onNewStep={noop}
+                    onAddTo={c => sent.push({ what: 'addTo', with: c })} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        (canvasElement.querySelector('.pb-lane-add') as HTMLButtonElement).click();
+        const sent = sentFrom(canvasElement);
+        assert(sent[0]?.what === 'addTo' && sent[0].with === 'specify',
+            'the lane button opens the add modal for its step');
     },
 };
 

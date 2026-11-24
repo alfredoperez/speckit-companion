@@ -17,7 +17,7 @@
  *   through connector arms nobody could read.
  */
 
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Menu } from './Menu';
 import { changeSummary, changed } from './changes';
 import { KIND_LABELS } from './hookKinds';
@@ -79,6 +79,22 @@ interface Props {
     onOpenDecision?: (command: string, node: string) => void;
     /** The last run's outcome per hook; absent until the host answers. */
     runs?: HookRunsAnswer | null;
+    /** Open the add modal for a step, from its lane's header. */
+    onAddTo?: (command: string) => void;
+    /** The step whose add modal is open, so its lane button reads pressed. */
+    adding?: string | null;
+    /** A node just taken out whose removal can still be undone. */
+    removed?: RemovedRow | null;
+    onUndo?: (token: string) => void;
+}
+
+/** Where a removed node sat, drawn struck through while its undo is on offer. */
+export interface RemovedRow {
+    command: string;
+    phase: string;
+    index: number;
+    name: string;
+    token: string;
 }
 
 /**
@@ -824,17 +840,9 @@ function Node({ node, actions, stock }: {
  */
 interface PhaseControls {
     onRename: (from: string, to: string) => void;
-    onRemove: (name: string) => void;
+    /** Fold this phase into its neighbour; its nodes join that phase at the near edge. */
+    onMerge: (name: string, into: 'above' | 'below') => void;
     onAddPhaseAfter: (name: string) => void;
-    onAddNode: (phase: string, nodeId: string) => void;
-    /** Nodes this step could run and is not — the only ones that can be added. */
-    dropped: string[];
-    /** Which of those are shipped add-ons rather than nodes the recipe took out. */
-    addOns: string[];
-    /** What each offerable node is, so the picker names it rather than its id. */
-    offers: PipelineStep['offers'];
-    /** The step this phase belongs to, named when explaining where nodes come from. */
-    step: string;
     /**
      * Extension hooks that fire at the step's edges, given to the phase that
      * holds those edges — empty for every phase in between.
@@ -843,10 +851,25 @@ interface PhaseControls {
     stockAfter: StockHook[];
     /** A phase needs two nodes to split, since neither half may be empty. */
     canSplit: boolean;
-    /** A step needs at least one phase, so the last one cannot be removed. */
-    only: boolean;
-    /** The first phase has nothing above it, so its nodes merge downward. */
-    first: boolean;
+    /** The phases on either side, which are what a merge can join. */
+    above?: string;
+    below?: string;
+    /** A node just removed from this phase, still on offer to be put back. */
+    removed?: RemovedRow | null;
+    onUndo?: (token: string) => void;
+}
+
+/** A struck row where a removed node sat, with the way back while the host still offers it. */
+function RemovedNode({ row, onUndo }: { row: RemovedRow; onUndo?: (token: string) => void }) {
+    return (
+        <div class="pb-removed" role="group" aria-label={`${row.name} removed from the run`}>
+            <span class="pb-removed-name"><s>{row.name}</s></span>
+            {onUndo && (
+                <button type="button" class="pb-removed-undo" onClick={() => onUndo(row.token)}
+                    aria-label={`Undo removing ${row.name}`}>Undo</button>
+            )}
+        </div>
+    );
 }
 
 function Phase({ phase, actions, controls }: {
@@ -854,168 +877,92 @@ function Phase({ phase, actions, controls }: {
     actions: NodeActions;
     controls: PhaseControls;
 }) {
-    const { onRename } = controls;
-    const name = useRef<HTMLHeadingElement>(null);
-    const [picking, setPicking] = useState(false);
+    const [renaming, setRenaming] = useState(false);
+    const field = useRef<HTMLInputElement>(null);
 
-    // The node picker is the phase menu's second step, so a click that dismisses
-    // the list has to put the trigger back to the menu it opened from.
-    useEffect(() => {
-        if (!picking) { return undefined; }
-        const done = () => setPicking(false);
-        document.addEventListener('click', done);
-        return () => document.removeEventListener('click', done);
-    }, [picking]);
+    // The menu hands focus back to its trigger before the pick runs, so the field can take it now.
+    useLayoutEffect(() => {
+        if (renaming) { field.current?.focus(); field.current?.select(); }
+    }, [renaming]);
 
-    const rename = (event: Event) => {
-        const el = event.currentTarget as HTMLElement;
-        const next = (el.textContent ?? '').trim();
-        if (!next || next === phase.name) { el.textContent = phase.name; return; }
-        onRename(phase.name, next);
-        // Put the old name back and let the redraw carry the new one, rather
-        // than leaving the typed text standing. A refused write redraws the
-        // graph unchanged, and Preact then sees the same vdom text it rendered
-        // last time and touches nothing — so the board went on showing a phase
-        // name that is not in the configuration, which is the one thing every
-        // other refusal in this panel is careful not to do.
-        el.textContent = phase.name;
-    };
-
-    /** Put the caret in the name on the board rather than in a second field. */
-    const startRename = () => {
-        const el = name.current;
-        if (!el) { return; }
-        // After the menu has finished closing, not during it. A menu hands the
-        // keyboard back to its trigger on the way out, which is right for every
-        // other entry and would take the caret straight back off this one.
-        setTimeout(() => {
-            el.focus();
-            const range = document.createRange();
-            range.selectNodeContents(el);
-            const selection = window.getSelection();
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-        }, 0);
+    const finish = (save: boolean) => {
+        // Escape unmounts the field, and a browser may blur it on the way out.
+        if (!field.current?.isConnected || field.current.dataset.done) { return; }
+        field.current.dataset.done = '1';
+        const next = field.current.value.trim();
+        setRenaming(false);
+        if (save && next && next !== phase.name) { controls.onRename(phase.name, next); }
     };
 
     /**
-     * Everything a phase can do, said in the same five words every time.
-     *
-     * Every one of these used to be a separate button that was `opacity: 0`
-     * until the pointer arrived, so the board showed nothing that could change
-     * anything and touch reached none of it. One `+` on the rule, always there.
-     *
-     * A row that cannot run here is shown inert rather than dropped, because
-     * the note is what teaches the capability: "one node here, so there is
-     * nothing to split off" says a phase can be split at the same moment it
-     * says why this one cannot. A dropped row teaches nothing, and a person
-     * who never sees Split never learns to look for it.
+     * What a phase can do, behind its own name. A row that cannot run here is
+     * shown inert with its reason, because the note is what teaches the
+     * capability: "one node here, so there is nothing to split off".
      */
     const offered = [
-        { id: 'hook', label: 'Add hook', note: 'a skill, an instruction or a command' },
-        controls.dropped.length
-            ? { id: 'node', label: 'Add node', note: `${controls.dropped.length} on offer` }
-            : {
-                id: 'node', label: 'Add node', disabled: true,
-                note: `every node ${controls.step} has is already in a phase — drag one in `
-                    + `from another, or write your own at .specify/companion/nodes/${controls.step}/`,
-            },
-        { id: 'rename', label: 'Rename phase', note: 'its hooks follow the new name' },
+        { id: 'rename', label: 'Rename…', note: 'Its hooks follow the new name.' },
         controls.canSplit
-            ? {
-                id: 'split', label: 'Split phase',
-                note: 'its last node starts a new phase after it',
-            }
+            ? { id: 'split', label: 'Split', note: 'Its last node starts a new phase after it.' }
             : {
-                id: 'split', label: 'Split phase', disabled: true,
-                note: 'one node here, so there is nothing to split off',
+                id: 'split', label: 'Split', disabled: true,
+                note: 'One node here, so there is nothing to split off.',
             },
-        // The first phase has nothing above it, so its nodes go down into the
-        // second. The label used to say "above" in both directions.
-        controls.only
-            ? {
-                id: 'merge', label: 'Merge into the phase above', disabled: true,
-                note: 'a step needs at least one phase',
-            }
-            : controls.first
-                ? {
-                    id: 'merge', label: 'Merge into the phase below',
-                    note: 'nothing sits above this one, so its nodes go down',
-                }
-                : {
-                    id: 'merge', label: 'Merge into the phase above',
-                    note: 'its nodes go with it',
-                },
+        ...(controls.above
+            ? [{ id: 'merge-above', label: `Merge into ${controls.above}, above` }] : []),
+        ...(controls.below
+            ? [{ id: 'merge-below', label: `Merge into ${controls.below}, below` }] : []),
+        ...(!controls.above && !controls.below
+            ? [{
+                id: 'merge', label: 'Merge', disabled: true,
+                note: 'A step needs at least one phase.',
+            }] : []),
     ];
 
     // No guards here: `Menu` will not call this for a row it drew inert.
     const act = (id: string) => {
-        if (id === 'hook') { actions.onAdd(phase.name, 'before'); }
-        if (id === 'node') { setPicking(true); }
-        if (id === 'rename') { startRename(); }
+        if (id === 'rename') { setRenaming(true); }
         if (id === 'split') { controls.onAddPhaseAfter(phase.name); }
-        if (id === 'merge') { controls.onRemove(phase.name); }
+        if (id === 'merge-above') { controls.onMerge(phase.name, 'above'); }
+        if (id === 'merge-below') { controls.onMerge(phase.name, 'below'); }
     };
+
+    const removed = controls.removed;
+    const nodes = phase.nodes.map((node, at) => (
+        // An installed extension registers against the step, not a node — so
+        // its hooks land on the step's real edges: the first node's `before`
+        // and the last node's `after`.
+        <Node key={node.id} node={node} actions={actions} stock={{
+            before: at === 0 ? controls.stockBefore : [],
+            after: at === phase.nodes.length - 1 ? controls.stockAfter : [],
+        }} />
+    ));
+    if (removed) {
+        nodes.splice(Math.min(removed.index, nodes.length), 0,
+            <RemovedNode key={`removed-${removed.token}`} row={removed} onUndo={controls.onUndo} />);
+    }
 
     return (
         <section class="pb-phase">
             <header class="pb-phase-head" {...hookDropZone(actions.drop, () => ({
                 target: { when: 'before', anchor: phase.name, boundary: 'phase' },
             }))}>
-                {/* A phase name is the project's to choose — it is also a hook
-                    anchor, so renaming it is a real edit, not a label. */}
-                <h3 class="pb-phase-name" contentEditable spellcheck={false}
-                    ref={name} role="textbox" aria-label="Phase name"
-                    title="Rename this phase"
-                    onBlur={rename}
-                    onKeyDown={event => {
-                        if (event.key === 'Enter') {
-                            event.preventDefault();
-                            (event.currentTarget as HTMLElement).blur();
-                        }
-                        if (event.key === 'Escape') {
-                            (event.currentTarget as HTMLElement).textContent = phase.name;
-                            (event.currentTarget as HTMLElement).blur();
-                        }
-                    }}>{phase.name}</h3>
-                {picking ? (
-                    <Menu
-                        // Keyed apart from the menu it replaces: without it
-                        // Preact reuses the instance, and the picker inherits
-                        // the closed state the pick that opened it left behind.
-                        key="pick"
-                        class="pb-phase-add"
-                        trigger={<PlusIcon />}
-                        caret={false}
-                        align="right"
-                        defaultOpen
-                        label={`Put a node in ${phase.name}`}
-                        title={`Put a node in ${phase.name}`}
-                        options={controls.dropped.map(id => ({
-                            id,
-                            // What the node IS, and what it does. The list used
-                            // to be bare ids under one sentence about the
-                            // category they were in — the same words on every
-                            // row, and never what picking one gets you.
-                            label: controls.offers[id]?.name || id,
-                            note: [
-                                controls.offers[id]?.summary,
-                                controls.addOns.includes(id)
-                                    ? `${controls.step} ships this and does not run it`
-                                    : 'removed from this run',
-                            ].filter(Boolean).join(' · '),
-                        }))}
-                        onPick={id => { setPicking(false); controls.onAddNode(phase.name, id); }}
-                    />
+                {/* A phase name is also a hook anchor, so renaming it is a real
+                    edit: the hooks on it follow the new name. */}
+                {renaming ? (
+                    <input ref={field} class="pb-phase-input" type="text" defaultValue={phase.name}
+                        aria-label={`Rename the ${phase.name} phase`} spellcheck={false}
+                        onBlur={() => finish(true)}
+                        onKeyDown={event => {
+                            if (event.key === 'Enter') { event.preventDefault(); finish(true); }
+                            if (event.key === 'Escape') { event.preventDefault(); finish(false); }
+                        }} />
                 ) : (
                     <Menu
-                        key="menu"
-                        class="pb-phase-add"
-                        trigger={<PlusIcon />}
-                        caret={false}
-                        align="right"
-                        label={`Add or change ${phase.name}`}
-                        title={`Add or change ${phase.name}`}
+                        class="pb-phase-name"
+                        trigger={<span class="pb-trigger-text">{phase.name}</span>}
+                        heading={`Phase ${phase.name} · ${count(phase.nodes.length)}`}
+                        label={`Phase ${phase.name}`}
+                        title={`Rename, split or merge ${phase.name}`}
                         options={offered}
                         onPick={act}
                     />
@@ -1023,17 +970,7 @@ function Phase({ phase, actions, controls }: {
             </header>
             <EdgeHooks hooks={phase.hooks} anchor={phase.name} boundary="phase"
                 actions={actions} label={`Hooks on the ${phase.name} phase`} />
-            <div class="pb-phase-nodes">
-                {phase.nodes.map((node, at) => (
-                    // An installed extension registers against the step, not a
-                    // node — so its hooks land on the step's real edges: the
-                    // first node's `before` and the last node's `after`.
-                    <Node key={node.id} node={node} actions={actions} stock={{
-                        before: at === 0 ? controls.stockBefore : [],
-                        after: at === phase.nodes.length - 1 ? controls.stockAfter : [],
-                    }} />
-                ))}
-            </div>
+            <div class="pb-phase-nodes">{nodes}</div>
         </section>
     );
 }
@@ -1134,9 +1071,13 @@ export function hooksAt(step: PipelineStep, anchor: string, boundary: 'node' | '
 
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
     onAddNode, onOpenFrame, onOpenTemplate, onMoveHook, onRefuse,
-    onOpenDecision }: {
+    onOpenDecision, onAddTo, adding, removed, onUndo }: {
     step: PipelineStep;
     index: number;
+    onAddTo?: Props['onAddTo'];
+    adding?: boolean;
+    removed?: RemovedRow | null;
+    onUndo?: Props['onUndo'];
     actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'drop'>;
     onMoveHook: Props['onMoveHook'];
     onRefuse: Props['onRefuse'];
@@ -1292,6 +1233,14 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                         {changeSummary(step).join(' · ')}
                     </p>
                 )}
+                {onAddTo && (
+                    <button type="button" class={`pb-lane-add${adding ? ' pb-lane-add--on' : ''}`}
+                        aria-haspopup="dialog" aria-expanded={Boolean(adding)}
+                        onClick={() => onAddTo(step.name)}>
+                        <PlusIcon />
+                        <span>Add to {step.name}</span>
+                    </button>
+                )}
             </header>
 
             <div class="pb-step-body">
@@ -1300,34 +1249,32 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                 {step.phases.map((phase, at) => (
                     <Phase key={phase.name} phase={phase} actions={bound}
                         controls={{
-                            dropped: step.dropped,
-                            addOns: step.addOns,
-                            offers: step.offers,
-                            step: step.name,
                             stockBefore: at === 0
                                 ? step.stockHooks.filter(h => h.when === 'before') : [],
                             stockAfter: at === step.phases.length - 1
                                 ? step.stockHooks.filter(h => h.when === 'after') : [],
                             canSplit: phase.nodes.length > 1,
-                            only: step.phases.length === 1,
-                            first: at === 0,
+                            above: step.phases[at - 1]?.name,
+                            below: step.phases[at + 1]?.name,
+                            removed: removed?.command === step.name && removed.phase === phase.name
+                                ? removed : null,
+                            onUndo,
                             // The name is a hook anchor, so the hooks come with it.
                             onRename: (from, to) => onSetPhases(step.name, settled(
                                 grouping().map(p => p.name === from ? { ...p, name: to } : p)),
                                 { from, to }),
-                            // A phase's nodes have to land somewhere: they join
-                            // the phase above, or the one below when it is first.
-                            onRemove: name => {
+                            // Its nodes join the neighbour at the edge they meet it.
+                            onMerge: (name, direction) => {
                                 const phases = grouping();
                                 const i = phases.findIndex(p => p.name === name);
-                                if (i < 0 || phases.length < 2) { return; }
-                                const into = i === 0 ? 1 : i - 1;
+                                const into = direction === 'above' ? i - 1 : i + 1;
+                                if (i < 0 || !phases[into]) { return; }
                                 const next = phases.map((p, k) => k === into
                                     ? {
                                         ...p,
-                                        nodes: i === 0
-                                            ? [...phases[i].nodes, ...p.nodes]
-                                            : [...p.nodes, ...phases[i].nodes],
+                                        nodes: direction === 'above'
+                                            ? [...p.nodes, ...phases[i].nodes]
+                                            : [...phases[i].nodes, ...p.nodes],
                                     }
                                     : p);
                                 onSetPhases(step.name, next.filter((_, k) => k !== i));
@@ -1348,12 +1295,6 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                                     ? { ...p, nodes: p.nodes.slice(0, -1) } : p);
                                 next.splice(i + 1, 0, { name: fresh, nodes: [moved] });
                                 onSetPhases(step.name, next);
-                            },
-                            onAddNode: (phaseName, nodeId) => {
-                                const phases = grouping().map(p => p.name === phaseName
-                                    ? { ...p, nodes: [...p.nodes, nodeId] } : p);
-                                onAddNode(step.name, nodeId, phaseName,
-                                    phases.flatMap(p => p.nodes), phases);
                             },
                         }} />
                 ))}
@@ -1407,7 +1348,7 @@ export function Canvas(
     { graph, onOpenNode, onReorder, onAddHook,
         onEditHook, onSetPhases, onAddNode, onOpenFrame,
         onOpenTemplate, onNewStep, selected, onMoveHook, onRefuse,
-        onOpenDecision, runs }: Props,
+        onOpenDecision, runs, onAddTo, adding, removed, onUndo }: Props,
 ) {
     const actions = { onOpenNode, selected, runs, yours: hookHome(graph.workflows.active) };
     const sequence = graph.steps.filter(step => step.inSequence);
@@ -1432,7 +1373,8 @@ export function Canvas(
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
                         onOpenTemplate={onOpenTemplate}
                         onMoveHook={onMoveHook} onRefuse={onRefuse}
-                        onOpenDecision={onOpenDecision} />,
+                        onOpenDecision={onOpenDecision} onAddTo={onAddTo}
+                        adding={adding === step.name} removed={removed} onUndo={onUndo} />,
                 ])}
                 {/* The tail of the row: everything that does not take a turn in
                     the run, and the invitation to add something that does. This

@@ -31,14 +31,16 @@ import { StockBoard } from './StockBoard';
 import { PresetsPanel } from './PresetsPanel';
 import { SidePanel } from './SidePanel';
 import { BrokenPipeline } from './BrokenPipeline';
-import { Canvas, hookHome, hooksAt, withoutNode as withoutNodeOf } from './Canvas';
+import {
+    Canvas, RemovedRow, hookHome, hooksAt, withoutNode as withoutNodeOf,
+} from './Canvas';
 import { NodeAction, NodePopover } from './NodePopover';
 import { Header } from './Header';
 import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
-import { moveTargets, movedToPhase } from './moves';
-import { NewStepForm, NewWorkflowForm, Attachment, boundaryOf } from './AttachForm';
-import { HookModal } from './HookModal';
+import { movePlaces, moveTargets, movedToPhase, movedWithin } from './moves';
+import { NewWorkflowForm, Attachment, boundaryOf } from './AttachForm';
+import { AddMode, FRESH_PHASE, HookModal } from './HookModal';
 import { TemplateForm } from './TemplateForm';
 import { DecisionForm } from './DecisionForm';
 
@@ -57,14 +59,22 @@ interface Attaching {
     hook?: PipelineHook;
     /** Bumped each time the form opens, so a move inside it keeps it mounted. */
     opened: number;
+    /** Which choice opens, and which the first row offers; a hook alone when absent. */
+    mode?: AddMode;
+    modes?: AddMode[];
+    /** The step a new one runs behind, when the opener said. */
+    after?: string;
+    /** Set when the opener was not a lane, so the title does not name one. */
+    title?: string;
 }
+
+const ALL_MODES: AddMode[] = ['hook', 'node', 'step'];
 
 /** Only one thing occupies the side column at a time. */
 type Side =
     | { kind: 'node'; at: Selection }
     | { kind: 'attach'; at: Attaching }
     | { kind: 'new-workflow' }
-    | { kind: 'new-step'; after?: string }
     | { kind: 'template'; command: string }
     | { kind: 'presets' }
     /** Where one node's verdicts route. `node` is the node that decides. */
@@ -100,15 +110,7 @@ function withoutNode(graph: PipelineGraph, at: Selection) {
 /** That shape again, with one node a place earlier or later inside its phase. */
 function movedNode(graph: PipelineGraph, at: Selection, direction: 'up' | 'down') {
     const step = graph.steps.find(s => s.name === at.command);
-    if (!step) { return null; }
-    const phases = step.phases.map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id) }));
-    const phase = phases.find(p => p.nodes.includes(at.nodeId));
-    if (!phase) { return null; }
-    const from = phase.nodes.indexOf(at.nodeId);
-    const to = direction === 'up' ? from - 1 : from + 1;
-    if (to < 0 || to >= phase.nodes.length) { return null; }
-    [phase.nodes[from], phase.nodes[to]] = [phase.nodes[to], phase.nodes[from]];
-    return { order: phases.flatMap(p => p.nodes), phases };
+    return step ? movedWithin(step, at.nodeId, direction) : null;
 }
 
 /** Find the selected node in the graph, so the inspector follows a rebuild. */
@@ -161,6 +163,8 @@ function App() {
     // The node whose details hang beside its card. Not the side column: the two can both be open.
     const [pop, setPop] = useState<Selection | null>(null);
     const [narrow, setNarrow] = useState(() => window.innerWidth <= NARROW);
+    // Where the last removed node sat; drawn while the status still offers its undo.
+    const [removed, setRemoved] = useState<RemovedRow | null>(null);
     const moving = useRef(false);
     // The form as it was before a keyboard move, put back if the write refuses it.
     const unmoved = useRef<Attaching | null>(null);
@@ -341,6 +345,12 @@ function App() {
         } else if (action === 'remove') {
             const shape = withoutNode(graph, at);
             if (!shape) { return; }
+            const phase = step?.phases.find(p => p.nodes.some(n => n.id === at.nodeId));
+            const index = phase?.nodes.findIndex(n => n.id === at.nodeId) ?? -1;
+            setRemoved(phase ? {
+                command: at.command, phase: phase.name, index,
+                name: phase.nodes[index].name, token: `remove:${at.command}:${at.nodeId}`,
+            } : null);
             setPop(null);
             setSide(null);
             send({ type: 'removeNode', command: at.command, nodeId: at.nodeId, ...shape });
@@ -389,12 +399,25 @@ function App() {
         setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
     };
 
-    // The header appends and passes nothing; a lane seam places and passes the
-    // step to its left. One handler, so the two cannot drift apart.
+    const sequence = graph.steps.filter(s => s.inSequence && !s.own).map(s => s.name);
+    // The header and the tail append; a lane seam passes the step to its left.
+    // One handler, so they cannot drift apart.
     const newStep = (after?: string) => {
-        setNotice(null);
-        setSide({ kind: 'new-step', after });
+        const host = after ?? sequence[sequence.length - 1] ?? graph.steps[0]?.name;
+        if (!host) { return; }
+        openAttach({
+            command: host, anchor: graph.steps.find(s => s.name === host)?.phases[0]?.name ?? host,
+            mode: 'step', modes: ['step'], after, title: 'Add a step',
+        });
     };
+    const addTo = (command: string) => {
+        const step = graph.steps.find(s => s.name === command);
+        openAttach({
+            command, anchor: step?.phases[0]?.name ?? command, when: 'before',
+            mode: 'hook', modes: ALL_MODES, after: sequence.includes(command) ? command : undefined,
+        });
+    };
+    const shownRemoved = removed && status?.undo?.token === removed.token ? removed : null;
 
     return (
         <div class={`builder ${side && side.kind !== 'attach' ? 'builder--inspecting' : ''}${
@@ -474,6 +497,11 @@ function App() {
                         });
                     }}
                     onRefuse={reason => { setStatus(null); setNotice(reason); }}
+                    onAddTo={addTo}
+                    adding={attaching && attaching.modes && attaching.modes.length > 1
+                        ? attaching.command : null}
+                    removed={shownRemoved}
+                    onUndo={undo}
                     onOpenDecision={(command, node) => {
                         setNotice(null);
                         setSide({ kind: 'decision', command, node });
@@ -524,6 +552,34 @@ function App() {
                         } : undefined}
                         count={hookCount}
                         announce={announced}
+                        mode={attaching.mode}
+                        modes={attaching.modes}
+                        title={attaching.title}
+                        onAddNode={(phase, nodeId, keepOpen) => {
+                            if (!keepOpen) { setSide(null); }
+                            const grouping = attachStep.phases.map(p => ({
+                                name: p.name, nodes: p.nodes.map(n => n.id),
+                            }));
+                            const phases = grouping.some(p => p.name === phase)
+                                ? grouping.map(p => (p.name === phase
+                                    ? { ...p, nodes: [...p.nodes, nodeId] } : p))
+                                : [...grouping, { name: phase || FRESH_PHASE, nodes: [nodeId] }];
+                            send({
+                                type: 'addNode', command: attaching.command, nodeId,
+                                phase: phase || FRESH_PHASE,
+                                order: phases.flatMap(p => p.nodes), phases,
+                            });
+                        }}
+                        stepForm={{
+                            sequence,
+                            taken: graph.steps.map(s => s.name),
+                            after: attaching.after,
+                            autoRuns: graph.steps.some(s => s.name === 'auto') ? sequence : null,
+                        }}
+                        onNewStep={(step, keepOpen) => {
+                            if (!keepOpen) { setSide(null); }
+                            send({ type: 'newStep', ...step });
+                        }}
                         onMove={editingHook ? (direction: 'up' | 'down') => {
                             const index = editingHook.index + (direction === 'up' ? -1 : 1);
                             // A press while the last move is unanswered would act on an index the file may not have.
@@ -603,20 +659,6 @@ function App() {
                     </SidePanel>
                 )}
 
-                {side?.kind === 'new-step' && (
-                    <NewStepForm
-                        sequence={graph.steps.filter(s => s.inSequence && !s.own)
-                            .map(s => s.name)}
-                        taken={graph.steps.map(s => s.name)}
-                        initialAfter={side.after}
-                        onCancel={() => setSide(null)}
-                        onCreate={step => {
-                            setSide(null);
-                            send({ type: 'newStep', ...step });
-                        }}
-                    />
-                )}
-
                 {side?.kind === 'new-workflow' && (
                     <NewWorkflowForm
                         from={graph.workflows.active}
@@ -678,11 +720,7 @@ function App() {
                     hooksIn={hookHome(graph.workflows.active).name}
                     anchorKey={`${pop.command}/${pop.nodeId}`}
                     narrow={narrow}
-                    moveTargets={moveTargets(popStep, pop.nodeId)}
-                    canMove={{
-                        up: movedNode(graph, pop, 'up') !== null,
-                        down: movedNode(graph, pop, 'down') !== null,
-                    }}
+                    moves={movePlaces(popStep, pop.nodeId)}
                     removeBlocked={withoutNode(graph, pop) ? ''
                         : `The last node ${pop.command} has: a step needs at least one.`}
                     announce={announced}

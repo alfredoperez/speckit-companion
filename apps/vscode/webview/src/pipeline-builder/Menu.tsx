@@ -58,6 +58,8 @@ interface Props {
     defaultOpen?: boolean;
     /** Hang the list from the viewport on the side with room, for a trigger inside a pane that clips. */
     floating?: boolean;
+    /** A quiet line above the options naming what they act on. */
+    heading?: string;
 }
 
 /** How far a floating list keeps from the trigger, and from the panel's edges. */
@@ -108,7 +110,7 @@ function clippedAway(element: HTMLElement): boolean {
 
 export function Menu({
     trigger, title, options, onPick, disabled, disabledTitle, defaultOpen,
-    label, caret = true, align = 'left', floating = false, ...rest
+    label, caret = true, align = 'left', floating = false, heading, ...rest
 }: Props) {
     const [open, setOpen] = useState(Boolean(defaultOpen));
     const root = useRef<HTMLDivElement>(null);
@@ -230,6 +232,7 @@ export function Menu({
                 <ul class={`pb-menu-list${align === 'right' ? ' pb-menu-list--right' : ''}${
                     floating ? ' pb-menu-list--floating' : ''}`}
                     role="menu" aria-label={title} ref={list} onKeyDown={steer}>
+                    {heading && <li role="presentation" class="pb-menu-heading">{heading}</li>}
                     {options.map(option => (
                         <li key={option.id} role="none">
                             {/* `aria-disabled` rather than the native attribute,

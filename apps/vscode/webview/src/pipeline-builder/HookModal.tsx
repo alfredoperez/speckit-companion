@@ -32,6 +32,63 @@ interface Props {
     count?: number;
     /** What the last move's write said, read once it answers. */
     announce?: string;
+    /** Which choice opens. Hook unless said. */
+    mode?: AddMode;
+    /** The choices offered in the first row; none, or one, draws no row. */
+    modes?: AddMode[];
+    /** The phase a node lands at the end of, when the opener said. */
+    nodePhase?: string;
+    onAddNode?: (phase: string, nodeId: string, keepOpen: boolean) => void;
+    /** What a new step can be placed behind, and which steps auto runs. */
+    stepForm?: StepForm;
+    onNewStep?: (step: NewStep, keepOpen: boolean) => void;
+    /** Replaces the title the place would give, for an opener with no lane. */
+    title?: string;
+}
+
+export type AddMode = 'hook' | 'node' | 'step';
+
+export interface NewStep { name: string; label: string; after: string; writes: string }
+
+export interface StepForm {
+    /** Steps a new one can run behind, in run order. */
+    sequence: string[];
+    /** Every step name already in use. */
+    taken: string[];
+    after?: string;
+    /** The steps the hands-off auto command runs, or null when the project has no auto. */
+    autoRuns: string[] | null;
+}
+
+const MODES: Array<{ id: AddMode; label: string }> = [
+    { id: 'hook', label: 'Hook' }, { id: 'node', label: 'Node' }, { id: 'step', label: 'Step' },
+];
+
+/** What a phase made for a step with none is called; the writer refuses an empty one. */
+export const FRESH_PHASE = 'new phase';
+
+/** The last phase that does not end on a held node, since nothing can join after one. */
+export function defaultPhase(step: PipelineStep): string {
+    const open = [...step.phases].reverse().find(p => !p.nodes[p.nodes.length - 1]?.pinned);
+    return open?.name ?? step.phases[step.phases.length - 1]?.name ?? FRESH_PHASE;
+}
+
+/** What a hands-off run will and will not do with a step added after `after`. */
+export function autoWarning(autoRuns: string[], after: string): { title: string; body: string } {
+    const last = autoRuns[autoRuns.length - 1];
+    return {
+        title: after && after === last
+            ? 'The hands-off auto command stops before it'
+            : 'The hands-off auto command will not run it',
+        body: `Auto runs ${autoRuns[0]} through ${last}. A step you add runs only when you start it.`,
+    };
+}
+
+/** The same rule the writer applies, said before it is asked. */
+export function stepNameProblem(name: string, taken: string[]): string {
+    if (!name) { return ''; }
+    if (!/^[a-z][a-z0-9-]*$/.test(name)) { return 'Lowercase letters, digits and dashes — it becomes a command.'; }
+    return taken.includes(name) ? `There is already a step called ${name}.` : '';
 }
 
 const KINDS: Array<{
@@ -124,6 +181,17 @@ export function HookModal(props: Props) {
     const box = useRef<HTMLDivElement>(null);
     const field = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
     const opener = useRef<HTMLElement | null>(null);
+    const modes = editing ? [] : props.modes ?? [];
+    const [mode, setMode] = useState<AddMode>(editing ? 'hook' : props.mode ?? 'hook');
+    const [nodeQuery, setNodeQuery] = useState('');
+    const [nodeActive, setNodeActive] = useState(0);
+    const [nodePhase, setNodePhase] = useState(props.nodePhase ?? defaultPhase(step));
+    const form = props.stepForm;
+    const [stepName, setStepName] = useState('');
+    const [stepLabel, setStepLabel] = useState('');
+    const [stepAfter, setStepAfter] = useState(
+        form?.after ?? form?.sequence[form.sequence.length - 1] ?? '');
+    const [stepWrites, setStepWrites] = useState('');
 
     const kind = KINDS.find(k => k.type === hookType)!;
     const all = places(step);
@@ -161,10 +229,66 @@ export function HookModal(props: Props) {
     const titleId = `${listId}-title`;
     const optionId = (index: number) => `${listId}-${index}`;
 
+    /** The first thing to type in, whichever choice is showing. */
+    function focusField() {
+        (field.current ?? box.current?.querySelector<HTMLElement>(
+            '.pb-modal-body input, .pb-modal-body textarea'))?.focus();
+    }
+
+    const offers: Row[] = step.dropped.map(id => ({
+        id,
+        label: step.offers[id]?.name || id,
+        note: [step.addOns.includes(id) ? 'Shipped, optional' : 'Removed from this run',
+            step.offers[id]?.summary].filter(Boolean).join(' · '),
+    }));
+    const nodeText = nodeQuery.trim().toLowerCase();
+    const nodeRows = offers.filter(row => !nodeText || row.id.toLowerCase().includes(nodeText)
+        || row.label.toLowerCase().includes(nodeText)
+        || (row.note ?? '').toLowerCase().includes(nodeText));
+    const nodeCurrent = nodeRows[Math.min(Math.max(nodeActive, 0), nodeRows.length - 1)] ?? null;
+    const phaseNames = step.phases.length ? step.phases.map(p => p.name) : [FRESH_PHASE];
+    const cleanName = stepName.trim();
+    const stepProblem = stepNameProblem(cleanName, form?.taken ?? []);
+    const canAdd = mode === 'hook' ? ready
+        : mode === 'node' ? Boolean(nodeCurrent)
+            : Boolean(cleanName) && !stepProblem;
+
+    const switchMode = (next: AddMode) => {
+        setMode(next);
+        setAdded('');
+        setTimeout(focusField, 0);
+    };
+
+    const pickMode = (event: KeyboardEvent, index: number) => {
+        const by = { ArrowLeft: -1, ArrowUp: -1, ArrowRight: 1, ArrowDown: 1 }[event.key];
+        if (by === undefined) { return; }
+        event.preventDefault();
+        const shown = MODES.filter(m => modes.includes(m.id));
+        const to = (index + by + shown.length) % shown.length;
+        setMode(shown[to].id);
+        setAdded('');
+        const group = (event.currentTarget as HTMLElement).parentElement;
+        (group?.children[to] as HTMLButtonElement | undefined)?.focus();
+    };
+
+    const submitNode = () => {
+        if (!nodeCurrent) { return; }
+        props.onAddNode?.(nodePhase, nodeCurrent.id, keep);
+        if (keep) { setAdded(nodeCurrent.label); setNodeQuery(''); setNodeActive(0); }
+    };
+
+    const submitStep = () => {
+        if (!cleanName || stepProblem) { return; }
+        props.onNewStep?.({
+            name: cleanName, label: stepLabel.trim(), after: stepAfter, writes: stepWrites.trim(),
+        }, keep);
+        if (keep) { setAdded(cleanName); setStepName(''); setStepLabel(''); setStepWrites(''); }
+    };
+
     useLayoutEffect(() => {
         const was = document.activeElement as HTMLElement | null;
         opener.current = was && was !== document.body ? was : null;
-        field.current?.focus();
+        focusField();
         const self = box.current;
         return () => {
             const active = document.activeElement;
@@ -226,6 +350,8 @@ export function HookModal(props: Props) {
 
     const submit = (event?: Event) => {
         event?.preventDefault();
+        if (mode === 'node') { submitNode(); return; }
+        if (mode === 'step') { submitStep(); return; }
         if (!ready) { return; }
         // An index belongs to the anchor it was read from, so a new place is a move.
         const moved = Boolean(editing)
@@ -294,7 +420,175 @@ export function HookModal(props: Props) {
         </div>
     );
 
-    const title = editing ? 'Edit hook' : `Add ${when} ${placeLabel}`;
+    const title = editing ? 'Edit hook'
+        : props.title ?? (modes.length > 1 ? `Add to ${step.name}` : `Add ${when} ${placeLabel}`);
+    const subtitle = editing ? `${when} ${placeLabel} · in ${step.name}`
+        : mode === 'node' ? 'Choose what to add. It goes at the end of its phase; drag it after.'
+            : mode === 'step' ? 'A step is a new lane with its own phases.'
+                : modes.length > 1 ? `Runs ${when} ${placeLabel}, or anywhere you pick below.`
+                    : `in ${step.name}`;
+
+    const modeRow = modes.length > 1 && (
+        <div class="pb-modal-modes" role="radiogroup" aria-label="What to add">
+            {MODES.filter(m => modes.includes(m.id)).map((option, index) => (
+                <button key={option.id} type="button" role="radio" aria-checked={mode === option.id}
+                    tabIndex={mode === option.id ? 0 : -1}
+                    class={`pb-modal-mode${mode === option.id ? ' pb-modal-mode--on' : ''}`}
+                    onKeyDown={event => pickMode(event, index)}
+                    onClick={() => switchMode(option.id)}>
+                    {option.label}
+                </button>
+            ))}
+        </div>
+    );
+
+    const nodeListId = `${listId}-nodes`;
+    const nodePanel = (
+        <>
+            {offers.length > 0 ? (
+                <>
+                    <div class="pb-modal-search">
+                        <svg class="pb-modal-search-icon" width="14" height="14" viewBox="0 0 14 14"
+                            fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                            aria-hidden="true" focusable="false">
+                            <circle cx="6" cy="6" r="4.25" />
+                            <path d="M9.5 9.5L12.5 12.5" />
+                        </svg>
+                        <input class="pb-modal-input" type="text" value={nodeQuery}
+                            role="combobox" aria-expanded={nodeRows.length > 0}
+                            aria-autocomplete="list" aria-controls={nodeListId}
+                            aria-label="Search nodes on offer" placeholder="Search nodes on offer"
+                            aria-activedescendant={nodeCurrent
+                                ? `${nodeListId}-${nodeRows.indexOf(nodeCurrent)}` : undefined}
+                            autocomplete="off" spellcheck={false}
+                            onInput={e => {
+                                setNodeQuery((e.target as HTMLInputElement).value);
+                                setNodeActive(0); setAdded('');
+                            }}
+                            onKeyDown={event => {
+                                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                                    event.preventDefault();
+                                    if (nodeRows.length === 0) { return; }
+                                    const by = event.key === 'ArrowDown' ? 1 : -1;
+                                    setNodeActive(at => (Math.min(Math.max(at, 0), nodeRows.length - 1)
+                                        + by + nodeRows.length) % nodeRows.length);
+                                } else if (event.key === 'Enter') {
+                                    event.preventDefault();
+                                    submitNode();
+                                }
+                            }} />
+                    </div>
+                    <p class="pb-modal-section">On offer for {step.name}</p>
+                    {nodeRows.length > 0 ? (
+                        <ul class="pb-modal-results" id={nodeListId} role="listbox"
+                            aria-label={`Nodes on offer for ${step.name}`}>
+                            {nodeRows.map((row, index) => {
+                                const on = row === nodeCurrent;
+                                return (
+                                    <li key={row.id} id={`${nodeListId}-${index}`} role="option"
+                                        aria-selected={on}
+                                        class={`pb-modal-row${on ? ' pb-modal-row--on' : ''}`}
+                                        onMouseDown={event => event.preventDefault()}
+                                        onClick={() => setNodeActive(index)}
+                                        onDblClick={submitNode}>
+                                        <HookIcon type="node" />
+                                        <span class="pb-modal-row-text">
+                                            <span class="pb-modal-row-name">
+                                                <Marked text={row.label} query={nodeQuery.trim()} />
+                                            </span>
+                                            {row.note && <span class="pb-modal-row-note">{row.note}</span>}
+                                        </span>
+                                        <span class="pb-modal-row-id">{row.id}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    ) : (
+                        <p class="pb-modal-hint">No node on offer matches that.</p>
+                    )}
+                    <p class="pb-modal-runs">
+                        <span>Goes at the end of</span>
+                        <Menu class="pb-menu-trigger--field"
+                            trigger={<span class="pb-trigger-text">{nodePhase}</span>}
+                            label="Phase" title="The phase the node joins, at its end"
+                            options={phaseNames.map(name => ({ id: name, label: name }))}
+                            onPick={setNodePhase} />
+                    </p>
+                    <p class="pb-modal-hint">
+                        Only shipped optional nodes and ones removed from this run are on offer.
+                    </p>
+                </>
+            ) : (
+                <p class="pb-modal-hint pb-modal-empty">
+                    Every node {step.name} has is already in a phase. Write your own at{' '}
+                    <span class="pb-mono">.specify/companion/nodes/{step.name}/</span> and it is
+                    offered here.
+                </p>
+            )}
+        </>
+    );
+
+    const runsAfter = form ? [
+        ...form.sequence.map((name, at) => ({ id: name, label: `${at + 1} ${name}` })),
+        { id: '', label: 'Nothing, I launch it myself' },
+    ] : [];
+    const warning = form?.autoRuns?.length ? autoWarning(form.autoRuns, stepAfter) : null;
+    const stepPanel = form && (
+        <div class="pb-modal-fields">
+            <label class="pb-modal-field pb-modal-field--wide">
+                <span class="pb-modal-field-label">Name</span>
+                <input class="pb-modal-text" type="text" value={stepName} placeholder="review"
+                    spellcheck={false} aria-invalid={stepProblem ? 'true' : undefined}
+                    onInput={e => { setStepName((e.target as HTMLInputElement).value); setAdded(''); }} />
+                {stepProblem && <span class="pb-field-problem">{stepProblem}</span>}
+            </label>
+            <label class="pb-modal-field pb-modal-field--wide">
+                <span class="pb-modal-field-label">Display name</span>
+                <input class="pb-modal-text" type="text" value={stepLabel}
+                    placeholder={cleanName ? `${cleanName[0].toUpperCase()}${cleanName.slice(1)}` : 'Review'}
+                    onInput={e => setStepLabel((e.target as HTMLInputElement).value)} />
+                <span class="pb-modal-field-note">Taken from the name unless you write something here.</span>
+            </label>
+            <div class="pb-modal-field">
+                <span class="pb-modal-field-label" id={`${listId}-after`}>Runs after</span>
+                <Menu class="pb-menu-trigger--field pb-modal-select"
+                    trigger={<span class="pb-trigger-text">
+                        {runsAfter.find(o => o.id === stepAfter)?.label ?? stepAfter}
+                    </span>}
+                    label={`Runs after: ${runsAfter.find(o => o.id === stepAfter)?.label ?? stepAfter}`}
+                    title="The step this one runs behind"
+                    options={runsAfter} onPick={setStepAfter} />
+            </div>
+            <label class="pb-modal-field">
+                <span class="pb-modal-field-label">Writes</span>
+                <input class="pb-modal-text pb-modal-text--mono" type="text" value={stepWrites}
+                    placeholder="review.md" spellcheck={false}
+                    onInput={e => setStepWrites((e.target as HTMLInputElement).value)} />
+            </label>
+            <p class="pb-modal-field-note pb-modal-field--wide">
+                Several files go in brackets: <span class="pb-mono">[review.md, notes.md]</span>;
+                leave it empty if the step writes nothing. It writes{' '}
+                <span class="pb-mono">.specify/companion/nodes/{cleanName || 'name'}/</span> with one
+                node to edit, and after the next build the assistant can run{' '}
+                <span class="pb-mono">/speckit.companion.{cleanName || 'name'}</span>.
+            </p>
+            {warning && (
+                <div class="pb-modal-warning pb-modal-field--wide" role="note">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                        stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true" focusable="false">
+                        <path d="M7 1.8L12.6 11.8H1.4Z" />
+                        <path d="M7 5.5V8.2" />
+                        <circle cx="7" cy="10" r="0.6" fill="currentColor" />
+                    </svg>
+                    <span class="pb-modal-warning-text">
+                        <strong class="pb-modal-warning-title">{warning.title}</strong>
+                        <span>{warning.body}</span>
+                    </span>
+                </div>
+            )}
+        </div>
+    );
 
     return (
         <div class="pb-modal-layer">
@@ -316,9 +610,7 @@ export function HookModal(props: Props) {
                 <header class="pb-modal-head">
                     <div class="pb-modal-heading">
                         <h2 class="pb-modal-title" id={titleId}>{title}</h2>
-                        <p class="pb-modal-where">
-                            {editing ? `${when} ${placeLabel} · ` : ''}in {step.name}
-                        </p>
+                        <p class="pb-modal-where">{subtitle}</p>
                     </div>
                     <button type="button" class="pb-modal-close" aria-label="Close" onClick={onCancel}>
                         <kbd class="pb-modal-esc" aria-hidden="true">Esc</kbd>
@@ -328,6 +620,10 @@ export function HookModal(props: Props) {
 
                 <form class="pb-modal-form" onSubmit={submit}>
                     <div class="pb-modal-body">
+                        {modeRow}
+                        {mode === 'node' && nodePanel}
+                        {mode === 'step' && stepPanel}
+                        {mode === 'hook' && <>
                         {searching ? <>{search}{kinds}</> : kinds}
                         {searching && rows.length > 0 && (
                             <ul class="pb-modal-results" id={listId} role="listbox"
@@ -426,6 +722,7 @@ export function HookModal(props: Props) {
                         {searching && rows.length > 0 && (
                             <p class="pb-modal-hint">Up and down move · Enter adds · Esc closes</p>
                         )}
+                        </>}
                     </div>
 
                     <footer class="pb-modal-foot">
@@ -443,8 +740,9 @@ export function HookModal(props: Props) {
                         )}
                         <p class="pb-live" role="status" aria-live="polite">{props.announce ?? ''}</p>
                         <button class="pb-action pb-modal-cancel" type="button" onClick={onCancel}>Cancel</button>
-                        <button class="pb-action pb-action--primary" type="submit" disabled={!ready}>
-                            {editing ? 'Save' : 'Add'}
+                        <button class="pb-action pb-action--primary" type="submit" disabled={!canAdd}>
+                            {editing ? 'Save' : mode === 'node' ? 'Add node'
+                                : mode === 'step' ? 'Add step' : 'Add'}
                         </button>
                     </footer>
                 </form>

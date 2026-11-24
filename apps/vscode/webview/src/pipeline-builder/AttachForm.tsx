@@ -1,6 +1,6 @@
 /**
- * The shared shape of a hook write, and the side-pane forms for a new step and
- * a new workflow. Adding or editing a hook happens in `HookModal`.
+ * The shared shape of a hook write, and the side-pane form for a new workflow.
+ * Adding a hook, a node or a step happens in `HookModal`.
  */
 
 import { useState } from 'preact/hooks';
@@ -24,120 +24,6 @@ export interface Attachment {
 /** A node wins a name it shares with a phase, which is the order the writer resolves it in. */
 export function boundaryOf(step: PipelineStep, anchor: string): 'node' | 'phase' {
     return step.phases.some(p => p.nodes.some(n => n.id === anchor)) ? 'node' : 'phase';
-}
-
-interface NewStepProps {
-    /** Steps a new one can be placed behind, in run order. */
-    sequence: string[];
-    /** Every step name already in use. */
-    taken: string[];
-    /**
-     * The step this one should run behind, when the click already said where.
-     *
-     * A seam between two lanes IS the answer to "runs after", so arriving from
-     * one should not ask again.
-     */
-    initialAfter?: string;
-    onCancel: () => void;
-    onCreate: (step: { name: string; label: string; after: string; writes: string }) => void;
-}
-
-/**
- * Add a step of the project's own.
- *
- * The board could show the steps and not change them, so a review pass had to
- * hide inside implement. A step is a directory of nodes; this writes one.
- */
-export function NewStepForm({
-    sequence, taken, initialAfter, onCancel, onCreate,
-}: NewStepProps) {
-    const [name, setName] = useState('');
-    const [label, setLabel] = useState('');
-    const [after, setAfter] = useState(
-        initialAfter ?? sequence[sequence.length - 1] ?? '');
-    const [writes, setWrites] = useState('');
-    const clean = name.trim();
-
-    const problem = !clean ? ''
-        : !/^[a-z][a-z0-9-]*$/.test(clean)
-            ? 'Lowercase letters, digits and dashes — it becomes a command.'
-            : taken.includes(clean) ? `There is already a step called ${clean}.` : '';
-
-    const submit = (event: Event) => {
-        event.preventDefault();
-        if (clean && !problem) {
-            onCreate({ name: clean, label: label.trim(), after, writes: writes.trim() });
-        }
-    };
-
-    return (
-        <SidePanel
-            label="New step" title="New step"
-            where="A turn of its own in the run, with its own command."
-            onClose={onCancel} closeLabel="Cancel"
-        >
-            <form class="pb-form" onSubmit={submit}>
-                <div class="pb-form-fields">
-                <label class="pb-field">
-                    <span class="pb-field-label">Name</span>
-                    <input class="pb-input pb-input--mono" type="text" value={name} autofocus
-                        placeholder="review"
-                        onInput={e => setName((e.target as HTMLInputElement).value)} />
-                    {problem && <span class="pb-field-problem">{problem}</span>}
-                </label>
-
-                {/* Empty is what tells the writer to derive it from the name. */}
-                <label class="pb-field">
-                    <span class="pb-field-label">Display name</span>
-                    <input class="pb-input" type="text" value={label}
-                        placeholder={clean ? `${clean[0].toUpperCase()}${clean.slice(1)}` : 'Review'}
-                        onInput={e => setLabel((e.target as HTMLInputElement).value)} />
-                    <span class="pb-field-note">
-                        Taken from the name unless you write something here.
-                    </span>
-                </label>
-
-                <label class="pb-field">
-                    <span class="pb-field-label">Runs after</span>
-                    <select class="pb-input" value={after}
-                        onChange={e => setAfter((e.target as HTMLSelectElement).value)}>
-                        {sequence.map(step => (
-                            <option key={step} value={step}>{step}</option>
-                        ))}
-                        <option value="">Nothing — I launch it myself</option>
-                    </select>
-                </label>
-
-                <label class="pb-field">
-                    <span class="pb-field-label">Writes</span>
-                    <input class="pb-input pb-input--mono" type="text" value={writes}
-                        placeholder="review.md"
-                        onInput={e => setWrites((e.target as HTMLInputElement).value)} />
-                    <span class="pb-field-note">
-                        Several go in brackets: <span class="pb-mono">[review.md, notes.md]</span>.
-                        Leave it empty if the step writes nothing.
-                    </span>
-                </label>
-
-                <p class="pb-form-preview">
-                    Writes <span class="pb-mono">
-                        .specify/companion/nodes/{clean || 'name'}/
-                    </span> with one node to edit. After the next build the assistant can
-                    run <span class="pb-mono">
-                        /speckit.companion.{clean || 'name'}
-                    </span>.
-                </p>
-                </div>
-
-                <div class="pb-form-actions">
-                    <button class="pb-action pb-action--primary" type="submit"
-                        disabled={!clean || Boolean(problem)}>Add step</button>
-                    <button class="pb-action pb-action--quiet" type="button"
-                        onClick={onCancel}>Cancel</button>
-                </div>
-            </form>
-        </SidePanel>
-    );
 }
 
 interface NewWorkflowProps {

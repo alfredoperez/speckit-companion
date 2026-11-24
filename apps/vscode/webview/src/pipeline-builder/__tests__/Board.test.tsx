@@ -8,10 +8,10 @@ import { NO_CHANGES, canvas, drag, flush, graph, mount, node, step } from './sup
 
 afterEach(() => { document.body.innerHTML = ''; });
 
-/** Open a phase's one resting control and read back what it offers. */
+/** Open a phase's label menu and read back what it offers. */
 async function phaseMenu(host: HTMLElement, at = 0) {
     const phase = host.querySelectorAll('.pb-phase')[at];
-    (phase.querySelector('.pb-phase-add') as HTMLButtonElement).click();
+    (phase.querySelector('.pb-phase-name') as HTMLButtonElement).click();
     await flush();
     return Array.from(phase.querySelectorAll('.pb-menu-option')) as HTMLButtonElement[];
 }
@@ -122,11 +122,25 @@ describe('where work can be attached', () => {
         expect(added).toEqual([['specify', 'a', 'after'], ['specify', 'b', 'before']]);
     });
 
-    it('offers Add hook on every phase, which is the discoverable way in', async () => {
-        const { host } = canvas();
-        expect(host.querySelectorAll('.pb-phase-add')).toHaveLength(2);
-        const options = await phaseMenu(host);
-        expect(options[0].querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
+    it('offers Add to <step> on every lane, which is the discoverable way in', () => {
+        const { host, addTo } = canvas(graph({
+            steps: [step({ name: 'specify' }), step({ name: 'plan' })],
+        }));
+        const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-lane-add'));
+        expect(buttons.map(b => b.textContent)).toEqual(['Add to specify', 'Add to plan']);
+        expect(buttons[0].getAttribute('aria-haspopup')).toBe('dialog');
+        buttons[1].click();
+        expect(addTo).toEqual(['plan']);
+    });
+
+    it('marks the lane whose add modal is open', () => {
+        const { host } = canvas(graph({
+            steps: [step({ name: 'specify' }), step({ name: 'plan' })],
+        }), undefined, undefined, { adding: 'plan' });
+        const buttons = host.querySelectorAll('.pb-lane-add');
+        expect(buttons[0].getAttribute('aria-expanded')).toBe('false');
+        expect(buttons[1].getAttribute('aria-expanded')).toBe('true');
+        expect(buttons[1].classList.contains('pb-lane-add--on')).toBe(true);
     });
 });
 
@@ -789,30 +803,36 @@ describe('what a step produces sits with its name', () => {
 });
 
 describe('phases are the project\'s to name and group', () => {
-    // contentEditable with no role and no label reads to a screen reader as a
-    // heading, which is what it also looks like.
-    it('says the name is a field, and what field it is', () => {
+    /** Rename… from the label menu, then the field it leaves the caret in. */
+    async function renameField(host: HTMLElement): Promise<HTMLInputElement> {
+        await fromPhaseMenu(host, 0, 'Rename…');
+        await new Promise(resolve => setTimeout(resolve, 5));
+        return host.querySelector('.pb-phase-input') as HTMLInputElement;
+    }
+
+    it('makes the label a button that opens the phase menu, named for its phase', async () => {
         const { host } = canvas();
-        const name = host.querySelector('.pb-phase-name') as HTMLElement;
-        expect(name.getAttribute('role')).toBe('textbox');
-        expect(name.getAttribute('aria-label')).toBe('Phase name');
+        const label = host.querySelector('.pb-phase-name') as HTMLElement;
+        expect(label.tagName).toBe('BUTTON');
+        expect(label.getAttribute('aria-label')).toBe('Phase gather');
+        expect(label.getAttribute('aria-haspopup')).toBe('menu');
+        await phaseMenu(host, 0);
+        expect(host.querySelector('.pb-menu-heading')?.textContent).toBe('Phase gather · 1 node');
     });
 
-    // Hovering a heading to discover it can be typed into is not discovery.
-    it('puts the caret in the name from the phase menu', async () => {
+    it('puts the caret in a field holding the name from Rename…', async () => {
         const { host } = canvas();
-        await fromPhaseMenu(host, 0, 'Rename phase');
-        expect(document.activeElement)
-            .toBe(host.querySelectorAll('.pb-phase-name')[0]);
+        const field = await renameField(host);
+        expect(field.value).toBe('gather');
+        expect(document.activeElement).toBe(field);
+        expect(field.getAttribute('aria-label')).toBe('Rename the gather phase');
     });
 
-    it('renames a phase in place, and sends the whole grouping', () => {
+    it('renames a phase in place on Enter, and sends the whole grouping', async () => {
         const { host, grouped } = canvas();
-        const name = host.querySelector('.pb-phase-name') as HTMLElement;
-
-        expect(name.getAttribute('contenteditable')).toBe('true');
-        name.textContent = 'set up';
-        name.dispatchEvent(new Event('blur', { bubbles: true }));
+        const field = await renameField(host);
+        field.value = 'set up';
+        field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
         expect(grouped).toEqual([['specify', [
             { name: 'set up', nodes: ['resolve-dir'] },
@@ -820,11 +840,17 @@ describe('phases are the project\'s to name and group', () => {
         ]]]);
     });
 
-    it('says nothing when the name did not change', () => {
+    it('says nothing when the name did not change, or Escape cancelled it', async () => {
         const { host, grouped } = canvas();
-        const name = host.querySelector('.pb-phase-name') as HTMLElement;
-        name.dispatchEvent(new Event('blur', { bubbles: true }));
+        let field = await renameField(host);
+        field.dispatchEvent(new Event('blur', { bubbles: true }));
+        await flush();
+        field = await renameField(host);
+        field.value = 'other';
+        field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await flush();
         expect(grouped).toEqual([]);
+        expect(host.querySelector('.pb-phase-input')).toBeNull();
     });
 
     // Dropping across phases moves a node between them; the order and the
@@ -878,21 +904,17 @@ describe('a phase is a block a project owns', () => {
 
     // Five buttons at `opacity: 0` became one that is always there. Everything
     // a phase can do is said in words inside it.
-    it('says everything a phase can do, in one resting control', async () => {
+    it('says everything a phase can do, behind its own name', async () => {
         const { host } = canvas(three());
-        const labels = (await phaseMenu(host, 0))
+        const labels = (await phaseMenu(host, 1))
             .map(o => o.querySelector('.pb-menu-label')?.textContent);
         expect(labels).toEqual([
-            'Add hook', 'Add node', 'Rename phase', 'Split phase',
-            'Merge into the phase below',
+            'Rename…', 'Split', 'Merge into gather, above', 'Merge into wrap-up, below',
         ]);
     });
 
-    // `Menu` has no per-option disabled state, so a row that cannot run would
-    // be a live row that silently does nothing.
-    // The same five words every time, whatever this phase happens to allow —
-    // the note on an inert row is what teaches the capability.
-    it('says the same five things, marking the ones that cannot run here', async () => {
+    // The note on an inert row is what teaches the capability.
+    it('marks the ones that cannot run here, and says why', async () => {
         const { host } = canvas(graph({
             steps: [step({
                 dropped: [],
@@ -901,23 +923,22 @@ describe('a phase is a block a project owns', () => {
         }));
         const rows = await phaseMenu(host, 0);
         expect(rows.map(o => o.querySelector('.pb-menu-label')?.textContent)).toEqual([
-            'Add hook', 'Add node', 'Rename phase', 'Split phase',
-            'Merge into the phase above',
+            'Rename…', 'Split', 'Merge',
         ]);
-        expect(rows.map(o => o.getAttribute('aria-disabled'))).toEqual([
-            null, 'true', null, 'true', 'true',
-        ]);
+        expect(rows.map(o => o.getAttribute('aria-disabled'))).toEqual([null, 'true', 'true']);
     });
 
-    // The first phase has nothing above it, and the write merges downward.
+    // An edge phase offers only the neighbour it has.
     it('names the direction a merge actually goes', async () => {
         const { host } = canvas(three());
         const first = (await phaseMenu(host, 0))
             .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        const middle = (await phaseMenu(host, 1))
+        const last = (await phaseMenu(host, 2))
             .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        expect(first).toContain('Merge into the phase below');
-        expect(middle).toContain('Merge into the phase above');
+        expect(first).toContain('Merge into author, below');
+        expect(first.some(l => /above/.test(l ?? ''))).toBe(false);
+        expect(last).toContain('Merge into author, above');
+        expect(last.some(l => /below/.test(l ?? ''))).toBe(false);
     });
 
     it('does not offer to reorder phases', async () => {
@@ -933,21 +954,21 @@ describe('a phase is a block a project owns', () => {
     });
 
     // A phase's nodes have to land somewhere; dropping them would drop work.
-    it('folds a removed phase into the one above it', async () => {
+    it('folds a phase into the one above it, at its end', async () => {
         const { host, grouped } = canvas(three());
-        await fromPhaseMenu(host, 1, 'Merge into the phase above');
+        await fromPhaseMenu(host, 1, 'Merge into gather, above');
         expect(grouped[0][1]).toEqual([
             { name: 'gather', nodes: ['a', 'b', 'c'] },
             { name: 'wrap-up', nodes: ['d'] },
         ]);
     });
 
-    it('folds the first phase into the one below it', async () => {
+    it('folds a phase into the one below it, at its start', async () => {
         const { host, grouped } = canvas(three());
-        await fromPhaseMenu(host, 0, 'Merge into the phase below');
+        await fromPhaseMenu(host, 1, 'Merge into wrap-up, below');
         expect(grouped[0][1]).toEqual([
-            { name: 'author', nodes: ['a', 'b', 'c'] },
-            { name: 'wrap-up', nodes: ['d'] },
+            { name: 'gather', nodes: ['a', 'b'] },
+            { name: 'wrap-up', nodes: ['c', 'd'] },
         ]);
     });
 
@@ -955,10 +976,10 @@ describe('a phase is a block a project owns', () => {
         const { host, grouped } = canvas(graph({
             steps: [step({ phases: [{ name: 'only', hooks: [], nodes: [node()] }] })],
         }));
-        const merge = (await phaseMenu(host, 0))[4];
+        const merge = (await phaseMenu(host, 0))[2];
         expect(merge.getAttribute('aria-disabled')).toBe('true');
         expect(merge.querySelector('.pb-menu-note')?.textContent)
-            .toBe('a step needs at least one phase');
+            .toBe('A step needs at least one phase.');
         merge.click();
         expect(grouped).toEqual([]);
     });
@@ -967,7 +988,7 @@ describe('a phase is a block a project owns', () => {
     // takes a node from the phase it follows.
     it('adds a phase by splitting the one before it', async () => {
         const { host, grouped } = canvas(three());
-        await fromPhaseMenu(host, 0, 'Split phase');
+        await fromPhaseMenu(host, 0, 'Split');
         expect(grouped[0][1]).toEqual([
             { name: 'gather', nodes: ['a'] },
             { name: 'new phase', nodes: ['b'] },
@@ -981,60 +1002,47 @@ describe('a phase is a block a project owns', () => {
         // none to give. The row stays, because its note is where someone finds
         // out a phase can be split at all.
         const { host, grouped } = canvas(three());
-        const one = (await phaseMenu(host, 1))[3];
+        const one = (await phaseMenu(host, 1))[1];
         expect(one.getAttribute('aria-disabled')).toBe('true');
         expect(one.querySelector('.pb-menu-note')?.textContent)
-            .toBe('one node here, so there is nothing to split off');
+            .toBe('One node here, so there is nothing to split off.');
         one.click();
         expect(grouped).toEqual([]);
 
-        const two = (await phaseMenu(host, 0))[3];
+        const two = (await phaseMenu(host, 0))[1];
         expect(two.getAttribute('aria-disabled')).toBeNull();
     });
 });
 
-describe('a dropped node can be put back', () => {
-    const withDropped = () => graph({
+describe('a removed node leaves a struck row while its undo is on offer', () => {
+    const two = () => graph({
         steps: [step({
-            dropped: ['branch', 'finalize'],
-            phases: [{ name: 'gather', hooks: [], nodes: [node({ id: 'a' })] }],
+            phases: [{ name: 'gather', hooks: [], nodes: [node({ id: 'a', name: 'First' }), node({ id: 'b', name: 'Second' })] }],
         })],
     });
+    const row = {
+        command: 'specify', phase: 'gather', index: 1, name: 'Was here', token: 'remove:specify:gone',
+    };
 
-    it('offers only the nodes this step actually dropped', async () => {
-        const { host } = canvas(withDropped());
-        await fromPhaseMenu(host, 0, 'Add node');
-        const options = Array.from(host.querySelectorAll('.pb-menu-label'))
-            .map(el => el.textContent);
-        expect(options).toEqual(['branch', 'finalize']);
+    it('draws it where the node sat, struck, with Undo', () => {
+        const { host } = canvas(two(), undefined, undefined, { removed: row });
+        const nodes = Array.from(host.querySelector('.pb-phase-nodes')!.children)
+            .map(el => el.className.split(' ')[0]);
+        expect(nodes).toEqual(['pb-node-group', 'pb-removed', 'pb-node-group']);
+        expect(host.querySelector('.pb-removed s')?.textContent).toBe('Was here');
     });
 
-    it('says how many are on offer, and why there are none when there are none', async () => {
-        const { host } = canvas(withDropped());
-        const offered = await phaseMenu(host, 0);
-        expect(offered[1].querySelector('.pb-menu-label')?.textContent).toBe('Add node');
-        expect(offered[1].querySelector('.pb-menu-note')?.textContent).toBe('2 on offer');
-
-        document.body.innerHTML = '';
-        const bare = canvas();
-        const none = (await phaseMenu(bare.host, 0))[1];
-        expect(none.getAttribute('aria-disabled')).toBe('true');
-        expect(none.querySelector('.pb-menu-note')?.textContent)
-            .toMatch(/drag one in\s+from another/);
+    it('sends the undo token when Undo is pressed', () => {
+        const { host, undone } = canvas(two(), undefined, undefined, { removed: row });
+        const undo = host.querySelector('.pb-removed-undo') as HTMLButtonElement;
+        expect(undo.getAttribute('aria-label')).toBe('Undo removing Was here');
+        undo.click();
+        expect(undone).toEqual(['remove:specify:gone']);
     });
 
-    // The order says when it runs and the phase says where it sits; one without
-    // the other is a pipeline that contradicts itself.
-    it('sends the order and the grouping together', async () => {
-        const { host, addedNodes } = canvas(withDropped());
-        await fromPhaseMenu(host, 0, 'Add node');
-        (host.querySelectorAll('.pb-menu-option')[0] as HTMLButtonElement).click();
-
-        expect(addedNodes).toEqual([{
-            c: 'specify', id: 'branch', phase: 'gather',
-            order: ['a', 'branch'],
-            phases: [{ name: 'gather', nodes: ['a', 'branch'] }],
-        }]);
+    it('draws nothing in a lane the removal was not in', () => {
+        const { host } = canvas(two(), undefined, undefined, { removed: { ...row, command: 'plan' } });
+        expect(host.querySelector('.pb-removed')).toBeNull();
     });
 });
 
@@ -1057,34 +1065,17 @@ describe("a step has instructions of its own", () => {
 });
 
 describe('attaching work', () => {
-    it('offers one add-hook per phase, not a pair on every block', () => {
+    it('offers one Add to per lane, not a control on every phase', () => {
         const { host } = canvas();   // two phases, one node each
-        expect(host.querySelectorAll('.pb-phase-add')).toHaveLength(2);
+        expect(host.querySelectorAll('.pb-lane-add')).toHaveLength(1);
+        expect(host.querySelectorAll('.pb-phase-head button:not(.pb-phase-name)')).toHaveLength(0);
     });
 
-    // "Attach" read as "add a block". It adds a hook, and says so.
-    it('says a hook is what it adds', async () => {
-        const { host } = canvas();
-        const options = await phaseMenu(host, 0);
-        expect(options[0].querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
-        expect(options[0].querySelector('.pb-menu-note')?.textContent)
-            .toBe('a skill, an instruction or a command');
-    });
-
-    it('names the phase it would attach to', async () => {
-        const { host, added } = canvas();
-        await fromPhaseMenu(host, 0, 'Add hook');
-        expect(added).toEqual([['specify', 'gather', 'before']]);
-    });
-
-    // The one control on a phase is there without a pointer, and says whose
-    // phase it belongs to.
     it('is reachable at rest, and named', () => {
         const { host } = canvas();
-        const control = host.querySelector('.pb-phase-add') as HTMLElement;
+        const control = host.querySelector('.pb-lane-add') as HTMLElement;
         expect(control.tagName).toBe('BUTTON');
-        expect(control.getAttribute('aria-label')).toBe('Add or change gather');
-        expect(control.getAttribute('aria-haspopup')).toBe('menu');
+        expect(control.textContent).toBe('Add to specify');
     });
 });
 
@@ -1318,54 +1309,6 @@ describe('a node card says what its node does, and can be taken out of the run',
     });
 });
 
-describe('what the Add node picker offers', () => {
-    // A node the recipe took out and one the step ships but does not run read
-    // identically as bare ids, so the list gave no clue which was which. And a
-    // summary the offer already carries was being thrown away for one of them.
-    it('says what the node is AND where it went, rather than one or the other', async () => {
-        const { host } = canvas(graph({
-            steps: [step({
-                dropped: ['branch', 'review-gaps'], addOns: ['review-gaps'],
-                offers: {
-                    branch: { name: 'Create the feature branch', summary: 'Creates the feature branch' },
-                    'review-gaps': { name: 'Review the task list for gaps', summary: 'Attacks the task list for gaps before it runs' },
-                },
-            })],
-        }));
-        await fromPhaseMenu(host, 0, 'Add node');
-        const rows = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => ({
-            label: el.querySelector('.pb-menu-label')?.textContent,
-            note: el.querySelector('.pb-menu-note')?.textContent,
-        }));
-        expect(rows).toEqual([
-            {
-                label: 'Create the feature branch',
-                note: 'Creates the feature branch · removed from this run',
-            },
-            {
-                label: 'Review the task list for gaps',
-                note: 'Attacks the task list for gaps before it runs · '
-                    + 'specify ships this and does not run it',
-            },
-        ]);
-    });
-
-    it('falls back to where it went when the offer carries no summary', async () => {
-        const { host } = canvas(graph({
-            steps: [step({ dropped: ['branch', 'clarify'], addOns: ['clarify'] })],
-        }));
-        await fromPhaseMenu(host, 0, 'Add node');
-        const rows = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => ({
-            label: el.querySelector('.pb-menu-label')?.textContent,
-            note: el.querySelector('.pb-menu-note')?.textContent,
-        }));
-        expect(rows).toEqual([
-            { label: 'branch', note: 'removed from this run' },
-            { label: 'clarify', note: 'specify ships this and does not run it' },
-        ]);
-    });
-});
-
 describe('a step of the project\'s own', () => {
     const noop = () => undefined;
 
@@ -1447,8 +1390,7 @@ describe('a seam between two lanes says where a step would go', () => {
         const { host } = canvas(run());
         const head = host.querySelector('.pb-phase-head') as HTMLElement;
         expect(head.querySelector('.pb-phase-rule')).toBeNull();
-        expect(head.querySelector('.pb-phase-name')).not.toBeNull();
-        expect(head.querySelector('.pb-phase-add')).not.toBeNull();
+        expect(head.querySelector('.pb-phase-name')?.getAttribute('aria-haspopup')).toBe('menu');
     });
 
     it('draws no seam on a run of one step', () => {
