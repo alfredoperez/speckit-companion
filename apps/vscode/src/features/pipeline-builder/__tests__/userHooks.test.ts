@@ -166,6 +166,24 @@ describe('changing a hook you added', () => {
         });
     });
 
+    it('rewrites only the field that changed, keeping comments and a folded description', () => {
+        const mine = REGISTRY.replace('    command: house-check', '    command: house-check # my comment');
+        const at = { step: 'tasks', when: 'after' as const, index: 1 };
+        const same = { command: 'house-check', description: 'Check the house rules', optional: false };
+        expect(ok(updateUserHook(mine, at, same, INSTALLED))).toBe(mine);
+
+        const text = ok(updateUserHook(mine, at, { ...same, prompt: 'Check?' }, INSTALLED));
+        expect(added(mine, text)).toEqual(['    prompt: Check?']);
+        expect(text.split('\n').filter(line => !line.includes('prompt:'))).toEqual(mine.split('\n'));
+    });
+
+    it('keeps a trailing comment on a line whose value changed', () => {
+        const mine = REGISTRY.replace('    command: house-note', '    command: house-note  # mine');
+        const text = ok(updateUserHook(mine, { step: 'tasks', when: 'after', index: 0 },
+            { ...NOTE, command: 'house-log', description: 'Log a house note' }, INSTALLED));
+        expect(text).toBe(mine.replace('command: house-note  # mine', 'command: house-log  # mine'));
+    });
+
     it('drops the prompt line when the prompt is cleared', () => {
         const withPrompt = ok(addUserHook(REGISTRY, 'plan', 'after', { ...NOTE, prompt: 'Log?' }, INSTALLED));
         const text = ok(updateUserHook(withPrompt, { step: 'plan', when: 'after', index: 1 }, NOTE, INSTALLED));

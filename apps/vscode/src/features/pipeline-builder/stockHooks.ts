@@ -205,14 +205,32 @@ function entriesOf(doc: Doc, key: string): unknown[] | undefined {
     return Array.isArray(entries) ? entries : undefined;
 }
 
+/** A string field as the board compares it: trimmed, so a block scalar's last newline does not count. */
+function trimmed(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
 function matches(entry: unknown, draft: StockHookDraft): boolean {
     if (!entry || typeof entry !== 'object') { return false; }
     const row = entry as Doc;
-    const prompt = draft.prompt?.trim() ?? '';
-    return row.command === draft.command.trim()
-        && row.description === draft.description.trim()
+    return typeof row.command === 'string' && trimmed(row.command) === draft.command.trim()
+        && typeof row.description === 'string' && trimmed(row.description) === draft.description.trim()
         && Boolean(row.optional) === draft.optional
-        && (typeof row.prompt === 'string' ? row.prompt : '') === prompt;
+        && trimmed(row.prompt) === (draft.prompt?.trim() ?? '');
+}
+
+/** A line's `  # comment`, when cutting it leaves the value YAML read before. */
+function trailingComment(line: string): string {
+    const found = /\s+#.*$/.exec(line);
+    if (!found) { return ''; }
+    const value = line.slice(line.indexOf(':') + 1);
+    try {
+        const whole = yaml.load(`k: ${value}`) as Doc | undefined;
+        const cut = yaml.load(`k: ${value.slice(0, value.length - found[0].length)}`) as Doc | undefined;
+        return whole?.k === cut?.k ? found[0] : '';
+    } catch {
+        return '';
+    }
 }
 
 const UNSAFE = 'is written in a form the board cannot edit safely, so it was left as it is.';
@@ -318,14 +336,17 @@ export function updateUserHook(
     const bullet = indentOf(lines[start]);
     const fieldIndent = bullet + 2;
     const prompt = draft.prompt?.trim() ?? '';
-    const fields: Array<[string, string | null]> = [
-        ['command', scalar(draft.command.trim())],
-        ['optional', draft.optional ? 'true' : 'false'],
-        ['prompt', prompt ? scalar(prompt) : null],
-        ['description', scalar(draft.description.trim())],
+    const row = entriesOf(found.doc, key)![at.index] as Doc;
+    const fields: Array<[string, string | null, boolean]> = [
+        ['command', scalar(draft.command.trim()), trimmed(row.command) === draft.command.trim()],
+        ['optional', draft.optional ? 'true' : 'false', Boolean(row.optional) === draft.optional],
+        ['prompt', prompt ? scalar(prompt) : null, trimmed(row.prompt) === prompt],
+        ['description', scalar(draft.description.trim()), trimmed(row.description) === draft.description.trim()],
     ];
 
-    for (const [field, value] of fields) {
+    // Only a value that changed is rewritten, so the person's comments and block style survive.
+    for (const [field, value, same] of fields) {
+        if (same) { continue; }
         const end = trimEnd(lines, start, entrySpan(lines, start));
         const name = new RegExp(`^${field}\\s*:`);
         let line = -1;
@@ -348,7 +369,7 @@ export function updateUserHook(
         if (value === null && line !== start) {
             lines.splice(line, stop - line);
         } else {
-            lines.splice(line, stop - line, `${lead}${field}: ${value ?? '""'}`);
+            lines.splice(line, stop - line, `${lead}${field}: ${value ?? '""'}${trailingComment(lines[line])}`);
         }
     }
 
