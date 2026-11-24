@@ -37,6 +37,7 @@ npm run clips:stills                       # hero and accordion crops -> content
 npm run clips:gifs -- <id>                 # -> docs/screenshots/generated/<id>.gif
 npm run clips:sync                         # -> apps/website/public/media
 npm run clips:check                        # storyboard drift + manifest
+npm run clips:check:boxes                  # re-measure highlight boxes in Storybook (Chrome); not in clips:check
 npm run clips:outline -- <id>              # pacing: t, hold and label per beat
 npm run clips:scenes -- <id>               # scene and step list, for review
 ```
@@ -79,6 +80,7 @@ Each of these has already cost someone a session.
   `getBoundingClientRect` box in **the capture's own CSS pixels**. Captures are DPR 2,
   so a 2448×1552 file is 1224×776 in rect space. Eyeballing a rect produces a clip that
   points at nothing.
+- **A moved box is caught only for beats listed in `content/media/feature-clips/boxes.json`.** Each entry names the element a beat highlights and the rect it measured when last checked; `clips:check:boxes` re-measures it and fails past 4px. Give a new clip's beats an entry, and after fixing a drifted rect run `npm run clips:check:boxes -- --update <clip>`.
 - **The encoder picks the newest render, not `<id>.mp4`.** `sourceFor()` sorts
   `renders/*.mp4` by mtime. A stale canonical once shipped three-renders-old labels to
   the site. `--list` shows the choice and warns when a newer take is being preferred.

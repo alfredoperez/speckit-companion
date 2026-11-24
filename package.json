@@ -1466,6 +1466,7 @@
     "clips:render": "node tooling/scripts/render-web-clips.mjs",
     "clips:sync": "node apps/website/scripts/sync-media.mjs",
     "clips:check": "node tooling/scripts/clip-storyboard.mjs --check && node tooling/scripts/check-media-manifest.mjs",
+    "clips:check:boxes": "node tooling/scripts/clip-boxes.mjs",
     "clips:outline": "node tooling/scripts/clip-storyboard.mjs --outline",
     "clips:scenes": "node tooling/scripts/clip-storyboard.mjs --scenes"
   },
