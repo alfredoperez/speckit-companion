@@ -257,10 +257,24 @@ function App() {
             <StockBoard
                 view={stock}
                 status={status ?? (notice ? { tone: 'warning', text: notice } : null)}
+                narrow={narrow}
                 onSetHook={flip => {
                     setNotice(null);
                     vscode.postMessage({ type: 'setStockHook', ...flip });
                 }}
+                onAddHook={add => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'addStockHook', ...add });
+                }}
+                onUpdateHook={update => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'updateStockHook', ...update });
+                }}
+                onRemoveHook={address => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'removeStockHook', ...address });
+                }}
+                onInstallCompanion={() => vscode.postMessage({ type: 'installCompanion' })}
                 onOpenFile={path => vscode.postMessage({ type: 'openStockFile', path })}
                 onSelectWorkflow={id => {
                     setNotice(null);

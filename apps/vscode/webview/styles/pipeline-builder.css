@@ -2604,35 +2604,8 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 }
 
 /* ============================================
-   Stock Spec Kit
+   Stock Spec Kit presets, shared with the Companion side panel
    ============================================ */
-
-/* A project without the Companion extension reads top to bottom rather than
-   left to right: there are no phases to lay out side by side, and the honest
-   shape of a stock run is a numbered list of commands. */
-.pb-stock {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-    padding: var(--space-4);
-    overflow-y: auto;
-}
-
-.pb-stock-workflow {
-    color: var(--text-primary);
-    cursor: default;
-}
-
-.pb-stock-section {
-    max-width: 44rem;
-}
-
-.pb-stock-heading {
-    margin: 0 0 var(--space-2);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--text-primary);
-}
 
 .pb-stock-prose {
     margin: var(--space-3) 0 0;
@@ -2641,139 +2614,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     line-height: var(--leading-normal);
 }
 
-.pb-stock-steps {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    counter-reset: stock-step;
-}
-
-.pb-stock-step {
-    padding: var(--space-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--bg-elevated);
-}
-
-/* A gate is the run waiting for a person, so it is drawn as a pause in the
-   sequence rather than as another command. */
-.pb-stock-step--gate {
-    background: none;
-    border-style: dashed;
-}
-
-.pb-stock-step-head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2);
-    min-width: 0;
-}
-
-.pb-stock-step-name {
-    counter-increment: stock-step;
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-.pb-stock-step-name::before {
-    content: counter(stock-step) '. ';
-    color: var(--text-muted);
-    font-weight: 400;
-}
-
-.pb-stock-command {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pb-stock-chip {
-    padding: 0 var(--space-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-}
-
-.pb-stock-writes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: var(--space-2) 0 0;
-    padding: 0;
-    list-style: none;
-}
-
-/* Green is the panel's word for a file here too. */
-.pb-stock-file {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    color: var(--success);
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pb-stock-hooks {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    margin: var(--space-3) 0 0;
-    padding: var(--space-2) 0 0;
-    border-top: 1px dashed var(--border);
-    list-style: none;
-}
-
-.pb-stock-hook {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-    min-width: 0;
-}
-
-.pb-stock-switch { margin: 0; }
-
-.pb-stock-hook-body {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: var(--space-2);
-    min-width: 0;
-    cursor: pointer;
-}
-
-.pb-stock-hook-when {
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-}
-
-.pb-stock-hook-text {
-    color: var(--text-body);
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.pb-stock-hook-meta {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-}
-
-/* Switched off, and still legible: the switch is the way back on. */
-.pb-stock-hook--off .pb-stock-hook-text { color: var(--text-secondary); }
-
-.pb-stock-presets,
-.pb-stock-rows {
+.pb-stock-presets {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
@@ -2795,71 +2636,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-stock-preset-note {
     font-size: var(--text-xs);
     color: var(--text-secondary);
-}
-
-/* A row that acts: it opens a file, draws a workflow or sends a command. The
-   whole row is the target, because a name with a separate verb beside it makes
-   the reader aim. */
-.pb-stock-row {
-    display: grid;
-    grid-template-columns: auto auto;
-    align-items: baseline;
-    gap: 0 var(--space-2);
-    width: 100%;
-    min-width: 0;
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    background: var(--bg-elevated);
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-}
-
-.pb-stock-row:hover,
-.pb-stock-row:focus-visible { border-color: var(--border-hover); }
-
-.pb-stock-row-name {
-    color: var(--text-primary);
-    font-weight: 600;
-}
-
-/* Under the name and across both columns, so a long line wraps as prose
-   rather than squeezing the file name beside it into two characters. */
-.pb-stock-row-note {
-    grid-column: 1 / -1;
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-}
-
-/* The one the board is showing. The accent is the panel's forward mark, so a
-   drawn row takes the quieter outline instead. */
-.pb-stock-row--drawn { border-color: var(--border-accent); }
-
-/* Sends a command rather than opening a file, which is the row's whole point. */
-.pb-stock-row--runs .pb-stock-row-name { color: var(--text-primary); }
-
-.pb-stock-rowline {
-    display: flex;
-    align-items: start;
-    gap: var(--space-2);
-    min-width: 0;
-}
-
-.pb-stock-rowline .pb-stock-row { flex-grow: 1; }
-
-/* The way on to Companion, at the foot where it cannot be mistaken for part of
-   this project's workflow. */
-.pb-stock-foot {
-    margin: 0;
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--border);
-    font-size: var(--text-xs);
-    color: var(--text-secondary);
-}
-
-@container builder (max-width: 640px) {
-    .pb-stock { padding: var(--space-3); }
 }
 
 /* Spec Kit presets: a search row, an add row, then one block per preset. */
@@ -4643,4 +4419,638 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     .pb-dm-preview { padding: var(--space-3) var(--space-4); overflow: visible; }
 
     .pb-dm-foot-note { flex-basis: 100%; }
+}
+
+
+/* ── Stock Spec Kit: the same lanes and cards ─────────────────
+   A project without the Companion extension draws one lane per command, its
+   hooks inside the card, and the review gates on the joins between lanes.
+   Last in the file so it settles the card and edge rules it borrows. */
+
+.pb-sb { gap: var(--space-5); }
+
+.pb-sb-applies {
+    font-size: var(--text-sm);
+    color: var(--text-label);
+}
+
+span.pb-sb-workflow {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.pb-sb-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding: var(--space-3) var(--space-4);
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.pb-sb-banner-text {
+    margin: 0;
+    font-size: var(--text-base);
+    line-height: 20px;
+    color: var(--text-body);
+}
+
+.pb-sb-banner-add {
+    flex-shrink: 0;
+    font-weight: 500;
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+}
+
+.pb-sb-banner-add:focus-visible,
+.pb-sb-doc:focus-visible,
+.pb-sb-revise:focus-visible,
+.pb-sh-open:focus-visible,
+.pb-switch:focus-visible,
+.pb-sd-pick:focus-visible,
+.pb-sd-revise:focus-visible,
+.pb-sh-ask:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.pb-sb-empty { margin: 0; color: var(--text-body); }
+
+.pb-sb-run {
+    display: flex;
+    align-items: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: var(--space-2);
+    scrollbar-width: thin;
+}
+
+/* A lane: its number and name, a quiet count, the card, then what Companion adds. */
+.pb-sl {
+    display: flex;
+    flex: 1 1 260px;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 240px;
+    max-width: 420px;
+    box-sizing: border-box;
+    padding: var(--space-4);
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+}
+
+.pb-sl-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.pb-sl-title {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    margin: 0;
+    min-width: 0;
+}
+
+.pb-sl-number {
+    font-size: var(--text-sm);
+    font-weight: 400;
+    color: var(--text-label);
+}
+
+.pb-sl-name {
+    min-width: 0;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 22px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pb-sl-counts {
+    margin: 0;
+    font-size: var(--text-xs);
+    line-height: 16px;
+    color: var(--text-label);
+}
+
+/* The card: before hooks inside its top, the command, after hooks inside its bottom. */
+.pb-sc {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-md);
+}
+
+.pb-sc-command {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 14px var(--space-3);
+}
+
+.pb-sc-name {
+    font-size: var(--text-base);
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--text-primary);
+}
+
+.pb-sc-meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 16px;
+    color: var(--text-label);
+}
+
+.pb-sh-slot { display: flex; flex-direction: column; min-width: 0; }
+
+.pb-sh-slot--before { border-bottom: 1px solid var(--border); }
+.pb-sh-slot--after { border-top: 1px solid var(--border); }
+
+.pb-sh-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    padding-right: var(--space-3);
+    background: var(--bg-secondary);
+}
+
+.pb-sh-row + .pb-sh-row { border-top: 1px solid var(--border); }
+
+/* The person's own hook takes the review hue as a tint; the word under it takes the ink. */
+.pb-sh-row--yours { background: var(--review-subtle); }
+
+.pb-sh-row--open { box-shadow: inset 0 0 0 1px var(--text-primary); }
+
+.pb-sh-open {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: 9px 0 9px var(--space-3);
+    font: inherit;
+    text-align: left;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.pb-sh-open:focus-visible { outline-offset: -2px; }
+
+.pb-sh-mark { display: inline-flex; flex-shrink: 0; color: var(--text-label); }
+.pb-sh-row--yours .pb-sh-mark { color: var(--review-ink); }
+
+.pb-sh-text { display: flex; flex: 1; flex-direction: column; gap: 1px; min-width: 0; }
+
+.pb-sh-name {
+    font-size: var(--text-sm);
+    line-height: 16px;
+    color: var(--text-primary);
+}
+
+.pb-sh-meta {
+    font-size: var(--text-xs);
+    line-height: 16px;
+    color: var(--text-label);
+}
+
+.pb-sh-row--yours .pb-sh-meta { color: var(--review-ink); }
+
+/* Switched off and still legible: the switch is the way back on. */
+.pb-sh-row--off .pb-sh-name { color: var(--text-label); }
+
+/* "+ before" and "+ after" sit on the card's edges, always shown: on stock they are the way to add. */
+.pb-edge-add--stock {
+    right: 10px;
+    height: 22px;
+    padding: 0 var(--space-2);
+    color: var(--text-label);
+    background: var(--bg-primary);
+    border-color: var(--border-hover);
+    border-radius: 11px;
+    opacity: 1;
+}
+
+.pb-edge-add--stock:hover { color: var(--text-primary); background: var(--bg-hover); }
+
+.pb-sc-group .pb-edge-add--before { top: -11px; }
+.pb-sc-group .pb-edge-add--after { bottom: -11px; }
+
+/* What Companion would add here: dashed and muted, an aside rather than a step. */
+.pb-sl-companion {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-3);
+    border: 1px dashed var(--border-hover);
+    border-radius: var(--radius-md);
+}
+
+.pb-sl-companion-label {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-label);
+}
+
+.pb-sl-companion-text {
+    font-size: var(--text-sm);
+    line-height: 18px;
+    color: var(--text-label);
+}
+
+/* The join: gates as small chips, then the arrow to the next lane. */
+.pb-sj {
+    display: flex;
+    flex: 0 0 100px;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding-top: 76px;
+    color: var(--text-label);
+}
+
+.pb-sj > .pb-sj-arrow--across:first-child { margin-top: 96px; }
+
+.pb-sj-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    width: 92px;
+    box-sizing: border-box;
+    padding: var(--space-2) 6px;
+    text-align: center;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.pb-sj-gate .pb-gate-mark { color: var(--warning); }
+
+.pb-sj-gate-name {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 16px;
+    color: var(--text-primary);
+}
+
+.pb-sj-gate-wait {
+    font-size: var(--text-xs);
+    line-height: 16px;
+    color: var(--text-label);
+}
+
+.pb-sj-arrow { flex-shrink: 0; }
+.pb-sj-arrow--down { display: none; }
+
+/* The documents row under the lanes. */
+.pb-sb-docs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) 28px;
+    padding: var(--space-2) var(--space-1) 0;
+}
+
+.pb-sb-docs-label {
+    margin: 0;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-label);
+}
+
+.pb-sb-docs-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pb-sb-doc {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+    font: inherit;
+    color: var(--text-primary);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+button.pb-sb-doc:hover .pb-sb-doc-file { text-decoration: underline; }
+
+.pb-sb-doc .pb-sd-file-icon,
+.pb-sd-pick .pb-sd-file-icon,
+.pb-sd-memory .pb-sd-file-icon { flex-shrink: 0; color: var(--text-label); }
+
+.pb-sb-doc-file,
+.pb-sd-pick-file {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: 16px;
+    color: var(--text-primary);
+}
+
+.pb-sb-doc-force,
+.pb-sd-pick-force {
+    font-size: var(--text-xs);
+    color: var(--text-label);
+}
+
+.pb-sb-doc-force--yours,
+.pb-sd-pick-force--yours { color: var(--review-ink); }
+
+.pb-sb-revise,
+.pb-sd-revise {
+    margin-left: 6px;
+    padding: 0 var(--space-1);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-sb-revise:hover,
+.pb-sd-revise:hover { text-decoration: underline; }
+
+/* A hook's switch: a track and a thumb, filled when it runs. */
+.pb-switch {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 2px;
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-switch-track {
+    display: flex;
+    align-items: center;
+    width: 28px;
+    height: 16px;
+    box-sizing: border-box;
+    padding: 0 2px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-hover);
+    border-radius: 8px;
+    transition: background var(--transition-fast);
+}
+
+.pb-switch-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-label);
+    transition: transform var(--transition-fast);
+}
+
+.pb-switch--on .pb-switch-track {
+    background: var(--text-primary);
+    border-color: var(--text-primary);
+}
+
+.pb-switch--on .pb-switch-thumb {
+    background: var(--bg-primary);
+    transform: translateX(12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pb-switch-track,
+    .pb-switch-thumb { transition: none; }
+}
+
+/* The hook popover. */
+.pb-shp .pb-pop-head { align-items: center; }
+.pb-shp-mark { display: inline-flex; color: var(--text-label); }
+.pb-shp-mark--yours { color: var(--review-ink); }
+.pb-shp-facts { grid-template-columns: 72px 1fr; }
+.pb-shp .pb-pop-actions { padding-top: var(--space-3); border-top: 1px solid var(--border); }
+.pb-shp-push { margin-left: auto; }
+
+/* The add modal's required or optional choice. */
+.pb-modal.pb-sh { width: 520px; }
+
+.pb-sh-asks {
+    display: inline-flex;
+    align-self: flex-start;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.pb-sh-ask {
+    height: 26px;
+    padding: 0 var(--space-3);
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-body);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-sh-ask--on {
+    font-weight: 500;
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+/* The documents modal: templates on the left, the one picked and its layers on the right. */
+.pb-modal.pb-sd { width: 840px; }
+
+.pb-sd-body { display: flex; flex: 1; min-height: 0; }
+
+.pb-sd-list {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    gap: var(--space-1);
+    width: 288px;
+    box-sizing: border-box;
+    padding: var(--space-3);
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+}
+
+.pb-sd-picks { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+
+.pb-sd-pick,
+.pb-sd-memory {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 36px;
+    box-sizing: border-box;
+    padding: 0 var(--space-3);
+    font: inherit;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-radius: var(--radius-md);
+}
+
+.pb-sd-pick { cursor: pointer; }
+.pb-sd-pick:hover { background: var(--bg-hover); }
+.pb-sd-pick--on { background: var(--bg-hover); }
+.pb-sd-pick .pb-sd-pick-file,
+.pb-sd-memory .pb-sd-pick-file { flex: 1; min-width: 0; }
+
+.pb-sd-detail {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    padding: var(--space-5) var(--space-6);
+    overflow-y: auto;
+}
+
+.pb-sd-file {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.pb-sd-note { margin: 0; font-size: var(--text-sm); color: var(--text-body); }
+
+.pb-sd-layers { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+
+.pb-sd-layer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.pb-sd-layer--in-use {
+    background: var(--accent-subtle);
+    border-color: var(--border-accent);
+}
+
+.pb-sd-layer-text { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+
+.pb-sd-layer-name { font-size: var(--text-sm); color: var(--text-primary); }
+.pb-sd-layer--in-use .pb-sd-layer-name { font-weight: 500; }
+.pb-sd-layer--hidden .pb-sd-layer-name { color: var(--text-label); }
+
+.pb-sd-layer-path {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    color: var(--text-label);
+}
+
+.pb-sd-layer-state { flex-shrink: 0; font-size: var(--text-xs); color: var(--text-label); }
+.pb-sd-layer--in-use .pb-sd-layer-state { font-weight: 500; color: var(--accent-ink); }
+
+.pb-sd-layer-open { flex-shrink: 0; }
+.pb-sd-actions { display: flex; gap: var(--space-2); }
+
+/* The workflows and presets modal. */
+.pb-modal.pb-ss { width: 720px; }
+
+.pb-ss-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    overflow-y: auto;
+}
+
+.pb-ss-section { display: flex; flex-direction: column; gap: var(--space-2); }
+.pb-ss-section .pb-dm-label { padding: 0; }
+
+.pb-ss-rows { display: flex; flex-direction: column; gap: 0; margin: 0; padding: 0; list-style: none; border: 1px solid var(--border); border-radius: var(--radius-md); }
+
+.pb-ss-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 10px 14px;
+}
+
+.pb-ss-row + .pb-ss-row { border-top: 1px solid var(--border); }
+
+.pb-ss-row-text { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.pb-ss-row-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-primary); }
+.pb-ss-row--drawn .pb-ss-row-name { font-weight: 500; }
+.pb-ss-row-id { font-size: var(--text-xs); color: var(--text-label); }
+.pb-ss-row-note { font-size: var(--text-xs); color: var(--text-label); }
+.pb-ss-row-drawn { flex-shrink: 0; font-size: var(--text-xs); color: var(--text-label); }
+.pb-ss-registry { align-self: flex-start; }
+
+/* Narrow: the lanes stack, the join turns into a row with a down arrow, the modals become sheets. */
+@container builder (max-width: 640px) {
+    .pb-sb { padding: var(--space-3); gap: var(--space-4); }
+
+    .pb-sb-banner { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+
+    .pb-sb-run { flex-direction: column; align-items: stretch; overflow: visible; }
+
+    .pb-sl { flex: none; max-width: none; min-width: 0; }
+
+    .pb-sj {
+        flex: none;
+        flex-direction: row;
+        justify-content: center;
+        gap: var(--space-3);
+        padding: var(--space-3) 0;
+    }
+
+    .pb-sj > .pb-sj-arrow--across:first-child { margin-top: 0; }
+    .pb-sj-arrow--across { display: none; }
+    .pb-sj-arrow--down { display: block; order: -1; }
+
+    .pb-sj-gate {
+        flex-direction: row;
+        width: auto;
+        gap: var(--space-2);
+        padding: 6px var(--space-3);
+        border-radius: 999px;
+    }
+
+    .pb-sb-docs { flex-direction: column; align-items: flex-start; }
+    .pb-sb-docs-list { flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+
+    .pb-modal.pb-sh,
+    .pb-modal.pb-sd,
+    .pb-modal.pb-ss { width: 100%; }
+
+    .pb-sd-body { flex-direction: column; overflow-y: auto; }
+    .pb-sd-list { width: auto; overflow: visible; border-right: 0; border-bottom: 1px solid var(--border); }
+    .pb-sd-detail { padding: var(--space-4); overflow: visible; }
+    .pb-ss-body { padding: var(--space-3) var(--space-4); }
+    .pb-ss-row { flex-wrap: wrap; }
 }

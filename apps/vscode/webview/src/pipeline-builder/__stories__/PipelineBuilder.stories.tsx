@@ -687,6 +687,7 @@ export const DecisionRoutingEditableLight: Story = {
 
 const STOCK_ACTIONS = {
     onSetHook: noop, onOpenFile: noop, onSelectWorkflow: noop, onRunCommand: noop,
+    onAddHook: noop, onUpdateHook: noop, onRemoveHook: noop, onInstallCompanion: noop,
 };
 
 /**
@@ -697,7 +698,7 @@ const STOCK_ACTIONS = {
  */
 const STOCK_STEPS: StockStepRow[] = [
     {
-        id: 'specify', command: 'speckit-specify', kind: 'command',
+        id: 'specify', command: 'speckit-specify', kind: 'command', hookStep: 'specify',
         label: 'Write the spec', writes: ['spec.md'], hooks: [],
     },
     {
@@ -705,15 +706,15 @@ const STOCK_STEPS: StockStepRow[] = [
         label: 'Review the generated spec before planning.', writes: [], hooks: [],
     },
     {
-        id: 'plan', command: 'speckit-plan', kind: 'command',
+        id: 'plan', command: 'speckit-plan', kind: 'command', hookStep: 'plan',
         label: 'Plan the work', writes: ['plan.md', 'research.md', 'data-model.md'], hooks: [],
     },
     {
-        id: 'tasks', command: 'speckit-tasks', kind: 'command',
+        id: 'tasks', command: 'speckit-tasks', kind: 'command', hookStep: 'tasks',
         label: 'Break it into tasks', writes: ['tasks.md'], hooks: [],
     },
     {
-        id: 'implement', command: 'speckit-implement', kind: 'command',
+        id: 'implement', command: 'speckit-implement', kind: 'command', hookStep: 'implement',
         label: 'Implement the tasks', writes: [], hooks: [],
     },
 ];
@@ -851,6 +852,157 @@ export const StockWithPreset: Story = {
                 detail: 'Saved to .specify/extensions.yml',
             }}
             {...STOCK_ACTIONS} />
+    ),
+};
+
+/** Every kind of stock hook: an extension's, one switched off, one under a condition, and the person's own. */
+const EVERY_KIND_STEPS: StockStepRow[] = STOCK_STEPS.map(step => {
+    if (step.id === 'specify') {
+        return {
+            ...step,
+            hooks: [
+                stockHook('specify', 'before', 0, 'Make the branch', { command: 'speckit.git.feature' }),
+                stockHook('specify', 'after', 0, 'Offer a commit', {
+                    optional: true, prompt: 'Commit the new spec?',
+                }),
+            ],
+        };
+    }
+    if (step.id === 'plan') {
+        return {
+            ...step,
+            hooks: [
+                stockHook('plan', 'before', 0, 'Read the architecture notes', {
+                    extension: 'house', command: 'read-arch-notes', own: true,
+                }),
+                stockHook('plan', 'after', 0, 'Commit the plan'),
+                stockHook('plan', 'after', 1, '', {
+                    extension: 'house', command: 'house-note', own: true, optional: true,
+                    prompt: 'Write the house note now?',
+                }),
+            ],
+        };
+    }
+    if (step.id === 'tasks') {
+        return {
+            ...step,
+            hooks: [
+                stockHook('tasks', 'before', 0, 'Check the branch', { enabled: false }),
+                stockHook('tasks', 'after', 0, 'Post to the team channel', {
+                    extension: 'github', optional: true, conditional: true,
+                    prompt: 'Post the task list to the team channel?',
+                }),
+            ],
+        };
+    }
+    return step;
+});
+
+const LAYERED_TEMPLATES: StockTemplate[] = STOCK_TEMPLATES.map(template => {
+    if (template.file === 'spec-template.md') {
+        return {
+            ...template, inForce: 'override',
+            layers: [
+                { kind: 'override', source: '', path: '.specify/templates/overrides/spec-template.md', strategy: 'replace' },
+                { kind: 'preset', source: 'house-style', path: '.specify/presets/house-style/templates/spec-template.md', strategy: 'append' },
+                { kind: 'core', source: '', path: template.path, strategy: 'replace' },
+            ],
+        };
+    }
+    if (template.file === 'plan-template.md') {
+        return {
+            ...template, inForce: 'preset',
+            layers: [
+                { kind: 'preset', source: 'house-style', path: '.specify/presets/house-style/templates/plan-template.md', strategy: 'append' },
+                { kind: 'core', source: '', path: template.path, strategy: 'replace' },
+            ],
+        };
+    }
+    return {
+        ...template, inForce: 'core',
+        layers: [{ kind: 'core', source: '', path: template.path, strategy: 'replace' }],
+    };
+});
+
+const TWO_WORKFLOWS: StockWorkflowView['workflows'] = [
+    {
+        id: 'speckit', name: 'Full SDD Cycle',
+        description: 'specify → plan → tasks → implement with review gates',
+        path: '.specify/workflows/speckit/workflow.yml', drawn: true,
+    },
+    {
+        id: 'hotfix', name: 'Hotfix', description: 'Specify, test, then plan only when the change is large',
+        path: '.specify/workflows/hotfix/workflow.yml', drawn: false,
+    },
+];
+
+export const StockEveryHook: Story = {
+    name: '34 · Stock, hooks of every kind',
+    render: () => (
+        <StockBoard view={stock({ steps: EVERY_KIND_STEPS, workflows: TWO_WORKFLOWS })}
+            status={null} {...STOCK_ACTIONS} />
+    ),
+};
+
+export const StockHookOpen: Story = {
+    name: '35 · Stock, a hook opened',
+    render: () => (
+        <StockBoard view={stock({ steps: EVERY_KIND_STEPS })} status={null} {...STOCK_ACTIONS}
+            initialOpen={{ kind: 'hook', key: 'tasks/after/0' }} />
+    ),
+};
+
+export const StockAddHook: Story = {
+    name: '36 · Stock, add a hook of your own',
+    render: () => (
+        <StockBoard view={stock({ steps: EVERY_KIND_STEPS })} status={null} {...STOCK_ACTIONS}
+            initialOpen={{ kind: 'add', step: 'plan', when: 'after' }} />
+    ),
+};
+
+export const StockEditOwnHook: Story = {
+    name: '37 · Stock, edit your own hook',
+    render: () => (
+        <StockBoard view={stock({ steps: EVERY_KIND_STEPS })} status={null} {...STOCK_ACTIONS}
+            initialOpen={{ kind: 'edit', key: 'plan/after/1' }} />
+    ),
+};
+
+export const StockDocumentsOpen: Story = {
+    name: '38 · Stock, which template layer is in force',
+    render: () => (
+        <StockBoard view={stock({ steps: EVERY_KIND_STEPS, templates: LAYERED_TEMPLATES })}
+            status={null} {...STOCK_ACTIONS}
+            initialOpen={{ kind: 'documents', file: 'spec-template.md' }} />
+    ),
+};
+
+export const StockSetupOpen: Story = {
+    name: '39 · Stock, workflows and presets',
+    render: () => (
+        <StockBoard view={stock({ steps: EVERY_KIND_STEPS, workflows: TWO_WORKFLOWS })}
+            presets={SPEC_PRESETS} status={null} {...STOCK_ACTIONS}
+            initialOpen={{ kind: 'setup' }} />
+    ),
+};
+
+export const StockNarrow: Story = {
+    name: '40 · Stock, a narrow panel',
+    render: () => (
+        <div style={{ width: '380px', border: '1px dashed var(--border)' }}>
+            <StockBoard view={stock({ steps: EVERY_KIND_STEPS, templates: LAYERED_TEMPLATES })}
+                status={null} narrow {...STOCK_ACTIONS} />
+        </div>
+    ),
+};
+
+export const StockNarrowHookSheet: Story = {
+    name: '41 · Stock, a hook as a sheet when narrow',
+    render: () => (
+        <div style={{ width: '380px', border: '1px dashed var(--border)' }}>
+            <StockBoard view={stock({ steps: EVERY_KIND_STEPS })} status={null} narrow
+                {...STOCK_ACTIONS} initialOpen={{ kind: 'hook', key: 'specify/after/0' }} />
+        </div>
     ),
 };
 
