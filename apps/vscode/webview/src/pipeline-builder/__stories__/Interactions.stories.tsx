@@ -10,6 +10,7 @@
  */
 import type { Meta, StoryObj } from '@storybook/preact';
 import { BrokenPipeline } from '../BrokenPipeline';
+import { BuildBar } from '../BuildBar';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
 import { HookModal } from '../HookModal';
@@ -565,7 +566,7 @@ export const SwitchWorkflow: Story = {
                     workflows: { available: ['shipped', 'bugfix', 'client'], active: '' },
                 })}
                 buildState="current" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                onPreview={noop} onOpenConfig={noop}
                 onSelectWorkflow={noop} onNewWorkflow={noop} />
         </div>
     ),
@@ -579,18 +580,15 @@ export const SwitchWorkflow: Story = {
     },
 };
 
-/**
- * The chip used to print the same list the board draws, one lane per line. Now
- * it names a lane and goes there, so the panel says each thing once.
- */
+/** The review under the build bar names each changed lane and goes there. */
 export const GoToWhatChanged: Story = {
     name: 'Go to what this project changed',
     render: () => {
         const shown: string[] = [];
         (GoToWhatChanged as { shown?: string[] }).shown = shown;
         return (
-            <div class="builder">
-                <Header
+            <div class="builder builder--bar" style="height: 420px;">
+                <BuildBar
                     graph={graph([
                         step('plan', SPECIFY.phases),
                         step('tasks', SPECIFY.phases, {
@@ -600,25 +598,26 @@ export const GoToWhatChanged: Story = {
                             },
                         }),
                     ], { customised: true, configured: true })}
-                    buildState="current" busy={false}
-                    onBuild={noop} onPreview={noop} onOpenConfig={noop}
-                    onSelectWorkflow={noop} onNewWorkflow={noop}
-                    onShowChanged={name => shown.push(name)} />
+                    buildState="stale" busy={false} report={null} status={null}
+                    onBuild={noop} onPreview={noop} onUndo={noop} onDismissStatus={noop}
+                    onEditHook={noop} onRemoveHook={noop}
+                    onShowStep={name => shown.push(name)} />
             </div>
         );
     },
     play: async ({ canvasElement }) => {
-        (canvasElement.querySelector('.builder-chip') as HTMLButtonElement).click();
+        Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.builder-bar button'))
+            .find(el => el.textContent === 'Review')!.click();
         await new Promise(resolve => setTimeout(resolve, 0));
+        (canvasElement.querySelector('[aria-label="Show tasks on the board"]') as HTMLButtonElement)
+            .click();
         const shown = (GoToWhatChanged as { shown?: string[] }).shown ?? [];
-        assert(canvasElement.querySelector('.builder-changes') === null,
-            'no list under the header, because the board is the list');
-        assert(shown.length === 1, 'the chip asks to be taken somewhere');
-        assert(shown[0] === 'tasks', 'and it is the first lane that changed');
+        assert(shown.length === 1, 'the row asks to be taken somewhere');
+        assert(shown[0] === 'tasks', 'and it is the lane that changed');
     },
 };
 
-/** The way to grow the run, in the band that names it. */
+/** The way to grow the run, in the menu of the band that names it. */
 export const AddAStepFromTheHeader: Story = {
     name: 'Add a step from the header',
     render: () => {
@@ -629,15 +628,18 @@ export const AddAStepFromTheHeader: Story = {
                 <Header
                     graph={graph([SPECIFY], { configured: true })}
                     buildState="current" busy={false}
-                    onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                    onPreview={noop} onOpenConfig={noop}
                     onSelectWorkflow={noop} onNewWorkflow={noop}
                     onNewStep={() => started.push('new')} />
             </div>
         );
     },
     play: async ({ canvasElement }) => {
-        const add = canvasElement.querySelector('.builder-action--add') as HTMLButtonElement;
-        assert(Boolean(add), 'the header offers a way to add a step');
+        (canvasElement.querySelector('.builder-overflow button') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const add = Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+            .find(el => el.textContent === 'Add step')!;
+        assert(Boolean(add), 'the header menu offers a way to add a step');
         add.click();
         await new Promise(resolve => setTimeout(resolve, 0));
         assert((AddAStepFromTheHeader as { started?: string[] }).started?.length === 1,
@@ -653,12 +655,12 @@ export const OpenTheTally: Story = {
             <Header
                 graph={graph([SPECIFY], { configured: true })}
                 buildState="current" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                onPreview={noop} onOpenConfig={noop}
                 onSelectWorkflow={noop} onNewWorkflow={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        (canvasElement.querySelector('.builder-tally') as HTMLButtonElement).click();
+        (canvasElement.querySelector('.builder-overflow button') as HTMLButtonElement).click();
         await new Promise(resolve => setTimeout(resolve, 0));
         const said = Array.from(canvasElement.querySelectorAll('.pb-menu-option'))
             .map(el => el.textContent ?? '');

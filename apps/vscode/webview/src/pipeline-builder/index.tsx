@@ -24,7 +24,9 @@ import {
     SpecPreset,
     StockWorkflowView,
     isGraphError,
+    needsBuild,
 } from '../../../src/protocol/pipeline';
+import { BuildBar } from './BuildBar';
 import { StockBoard } from './StockBoard';
 import { PresetsPanel } from './PresetsPanel';
 import { SidePanel } from './SidePanel';
@@ -201,6 +203,8 @@ function App() {
                 }
             } else if (message.type === 'buildReport') {
                 setReport(message.report);
+                // A build that wrote the files answers "Build to apply" for good.
+                if (message.report?.ok && !message.report.dryRun) { setStatus(null); }
             } else if (message.type === 'nodeBody') {
                 setBody({
                     key: `${message.command}/${message.nodeId}`,
@@ -361,6 +365,30 @@ function App() {
         }
     };
 
+    // A modal or a bottom sheet covers the foot, so the bar steps aside for it.
+    const sheetOpen = Boolean(attachStep && attaching) || (narrow && Boolean(pop || side));
+    // The bar carries the last write while it is up; the foot line otherwise.
+    const barUp = !sheetOpen && needsBuild(buildState);
+    const undo = (token: string) => {
+        vscode.postMessage({ type: 'undo', token });
+        setStatus(null);
+    };
+    // Matched on the property rather than through a selector, since a step is
+    // named by whoever wrote the workflow.
+    const showStep = (name: string) => {
+        const lane = Array.from(document.querySelectorAll<HTMLElement>('.pb-step'))
+            .find(el => el.dataset.step === name);
+        if (!lane) { return; }
+        // Absent in jsdom, so a test of this path would throw on it.
+        lane.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        // Removed and re-added around a layout read, or a second click on a
+        // lane already marked plays no pulse at all.
+        lane.classList.remove('pb-step--found');
+        void lane.offsetWidth;
+        lane.classList.add('pb-step--found');
+        setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
+    };
+
     // The header appends and passes nothing; a lane seam places and passes the
     // step to its left. One handler, so the two cannot drift apart.
     const newStep = (after?: string) => {
@@ -369,44 +397,42 @@ function App() {
     };
 
     return (
-        <div class={`builder ${side && side.kind !== 'attach' ? 'builder--inspecting' : ''}`}>
+        <div class={`builder ${side && side.kind !== 'attach' ? 'builder--inspecting' : ''}${
+            barUp ? ' builder--bar' : ''}`}>
             <Header
                 graph={graph}
                 buildState={buildState}
                 busy={busy}
-                report={report}
-                onBuild={() => vscode.postMessage({ type: 'build' })}
                 onPreview={() => vscode.postMessage({ type: 'preview' })}
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
                 onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
                 onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
                 onNewStep={newStep}
                 onOpenPresets={() => { setNotice(null); setSide({ kind: 'presets' }); }}
-                // Matched on the property rather than through a selector, since
-                // a step is named by whoever wrote the workflow.
-                onShowChanged={name => {
-                    const lane = Array.from(document.querySelectorAll<HTMLElement>('.pb-step'))
-                        .find(el => el.dataset.step === name);
-                    if (!lane) { return; }
-                    // Absent in jsdom, so a test of this path would throw on it.
-                    lane.scrollIntoView?.({
-                        behavior: 'smooth', block: 'nearest', inline: 'center',
-                    });
-                    // Removed and re-added around a layout read, or a second
-                    // click on a lane already marked plays no pulse at all.
-                    lane.classList.remove('pb-step--found');
-                    void lane.offsetWidth;
-                    lane.classList.add('pb-step--found');
-                    setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
-                }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
             />
-            {line && (
-                <StatusLine status={line}
-                    onUndo={token => {
-                        vscode.postMessage({ type: 'undo', token });
-                        setStatus(null);
-                    }}
+            {!sheetOpen && (
+                <BuildBar
+                    graph={graph}
+                    buildState={buildState}
+                    busy={busy}
+                    report={report}
+                    status={barUp ? status : null}
+                    onBuild={() => vscode.postMessage({ type: 'build' })}
+                    onPreview={() => vscode.postMessage({ type: 'preview' })}
+                    onUndo={undo}
+                    onDismissStatus={() => setStatus(null)}
+                    onEditHook={(command, hook) => openAttach({ command, anchor: hook.anchor, hook })}
+                    onRemoveHook={(command, hook) => send({
+                        type: 'removeHook', command,
+                        anchor: hook.anchor, when: hook.when, index: hook.index,
+                    })}
+                    onShowStep={showStep}
+                />
+            )}
+            {line && !(barUp && !notice) && (
+                <StatusLine status={barUp ? { tone: 'warning', text: notice! } : line}
+                    onUndo={undo}
                     onDismiss={() => { setStatus(null); setNotice(null); }} />
             )}
             <div class="builder-body">

@@ -1,16 +1,12 @@
 /**
- * The page-chrome band: what this pipeline is, whether it needs rebuilding, and
- * the one forward action.
+ * The page-chrome band: what this pipeline is called and which workflow runs.
  *
- * The divergence chip is a mark that navigates. It used to print the same list
- * the board already draws, one lane per line, so the panel said everything
- * twice; now it says how much changed and takes you to the first of it.
+ * Build lives in the bar at the foot, which appears when there is something to
+ * build. Everything else the band offered folds into one menu, and one quiet
+ * line says the build is current so the state is never invisible.
  */
 
-import { useState } from 'preact/hooks';
-import {
-    BuildReport, PipelineBuildKind, PipelineGraph, needsBuild,
-} from '../../../src/protocol/pipeline';
+import { PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
 import { changed } from './changes';
 import { PipelineTotals, totals } from './counts';
 import { Menu, MenuOption } from './Menu';
@@ -23,9 +19,6 @@ interface Props {
     graph: PipelineGraph;
     buildState: PipelineBuildKind;
     busy: boolean;
-    /** What the last build or preview did. Absent until one has run. */
-    report?: BuildReport | null;
-    onBuild: () => void;
     onPreview: () => void;
     onOpenConfig: () => void;
     /** Switch the whole configuration to another saved workflow. */
@@ -36,8 +29,6 @@ interface Props {
     onNewStep?: () => void;
     /** Open the Spec Kit presets installed here. */
     onOpenPresets?: () => void;
-    /** Take the reader to a changed lane. The DOM lookup belongs to the panel. */
-    onShowChanged?: (step: string) => void;
     /** The first-run line has been read. Absent outside the panel. */
     onDismissFirstRun?: () => void;
 }
@@ -46,8 +37,8 @@ interface Props {
  * The mark a line carries, drawn rather than typed.
  *
  * A glyph takes a font's idea of the shape and none of the semantic hue; these
- * take the tone's colour. Exported because the status line at the foot of the
- * panel says the same three kinds of thing this band does, in the same marks.
+ * take the tone's colour. Exported because the build bar and the status line
+ * say the same three kinds of thing, in the same marks.
  */
 export function StatusIcon({ tone }: { tone: string }) {
     if (tone === 'done') {
@@ -73,18 +64,12 @@ export function StatusIcon({ tone }: { tone: string }) {
 }
 
 /** `1 step`, `3 phases`. A pipeline with one of something said "1 steps". */
-function tally(count: number, noun: string): string {
+export function tally(count: number, noun: string): string {
     return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
 
 /**
  * The one fact about this pipeline you cannot get by looking at it.
- *
- * Hooks sit at boundaries scattered down five lanes, so they are the thing you
- * genuinely cannot total by eye. Everything else the panel knows about itself —
- * steps, phases, nodes, whose hooks these are — was a native `title` on a line
- * of grey mono text, which is to say it was unfindable. It is a chip that opens
- * now, and this is what the closed chip says.
  *
  * Counted from the steps the canvas draws, not from `graph.counts`: those two
  * disagreed, and a board showing five hooks was topped by a header saying
@@ -98,19 +83,14 @@ function hookTally(counts: PipelineTotals): string {
     return counts.parked ? 'no hooks running' : 'no hooks';
 }
 
-/**
- * What the tally chip opens onto — the counts, each one a line of its own.
- *
- * Every line is `disabled`, which is what makes them read as facts: a menu of
- * three focusable rows that close the sheet and do nothing is the same
- * fires-and-changes-nothing control this round took out elsewhere.
- */
+/** The counts, as inert rows: facts, not choices. */
 function tallyOptions(counts: PipelineTotals): MenuOption[] {
     const options: MenuOption[] = [{
         id: 'shape',
         disabled: true,
         label: `${tally(counts.steps, 'step')} · ${tally(counts.phases, 'phase')} · `
             + tally(counts.nodes, 'node'),
+        note: hookTally(counts),
     }];
     if (counts.hooks) {
         options.push({
@@ -147,91 +127,30 @@ function workflowLabel(name: string): string {
     return name;
 }
 
-/**
- * What the build state means, in the words a person would use.
- *
- * A stale build carries the count, because "it is behind" is only worrying once
- * you know how much of your work is not in it.
- */
-function buildNotice(
-    state: PipelineBuildKind, changedSteps: number,
-): { text: string; tone: string } | null {
-    switch (state) {
-        case 'stale':
-            return {
-                text: changedSteps
-                    ? `${tally(changedSteps, 'changed step')} not built yet — the assistant `
-                      + 'is still reading the old commands'
-                    : 'companion.yml changed since the last build — the assistant is still '
-                      + 'reading the old commands',
-                tone: 'warning',
-            };
-        case 'never-built':
-            return { text: 'This configuration has never been built', tone: 'warning' };
-        case 'current':
-        case 'unconfigured':
-            return null;
-    }
-}
-
-/** `a`, `a and b`, `a, b and c` — a list read the way it would be said. */
-function readList(names: string[]): string {
-    if (names.length < 2) { return names.join(''); }
-    return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-}
-
-/** What a build or a preview did, in one line. */
-function reportLine(report: BuildReport): string {
-    if (!report.ok) {
-        return report.dryRun
-            ? `The preview failed at ${report.at} — the configuration could not be read`
-            : `The build failed at ${report.at} — nothing was written`;
-    }
-    if (!report.dryRun) {
-        return `Built ${report.at} · ${tally(report.commands, 'command')} written`;
-    }
-    if (report.changed.length === 0) {
-        return `Preview: nothing would change in ${tally(report.commands, 'command')}`;
-    }
-    return `Preview: ${report.changed.length} of ${report.commands} commands would change, `
-        + readList(report.changed);
-}
-
-/** A preview wrote nothing, so it is news rather than a job done. */
-function reportTone(report: BuildReport): string {
-    if (!report.ok) { return 'warning'; }
-    return report.dryRun ? 'info' : 'done';
+/** The build state when the bar has nothing to say. */
+function quietState(state: PipelineBuildKind): string {
+    if (state === 'current') { return 'Built, up to date'; }
+    if (state === 'unconfigured') { return 'Nothing to build'; }
+    return '';
 }
 
 export function Header(props: Props) {
-    const { graph, buildState, busy, report, onBuild, onPreview, onOpenConfig } = props;
+    const { graph, buildState, busy, onPreview, onOpenConfig } = props;
     const counts = totals(graph);
-    const [showingLog, setShowingLog] = useState(false);
     const changedSteps = graph.steps.filter(changed).length;
-    const firstChanged = graph.steps.find(changed)?.name ?? '';
-    const differs = changedSteps === 1
-        ? '1 step differs from shipped'
-        : `${changedSteps} steps differ from shipped`;
-    // A report is the newer and more specific statement about the same file, so
-    // it replaces the build state rather than stacking under it — a preview that
-    // answers "2 of 5 would change" does not also need an amber line saying the
-    // build is behind, which is what asking for a preview already meant.
-    const notice = report ? null : buildNotice(buildState, changedSteps);
-    // Nothing configured AND nothing changed. Editing a node writes a project
-    // file and no configuration at all, so keying on the configuration alone
-    // let the panel say "Changed · 1 step" and, one line below, that this is
-    // the pipeline as it ships.
-    // What this project wrote and is not running.
     const onShipped = graph.workflows.active === 'shipped';
     const parked = onShipped ? graph.workflows.parked : null;
+    // Editing a node writes a project file and no configuration at all, so
+    // keying on the configuration alone let the panel say a step changed and,
+    // one line below, that this is the pipeline as it ships.
     const firstRun = graph.firstRun === true && !graph.configured && changedSteps === 0
         && !onShipped;
+    const quiet = busy ? '' : quietState(buildState);
 
     const workflows = [
         ...graph.workflows.available.map(name => ({
             id: name,
             label: workflowLabel(name),
-            // Which one is running was a bold row before; a Menu says it in words.
             note: [
                 name === 'shipped' ? 'Companion with nothing changed' : '',
                 name === '' ? 'Whatever .specify/companion.yml says' : '',
@@ -244,13 +163,8 @@ export function Header(props: Props) {
     return (
         <header class="builder-header">
             <div class="builder-identity">
-                <span class="builder-title">Pipeline</span>
-
-                {/* Two dropdowns stood side by side, one naming a workflow and
-                    one summarising the changes, with nothing to say which was
-                    which. This one now says what it picks. */}
+                <span class="builder-title">Workflow</span>
                 <div class="builder-workflow">
-                    <span class="builder-workflow-label">Workflow</span>
                     <Menu
                         class="builder-workflow-current"
                         trigger={workflowLabel(graph.workflows.active)}
@@ -262,106 +176,39 @@ export function Header(props: Props) {
                             else { props.onSelectWorkflow(id); }
                         }} />
                 </div>
+                {quiet && (
+                    <span class="builder-state">
+                        {buildState === 'current' && <StatusIcon tone="done" />}
+                        {quiet}
+                    </span>
+                )}
             </div>
 
-            {/* The band people already read, so the two marks and the way in
-                sit here rather than out at the right edge with the actions. */}
-            <div class="builder-tools">
-                {/* Nothing changed is a whole fact, so it states it and stops.
-                    Something changed is a place on the board, so the chip goes
-                    there — a `›` rather than a `▾`, because it moves you.
-
-                    It says "differs from shipped" rather than "changed": the
-                    stale-build notice two lines below also says "changed", and
-                    meant something else entirely by it. */}
-                {changedSteps === 0 ? (
-                    <span class="builder-chip builder-chip--flat">No changes</span>
-                ) : (
-                    <button class="builder-chip builder-chip--customised"
-                        title={`Go to ${firstChanged}`}
-                        aria-label={`${differs} — go to ${firstChanged}`}
-                        onClick={() => props.onShowChanged?.(firstChanged)}
-                    >
-                        {differs}
-                        <span class="builder-chip-caret" aria-hidden="true">›</span>
-                    </button>
-                )}
-
-                <Menu
-                    class="builder-chip builder-tally"
-                    trigger={hookTally(counts)}
-                    label={`What this pipeline holds: ${hookTally(counts)}`}
-                    title="What this pipeline holds"
-                    options={tallyOptions(counts)}
-                    onPick={() => undefined} />
-
-                {/* A run grows at its end, so the way to grow it belongs in the
-                    band that names the run. It was parked past the last lane,
-                    behind a horizontal scroll. */}
-                <button class="builder-action builder-action--add"
-                    onClick={() => props.onNewStep?.()}>
-                    + Add step
-                </button>
-            </div>
-
-            <div class="builder-facts">
-                {/* Named for what it does, and offered only when there is a file
-                    to open — a project running the shipped pipeline has none. */}
-                {(graph.configured || onShipped) && (
-                    <button class="builder-action builder-action--quiet" onClick={onOpenConfig}>
-                        Open companion.yml
-                    </button>
-                )}
-                <button class="builder-action builder-action--quiet"
-                    onClick={() => props.onOpenPresets?.()}>
-                    Spec Kit presets
-                </button>
-                <button class="builder-action builder-action--quiet" disabled={busy}
-                    onClick={onPreview}>
-                    Preview build
-                </button>
-                {/* "Build" — this runs the project's own build and writes the
-                    command files. Claude is who reads them afterwards, not who
-                    does this, and naming it here promised a step that never ran.
-
-                    The fill follows the build state alone. A changed step is
-                    divergence from the shipped pipeline, not an unbuilt delta —
-                    every edit here writes to disk and turns the state stale by
-                    itself — so keying on it left Build permanently accented on
-                    any project that had ever used the panel. */}
-                <button class={`builder-action${
-                    needsBuild(buildState) ? ' builder-action--primary' : ''}`}
-                    disabled={busy} onClick={onBuild}>
-                    {busy ? 'Building…' : 'Build'}
-                </button>
-                {/* Narrow only. Row one keeps the name, the workflow and the
-                    forward action; the two quiet actions fold in here. Add step
-                    stays on the band as well — this is a second way to it, not
-                    the only one. */}
-                <div class="builder-overflow">
-                    <Menu class="builder-action"
-                        trigger="⋯" caret={false} align="right"
-                        label="More pipeline actions" title="More"
-                        options={[
-                            { id: 'step', label: 'Add step' },
-                            ...(graph.configured || onShipped
-                                ? [{ id: 'open', label: 'Open companion.yml' }] : []),
-                            { id: 'preview', label: 'Preview build', disabled: busy },
-                            { id: 'presets', label: 'Spec Kit presets' },
-                        ]}
-                        onPick={id => {
-                            if (id === 'step') { props.onNewStep?.(); }
-                            else if (id === 'open') { onOpenConfig(); }
-                            else if (id === 'presets') { props.onOpenPresets?.(); }
-                            else { onPreview(); }
-                        }} />
-                </div>
+            <div class="builder-overflow">
+                <Menu class="builder-action builder-more"
+                    trigger="⋯" caret={false} align="right"
+                    label="More pipeline actions" title="More"
+                    options={[
+                        { id: 'step', label: 'Add step' },
+                        // Offered only when there is a file to open: a project
+                        // running the shipped pipeline has none of its own.
+                        ...(graph.configured || onShipped
+                            ? [{ id: 'open', label: 'Open companion.yml' }] : []),
+                        { id: 'preview', label: 'Preview build', disabled: busy },
+                        { id: 'presets', label: 'Spec Kit presets' },
+                        ...tallyOptions(counts),
+                    ]}
+                    onPick={id => {
+                        if (id === 'step') { props.onNewStep?.(); }
+                        else if (id === 'open') { onOpenConfig(); }
+                        else if (id === 'presets') { props.onOpenPresets?.(); }
+                        else if (id === 'preview') { onPreview(); }
+                    }} />
             </div>
 
             {/* Running the pipeline as it ships is a choice, and while it is on,
                 everything this project wrote is switched off. Both halves of
-                that have to be on the page: what is running, and the one click
-                back. */}
+                that have to be on the page: what is running, and the way back. */}
             {onShipped && (
                 <div class="builder-notice builder-notice--warning" role="status">
                     <StatusIcon tone="warning" />
@@ -370,9 +217,6 @@ export function Header(props: Props) {
                         <code class="builder-notice-file">
                             {parked?.file ?? '.specify/companion.yml'}
                         </code>{' '}
-                        {/* One number, from the board the reader is looking at.
-                            Taking it from the resolver instead let the notice
-                            say one thing while the tally beside it said another. */}
                         is running.{counts.parked
                             ? ` ${tally(counts.parked, 'hook')} of yours ${counts.parked === 1
                                 ? 'is' : 'are'} parked on the board, kept exactly as written.`
@@ -387,10 +231,6 @@ export function Header(props: Props) {
                                 + ' not be resolved at all: ' + parked.warnings.join('; ')
                             : ''}
                     </span>
-                    {/* The way back is the point of the notice, so it is offered
-                        whenever the shipped pipeline is in force — not only when
-                        something resolved as parked. A config the builder could
-                        not read is the case that most needs it. */}
                     <button class="builder-link"
                         onClick={() => props.onSelectWorkflow('')}>
                         Use this project&rsquo;s pipeline
@@ -398,9 +238,6 @@ export function Header(props: Props) {
                 </div>
             )}
 
-            {/* Nothing said that a change here writes a file, so the first thing
-                a project sees is what the board is and what Build does with it.
-                Read once per workspace. */}
             {firstRun && (
                 <div class="builder-notice builder-notice--info">
                     <StatusIcon tone="info" />
@@ -414,35 +251,6 @@ export function Header(props: Props) {
                         </button>
                     )}
                 </div>
-            )}
-
-            {notice && (
-                <div class={`builder-notice builder-notice--${notice.tone}`}>
-                    <StatusIcon tone={notice.tone} />
-                    {notice.text}
-                </div>
-            )}
-
-            {/* A build used to answer in the Output panel, which took the editor
-                to say it had worked. It answers here, where it was asked; the
-                channel still keeps the whole log. */}
-            {report && (
-                <div class={`builder-notice builder-report builder-notice--${
-                    reportTone(report)}`} role="status">
-                    <StatusIcon tone={reportTone(report)} />
-                    <span class="builder-report-line">{reportLine(report)}</span>
-                    {report.output && (
-                        <button class="builder-link" aria-expanded={showingLog}
-                            onClick={() => setShowingLog(!showingLog)}>
-                            {showingLog ? 'Hide the log'
-                                : report.dryRun ? 'Show what changes' : 'Show the log'}
-                        </button>
-                    )}
-                </div>
-            )}
-
-            {report && showingLog && (
-                <pre class="builder-changes builder-report-log">{report.output}</pre>
             )}
 
             {graph.warnings.length > 0 && (

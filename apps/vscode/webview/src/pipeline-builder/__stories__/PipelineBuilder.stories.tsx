@@ -13,6 +13,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { BrokenPipeline } from '../BrokenPipeline';
 import { Canvas } from '../Canvas';
 import { DecisionForm } from '../DecisionForm';
+import { BuildBar } from '../BuildBar';
 import { Header } from '../Header';
 import { PresetsPanel } from '../PresetsPanel';
 import { SidePanel } from '../SidePanel';
@@ -129,8 +130,13 @@ const CANVAS_ACTIONS = {
     onNewStep: noop, onMoveNode: noop,
 };
 const HEADER_ACTIONS = {
-    onBuild: noop, onPreview: noop, onOpenConfig: noop,
+    onPreview: noop, onOpenConfig: noop,
     onSelectWorkflow: noop, onNewWorkflow: noop,
+};
+const BAR_ACTIONS = {
+    onBuild: noop, onPreview: noop, onUndo: noop, onDismissStatus: noop,
+    onEditHook: noop, onRemoveHook: noop, onShowStep: noop,
+    report: null, status: null,
 };
 
 const meta: Meta = { title: 'VS Code Extension/Pipeline Builder/Situations' };
@@ -351,18 +357,28 @@ export const EverythingChangedAtOnce: Story = {
 
 export const BuildIsBehind: Story = {
     name: '12 · The build is behind the file',
-    render: () => (
-        <Header graph={graph([SPECIFY], { configured: true, customised: true })}
-            buildState="stale" busy={false} {...HEADER_ACTIONS} />
-    ),
+    render: () => {
+        const g = graph([SPECIFY], { configured: true, customised: true });
+        return (
+            <div class="builder builder--bar" style="height: 320px;">
+                <Header graph={g} buildState="stale" busy={false} {...HEADER_ACTIONS} />
+                <BuildBar graph={g} buildState="stale" busy={false} {...BAR_ACTIONS} />
+            </div>
+        );
+    },
 };
 
 export const NeverBuilt: Story = {
     name: '13 · Configured but never built',
-    render: () => (
-        <Header graph={graph([SPECIFY], { configured: true, customised: true })}
-            buildState="never-built" busy={false} {...HEADER_ACTIONS} />
-    ),
+    render: () => {
+        const g = graph([SPECIFY], { configured: true, customised: true });
+        return (
+            <div class="builder builder--bar" style="height: 320px;">
+                <Header graph={g} buildState="never-built" busy={false} {...HEADER_ACTIONS} />
+                <BuildBar graph={g} buildState="never-built" busy={false} {...BAR_ACTIONS} />
+            </div>
+        );
+    },
 };
 
 export const Building: Story = {

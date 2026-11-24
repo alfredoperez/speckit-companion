@@ -7,6 +7,7 @@
  */
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Canvas } from '../Canvas';
+import { BuildBar } from '../BuildBar';
 import { Header } from '../Header';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
@@ -80,8 +81,34 @@ const RAN = step('implement', [
 ], { changes: { ...NO_CHANGES, hooks: 4 } });
 
 const HEAD = {
-    onBuild: noop, onPreview: noop, onOpenConfig: noop,
-    onSelectWorkflow: noop, onNewWorkflow: noop, onNewStep: noop, onShowChanged: noop,
+    onPreview: noop, onOpenConfig: noop,
+    onSelectWorkflow: noop, onNewWorkflow: noop, onNewStep: noop,
+};
+
+const BAR = {
+    onBuild: noop, onPreview: noop, onUndo: noop, onDismissStatus: noop,
+    onEditHook: noop, onRemoveHook: noop, onShowStep: noop,
+};
+
+/** The bar floats at the foot of the panel, so it is drawn inside one. */
+function Foot({ children, width = 900 }: { children: preact.ComponentChildren; width?: number }) {
+    return (
+        <div class="builder builder--bar" style={`width: ${width}px; height: 420px;`}>
+            {children}
+        </div>
+    );
+}
+
+const BUILT_REPORT = {
+    ok: true, at: '14:02', commands: 4, changed: [], dryRun: false,
+    output: '[build] built 4 commands from .specify/companion.yml', warnings: [],
+};
+
+const PREVIEW_REPORT = {
+    ok: true, at: '14:02', commands: 4, changed: ['implement'], dryRun: true,
+    output: '[build] would build 4 commands from .specify/companion.yml\n'
+        + '[build] what would change:\n  implement: +12 −4 lines',
+    warnings: [],
 };
 
 const INSPECT = {
@@ -630,28 +657,74 @@ export const HeaderFirstRun: Story = {
     ),
 };
 
-export const HeaderBuilt: Story = {
-    name: 'Header · what the build did',
+// ── Build bar ───────────────────────────────────────────
+
+export const BuildBarAppears: Story = {
+    name: 'Build bar · changes waiting',
     render: () => (
-        <One><Header graph={graph([SPECIFY])} buildState="current" busy={false} {...HEAD}
-            report={{
-                ok: true, at: '14:02', commands: 5, changed: [], dryRun: false,
-                output: '[build] built 5 commands from .specify/companion.yml',
-            }} /></One>
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={null} status={null} {...BAR} /></Foot>
     ),
 };
 
-export const HeaderPreviewed: Story = {
-    name: 'Header · what a preview would change',
+export const BuildBarAfterAWrite: Story = {
+    name: 'Build bar · the last write, with the way back',
     render: () => (
-        <One><Header graph={graph([SPECIFY])} buildState="stale" busy={false} {...HEAD}
-            report={{
-                ok: true, at: '14:02', commands: 5, changed: ['specify', 'implement'],
-                dryRun: true,
-                output: '[build] would build 5 commands from .specify/companion.yml\n'
-                    + '[build] what would change:\n'
-                    + '  implement: +12 −4 lines\n  plan: unchanged\n  specify: +31 −0 lines',
-            }} /></One>
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={null}
+            status={{ tone: 'done', text: 'draft-spec no longer runs in specify',
+                undo: { token: 'remove:specify:draft-spec' } }}
+            {...BAR} /></Foot>
+    ),
+};
+
+export const BuildBarReview: Story = {
+    name: 'Build bar · review open, with a problem',
+    render: () => (
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={PREVIEW_REPORT}
+            status={{ tone: 'done', text: 'Hook added before execute',
+                undo: { token: 'add:implement' } }}
+            {...BAR} /></Foot>
+    ),
+    play: ({ canvasElement }: { canvasElement: HTMLElement }) => {
+        Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.builder-bar button'))
+            .find(el => el.textContent === 'Review')?.click();
+    },
+};
+
+export const BuildBarBuilding: Story = {
+    name: 'Build bar · building',
+    render: () => (
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy
+            report={null} status={null} {...BAR} /></Foot>
+    ),
+};
+
+export const BuildBarBuilt: Story = {
+    name: 'Build bar · built',
+    render: () => (
+        <Foot><BuildBar graph={graph([SPECIFY])} buildState="current" busy={false}
+            report={BUILT_REPORT} status={null} {...BAR} /></Foot>
+    ),
+};
+
+export const BuildBarFailed: Story = {
+    name: 'Build bar · the build failed',
+    render: () => (
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={{ ...BUILT_REPORT, ok: false,
+                warnings: ['implement: unknown node "draft" in phase execute'] }}
+            status={null} {...BAR} /></Foot>
+    ),
+};
+
+export const BuildBarNarrow: Story = {
+    name: 'Build bar · a docked panel',
+    parameters: { capture: { width: 380, height: 420 } },
+    render: () => (
+        <Foot width={380}><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale"
+            busy={false} report={null} status={null} {...BAR} /></Foot>
     ),
 };
 
@@ -674,11 +747,11 @@ export const HeaderTally: Story = {
             buildState="current" busy={false} {...HEAD} /></One>
     ),
     play: ({ canvasElement }: { canvasElement: HTMLElement }) => {
-        (canvasElement.querySelector('.builder-tally') as HTMLButtonElement | null)?.click();
+        (canvasElement.querySelector('.builder-overflow button') as HTMLButtonElement | null)?.click();
     },
 };
 
-/** Two rows: the name and the forward action, then the marks and the way in. */
+/** The name, the workflow and the menu; Build is in the bar at the foot. */
 export const HeaderNarrow: Story = {
     name: 'Header · a docked panel',
     parameters: { capture: { width: 380, height: 160 } },

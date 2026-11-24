@@ -17,6 +17,7 @@
  */
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Canvas } from '../Canvas';
+import { BuildBar } from '../BuildBar';
 import { Header } from '../Header';
 import { Inspector } from '../Inspector';
 import { Menu } from '../Menu';
@@ -39,8 +40,12 @@ const CANVAS = {
     onOpenFrame: noop, onOpenTemplate: noop, onNewStep: noop,
 };
 const HEAD = {
-    onBuild: noop, onPreview: noop, onOpenConfig: noop,
+    onPreview: noop, onOpenConfig: noop,
     onSelectWorkflow: noop, onNewWorkflow: noop,
+};
+const BAR = {
+    onBuild: noop, onPreview: noop, onUndo: noop, onDismissStatus: noop,
+    onEditHook: noop, onRemoveHook: noop, onShowStep: noop,
 };
 const INSPECT = {
     onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop,
@@ -62,10 +67,6 @@ function Pane({ children }: { children: preact.ComponentChildren }) {
 }
 
 /** Click a control the story wants photographed open. */
-function press(root: HTMLElement, selector: string) {
-    (root.querySelector(selector) as HTMLButtonElement | null)?.click();
-}
-
 const meta: Meta = { title: 'VS Code Extension/Pipeline Builder/Guide' };
 export default meta;
 type Story = StoryObj;
@@ -236,21 +237,7 @@ export const ASidePanel: Story = {
     ),
 };
 
-/**
- * The header chip, expanded.
- *
- * Two marks, side by side. The first says whether anything differs from the
- * shipped pipeline and takes you to the first lane that does; the second says
- * what the pipeline holds, and opens onto the counts. There is no prop for the
- * open state — it is what clicking does — so the story clicks it.
- */
-export const WhatChanged: Story = {
-    parameters: { capture: { width: 1000, height: 200 } },
-    name: 'What this project changed',
-    render: () => (
-        <Panel>
-            <Header
-                graph={graph([
+const CHANGED = graph([
                     step('specify', [phase('author', [node('draft-spec', 'Draft the spec', {
                         // Real hooks, because the tally counts what the board
                         // draws rather than what `changes` claims. A fixture that
@@ -272,12 +259,27 @@ export const WhatChanged: Story = {
                     step('tasks', [phase('author', [node('tasks-doc', 'Write the task list')])], {
                         changes: { ...NO_CHANGES, added: ['review-gaps'], reordered: true },
                     }),
-                ], { configured: true })}
-                buildState="stale" busy={false} {...HEAD} />
-        </Panel>
+                ], { configured: true });
+
+/**
+ * The build bar's review, open.
+ *
+ * Each step that differs from the shipped pipeline is a row with the way to
+ * it. There is no prop for the open state, so the story clicks Review.
+ */
+export const WhatChanged: Story = {
+    parameters: { capture: { width: 1000, height: 360 } },
+    name: 'What this project changed',
+    render: () => (
+        <div class="builder builder--bar" style="height: 360px;">
+            <Header graph={CHANGED} buildState="stale" busy={false} {...HEAD} />
+            <BuildBar graph={CHANGED} buildState="stale" busy={false}
+                report={null} status={null} {...BAR} />
+        </div>
     ),
     play: ({ canvasElement }: { canvasElement: HTMLElement }) => {
-        press(canvasElement, '.builder-tally');
+        Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.builder-bar button'))
+            .find(el => el.textContent === 'Review')?.click();
     },
 };
 
@@ -594,31 +596,38 @@ export const AStepOfYourOwn: Story = {
 // ── Building ────────────────────────────────────────────
 
 export const TheBuildIsBehind: Story = {
-    parameters: { capture: { width: 1000, height: 112 } },
+    parameters: { capture: { width: 1000, height: 200 } },
     name: 'The build is behind',
-    render: () => (
-        <Panel>
-            <Header graph={graph([SPECIFY], { configured: true, customised: true })}
-                buildState="stale" busy={false} {...HEAD} />
-        </Panel>
-    ),
+    render: () => {
+        const g = graph([SPECIFY], { configured: true, customised: true });
+        return (
+            <div class="builder builder--bar" style="height: 200px;">
+                <Header graph={g} buildState="stale" busy={false} {...HEAD} />
+                <BuildBar graph={g} buildState="stale" busy={false}
+                    report={null} status={null} {...BAR} />
+            </div>
+        );
+    },
 };
 
 /** A build answers in the panel it was asked from, not in the editor. */
 export const WhatTheBuildDid: Story = {
-    parameters: { capture: { width: 1000, height: 110 } },
+    parameters: { capture: { width: 1000, height: 200 } },
     name: 'What the build did',
-    render: () => (
-        <Panel>
-            <Header graph={graph([SPECIFY], { configured: true, customised: true })}
-                buildState="current" busy={false}
-                report={{
-                    ok: true, at: '14:02', commands: 5, changed: [], dryRun: false,
-                    output: 'wrote 5 commands',
-                }}
-                {...HEAD} />
-        </Panel>
-    ),
+    render: () => {
+        const g = graph([SPECIFY], { configured: true, customised: true });
+        return (
+            <div class="builder builder--bar" style="height: 200px;">
+                <Header graph={g} buildState="current" busy={false} {...HEAD} />
+                <BuildBar graph={g} buildState="current" busy={false} status={null}
+                    report={{
+                        ok: true, at: '14:02', commands: 5, changed: [], dryRun: false,
+                        output: 'wrote 5 commands',
+                    }}
+                    {...BAR} />
+            </div>
+        );
+    },
 };
 
 // ── When it cannot be read ──────────────────────────────
