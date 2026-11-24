@@ -61,11 +61,8 @@ function readList(names: string[]): string {
     return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
-function waitingHeadline(state: PipelineBuildKind, changedSteps: number): string {
-    if (state === 'never-built') { return 'Never built'; }
-    return changedSteps
-        ? `${tally(changedSteps, 'changed step')} not built`
-        : 'companion.yml changed since the last build';
+function waitingHeadline(state: PipelineBuildKind): string {
+    return state === 'never-built' ? 'Never built' : 'The build is out of date';
 }
 
 /** Which commands a preview says the build rewrites. */
@@ -141,7 +138,7 @@ export function BuildBar(props: Props) {
             ?? (failed.dryRun ? 'The configuration could not be read.'
                 : `The build failed at ${failed.at}.`);
     } else if (waiting) {
-        headline = waitingHeadline(buildState, changedSteps.length);
+        headline = waitingHeadline(buildState);
         detail = problems.length
             ? `${tally(problems.length, 'hook')} will do nothing. Review before you build.`
             : buildState === 'never-built'
@@ -169,7 +166,7 @@ export function BuildBar(props: Props) {
             }}>
             {open && (
                 <div class="builder-bar-review" id={listId}>
-                    <h2 class="sr-only">Changes not built</h2>
+                    <h2 class="sr-only">What the build would change</h2>
                     <ul class="builder-bar-list">
                         {status && (
                             <li class="builder-bar-row">
@@ -215,6 +212,13 @@ export function BuildBar(props: Props) {
                                 <span class="builder-bar-text">{warning}</span>
                             </li>
                         ))}
+                        {changedSteps.length > 0 && (
+                            <li class="builder-bar-row builder-bar-row--label">
+                                <span class="builder-bar-text builder-bar-quiet">
+                                    Differs from what Companion ships
+                                </span>
+                            </li>
+                        )}
                         {changedSteps.map(step => (
                             <li class="builder-bar-row" key={step.name}>
                                 <span class="builder-bar-text">

@@ -53,11 +53,11 @@ const withProblem = () => graph({
 });
 
 describe('the build bar appears when there is something to build', () => {
-    it('says what is not built and offers Review and the one filled Build (FR-003)', () => {
+    it('says the build is out of date and offers Review and the one filled Build (FR-003)', () => {
         const { host, button } = bar({
             g: graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 2 } }), step({ name: 'plan' })] }),
         });
-        expect(host.querySelector('.builder-bar-headline')?.textContent).toBe('1 changed step not built');
+        expect(host.querySelector('.builder-bar-headline')?.textContent).toBe('The build is out of date');
         expect(host.querySelector('.builder-bar-detail')?.textContent)
             .toBe('The assistant still reads the old commands');
         expect(button('Review')?.className).not.toContain('primary');
@@ -65,10 +65,12 @@ describe('the build bar appears when there is something to build', () => {
         expect(host.querySelectorAll('.builder-action--primary')).toHaveLength(1);
     });
 
-    it('names the file when no step differs but the build is behind', () => {
-        const { host } = bar();
-        expect(host.querySelector('.builder-bar-headline')?.textContent)
-            .toBe('companion.yml changed since the last build');
+    it('states no count of unbuilt steps from what differs from shipped', () => {
+        const { host } = bar({
+            g: graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 2 } }),
+                step({ name: 'plan', changes: { ...NO_CHANGES, reordered: true } })] }),
+        });
+        expect(host.querySelector('.builder-bar-headline')?.textContent).toBe('The build is out of date');
     });
 
     it('is not there when the build is current and nothing ran', () => {
@@ -180,6 +182,8 @@ describe('Review opens the list of changes', () => {
         button('Review')!.click();
         await flush();
         expect(host.textContent).toContain('reordered');
+        expect(host.querySelector('.builder-bar-row--label')?.textContent?.trim())
+            .toBe('Differs from what Companion ships');
         expect(host.textContent).toContain('Rewrites the specify and implement commands. 3 others stay as they are.');
         host.querySelector<HTMLButtonElement>('[aria-label="Show specify on the board"]')!.click();
         await flush();

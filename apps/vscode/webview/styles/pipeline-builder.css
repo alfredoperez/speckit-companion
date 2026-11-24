@@ -2218,6 +2218,8 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .builder-bar-problem .builder-action { min-height: 28px; }
 
 .builder-bar-row--files { font-size: var(--text-xs); }
+.builder-bar-row--label { font-size: var(--text-xs); padding-bottom: 0; }
+.builder-bar-row--label + .builder-bar-row { border-top: 0; }
 
 .builder-bar-review .builder-report-log {
     margin: var(--space-2) var(--space-5) 0;
