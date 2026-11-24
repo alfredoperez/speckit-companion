@@ -1,0 +1,224 @@
+{
+  "workflow": "companion",
+  "specName": "Workflow Builder: the build bar",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:18:57.128Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:19:36.981Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:19:42.379Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:20:13.263Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:20:28.627Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:20:36.053Z"
+    }
+  ],
+  "request": "Workflow Builder: a build bar at the bottom that appears when there is something to build, with a review of the changes.",
+  "unattended": true,
+  "expectations": [
+    "Installing a missing skill from the bar",
+    "Undo on any change but the last write",
+    "Blocking Build when a hook has a problem",
+    "The stock board status line"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder (Header, StatusLine, index)",
+    "area: apps/vscode/webview/styles/pipeline-builder.css",
+    "constraint: host tokens, accent only on Build, no new messages"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Header without Build",
+      "tasks": [
+        "T002",
+        "T006"
+      ]
+    },
+    "FR-002": {
+      "title": "Quiet up-to-date line",
+      "tasks": [
+        "T002",
+        "T006"
+      ]
+    },
+    "FR-003": {
+      "title": "Bar when stale",
+      "tasks": [
+        "T001",
+        "T004"
+      ]
+    },
+    "FR-004": {
+      "title": "Review expands",
+      "tasks": [
+        "T001",
+        "T004"
+      ]
+    },
+    "FR-005": {
+      "title": "Last write with Undo",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-006": {
+      "title": "Problem hooks with fixes",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-007": {
+      "title": "Warnings not repeated",
+      "tasks": [
+        "T001",
+        "T004"
+      ]
+    },
+    "FR-008": {
+      "title": "Changed steps and commands",
+      "tasks": [
+        "T001",
+        "T004"
+      ]
+    },
+    "FR-009": {
+      "title": "Confirmation leaves",
+      "tasks": [
+        "T001",
+        "T004"
+      ]
+    },
+    "FR-010": {
+      "title": "Failure stays",
+      "tasks": [
+        "T001",
+        "T004"
+      ]
+    },
+    "FR-011": {
+      "title": "Hidden under sheets",
+      "tasks": [
+        "T005"
+      ]
+    },
+    "FR-012": {
+      "title": "Status in bar or foot",
+      "tasks": [
+        "T005"
+      ]
+    },
+    "FR-013": {
+      "title": "Accessible",
+      "tasks": [
+        "T001",
+        "T003",
+        "T004"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 10,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Move Build into a bottom bar with a review of the changes",
+  "size": "normal",
+  "planBlocks": [
+    "states",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "states",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/687-builder-build-bar --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 screens, 20 parts, 1 state block (6 states). Every block holds to its grammar."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Count changed steps in the headline",
+      "why": "no record of writes since the last build",
+      "rejected": "preview on every write",
+      "by": "agent",
+      "at": "2026-11-24T18:20:13.004Z"
+    },
+    {
+      "decision": "Undo only on the last write",
+      "why": "host holds one undo",
+      "rejected": "per-row undo",
+      "by": "agent",
+      "at": "2026-11-24T18:20:13.004Z"
+    },
+    {
+      "decision": "Build stays enabled with a hook problem",
+      "why": "the build only warns",
+      "rejected": "disabled Build from the design",
+      "by": "agent",
+      "at": "2026-11-24T18:20:13.004Z"
+    },
+    {
+      "decision": "No Install it fix",
+      "why": "no host action",
+      "rejected": "a dead button",
+      "by": "agent",
+      "at": "2026-11-24T18:20:13.004Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "New BuildBar component, header trimmed, panel owns open state",
+      "key_finding": "host clears the report on each redraw, so a held report is always fresh"
+    },
+    "tasks": {
+      "summary": "9 tasks: foundational wave of 3, bar wiring, header tests, polish"
+    }
+  },
+  "approach": "A BuildBar component at the foot reads build state, report, status and hook problems; Review opens a list and asks for a preview when none is held. The header keeps the title, switcher, an overflow menu and a quiet up-to-date line."
+}
