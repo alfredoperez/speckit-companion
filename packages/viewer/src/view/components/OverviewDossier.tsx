@@ -271,13 +271,13 @@ function SectionHead({ kicker, title, count, tone }: {
 }
 
 export function IntentSection({ state }: { state: ViewerState }) {
-    const { intent, request, approach, context, classification, source, supersedes } = state;
+    const { intent, request, approach, context, classification, source, supersedes, amendments } = state;
     const extendsFolder = state.extends;
     const area = context?.find(item => item.startsWith(AREA_PREFIX))?.slice(AREA_PREFIX.length);
     const livingSpecs = state.livingSpecs;
     const livingSpecsCount = livingSpecs ? livingSpecChips(livingSpecs).length : 0;
     const hasTiming = phaseNames(state).length > 0;
-    const lineage = Boolean(source || extendsFolder || supersedes);
+    const lineage = Boolean(source || extendsFolder || supersedes || amendments?.length);
     const hasIntentContent = Boolean(intent || request || approach || area || classification || lineage || livingSpecsCount > 0);
     if (!hasIntentContent && !hasTiming) return null;
 
@@ -329,6 +329,12 @@ export function IntentSection({ state }: { state: ViewerState }) {
                                 <>
                                     <span class="dossier-meta-label">Replaces</span>
                                     <p>{supersedes}</p>
+                                </>
+                            )}
+                            {amendments && amendments.length > 0 && (
+                                <>
+                                    <span class="dossier-meta-label">Amended</span>
+                                    <p>{`${amendments.length} ${amendments.length === 1 ? 'time' : 'times'} · last: ${amendments[amendments.length - 1]?.what ?? ''}`}</p>
                                 </>
                             )}
                             {area && (

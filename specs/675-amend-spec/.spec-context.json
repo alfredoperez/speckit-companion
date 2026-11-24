@@ -1,0 +1,733 @@
+{
+  "workflow": "companion",
+  "specName": "Amend a spec after work has started",
+  "branch": "main",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:26:35.214Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T16:27:04.829Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:27:09.134Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:28:49.395Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:29:23.580Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:29:24.346Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:29:24.473Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:30:19.140Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:30:19.141Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:31:17.779Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:31:18.690Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:33:27.249Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:33:27.392Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:34:23.227Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:35:35.125Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:35:35.259Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:35:35.539Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:35:35.681Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:35:35.819Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:51.472Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:51.985Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:52.554Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:53.177Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:53.932Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T018",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:54.492Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T019",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:54.813Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T020",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:55.067Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T021",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:36:55.332Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T022",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:37:18.466Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T023",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:37:18.467Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T024",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:49:56.136Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-23T16:49:56.161Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-23T16:50:09.760Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-23T16:50:13.177Z"
+    }
+  ],
+  "request": "Issue #1030: Amend a spec after work has started. The PR body must carry `Closes #1030`.\n\nOwner's settled decisions (do not re-ask):\n- A separate command, `speckit.companion.amend`, not a flag on specify. It edits the current spec.md in place.\n- It records each amendment in `.spec-context.json` as a new additive list field `amendments: [{at, by, what, why, replanned}]`, written by a new `write-context.py --amend '<json>'` flag (and accepted in `--batch`), appended without de-dupe. Not a new history kind: unknown kinds break the viewer schema, doctor and timing.\n- \"Big\" means a requirement was added or removed. Then amend reruns plan (`speckit.companion.plan`) and converge (`speckit.converge`, which appends tasks for the new requirements); a wording-only change reruns neither. Amend never moves the spec's status or step backward (the writer refuses that by design); on a completed spec it says so and points to Set status in VS Code to reopen it.\n- It ends with a keep-or-remove decision for code that no longer has a spec line (asked attended; unattended it records a concern instead).\n- The VS Code viewer's Overview shows one line in the intent block's context, after Replaces: \"Amended N times · last: <what>\". Update the viewer contract (types, zod schema), state derivation, the overview availability checks, the stories and tests, and add a changeset for speckit-viewer.\n- Register the command everywhere CI checks: extension.yml provides.commands, the tracked .specify/extensions/.registry, apps/speckit-extension/README.md command table and docs/commands.md, website reference/commands.mdx. Flat command body copying speckit.companion.resume.md (no nodes folder, so it stays out of the Workflow Builder). Leave the Copilot canvas out.\n- Changelogs: one `[Unreleased]` line in apps/speckit-extension/CHANGELOG.md (pipeline) and one in the root CHANGELOG.md for the Overview line (overview area). No version bumps.",
+  "unattended": true,
+  "expectations": [
+    "A Copilot canvas button for amend",
+    "Moving a spec's status backward from the writer",
+    "Showing the full amendment list in the Overview"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts (capture.py, write-context.py)",
+    "area: packages/viewer/src (contract, core, view OverviewDossier)",
+    "area: apps/speckit-extension/commands + extension.yml + .specify/extensions/.registry",
+    "area: apps/website/src/content/docs/docs/reference/commands.mdx",
+    "constraint: a status never moves backward",
+    "constraint: history kinds stay start|complete"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Amend edits spec.md in place and never creates a new folder",
+      "tasks": [
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_amend_command.py"
+      ]
+    },
+    "FR-002": {
+      "title": "Each amendment appends one entry to amendments without merging",
+      "tasks": [
+        "T001",
+        "T003",
+        "T007",
+        "T009"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_capture_fields.py::AmendmentTests; tests/test_cli_parity.py::test_an_amendment_lands_on_the_record_and_leaves_status_alone"
+      ]
+    },
+    "FR-003": {
+      "title": "Adding or removing a requirement reruns plan then converge; wording does not",
+      "tasks": [
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_amend_command.py"
+      ]
+    },
+    "FR-004": {
+      "title": "Amend never moves status or step backward; completed specs get reopen guidance",
+      "tasks": [
+        "T001",
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_capture_fields.py::test_an_amendment_never_moves_the_lifecycle; tests/test_amend_command.py"
+      ]
+    },
+    "FR-005": {
+      "title": "Removed requirements end with keep-or-remove (attended) or a concern (unattended)",
+      "tasks": [
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_amend_command.py"
+      ]
+    },
+    "FR-006": {
+      "title": "The Overview shows Amended N times and the last change",
+      "tasks": [
+        "T002",
+        "T004",
+        "T005",
+        "T006",
+        "T013",
+        "T014",
+        "T015",
+        "T016",
+        "T017",
+        "T018"
+      ],
+      "tests": [
+        "OverviewDossier.test.tsx",
+        "stateDerivation.test.ts",
+        "overviewAvailability.test.ts",
+        "packages/viewer/tests/schemas.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "The command is registered for every command check and documented",
+      "tasks": [
+        "T008",
+        "T010",
+        "T011",
+        "T012"
+      ],
+      "tests": [
+        "check-command-emissions.py; tests/test_command_emissions.py"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 18,
+    "projectedTasks": 16,
+    "scopeSignal": "none",
+    "verdict": "oversized"
+  },
+  "intent": "Change a spec in place after work has started, with the change on the record",
+  "size": "oversized",
+  "source": "#1030",
+  "workingBranch": "675-amend-spec",
+  "decisions": [
+    {
+      "decision": "Record amendments as an additive list field",
+      "why": "Every history reader treats an unknown kind as a start, breaking the schema, the doctor and timing",
+      "rejected": "A new history kind amended",
+      "by": "agent",
+      "at": "2026-11-23T16:28:49.113Z"
+    },
+    {
+      "decision": "Replan by dispatching plan then converge, never writing status",
+      "why": "The writer refuses backward moves by design; converge appends tasks implement picks up",
+      "rejected": "A --reopen writer flag",
+      "by": "agent",
+      "at": "2026-11-23T16:28:49.113Z"
+    },
+    {
+      "decision": "A flat command body copied from resume",
+      "why": "Keeps amend out of the Workflow Builder like the other side commands",
+      "rejected": "A nodes/amend folder",
+      "by": "agent",
+      "at": "2026-11-23T16:28:49.113Z"
+    },
+    {
+      "decision": "One Overview row after Replaces",
+      "why": "Matches the lineage rows beside it",
+      "rejected": "A full amendment list",
+      "by": "agent",
+      "at": "2026-11-23T16:28:49.113Z"
+    },
+    {
+      "decision": "Skipped clips:capture",
+      "why": "No capture fixture carries amendments, so no generated image changes; clips:check confirms no drift",
+      "rejected": "Regenerating every capture",
+      "by": "agent",
+      "at": "2026-11-23T16:49:56.299Z"
+    },
+    {
+      "decision": "Raised the companion-command count pinned in codexPromptResolver.test.ts from 21 to 22",
+      "why": "Amend is a new provided command",
+      "rejected": "Deriving the count, which would hide a dropped command",
+      "by": "agent",
+      "at": "2026-11-23T16:49:56.299Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Writer field, viewer contract and row, and a flat amend command with its registrations",
+      "key_finding": "amendments is the first capture field that must append without de-dupe, and a lone --amend must count as a capture call"
+    },
+    "tasks": {
+      "summary": "24 tasks: a foundational field and contract phase, then the command and the Overview row side by side, then changelogs and validation"
+    },
+    "implement": {
+      "summary": "Amend command, amendments on the record, and an Amended row in the Overview"
+    }
+  },
+  "approach": "write-context.py gains --amend appending to an amendments list; the viewer reads it and the Overview shows one Amended row; a flat amend command edits spec.md in place, records the entry, and dispatches plan and converge only when requirements changed.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Writer, CLI and schema tests for amendments; failing first",
+      "files": [
+        "apps/speckit-extension/tests/test_capture_fields.py",
+        "apps/speckit-extension/tests/test_cli_parity.py",
+        "packages/viewer/tests/schemas.test.ts"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Writer, CLI and schema tests for amendments; failing first",
+      "files": [
+        "apps/speckit-extension/tests/test_capture_fields.py",
+        "apps/speckit-extension/tests/test_cli_parity.py",
+        "packages/viewer/tests/schemas.test.ts"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Added append_amendments and the amendments batch key to capture.py",
+      "files": [
+        "apps/speckit-extension/scripts/capture.py"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Added the amendments entry schema to SpecContextSchema",
+      "files": [
+        "packages/viewer/src/contract/schemas.ts"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Added AmendmentEntry and amendments on SpecContext and ViewerState",
+      "files": [
+        "packages/viewer/src/contract/specContext.ts",
+        "packages/viewer/src/contract/viewerState.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Added amendments to the VS Code ViewerState copy and the JSON schema",
+      "files": [
+        "apps/vscode/src/core/types/specContext.ts",
+        "apps/vscode/src/core/types/spec-context.schema.json"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "--amend flag on both write paths",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Added the amend command test",
+      "files": [
+        "apps/speckit-extension/tests/test_amend_command.py"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Wrote the amend command body",
+      "files": [
+        "apps/speckit-extension/commands/speckit.companion.amend.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Declared amend in extension.yml and the registry",
+      "files": [
+        "apps/speckit-extension/extension.yml",
+        ".specify/extensions/.registry"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Listed amend in README and commands doc",
+      "files": [
+        "apps/speckit-extension/README.md",
+        "apps/speckit-extension/docs/commands.md"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Documented amend on the site",
+      "files": [
+        "apps/website/src/content/docs/docs/reference/commands.mdx",
+        "apps/website/src/content/docs/docs/steps/index.mdx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Amended row: stateDerivation.test.ts",
+      "files": [
+        "stateDerivation.test.ts"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Amended row: OverviewDossier.test.tsx",
+      "files": [
+        "OverviewDossier.test.tsx"
+      ]
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Amended row: overviewAvailability.test.ts",
+      "files": [
+        "overviewAvailability.test.ts"
+      ]
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Amended row: stateDerivation.ts",
+      "files": [
+        "stateDerivation.ts"
+      ]
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Amended row: overviewAvailability.ts",
+      "files": [
+        "overviewAvailability.ts"
+      ]
+    },
+    "T018": {
+      "status": "DONE",
+      "did": "Amended row: OverviewDossier.tsx",
+      "files": [
+        "OverviewDossier.tsx"
+      ]
+    },
+    "T019": {
+      "status": "DONE",
+      "did": "Amended row: ActivityPanel.stories.tsx",
+      "files": [
+        "ActivityPanel.stories.tsx"
+      ]
+    },
+    "T020": {
+      "status": "DONE",
+      "did": "Amended row: the-overview.mdx",
+      "files": [
+        "the-overview.mdx"
+      ]
+    },
+    "T021": {
+      "status": "DONE",
+      "did": "Amended row: amended-overview-row.md",
+      "files": [
+        "amended-overview-row.md"
+      ]
+    },
+    "T022": {
+      "status": "DONE",
+      "did": "Changelog lines for amend and the Overview row",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md",
+        "CHANGELOG.md"
+      ],
+      "wave": "T022-T023"
+    },
+    "T023": {
+      "status": "DONE",
+      "did": "Changelog lines for amend and the Overview row",
+      "files": [
+        "apps/speckit-extension/CHANGELOG.md",
+        "CHANGELOG.md"
+      ],
+      "wave": "T022-T023"
+    },
+    "T024": {
+      "status": "DONE",
+      "did": "Extension suite, emissions, drift, tsc, related jest, viewer build, changelog and media checks pass",
+      "files": [
+        "apps/vscode/src/ai-providers/__tests__/codexPromptResolver.test.ts"
+      ]
+    }
+  },
+  "verified": [
+    {
+      "what": "speckit-extension tests",
+      "command": "python3 -m unittest discover -s apps/speckit-extension/tests -p 'test_*.py'",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 139.0,
+      "result": "---------------------------------------------------------------------- · Ran 1562 tests in 138.833s · OK (skipped=14)",
+      "commit": "344d516d",
+      "tree": "0c118aa698b00d574546d2008a4e7087b4a46020"
+    },
+    {
+      "what": "build drift",
+      "command": "python3 apps/speckit-extension/scripts/build.py --check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "  plan: plan.md (plan-doc), research.md (side-files), data-model.md (side-files), contracts/ (side-files) ·   specify: spec.md (draft-spec) ·   tasks: tasks.md (tasks-doc)",
+      "commit": "344d516d",
+      "tree": "0c118aa698b00d574546d2008a4e7087b4a46020"
+    },
+    {
+      "what": "type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.5,
+      "result": "npm notice run speckit-companion@0.40.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "344d516d",
+      "tree": "0c118aa698b00d574546d2008a4e7087b4a46020"
+    },
+    {
+      "what": "related jest",
+      "command": "npx jest --findRelatedTests apps/vscode/src/ai-providers/__tests__/codexPromptResolver.test.ts apps/vscode/src/core/types/specContext.ts apps/vscode/src/core/utils/__tests__/overviewAvailability.test.ts apps/vscode/src/features/spec-viewer/__tests__/stateDerivation.test.ts apps/vscode/webview/src/spec-viewer/components/ActivityPanel.stories.tsx apps/vscode/webview/src/spec-viewer/components/__tests__/OverviewDossier.test.tsx packages/viewer/src/contract/schemas.ts packages/viewer/src/contract/specContext.ts packages/viewer/src/contract/viewerState.ts packages/viewer/src/core/overviewAvailability.ts packages/viewer/src/core/stateDerivation.ts packages/viewer/src/view/components/OverviewDossier.tsx packages/viewer/tests/schemas.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 76.1,
+      "result": "Snapshots:   0 total · Time:        75.142 s · Ran all test suites related to files matching /apps\\/vscode\\/src\\/ai-providers\\/__tests__\\/codexPromptResolver.test.ts|apps\\/vscode\\/src\\/core\\/types\\/specContext.ts|apps\\/vscode\\/src\\/core\\/utils\\/__tests__\\/overviewAvailability.test.ts|apps\\/vscode\\/src\\/features\\/spec-viewer\\/__tests__\\/stateDerivation.test.ts|apps\\/vscode\\/webview\\/src\\/spec-viewer\\/components\\/ActivityPanel.stories.tsx|apps\\/vscode\\/webview\\/src\\/spec-viewer\\/components\\/__tests__\\/OverviewDossier.test.tsx|packages\\/viewer\\/src\\/contract\\/schemas.ts|packages\\/viewer\\/src\\/contract\\/specContext.ts|packages\\/viewer\\/src\\/contract\\/viewerState.ts|packages\\/viewer\\/src\\/core\\/overviewAvailability.ts|packages\\/viewer\\/src\\/core\\/stateDerivation.ts|packages\\/viewer\\/src\\/view\\/components\\/OverviewDossier.tsx|packages\\/viewer\\/tests\\/schemas.test.ts/i.",
+      "commit": "344d516d",
+      "tree": "0c118aa698b00d574546d2008a4e7087b4a46020"
+    },
+    {
+      "what": "viewer build",
+      "command": "npm run viewer:build",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.4,
+      "result": "npm notice run npm run build -w speckit-viewer · npm notice run speckit-viewer@0.1.0 build · npm notice run tsc -p tsconfig.json && tsc -p tsconfig.view.json && node scripts/build-css.mjs && node scripts/build-element.mjs",
+      "commit": "344d516d",
+      "tree": "0c118aa698b00d574546d2008a4e7087b4a46020"
+    },
+    {
+      "what": "changelog consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "Snapshots:   0 total · Time:        1.429 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "e0190fba",
+      "tree": "7111f06bbb5e52f0743c0f7338f0bf4967ce201f"
+    },
+    {
+      "what": "media drift",
+      "command": "npm run clips:check",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.2,
+      "result": "OK every output in the manifest exists and both READMEs agree with it. · npm notice run speckit-companion@0.40.0 clips:check · npm notice run node tooling/scripts/clip-storyboard.mjs --check && node tooling/scripts/check-media-manifest.mjs",
+      "commit": "344d516d",
+      "tree": "0c118aa698b00d574546d2008a4e7087b4a46020"
+    },
+    {
+      "what": "command emissions",
+      "command": "python3 apps/speckit-extension/scripts/check-command-emissions.py",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[command-emissions] OK — 22 commands agree across 1 install areas, 1 agent records, and 2 documents",
+      "commit": "344d516d",
+      "tree": "0c118aa698b00d574546d2008a4e7087b4a46020"
+    }
+  ],
+  "concerns": [
+    {
+      "note": "No live agent run of amend yet; the batched cheap-model sandbox run covers it.",
+      "step": "implement"
+    }
+  ],
+  "last_action": "all checks pass",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-23T16:50:09.802Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-23T16:50:09.847Z",
+      "by": "extension",
+      "finishedAt": "2026-11-23T16:50:13.256Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

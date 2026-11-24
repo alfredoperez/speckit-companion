@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- **The Overview shows when a spec was amended.** The intent card counts the amendments and ==names the last change==. ([#1042](https://github.com/alfredoperez/speckit-companion/pull/1042)) <!-- area: overview -->
 - **A project health check in the sidebar.** Project health lists ==the CLI, Companion, constitution and AI agent==, and a click runs the fix. ([#1048](https://github.com/alfredoperez/speckit-companion/pull/1048)) <!-- area: sidebar -->
 - **Spec Kit presets in the Workflow Builder.** A panel lists what each installed preset replaces and ==warns when it clashes with Companion==. ([#1044](https://github.com/alfredoperez/speckit-companion/pull/1044)) <!-- area: pipeline-builder -->
 - **See a spec's open questions.** The spec header counts the ==open questions left== in the spec, and pressing it runs Clarify. ([#1046](https://github.com/alfredoperez/speckit-companion/pull/1046)) <!-- area: spec-viewer -->

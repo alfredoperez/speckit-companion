@@ -25,6 +25,7 @@ import {
     RiskEntry,
     TaskSummary,
     ConcernEntry,
+    AmendmentEntry,
     CheckpointStatus,
     ReviewComment,
     LivingSpecsView,
@@ -297,6 +298,25 @@ function pickConcerns(ctx: SpecContext): ConcernEntry[] | undefined {
     return out.length > 0 ? out : undefined;
 }
 
+function pickAmendments(ctx: SpecContext): AmendmentEntry[] | undefined {
+    const v: unknown = ctx.amendments;
+    if (!Array.isArray(v)) return undefined;
+    const out: AmendmentEntry[] = [];
+    for (const entry of v) {
+        if (!entry || typeof entry !== 'object') continue;
+        const e = entry as Record<string, unknown>;
+        if (typeof e.what !== 'string' || e.what.trim() === '') continue;
+        const what = e.what.replace(/\s+/g, ' ').trim();
+        const item: AmendmentEntry = { what: what.length > 120 ? `${what.slice(0, 119)}…` : what };
+        if (typeof e.why === 'string') item.why = e.why;
+        if (typeof e.at === 'string') item.at = e.at;
+        if (typeof e.by === 'string') item.by = e.by;
+        if (typeof e.replanned === 'boolean') item.replanned = e.replanned;
+        out.push(item);
+    }
+    return out.length > 0 ? out : undefined;
+}
+
 function pickReviewComments(ctx: SpecContext): ReviewComment[] | undefined {
     const v: unknown = ctx.reviewComments;
     if (!Array.isArray(v) || v.length === 0) return undefined;
@@ -474,6 +494,7 @@ export function deriveViewerState<Footer = never, Step extends StepConfigLike = 
         source: optString(ctx.source),
         extends: optString(ctx.extends),
         supersedes: optString(ctx.supersedes),
+        amendments: pickAmendments(ctx),
         expectations: asStringArray(ctx.expectations),
         context: asStringArray(ctx.context),
         verified: pickVerified(ctx),

@@ -82,6 +82,20 @@
         ]
       }
     },
+    "amendments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["what"],
+        "properties": {
+          "what": { "type": "string" },
+          "why": { "type": "string" },
+          "at": { "type": "string" },
+          "by": { "type": "string" },
+          "replanned": { "type": "boolean" }
+        }
+      }
+    },
     "concerns": {
       "type": "array",
       "items": {

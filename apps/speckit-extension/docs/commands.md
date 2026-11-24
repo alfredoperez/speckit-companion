@@ -7,14 +7,14 @@ The extension follows spec-kit's bundled-extension pattern exactly: a **lifecycl
                →  after_plan hook   →  speckit.companion.after-plan   →  write-context.py  →  .spec-context.json  (finish)
 ```
 
-## The twenty-four commands
+## The twenty-five commands
 
 Everything the extension declares, by family. The README's [Commands](../README.md#commands) table is the short version; this page is the detail. Both are checked against the extension's own command list on every build, so neither can fall behind a rename.
 
 | Family | Commands |
 |--------|----------|
 | [Pipeline](#pipeline-commands) | `speckit.companion.specify`, `speckit.companion.plan`, `speckit.companion.tasks`, `speckit.companion.implement`, `speckit.companion.auto`, `speckit.companion.classify`, `speckit.companion.mark-complete` |
-| [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume` |
+| [Run state](#read-commands-status--resume) | `speckit.companion.status`, `speckit.companion.resume`, `speckit.companion.amend` |
 | [Diagnostics](#diagnostics) | `speckit.companion.doctor` |
 | [Hooks](#lifecycle-hooks) | `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge`, `speckit.companion.before-bug`, `speckit.companion.after-bug`, `speckit.companion.on-prompt`, `speckit.companion.on-stop` |
 
@@ -221,6 +221,10 @@ python3 .specify/extensions/companion/scripts/status-context.py --plain --featur
 Resolves the next step from the same script, then dispatches the next `/speckit.*` command with the recorded `decisions[]` in scope. Inside the implement step it continues at the next unchecked task. On a terminal state (`completed`/`archived`) it reports "Pipeline complete" and dispatches nothing. Resume dispatches the **already-installed** `/speckit.*` commands — it does not require a `specify workflow resume` CLI subcommand, so it works on the stock spec-kit version.
 
 The next-action mapping: `specify/specified → /speckit.plan`, `plan/planned → /speckit.tasks`, `tasks/ready-to-implement → /speckit.implement`, `implement/implementing → /speckit.implement` (at the next unchecked task), `implement/implemented → /speckit.converge`. In-progress statuses re-dispatch the current step.
+
+### `speckit.companion.amend`
+
+Edits the active spec's `spec.md` in place when you change your mind after plan or implement, and records the change in `amendments[]` with `write-context.py --amend`. It never mints a folder and never moves `status` or `currentStep`. When a requirement was added or removed it then runs `speckit.companion.plan` and `speckit.converge`; a wording-only change runs neither. On a completed spec, converge's new tasks are recorded as a concern, and you reopen the spec with Set status in VS Code. When a requirement was removed it asks whether to keep or remove the code that implemented it, or records a concern when the run is unattended.
 
 ## Pipeline commands
 

@@ -466,6 +466,8 @@ export interface SpecContext {
     extends?: string;
     /** An earlier spec folder this one replaces. */
     supersedes?: string;
+    /** Changes made to the spec after it was written. */
+    amendments?: AmendmentEntry[];
     /** Converge passes, appended by the converge start and finish hooks. */
     convergePasses?: ConvergePass[];
 }
@@ -486,6 +488,14 @@ export interface TaskSummary {
 export interface ConcernEntry {
     task?: string;
     note: string;
+}
+
+export interface AmendmentEntry {
+    what: string;
+    why?: string;
+    at?: string;
+    by?: string;
+    replanned?: boolean;
 }
 
 export interface CheckpointStatus {

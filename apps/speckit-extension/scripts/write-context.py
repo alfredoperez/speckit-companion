@@ -80,6 +80,7 @@ from capture import (  # noqa: E402,F401
     _entry_identity,
     _parsed_batch,
     _parsed_classification,
+    append_amendments,
     append_capture_entries,
     append_decisions,
     apply_batch,
@@ -921,6 +922,11 @@ def _main() -> int:
              "JSON object with a 'note' key (plus step/kind), or bare text. Repeatable.",
     )
     parser.add_argument(
+        "--amend", dest="amendments", action="append", default=None, metavar="JSON|TEXT",
+        help="Append an amendment to amendments[] (never de-duped). JSON object with a 'what' key "
+             "(plus why/by/replanned), or bare text. Never moves status. Repeatable.",
+    )
+    parser.add_argument(
         "--expectation", dest="expectations", action="append", default=None, metavar="TEXT",
         help="Append an out-of-scope/non-goal string to expectations[] (de-duped). Repeatable.",
     )
@@ -975,10 +981,11 @@ def _main() -> int:
     parser.add_argument(
         "--batch", dest="batch", default=None, metavar="JSON",
         help="Apply the whole end-of-step capture volley in one call — a JSON object with "
-             "any of verified/decisions/concerns/expectations/context/coverage (with tasks/tests/"
+             "any of verified/decisions/concerns/amendments/expectations/context/coverage (with tasks/tests/"
              "title/assumes)/step_summary/"
              "last_action, written through the same additive writers. Collapses the volley "
-             "to one invocation; each writer still performs its own atomic write.",
+             "to one invocation; each writer still performs its own atomic write. Every list "
+             "de-dupes except amendments, which appends on each run.",
     )
     parser.add_argument(
         "--close-task", dest="close_task", default=None, metavar="TaskID",
@@ -1017,7 +1024,7 @@ def _main() -> int:
     # Terminal state belongs in `status`, not `currentStep`. Skipped in task-sync
     # mode, which always operates on the implement step.
     capture_mode = bool(
-        args.decisions or args.verified or args.verify_runs or args.concerns or args.expectations
+        args.decisions or args.verified or args.verify_runs or args.concerns or args.amendments or args.expectations
         or args.coverage_req or args.assumes or args.risk or args.risk_raise or args.mutation_report or args.step_summary or args.classification or args.context_entries
         or args.batch or args.request
     )
@@ -1168,6 +1175,10 @@ def _main() -> int:
         if args.concerns:
             target = append_capture_entries(feature_dir, "concerns", "note", args.concerns)
             captured.append(f"[companion] Recorded {len(args.concerns)} concern(s) in {target}")
+        if args.amendments:
+            target = append_amendments(feature_dir, args.amendments)
+            if target:
+                captured.append(f"[companion] Recorded {len(args.amendments)} amendment(s) in {target}")
         if args.expectations:
             target = append_string_list(feature_dir, "expectations", args.expectations)
             captured.append(f"[companion] Recorded {len(args.expectations)} expectation(s) in {target}")
@@ -1412,7 +1423,7 @@ _OP_FLAGS = (
 
 _CAPTURE_FLAGS = (
     "--batch",
-    "--decision", "--verified", "--concern", "--expectation", "--context",
+    "--decision", "--verified", "--concern", "--amend", "--expectation", "--context",
     "--coverage-req", "--step-summary", "--classification",
     "--request", "--assumes", "--risk", "--risk-raise", "--mutation-report",
 )

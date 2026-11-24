@@ -3,6 +3,7 @@
  * own view of it, with footer predicates that never cross to the webview, stays here.
  */
 import type {
+    AmendmentEntry,
     CheckpointStatus,
     ClassificationEntry,
     ConcernEntry,
@@ -88,6 +89,7 @@ export interface ViewerState {
     extends?: string;
     /** An earlier spec folder this one replaces. */
     supersedes?: string;
+    amendments?: AmendmentEntry[];
     expectations?: string[];
     context?: string[];
     verified?: ViewerVerification[];

@@ -44,6 +44,7 @@
           "speckit.companion.after-bug",
           "speckit.companion.status",
           "speckit.companion.resume",
+          "speckit.companion.amend",
           "speckit.companion.specify",
           "speckit.companion.plan",
           "speckit.companion.tasks",

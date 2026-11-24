@@ -859,13 +859,13 @@ function SectionHead({ kicker, title, count, tone }) {
   ] });
 }
 function IntentSection({ state }) {
-  const { intent, request, approach, context, classification, source, supersedes } = state;
+  const { intent, request, approach, context, classification, source, supersedes, amendments } = state;
   const extendsFolder = state.extends;
   const area = context?.find((item) => item.startsWith(AREA_PREFIX))?.slice(AREA_PREFIX.length);
   const livingSpecs = state.livingSpecs;
   const livingSpecsCount = livingSpecs ? livingSpecChips(livingSpecs).length : 0;
   const hasTiming = phaseNames(state).length > 0;
-  const lineage = Boolean(source || extendsFolder || supersedes);
+  const lineage = Boolean(source || extendsFolder || supersedes || amendments?.length);
   const hasIntentContent = Boolean(intent || request || approach || area || classification || lineage || livingSpecsCount > 0);
   if (!hasIntentContent && !hasTiming) return null;
   return /* @__PURE__ */ u3("section", { class: "dossier-intent", "aria-label": hasIntentContent ? "Intent" : "Run overview", children: [
@@ -900,6 +900,10 @@ function IntentSection({ state }) {
         supersedes && /* @__PURE__ */ u3(S, { children: [
           /* @__PURE__ */ u3("span", { class: "dossier-meta-label", children: "Replaces" }),
           /* @__PURE__ */ u3("p", { children: supersedes })
+        ] }),
+        amendments && amendments.length > 0 && /* @__PURE__ */ u3(S, { children: [
+          /* @__PURE__ */ u3("span", { class: "dossier-meta-label", children: "Amended" }),
+          /* @__PURE__ */ u3("p", { children: `${amendments.length} ${amendments.length === 1 ? "time" : "times"} \xB7 last: ${amendments[amendments.length - 1]?.what ?? ""}` })
         ] }),
         area && /* @__PURE__ */ u3(S, { children: [
           /* @__PURE__ */ u3("span", { class: "dossier-meta-label", children: "Working area" }),

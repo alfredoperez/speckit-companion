@@ -476,6 +476,17 @@ describe('reasoning-trail normalization', () => {
         });
     });
 
+    describe('amendments', () => {
+        it('carries the amendments through and drops entries without a what', () => {
+            const state = deriveViewerState(makeContext({ amendments: [{ what: 'Add export', why: 'asked', replanned: true }, { why: 'no what' }, { what: 'Drop limit' }] } as never));
+            expect(state.amendments).toEqual([{ what: 'Add export', why: 'asked', replanned: true }, { what: 'Drop limit' }]);
+        });
+
+        it('is absent on older records', () => {
+            expect(deriveViewerState(makeContext()).amendments).toBeUndefined();
+        });
+    });
+
     describe('verified', () => {
         it('normalizes strings and keeps structured entries with warnings', () => {
             const state = deriveViewerState(makeContext({

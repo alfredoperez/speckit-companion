@@ -24,12 +24,13 @@ Spec Kit also has `/speckit.clarify`, `/speckit.checklist`, `/speckit.analyze` a
 
 ## Run state
 
-These three read the run record, which [Overview and progress](/docs/results/the-overview) covers.
+These four work on the run record, which [Overview and progress](/docs/results/the-overview) covers.
 
 | Command | Use it when |
 | --- | --- |
 | `/speckit.companion.status` | You want the current step and the next action |
 | `/speckit.companion.resume` | A run stopped and you want to continue from the last finished step |
+| `/speckit.companion.amend` | You changed your mind after plan or implement and want the spec edited in place, on the record |
 | `/speckit.companion.doctor` | A run looks wrong and you want a health report |
 
 The extension installs eight more commands that you never type: seven record a Spec Kit run's step times, and `speckit.companion.classify` sizes a change for the workflow.

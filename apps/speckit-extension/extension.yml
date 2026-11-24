@@ -58,6 +58,9 @@ provides:
     - name: speckit.companion.resume
       file: commands/speckit.companion.resume.md
       description: "Continue the spec-driven pipeline from the last completed step, carrying recorded decisions into scope, and dispatch the next command"
+    - name: speckit.companion.amend
+      file: commands/speckit.companion.amend.md
+      description: "Edit the active spec in place when you change your mind after plan or implement, record the change, and re-plan only when a requirement was added or removed"
     - name: speckit.companion.specify
       file: commands/speckit.companion.specify.md
       description: "Companion specify — a feature spec with prioritized user stories"

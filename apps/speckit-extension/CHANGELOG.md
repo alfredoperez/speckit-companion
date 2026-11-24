@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 ## [Unreleased]
 
 ### Added
+- **Amend a spec after work has started.** The amend command edits the spec in place, records the change, and ==replans only when requirements changed==. ([#1042](https://github.com/alfredoperez/speckit-companion/pull/1042)) <!-- area: pipeline -->
 - **Bug runs typed in chat leave a record.** Assess, fix and test each record ==their start, finish and outcome== in the bug's own folder. ([#1023](https://github.com/alfredoperez/speckit-companion/pull/1023)) <!-- area: run-record -->
 - **Doctor checks plugin freshness.** It flags each Claude Code plugin your Companion config or project nodes call that is ==behind its marketplace==, naming both versions. ([#1004](https://github.com/alfredoperez/speckit-companion/pull/1004)) <!-- area: install -->
 

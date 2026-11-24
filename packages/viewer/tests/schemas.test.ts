@@ -37,6 +37,13 @@ describe('SpecContextSchema', () => {
         expect(parsed.coverage?.['FR-001']).toMatchObject({ tasks: ['T001', 'T004'], tests: ['a.test.ts'] });
     });
 
+    it('parses amendments and refuses one with no description', () => {
+        const amendments = [{ what: 'dropped CSV export', why: 'out of scope', at: '2026-11-23T12:00:00Z', by: 'you', replanned: true }];
+        const parsed = SpecContextSchema.parse({ ...record(), amendments });
+        expect(parsed.amendments?.[0].what).toBe('dropped CSV export');
+        expect(SpecContextSchema.safeParse({ ...record(), amendments: [{ why: 'no what' }] }).success).toBe(false);
+    });
+
     it('parses a record with only the required fields', () => {
         const minimal = { workflow: 'speckit', specName: 'x', branch: '', currentStep: 'specify', status: 'draft', history: [] };
         expect(SpecContextSchema.safeParse(minimal).success).toBe(true);

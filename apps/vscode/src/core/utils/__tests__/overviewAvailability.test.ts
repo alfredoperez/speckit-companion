@@ -31,6 +31,10 @@ describe('overview availability', () => {
             expect(hasAnyData({ intent: 'Ship it' })).toBe(true);
         });
 
+        it('counts a record with only amendments', () => {
+            expect(hasAnyData({ amendments: [{ what: 'Add export' }] })).toBe(true);
+        });
+
         it('does not count a status and a current step alone', () => {
             const { reviewComments: _comments, ...ctx } = readFixture();
             expect(hasAnyData(deriveViewerState(ctx))).toBe(false);

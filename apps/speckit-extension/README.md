@@ -63,6 +63,7 @@ Then run plan, tasks and implement the same way, or all four at once with `/spec
 | `/speckit.companion.auto` | Run the whole pipeline without pausing |
 | `/speckit.companion.status` | Print the current step, the decisions and the next action |
 | `/speckit.companion.resume` | Continue from the recorded step |
+| `/speckit.companion.amend` | Edit the spec in place after plan or implement, and record the change |
 | `/speckit.companion.doctor` | Report on a run's health. Read-only |
 
 The rest run by themselves, so don't type them: `speckit.companion.classify`, and the hooks `speckit.companion.before-step`, `speckit.companion.after-specify`, `speckit.companion.after-plan`, `speckit.companion.after-tasks`, `speckit.companion.after-implement`, `speckit.companion.before-converge`, `speckit.companion.after-converge`, and `speckit.companion.before-bug` and `speckit.companion.after-bug` around spec-kit's bug commands. Two more, `speckit.companion.on-prompt` and `speckit.companion.on-stop`, record step boundaries from spec-kit's runtime events with no model in the loop; agents without events keep the hooks.

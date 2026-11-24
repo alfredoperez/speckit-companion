@@ -1,4 +1,5 @@
 import type {
+    AmendmentEntry,
     CheckpointStatus,
     ClassificationEntry,
     ConcernEntry,
@@ -65,6 +66,7 @@ export interface ViewerState {
     extends?: string;
     /** An earlier spec folder this one replaces. */
     supersedes?: string;
+    amendments?: AmendmentEntry[];
     expectations?: string[];
     context?: string[];
     verified?: ViewerVerification[];

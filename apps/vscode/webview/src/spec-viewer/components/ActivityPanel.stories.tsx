@@ -329,6 +329,21 @@ export const DossierSourceId: Story = {
     },
 };
 
+// A spec amended twice after it was written: the Overview names the count and the last change.
+export const DossierAmended: Story = {
+    render: () => {
+        viewerState.value = {
+            ...richReasoningState,
+            amendments: [
+                { what: 'Add a CSV export to the filter list', why: 'Support asked for it', replanned: true },
+                { what: 'Drop the 50-item limit on saved filters', why: 'The limit blocked a real team' },
+            ],
+        };
+        navState.value = { installPrompt: null } as NavState;
+        return <div style="max-width: 900px;"><ActivityPanel /></div>;
+    },
+};
+
 // The verbatim request plus decisions: an agent's, a person's, and one reopened twice.
 export const DossierRequestAndDecisions: Story = {
     render: () => {
