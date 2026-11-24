@@ -49,7 +49,7 @@ function render(g: PipelineGraph) {
             onOpenNode={() => {}} onReorder={(_c, order) => reordered.push(order)}
             onAddHook={() => {}} onEditHook={() => {}} onAddNode={() => {}}
             onOpenFrame={() => {}} onOpenTemplate={() => {}} onNewStep={() => {}}
-            onRemoveNode={() => {}} onSetPhases={() => {}}
+            onSetPhases={() => {}}
             onMoveHook={(c, from, to) => moved.push([c, from, to])}
             onRefuse={reason => refused.push(reason)} />,
     );

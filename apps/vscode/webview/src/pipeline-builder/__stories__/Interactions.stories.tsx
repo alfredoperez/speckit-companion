@@ -14,6 +14,7 @@ import { Canvas } from '../Canvas';
 import { Header } from '../Header';
 import { AttachForm } from '../AttachForm';
 import { Inspector } from '../Inspector';
+import { NodePopover } from '../NodePopover';
 import { CHOICES, IMPLEMENT, NO_CHANGES, SPECIFY, graph, hook, node, phase, step } from './fixtures';
 
 const noop = () => undefined;
@@ -45,7 +46,6 @@ function board(g = graph([SPECIFY])) {
                 onOpenFrame={on('openFrame')}
                 onNewStep={on('newStep')}
                 onOpenTemplate={on('openTemplate')}
-                onRemoveNode={on('removeNode')}
                 onMoveHook={(c, from, to) => sent.push({ what: 'moveHook', with: [c, from, to] })}
                 onRefuse={on('refuse')} />
         </div>
@@ -306,14 +306,33 @@ export const AShippedNodeCarriesNoExtraAction: Story = {
 
 export const TakeANodeOutOfTheRun: Story = {
     name: 'Take a node out of the run',
-    render: () => board().view,
+    render: () => {
+        const sent: Sent = [];
+        return (
+            <div class="builder"
+                ref={(el: HTMLElement | null) => {
+                    if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+                }}>
+                <NodePopover node={node('draft-spec', 'Draft the spec')}
+                    step="specify" hooksIn="companion.yml" moveTargets={[]}
+                    canMove={{ up: false, down: true }} removeBlocked=""
+                    onClose={noop} onEditNode={noop} onAddHook={noop}
+                    onEditHook={noop} onRemoveHook={noop}
+                    onAction={action => sent.push({ what: 'nodeAction', with: action })} />
+            </div>
+        );
+    },
     play: async ({ canvasElement }) => {
-        // There was no way to stop running a node from the panel at all — the
-        // writer's own refusal named an action only the file could perform.
-        const drop = canvasElement.querySelector('.pb-node-drop') as HTMLButtonElement;
-        assert(drop.getAttribute('title')?.includes('The file stays') ?? false,
+        // The node's own details carry it: the More menu says the file survives.
+        (canvasElement.querySelector('.pb-pop-more') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const remove = Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+            .find(row => row.textContent?.includes('Remove from the run'))!;
+        assert(remove.textContent?.includes('Keeps the file') ?? false,
             'it stops the node running, and says the file survives it');
-        drop.click();
+        remove.click();
+        const sent = sentFrom(canvasElement);
+        assert(sent.at(-1)?.with === 'remove', 'and asks for the removal');
     },
 };
 

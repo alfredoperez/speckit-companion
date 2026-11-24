@@ -14,6 +14,7 @@ import {
     ExtensionToBuilderMessage,
     PipelineBuildKind,
     BuildReport,
+    HookRunsAnswer,
     PipelineGraph,
     PipelineGraphResult,
     PipelineHook,
@@ -28,7 +29,8 @@ import { StockBoard } from './StockBoard';
 import { PresetsPanel } from './PresetsPanel';
 import { SidePanel } from './SidePanel';
 import { BrokenPipeline } from './BrokenPipeline';
-import { Canvas, hooksAt, withoutNode as withoutNodeOf } from './Canvas';
+import { Canvas, hookHome, hooksAt, withoutNode as withoutNodeOf } from './Canvas';
+import { NodeAction, NodePopover } from './NodePopover';
 import { Header } from './Header';
 import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
@@ -43,6 +45,9 @@ declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void 
 const vscode = acquireVsCodeApi();
 
 interface Selection { command: string; nodeId: string }
+
+/** The builder's width at which lanes stack, and a node's details become a sheet. */
+const NARROW = 640;
 interface Attaching {
     command: string;
     anchor: string;
@@ -150,6 +155,11 @@ function App() {
         { key: string; body: string; parts: string[]; editable: string } | null>(null);
     // A move is announced once its write answers, never when it is only asked for.
     const [announced, setAnnounced] = useState('');
+    // The last run's outcome per hook, asked for with every graph.
+    const [runs, setRuns] = useState<HookRunsAnswer | null>(null);
+    // The node whose details hang beside its card. Not the side column: the two can both be open.
+    const [pop, setPop] = useState<Selection | null>(null);
+    const [narrow, setNarrow] = useState(() => window.innerWidth <= NARROW);
     const moving = useRef(false);
     // The form as it was before a keyboard move, put back if the write refuses it.
     const unmoved = useRef<Attaching | null>(null);
@@ -162,6 +172,9 @@ function App() {
                 setGraph(message.graph);
                 setStock(null);
                 setBuildState(message.buildState);
+                vscode.postMessage({ type: 'readHookRuns' });
+            } else if (message.type === 'hookRuns') {
+                setRuns(message.answer);
             } else if (message.type === 'stock') {
                 setStock(message.view);
                 setGraph(null);
@@ -198,9 +211,14 @@ function App() {
                 });
             }
         };
+        const onResize = () => setNarrow(window.innerWidth <= NARROW);
         window.addEventListener('message', onMessage);
+        window.addEventListener('resize', onResize);
         vscode.postMessage({ type: 'ready' });
-        return () => window.removeEventListener('message', onMessage);
+        return () => {
+            window.removeEventListener('message', onMessage);
+            window.removeEventListener('resize', onResize);
+        };
     }, []);
 
     const presetActions = {
@@ -248,14 +266,21 @@ function App() {
         );
     }
 
-    const openNode = (command: string, nodeId: string) => {
+    const readNode = (command: string, nodeId: string) => {
         setSide({ kind: 'node', at: { command, nodeId } });
         setNotice(null);
         setBody(null);
         setAnnounced('');
         vscode.postMessage({ type: 'readNode', command, nodeId });
     };
+    const openNode = (command: string, nodeId: string) => {
+        setPop(pop?.command === command && pop.nodeId === nodeId ? null : { command, nodeId });
+        setNotice(null);
+        setAnnounced('');
+    };
 
+    const popNode = pop ? findNode(graph, pop) : null;
+    const popStep = pop ? graph.steps.find(s => s.name === pop.command) : undefined;
     const selected = side?.kind === 'node' ? side.at : null;
     const node = selected ? findNode(graph, selected) : null;
     const selectedStep = selected
@@ -292,6 +317,45 @@ function App() {
     // rather than in a band of its own above the board.
     const line: PipelineStatus | null = status
         ?? (notice ? { tone: 'warning', text: notice } : null);
+
+    /** Every node action, from the popover or the instructions pane, sent one way. */
+    const act = (at: Selection, action: NodeAction) => {
+        const step = graph.steps.find(s => s.name === at.command);
+        if (action === 'open-file') {
+            vscode.postMessage({ type: 'openNode', command: at.command, nodeId: at.nodeId });
+        } else if (action === 'shipped') {
+            vscode.postMessage({ type: 'restoreNode', command: at.command, nodeId: at.nodeId });
+        } else if (action === 'up' || action === 'down') {
+            const shape = movedNode(graph, at, action);
+            if (shape) {
+                sendMove({ type: 'moveNode', command: at.command, nodeId: at.nodeId, ...shape });
+            }
+        } else if (action === 'remove') {
+            const shape = withoutNode(graph, at);
+            if (!shape) { return; }
+            setPop(null);
+            setSide(null);
+            send({ type: 'removeNode', command: at.command, nodeId: at.nodeId, ...shape });
+        } else if (action.startsWith('phase:')) {
+            const phase = action.slice('phase:'.length);
+            const shape = step ? movedToPhase(step, at.nodeId, phase) : null;
+            if (shape) {
+                sendMove({
+                    type: 'moveNode', command: at.command, nodeId: at.nodeId, phase, ...shape,
+                });
+            }
+        } else if (action.startsWith('variant:')) {
+            const variant = action.slice('variant:'.length);
+            const swapped = swapNode(graph, at, variant);
+            if (!swapped) { return; }
+            const next = { command: at.command, nodeId: variant };
+            if (pop) { setPop(next); }
+            if (side?.kind === 'node') { setSide({ kind: 'node', at: next }); setBody(null); }
+            send({
+                type: 'useVariant', command: at.command, replaces: at.nodeId, variant, ...swapped,
+            });
+        }
+    };
 
     // The header appends and passes nothing; a lane seam places and passes the
     // step to its left. One handler, so the two cannot drift apart.
@@ -344,7 +408,8 @@ function App() {
             <div class="builder-body">
                 <Canvas
                     graph={graph}
-                    selected={selected}
+                    selected={pop ?? selected}
+                    runs={runs}
                     onOpenNode={openNode}
                     onReorder={(command, order) =>
                         vscode.postMessage({ type: 'reorderNodes', command, order })}
@@ -353,8 +418,6 @@ function App() {
                     onAddNode={(command, nodeId, phase, order, phases) =>
                         send({ type: 'addNode', command, nodeId, phase, order, phases })}
                     onNewStep={newStep}
-                    onRemoveNode={(command, nodeId, order, phases) =>
-                        send({ type: 'removeNode', command, nodeId, order, phases })}
                     onOpenFrame={command => {
                         setSide({ kind: 'node', at: { command, nodeId: '_frame' } });
                         setNotice(null);
@@ -548,50 +611,23 @@ function App() {
                         editable={body?.key === key ? body.editable : ''}
                         parts={body?.key === key ? body.parts : []}
                         onClose={() => { setSide(null); setBody(null); }}
-                        onOpenFile={() => vscode.postMessage({
-                            type: 'openNode', command: selected.command, nodeId: selected.nodeId,
-                        })}
+                        onOpenFile={() => act(selected, 'open-file')}
                         onSave={(text: string) => vscode.postMessage({
                             type: 'saveNode', command: selected.command,
                             nodeId: selected.nodeId, body: text,
                         })}
-                        onRestore={() => vscode.postMessage({
-                            type: 'restoreNode', command: selected.command, nodeId: selected.nodeId,
-                        })}
+                        onRestore={() => act(selected, 'shipped')}
                         // The step header no longer carries this, so the pane is
                         // the only route to it.
                         onReplaceStep={() => send({
                             type: 'replaceStep', command: selected.command,
                         })}
-                        onRemove={() => {
-                            const shape = withoutNode(graph, selected);
-                            if (!shape) { return; }
-                            setSide(null);
-                            send({
-                                type: 'removeNode', command: selected.command,
-                                nodeId: selected.nodeId, ...shape,
-                            });
-                        }}
-                        onMove={(direction: 'up' | 'down') => {
-                            const shape = movedNode(graph, selected, direction);
-                            if (!shape) { return; }
-                            sendMove({
-                                type: 'moveNode', command: selected.command,
-                                nodeId: selected.nodeId, ...shape,
-                            });
-                        }}
+                        onRemove={() => act(selected, 'remove')}
+                        onMove={(direction: 'up' | 'down') => act(selected, direction)}
                         announce={announced}
                         moveTargets={selectedStep && !node.pinned
                             ? moveTargets(selectedStep, selected.nodeId) : []}
-                        onMoveToPhase={(phase: string) => {
-                            const shape = selectedStep
-                                ? movedToPhase(selectedStep, selected.nodeId, phase) : null;
-                            if (!shape) { return; }
-                            sendMove({
-                                type: 'moveNode', command: selected.command,
-                                nodeId: selected.nodeId, phase, ...shape,
-                            });
-                        }}
+                        onMoveToPhase={(phase: string) => act(selected, `phase:${phase}`)}
                         // Opens the form, the way every other route to a hook
                         // does. Posting the message straight from here sent one
                         // with no kind and no value, and the write refused it
@@ -599,20 +635,44 @@ function App() {
                         onAttach={() => openAttach({
                             command: selected.command, anchor: selected.nodeId,
                         })}
-                        onUseVariant={(variantId: string) => {
-                            const swapped = swapNode(graph, selected, variantId);
-                            if (!swapped) { return; }
-                            setSide({ kind: 'node', at: { command: selected.command, nodeId: variantId } });
-                            setBody(null);
-                            send({
-                                type: 'useVariant', command: selected.command,
-                                replaces: selected.nodeId, variant: variantId,
-                                ...swapped,
-                            });
-                        }}
+                        onUseVariant={(variantId: string) => act(selected, `variant:${variantId}`)}
                     />
                 )}
             </div>
+            {pop && popNode && popStep && (
+                <NodePopover
+                    key={`${pop.command}/${pop.nodeId}`}
+                    node={popNode}
+                    step={pop.command}
+                    runs={runs}
+                    hooksIn={hookHome(graph.workflows.active).name}
+                    anchorKey={`${pop.command}/${pop.nodeId}`}
+                    narrow={narrow}
+                    moveTargets={moveTargets(popStep, pop.nodeId)}
+                    canMove={{
+                        up: movedNode(graph, pop, 'up') !== null,
+                        down: movedNode(graph, pop, 'down') !== null,
+                    }}
+                    removeBlocked={withoutNode(graph, pop) ? ''
+                        : `The last node ${pop.command} has: a step needs at least one.`}
+                    announce={announced}
+                    onClose={() => setPop(null)}
+                    onEditNode={() => { setPop(null); readNode(pop.command, pop.nodeId); }}
+                    onAddHook={() => {
+                        setPop(null);
+                        openAttach({ command: pop.command, anchor: pop.nodeId });
+                    }}
+                    onEditHook={hook => {
+                        setPop(null);
+                        openAttach({ command: pop.command, anchor: hook.anchor, hook });
+                    }}
+                    onRemoveHook={hook => send({
+                        type: 'removeHook', command: pop.command,
+                        anchor: hook.anchor, when: hook.when, index: hook.index,
+                    })}
+                    onAction={action => act(pop, action)}
+                />
+            )}
         </div>
     );
 }

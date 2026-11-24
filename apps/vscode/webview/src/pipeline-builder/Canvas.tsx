@@ -21,11 +21,14 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { Menu } from './Menu';
 import { changeSummary, changed } from './changes';
 import { KIND_LABELS } from './hookKinds';
+import { GateIcon, HookIcon } from './HookIcon';
+import { HookStatus, hookStatus } from './hookStatus';
 import {
     HookAddress, HookMove, HookTarget, hookMove, isHookDrag, readHookDrag, upperHalf,
     writeHookDrag,
 } from './hookMoves';
 import {
+    HookRunsAnswer,
     HookWhen,
     PipelineDecision,
     PipelineGraph,
@@ -60,15 +63,6 @@ interface Props {
     /** Add a step of the project's own to the run. */
     /** `after` names the step a new one runs behind, when the click said where. */
     onNewStep: (after?: string) => void;
-    /**
-     * Stop running a node. The file stays, so it is still on offer to add back.
-     *
-     * Order and grouping go together, as they do for adding one.
-     */
-    onRemoveNode: (
-        command: string, nodeId: string,
-        order: string[], phases: Array<{ name: string; nodes: string[] }>,
-    ) => void;
     /** Save a step's whole phase grouping after a rename or a move. */
     onSetPhases: (
         command: string,
@@ -83,6 +77,8 @@ interface Props {
     onRefuse?: (reason: string) => void;
     /** Open where a decision's verdicts route, so they can be changed. */
     onOpenDecision?: (command: string, node: string) => void;
+    /** The last run's outcome per hook; absent until the host answers. */
+    runs?: HookRunsAnswer | null;
 }
 
 /**
@@ -217,17 +213,6 @@ function PlusIcon() {
     );
 }
 
-/** Stop running a node. The file stays, so it is still on offer to add back. */
-function TrashIcon() {
-    return (
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-            stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true" focusable="false">
-            <path d="M3 4h10M6 4V2.5h4V4M5 4l.6 9h4.8L11 4" />
-        </svg>
-    );
-}
-
 /**
  * SpecKit Companion's mark — the mascot with everything that dies at row size
  * thrown away. The eyes are holes, so the row's own ground shows through them.
@@ -277,11 +262,9 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
     onDrop: (moved: string, target: string) => void;
     onAdd: (anchor: string, when: HookWhen) => void;
     onEditHook: (hook: PipelineHook) => void;
-    /** Stop running one node, with the order and the grouping a drag would send. */
-    onRemove: (nodeId: string) => void;
-    /** Whether taking it out would leave a step that can still be written. */
-    canRemove: (nodeId: string) => boolean;
     selected?: Props['selected'];
+    /** The last run's outcome per hook, when the project has a run on record. */
+    runs?: HookRunsAnswer | null;
     step: string;
     /** The file this project's own hooks are written in, as the group is headed. */
     yours: HookHome;
@@ -345,7 +328,7 @@ type HookHome = { name: string; title: string };
  * them `companion.yml` named a file with none of them in it. `shipped` is
  * Companion unchanged and has no file at all.
  */
-function hookHome(workflow: string): HookHome {
+export function hookHome(workflow: string): HookHome {
     if (workflow === SHIPPED_WORKFLOW) {
         return {
             name: 'companion.yml · parked',
@@ -417,7 +400,9 @@ interface HookDrop {
 
 const OVER = ['pb-drop-over', 'pb-drop-over--upper', 'pb-drop-over--lower'];
 
-const PARKED_REASON = 'This hook is parked: the project runs the pipeline as it ships, so its own '
+const STEP_HOOK_REASON = 'On the step itself, outside every phase. Change it in the file it is written in.';
+
+const PARKED_REASON ='This hook is parked: the project runs the pipeline as it ships, so its own '
     + 'hooks are not moved until This project is running again.';
 
 /** The handlers that let an element take a hook dropped on it; `at` reads the target off the pointer. */
@@ -473,156 +458,219 @@ function readOnlyRow(drop: HookDrop | undefined, reason: string) {
     };
 }
 
-/** One hook of this project's, as a line: which of the four it is, then its value. */
+/** What a hook row is called: a command by its script, everything else by its value. */
+export function hookName(hook: PipelineHook): string {
+    return hook.type === 'command' ? shellName(hook.summary) : hook.summary;
+}
+
+/** One hook of this project's, as a line: its kind as a mark, then its value. */
 function HookLine({ hook }: { hook: PipelineHook }) {
     return (
         <>
-            <span class="pb-hook-kind">{KIND_LABELS[hook.type]}</span>
-            <span class={hook.type === 'prompt'
+            <HookIcon type={hook.type} />
+            <span class="pb-hook-kind sr-only">{`${KIND_LABELS[hook.type]}: `}</span>
+            <span class={hook.type === 'skill' || hook.type === 'prompt'
                 ? 'pb-hook-name' : 'pb-hook-name pb-hook-name--ref'}>
-                {clip(hook.type === 'command' ? shellName(hook.summary) : hook.summary)}
+                {clip(hookName(hook))}
             </span>
         </>
     );
 }
 
-/**
- * Everything attached to one anchor, in one block.
- *
- * Before this, each side got its own block with its own connector arm and its
- * own "before draft-spec" heading, so a node with work on both sides was
- * sandwiched between two boxes and four repetitions of its own name. Position
- * was carrying the before/after meaning and it did not carry it: the arrows
- * were the thing people could not read.
- *
- * So one block, under the anchor it belongs to, with the two sides named in
- * words, and one line per hook — the block under "Mark the spec complete" was
- * about five times the height of the card it hangs from.
- *
- * Under each side the hooks are grouped by whoever registered them, headed by
- * that source's mark and its name. Whose a hook was used to be a word at the
- * tail of the row, so identity was the last thing read on a line whose first
- * word was `Command` — the mechanism — and whose only other text was
- * `speckit.c…`, the prefix every one of them shares. The mark leads, the source
- * is named once for the group, and the row is left to say the work.
- */
-function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, boundary, yours,
-    onEdit, drop }: {
-    before: PipelineHook[];
-    after: PipelineHook[];
-    stockBefore?: StockHook[];
-    stockAfter?: StockHook[];
-    anchor: string;
-    /** Whether the anchor is a node or a phase, which a moved hook has to land on. */
+/** Whether it ran, from the record alone; nothing when there is nothing on record. */
+export function StatusMark({ status }: { status: HookStatus | null }) {
+    if (!status) { return null; }
+    return (
+        <span class={`pb-hook-status pb-hook-status--${status.tone}`} title={status.reason}>
+            <span class="pb-status-dot" aria-hidden="true" />
+            {status.word}
+        </span>
+    );
+}
+
+/** One of this project's hooks: opens to be changed, drags to move, unless it is parked. */
+function OwnHookRow({ hook, step, runs, boundary, yours, onEdit, drop, when, readOnly }: {
+    hook: PipelineHook;
+    step: string;
+    runs?: HookRunsAnswer | null;
     boundary: 'node' | 'phase';
-    /** The file this project's own hooks are in, which heads their group. */
     yours: HookHome;
     onEdit: (hook: PipelineHook) => void;
     drop?: HookDrop;
+    /** Said on the row when its place does not say it: a phase's rows sit together at the top. */
+    when?: boolean;
+    /** Why the row is read and not opened here. */
+    readOnly?: string;
 }) {
-    const sides: Array<[HookWhen, PipelineHook[], StockHook[]]> = [
-        ['before', before, stockBefore],
-        ['after', after, stockAfter],
-    ];
-    if (!sides.some(([, ours, theirs]) => ours.length + theirs.length > 0)) { return null; }
-
+    const side = when && <span class="pb-hook-when">{hook.when}</span>;
+    if (readOnly && !hook.parked) {
+        return (
+            <span class="pb-hook pb-hook--fixed" title={`${hook.summary}\n\n${readOnly}`}>
+                {side}
+                <HookLine hook={hook} />
+                <StatusMark status={hookStatus(step, hook, runs)} />
+            </span>
+        );
+    }
+    if (hook.parked) {
+        return (
+            // The clipped name is unreachable by pointer or by keyboard, so the whole of it is said in text a screen reader gets and the eye does not.
+            <span class="pb-hook pb-hook--parked"
+                title={`${hook.summary}\n\nParked — this project runs the pipeline as it `
+                    + 'ships, so this does not run.'}
+                {...readOnlyRow(drop, PARKED_REASON)}>
+                {side}
+                <HookLine hook={hook} />
+                <span class="pb-hook-parked">parked</span>
+                <span class="sr-only">
+                    {`${hook.summary} — parked, not running while the pipeline is the shipped one`}
+                </span>
+            </span>
+        );
+    }
     return (
-        <div class="pb-attached">
-            {sides.map(([side, ours, theirs]) => (
-                (ours.length + theirs.length) > 0 && (
-                    <div key={side} class="pb-attached-side"
-                        {...hookDropZone(drop, () => ({ target: { when: side, anchor, boundary } }))}>
-                        <span class="pb-attached-when">{side}</span>
-                        {bySource(ours, theirs, yours, side).map((source, at) => (
-                            <div key={`${at}-${source.name}`} class="pb-hook-group">
-                                <span class="pb-hook-source" title={source.title}>
-                                    {sourceMark(source.mark)}
-                                    <span class="pb-hook-source-name">{source.name}</span>
-                                </span>
-                                <ul class="pb-attached-list">
-                                    {source.ours.map((hook, i) => (
-                                        <li key={`ours-${i}`}>
-                                            {hook.parked ? (
-                                                // The clipped name is unreachable by pointer or by keyboard, so the whole of it is said in text a screen reader gets and the eye does not.
-                                                <span class="pb-hook pb-hook--parked"
-                                                    title={`${hook.summary}\n\nParked — this `
-                                                        + 'project runs the pipeline as it '
-                                                        + 'ships, so this does not run.'}
-                                                    {...readOnlyRow(drop, PARKED_REASON)}>
-                                                    <HookLine hook={hook} />
-                                                    <span class="pb-hook-parked">parked</span>
-                                                    <span class="sr-only">
-                                                        {`${hook.summary} — parked, not running `
-                                                            + 'while the pipeline is the shipped one'}
-                                                    </span>
-                                                </span>
-                                            ) : (
-                                                <button class="pb-hook"
-                                                    title={`${hook.summary}\n\nClick to edit`
-                                                        + (drop ? ', drag to move' : '')}
-                                                    onClick={() => onEdit(hook)}
-                                                    draggable={Boolean(drop)}
-                                                    onDragStart={drop && (event => {
-                                                        event.stopPropagation();
-                                                        writeHookDrag(event.dataTransfer, {
-                                                            command: drop.step, when: hook.when,
-                                                            anchor: hook.anchor, index: hook.index,
-                                                            boundary,
-                                                        });
-                                                        event.currentTarget.classList
-                                                            .add('pb-hook--dragging');
-                                                    })}
-                                                    onDragEnd={event => event.currentTarget
-                                                        .classList.remove('pb-hook--dragging')}
-                                                    {...hookDropZone(drop, event => {
-                                                        const upper = overUpper(event);
-                                                        return {
-                                                            upper,
-                                                            target: {
-                                                                when: hook.when, anchor: hook.anchor,
-                                                                boundary,
-                                                                place: hook.index + (upper ? 0 : 1),
-                                                            },
-                                                        };
-                                                    })}>
-                                                    {drop && (
-                                                        <span class="pb-hook-grip"><GripIcon /></span>
-                                                    )}
-                                                    <HookLine hook={hook} />
-                                                </button>
-                                            )}
-                                        </li>
-                                    ))}
-                                    {source.theirs.map((hook, i) => (
-                                        <li key={`theirs-${i}`}>
-                                            {/* No kind badge: every one of these is a command. */}
-                                            <span class="pb-hook pb-hook--stock"
-                                                {...readOnlyRow(drop, source.title.replace(
-                                                    'is not edited', 'is not moved or edited'))}
-                                                title={(hook.description.trim()
-                                                    ? `${hook.description.trim()}\n\n` : '')
-                                                    + (hook.command.trim()
-                                                        || 'This entry names no command to run.')
-                                                    + (hook.optional
-                                                        ? '\nIt asks before it runs.' : '')
-                                                    + (hook.conditional
-                                                        ? '\nIt does not run every time.' : '')}>
-                                                <span class="pb-hook-name pb-hook-name--ref">
-                                                    {clip(stockName(hook))}
-                                                </span>
-                                                {/* The one fact here with a consequence. */}
-                                                {hook.optional && (
-                                                    <span class="pb-hook-asks">asks first</span>
-                                                )}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
+        <button class="pb-hook"
+            title={`${hook.summary}\n\n${yours.title.replace(/ Click.*$/, '')}\nClick to edit`
+                + (drop ? ', drag to move' : '')}
+            onClick={() => onEdit(hook)}
+            draggable={Boolean(drop)}
+            onDragStart={drop && (event => {
+                event.stopPropagation();
+                writeHookDrag(event.dataTransfer, {
+                    command: drop.step, when: hook.when,
+                    anchor: hook.anchor, index: hook.index, boundary,
+                });
+                event.currentTarget.classList.add('pb-hook--dragging');
+            })}
+            onDragEnd={event => event.currentTarget.classList.remove('pb-hook--dragging')}
+            {...hookDropZone(drop, event => {
+                const upper = overUpper(event);
+                return {
+                    upper,
+                    target: {
+                        when: hook.when, anchor: hook.anchor, boundary,
+                        place: hook.index + (upper ? 0 : 1),
+                    },
+                };
+            })}>
+            {side}
+            <HookLine hook={hook} />
+            <StatusMark status={hookStatus(step, hook, runs)} />
+        </button>
+    );
+}
+
+/** A hook another extension registered: read here, edited where it was registered. */
+function StockHookRow({ hook, source, drop }: {
+    hook: StockHook;
+    source: HookSource;
+    drop?: HookDrop;
+}) {
+    return (
+        <span class="pb-hook pb-hook--stock"
+            {...readOnlyRow(drop, source.title.replace('is not edited', 'is not moved or edited'))}
+            title={(hook.description.trim() ? `${hook.description.trim()}\n\n` : '')
+                + (hook.command.trim() || 'This entry names no command to run.')
+                + (hook.optional ? '\nIt asks before it runs.' : '')
+                + (hook.conditional ? '\nIt does not run every time.' : '')}>
+            <span class="pb-hook-source" title={source.title}>
+                {sourceMark(source.mark)}
+                <span class="pb-hook-source-name sr-only">{`${source.name}: `}</span>
+            </span>
+            <span class="pb-hook-name pb-hook-name--ref">{clip(stockName(hook))}</span>
+            {/* The one fact here with a consequence. */}
+            {hook.optional && <span class="pb-hook-asks">asks first</span>}
+        </span>
+    );
+}
+
+/** The rows on one side of an anchor, in the order they run. */
+function HookRows({ side, ours, theirs, step, runs, boundary, yours, onEdit, drop, when,
+    readOnly }: {
+    side: HookWhen;
+    ours: PipelineHook[];
+    theirs: StockHook[];
+    step: string;
+    runs?: HookRunsAnswer | null;
+    boundary: 'node' | 'phase';
+    yours: HookHome;
+    onEdit: (hook: PipelineHook) => void;
+    drop?: HookDrop;
+    when?: boolean;
+    readOnly?: string;
+}) {
+    return (
+        <>
+            {bySource(ours, theirs, yours, side).flatMap(source => [
+                ...source.ours.map(hook => (
+                    <OwnHookRow key={`ours-${hook.index}`} hook={hook} step={step} runs={runs}
+                        boundary={boundary} yours={yours} onEdit={onEdit} drop={drop}
+                        when={when} readOnly={readOnly} />
+                )),
+                ...source.theirs.map((hook, i) => (
+                    <StockHookRow key={`theirs-${source.name}-${i}`} hook={hook}
+                        source={source} drop={drop} />
+                )),
+            ])}
+        </>
+    );
+}
+
+/**
+ * One side of a node's card: the hooks that run before it sit inside the top of
+ * the card, the ones after it inside the bottom, so a node and its hooks read
+ * and move as one block. Absent when nothing runs on that side.
+ */
+function Slot({ side, node, ours, theirs, actions }: {
+    side: HookWhen;
+    node: PipelineNode;
+    ours: PipelineHook[];
+    theirs: StockHook[];
+    actions: NodeActions;
+}) {
+    if (ours.length + theirs.length === 0) { return null; }
+    return (
+        <div class={`pb-card-slot pb-card-slot--${side}`} role="group"
+            aria-label={`Runs ${side} ${node.name}`}
+            {...hookDropZone(actions.drop, () => ({
+                target: { when: side, anchor: node.id, boundary: 'node' },
+            }))}>
+            <HookRows side={side} ours={ours} theirs={theirs} step={actions.step}
+                runs={actions.runs} boundary="node" yours={actions.yours}
+                onEdit={actions.onEditHook} drop={actions.drop} />
+        </div>
+    );
+}
+
+/** A phase's or a step's own hooks: slim rows at its top, each saying its side. */
+function EdgeHooks({ hooks, stock = [], anchor, boundary, actions, label }: {
+    hooks: PipelineHook[];
+    stock?: StockHook[];
+    anchor: string;
+    boundary: 'phase' | null;
+    actions: NodeActions;
+    label: string;
+}) {
+    if (hooks.length + stock.length === 0) { return null; }
+    const drop = boundary ? actions.drop : undefined;
+    return (
+        <div class="pb-edge-hooks" role="group" aria-label={label}>
+            {(['before', 'after'] as HookWhen[]).map(side => {
+                const ours = hooks.filter(hook => hook.when === side);
+                const theirs = stock.filter(hook => hook.when === side);
+                if (ours.length + theirs.length === 0) { return null; }
+                return (
+                    <div key={side} class={`pb-edge-side pb-edge-side--${side}`}
+                        {...(boundary ? hookDropZone(drop, () => ({
+                            target: { when: side, anchor, boundary },
+                        })) : {})}>
+                        <HookRows side={side} ours={ours} theirs={theirs} step={actions.step}
+                            runs={actions.runs} boundary="phase" yours={actions.yours}
+                            onEdit={actions.onEditHook} drop={drop} when
+                            readOnly={boundary ? undefined : STEP_HOOK_REASON} />
                     </div>
-                )
-            ))}
+                );
+            })}
         </div>
     );
 }
@@ -641,6 +689,38 @@ function Seam({ side, anchor, onAdd, drop }: {
             <span class="pb-slot-label">{side} {anchor}</span>
         </button>
     );
+}
+
+/**
+ * At most two marks after a node's name: what it writes, that it can stop the
+ * run, that the project changed it. Ownership and the gate outrank the file
+ * when all three apply, since the file is also named in the popover.
+ */
+function NodeMarks({ node }: { node: PipelineNode }) {
+    const file = node.writes[0] ?? node.mayWrite[0];
+    const sometimes = !node.writes.length && Boolean(file);
+    const marks = [
+        file && (node.kind !== 'gate' || !node.replaced) && (
+            <span key="file" class={`pb-writes${sometimes ? ' pb-writes--sometimes' : ''}`}
+                title={sometimes
+                    ? 'this node produces it at some sizes, and folds it away at others'
+                    : `this node produces ${[...node.writes, ...node.mayWrite].join(', ')}`}>
+                {file}
+            </span>
+        ),
+        node.kind === 'gate' && (
+            <span key="gate" class="pb-node-gate" title="This node can stop the run">
+                <GateIcon /><span class="sr-only">gate</span>
+            </span>
+        ),
+        node.replaced && (
+            <span key="yours" class="pb-yours">
+                <span class="pb-status-dot" aria-hidden="true" />yours
+            </span>
+        ),
+    ].filter(Boolean);
+    if (marks.length === 0) { return null; }
+    return <span class="pb-node-meta">{marks}</span>;
 }
 
 function Node({ node, actions, stock, seams }: {
@@ -669,6 +749,7 @@ function Node({ node, actions, stock, seams }: {
         const upper = overUpper(event);
         return { upper, target: { when: upper ? 'before' : 'after', anchor: node.id, boundary: 'node' } };
     });
+    const hooked = before.length + after.length + stock.before.length + stock.after.length > 0;
 
     return (
         <div class="pb-node-group">
@@ -676,18 +757,12 @@ function Node({ node, actions, stock, seams }: {
                 <Seam side="before" anchor={node.id} drop={actions.drop}
                     onAdd={() => actions.onAdd(node.id, 'before')} />
             )}
-            {/* Above the card, because BEFORE is an ordering claim and one
-                block under the card made it twice: a phase heading, the card,
-                and then a second BEFORE belonging to the card above it. */}
-            <Attached before={before} after={[]} stockBefore={stock.before}
-                anchor={node.id} boundary="node" yours={actions.yours}
-                onEdit={actions.onEditHook} drop={actions.drop} />
+            <div class={`pb-card${hooked ? ' pb-card--hooked' : ''}${open ? ' pb-card--open' : ''}`}
+                data-node={`${actions.step}/${node.id}`}>
+            <Slot side="before" node={node} ours={before} theirs={stock.before} actions={actions} />
             <div
                 class={[
                     'pb-node',
-                    // The tick down the left says what the node does — writes a
-                    // file, can stop the run, or neither — so the kind is on the
-                    // board rather than only in the pane you have to open.
                     `pb-node--${node.kind}`,
                     node.replaced ? 'pb-node--yours' : '',
                     movable ? 'pb-node--movable' : 'pb-node--pinned',
@@ -728,65 +803,17 @@ function Node({ node, actions, stock, seams }: {
                     <GripIcon />
                 </span>
 
-                <button class="pb-node-main"
+                <button class="pb-node-main" aria-haspopup="dialog" aria-expanded={open}
                     onClick={() => actions.onOpenNode(actions.step, node.id)}
-                    title={node.replaced
-                        ? "Read this project's instructions for this node"
-                        : 'Read the instructions this node contributes'}>
+                    title={node.pinned
+                        ? `${node.name}. Held in place: ${node.pinned}. Open for its details.`
+                        : `${node.name}. Open for its details and everything it can do.`}>
                     <span class="pb-node-name">{node.name}</span>
-                    {(node.replaced || node.pinned || node.kind === 'gate'
-                        || node.writes.length > 0 || node.mayWrite.length > 0) && (
-                        <span class="pb-node-meta">
-                            {/* In a word, not a hue: every colour this panel
-                                has left already means something else. */}
-                            {node.kind === 'gate' && (
-                                <span class="pb-node-gate"
-                                    title="This node can stop the run">gate</span>
-                            )}
-                            {!movable && (
-                                <span class="pb-held"
-                                    title={`Cannot be reordered — ${node.pinned}. `
-                                        + 'You can still rewrite it, attach work to it, '
-                                        + 'or drop it from companion.yml.'}>held</span>
-                            )}
-                            {node.writes.map(file => (
-                                <span key={file} class="pb-writes"
-                                    title="this node produces it">{file}</span>
-                            ))}
-                            {/* Produced only sometimes — the size budget can fold
-                                these away. Without them the step counted four
-                                artifacts while the node writing three of them
-                                showed none. */}
-                            {node.mayWrite.map(file => (
-                                <span key={file} class="pb-writes pb-writes--sometimes"
-                                    title="this node produces it at some sizes, and folds it away at others">
-                                    {file}
-                                </span>
-                            ))}
-                            {node.replaced && <span class="pb-yours">yours</span>}
-                        </span>
-                    )}
+                    <NodeMarks node={node} />
                 </button>
-
-                {/* Nothing on the card says "make this mine" any more. Clicking
-                    it opens the panel where its instructions can be edited, and
-                    saving that edit is what makes it yours — so a separate step
-                    stood between someone and the thing they came to do. Going
-                    back to the shipped node lives in that same panel. */}
-                {/* Absent, not inert, on the last node a step has: taking it out
-                    would leave a step with no phases, which cannot be written.
-                    A step added through "Add step" ships with exactly one. */}
-                {actions.canRemove(node.id) && (
-                    <button class="pb-node-drop"
-                        title={`Stop running ${node.name}. The file stays, so it is `
-                            + 'still on offer under Add node.'}
-                        aria-label={`Stop running ${node.name}`}
-                        onClick={() => actions.onRemove(node.id)}><TrashIcon /></button>
-                )}
             </div>
-            <Attached before={[]} after={after} stockAfter={stock.after}
-                anchor={node.id} boundary="node" yours={actions.yours}
-                onEdit={actions.onEditHook} drop={actions.drop} />
+            <Slot side="after" node={node} ours={after} theirs={stock.after} actions={actions} />
+            </div>
             {seams.after && (
                 <Seam side="after" anchor={node.id} drop={actions.drop}
                     onAdd={() => actions.onAdd(node.id, 'after')} />
@@ -842,8 +869,6 @@ function Phase({ phase, actions, controls }: {
     controls: PhaseControls;
 }) {
     const { onRename } = controls;
-    const before = phase.hooks.filter(hook => hook.when === 'before');
-    const after = phase.hooks.filter(hook => hook.when === 'after');
     const name = useRef<HTMLHeadingElement>(null);
     const [picking, setPicking] = useState(false);
 
@@ -1010,12 +1035,8 @@ function Phase({ phase, actions, controls }: {
                     />
                 )}
             </header>
-            {/* Split the same way a node's are: a phase's `after` hooks run
-                after its nodes, so drawing them above the nodes made the
-                heading contradict the layout. Neither block is indented, which
-                is what separates a phase's from the card-hung ones below. */}
-            <Attached before={before} after={[]} anchor={phase.name} boundary="phase"
-                yours={actions.yours} onEdit={actions.onEditHook} drop={actions.drop} />
+            <EdgeHooks hooks={phase.hooks} anchor={phase.name} boundary="phase"
+                actions={actions} label={`Hooks on the ${phase.name} phase`} />
             <div class="pb-phase-nodes">
                 {phase.nodes.map((node, at) => (
                     // An installed extension registers against the step, not a
@@ -1033,8 +1054,6 @@ function Phase({ phase, actions, controls }: {
                     }} />
                 ))}
             </div>
-            <Attached before={[]} after={after} anchor={phase.name} boundary="phase"
-                yours={actions.yours} onEdit={actions.onEditHook} drop={actions.drop} />
         </section>
     );
 }
@@ -1134,12 +1153,11 @@ export function hooksAt(step: PipelineStep, anchor: string, boundary: 'node' | '
 }
 
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
-    onAddNode, onOpenFrame, onRemoveNode, onOpenTemplate, onMoveHook, onRefuse,
+    onAddNode, onOpenFrame, onOpenTemplate, onMoveHook, onRefuse,
     onOpenDecision }: {
     step: PipelineStep;
     index: number;
-    actions: Omit<NodeActions,
-        'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'onRemove' | 'canRemove' | 'drop'>;
+    actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'drop'>;
     onMoveHook: Props['onMoveHook'];
     onRefuse: Props['onRefuse'];
     onReorder: Props['onReorder'];
@@ -1148,7 +1166,6 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     onSetPhases: Props['onSetPhases'];
     onAddNode: Props['onAddNode'];
     onOpenFrame: Props['onOpenFrame'];
-    onRemoveNode: Props['onRemoveNode'];
     onOpenTemplate: Props['onOpenTemplate'];
     onOpenDecision: Props['onOpenDecision'];
 }) {
@@ -1199,12 +1216,6 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         },
         onAdd: (anchor, when) => onAddHook(step.name, anchor, when),
         onEditHook: hook => onEditHook(step.name, hook),
-        onRemove: nodeId => {
-            const shape = withoutNode(step, nodeId);
-            if (!shape) { return; }
-            onRemoveNode(step.name, nodeId, shape.order, shape.phases);
-        },
-        canRemove: nodeId => withoutNode(step, nodeId) !== null,
         drop: onMoveHook && onRefuse && {
             step: step.name,
             onRefuse,
@@ -1304,6 +1315,8 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
             </header>
 
             <div class="pb-step-body">
+                <EdgeHooks hooks={step.hooks ?? []} anchor={step.name} boundary={null}
+                    actions={bound} label={`Hooks on the ${step.name} step`} />
                 {step.phases.map((phase, at) => (
                     <Phase key={phase.name} phase={phase} actions={bound}
                         controls={{
@@ -1412,11 +1425,11 @@ function LaneJoin({ after, next, onNewStep }: {
 
 export function Canvas(
     { graph, onOpenNode, onReorder, onAddHook,
-        onEditHook, onSetPhases, onAddNode, onOpenFrame, onRemoveNode,
+        onEditHook, onSetPhases, onAddNode, onOpenFrame,
         onOpenTemplate, onNewStep, selected, onMoveHook, onRefuse,
-        onOpenDecision }: Props,
+        onOpenDecision, runs }: Props,
 ) {
-    const actions = { onOpenNode, selected, yours: hookHome(graph.workflows.active) };
+    const actions = { onOpenNode, selected, runs, yours: hookHome(graph.workflows.active) };
     const sequence = graph.steps.filter(step => step.inSequence);
     const aside = graph.steps.filter(step => !step.inSequence);
 
@@ -1437,7 +1450,6 @@ export function Canvas(
                         onReorder={onReorder} onAddHook={onAddHook}
                         onEditHook={onEditHook} onSetPhases={onSetPhases}
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
-                        onRemoveNode={onRemoveNode}
                         onOpenTemplate={onOpenTemplate}
                         onMoveHook={onMoveHook} onRefuse={onRefuse}
                         onOpenDecision={onOpenDecision} />,

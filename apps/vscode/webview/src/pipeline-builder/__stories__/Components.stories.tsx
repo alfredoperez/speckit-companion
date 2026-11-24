@@ -14,6 +14,8 @@ import { Inspector } from '../Inspector';
 import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
 import { TemplateForm } from '../TemplateForm';
 import { moveTargets } from '../moves';
+import { NodePopover } from '../NodePopover';
+import type { HookRunsAnswer } from '../../../../src/protocol/pipeline';
 import {
     AUTO, CHOICES, IMPLEMENT, NO_CHANGES, NO_PHASES, OWN_STEP, PLAN, SPECIFY,
     SPECIFY_THREE_YOURS, STOCK, TASKS,
@@ -26,8 +28,55 @@ const CANVAS = {
     onOpenNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
     onOpenFrame: noop, onOpenTemplate: noop, onNewStep: noop,
-    onRemoveNode: noop,
 };
+
+const POPOVER = {
+    onClose: noop, onEditNode: noop, onAddHook: noop, onEditHook: noop,
+    onRemoveHook: noop, onAction: noop,
+};
+
+/** A run record that saw two of the hooks below and not the third. */
+const RUNS: HookRunsAnswer = {
+    spec: { name: '684-hook-run-record', path: '/proj/specs/684-hook-run-record' },
+    runAt: '2026-11-20T10:00:00Z',
+    runs: [
+        {
+            key: 'implement/before/execute/0', step: 'implement', when: 'before',
+            anchor: 'execute', index: 0, type: 'prompt', ref: '', outcome: 'skipped',
+            reason: 'The assistant read it and chose not to.', at: '2026-11-20T10:00:00Z',
+        },
+        {
+            key: 'implement/before/gather/0', step: 'implement', when: 'before',
+            anchor: 'gather', index: 0, type: 'skill', ref: 'house-check', outcome: 'ran',
+            at: '2026-11-20T10:00:00Z',
+        },
+    ],
+};
+
+const EXECUTE = node('execute', 'Execute the tasks', {
+    kind: 'author', reads: ['tasks.md'],
+    hooks: [
+        hook({ when: 'before', type: 'prompt', anchor: 'execute', summary: 'Ask me before adding a new dependency' }),
+        hook({ when: 'after', type: 'command', anchor: 'execute', summary: 'npm run lint' }),
+    ],
+});
+
+const RAN = step('implement', [
+    phase('gather', [node('resolve-dir', 'Resolve the spec folder')], [
+        hook({ when: 'before', type: 'skill', anchor: 'gather', summary: 'house-check' }),
+    ]),
+    phase('execute', [
+        EXECUTE,
+        node('check', 'Check the requirements', {
+            kind: 'gate',
+            hooks: [hook({
+                when: 'after', type: 'skill', anchor: 'check', summary: 'pr-template',
+                problem: 'No skill named "pr-template" in this project or an installed plugin, so this hook does nothing in a run.',
+            })],
+        }),
+        node('draft', 'Draft the spec', { kind: 'author', writes: ['spec.md'], replaced: true }),
+    ]),
+], { changes: { ...NO_CHANGES, hooks: 4 } });
 
 const HEAD = {
     onBuild: noop, onPreview: noop, onOpenConfig: noop,
@@ -157,6 +206,56 @@ export const HooksEveryType: Story = {
                 }),
             ]),
         ], { changes: { ...NO_CHANGES, hooks: 4 } })])} {...CANVAS} /></One>
+    ),
+};
+
+export const HooksWhetherTheyRan: Story = {
+    name: 'Hooks · whether each ran',
+    render: () => (
+        <One><Canvas graph={graph([RAN])} runs={RUNS} {...CANVAS} /></One>
+    ),
+};
+
+export const HooksNoRunOnRecord: Story = {
+    name: 'Hooks · no run on record',
+    render: () => (
+        <One><Canvas graph={graph([RAN])} runs={{ spec: null, runAt: null, runs: [] }} {...CANVAS} /></One>
+    ),
+};
+
+export const NodePopoverOpen: Story = {
+    name: 'Node popover · details and hooks',
+    render: () => (
+        <One>
+            <NodePopover node={EXECUTE} step="implement" runs={RUNS} hooksIn="companion.yml"
+                moveTargets={moveTargets(RAN, 'execute')} canMove={{ up: false, down: true }}
+                removeBlocked="" {...POPOVER} />
+        </One>
+    ),
+};
+
+export const NodePopoverMore: Story = {
+    name: 'Node popover · More open',
+    render: () => (
+        <One>
+            <NodePopover node={node('draft', 'Draft the spec', {
+                kind: 'author', writes: ['spec.md'], replaced: true,
+                variants: [{ id: 'draft-lean', name: 'Lean draft', summary: 'A shorter spec' }],
+            })} step="implement" runs={RUNS} hooksIn="companion.yml"
+            moveTargets={moveTargets(RAN, 'draft')} canMove={{ up: true, down: false }}
+            removeBlocked="" moreOpen {...POPOVER} />
+        </One>
+    ),
+};
+
+export const NodePopoverSheet: Story = {
+    name: 'Node popover · bottom sheet when narrow',
+    render: () => (
+        <div class="builder" style="max-width: 380px; height: 640px; position: relative">
+            <NodePopover node={EXECUTE} step="implement" runs={RUNS} hooksIn="companion.yml"
+                moveTargets={[]} canMove={{ up: false, down: true }} narrow
+                removeBlocked="" {...POPOVER} />
+        </div>
     ),
 };
 

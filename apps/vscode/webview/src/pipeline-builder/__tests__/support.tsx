@@ -12,7 +12,7 @@
 import { render } from 'preact';
 import { Canvas } from '../Canvas';
 import type {
-    PipelineGraph, PipelineNode, PipelineStep,
+    HookRunsAnswer, PipelineGraph, PipelineNode, PipelineStep,
 } from '../../../../src/protocol/pipeline';
 
 export function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
@@ -87,7 +87,10 @@ export function mount(child: preact.ComponentChild): HTMLElement {
 
 export type Calls = string[][];
 
-export function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId: string }) {
+export function canvas(
+    g: PipelineGraph = graph(), selected?: { command: string; nodeId: string },
+    runs?: HookRunsAnswer,
+) {
     const opened: Calls = [], replaced: Calls = [], restored: Calls = [], added: Calls = [];
     const orders: Array<[string, string[]]> = [];
     const grouped: Array<[string, Array<{ name: string; nodes: string[] }>]> = [];
@@ -103,9 +106,8 @@ export function canvas(g: PipelineGraph = graph(), selected?: { command: string;
     /** The step each request named to run behind, or `undefined` for the tail. */
     const newStepAfter: Array<string | undefined> = [];
     const host = mount(
-        <Canvas graph={g} selected={selected}
+        <Canvas graph={g} selected={selected} runs={runs}
             onNewStep={after => { newSteps += 1; newStepAfter.push(after); }}
-            onRemoveNode={(c, n, order, phases) => removedNodes.push({ c, n, order, phases })}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
             onEditHook={(c, h) => edited.push([c, h.anchor, String(h.index)])}
             onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}

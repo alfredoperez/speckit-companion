@@ -29,12 +29,10 @@ const deliver = async (data: unknown) => {
 const live = () => root.querySelector('.pb-live')?.textContent;
 
 async function moveTo(phase: string) {
-    const trigger = Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-order-move'))
-        .find(el => el.textContent?.startsWith('Move to phase'))!;
-    trigger.click();
+    root.querySelector<HTMLButtonElement>('.pb-popover .pb-pop-more')!.click();
     await flush();
     Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
-        .find(row => row.querySelector('.pb-menu-label')?.textContent === phase)!.click();
+        .find(row => row.querySelector('.pb-menu-label')?.textContent === `Move to ${phase}`)!.click();
     await flush();
 }
 

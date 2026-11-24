@@ -28,15 +28,15 @@ Files: `Canvas.tsx`, `pipeline-builder.css`, `__tests__/Board.test.tsx`, `__test
 
 ### Tests
 
-- [ ] **T004** [US1] Board tests for one card per node with slots in order, marks capped at two, phase and step hook rows at the top saying their side, status words from a run record (FR-001, FR-002, FR-003, FR-004, FR-005) · apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx
-- [ ] **T005** [US1] Hook drag tests still pass against the card rows (FR-007) · apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx
+- [x] **T004** [US1] Board tests for one card per node with slots in order, marks capped at two, phase and step hook rows at the top saying their side, status words from a run record (FR-001, FR-002, FR-003, FR-004, FR-005) · apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx
+- [x] **T005** [US1] Hook drag tests still pass against the card rows (FR-007) · apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx
 
 ### Implementation
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T006** [P] [US1] Card with before slot, node row, after slot; hook rows with icon, name, status; phase and step hook rows; `runs` prop (FR-001 to FR-005, FR-007) · apps/vscode/webview/src/pipeline-builder/Canvas.tsx
-- [ ] **T007** [P] [US1] Card, slot, hook row, status and mark styles from host tokens (FR-012) · apps/vscode/webview/styles/pipeline-builder.css
+- [x] **T006** [P] [US1] Card with before slot, node row, after slot; hook rows with icon, name, status; phase and step hook rows; `runs` prop (FR-001 to FR-005, FR-007) · apps/vscode/webview/src/pipeline-builder/Canvas.tsx
+- [x] **T007** [P] [US1] Card, slot, hook row, status and mark styles from host tokens (FR-012) · apps/vscode/webview/styles/pipeline-builder.css
 
 **Checkpoint**: The board draws the card and statuses on its own.
 
@@ -49,19 +49,19 @@ Files: `NodePopover.tsx`, `index.tsx`, `__tests__/NodePopover.test.tsx`, `__test
 
 ### Tests
 
-- [ ] **T008** [US3] Popover tests: opens with focus inside, Escape and close restore focus to the node, each hook shows outcome and reason with Edit and Remove, More sends every Inspector action, the sheet keeps Tab inside (FR-008, FR-009, FR-010, FR-011) · apps/vscode/webview/src/pipeline-builder/__tests__/NodePopover.test.tsx
+- [x] **T008** [US3] Popover tests: opens with focus inside, Escape and close restore focus to the node, each hook shows outcome and reason with Edit and Remove, More sends every Inspector action, the sheet keeps Tab inside (FR-008, FR-009, FR-010, FR-011) · apps/vscode/webview/src/pipeline-builder/__tests__/NodePopover.test.tsx
 
 ### Implementation
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T009** [P] [US3] The popover and the bottom sheet with focus handling (FR-008, FR-010, FR-011) · apps/vscode/webview/src/pipeline-builder/NodePopover.tsx
-- [ ] **T010** [P] [US3] Stories for the card states and the popover · apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx
+- [x] **T009** [P] [US3] The popover and the bottom sheet with focus handling (FR-008, FR-010, FR-011) · apps/vscode/webview/src/pipeline-builder/NodePopover.tsx
+- [x] **T010** [P] [US3] Stories for the card states and the popover · apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T011** [US3] Open the popover on node click, Edit node opens the Inspector, wire every action, post `readHookRuns` on each graph and keep the answer (FR-006, FR-008, FR-009) · apps/vscode/webview/src/pipeline-builder/index.tsx
-- [ ] **T012** [US3] Keep the move tests passing on the Inspector the popover opens · apps/vscode/webview/src/pipeline-builder/__tests__/MoveToPhase.test.tsx
+- [x] **T011** [US3] Open the popover on node click, Edit node opens the Inspector, wire every action, post `readHookRuns` on each graph and keep the answer (FR-006, FR-008, FR-009) · apps/vscode/webview/src/pipeline-builder/index.tsx
+- [x] **T012** [US3] Keep the move tests passing on the Inspector the popover opens · apps/vscode/webview/src/pipeline-builder/__tests__/MoveToPhase.test.tsx
 
 **Checkpoint**: The popover works on its own over the card.
 

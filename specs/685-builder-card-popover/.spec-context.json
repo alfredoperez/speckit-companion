@@ -77,6 +77,78 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-24T17:46:19.506Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:56:41.774Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:56:41.775Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:56:42.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:56:42.001Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.210Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.358Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.358Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.504Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.504Z"
     }
   ],
   "request": "Workflow Builder: a node card with its hooks inside it, each showing whether it ran, and a popover for the details.",
@@ -245,7 +317,7 @@
     }
   },
   "approach": "Restructure Canvas Node into one card with hook slots and status rows from a pure hookStatus module; add NodePopover rendered from index.tsx with every Inspector action in More; Edit node opens the Inspector.",
-  "currentTask": "T003",
+  "currentTask": "T012",
   "task_summaries": {
     "T001": {
       "status": "DONE",
@@ -271,6 +343,85 @@
       "files": [
         "apps/vscode/webview/src/pipeline-builder/__tests__/HookStatus.test.tsx"
       ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Board and hook drag tests on the card, slots, marks and statuses",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ],
+      "wave": "T004-T005"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Board and hook drag tests on the card, slots, marks and statuses",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ],
+      "wave": "T004-T005"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Card with hook slots, status rows, phase and step hook rows, styles",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T006-T007"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Card with hook slots, status rows, phase and step hook rows, styles",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T006-T007"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Popover tests: focus, Escape, hooks, More actions, sheet trap",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/NodePopover.test.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "NodePopover with sheet and focus handling; stories for statuses and popover",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/NodePopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx"
+      ],
+      "wave": "T009-T010"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "NodePopover with sheet and focus handling; stories for statuses and popover",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/NodePopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx"
+      ],
+      "wave": "T009-T010"
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Popover wired in index with every node action and readHookRuns; move tests drive the popover",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/MoveAnnouncement.test.tsx"
+      ],
+      "wave": "T011-T012"
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Popover wired in index with every node action and readHookRuns; move tests drive the popover",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/MoveAnnouncement.test.tsx"
+      ],
+      "wave": "T011-T012"
     }
   }
 }

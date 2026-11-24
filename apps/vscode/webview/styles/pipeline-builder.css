@@ -747,37 +747,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     border-radius: var(--radius-sm);
 }
 
-/* Taking a node out of the run. Quiet on the card it acts on, and never
-   invisible: at `opacity: 0` a live destructive target rendered as nothing at
-   all, so the only way to learn a node could leave the run was to sweep the
-   pointer across the lane.
-
-   Quiet in the ink, not in an `opacity` on top of it: the tokens already carry
-   an alpha, and .45 over `--text-secondary` compounded to 2:1 against the
-   panel — under the 3:1 a control that is not text has to clear. The resting
-   step is the token; hover and focus take the colour up. */
-.pb-node-drop {
-    display: flex;
-    align-items: center;
-    align-self: stretch;
-    min-width: 24px;
-    padding: 0 var(--space-2);
-    color: var(--text-secondary);
-    background: transparent;
-    border: none;
-    border-left: 1px solid var(--border);
-    cursor: pointer;
-    transition: color var(--transition-fast), background var(--transition-fast);
-}
-
-.pb-node:hover .pb-node-drop,
-.pb-node-drop:focus-visible { color: var(--text-body); }
-
-.pb-node-drop:hover {
-    color: var(--error);
-    background: var(--error-subtle);
-}
-
 /* ---- One hue for everything the project owns ----
    Hooks, replaced nodes and replaced template sections share it, and nothing
    else in the panel does, so "what did we change" needs no reading. */
@@ -832,13 +801,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 /* Not on another extension's, and not on a parked one: neither opens. */
 .pb-hook:not(.pb-hook--stock):not(.pb-hook--parked):hover { background: var(--bg-hover); }
 
-/* The whole row drags; the grip only says it can. */
-.pb-hook-grip {
-    display: flex;
-    flex-shrink: 0;
-    color: var(--text-muted);
-}
-
 .pb-hook--dragging { opacity: 0.4; }
 
 /* Where a dragged hook would land, said by a rule on the side it lands, never by motion. */
@@ -847,7 +809,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-node.pb-drop-over--upper { box-shadow: 0 -3px 0 var(--accent); }
 .pb-node.pb-drop-over--lower { box-shadow: 0 3px 0 var(--accent); }
 
-.pb-attached-side.pb-drop-over,
 .pb-slot.pb-drop-over,
 .pb-phase-head.pb-drop-over {
     background: var(--accent-subtle);
@@ -1497,16 +1458,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     border-radius: var(--radius-sm);
 }
 
-/* Whose these are, said once above them instead of as a word at the tail of
-   every row. A trailing badge put identity last on a line whose leading word
-   was the mechanism; the mark is read before any of it. */
-.pb-hook-group {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
+/* Whose a registered hook is, as the mark that leads its row. */
 .pb-hook-source {
     display: flex;
     align-items: center;
@@ -1518,19 +1470,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 }
 
 .pb-mark { flex-shrink: 0; }
-
-.pb-hook-source-name {
-    font-family: var(--font-mono);
-    letter-spacing: 0.04em;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* The rows sit under the mark that names them. Eight pixels, not sixteen: a
-   lane is 300px and every one of them comes off the row's own text. */
-.pb-hook-group > .pb-attached-list { padding-left: var(--space-2); }
 
 
 /* ============================================
@@ -1773,60 +1712,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
    opened. */
 .pb-hook--stock { cursor: default; }
 
-/* ============================================
-   Attached work — one block per anchor
-   ============================================
-   Each side used to be its own box with its own connector arm and its own
-   "before draft-spec" heading, so a node with work on both sides sat between
-   two of them and four repetitions of its own name. Position was carrying the
-   before/after meaning and it was not carrying it — the arrows were the thing
-   nobody could read. One block, two sides named in words.
-
-   No HOOKS heading either: the purple rule down the side and the words `before`
-   and `after` already say what the block is, and the heading was a third line
-   of chrome above rows one line tall. */
-
-.pb-attached {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    margin: 2px 0 var(--space-1) var(--space-4);
-    padding: var(--space-2);
-    min-width: 0;
-    box-sizing: border-box;
-    border-left: 1px solid var(--review);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background: var(--bg-elevated);
-}
-
-/* The side's word heads its list rather than sitting in a column beside it. The
-   3.6rem gutter cost every row that width, and a lane is 300px: it is the
-   difference between `doctor.py --chat` fitting and being cut. */
-.pb-attached-side {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    min-width: 0;
-}
-
-/* The word, not an arrow. Set as a band label, the way a phase name is. */
-.pb-attached-when {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-}
-
-.pb-attached-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    min-width: 0;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
 
 /* ============================================
    Menu — the panel's own picker
@@ -2570,10 +2455,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     .pb-lane-seam-label { transition: none; }
 }
 
-/* A phase's own hooks hang off the phase, so they sit at the lane's edge; a
-   node's hang off its card and keep the indent. Two BEFORE headings back to
-   back said nothing about which anchor each belonged to. */
-.pb-phase > .pb-attached { margin-left: 0; }
 
 /* A row inside a lane, not the lane's own tail: 72px is the tail's height. */
 .pb-menu-trigger.pb-first-phase-add {
@@ -3045,4 +2926,504 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-spec-preset-actions {
     display: flex;
     gap: var(--space-2);
+}
+
+
+/* ── The card ─────────────────────────────────────────────────
+   A node and the hooks that run around it are one outlined block: the before
+   rows inside its top, the node, the after rows inside its bottom. Last in the
+   file so it settles every older rule for the node and its hooks. */
+
+.pb-phase-nodes { gap: var(--space-2); }
+
+.pb-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+}
+
+.pb-card--hooked { border-color: var(--border-hover); }
+
+.pb-card--open {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-md);
+}
+
+/* Inside the card the row carries no outline of its own, and no kind stripe:
+   the marks after the name say what the node does. */
+.pb-card .pb-node,
+.pb-card .pb-node--author,
+.pb-card .pb-node--gate,
+.pb-card .pb-node--open {
+    align-items: center;
+    gap: 0;
+    min-height: 36px;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.pb-card .pb-node--over { box-shadow: inset 0 0 0 1px var(--accent); }
+.pb-card .pb-node.pb-drop-over--upper { box-shadow: inset 0 2px 0 var(--accent); }
+.pb-card .pb-node.pb-drop-over--lower { box-shadow: inset 0 -2px 0 var(--accent); }
+
+.pb-card .pb-grip { padding-left: var(--space-2); }
+
+.pb-card .pb-node-main {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-1);
+}
+
+.pb-card .pb-node-main:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.pb-card .pb-node-name {
+    flex-grow: 1;
+    min-width: 0;
+    font-size: var(--text-sm);
+    line-height: 18px;
+    color: var(--text-primary);
+}
+
+.pb-card--hooked .pb-node-name { font-weight: 500; }
+
+.pb-card .pb-node-meta {
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    gap: 10px;
+    max-width: 55%;
+}
+
+.pb-card .pb-writes {
+    font-size: var(--text-xs);
+    color: var(--text-label);
+}
+
+.pb-card .pb-writes--sometimes { border-bottom: 1px dashed currentColor; }
+
+.pb-card .pb-node-gate {
+    display: inline-flex;
+    padding: 0;
+    color: var(--text-label);
+    border: 0;
+}
+
+.pb-yours {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+/* ---- Hook rows, inside the card or at the top of a phase ---- */
+
+.pb-card-slot,
+.pb-edge-side {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pb-card-slot { background: var(--review-subtle); }
+
+.pb-card-slot--before {
+    border-bottom: 1px solid color-mix(in srgb, var(--review) 30%, transparent);
+}
+
+.pb-card-slot--after {
+    border-top: 1px solid color-mix(in srgb, var(--review) 30%, transparent);
+}
+
+.pb-card-slot .pb-hook + .pb-hook {
+    border-top: 1px solid color-mix(in srgb, var(--review) 18%, transparent);
+}
+
+.pb-card .pb-hook,
+.pb-edge-hooks .pb-hook {
+    gap: var(--space-2);
+    height: auto;
+    min-height: 30px;
+    padding: 6px var(--space-3);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--text-primary);
+}
+
+.pb-card .pb-hook:not(.pb-hook--stock):not(.pb-hook--parked):not(.pb-hook--fixed):hover,
+.pb-edge-hooks .pb-hook:not(.pb-hook--stock):not(.pb-hook--parked):not(.pb-hook--fixed):hover {
+    background: color-mix(in srgb, var(--review) 16%, transparent);
+}
+
+.pb-card .pb-hook:focus-visible,
+.pb-edge-hooks .pb-hook:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.pb-card .pb-hook--parked,
+.pb-edge-hooks .pb-hook--parked { border: 1px dashed var(--border); }
+
+.pb-hook--fixed { cursor: default; }
+
+.pb-hook-icon,
+.pb-hook-source {
+    flex-shrink: 0;
+    color: var(--review-ink);
+}
+
+.pb-hook--stock .pb-hook-source { padding: 0; color: var(--text-label); }
+
+.pb-card .pb-hook-name,
+.pb-edge-hooks .pb-hook-name {
+    flex-grow: 1;
+    font-size: var(--text-sm);
+    line-height: 18px;
+    color: var(--text-primary);
+}
+
+.pb-card .pb-hook-name--ref,
+.pb-edge-hooks .pb-hook-name--ref { font-size: var(--text-xs); }
+
+/* A phase's own rows sit together at its top, so each says which side it runs. */
+.pb-edge-hooks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
+}
+
+.pb-edge-side {
+    overflow: hidden;
+    background: var(--review-subtle);
+    border: 1px solid color-mix(in srgb, var(--review) 30%, transparent);
+    border-radius: var(--radius-md);
+}
+
+.pb-edge-side .pb-hook + .pb-hook {
+    border-top: 1px solid color-mix(in srgb, var(--review) 18%, transparent);
+}
+
+.pb-hook-when {
+    flex-shrink: 0;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--text-label);
+}
+
+.pb-card-slot.pb-drop-over,
+.pb-edge-side.pb-drop-over {
+    outline: 1px dashed var(--accent);
+    outline-offset: -1px;
+}
+
+/* ---- Whether it ran: a word and a dot, filled when the record says so ---- */
+
+.pb-hook-status {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 16px;
+    color: var(--text-label);
+    white-space: nowrap;
+}
+
+.pb-status-dot {
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.pb-hook-status--ran { color: var(--success); }
+.pb-hook-status--problem { color: var(--warning); }
+
+.pb-hook-status--unseen .pb-status-dot {
+    background: transparent;
+    border: 1.5px solid currentColor;
+}
+
+/* ---- The popover beside a node, and the sheet when narrow ---- */
+
+.pb-popover {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 372px;
+    max-width: calc(100vw - var(--space-4));
+    box-sizing: border-box;
+    padding: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--text-body);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow-wrap: anywhere;
+}
+
+.pb-popover:focus { outline: none; }
+.pb-popover:focus-visible { outline: 1px solid var(--accent); }
+
+.pb-popover--floating {
+    position: fixed;
+    z-index: 20;
+    max-height: calc(100vh - var(--space-4));
+    overflow-y: auto;
+}
+
+/* The caret points at the card it describes. */
+.pb-popover--right::before,
+.pb-popover--left::before {
+    content: '';
+    position: absolute;
+    top: var(--pb-arrow-top, 20px);
+    width: 10px;
+    height: 10px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    transform: rotate(45deg);
+}
+
+.pb-popover--right::before { left: -6px; border-top: 0; border-right: 0; }
+.pb-popover--left::before { right: -6px; border-bottom: 0; border-left: 0; }
+
+.pb-pop-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+}
+
+.pb-pop-title {
+    flex-grow: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: var(--text-base);
+    font-weight: 600;
+    line-height: 20px;
+    color: var(--text-primary);
+}
+
+.pb-pop-source {
+    flex-shrink: 0;
+    font-size: var(--text-xs);
+    color: var(--text-label);
+}
+
+.pb-pop-source--yours { color: var(--review-ink); }
+
+.pb-pop-close {
+    align-self: center;
+    display: inline-flex;
+    padding: 2px;
+    color: var(--text-label);
+    background: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pb-pop-close:hover { color: var(--text-primary); background: var(--bg-hover); }
+.pb-pop-close:focus-visible { outline: 1px solid var(--accent); }
+
+.pb-pop-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.pb-pop-label {
+    margin: 0;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-label);
+}
+
+.pb-pop-facts {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: var(--space-2) var(--space-3);
+    margin: 0;
+    line-height: 18px;
+}
+
+.pb-pop-facts dt { color: var(--text-label); }
+.pb-pop-facts dd { margin: 0; color: var(--text-primary); }
+
+.pb-pop-mono,
+.pb-pop-hook-name--ref {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+}
+
+.pb-pop-hooks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pb-pop-hook {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 10px var(--space-3);
+    background: var(--review-subtle);
+    border: 1px solid color-mix(in srgb, var(--review) 30%, transparent);
+    border-radius: var(--radius-md);
+}
+
+.pb-pop-hook-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--text-xs);
+}
+
+.pb-pop-hook-when { font-weight: 600; color: var(--text-label); }
+
+.pb-pop-hook-head .pb-hook-icon { color: var(--review-ink); }
+
+.pb-pop-hook-kind {
+    flex-grow: 1;
+    font-weight: 600;
+    color: var(--review-ink);
+}
+
+.pb-pop-hook-name,
+.pb-pop-hook-reason {
+    margin: 0;
+    line-height: 18px;
+}
+
+.pb-pop-hook-name { color: var(--text-primary); }
+.pb-pop-hook-reason { color: var(--text-label); }
+
+.pb-pop-hook-foot {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-top: 2px;
+}
+
+.pb-pop-hook-where {
+    flex-grow: 1;
+    font-size: var(--text-xs);
+    color: var(--text-label);
+}
+
+.pb-pop-link {
+    padding: 0;
+    font: inherit;
+    font-weight: 500;
+    color: var(--review-ink);
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.pb-pop-link:hover { text-decoration: underline; }
+
+.pb-pop-link:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.pb-pop-empty { margin: 0; color: var(--text-label); }
+
+.pb-pop-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.pb-pop-actions .pb-menu { margin-left: auto; }
+
+.pb-pop-button,
+.pb-pop-more {
+    height: 30px;
+    padding: 0 14px;
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+    background: transparent;
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+}
+
+.pb-pop-more { border-color: transparent; padding: 0 10px 0 14px; }
+
+.pb-pop-button:hover,
+.pb-pop-more:hover { background: var(--bg-hover); }
+
+.pb-pop-button:focus-visible,
+.pb-pop-more:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.pb-sheet-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.pb-sheet-scrim {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--bg-primary) 55%, transparent);
+}
+
+.pb-popover--sheet {
+    width: auto;
+    max-width: none;
+    max-height: 85vh;
+    overflow-y: auto;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-bottom: 0;
+    animation: pb-sheet-in var(--transition-normal) ease-out;
+}
+
+.pb-sheet-grip {
+    align-self: center;
+    width: 36px;
+    height: 4px;
+    margin-top: calc(var(--space-2) * -1);
+    border-radius: 2px;
+    background: var(--border-hover);
+}
+
+@keyframes pb-sheet-in {
+    from { transform: translateY(24px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pb-popover--sheet { animation: none; }
 }
