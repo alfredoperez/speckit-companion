@@ -12,12 +12,12 @@ Files: `hookStatus.ts`, `HookIcon.tsx`, `__tests__/HookStatus.test.tsx`
 
 **Wave 1 — independent (different files):**
 
-- [ ] **T001** [P] [US2] Status derivation and problem short forms (FR-005) · apps/vscode/webview/src/pipeline-builder/hookStatus.ts
-- [ ] **T002** [P] [US1] The four hook kind icons and the gate diamond · apps/vscode/webview/src/pipeline-builder/HookIcon.tsx
+- [x] **T001** [P] [US2] Status derivation and problem short forms (FR-005) · apps/vscode/webview/src/pipeline-builder/hookStatus.ts
+- [x] **T002** [P] [US1] The four hook kind icons and the gate diamond · apps/vscode/webview/src/pipeline-builder/HookIcon.tsx
 
 **⟶ Wait for Wave 1 to finish, then:**
 
-- [ ] **T003** [US2] Tests: problem wins, ran, skipped, not seen, changed since, no run draws nothing (FR-005) · apps/vscode/webview/src/pipeline-builder/__tests__/HookStatus.test.tsx
+- [x] **T003** [US2] Tests: problem wins, ran, skipped, not seen, changed since, no run draws nothing (FR-005) · apps/vscode/webview/src/pipeline-builder/__tests__/HookStatus.test.tsx
 
 ## Phase 3: User Stories 1 and 2 - The card and its hook statuses (P1)
 

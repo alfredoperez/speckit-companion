@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Builder card with its hooks inside, and a node popover",
   "branch": "feat/builder-redesign-core",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "implement",
+  "status": "implementing",
   "history": [
     {
       "step": "specify",
@@ -46,6 +46,37 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-24T17:45:26.979Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:45:38.055Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:46:00.044Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:46:00.044Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:46:19.506Z"
     }
   ],
   "request": "Workflow Builder: a node card with its hooks inside it, each showing whether it ran, and a popover for the details.",
@@ -213,5 +244,33 @@
       "summary": "13 tasks: foundational status and icons, card phase, popover phase, polish"
     }
   },
-  "approach": "Restructure Canvas Node into one card with hook slots and status rows from a pure hookStatus module; add NodePopover rendered from index.tsx with every Inspector action in More; Edit node opens the Inspector."
+  "approach": "Restructure Canvas Node into one card with hook slots and status rows from a pure hookStatus module; add NodePopover rendered from index.tsx with every Inspector action in More; Edit node opens the Inspector.",
+  "currentTask": "T003",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Status derivation and hook kind icons",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/hookStatus.ts",
+        "apps/vscode/webview/src/pipeline-builder/HookIcon.tsx"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Status derivation and hook kind icons",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/hookStatus.ts",
+        "apps/vscode/webview/src/pipeline-builder/HookIcon.tsx"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Status derivation tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookStatus.test.tsx"
+      ]
+    }
+  }
 }
