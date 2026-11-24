@@ -1,0 +1,210 @@
+{
+  "workflow": "companion",
+  "specName": "Templates and saved workflows in the Workflow Builder",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:04:01.093Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T19:04:40.920Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:04:46.027Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:05:23.676Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:05:46.793Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:05:47.439Z"
+    }
+  ],
+  "request": "Workflow Builder: change a document's sections from the node that writes it, and switch or create workflows from the header.",
+  "unattended": true,
+  "expectations": [
+    "A rendered preview of the document's real text",
+    "A one-line summary per saved workflow",
+    "A What differs from shipped row",
+    "Any host or protocol change"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder (NodePopover, Header, TemplateForm, AttachForm, Canvas, index)",
+    "constraint: no protocol change; host tokens only"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Document row",
+      "tasks": [
+        "T002",
+        "T003",
+        "T005"
+      ]
+    },
+    "FR-002": {
+      "title": "Modal lists sections",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-003": {
+      "title": "Fragments and Restore shipped",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-004": {
+      "title": "Picks staged until Done",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-005": {
+      "title": "Outline preview",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-006": {
+      "title": "Placeholder advice",
+      "tasks": [
+        "T003",
+        "T004"
+      ]
+    },
+    "FR-007": {
+      "title": "Chip and side form removed",
+      "tasks": [
+        "T006",
+        "T007",
+        "T016"
+      ]
+    },
+    "FR-008": {
+      "title": "Grouped workflow menu",
+      "tasks": [
+        "T008",
+        "T009",
+        "T010"
+      ]
+    },
+    "FR-009": {
+      "title": "Selected, not built",
+      "tasks": [
+        "T008",
+        "T010",
+        "T013"
+      ]
+    },
+    "FR-010": {
+      "title": "New workflow modal",
+      "tasks": [
+        "T011",
+        "T012"
+      ]
+    },
+    "FR-011": {
+      "title": "Modal focus and sheets",
+      "tasks": [
+        "T001",
+        "T014"
+      ]
+    },
+    "FR-012": {
+      "title": "Every action reachable",
+      "tasks": [
+        "T013",
+        "T017"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 10,
+    "projectedTasks": 12,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Edit a document's sections from its node and switch or create workflows from the header",
+  "size": "normal",
+  "planBlocks": [
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/682-builder-templates-workflows --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 screens, 12 parts. Every screen holds to its grammar."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Outline preview from headings and fragment summaries",
+      "why": "host renders no document text",
+      "rejected": "new host message for a composed preview",
+      "by": "agent",
+      "at": "2026-11-24T19:05:23.449Z"
+    },
+    {
+      "decision": "Stage picks until Done",
+      "why": "Cancel must write nothing",
+      "rejected": "write on every click",
+      "by": "agent",
+      "at": "2026-11-24T19:05:23.449Z"
+    },
+    {
+      "decision": "Document row on the node whose writes match the template file",
+      "why": "no protocol field names the node",
+      "rejected": "host field",
+      "by": "agent",
+      "at": "2026-11-24T19:05:23.449Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Webview-only: DocumentModal, WorkflowMenu, NewWorkflowModal",
+      "key_finding": "No host preview exists; outline only"
+    },
+    "tasks": {
+      "summary": "17 tasks, 6 phases, stories disjoint"
+    }
+  },
+  "approach": "Add DocumentModal opened from the node popover, a grouped WorkflowMenu and NewWorkflowModal in the header, and remove TemplateForm, the Document shape chip and the new-workflow side pane. Writes reuse setTemplateSection, selectWorkflow and newWorkflow."
+}
