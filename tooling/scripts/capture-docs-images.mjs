@@ -58,6 +58,7 @@
 
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
     REPO_ROOT, ensureStorybook, launchChrome, openStory, storyIndex,
 } from './lib/storybook-browser.mjs';
@@ -223,7 +224,7 @@ const STORIES = [
 // Sources: apps/vscode/webview/src/spec-viewer/__stories__/ClipCapture.stories.tsx (the
 // D–H state pairs), VideoCapture.stories.tsx (the A* Teamboard lifecycle) and
 // SidebarCapture.stories.tsx (the B* sidebar recreation).
-const CLIP_CAPTURES = [
+export const CLIP_CAPTURES = [
     // D · review (1224 x 776): the review loop on one document.
     { clip: 'review', story: 'scenes-clip-states--d-1-no-comments', out: 'cm-clean.png' },
     { clip: 'review', story: 'scenes-clip-states--d-2-pending', out: 'cm-pending.png' },
@@ -464,7 +465,10 @@ async function main() {
     );
 }
 
-main().catch((err) => {
-    console.error(err.message);
-    process.exit(1);
-});
+// Importable for CLIP_CAPTURES (the clip box check reads it); only a direct run captures.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+    main().catch((err) => {
+        console.error(err.message);
+        process.exit(1);
+    });
+}

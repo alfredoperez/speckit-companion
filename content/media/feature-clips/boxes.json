@@ -1,0 +1,208 @@
+{
+  "coverage": [
+    {
+      "beat": 0,
+      "selector": ".dossier-coverage",
+      "rect": [328, 317.3, 776, 221.4]
+    },
+    {
+      "beat": 1,
+      "selector": ".dossier-coverage__row",
+      "rect": [328, 317.3, 776, 50.6]
+    }
+  ],
+  "inline-comments": [
+    {
+      "beat": 0,
+      "selector": ".line-comment-slot:has(.inline-comment)",
+      "rect": [180.2, 74.8, 557.6, 24]
+    },
+    {
+      "beat": 1,
+      "selector": ".line-comment-slot:has(.inline-comment)",
+      "rect": [180.2, 74.8, 557.6, 94.2]
+    },
+    {
+      "beat": 2,
+      "selector": ".comment-detail",
+      "rect": [182.2, 98.8, 555.6, 70.2]
+    }
+  ],
+  "overview": [
+    {
+      "beat": 0,
+      "selector": ".dossier-intent__statement",
+      "rect": [328, 181.1, 776, 55.1]
+    },
+    {
+      "beat": 1,
+      "selector": ".dossier-timing",
+      "rect": [328, 252.2, 776, 76.4]
+    },
+    {
+      "beat": 2,
+      "selector": ".dossier-intent__approach p",
+      "rect": [353, 393.1, 484.5, 42.6]
+    },
+    {
+      "beat": 3,
+      "selector": ".dossier-intent__context p",
+      "rect": [886.5, 393.1, 192.5, 42.6]
+    },
+    {
+      "beat": 4,
+      "selector": ".dossier-intent__context p",
+      "nth": 1,
+      "rect": [886.5, 471.4, 192.5, 42.6]
+    },
+    {
+      "beat": 5,
+      "selector": ".dossier-fence-grid",
+      "rect": [328, 689, 776, 204.6]
+    },
+    {
+      "beat": 6,
+      "selector": ".dossier-evidence",
+      "rect": [328, 1051.6, 776, 354.5]
+    },
+    {
+      "beat": 7,
+      "selector": ".dossier-decisions",
+      "rect": [328, 1564.1, 776, 350.2]
+    },
+    {
+      "beat": 8,
+      "selector": ".dossier-coverage",
+      "rect": [328, 2097.3, 776, 221.4]
+    }
+  ],
+  "own-workflow": [
+    {
+      "beat": 0,
+      "selector": ".workflow-row",
+      "rect": [212, 87.2, 800, 54.3]
+    },
+    {
+      "beat": 1,
+      "selector": "#story-workflow",
+      "rect": [212, 114.5, 800, 27]
+    },
+    {
+      "beat": 2,
+      "selector": ".workflow-pitch",
+      "rect": [212, 169.5, 800, 35.2]
+    },
+    {
+      "beat": 3,
+      "selector": ".doc-rail .rail-group",
+      "nth": 1,
+      "rect": [12, 163.5, 183, 174]
+    }
+  ],
+  "review": [
+    {
+      "beat": 0,
+      "selector": ".line-comment-slot:has(.inline-comment)",
+      "rect": [232, 223, 648, 52]
+    },
+    {
+      "beat": 1,
+      "selector": ".line-comment-slot:has(.inline-comment)",
+      "rect": [232, 223, 648, 122.2]
+    },
+    {
+      "beat": 4,
+      "selector": ".monaco-list-rows",
+      "rect": [0, 60, 340, 242]
+    },
+    {
+      "beat": 5,
+      "selector": ".monaco-list-rows",
+      "nth": 1,
+      "rect": [0, 330, 340, 154]
+    }
+  ],
+  "run-in-flight": [
+    {
+      "beat": 0,
+      "selector": ".doc-rail .rail-group",
+      "nth": 1,
+      "rect": [12, 163.5, 183, 168]
+    },
+    {
+      "beat": 2,
+      "selector": ".doc-rail .rail-group",
+      "nth": 1,
+      "rect": [12, 163.5, 183, 232]
+    },
+    {
+      "beat": 4,
+      "selector": ".doc-rail .rail-group",
+      "nth": 1,
+      "rect": [12, 163.5, 183, 232]
+    },
+    {
+      "beat": 6,
+      "selector": ".dossier-timing",
+      "rect": [328, 252.2, 776, 76.4]
+    }
+  ],
+  "spec-viewer": [
+    {
+      "beat": 1,
+      "selector": ".spec-toc",
+      "rect": [960, 111.5, 240, 240.7]
+    },
+    {
+      "beat": 2,
+      "selector": ".doc-rail .rail-group",
+      "nth": 1,
+      "rect": [12, 163.5, 183, 232]
+    }
+  ],
+  "specs-sidebar": [
+    {
+      "beat": 1,
+      "selector": "#row-041-doc-tasks",
+      "rect": [4, 170, 332, 22]
+    },
+    {
+      "beat": 2,
+      "selector": "#row-042-member-status-badges",
+      "rect": [4, 192, 332, 22]
+    }
+  ],
+  "step-rail": [
+    {
+      "beat": 0,
+      "selector": ".doc-rail .rail-group",
+      "nth": 1,
+      "rect": [12, 163.5, 183, 168]
+    },
+    {
+      "beat": 2,
+      "selector": ".doc-rail .rail-group",
+      "nth": 1,
+      "rect": [12, 163.5, 183, 232]
+    }
+  ],
+  "workflow-documents": [
+    {
+      "beat": 0,
+      "selector": ".step-tab-group",
+      "nth": 1,
+      "rect": [12, 257.5, 183, 100]
+    },
+    {
+      "beat": 1,
+      "selector": ".doc-rail .rail-group",
+      "nth": 1,
+      "rect": [12, 163.5, 183, 232]
+    },
+    {
+      "beat": 3,
+      "selector": ".spec-toc",
+      "rect": [960, 111.5, 240, 101.1]
+    }
+  ]
+}
