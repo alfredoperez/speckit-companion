@@ -82,6 +82,7 @@ export const OWN_HOOK_EXTENSION = 'project';
 
 const COMMAND_NAME = /^[A-Za-z0-9][A-Za-z0-9._:/-]*$/;
 const STEP_NAME = /^[a-z][a-z-]*$/;
+const WHENS: readonly HookWhen[] = ['before', 'after'];
 
 export interface HookAddress {
     step: string;
@@ -118,6 +119,12 @@ function parse(text: string): { doc: Doc } | Refused {
 }
 
 function checkDraft(draft: StockHookDraft): string | null {
+    // The webview is a separate process; its message is checked like any input.
+    if (!draft || typeof draft.command !== 'string' || typeof draft.description !== 'string'
+        || typeof draft.optional !== 'boolean'
+        || (draft.prompt !== undefined && typeof draft.prompt !== 'string')) {
+        return 'That hook is missing its command, description or required flag.';
+    }
     if (!COMMAND_NAME.test(draft.command.trim())) {
         return 'A hook names a skill or command: letters, digits, and . _ : / - only.';
     }
@@ -222,7 +229,9 @@ export function addUserHook(
     text: string | null, step: string, when: HookWhen, draft: StockHookDraft,
     installed: ReadonlySet<string>,
 ): Written {
-    if (!STEP_NAME.test(step)) { return { error: `${step} is not a Spec Kit step.` }; }
+    if (!STEP_NAME.test(step) || !WHENS.includes(when)) {
+        return { error: `${when} ${step} is not a place a hook can attach.` };
+    }
     const bad = checkDraft(draft);
     if (bad) { return { error: bad }; }
     if (installed.has(OWN_HOOK_EXTENSION)) {

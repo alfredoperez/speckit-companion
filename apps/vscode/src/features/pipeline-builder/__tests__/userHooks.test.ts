@@ -129,6 +129,13 @@ describe('attaching your own hook to a stock step', () => {
         expect('error' in addUserHook(REGISTRY, 'plan', 'after', { ...NOTE, description: '' }, INSTALLED)).toBe(true);
     });
 
+    it('refuses a when other than before or after, and a draft missing its fields', () => {
+        expect(addUserHook(REGISTRY, 'plan', 'during' as never, NOTE, INSTALLED))
+            .toEqual({ error: expect.stringContaining('not a place a hook can attach') });
+        expect(addUserHook(REGISTRY, 'plan', 'after', { command: 'x' } as never, INSTALLED))
+            .toEqual({ error: expect.stringContaining('missing') });
+    });
+
     it('refuses when an installed extension owns the id written on your hooks', () => {
         const result = addUserHook(REGISTRY, 'plan', 'after', NOTE, new Set(['git', 'project']));
         expect(result).toEqual({ error: expect.stringContaining('named project') });
