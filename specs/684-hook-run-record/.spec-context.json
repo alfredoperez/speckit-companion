@@ -1,0 +1,223 @@
+{
+  "workflow": "companion",
+  "specName": "A record of which hooks ran",
+  "branch": "feat/builder-hook-data",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:14:17.306Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:14:44.153Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:15:20.243Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T17:15:21.006Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:15:27.924Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:15:55.140Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:16:37.191Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:16:56.557Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:16:56.991Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:16:58.489Z"
+    }
+  ],
+  "request": "Companion pipeline: each hook records whether it ran or was skipped, and the Workflow Builder can read the last run's outcome per hook.",
+  "unattended": true,
+  "expectations": [
+    "Proving a hook ran: a record is the assistant's own report",
+    "Records for stock Spec Kit hooks in extensions.yml",
+    "Drawing outcomes on the board",
+    "Changing what a hook does or when it runs"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts (hook_render.py, write-context.py, capture.py)",
+    "area: apps/vscode/src/features/pipeline-builder + protocol/pipeline.ts",
+    "constraint: one writer and one lock for .spec-context.json; history only grows",
+    "constraint: webview files belong to another team"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Each rendered hook ends with one instruction to record its outcome, naming the hook",
+      "tasks": [
+        "T001",
+        "T002"
+      ]
+    },
+    "FR-002": {
+      "title": "The record rides on any call of the existing run-record writer",
+      "tasks": [
+        "T001",
+        "T004"
+      ]
+    },
+    "FR-003": {
+      "title": "Records are appended under the shared lock, stamped by: ai, never rewritten",
+      "tasks": [
+        "T001",
+        "T003"
+      ]
+    },
+    "FR-004": {
+      "title": "Outcome is ran or skipped with optional one-line reason; anything else refused",
+      "tasks": [
+        "T001",
+        "T003"
+      ]
+    },
+    "FR-005": {
+      "title": "Hook records are never read as step boundaries",
+      "tasks": [
+        "T001",
+        "T003"
+      ]
+    },
+    "FR-006": {
+      "title": "Host read returns the latest spec run and its last outcome per hook, or no run",
+      "tasks": [
+        "T005",
+        "T007",
+        "T008"
+      ]
+    },
+    "FR-007": {
+      "title": "The read passes over an unreadable run record",
+      "tasks": [
+        "T005",
+        "T007"
+      ]
+    },
+    "FR-008": {
+      "title": "Not seen is never written; each outcome carries a matching key",
+      "tasks": [
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-009": {
+      "title": "node-hooks reference lists the skill type and the record rule",
+      "tasks": [
+        "T009"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 10,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Each Companion hook records ran or skipped, and the Workflow Builder can read the last run's outcome per hook",
+  "size": "normal",
+  "source": "Workflow Builder Trial, section 7, gap 1",
+  "planBlocks": [
+    "calls"
+  ],
+  "planBlocksPicked": [
+    "calls"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/684-hook-run-record --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[plan-check] plan.md: 3 call paths, 11 lines ·   WARNING plan.md:39  `apps/speckit-extension/scripts/spec_context.py` has no `:line`, so it is unverified (no-line) ·   0 error(s), 1 warning(s)"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Hook records live in a new append-only hookRuns list, not history[]",
+      "why": "every history reader treats a row without substep/task and with an unknown kind as a step start",
+      "rejected": "a history row with kind hook, which needs five readers changed",
+      "by": "agent",
+      "at": "2026-11-24T17:16:36.442Z"
+    },
+    {
+      "decision": "--hook-outcome rides on any write-context.py call",
+      "why": "every step makes a writer call after its hooks, so the record costs no extra turn",
+      "rejected": "a dedicated call per hook",
+      "by": "agent",
+      "at": "2026-11-24T17:16:36.442Z"
+    },
+    {
+      "decision": "The build renders the whole hook address; the assistant only picks ran or skipped",
+      "why": "shortest prompt and the record survives later config edits",
+      "rejected": "JSON payloads or a slot id the writer resolves from companion.yml",
+      "by": "agent",
+      "at": "2026-11-24T17:16:36.442Z"
+    },
+    {
+      "decision": "Most recent run is the spec with the newest at across history and hookRuns",
+      "why": "folder numbers and mtimes do not order runs",
+      "rejected": "highest spec number",
+      "by": "agent",
+      "at": "2026-11-24T17:16:36.442Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Record line in each rendered hook, --hook-outcome writer to hookRuns[], host readHookRuns message",
+      "key_finding": "history[] cannot carry non-boundary rows without corrupting step timing in every reader"
+    },
+    "tasks": {
+      "summary": "11 tasks, three disjoint story phases plus polish"
+    }
+  },
+  "approach": "hook_render appends one record line naming the hook; write-context.py --hook-outcome appends to hookRuns[] under the shared lock and rides on any call; the host reads the newest spec and answers a readHookRuns message."
+}
