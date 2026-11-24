@@ -2,8 +2,8 @@
   "workflow": "companion",
   "specName": "Templates and saved workflows in the Workflow Builder",
   "branch": "feat/builder-redesign-core",
-  "currentStep": "tasks",
-  "status": "ready-to-implement",
+  "currentStep": "converge",
+  "status": "completed",
   "history": [
     {
       "step": "specify",
@@ -46,6 +46,170 @@
       "kind": "complete",
       "by": "ai",
       "at": "2026-11-24T19:05:47.439Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:05:56.366Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:06:13.656Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:06:13.656Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:08:57.306Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:08:57.459Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:08:57.459Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:08:57.460Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:08:57.460Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:10:50.226Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:10:50.382Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:10:50.563Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:11:57.274Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:11:57.429Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:18:39.698Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:18:39.699Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:18:39.699Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T016",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:18:39.699Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T017",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:18:39.699Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:18:39.730Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:19:38.025Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T19:19:53.243Z"
     }
   ],
   "request": "Workflow Builder: change a document's sections from the node that writes it, and switch or create workflows from the header.",
@@ -67,6 +231,9 @@
         "T002",
         "T003",
         "T005"
+      ],
+      "tests": [
+        "__tests__/TemplatesWorkflows.test.tsx::puts the Document row on the writing node only"
       ]
     },
     "FR-002": {
@@ -88,6 +255,10 @@
       "tasks": [
         "T003",
         "T004"
+      ],
+      "tests": [
+        "__tests__/TemplatesWorkflows.test.tsx::writes each changed section on Done",
+        "and nothing on Cancel"
       ]
     },
     "FR-005": {
@@ -126,6 +297,10 @@
         "T008",
         "T010",
         "T013"
+      ],
+      "tests": [
+        "__tests__/TemplatesWorkflows.test.tsx::says Selected",
+        "not built after a switch"
       ]
     },
     "FR-010": {
@@ -133,6 +308,9 @@
       "tasks": [
         "T011",
         "T012"
+      ],
+      "tests": [
+        "__tests__/NewWorkflowModal.test.tsx"
       ]
     },
     "FR-011": {
@@ -140,6 +318,9 @@
       "tasks": [
         "T001",
         "T014"
+      ],
+      "tests": [
+        "__tests__/DocumentModal.test.tsx::keeps Tab inside it"
       ]
     },
     "FR-012": {
@@ -172,6 +353,40 @@
       "exitCode": 0,
       "durationSeconds": 0.0,
       "result": "[plan-check] plan.md: 2 screens, 12 parts. Every screen holds to its grammar."
+    },
+    {
+      "what": "Requirements check against the diff, inline (no subagent tool in this session)",
+      "result": "FR-001..FR-012 met; FR-011 Tab trap and focus return now tested"
+    },
+    {
+      "what": "webview types",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.4,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json",
+      "commit": "9d56e5a9",
+      "tree": "e0af600043e955e261fdafbb5f5dd715742fb27a"
+    },
+    {
+      "what": "extension types",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "9d56e5a9",
+      "tree": "e0af600043e955e261fdafbb5f5dd715742fb27a"
+    },
+    {
+      "what": "builder tests",
+      "command": "npx jest apps/vscode/webview/src/pipeline-builder",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 15.8,
+      "result": "Snapshots:   0 total · Time:        15.082 s · Ran all test suites matching /apps\\/vscode\\/webview\\/src\\/pipeline-builder/i.",
+      "commit": "9d56e5a9",
+      "tree": "e0af600043e955e261fdafbb5f5dd715742fb27a"
     }
   ],
   "decisions": [
@@ -195,6 +410,27 @@
       "rejected": "host field",
       "by": "agent",
       "at": "2026-11-24T19:05:23.449Z"
+    },
+    {
+      "decision": "Picks staged until Done, one setTemplateSection per changed heading",
+      "why": "Cancel must write nothing",
+      "rejected": "write on every click",
+      "by": "agent",
+      "at": "2026-11-24T19:19:06.111Z"
+    },
+    {
+      "decision": "Workflow dropdown built on the shared Menu, extended with groups, checks, trail and chevron",
+      "why": "keeps the tested keyboard behaviour",
+      "rejected": "a separate dropdown component",
+      "by": "agent",
+      "at": "2026-11-24T19:19:06.111Z"
+    },
+    {
+      "decision": "New workflow also offers the saved workflow in force as a start",
+      "why": "the old form seeded from it; keep that behaviour",
+      "rejected": "only shipped, this project and presets",
+      "by": "agent",
+      "at": "2026-11-24T19:19:06.111Z"
     }
   ],
   "step_summaries": {
@@ -204,7 +440,206 @@
     },
     "tasks": {
       "summary": "17 tasks, 6 phases, stories disjoint"
+    },
+    "implement": {
+      "summary": "Document modal from the node popover, grouped workflow menu with Selected-not-built, New workflow modal; TemplateForm and the chip removed"
     }
   },
-  "approach": "Add DocumentModal opened from the node popover, a grouped WorkflowMenu and NewWorkflowModal in the header, and remove TemplateForm, the Document shape chip and the new-workflow side pane. Writes reuse setTemplateSection, selectWorkflow and newWorkflow."
+  "approach": "Add DocumentModal opened from the node popover, a grouped WorkflowMenu and NewWorkflowModal in the header, and remove TemplateForm, the Document shape chip and the new-workflow side pane. Writes reuse setTemplateSection, selectWorkflow and newWorkflow.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Shared modal focus hook and the document-node lookup",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/useModal.ts",
+        "apps/vscode/webview/src/pipeline-builder/documentNode.ts"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Shared modal focus hook and the document-node lookup",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/useModal.ts",
+        "apps/vscode/webview/src/pipeline-builder/documentNode.ts"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Document modal tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/DocumentModal.test.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "DocumentModal, popover Document row, chip and TemplateForm removed",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/DocumentModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/NodePopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/src/pipeline-builder/TemplateForm.tsx"
+      ],
+      "wave": "T004-T007"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "DocumentModal, popover Document row, chip and TemplateForm removed",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/DocumentModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/NodePopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/src/pipeline-builder/TemplateForm.tsx"
+      ],
+      "wave": "T004-T007"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "DocumentModal, popover Document row, chip and TemplateForm removed",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/DocumentModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/NodePopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/src/pipeline-builder/TemplateForm.tsx"
+      ],
+      "wave": "T004-T007"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "DocumentModal, popover Document row, chip and TemplateForm removed",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/DocumentModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/NodePopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/src/pipeline-builder/TemplateForm.tsx"
+      ],
+      "wave": "T004-T007"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Workflow menu and Selected-not-built tests, in the header suite",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HeaderChip.test.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "WorkflowMenu on Menu, which gained groups, checks, trail and chevron",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/WorkflowMenu.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Menu.tsx"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Header uses WorkflowMenu and says Selected, not built",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/Header.tsx"
+      ]
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "New workflow modal tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/NewWorkflowModal.test.tsx"
+      ]
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "NewWorkflowModal; NewWorkflowForm dropped",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/NewWorkflowModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/AttachForm.tsx"
+      ]
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Wired modals and menu in the app, styles in host tokens, stories and old tests updated, tsc and related jest green",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css",
+        "apps/vscode/webview/src/pipeline-builder/__stories__",
+        "apps/vscode/webview/src/pipeline-builder/__tests__"
+      ],
+      "wave": "T013-T017"
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Wired modals and menu in the app, styles in host tokens, stories and old tests updated, tsc and related jest green",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css",
+        "apps/vscode/webview/src/pipeline-builder/__stories__",
+        "apps/vscode/webview/src/pipeline-builder/__tests__"
+      ],
+      "wave": "T013-T017"
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "Wired modals and menu in the app, styles in host tokens, stories and old tests updated, tsc and related jest green",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css",
+        "apps/vscode/webview/src/pipeline-builder/__stories__",
+        "apps/vscode/webview/src/pipeline-builder/__tests__"
+      ],
+      "wave": "T013-T017"
+    },
+    "T016": {
+      "status": "DONE",
+      "did": "Wired modals and menu in the app, styles in host tokens, stories and old tests updated, tsc and related jest green",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css",
+        "apps/vscode/webview/src/pipeline-builder/__stories__",
+        "apps/vscode/webview/src/pipeline-builder/__tests__"
+      ],
+      "wave": "T013-T017"
+    },
+    "T017": {
+      "status": "DONE",
+      "did": "Wired modals and menu in the app, styles in host tokens, stories and old tests updated, tsc and related jest green",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css",
+        "apps/vscode/webview/src/pipeline-builder/__stories__",
+        "apps/vscode/webview/src/pipeline-builder/__tests__"
+      ],
+      "wave": "T013-T017"
+    }
+  },
+  "concerns": [
+    {
+      "note": "Preview is an outline (headings, fragment names and summaries); the host sends no rendered document text",
+      "step": "implement"
+    },
+    {
+      "note": "Saved workflows carry no one-line summary because the host sends none; the design's What differs from shipped row is not built",
+      "step": "implement"
+    },
+    {
+      "note": "Pixel baselines and clips not regenerated by instruction; story names for the document and new-workflow captures changed size",
+      "step": "implement"
+    }
+  ],
+  "last_action": "Checks green; implement closing",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-24T19:19:38.075Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T19:19:38.130Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T19:19:53.339Z",
+      "added": [],
+      "completed": true
+    }
+  ]
 }
