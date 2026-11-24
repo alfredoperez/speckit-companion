@@ -20,6 +20,7 @@ jobs:
       capture: ${{ steps.filter.outputs.capture }}
       visual: ${{ steps.filter.outputs.visual }}
       builder: ${{ steps.filter.outputs.builder }}
+      site: ${{ steps.filter.outputs.site }}
 
     steps:
       - name: Checkout code
@@ -68,6 +69,8 @@ jobs:
           # list: the panel, the stories that render it, and the script that
           # drives them. A site or media change stops at clips:check.
           BUILDER='^(apps/vscode/webview/|packages/viewer/|\.storybook/|tooling/scripts/visual-builder\.mjs$|tooling/scripts/lib/storybook-browser\.mjs$|package\.json$|package-lock\.json$|\.github/workflows/ci\.yml$)'
+          # The site renders every changelog, so a changelog line can break it too.
+          SITE='^(apps/website/|content/media/|docs/screenshots/|(apps/[^/]+/)?CHANGELOG\.md$|\.github/workflows/ci\.yml$)'
 
           answer() {
             if [ "$everything" = yes ] || grep -qE "$2" changed.txt; then
@@ -88,6 +91,7 @@ jobs:
           answer capture "$CAPTURE"
           answer visual "$VISUAL"
           answer builder "$BUILDER"
+          answer site "$SITE"
 
           sed 's/^/changed: /' changed.txt
           cat "$GITHUB_OUTPUT"
@@ -268,3 +272,34 @@ jobs:
       - name: Workflow Builder visual gate (layout only)
         if: needs.changes.outputs.builder == 'true'
         run: npm run test:visual:ci
+
+  site-build:
+    runs-on: ubuntu-latest
+    needs: changes
+
+    steps:
+      - name: Nothing here to build
+        if: needs.changes.outputs.site != 'true'
+        run: echo "No site, media or changelog change — the site build has nothing to check."
+
+      - name: Checkout code
+        if: needs.changes.outputs.site == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: needs.changes.outputs.site == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/website/package-lock.json
+
+      - name: Install site dependencies
+        if: needs.changes.outputs.site == 'true'
+        working-directory: apps/website
+        run: npm ci
+
+      - name: Build the site
+        if: needs.changes.outputs.site == 'true'
+        working-directory: apps/website
+        run: npm run build

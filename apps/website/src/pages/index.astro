@@ -204,7 +204,7 @@ const tabs = [
     label: 'Understand',
     window: 'Overview · the run’s story',
     heading: 'You stop reading four markdown files',
-    body: 'A finished run becomes one page: what it was for, how it was approached, where in the codebase it landed, and what it decided against — with a coverage table that puts untraced requirements first.',
+    body: 'A finished run becomes one page: what it was for, how it was approached, where in the codebase it landed, and what it decided against. Its coverage table puts untraced requirements first.',
     clip: overview,
     link: { label: 'Read the Overview guide', href: '/docs/results/the-overview/' },
   },
@@ -224,7 +224,7 @@ const tabs = [
     id: 'customize',
     label: 'Customize',
     window: 'Custom workflows · the one you wrote, at every step',
-    heading: 'The workflow is yours, not the tool’s',
+    heading: 'Every step runs the workflow you wrote',
     body: 'Write your own steps, commands and output files in settings. Create Spec offers your workflow next to the two built in, and each step sends the command you wrote.',
     clip: makeItYours,
     link: { label: 'Write your own workflow', href: '/docs/customize/your-own-workflow/' },
@@ -233,7 +233,7 @@ const tabs = [
     id: 'review',
     label: 'Review',
     window: 'Review · a comment under the line it annotates',
-    heading: 'Say it in the margin, not in the chat box',
+    heading: 'Leave your notes in the margin',
     body: 'Comment on a line the way you’d review a pull request. Notes persist the moment you add them, and Refine sends the pending ones to your agent as an in-place edit request.',
     clip: review,
     link: { label: 'See the review flow', href: '/docs/steps/review-with-comments/' },
@@ -600,7 +600,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
           scratch.
         </p>
 
-        <p class="ownership">Your specs. Your pipeline. Your record. Your repo.</p>
+        <p class="ownership">Your specs, your pipeline and your run record stay as files in your own repo.</p>
 
         <div class="hero-actions">
           <Button
@@ -706,7 +706,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
                 role="tab"
                 data-hero-pip={surface.id}
                 data-hero-caption={surface.caption}
-                style={`--pdur:${5200 + index * 900}ms;--pdelay:${index * 700}ms`}
                 aria-selected={index === 0 ? 'true' : 'false'}
                 tabindex={index === 0 ? 0 : -1}
               >
@@ -1370,8 +1369,7 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
     transform: none;
   }
 
-  /* The three real surfaces drift with the ambient chips, so the field reads as
-     one thing and the clickable ones are only distinguished by being lit. */
+  /* The tab buttons hold still so they are easy to click; only the ambient chips drift. */
   .hero-pips {
     display: flex;
     flex-wrap: wrap;
@@ -1392,12 +1390,6 @@ const spores: Record<'hero' | 'cards', Spore[]> = {
       color 200ms ease,
       border-color 200ms ease,
       box-shadow 200ms ease;
-  }
-
-  :global(html[data-motion]) .hero-pip {
-    animation: mote-drift var(--pdur, 6000ms) var(--pdelay, 0ms) ease-in-out infinite alternate;
-    --mdx: 0px;
-    --mdy: -5px;
   }
 
   .hero-pip:hover {
