@@ -2495,7 +2495,7 @@ try {
 
     await step('builder-add-step', 'Add step opens the new-step form, and Cancel leaves the board as it was', async () => {
         const before = await webview().locator('.pb-step').count();
-        await webview().locator('.builder-action--add').click();
+        await webview().locator('.pb-add-step').last().click();
         const cancel = webview().locator('.pb-modal .pb-modal-cancel').first();
         await cancel.waitFor({ timeout: 5000 });
         await cancel.click();
@@ -2520,35 +2520,30 @@ try {
         return `${Math.round(facts.width)}px, one column, heads sticky`;
     }, { needs: 'fixtures', check: true });
 
-    await step('builder-move-to-phase', 'Move to phase… moves a free node and the status line says so', async () => {
+    await step('builder-move-to-phase', 'Move… in a node popover moves a free node to another phase and the status says so', async () => {
         try {
-            const nodes = webview().locator('.pb-node');
+            const nodes = webview().locator('.pb-node-main');
             const count = await nodes.count();
             for (let i = 0; i < count; i++) {
                 await nodes.nth(i).click();
-                const move = webview().locator('button.pb-order-move[aria-haspopup="menu"]').first();
-                if (!(await move.isVisible().catch(() => false))) continue;
-                await move.click();
-                const menu = webview().locator('[role="menu"]').first();
-                await menu.waitFor({ timeout: 5000 });
-                const fits = await menu.evaluate(element => {
+                const pop = webview().locator('.pb-popover').first();
+                if (!(await pop.waitFor({ timeout: 3000 }).then(() => true, () => false))) continue;
+                await pop.getByRole('button', { name: 'Move…' }).click();
+                const places = pop.locator('.pb-move-place:not([aria-disabled])').filter({ hasText: /^To phase / });
+                if (await places.count() === 0) { await page.keyboard.press('Escape'); continue; }
+                const fits = await pop.evaluate(element => {
                     const box = element.getBoundingClientRect();
                     return box.left >= -1 && box.right <= innerWidth + 1 && box.top >= -1 && box.bottom <= innerHeight + 1;
                 });
-                if (!fits) throw new Error('the phase list spills outside the panel');
-                const options = menu.locator('[role="menuitem"]');
-                const total = await options.count();
-                for (let pick = 0; pick < total; pick++) {
-                    const phase = (await options.nth(pick).innerText()).split('\n')[0].trim();
-                    await options.nth(pick).click();
-                    const said = webview().locator('.builder-status-text', { hasText: `moved to ${phase} in ` });
-                    if (await said.first().waitFor({ timeout: 4000 }).then(() => true, () => false)) return (await said.first().innerText()).trim();
-                    await move.click();
-                    await menu.waitFor({ timeout: 5000 });
-                }
-                throw new Error('every phase refused the node');
+                if (!fits) throw new Error('the popover spills outside the panel');
+                const label = (await places.first().locator('.pb-move-label').innerText()).trim();
+                const phase = label.replace(/^To phase /, '').replace(/, (first|last)$/, '');
+                await places.first().click();
+                const said = webview().locator('.builder-status-text, .builder-bar-status .builder-bar-text', { hasText: `moved to ${phase} in ` });
+                await said.first().waitFor({ timeout: 4000 });
+                return (await said.first().innerText()).trim();
             }
-            throw new Error('no free node with Move to phase… on the board');
+            throw new Error('no free node with a phase to move to on the board');
         } finally {
             await sidebarWidth(sidebar);
             await clear();
