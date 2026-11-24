@@ -285,3 +285,125 @@ describe('the files the board will open', () => {
         }
     });
 });
+
+describe('whose each stock hook is', () => {
+    it('marks an installed extension\'s hook as its, and a hand-written one as yours', () => {
+        const root = project();
+        write(root, '.specify/workflows/speckit/workflow.yml', WORKFLOW);
+        write(root, '.specify/extensions.yml', [
+            'installed:', '- git', 'hooks:', '  after_plan:',
+            '  - extension: git', '    command: speckit.git.commit',
+            '  - extension: house', '    command: house-note', '    prompt: Log it?',
+            '    description: Log a house note', '',
+        ].join('\n'));
+
+        const plan = readStockWorkflow(root).steps[2];
+
+        expect(plan.hooks.map(hook => [hook.command, hook.own, hook.prompt])).toEqual([
+            ['speckit.git.commit', false, ''],
+            ['house-note', true, 'Log it?'],
+        ]);
+    });
+
+    it('counts an extension folder as installed even when the registry does not list it', () => {
+        const root = project();
+        write(root, '.specify/workflows/speckit/workflow.yml', WORKFLOW);
+        write(root, '.specify/extensions/github/extension.yml', 'id: github\n');
+        write(root, '.specify/extensions.yml', [
+            'hooks:', '  before_specify:', '  - extension: github', '    command: speckit.github.label', '',
+        ].join('\n'));
+
+        expect(readStockWorkflow(root).steps[0].hooks[0].own).toBe(false);
+    });
+});
+
+describe('which template layer is in force', () => {
+    function layered(): string {
+        const root = project();
+        write(root, '.specify/templates/spec-template.md', '# Core spec\n');
+        write(root, '.specify/templates/plan-template.md', '# Core plan\n');
+        write(root, '.specify/templates/tasks-template.md', '# Core tasks\n');
+        return root;
+    }
+
+    function template(root: string, file: string) {
+        return readStockWorkflow(root).templates.find(t => t.file === file)!;
+    }
+
+    it('is core when nothing sits over it', () => {
+        const root = layered();
+        expect(template(root, 'spec-template.md')).toMatchObject({
+            inForce: 'core',
+            layers: [{ kind: 'core', source: '', strategy: 'replace',
+                path: path.join('.specify', 'templates', 'spec-template.md') }],
+        });
+    });
+
+    it('is your override when there is one, over any preset', () => {
+        const root = layered();
+        write(root, '.specify/templates/overrides/spec-template.md', '# Ours\n');
+        write(root, '.specify/presets/lean/templates/spec-template.md', '# Lean\n');
+
+        const spec = template(root, 'spec-template.md');
+        expect(spec.inForce).toBe('override');
+        expect(spec.layers).toHaveLength(1);
+        expect(spec.path).toBe(path.join('.specify', 'templates', 'spec-template.md'));
+    });
+
+    it('is the preset with the lowest priority that replaces it', () => {
+        const root = layered();
+        write(root, '.specify/presets/lean/templates/plan-template.md', '# Lean\n');
+        write(root, '.specify/presets/house/templates/plan-template.md', '# House\n');
+        write(root, '.specify/presets/.registry', JSON.stringify({
+            presets: { lean: { priority: 5 }, house: { priority: 1 } },
+        }));
+
+        expect(template(root, 'plan-template.md').layers).toEqual([{
+            kind: 'preset', source: 'house', strategy: 'replace',
+            path: path.join('.specify', 'presets', 'house', 'templates', 'plan-template.md'),
+        }]);
+    });
+
+    it('skips a disabled preset', () => {
+        const root = layered();
+        write(root, '.specify/presets/lean/templates/plan-template.md', '# Lean\n');
+        write(root, '.specify/presets/.registry', JSON.stringify({
+            presets: { lean: { priority: 1, enabled: false } },
+        }));
+        expect(template(root, 'plan-template.md').inForce).toBe('core');
+    });
+
+    it('lists a preset that appends over the layer it composes onto', () => {
+        const root = layered();
+        write(root, '.specify/presets/rules/preset.yml', [
+            'provides:', '  templates:', '  - type: template', '    name: tasks-template',
+            '    file: extra/tasks-rules.md', '    strategy: append', '',
+        ].join('\n'));
+        write(root, '.specify/presets/rules/extra/tasks-rules.md', '## House rules\n');
+
+        const tasks = template(root, 'tasks-template.md');
+        expect(tasks.inForce).toBe('preset');
+        expect(tasks.layers!.map(layer => [layer.kind, layer.source, layer.strategy])).toEqual([
+            ['preset', 'rules', 'append'],
+            ['core', '', 'replace'],
+        ]);
+    });
+
+    it('is an extension\'s template when no preset or override provides one', () => {
+        const root = layered();
+        write(root, '.specify/extensions/house/templates/spec-template.md', '# House\n');
+        expect(template(root, 'spec-template.md').layers![0]).toMatchObject({
+            kind: 'extension', source: 'house',
+        });
+    });
+
+    it('lists an override for a template core does not ship', () => {
+        const root = layered();
+        write(root, '.specify/templates/overrides/review-template.md', '# Review\n');
+
+        const review = template(root, 'review-template.md');
+        expect(review).toMatchObject({ inForce: 'override', label: 'review' });
+        expect(review.path).toBe(path.join('.specify', 'templates', 'overrides', 'review-template.md'));
+        expect(stockFileToOpen(root, review.path)).not.toBeNull();
+    });
+});
