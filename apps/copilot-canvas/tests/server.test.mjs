@@ -64,6 +64,8 @@ describe('spec board server', () => {
         assert.equal(snapshot.specs.length, 2);
         assert.equal(snapshot.commandSet, 'companion');
         assert.ok(snapshot.commands.includes('resume'));
+        assert.deepEqual(snapshot.health.map(item => item.id).slice(0, 4), ['cli', 'companion', 'constitution', 'agent']);
+        assert.equal(snapshot.health.find(item => item.id === 'companion').ok, true);
     });
 
     it('returns a spec detail with rendered documents', async () => {

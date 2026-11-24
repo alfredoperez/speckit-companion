@@ -497,3 +497,8 @@ button { font: inherit; color: inherit; }
 .constitution-card__label { min-width: 0; }
 .stale-notes { display: grid; gap: 4px; margin: 0 0 10px; }
 .stale-note { margin: 0; font-size: 12px; color: var(--text-body); }
+
+#project-health { margin: 6px 0; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-secondary); color: var(--text-body); font-size: 12px; }
+#project-health summary { cursor: pointer; color: var(--text-primary); }
+#project-health ul { margin: 6px 0 0; padding: 0; list-style: none; }
+#project-health .health-fix { opacity: 0.8; }
