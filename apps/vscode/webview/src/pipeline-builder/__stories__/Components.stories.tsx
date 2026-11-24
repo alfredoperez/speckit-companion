@@ -34,7 +34,7 @@ const CANVAS = {
 
 const POPOVER = {
     onClose: noop, onEditNode: noop, onAddHook: noop, onEditHook: noop,
-    onRemoveHook: noop, onAction: noop,
+    onRemoveHook: noop, onAction: noop, now: new Date('2026-11-20T12:00:00Z'),
 };
 
 /** A run record that saw two of the hooks below and not the third. */

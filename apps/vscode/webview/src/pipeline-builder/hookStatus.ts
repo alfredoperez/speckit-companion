@@ -3,6 +3,7 @@
  * then the last run's entry for it. The card and the popover both read this, so
  * the word on a row and the sentence beside it never disagree.
  */
+import { formatRelativeTime } from 'speckit-viewer/core/relativeTime';
 import { HookRunsAnswer, PipelineHook } from '../../../src/protocol/pipeline';
 
 export type HookTone = 'problem' | 'ran' | 'skipped' | 'unseen';
@@ -35,6 +36,8 @@ export function hookStatus(
     const problem = hook.problem?.trim();
     if (problem) { return { word: problemWord(problem), tone: 'problem', reason: problem }; }
     if (!runs?.spec) { return null; }
+    // A step the run left no record in has not been reached, which says nothing about its hooks.
+    if (!runs.runs.some(r => r.step === step)) { return null; }
     const key = hookKey(step, hook);
     const run = runs.runs.find(r => r.key === key);
     if (!run) { return { word: 'not seen', tone: 'unseen', reason: NOT_SEEN }; }
@@ -49,4 +52,11 @@ export function hookStatus(
         word: 'skipped', tone: 'skipped',
         reason: run.reason ?? 'The last run reached it and did not run it.',
     };
+}
+
+/** Which run the statuses come from, said once: the spec and how long ago. */
+export function runSource(runs: HookRunsAnswer | null | undefined, now = new Date()): string {
+    if (!runs?.spec) { return ''; }
+    const when = runs.runAt ? formatRelativeTime(runs.runAt, now) : '';
+    return `Last run: ${runs.spec.name}${when && when !== 'unknown' ? `, ${when}` : ''}`;
 }

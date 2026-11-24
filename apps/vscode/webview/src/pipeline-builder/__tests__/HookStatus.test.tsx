@@ -1,4 +1,4 @@
-import { hookStatus, problemWord } from '../hookStatus';
+import { hookStatus, problemWord, runSource } from '../hookStatus';
 import type { HookRun, HookRunsAnswer, PipelineHook } from '../../../../src/protocol/pipeline';
 
 const hook = (over: Partial<PipelineHook> = {}): PipelineHook => ({
@@ -59,6 +59,21 @@ describe('what a hook row says about its last run', () => {
     it('matches a command hook by its address, since a command carries no ref', () => {
         expect(hookStatus('specify', hook({ type: 'command', summary: 'npm run lint' }),
             record([run({ type: 'command', ref: '' })]))?.word).toBe('ran');
+    });
+
+    it('says nothing about a hook on a step the run has not reached', () => {
+        expect(hookStatus('plan', hook(), record([run()]))).toBeNull();
+    });
+});
+
+describe('which run the statuses come from', () => {
+    it('names the spec and how long ago it ran', () => {
+        expect(runSource(record([]), new Date('2026-11-20T12:00:00Z'))).toBe('Last run: 684-x, 2h ago');
+    });
+
+    it('says nothing when there is no run', () => {
+        expect(runSource(null)).toBe('');
+        expect(runSource({ spec: null, runAt: null, runs: [] })).toBe('');
     });
 });
 

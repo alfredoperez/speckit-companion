@@ -7,7 +7,7 @@ import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Menu, MenuOption } from './Menu';
 import { HookIcon } from './HookIcon';
 import { KIND_LABELS } from './hookKinds';
-import { hookStatus } from './hookStatus';
+import { hookStatus, runSource } from './hookStatus';
 import { StatusMark, hookName } from './Canvas';
 import { MovePlaces } from './moves';
 import { HookRunsAnswer, PipelineHook, PipelineNode } from '../../../src/protocol/pipeline';
@@ -20,6 +20,8 @@ interface Props {
     node: PipelineNode;
     step: string;
     runs?: HookRunsAnswer | null;
+    /** The clock the run's age is read against; a story pins it. */
+    now?: Date;
     /** The file this project's hooks are written in, as the hook card names it. */
     hooksIn: string;
     /** The `data-node` of the card this hangs beside; absent in a story, where it sits in the flow. */
@@ -355,6 +357,9 @@ export function NodePopover(props: Props) {
 
             <section class="pb-pop-section" aria-label="Its hooks">
                 <h3 class="pb-pop-label">Its hooks · {ownHooks.length}</h3>
+                {ownHooks.length > 0 && runSource(runs) && (
+                    <p class="pb-pop-run">{runSource(runs, props.now)}</p>
+                )}
                 {ownHooks.length > 0 ? (
                     <ul class="pb-pop-hooks">
                         {ownHooks.map(hook => (

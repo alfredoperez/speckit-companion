@@ -99,6 +99,8 @@ describe('the builder asks whether each hook ran', () => {
         });
         expect(Array.from(root.querySelectorAll('.pb-card .pb-hook-status'))
             .map(el => el.textContent)).toEqual(['skipped', 'not seen']);
+        await open();
+        expect(popover()!.querySelector('.pb-pop-run')?.textContent).toMatch(/^Last run: 684-x, /);
     });
 });
 

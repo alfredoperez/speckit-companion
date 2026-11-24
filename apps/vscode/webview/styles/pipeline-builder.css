@@ -3116,6 +3116,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 }
 
 .pb-pop-empty { margin: 0; color: var(--text-label); }
+.pb-pop-run { margin: 0; font-size: var(--text-xs); color: var(--text-label); }
 
 .pb-pop-actions {
     display: flex;
