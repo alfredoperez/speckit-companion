@@ -83,6 +83,8 @@ from capture import (  # noqa: E402,F401
     append_amendments,
     append_capture_entries,
     append_decisions,
+    append_hook_runs,
+    parse_hook_outcome,
     apply_batch,
     append_string_list,
     append_verification_runs,
@@ -998,6 +1000,12 @@ def _main() -> int:
         help="Store the size classification object {projectedFiles, projectedTasks, "
              "scopeSignal, verdict}; verdict (simple|normal|oversized) is required.",
     )
+    parser.add_argument(
+        "--hook-outcome", dest="hook_outcomes", action="append", default=None,
+        metavar="STEP/WHEN/ANCHOR/INDEX/TYPE[:REF]=ran|skipped[: WHY]",
+        help="Record whether a node hook ran, in hookRuns[]. Rides on any other call "
+             "without changing what that call does. Repeatable.",
+    )
     args = parser.parse_args()
     # `--batch -` reads the JSON from stdin, so a quoted heredoc carries apostrophes safely.
     if args.batch == "-":
@@ -1031,7 +1039,13 @@ def _main() -> int:
     # `--feature-dir` if it was given; the resolved one is not bound until later,
     # and a project's own steps are discoverable from either.
     steps_here = known_steps(args.feature_dir)
-    if not args.tasks_file and not args.task and not args.close_task and not args.mark_complete and not args.set_pairs and not args.materialize and not args.finish and not args.advance and not args.fold and not capture_mode and (args.step == "done" or args.step not in steps_here):
+    # A hook record usually rides on a call the step makes anyway; alone, it is
+    # the whole call and must not be read as a bare step start.
+    hook_only = bool(args.hook_outcomes) and not (
+        args.tasks_file or args.task or args.close_task or args.mark_complete or args.set_pairs
+        or args.materialize or args.finish or args.advance or args.fold or capture_mode or args.hook
+        or _has_flag(sys.argv, "--kind") or _has_flag(sys.argv, "--status"))
+    if not hook_only and not args.tasks_file and not args.task and not args.close_task and not args.mark_complete and not args.set_pairs and not args.materialize and not args.finish and not args.advance and not args.fold and not capture_mode and (args.step == "done" or args.step not in steps_here):
         msg = (f"Skipping: '{args.step}' is not a step this project has "
                f"({', '.join(sorted(steps_here))}).")
         print(f"[companion] {msg}", file=sys.stderr)
@@ -1081,6 +1095,26 @@ def _main() -> int:
         print(f"[companion] {msg}", file=sys.stderr)
         _record_outcome(False, msg)
         return 2
+
+    if args.hook_outcomes:
+        records, bad = [], []
+        for raw in args.hook_outcomes:
+            try:
+                records.append(parse_hook_outcome(raw))
+            except ValueError as exc:
+                bad.append(f"not recording hook outcome: {exc}")
+        for line in bad:
+            print(f"[companion] {line}", file=sys.stderr)
+        try:
+            target = append_hook_runs(feature_dir, records)
+        except Exception as exc:  # noqa: BLE001 - a record never fails the call it rides on
+            target, bad = None, [*bad, f"skipped the hook record write: {exc}"]
+            print(f"[companion] Warning: {bad[-1]}", file=sys.stderr)
+        if target is not None:
+            print(f"[companion] Recorded {len(records)} hook outcome(s) in {target}")
+        if hook_only:
+            _record_outcome(not bad, "; ".join(bad) or None)
+            return 2 if bad and not records else 0
 
     # Caller-error validation for --classification (exit 2, per the capture contract):
     # a malformed classification is a bug in the emitting body, not a runtime miss.
@@ -1419,6 +1453,7 @@ _OP_FLAGS = (
     ("--fold", "fold"),
     ("--hook", "hook"),
     ("--event", "event"),
+    ("--hook-outcome", "hook-outcome"),
 )
 
 _CAPTURE_FLAGS = (

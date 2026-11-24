@@ -45,7 +45,7 @@ def _coerce_value(raw: str):
 
 
 # `request` is write-once, so only `set_request` may write it.
-PROTECTED_SET_KEYS = frozenset({"history", "transitions", "status", "currentStep", "request"})
+PROTECTED_SET_KEYS = frozenset({"history", "transitions", "status", "currentStep", "request", "hookRuns"})
 # Kept exactly as written: a ticket named "42" or "none" is still that ticket.
 TEXT_SET_KEYS = frozenset({"source", "extends", "supersedes"})
 
@@ -426,6 +426,57 @@ def append_amendments(feature_dir: Path, raws: list[str]) -> Path | None:
             replanned = replanned.strip().lower() == "true"
         entry["replanned"] = replanned if isinstance(replanned, bool) else False
     ctx["amendments"] = (list(prior) if isinstance(prior, list) else []) + entries
+    atomic_write(target, ctx)
+    return target
+
+
+HOOK_TYPES = ("command", "prompt", "node", "skill")
+HOOK_OUTCOMES = ("ran", "skipped")
+_HOOK_OUTCOME = re.compile(
+    r"^(?P<step>[\w.-]+)/(?P<when>before|after)/(?P<anchor>[^/=\s]+)/(?P<index>\d+)/"
+    r"(?P<type>[a-z]+)(?::(?P<ref>[^/=\s]+))?=(?P<outcome>[a-z]+)\s*(?::\s*(?P<reason>.*))?$",
+    re.S)
+
+
+def parse_hook_outcome(raw: str) -> dict:
+    """`specify/after/finalize/0/skill:review=skipped: no time` as a hook record.
+
+    Raises ValueError naming what is wrong, so a bad record writes nothing.
+    """
+    found = _HOOK_OUTCOME.match(str(raw).strip())
+    if not found:
+        raise ValueError(f"{raw!r} is not <step>/<when>/<anchor>/<index>/<type>[:<ref>]=ran|skipped[: why]")
+    if found["type"] not in HOOK_TYPES:
+        raise ValueError(f"{found['type']!r} is not a hook type ({', '.join(HOOK_TYPES)})")
+    if found["outcome"] not in HOOK_OUTCOMES:
+        raise ValueError(f"{found['outcome']!r} is not an outcome (ran or skipped)")
+    record = {
+        "step": found["step"], "when": found["when"], "anchor": found["anchor"],
+        "index": int(found["index"]), "type": found["type"], "ref": found["ref"] or "",
+        "outcome": found["outcome"],
+    }
+    reason = " ".join((found["reason"] or "").split())[:200]
+    if reason:
+        record["reason"] = reason
+    return record
+
+
+def append_hook_runs(feature_dir: Path, records: list[dict]) -> Path | None:
+    """Append hook records to `hookRuns`: the assistant's own word on each hook, never rewritten.
+
+    A list of its own, not rows in `history`: every history reader takes a row
+    with no substep, no task and an unknown kind for a step start.
+    """
+    if not records:
+        return None
+    target = feature_dir / ".spec-context.json"
+    branch = _git_branch(_repo_root_for(feature_dir)) or "main"
+    ctx = read_ctx(target)
+    fill_required(ctx, feature_dir, branch)
+    prior = ctx.get("hookRuns")
+    now = _now_iso()
+    stamped = [{**r, "by": "ai", "at": now} for r in records]
+    ctx["hookRuns"] = (list(prior) if isinstance(prior, list) else []) + stamped
     atomic_write(target, ctx)
     return target
 
