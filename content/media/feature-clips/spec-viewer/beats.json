@@ -1,0 +1,26 @@
+{
+  "title": "Spec viewer",
+  "shots": [
+    "clip-spec-viewer"
+  ],
+  "beats": [
+    {
+      "shot": "clip-spec-viewer",
+      "part": "requirements",
+      "noun": "Requirements",
+      "rest": "the asks, without the markdown"
+    },
+    {
+      "shot": "clip-spec-viewer",
+      "part": "toc",
+      "noun": "On this page",
+      "rest": "jump to the section you came for"
+    },
+    {
+      "shot": "clip-spec-viewer",
+      "part": "rail",
+      "noun": "Pipeline",
+      "rest": "every document the run wrote"
+    }
+  ]
+}

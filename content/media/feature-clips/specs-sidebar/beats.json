@@ -1,0 +1,26 @@
+{
+  "title": "Specs sidebar",
+  "shots": [
+    "clip-specs-sidebar"
+  ],
+  "beats": [
+    {
+      "shot": "clip-specs-sidebar",
+      "part": "spec",
+      "noun": "A spec",
+      "rest": "and every document it wrote"
+    },
+    {
+      "shot": "clip-specs-sidebar",
+      "part": "others",
+      "noun": "Each row",
+      "rest": "when it last moved"
+    },
+    {
+      "shot": "clip-specs-sidebar",
+      "part": "group",
+      "noun": "Completed",
+      "rest": "finished runs, kept together"
+    }
+  ]
+}

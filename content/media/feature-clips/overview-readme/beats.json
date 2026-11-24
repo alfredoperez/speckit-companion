@@ -1,0 +1,40 @@
+{
+  "title": "Overview page, README loop",
+  "shots": [
+    "clip-readme-approach",
+    "clip-readme-fence",
+    "clip-readme-verified"
+  ],
+  "beats": [
+    {
+      "shot": "clip-readme-approach",
+      "part": "approach",
+      "noun": "Approach",
+      "rest": "how it set out to do it"
+    },
+    {
+      "shot": "clip-readme-approach",
+      "part": "context",
+      "noun": "Working area",
+      "rest": "where it touched the code"
+    },
+    {
+      "shot": "clip-readme-fence",
+      "part": "scope",
+      "noun": "The fence",
+      "rest": "what had to stay true"
+    },
+    {
+      "shot": "clip-readme-fence",
+      "part": "out",
+      "noun": "Out of scope",
+      "rest": "said up front"
+    },
+    {
+      "shot": "clip-readme-verified",
+      "part": "checks",
+      "noun": "Checks",
+      "rest": "what ran, and what it said"
+    }
+  ]
+}

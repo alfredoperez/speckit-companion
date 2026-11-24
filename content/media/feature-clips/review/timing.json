@@ -1,0 +1,30 @@
+{
+  "duration": 20.4,
+  "captions": [
+    {
+      "t": 2.4,
+      "noun": "Comments",
+      "rest": "on any line of the plan"
+    },
+    {
+      "t": 5.86,
+      "noun": "Refine",
+      "rest": "sends every note to your AI"
+    },
+    {
+      "t": 9.32,
+      "noun": "Applied",
+      "rest": "the note stays with the spec"
+    },
+    {
+      "t": 12.78,
+      "noun": "The answer",
+      "rest": "written into the plan"
+    },
+    {
+      "t": 16.24,
+      "noun": "Specs",
+      "rest": "find it again by how far it got"
+    }
+  ]
+}

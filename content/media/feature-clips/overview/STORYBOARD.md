@@ -1,5 +1,18 @@
 # overview
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-overview-intent` · region | **Intent** what was asked, in one place |
+| 2 | `clip-overview-timing` · region | **Timing** where the time went |
+| 3 | `clip-overview-expectations` · region | **Expectations** what the run set out to do |
+| 4 | `clip-overview-verified` · region | **Verified** what was checked |
+| 5 | `clip-overview-decisions` · region | **Decisions** the calls made on the way |
+| 6 | `clip-overview-coverage` · region | **Coverage** every requirement to its test |
+
 The landing page's **first tab**, so the first moving thing anyone sees: a fast, continuous read down the whole Overview page of a completed run. Ten regions in 23.5 seconds, top of the page to the bottom of the coverage table. Promoted to `docs/screenshots/generated/overview.gif`.
 
 ## Why it exists

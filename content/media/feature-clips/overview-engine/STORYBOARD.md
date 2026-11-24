@@ -1,5 +1,15 @@
 # Overview GIF, engine cut. Storyboard
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-engine-top` · facts | **Run facts** counted from what the run wrote |
+| 2 | `clip-engine-top` · timing | **Every phase** timed as it ran |
+| 3 | `clip-engine-log` · log | **Run log** each step as it happened |
+
 **Status: BUILT (2026-08-24).** This is the shorter, engine-angled variant of
 `../overview-readme/` for the engine README (`speckit-extension/README.md`).
 That README tells the CAPTURE story: your existing Spec Kit commands run

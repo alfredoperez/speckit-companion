@@ -1,0 +1,26 @@
+{
+  "title": "Requirement coverage",
+  "shots": [
+    "clip-coverage"
+  ],
+  "beats": [
+    {
+      "shot": "clip-coverage",
+      "part": "table",
+      "noun": "Coverage",
+      "rest": "every requirement, its tasks, its tests"
+    },
+    {
+      "shot": "clip-coverage",
+      "part": "row",
+      "noun": "One requirement",
+      "rest": "read across to its evidence"
+    },
+    {
+      "shot": "clip-coverage",
+      "part": "tasks",
+      "noun": "Task chips",
+      "rest": "where that ask got built"
+    }
+  ]
+}

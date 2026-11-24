@@ -1,0 +1,12 @@
+{
+  "title": "Overview page",
+  "shots": ["clip-overview-intent", "clip-overview-timing", "clip-overview-expectations", "clip-overview-verified", "clip-overview-decisions", "clip-overview-coverage"],
+  "beats": [
+    { "shot": "clip-overview-intent", "part": "region", "noun": "Intent", "rest": "what was asked, in one place" },
+    { "shot": "clip-overview-timing", "part": "region", "noun": "Timing", "rest": "where the time went" },
+    { "shot": "clip-overview-expectations", "part": "region", "noun": "Expectations", "rest": "what the run set out to do" },
+    { "shot": "clip-overview-verified", "part": "region", "noun": "Verified", "rest": "what was checked" },
+    { "shot": "clip-overview-decisions", "part": "region", "noun": "Decisions", "rest": "the calls made on the way" },
+    { "shot": "clip-overview-coverage", "part": "region", "noun": "Coverage", "rest": "every requirement to its test" }
+  ]
+}

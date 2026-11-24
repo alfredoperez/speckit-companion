@@ -1,5 +1,17 @@
 # run-in-flight
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-run-tasked` · rail | **Step rail** what's done, what's next |
+| 2 | `clip-run-tasked` · footer | **Next step** one click from the footer |
+| 3 | `clip-run-implementing` · tasks | **Tasks** tick off as the AI works |
+| 4 | `clip-run-implementing` · timing | **Timing** how far the run has got |
+| 5 | `clip-run-implementing` · footer | **Running** the footer follows the run |
+
 The 30 to 60 second demo clip of a run **in flight**: the live pipeline rail and per-phase timing together, not a tour of a finished run. Promoted to `docs/screenshots/generated/run-in-flight.gif`.
 
 ## Why it exists

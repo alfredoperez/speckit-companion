@@ -1,5 +1,16 @@
 # workflow-documents
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-workflow-documents` · plan | **Plan** and the files it wrote |
+| 2 | `clip-workflow-documents` · rail | **Documents** switch without opening a file |
+| 3 | `clip-workflow-documents` · phases | **Tasks** grouped by phase |
+| 4 | `clip-workflow-documents` · toc | **On this page** follows the open document |
+
 ## The clip this directory was supposed to hold, and why it is not here yet
 
 This composition was commissioned as the clip for the custom-command guide: a run of `speckit.customCommands` showing where a command you defined actually surfaces. It is not that clip, because the state it needs was never captured. Read this section before wiring the output into any page.

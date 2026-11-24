@@ -1,0 +1,25 @@
+{
+  "duration": 16.94,
+  "captions": [
+    {
+      "t": 2.4,
+      "noun": "Your workflow",
+      "rest": "a few lines in settings"
+    },
+    {
+      "t": 5.86,
+      "noun": "Steps",
+      "rest": "each one a command you choose"
+    },
+    {
+      "t": 9.32,
+      "noun": "Workflow Builder",
+      "rest": "the pipeline as a board"
+    },
+    {
+      "t": 12.78,
+      "noun": "A node",
+      "rest": "open it to change what it runs"
+    }
+  ]
+}

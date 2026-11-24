@@ -1,0 +1,25 @@
+{
+  "duration": 16.94,
+  "captions": [
+    {
+      "t": 2.4,
+      "noun": "Plan",
+      "rest": "and the files it wrote"
+    },
+    {
+      "t": 5.86,
+      "noun": "Documents",
+      "rest": "switch without opening a file"
+    },
+    {
+      "t": 9.32,
+      "noun": "Tasks",
+      "rest": "grouped by phase"
+    },
+    {
+      "t": 12.78,
+      "noun": "On this page",
+      "rest": "follows the open document"
+    }
+  ]
+}

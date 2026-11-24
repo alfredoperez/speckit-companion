@@ -1,0 +1,20 @@
+{
+  "duration": 13.48,
+  "captions": [
+    {
+      "t": 2.4,
+      "noun": "Finished specs",
+      "rest": "still one click away"
+    },
+    {
+      "t": 5.86,
+      "noun": "What was asked",
+      "rest": "without rereading the spec"
+    },
+    {
+      "t": 9.32,
+      "noun": "Decisions",
+      "rest": "the next run won't rediscover"
+    }
+  ]
+}

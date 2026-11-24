@@ -1,0 +1,27 @@
+{
+  "title": "Overview page, engine README loop",
+  "shots": [
+    "clip-engine-top",
+    "clip-engine-log"
+  ],
+  "beats": [
+    {
+      "shot": "clip-engine-top",
+      "part": "facts",
+      "noun": "Run facts",
+      "rest": "counted from what the run wrote"
+    },
+    {
+      "shot": "clip-engine-top",
+      "part": "timing",
+      "noun": "Every phase",
+      "rest": "timed as it ran"
+    },
+    {
+      "shot": "clip-engine-log",
+      "part": "log",
+      "noun": "Run log",
+      "rest": "each step as it happened"
+    }
+  ]
+}

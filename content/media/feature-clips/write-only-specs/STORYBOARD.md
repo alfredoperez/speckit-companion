@@ -1,5 +1,15 @@
 # write-only-specs
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-written-top` · completed | **Finished specs** still one click away |
+| 2 | `clip-written-top` · intent | **What was asked** without rereading the spec |
+| 3 | `clip-written-decisions` · decisions | **Decisions** the next run won't rediscover |
+
 A 26-second typographic promo for the blog article **"I Wrote 238 Specs and Never Read One Again"**. It promotes a published article, not a product surface, so like `make-it-yours` it is typographic and reads no capture. Silent, clean loop, published to `media/web/write-only-specs.{mp4,webm}` and copied into the vault as `VID-write-only-specs.*`.
 
 ## Why it exists

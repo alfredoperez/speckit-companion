@@ -1,0 +1,40 @@
+{
+  "title": "The review loop",
+  "shots": [
+    "clip-review-pending",
+    "clip-review-applied",
+    "clip-review-sidebar"
+  ],
+  "beats": [
+    {
+      "shot": "clip-review-pending",
+      "part": "comment",
+      "noun": "Comments",
+      "rest": "on any line of the plan"
+    },
+    {
+      "shot": "clip-review-pending",
+      "part": "refine",
+      "noun": "Refine",
+      "rest": "sends every note to your AI"
+    },
+    {
+      "shot": "clip-review-applied",
+      "part": "comment",
+      "noun": "Applied",
+      "rest": "the note stays with the spec"
+    },
+    {
+      "shot": "clip-review-applied",
+      "part": "answer",
+      "noun": "The answer",
+      "rest": "written into the plan"
+    },
+    {
+      "shot": "clip-review-sidebar",
+      "part": "specs",
+      "noun": "Specs",
+      "rest": "find it again by how far it got"
+    }
+  ]
+}

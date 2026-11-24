@@ -116,12 +116,12 @@
       },
       "unnormalized": [],
       "alt": {
-        "docs/screenshots/generated/overview.gif": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
-        "content/media/web/overview-poster.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
-        "content/media/web/overview-x16x9.png": "A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table",
+        "docs/screenshots/generated/overview.gif": "A guided tour of a finished run's Overview, one part at a time: the intent, per-phase timing, the expectations fence, the verified checks, the first decisions, and the first rows of the requirement to task to test coverage table",
+        "content/media/web/overview-poster.png": "A guided tour of a finished run's Overview, one part at a time: the intent, per-phase timing, the expectations fence, the verified checks, the first decisions, and the first rows of the requirement to task to test coverage table",
+        "content/media/web/overview-x16x9.png": "A guided tour of a finished run's Overview, one part at a time: the intent, per-phase timing, the expectations fence, the verified checks, the first decisions, and the first rows of the requirement to task to test coverage table",
         "docs/screenshots/generated/overview.png": "The completed Overview page for the Teamboard fixture run",
         "docs/screenshots/generated/overview-annotated.png": "The completed Overview dossier with its honest per-phase timing called out: run status, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the coverage table",
-        "content/media/web/panel-read.png": "The Overview's content column: the intent the run answers to, each phase with the time it took, the approach, the corner of the codebase it changed, how it was sized, and the expectations fence."
+        "content/media/web/panel-read.png": "The Overview's content column: the intent the run answers to, each phase with the time it took, the approach, the corner of the codebase it changed, how it was sized, and the start of the expectations fence."
       },
       "referencedBy": {
         "docs/screenshots/generated/overview.gif": [
@@ -155,8 +155,8 @@
         "content/media/feature-clips/overview-readme/renders/overview-readme_2026-08-24_16-55-52.mp4"
       ],
       "alt": {
-        "content/media/web/overview-readme-poster.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table",
-        "content/media/web/overview-readme-x16x9.png": "A guided tour of the Overview: the whole run on one page, then per-phase timing, where it worked, the expectations fence, verified checks with the commands that prove them, decisions with rejected alternatives, and the requirement to task to test coverage table"
+        "content/media/web/overview-readme-poster.png": "A tour of a finished run's Overview: the approach and the working area, what had to stay true and what was out of scope, then the checks that ran",
+        "content/media/web/overview-readme-x16x9.png": "A tour of a finished run's Overview: the approach and the working area, what had to stay true and what was out of scope, then the checks that ran"
       },
       "referencedBy": {},
       "notes": "This composition no longer publishes. docs/screenshots/generated/overview.gif is now rendered from the faster nine-beat `overview` composition; see that entry. Kept as the long-form cut of the same page, with its establishing pull-back and closing end card."
@@ -183,9 +183,9 @@
         "content/media/feature-clips/overview-engine/renders/overview-engine_2026-08-24_18-18-33.mp4"
       ],
       "alt": {
-        "docs/screenshots/generated/overview-engine.gif": "The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage",
-        "content/media/web/overview-engine-poster.png": "The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage",
-        "content/media/web/overview-engine-x16x9.png": "The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage"
+        "docs/screenshots/generated/overview-engine.gif": "The record a run leaves behind: run facts counted from what it wrote, each phase timed as it ran, and the run log's latest activity",
+        "content/media/web/overview-engine-poster.png": "The record a run leaves behind: run facts counted from what it wrote, each phase timed as it ran, and the run log's latest activity",
+        "content/media/web/overview-engine-x16x9.png": "The record a run leaves behind: run facts counted from what it wrote, each phase timed as it ran, and the run log's latest activity"
       },
       "referencedBy": {
         "docs/screenshots/generated/overview-engine.gif": [
@@ -216,10 +216,10 @@
         "content/media/feature-clips/spec-viewer/renders/spec-viewer_2026-08-25_18-27-47.mp4"
       ],
       "alt": {
-        "docs/screenshots/generated/spec-viewer.gif": "A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation",
+        "docs/screenshots/generated/spec-viewer.gif": "A spec rendered as a page: its requirements as rows, the On this page outline, and the pipeline rail with every document the run wrote",
         "docs/screenshots/generated/spec-viewer.png": "A spec rendered as a structured page in the VS Code extension: requirements as labeled rows, the pipeline rail, and on-page navigation",
-        "content/media/web/spec-viewer-poster.png": "A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation",
-        "content/media/web/spec-viewer-x16x9.png": "A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation"
+        "content/media/web/spec-viewer-poster.png": "A spec rendered as a page: its requirements as rows, the On this page outline, and the pipeline rail with every document the run wrote",
+        "content/media/web/spec-viewer-x16x9.png": "A spec rendered as a page: its requirements as rows, the On this page outline, and the pipeline rail with every document the run wrote"
       },
       "referencedBy": {
         "docs/screenshots/generated/spec-viewer.gif": [
@@ -249,10 +249,10 @@
         "content/media/feature-clips/inline-comments/renders/inline-comments_2026-08-25_18-27-59.mp4"
       ],
       "alt": {
-        "docs/screenshots/generated/inline-comments.gif": "Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates",
+        "docs/screenshots/generated/inline-comments.gif": "An inline review comment pinned under the plan line it is about, opened to its full note with Refine, Edit and Delete",
         "docs/screenshots/generated/inline-comments.png": "Several inline comments on one spec document",
-        "content/media/web/inline-comments-poster.png": "Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates",
-        "content/media/web/inline-comments-x16x9.png": "Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates"
+        "content/media/web/inline-comments-poster.png": "An inline review comment pinned under the plan line it is about, opened to its full note with Refine, Edit and Delete",
+        "content/media/web/inline-comments-x16x9.png": "An inline review comment pinned under the plan line it is about, opened to its full note with Refine, Edit and Delete"
       },
       "referencedBy": {
         "docs/screenshots/generated/inline-comments.gif": [
@@ -284,11 +284,11 @@
         "content/media/feature-clips/specs-sidebar/renders/specs-sidebar_2026-08-25_18-28-10.mp4"
       ],
       "alt": {
-        "docs/screenshots/generated/specs-sidebar.gif": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the steering view beneath",
+        "docs/screenshots/generated/specs-sidebar.gif": "The Specs sidebar: a finished spec opened onto its documents, the other specs with when each last moved, and the Completed group",
         "docs/screenshots/generated/specs-sidebar.png": "The full Specs sidebar",
         "docs/screenshots/generated/sidebar-triptych.png": "The three-panel sidebar explainer: the Specs and Steering views as captioned cards",
-        "content/media/web/specs-sidebar-poster.png": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the steering view beneath",
-        "content/media/web/specs-sidebar-x16x9.png": "The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the steering view beneath"
+        "content/media/web/specs-sidebar-poster.png": "The Specs sidebar: a finished spec opened onto its documents, the other specs with when each last moved, and the Completed group",
+        "content/media/web/specs-sidebar-x16x9.png": "The Specs sidebar: a finished spec opened onto its documents, the other specs with when each last moved, and the Completed group"
       },
       "referencedBy": {
         "docs/screenshots/generated/specs-sidebar.gif": [
@@ -319,9 +319,9 @@
         "content/media/feature-clips/run-in-flight/renders/run-in-flight_2026-08-25_18-27-11.mp4"
       ],
       "alt": {
-        "docs/screenshots/generated/run-in-flight.gif": "A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing",
-        "content/media/web/run-in-flight-poster.png": "A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing",
-        "content/media/web/run-in-flight-x16x9.png": "A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing"
+        "docs/screenshots/generated/run-in-flight.gif": "A run in flight: the step rail and the next-step button after tasks, then mid-implement with a task running, the phase count and the footer saying the step is running",
+        "content/media/web/run-in-flight-poster.png": "A run in flight: the step rail and the next-step button after tasks, then mid-implement with a task running, the phase count and the footer saying the step is running",
+        "content/media/web/run-in-flight-x16x9.png": "A run in flight: the step rail and the next-step button after tasks, then mid-implement with a task running, the phase count and the footer saying the step is running"
       },
       "referencedBy": {
         "docs/screenshots/generated/run-in-flight.gif": [
@@ -351,10 +351,10 @@
       },
       "unnormalized": [],
       "alt": {
-        "docs/screenshots/generated/make-it-yours.gif": "Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches",
-        "content/media/web/make-it-yours-poster.png": "Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches",
-        "content/media/web/make-it-yours-x16x9.png": "Make it yours: a custom workflow written into settings.json, offered when you create a spec and recorded on it, then each step shown under the command it dispatches",
-        "content/media/web/panel-bend.png": "A workflow written by hand: its own phases listed as the steps a run will take."
+        "docs/screenshots/generated/make-it-yours.gif": "Make it yours: a custom workflow written into the workspace settings with its own steps, then the Workflow Builder showing the pipeline as a board of nodes",
+        "content/media/web/make-it-yours-poster.png": "Make it yours: a custom workflow written into the workspace settings with its own steps, then the Workflow Builder showing the pipeline as a board of nodes",
+        "content/media/web/make-it-yours-x16x9.png": "Make it yours: a custom workflow written into the workspace settings with its own steps, then the Workflow Builder showing the pipeline as a board of nodes",
+        "content/media/web/panel-bend.png": "A workflow written by hand in the workspace settings: its name, its description and the steps a run will take."
       },
       "referencedBy": {}
     },
@@ -379,9 +379,9 @@
       },
       "unnormalized": [],
       "alt": {
-        "content/media/web/step-rail-poster.png": "The step rail and next action: steps unlock in order, one button always points at the next step, and a live percent runs during implement",
-        "content/media/web/step-rail-x16x9.png": "The step rail and next action: steps unlock in order, one button always points at the next step, and a live percent runs during implement",
-        "content/media/web/panel-step-rail.png": "The pipeline rail with Specification, Plan and Tasks each carrying a green check, Tasks highlighted as the step being read, and the generated task list beside it in two phases"
+        "content/media/web/step-rail-poster.png": "The step rail and next action: grey steps not written yet, the next step named on the button, then the rail and the footer mid-implement",
+        "content/media/web/step-rail-x16x9.png": "The step rail and next action: grey steps not written yet, the next step named on the button, then the rail and the footer mid-implement",
+        "content/media/web/panel-step-rail.png": "The pipeline rail of a finished run with Specification, Plan and Tasks each carrying a green check, Tasks highlighted as the step being read, and the task list beside it grouped by phase"
       },
       "referencedBy": {},
       "notes": "No published still or GIF today. The clip exists and is a site and docs candidate."
@@ -406,8 +406,8 @@
       },
       "unnormalized": [],
       "alt": {
-        "content/media/web/coverage-poster.png": "Requirement coverage in the Overview: every requirement traced, down to the task and the test",
-        "content/media/web/coverage-x16x9.png": "Requirement coverage in the Overview: every requirement traced, down to the task and the test"
+        "content/media/web/coverage-poster.png": "Requirement coverage in the Overview: the first rows of the table, then one requirement read across to its tasks and tests",
+        "content/media/web/coverage-x16x9.png": "Requirement coverage in the Overview: the first rows of the table, then one requirement read across to its tasks and tests"
       },
       "referencedBy": {},
       "notes": "No published still or GIF today. The clip exists and is a site and docs candidate."
@@ -435,9 +435,9 @@
         "content/media/feature-clips/review/renders/review_2026-08-28_10-53-25.mp4"
       ],
       "alt": {
-        "content/media/web/review-poster.png": "Correcting a spec before it becomes code: a comment pins under the line it annotates, the card opens to say exactly what has to change, Refine hands the pending comments to your AI, the note stays on the card as history, and the side bar opens on the same spec sitting with every other one, grouped by lifecycle, with the steering material beneath",
-        "content/media/web/review-x16x9.png": "Correcting a spec before it becomes code: a comment pins under the line it annotates, the card opens to say exactly what has to change, Refine hands the pending comments to your AI, the note stays on the card as history, and the side bar opens on the same spec sitting with every other one, grouped by lifecycle, with the steering material beneath",
-        "content/media/web/panel-review.png": "A review comment open under the requirement it annotates, its whole note visible with Refine, Edit and Delete, among the other requirements on the page."
+        "content/media/web/review-poster.png": "Correcting a plan before it becomes code: a comment pinned under its line, Refine sending every note, the comment marked applied with the answer written into the plan, and the spec in the Specs sidebar",
+        "content/media/web/review-x16x9.png": "Correcting a plan before it becomes code: a comment pinned under its line, Refine sending every note, the comment marked applied with the answer written into the plan, and the spec in the Specs sidebar",
+        "content/media/web/panel-review.png": "A review comment open under the plan line it annotates, its whole note visible with Refine, Edit and Delete, above the plan's constitution check."
       },
       "referencedBy": {},
       "notes": "Where inline-comments shows the comment card as an object, this runs the same surface through all four of its real states and then closes on the sidebar. The labels carry three ideas in order: catch a bad requirement while it is still a sentence, keep the note so a later session still knows what that bit was about, and show where that spec is found again. No label says the spec was rewritten, because the extension does not read the file back. The closing shot deliberately shows only Specs and Steering, the two views a fresh install with just the VS Code extension puts in the activity bar."
@@ -462,8 +462,8 @@
       },
       "unnormalized": [],
       "alt": {
-        "content/media/web/own-workflow-poster.png": "Create New Spec with its workflow picker set to SpecKit, above the Feature Brief field",
-        "content/media/web/own-workflow-x16x9.png": "Create New Spec with its workflow picker set to SpecKit, above the Feature Brief field"
+        "content/media/web/own-workflow-poster.png": "Create New Spec with a custom workflow, Discuss First, picked and its description shown, then a spec on that workflow whose rail starts with a Discussion step",
+        "content/media/web/own-workflow-x16x9.png": "Create New Spec with a custom workflow, Discuss First, picked and its description shown, then a spec on that workflow whose rail starts with a Discussion step"
       },
       "referencedBy": {},
       "notes": "All three shots are captured UI, nothing is drawn. Discuss First is the workflow defined in settings. The picker is a native select, so only the chosen workflow is on screen and the clip shows the pick happening rather than the three side by side."
@@ -490,8 +490,8 @@
         "content/media/feature-clips/workflow-documents/renders/custom-command-toolbar_2026-08-28_09-34-09.mp4"
       ],
       "alt": {
-        "content/media/web/workflow-documents-poster.png": "Switching documents in the spec viewer: the Plan document opens with its own sub-documents, the highlight moves from Plan to Tasks, the body swaps to the phased task list, and the On this page outline rebuilds for the new document",
-        "content/media/web/workflow-documents-x16x9.png": "Switching documents in the spec viewer: the Plan document opens with its own sub-documents, the highlight moves from Plan to Tasks, the body swaps to the phased task list, and the On this page outline rebuilds for the new document"
+        "content/media/web/workflow-documents-poster.png": "Documents in the spec viewer: Plan with the files it wrote, the rail, the task list grouped by phase, and the On this page outline",
+        "content/media/web/workflow-documents-x16x9.png": "Documents in the spec viewer: Plan with the files it wrote, the rail, the task list grouped by phase, and the On this page outline"
       },
       "referencedBy": {},
       "notes": "This composition was commissioned for a different subject and is deliberately not that clip: the state it needed was never captured, so it films only what its two real captures honestly show. Read content/media/feature-clips/workflow-documents/STORYBOARD.md before wiring it into any page, and keep every caption to the document switch on screen. No published GIF: nothing in either README points at it. The timestamped render still carries the old working name."
@@ -719,8 +719,8 @@
       },
       "unnormalized": [],
       "alt": {
-        "content/media/web/write-only-specs-poster.png": "Typographic promo for the article 'I Wrote 238 Specs and Never Read One Again': 94 spec folders, 238 files, 15,225 lines stamped in marker lettering on ivory, a tangled ink line through closed boxes, then one short emerald path through an open box with the Spec Kit Companion mascot pointing along it",
-        "content/media/web/write-only-specs-x16x9.png": "Typographic promo for the article 'I Wrote 238 Specs and Never Read One Again': 94 spec folders, 238 files, 15,225 lines stamped in marker lettering on ivory, a tangled ink line through closed boxes, then one short emerald path through an open box with the Spec Kit Companion mascot pointing along it"
+        "content/media/web/write-only-specs-poster.png": "Finished specs kept one click away: the Completed group in the Specs sidebar, the intent of a finished run without rereading the spec, and the decisions the next run won't rediscover",
+        "content/media/web/write-only-specs-x16x9.png": "Finished specs kept one click away: the Completed group in the Specs sidebar, the intent of a finished run without rereading the spec, and the decisions the next run won't rediscover"
       },
       "referencedBy": {},
       "notes": "Typographic, reads no capture (like make-it-yours). 1920x1080 30fps 26.0s, silent; frame 0 is the fully-stamped hook and the loop closes on it (frame 0 is also the poster). Colors sampled from IMG-hero-write-only-specs.png; Permanent Marker vendored in assets/fonts. Promotes the blog article, not a product surface."

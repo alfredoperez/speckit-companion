@@ -46,44 +46,42 @@ const STILLS = [
   // An entry with `fromFile` or `parts` would cut one from real-window shots.
 
   // ------------------------------------------------------- accordion panels
+  // Captures are the clip-* steps of desktop-check.mjs: whole VS Code windows at
+  // 1728 x 1084 CSS px, shot at DPR 3, so every crop below is the measured CSS box
+  // times 3. Each crop keeps to the editor's content, never the whole window.
   {
-    // The Overview's content column only: no sidebar, no title bar. Runs from
-    // INTENT through the expectations fence, which is the part of the page the
-    // row's copy is actually describing.
+    // The Overview's content column only: intent, run overview, approach and
+    // working area, down into the expectations fence.
     id: 'panel-read',
-    from: 'overview/assets/captures/overview-tall.png',
-    crop: { x: 612, y: 280, w: 1728 },
+    from: 'overview/assets/captures/clip-overview-intent.png',
+    crop: { x: 2190, y: 480, w: 2490 },
     aspect: ASPECT,
     width: 1500,
   },
   {
-    // One comment open, whole note visible, with its Refine / Edit / Delete row
-    // and enough requirements around it to show what it is attached to.
+    // One comment open under its plan line, whole note visible with its
+    // Refine / Edit / Delete row, and the plan around it.
     id: 'panel-review',
-    from: 'review/assets/captures/cm-open.png',
-    crop: { x: 430, y: 186, w: 1470 },
+    from: 'inline-comments/assets/captures/clip-inline-open.png',
+    crop: { x: 1680, y: 900, w: 2550 },
     aspect: ASPECT,
     width: 1500,
   },
   {
-    // The step rail with every earlier step ticked. Cut from the CAPTURE, not
-    // the render: step-rail and run-in-flight open on the same shot, so their
-    // frame-zero posters are byte-identical and one picture was serving two
-    // docs pages. A later frame of the render is no good either — it carries
-    // the clip's scrim and caption band, which are clip chrome, not docs
-    // imagery.
+    // The step rail of a finished run, every step ticked and Tasks open, with
+    // the task list beside it. Cut from the capture, so no clip chrome.
     id: 'panel-step-rail',
-    from: 'step-rail/assets/captures/step-a4.png',
-    crop: { x: 0, y: 0, w: 2448 },
+    from: 'workflow-documents/assets/captures/clip-workflow-documents.png',
+    crop: { x: 1035, y: 420, w: 3000 },
     aspect: ASPECT,
     width: 1500,
   },
   {
-    // The workflow card sequence, held on the step list rather than frame zero.
+    // A workflow written by hand in the workspace settings: its name, its
+    // description and the steps a run will take.
     id: 'panel-bend',
-    fromRender: 'make-it-yours',
-    at: 8.6,
-    crop: { x: 118, y: 30, w: 1600 },
+    from: 'make-it-yours/assets/captures/clip-make-settings.png',
+    crop: { x: 1200, y: 290, w: 2280 },
     aspect: ASPECT,
     width: 1500,
   },

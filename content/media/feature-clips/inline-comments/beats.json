@@ -1,0 +1,27 @@
+{
+  "title": "Inline comments",
+  "shots": [
+    "clip-inline-collapsed",
+    "clip-inline-open"
+  ],
+  "beats": [
+    {
+      "shot": "clip-inline-collapsed",
+      "part": "comment",
+      "noun": "A comment",
+      "rest": "pinned under the line it is about"
+    },
+    {
+      "shot": "clip-inline-open",
+      "part": "card",
+      "noun": "The full note",
+      "rest": "not sent to your AI yet"
+    },
+    {
+      "shot": "clip-inline-open",
+      "part": "actions",
+      "noun": "Refine",
+      "rest": "one prompt from every note here"
+    }
+  ]
+}

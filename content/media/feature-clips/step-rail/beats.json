@@ -1,0 +1,33 @@
+{
+  "title": "Step rail and next action",
+  "shots": [
+    "clip-rail-specified",
+    "clip-rail-implementing"
+  ],
+  "beats": [
+    {
+      "shot": "clip-rail-specified",
+      "part": "rail",
+      "noun": "Grey steps",
+      "rest": "not written yet"
+    },
+    {
+      "shot": "clip-rail-specified",
+      "part": "footer",
+      "noun": "The next step",
+      "rest": "named on the button"
+    },
+    {
+      "shot": "clip-rail-implementing",
+      "part": "rail",
+      "noun": "The rail",
+      "rest": "moves as the run does"
+    },
+    {
+      "shot": "clip-rail-implementing",
+      "part": "footer",
+      "noun": "While it runs",
+      "rest": "the footer says so"
+    }
+  ]
+}

@@ -7,7 +7,7 @@
 
 SpecKit Companion is a VS Code extension for developers who build with an AI assistant and [Spec Kit](https://github.com/github/spec-kit). It lists every spec in your project, opens each one as a page you can read and comment on, follows a run while it happens, and keeps a record of what the AI did and why. Your specs stay plain markdown in your repo, with the run record in a file beside each one, so nothing passes through a server of ours.
 
-![A guided tour of the Overview: the one sentence the run answers to, per-phase timing, the approach and the corner of the codebase it changed, how the change was sized, the expectations fence, each verified check with the command it ran, decisions with the alternatives they rejected, and the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
+![A guided tour of a finished run's Overview, one part at a time: the intent, per-phase timing, the expectations fence, the verified checks, the first decisions, and the first rows of the requirement to task to test coverage table](docs/screenshots/generated/overview.gif)
 
 ## Install
 
@@ -42,11 +42,11 @@ The [Quickstart](https://speckit-companion.dev/docs/start/your-first-spec) follo
 
 - **A sidebar for every spec.** Specs are grouped by where they stand, with the status of each document and the assistant each one was last sent to. [Viewer and sidebar](https://speckit-companion.dev/docs/navigate/viewer-and-sidebar)
 
-  ![The Specs sidebar: specs grouped by lifecycle with per-document progress marks, filter and sort, and the steering view beneath](docs/screenshots/generated/specs-sidebar.gif)
+  ![The Specs sidebar: a finished spec opened onto its documents, the other specs with when each last moved, and the Completed group](docs/screenshots/generated/specs-sidebar.gif)
 
 - **Specs you can read.** Requirements are labeled rows, acceptance scenarios read as Given, When, Then, and tasks sit under their phases.
 
-  ![A spec rendered as a structured page: title-leading header, requirements as labeled rows, the pipeline rail, and on-page navigation](docs/screenshots/generated/spec-viewer.gif)
+  ![A spec rendered as a page: its requirements as rows, the On this page outline, and the pipeline rail with every document the run wrote](docs/screenshots/generated/spec-viewer.gif)
 
 - **A plan that draws itself.** Call paths, a lifecycle, a screen and annotated code each draw as a card in the plan. [Plan blocks](https://speckit-companion.dev/docs/steps/plan-blocks)
 
@@ -54,11 +54,11 @@ The [Quickstart](https://speckit-companion.dev/docs/start/your-first-spec) follo
 
 - **Review comments on any line.** Comment on a spec the way you review a pull request, then click **Refine** and your assistant edits the spec from your comments. [Review with comments](https://speckit-companion.dev/docs/steps/review-with-comments)
 
-  ![Inline review comments on a spec: two pending comments and one already applied, each pinned under the line it annotates](docs/screenshots/generated/inline-comments.gif)
+  ![An inline review comment pinned under the plan line it is about, opened to its full note with Refine, Edit and Delete](docs/screenshots/generated/inline-comments.gif)
 
 - **A run you can watch.** One button always offers the next step, tasks tick over while implement runs, and the finished run opens on its Overview. [The steps](https://speckit-companion.dev/docs/steps) and [the Overview](https://speckit-companion.dev/docs/results/the-overview)
 
-  ![A run moving through the pipeline: the rail unlocks phase by phase, the next-step button follows it, tasks tick over live during implement, and the run overview lands with per-phase timing](docs/screenshots/generated/run-in-flight.gif)
+  ![A run in flight: the step rail and the next-step button after tasks, then mid-implement with a task running, the phase count and the footer saying the step is running](docs/screenshots/generated/run-in-flight.gif)
 
 - **A pipeline you can change.** The Workflow Builder draws the steps your project runs and lets you attach your own work before or after any of them. [Workflow Builder](https://speckit-companion.dev/docs/customize/workflow-builder)
 

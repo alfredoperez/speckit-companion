@@ -1,0 +1,35 @@
+{
+  "duration": 23.86,
+  "captions": [
+    {
+      "t": 2.4,
+      "noun": "Intent",
+      "rest": "what was asked, in one place"
+    },
+    {
+      "t": 5.86,
+      "noun": "Timing",
+      "rest": "where the time went"
+    },
+    {
+      "t": 9.32,
+      "noun": "Expectations",
+      "rest": "what the run set out to do"
+    },
+    {
+      "t": 12.78,
+      "noun": "Verified",
+      "rest": "what was checked"
+    },
+    {
+      "t": 16.24,
+      "noun": "Decisions",
+      "rest": "the calls made on the way"
+    },
+    {
+      "t": 19.7,
+      "noun": "Coverage",
+      "rest": "every requirement to its test"
+    }
+  ]
+}

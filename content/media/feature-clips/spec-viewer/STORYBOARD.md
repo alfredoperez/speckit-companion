@@ -1,5 +1,15 @@
 # spec-viewer
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-spec-viewer` · requirements | **Requirements** the asks, without the markdown |
+| 2 | `clip-spec-viewer` · toc | **On this page** jump to the section you came for |
+| 3 | `clip-spec-viewer` · rail | **Pipeline** every document the run wrote |
+
 The 10 second look at a spec rendered as a page: the requirements column, the on-page navigation that indexes it, and the pipeline rail with each step's sub-documents hanging off it. Promoted to `docs/screenshots/generated/spec-viewer.gif`, which the README embeds under **Visual Spec Viewer**.
 
 ## Why it exists
