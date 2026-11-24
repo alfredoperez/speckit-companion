@@ -11,6 +11,9 @@ The running command is assembled from ordered **nodes**. A project attaches its 
 - `{ type: command, run: "<shell>" }`: run it with your terminal tool, then continue. Without a terminal tool, report the command you would have run rather than pretending.
 - `{ type: prompt, text: "<instruction>" }`: act on the text before moving on.
 - `{ type: node, ref: <id> }`: carry out `.specify/companion/nodes/<id>.md` as part of this command. A missing `ref` file is a real misconfiguration: report it and stop rather than silently skipping.
+- `{ type: skill, ref: <name>, text?: "<note>" }`: invoke that skill at this point, the way a person would ask for it, and act on the note. A skill you cannot find is reported, not imitated.
+
+**Record each hook's outcome.** After a hook, add `--hook-outcome '<step>/<when>/<anchor>/<index>/<type>[:<ref>]=ran'` to your next `write-context.py` call, or `=skipped: <why>` when you chose not to run it. `<index>` is its place among the hooks at that anchor, from 0. Use a call of its own only when none follows. A built command spells the exact flag at the end of each hook.
 
 **Background hooks.** Any hook may add `background: true`: start it and continue without waiting, detaching a `command` (`&`, `nohup … &`) and not blocking on a `node` or `prompt`. Report its result whenever it lands. Never background anything that writes `.spec-context.json`, meaning the timing and capture calls: they read-modify-write a shared file, so two at once lose an update. Background is for slow side-effects like a test run or a build, not for bookkeeping.
 
