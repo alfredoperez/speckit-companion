@@ -125,6 +125,8 @@ export function BuildBar(props: Props) {
 
     const setReview = (next: boolean) => {
         setOpen(next);
+        // A failure's reason is in its log, so the log opens with the review.
+        if (next && failed) { setShowingLog(true); }
         if (next && !preview && !busy && waiting) {
             setChecking(true);
             props.onPreview();

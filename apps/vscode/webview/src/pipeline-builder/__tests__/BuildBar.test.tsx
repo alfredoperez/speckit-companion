@@ -208,9 +208,8 @@ describe('after a build', () => {
         button('Try again')!.click();
         button('Review')!.click();
         await flush();
-        button('Show the log')!.click();
-        await flush();
         expect(host.querySelector('.builder-report-log')?.textContent).toContain('[build] built 5');
+        expect(button('Hide the log')).toBeDefined();
         expect(calls).toEqual(['build', 'preview']);
     });
 
