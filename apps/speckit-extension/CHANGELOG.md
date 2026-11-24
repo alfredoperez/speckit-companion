@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-11-24
+
+Amend a spec after work starts, settle open questions before plan, and have implement check every requirement.
+
 ### Added
 - **Amend a spec after work has started.** The amend command edits the spec in place, records the change, and ==replans only when requirements changed==. ([#1042](https://github.com/alfredoperez/speckit-companion/pull/1042)) <!-- area: pipeline -->
 - **Bug runs typed in chat leave a record.** Assess, fix and test each record ==their start, finish and outcome== in the bug's own folder. ([#1023](https://github.com/alfredoperez/speckit-companion/pull/1023)) <!-- area: run-record -->
@@ -39,25 +43,3 @@ Runs work from a worktree, take the spec number you name, and keep small waves w
 - **A finished spec reads Converge.** A spec that converge completed shows ==converge as its step==, even when converge built a task. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: run-record -->
 - **The plan check accepts files the plan creates.** Mark a new file once and ==every call path naming it== passes. ([#1016](https://github.com/alfredoperez/speckit-companion/pull/1016)) <!-- area: pipeline -->
 
-## [0.27.0] - 2026-11-12
-
-Hands-off runs cost less and finish at Completed, they also run on Spec Kit's workflow engine, and living specs are retired.
-
-### Added
-- **Hands-off runs on spec-kit's workflow engine.** `specify workflow run` routes on the recorded size, and ==each review gate resumes headless==. ([#1006](https://github.com/alfredoperez/speckit-companion/pull/1006)) <!-- area: pipeline -->
-- **Corner cuts show up as concerns.** A skipped test, a suppression, an empty stub or a lower coverage bar is ==recorded with its file and line==, never blocking. ([#1005](https://github.com/alfredoperez/speckit-companion/pull/1005)) <!-- area: run-record -->
-- **The doctor flags retired living-spec settings.** It prints ==one line== when a leftover living-specs setting is present, and notes a constitution that still names flow-back. ([#1008](https://github.com/alfredoperez/speckit-companion/pull/1008)) <!-- area: run-record -->
-
-### Changed
-- **Hands-off runs cost less.** An auto run makes ==fewer bookkeeping calls== and carries fewer instructions, closing the gap to stock on harder work. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
-- **Size is decided before the spec.** A change you understand, with nothing risky in it, ==goes straight to implement== whatever its file count. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
-- **Every requirement gets a test task.** The task list plans one test per requirement, checked ==through the screen or API== in the condition it names. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
-- **No more checklist file.** Specify checks the spec once and fixes it in place, without writing ==checklists/requirements.md==. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
-- **Task times come per wave.** A wave of tasks closes in one step, so the viewer shows ==one time per wave==. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: run-record -->
-
-### Removed
-- **Living specs are retired.** The seven living commands left too, and ==each change keeps one folder==; the [loss list](https://github.com/alfredoperez/speckit-companion/blob/main/specs/669-retire-living-specs/loss-list.md) says what went. ([#1008](https://github.com/alfredoperez/speckit-companion/pull/1008)) <!-- area: living-specs -->
-
-### Fixed
-- **Receipts catch every code edit.** A check reads ==out of date== even when the edit lands in the same second as the commit. ([#1003](https://github.com/alfredoperez/speckit-companion/pull/1003)) <!-- area: run-record -->
-- **Specs finish at Completed.** A run ==no longer stops at Implemented== when converge adds and builds work or closes without its hook. ([#1000](https://github.com/alfredoperez/speckit-companion/pull/1000)) <!-- area: pipeline -->
