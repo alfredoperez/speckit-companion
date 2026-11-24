@@ -1,0 +1,210 @@
+import * as yaml from 'js-yaml';
+import { StockHookDraft } from '../../../protocol/pipeline';
+import { addUserHook, removeUserHook, updateUserHook } from '../stockHooks';
+
+const INSTALLED = new Set(['git']);
+
+const REGISTRY = [
+    '# Spec Kit hook registry',
+    'installed:',
+    '- git',
+    'hooks:',
+    '  before_plan:',
+    '  - extension: git',
+    '    command: speckit.git.commit',
+    '    enabled: true',
+    '    optional: true  # ask first',
+    '    description: Auto-commit before planning',
+    '    condition: null',
+    '  after_plan:',
+    '  - extension: git',
+    '    command: speckit.git.commit',
+    '    enabled: true',
+    '    optional: true',
+    '    description: Commit plan changes',
+    '',
+    '  # my own',
+    '  after_tasks:',
+    '  - extension: house',
+    '    command: house-note',
+    '    enabled: true',
+    '    optional: false',
+    '    priority: 5',
+    '    description: Log a house note',
+    '  - extension: house',
+    '    command: house-check',
+    '    enabled: false',
+    '    description: >',
+    '      Check the house',
+    '      rules',
+    '',
+].join('\n');
+
+const NOTE: StockHookDraft = {
+    command: 'house-note', description: 'Log a house note after plan', optional: false,
+};
+
+function ok(result: { text: string } | { error: string }): string {
+    if ('error' in result) { throw new Error(result.error); }
+    return result.text;
+}
+
+function hooks(text: string): Record<string, Array<Record<string, unknown>>> {
+    return (yaml.load(text) as { hooks: Record<string, Array<Record<string, unknown>>> }).hooks;
+}
+
+/** The lines of `after` that are not in `before`, keeping order. */
+function added(before: string, after: string): string[] {
+    const old = before.split('\n');
+    const now = after.split('\n');
+    let i = 0;
+    const extra: string[] = [];
+    for (const line of now) {
+        if (i < old.length && line === old[i]) { i += 1; } else { extra.push(line); }
+    }
+    expect(i).toBe(old.length);
+    return extra;
+}
+
+describe('attaching your own hook to a stock step', () => {
+    it('adds one entry and keeps every other line byte for byte', () => {
+        const text = ok(addUserHook(REGISTRY, 'plan', 'after', NOTE, INSTALLED));
+        expect(added(REGISTRY, text)).toEqual([
+            '  - extension: project',
+            '    command: house-note',
+            '    enabled: true',
+            '    optional: false',
+            '    description: Log a house note after plan',
+        ]);
+        const entry = hooks(text).after_plan[1];
+        expect(entry).toMatchObject({ extension: 'project', command: 'house-note', optional: false });
+    });
+
+    it('creates the registry when the project has none', () => {
+        const text = ok(addUserHook(null, 'plan', 'after', { ...NOTE, prompt: 'Log it?' }, INSTALLED));
+        expect(hooks(text).after_plan).toEqual([{
+            extension: 'project', command: 'house-note', enabled: true, optional: false,
+            prompt: 'Log it?', description: 'Log a house note after plan',
+        }]);
+    });
+
+    it('adds a step key the registry did not have yet', () => {
+        const text = ok(addUserHook(REGISTRY, 'specify', 'before', NOTE, INSTALLED));
+        expect(added(REGISTRY, text)[0]).toBe('  before_specify:');
+        expect(hooks(text).before_specify).toHaveLength(1);
+    });
+
+    it('adds a hooks section to a registry without one', () => {
+        const start = 'installed:\n- git\n';
+        const text = ok(addUserHook(start, 'plan', 'after', NOTE, INSTALLED));
+        expect(text.startsWith(start)).toBe(true);
+        expect(hooks(text).after_plan[0].command).toBe('house-note');
+    });
+
+    it('reads back a description and prompt with quotes, colons and a hash exactly', () => {
+        const draft = { ...NOTE, description: 'Note: "house" #1', prompt: "Run it? it's: fine" };
+        const text = ok(addUserHook(REGISTRY, 'plan', 'after', draft, INSTALLED));
+        expect(hooks(text).after_plan[1]).toMatchObject({
+            description: 'Note: "house" #1', prompt: "Run it? it's: fine",
+        });
+    });
+
+    it('refuses a registry that is not valid YAML and returns nothing to write', () => {
+        const broken = 'hooks:\n  after_plan: [unclosed\n';
+        const result = addUserHook(broken, 'plan', 'after', NOTE, INSTALLED);
+        expect(result).toEqual({ error: expect.stringContaining('could not be read') });
+    });
+
+    it('refuses a step key written in flow style', () => {
+        const flow = 'hooks:\n  after_plan: []\n';
+        expect(addUserHook(flow, 'plan', 'after', NOTE, INSTALLED))
+            .toEqual({ error: expect.stringContaining('cannot edit safely') });
+        expect(addUserHook('hooks: {}\n', 'plan', 'after', NOTE, INSTALLED))
+            .toEqual({ error: expect.stringContaining('cannot edit safely') });
+    });
+
+    it('refuses an empty skill name, a name with spaces and an empty description', () => {
+        expect('error' in addUserHook(REGISTRY, 'plan', 'after', { ...NOTE, command: ' ' }, INSTALLED)).toBe(true);
+        expect('error' in addUserHook(REGISTRY, 'plan', 'after', { ...NOTE, command: 'rm -rf' }, INSTALLED)).toBe(true);
+        expect('error' in addUserHook(REGISTRY, 'plan', 'after', { ...NOTE, description: '' }, INSTALLED)).toBe(true);
+    });
+
+    it('refuses when an installed extension owns the id written on your hooks', () => {
+        const result = addUserHook(REGISTRY, 'plan', 'after', NOTE, new Set(['git', 'project']));
+        expect(result).toEqual({ error: expect.stringContaining('named project') });
+    });
+});
+
+describe('changing a hook you added', () => {
+    it('changes only that entry, keeping its priority', () => {
+        const text = ok(updateUserHook(REGISTRY, { step: 'tasks', when: 'after', index: 0 },
+            { command: 'house-log', description: 'Log a house note', optional: true, prompt: 'Log?' },
+            INSTALLED));
+        const before = REGISTRY.split('\n');
+        const after = text.split('\n');
+        expect(after.slice(0, 21)).toEqual(before.slice(0, 21));
+        expect(hooks(text).after_tasks[0]).toEqual({
+            extension: 'house', command: 'house-log', enabled: true, optional: true,
+            priority: 5, description: 'Log a house note', prompt: 'Log?',
+        });
+        expect(hooks(text).after_tasks[1]).toEqual(hooks(REGISTRY).after_tasks[1]);
+    });
+
+    it('replaces a folded description and adds an optional line that was missing', () => {
+        const text = ok(updateUserHook(REGISTRY, { step: 'tasks', when: 'after', index: 1 },
+            { command: 'house-check', description: 'Check the rules', optional: true }, INSTALLED));
+        expect(text).not.toContain('Check the house');
+        expect(hooks(text).after_tasks[1]).toMatchObject({
+            command: 'house-check', description: 'Check the rules', optional: true, enabled: false,
+        });
+    });
+
+    it('drops the prompt line when the prompt is cleared', () => {
+        const withPrompt = ok(addUserHook(REGISTRY, 'plan', 'after', { ...NOTE, prompt: 'Log?' }, INSTALLED));
+        const text = ok(updateUserHook(withPrompt, { step: 'plan', when: 'after', index: 1 }, NOTE, INSTALLED));
+        expect(text).toBe(ok(addUserHook(REGISTRY, 'plan', 'after', NOTE, INSTALLED)));
+    });
+
+    it('refuses an installed extension\'s hook', () => {
+        const result = updateUserHook(REGISTRY, { step: 'plan', when: 'after', index: 0 }, NOTE, INSTALLED);
+        expect(result).toEqual({ error: expect.stringContaining('belongs to the git extension') });
+    });
+
+    it('refuses a hook that is not there', () => {
+        const result = updateUserHook(REGISTRY, { step: 'plan', when: 'after', index: 4 }, NOTE, INSTALLED);
+        expect(result).toEqual({ error: expect.stringContaining('no hook 5') });
+    });
+});
+
+describe('removing a hook you added', () => {
+    it('removes its lines and nothing else', () => {
+        const text = ok(removeUserHook(REGISTRY, { step: 'tasks', when: 'after', index: 0 }, INSTALLED));
+        const expected = REGISTRY.split('\n');
+        expect(expected.splice(20, 6)[1]).toBe('    command: house-note');
+        expect(text).toBe(expected.join('\n'));
+    });
+
+    it('removes the step key with its last entry', () => {
+        const once = ok(addUserHook(REGISTRY, 'specify', 'before', NOTE, INSTALLED));
+        expect(ok(removeUserHook(once, { step: 'specify', when: 'before', index: 0 }, INSTALLED)))
+            .toBe(REGISTRY);
+    });
+
+    it('takes back exactly what adding wrote', () => {
+        const once = ok(addUserHook(REGISTRY, 'plan', 'after', NOTE, INSTALLED));
+        expect(ok(removeUserHook(once, { step: 'plan', when: 'after', index: 1 }, INSTALLED)))
+            .toBe(REGISTRY);
+    });
+
+    it('refuses an installed extension\'s hook', () => {
+        const result = removeUserHook(REGISTRY, { step: 'before', when: 'before', index: 0 }, INSTALLED);
+        expect('error' in result).toBe(true);
+        expect(removeUserHook(REGISTRY, { step: 'plan', when: 'before', index: 0 }, INSTALLED))
+            .toEqual({ error: expect.stringContaining('belongs to the git extension') });
+    });
+
+    it('refuses malformed YAML', () => {
+        const result = removeUserHook('hooks: [\n', { step: 'plan', when: 'after', index: 0 }, INSTALLED);
+        expect(result).toEqual({ error: expect.stringContaining('could not be read') });
+    });
+});

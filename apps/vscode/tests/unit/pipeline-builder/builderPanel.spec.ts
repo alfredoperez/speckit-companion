@@ -1262,6 +1262,71 @@ describe('what the stock board can change', () => {
         expect(panel.__lastPosted('notice').text).toContain('not installed');
     });
 
+    describe('a hook of your own', () => {
+        // The board draws the first installed workflow, `quick`, whose one step is implement.
+        const registry = () => path.join(workspace, '.specify', 'extensions.yml');
+        const NOTE = { command: 'house-note', description: 'Log a house note', optional: false };
+
+        it('creates the registry, writes the hook and draws it as yours', async () => {
+            await panel.__receive({ type: 'addStockHook', step: 'implement', when: 'after', hook: NOTE });
+
+            expect(fs.readFileSync(registry(), 'utf8')).toContain('command: house-note');
+            const hook = panel.__lastPosted('stock').view.steps[0].hooks[0];
+            expect(hook).toMatchObject({ command: 'house-note', own: true, when: 'after' });
+            expect(panel.__lastPosted('status').status.detail)
+                .toBe('Created .specify/extensions.yml');
+        });
+
+        it('changes and then removes it, leaving the file as it was', async () => {
+            const start = 'installed:\n- git\nhooks:\n  before_implement:\n  - extension: git\n'
+                + '    command: speckit.git.feature\n';
+            fs.writeFileSync(registry(), start, 'utf8');
+            fs.mkdirSync(path.join(workspace, '.specify', 'extensions', 'git'), { recursive: true });
+
+            await panel.__receive({ type: 'addStockHook', step: 'implement', when: 'before', hook: NOTE });
+            await panel.__receive({
+                type: 'updateStockHook', step: 'implement', when: 'before', index: 1,
+                hook: { ...NOTE, optional: true, prompt: 'Log it?' },
+            });
+            const hooks = panel.__lastPosted('stock').view.steps[0].hooks;
+            expect(hooks.map((h: { own: boolean }) => h.own)).toEqual([false, true]);
+            expect(hooks[1]).toMatchObject({ optional: true, prompt: 'Log it?' });
+
+            await panel.__receive({ type: 'removeStockHook', step: 'implement', when: 'before', index: 1 });
+            expect(fs.readFileSync(registry(), 'utf8')).toBe(start);
+        });
+
+        it('refuses an extension\'s hook, an unknown step and a broken file, writing nothing', async () => {
+            const start = 'installed:\n- git\nhooks:\n  before_implement:\n  - extension: git\n'
+                + '    command: speckit.git.feature\n';
+            fs.writeFileSync(registry(), start, 'utf8');
+
+            await panel.__receive({ type: 'removeStockHook', step: 'implement', when: 'before', index: 0 });
+            expect(panel.__lastPosted('notice').text).toContain('belongs to the git extension');
+
+            await panel.__receive({ type: 'addStockHook', step: 'deploy', when: 'after', hook: NOTE });
+            expect(panel.__lastPosted('notice').text).toContain('not a step this project runs');
+            expect(fs.readFileSync(registry(), 'utf8')).toBe(start);
+
+            fs.writeFileSync(registry(), 'hooks: [\n', 'utf8');
+            await panel.__receive({ type: 'addStockHook', step: 'implement', when: 'after', hook: NOTE });
+            expect(panel.__lastPosted('notice').text).toContain('could not be read');
+            expect(fs.readFileSync(registry(), 'utf8')).toBe('hooks: [\n');
+        });
+    });
+
+    it('says which layer each template comes from', async () => {
+        fs.mkdirSync(path.join(workspace, '.specify', 'templates', 'overrides'), { recursive: true });
+        fs.writeFileSync(path.join(workspace, '.specify', 'templates', 'overrides', 'spec-template.md'),
+            '# Ours\n', 'utf8');
+        await panel.__receive({ type: 'ready' });
+
+        const [template] = panel.__lastPosted('stock').view.templates;
+        expect(template.inForce).toBe('override');
+        expect(template.layers[0].path)
+            .toBe(path.join('.specify', 'templates', 'overrides', 'spec-template.md'));
+    });
+
     it('hands the constitution to the command that owns it', async () => {
         await panel.__receive({ type: 'runStockCommand', command: 'constitution' });
         expect(vscode.commands.executeCommand).toHaveBeenCalledWith('speckit.constitution');

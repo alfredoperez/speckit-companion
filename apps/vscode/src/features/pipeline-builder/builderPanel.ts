@@ -31,8 +31,10 @@ import { projectKind } from './projectKind';
 import { cleanQuery, isPresetId, presetCommandLine, readSpecPresets } from './specPresets';
 import { runSpecifyPreset } from '../../speckit/processExtensions';
 import { stockRefusal } from './stockGuard';
-import { setHookEnabled } from './stockHooks';
-import { formatStockCommands, readStockWorkflow, stockFileToOpen } from './stockWorkflow';
+import { addUserHook, removeUserHook, setHookEnabled, updateUserHook } from './stockHooks';
+import {
+    formatStockCommands, hookableSteps, installedExtensions, readStockWorkflow, stockFileToOpen,
+} from './stockWorkflow';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
@@ -576,6 +578,25 @@ export class PipelineBuilderPanel {
         },
 
         /**
+         * Attach, change or take away the person's own hook on a stock step.
+         *
+         * Only entries naming no installed extension: an extension rewrites
+         * its own on every install, so an edit there would not last.
+         */
+        addStockHook: message => this.writeUserHook(
+            message.step, true,
+            (text, installed) => addUserHook(text, message.step, message.when, message.hook, installed),
+            `${message.hook.command.trim()} runs ${message.when} ${message.step}`),
+        updateStockHook: message => this.writeUserHook(
+            message.step, false,
+            (text, installed) => updateUserHook(text!, message, message.hook, installed),
+            `${message.step} ${message.when} hook changed`),
+        removeStockHook: message => this.writeUserHook(
+            message.step, false,
+            (text, installed) => removeUserHook(text!, message, installed),
+            `${message.step} ${message.when} hook removed`),
+
+        /**
          * Open one of the stock files the board drew, in an editor.
          *
          * A template is the project's to edit, and an editor is where that is
@@ -932,6 +953,37 @@ export class PipelineBuilderPanel {
             editor.revealRange(new vscode.Range(at, at), vscode.TextEditorRevealType.AtTop);
             editor.selection = new vscode.Selection(at, at);
         }
+    }
+
+    /**
+     * One write to the registry on the person's behalf. The step must be one
+     * the board drew; a refusal leaves the file as it was.
+     */
+    private async writeUserHook(
+        step: string, mayCreate: boolean,
+        change: (text: string | null, installed: Set<string>) => { text: string } | { error: string },
+        done: string,
+    ): Promise<void> {
+        if (!hookableSteps(this.workspaceRoot, this.drawing).includes(step)) {
+            this.say(`${step} is not a step this project runs.`);
+            return;
+        }
+        const file = path.join(this.workspaceRoot, EXTENSIONS_REL);
+        const text = read(file);
+        if (text === null && !mayCreate) {
+            this.say('This project has no .specify/extensions.yml to change.');
+            return;
+        }
+        const result = change(text, installedExtensions(this.workspaceRoot));
+        if ('error' in result) { this.say(result.error); return; }
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, result.text, 'utf8');
+        await this.send();
+        this.sayStatus({
+            tone: 'done',
+            text: done,
+            detail: text === null ? 'Created .specify/extensions.yml' : 'Saved to .specify/extensions.yml',
+        });
     }
 
     private readonly dispatch = createDispatcher(this.handlers, {
