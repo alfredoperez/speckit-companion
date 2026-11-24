@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Drives a real VS Code window with this extension and a throwaway project (or an existing one, --sandbox), and saves a screenshot per step.
 // usage: node tooling/scripts/desktop-check.mjs [--extension <checkout>] [--out <dir>] [--theme light|dark|bearded|anthracite] [--scale 2|3] [--only <step,step>] [--sandbox <project folder>] [--shots <dir>] [--sheet] [--record <dir>]
+// With --sandbox on a talk sandbox, --shots and --record run each talk step in its own process, retried once (--step-timeout <seconds> bounds a try).
 // --shots also saves named crops for the docs and the changelog, and runs the capture-only steps.
 // --sheet also writes every picture of the run onto one reduced sheet (_sheet.png), the file to look at first.
 // --record also runs the recording steps, each saving its frames and one JSON of facts under <dir>/<name>/.
@@ -55,6 +56,49 @@ if (SANDBOX && !existsSync(join(SANDBOX, 'specs')) && !existsSync(join(SANDBOX, 
 if (!existsSync(CODE)) {
     console.error(`VS Code not found at ${CODE}. Set VSCODE_BIN.`);
     process.exit(2);
+}
+
+// A child of a per-step run keeps its siblings' pictures and results; --no-talk leaves the talk steps to their own processes.
+const APPEND = process.argv.includes('--append');
+const NO_TALK = process.argv.includes('--no-talk');
+const IS_TALK_SANDBOX = Boolean(SANDBOX && existsSync(join(SANDBOX, '.talk', 'state.mjs')));
+const TALK_PARENT = IS_TALK_SANDBOX && (SHOTS || RECORD) && !APPEND && !NO_TALK;
+
+// Talk steps share nothing but a window, and one that times out leaves it stuck. So each runs in its own process, once more if it fails.
+if (TALK_PARENT) {
+    const { talkSteps, childArgs, runPerStep, spawnChild } = await import('./lib/per-step.mjs');
+    const script = join(HERE, 'desktop-check.mjs');
+    const every = talkSteps(readFileSync(script, 'utf8'));
+    const all = every.filter(({ kind }) => (kind === 'shots' ? SHOTS : RECORD)).map(({ name }) => name);
+    const names = ONLY.length ? all.filter(name => ONLY.includes(name)) : all;
+    for (const name of ONLY) {
+        if (every.some(talk => talk.name === name) && !all.includes(name)) console.log(`skip ${name}: it needs ${every.find(talk => talk.name === name).kind === 'shots' ? '--shots' : '--record'}`);
+    }
+    const timeoutMs = Number(arg('step-timeout', '600')) * 1000;
+    mkdirSync(OUT, { recursive: true });
+    for (const file of readdirSync(OUT)) {
+        if (file.endsWith(`.${THEME}.png`) || file === `results.${THEME}.json` || file === '_sheet.png') rmSync(join(OUT, file), { force: true });
+    }
+    const outcomes = await runPerStep(names, name => spawnChild(script, childArgs(process.argv.slice(2), ['--only', name]), timeoutMs), { log: console.log });
+    // The steps that are not talk steps run once, together, unless --only named talk steps alone.
+    const rest = ONLY.filter(name => !every.some(talk => talk.name === name));
+    let restCode = 0;
+    if (!ONLY.length || rest.length) {
+        restCode = await spawnChild(script, childArgs(process.argv.slice(2), ['--no-talk', ...(rest.length ? ['--only', rest.join(',')] : [])]));
+        if (restCode) console.log(`FAIL the other steps: their process ended with code ${restCode}`);
+    }
+    if (SHEET) {
+        for (const dir of [OUT, SHOTS].filter(Boolean)) {
+            try {
+                execFileSync(process.execPath, [join(HERE, 'shots-sheet.mjs'), dir], { stdio: 'inherit' });
+            } catch {
+                console.error(`No sheet for ${dir}`);
+            }
+        }
+    }
+    const lost = outcomes.filter(outcome => !outcome.ok);
+    console.log(`\n${outcomes.length - lost.length} of ${outcomes.length} talk steps passed${lost.length ? `; failed: ${lost.map(outcome => outcome.name).join(', ')}` : ''}.`);
+    process.exit(lost.length || restCode ? 1 : 0);
 }
 
 const require = createRequire(join(EXTENSION, 'package.json'));
@@ -423,6 +467,7 @@ async function recordScroll(recording, inside, { most = 900 } = {}) {
 async function step(name, what, run, { needs, shots, record, check } = {}) {
     if (ONLY.length && !ONLY.includes(name)) return;
     if (check && FILM_WINDOW) return;
+    if (NO_TALK && needs === 'talk-sandbox') return;
     if (shots && !SHOTS) return;
     if (record && !RECORD) return;
     if (SANDBOX && needs === 'fixtures') {
@@ -456,7 +501,7 @@ async function expectText(locator, pattern) {
 
 // Only this theme's pictures and results go; the other theme's stay beside them.
 mkdirSync(OUT, { recursive: true });
-for (const file of readdirSync(OUT)) {
+for (const file of APPEND ? [] : readdirSync(OUT)) {
     if (file.endsWith(`.${THEME}.png`) || file === `results.${THEME}.json` || file === '_sheet.png') rmSync(join(OUT, file), { force: true });
 }
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
@@ -2892,7 +2937,16 @@ try {
         });
     }
 } finally {
-    writeFileSync(join(OUT, `results.${THEME}.json`), JSON.stringify(results, null, 2));
+    const resultsFile = join(OUT, `results.${THEME}.json`);
+    let earlier = [];
+    if (APPEND) {
+        try {
+            earlier = JSON.parse(readFileSync(resultsFile, 'utf8')).filter(old => !results.some(result => result.name === old.name));
+        } catch {
+            // no earlier results yet
+        }
+    }
+    writeFileSync(resultsFile, JSON.stringify([...earlier, ...results], null, 2));
     await app?.close().catch(() => undefined);
     rmSync(root, { recursive: true, force: true });
 }
