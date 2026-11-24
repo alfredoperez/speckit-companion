@@ -1,0 +1,221 @@
+{
+  "workflow": "companion",
+  "specName": "Builder structure — add, move and remove through the modal and the popover",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:40:53.567Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:41:51.127Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:41:56.332Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:42:43.257Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:43:11.521Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:43:12.260Z"
+    }
+  ],
+  "request": "Workflow Builder: add a node or a step, move and remove nodes through the add modal and the node's popover.",
+  "unattended": true,
+  "expectations": [
+    "No change to the host, the protocol or the writer",
+    "No new way to write a node file",
+    "No change to the Inspector side pane",
+    "No pixel baselines or clips regenerated"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder (Canvas, HookModal, NodePopover, index)",
+    "constraint: host tokens only, no protocol change"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Lane header + Add to <step> opens the add modal",
+      "tasks": [
+        "T002",
+        "T006"
+      ]
+    },
+    "FR-002": {
+      "title": "Modal choice row Hook · Node · Step",
+      "tasks": [
+        "T007",
+        "T009"
+      ]
+    },
+    "FR-003": {
+      "title": "Node choice lists nodes on offer, searchable",
+      "tasks": [
+        "T007",
+        "T009"
+      ]
+    },
+    "FR-004": {
+      "title": "Node choice picks the phase and sends addNode",
+      "tasks": [
+        "T004",
+        "T007",
+        "T009"
+      ]
+    },
+    "FR-005": {
+      "title": "Step choice sends newStep with todays fields",
+      "tasks": [
+        "T008",
+        "T010"
+      ]
+    },
+    "FR-006": {
+      "title": "Step choice warns auto will not run it",
+      "tasks": [
+        "T008",
+        "T010"
+      ]
+    },
+    "FR-007": {
+      "title": "+ step control at the end of the lanes",
+      "tasks": [
+        "T002",
+        "T006"
+      ]
+    },
+    "FR-008": {
+      "title": "Popover footer Move…, Edit node, Remove from the run",
+      "tasks": [
+        "T011",
+        "T013"
+      ]
+    },
+    "FR-009": {
+      "title": "Move list with refused places and reasons",
+      "tasks": [
+        "T001",
+        "T005",
+        "T011",
+        "T013"
+      ]
+    },
+    "FR-010": {
+      "title": "Remove shows struck row with Undo",
+      "tasks": [
+        "T002",
+        "T004",
+        "T006",
+        "T012"
+      ]
+    },
+    "FR-011": {
+      "title": "Phase label menu Rename, Split, Merge both ways",
+      "tasks": [
+        "T002",
+        "T006"
+      ]
+    },
+    "FR-012": {
+      "title": "Every host message stays reachable",
+      "tasks": [
+        "T004",
+        "T015"
+      ]
+    },
+    "FR-013": {
+      "title": "Focus trap, restore, names, reduced motion",
+      "tasks": [
+        "T003",
+        "T009",
+        "T013"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 14,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Add nodes and steps from the lane modal, move and remove nodes from the popover",
+  "size": "normal",
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/688-builder-structure-moves --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 call paths, 8 lines, 2 screens, 14 parts ·   WARNING plan.md:35  2 `note:` lines under the block, the budget is 1 (long-note) ·   0 error(s), 1 warning(s)"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Check move places in the webview from reads, readers and held nodes, in the writer wording",
+      "why": "the host exposes no per-place answer",
+      "rejected": "a new host message",
+      "by": "agent",
+      "at": "2026-11-24T18:42:42.978Z"
+    },
+    {
+      "decision": "Auto warning from shipped in-sequence steps",
+      "why": "auto dispatches a fixed list",
+      "rejected": "a host flag that does not exist",
+      "by": "agent",
+      "at": "2026-11-24T18:42:42.978Z"
+    },
+    {
+      "decision": "Extend HookModal with a mode instead of a second modal",
+      "why": "focus trap, sheet and footer already exist",
+      "rejected": "a new AddModal",
+      "by": "agent",
+      "at": "2026-11-24T18:42:42.978Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Lane add modal with Hook/Node/Step, popover Move list and remove with undo row, phase label menu",
+      "key_finding": "remove undo token is remove:<step>:<node>, so the struck row can track the real undo"
+    },
+    "tasks": {
+      "summary": "15 tasks: foundational (moves, canvas, wiring, css) then modal and popover stories, polish"
+    }
+  },
+  "approach": "Extend HookModal with a choice row and Node/Step panels; NodePopover gains a Move list from a pure movePlaces helper; Canvas adds the lane button, + step tail, phase label menu and struck undo row."
+}
