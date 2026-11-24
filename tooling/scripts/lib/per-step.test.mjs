@@ -44,12 +44,13 @@ test('the child gets one step and --append, and loses --only and --sheet', () =>
 });
 
 test('talkSteps finds the talk steps of desktop-check and their kind', () => {
-    const found = talkSteps(readFileSync(join(HERE, '..', 'desktop-check.mjs'), 'utf8'));
+    const source = readFileSync(join(HERE, '..', 'desktop-check.mjs'), 'utf8');
+    const found = talkSteps(source);
     const byName = Object.fromEntries(found.map(({ name, kind }) => [name, kind]));
     assert.equal(byName['talk-new-spec'], 'shots');
     assert.equal(byName['talk-film-ticking'], 'record');
     assert.equal(byName['talk-builder'], 'shots');
-    assert.equal(found.length, 11);
+    assert.equal(found.length, source.match(/\}, \{ needs: 'talk-sandbox'/g).length);
     assert.ok(!('sidebar-panes' in byName));
 });
 
