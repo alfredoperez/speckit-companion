@@ -32,6 +32,7 @@ import { cleanQuery, isPresetId, presetCommandLine, readSpecPresets } from './sp
 import { runSpecifyPreset } from '../../speckit/processExtensions';
 import { stockRefusal } from './stockGuard';
 import { addUserHook, removeUserHook, setHookEnabled, updateUserHook } from './stockHooks';
+import { readHookRuns } from './hookRuns';
 import {
     formatStockCommands, hookableSteps, installedExtensions, readStockWorkflow, stockFileToOpen,
 } from './stockWorkflow';
@@ -186,6 +187,9 @@ export class PipelineBuilderPanel {
 
     private readonly handlers: DispatcherMap<BuilderToExtensionMessage, []> = {
         ready: () => this.send(),
+        readHookRuns: async () => {
+            await this.post({ type: 'hookRuns', answer: await readHookRuns(this.workspaceRoot) });
+        },
         presetSearch: async message => {
             const query = cleanQuery(message.query);
             if (!query) { this.say('That search has characters a preset search cannot take.'); return; }

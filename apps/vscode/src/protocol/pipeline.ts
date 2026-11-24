@@ -185,6 +185,36 @@ export interface PipelineHook {
     problem?: string;
 }
 
+/**
+ * One hook's outcome in a run, as the assistant recorded it (`by: ai`): its own
+ * word, not proof. A board hook with no run under its `key` was "not seen".
+ */
+export interface HookRun {
+    /** `${step}/${when}/${anchor}/${index}`, the address a board hook is matched by. */
+    key: string;
+    step: string;
+    when: HookWhen;
+    anchor: string;
+    index: number;
+    type: HookType;
+    /** The skill or node name; empty for a command or prompt hook. A mismatch means the hook changed since. */
+    ref: string;
+    outcome: 'ran' | 'skipped';
+    /** Why it was skipped, one line, when the assistant gave one. */
+    reason?: string;
+    /** When it was recorded, ISO-8601 UTC. */
+    at: string;
+}
+
+/** The last run's hook outcomes: the newest spec in the project and its last record per hook. */
+export interface HookRunsAnswer {
+    /** `null` when the project has no spec run to read. */
+    spec: { name: string; path: string } | null;
+    /** The spec's newest activity, ISO-8601 UTC. */
+    runAt: string | null;
+    runs: HookRun[];
+}
+
 /** One skill a hook can name, and where it comes from. */
 export interface SkillChoice {
     /** What a hook writes in `ref`: `house-check`, or `plugin:skill` for a plugin's. */
@@ -780,7 +810,9 @@ export type BuilderToExtensionMessage =
     /** `specify preset add|update|remove <id>`, after a confirm that names what it replaces. */
     | { type: 'presetAdd'; id: string }
     | { type: 'presetUpdate'; id: string }
-    | { type: 'presetRemove'; id: string };
+    | { type: 'presetRemove'; id: string }
+    /** Ask for the last run's outcome per hook; answered with `hookRuns`. Reads only. */
+    | { type: 'readHookRuns' };
 
 export const PRESET_ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 export const PRESET_QUERY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 -]*$/;
@@ -840,4 +872,6 @@ export type ExtensionToBuilderMessage =
      * it: the moment the configuration changes again, a timestamp saying what
      * was built has stopped being true.
      */
-    | { type: 'buildReport'; report: BuildReport | null };
+    | { type: 'buildReport'; report: BuildReport | null }
+    /** The answer to `readHookRuns`. */
+    | { type: 'hookRuns'; answer: HookRunsAnswer };
