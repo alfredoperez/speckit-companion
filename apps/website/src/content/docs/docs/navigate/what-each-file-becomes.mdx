@@ -1,0 +1,98 @@
+---
+title: What each file becomes
+description: How the spec viewer draws spec.md, plan.md, tasks.md and research.md, one markdown part at a time, and the card each part becomes.
+---
+
+import DocFigure from '../../../../components/journey/DocFigure.astro';
+
+The viewer reads the markdown Spec Kit writes and draws each known part as a card. You write nothing special. A part the viewer can't read stays plain markdown, so the file still reads the same on GitHub.
+
+## spec.md
+
+| In the markdown | In the viewer |
+| --- | --- |
+| `### User Story 1 - Title (Priority: P1)` | A story card: its id, priority, why it matters, how to test it alone, and the tasks that build it |
+| `**Acceptance Scenarios**:` and a numbered list of Given, When, Then | Scenario rows, each keyword in its own column |
+| `- **FR-001**: System MUST …` | A requirement row: the id, the rule with MUST in bold, and Covered or Untested once tasks exist |
+| `- **SC-001**: …` | A success criterion row, its numbers in bold |
+| Edge Cases, Assumptions, Key Entities | Short lists, each item on its own row |
+| `## Clarifications` | The questions asked and the answers given, folded |
+
+<DocFigure
+  src="live-file-story-card.png"
+  alt="A user story card: the US1 chip and P1 priority on the left, then the story title, its description, why it is P1, and a Test it alone box."
+  caption="A user story becomes a card."
+/>
+
+<DocFigure
+  src="live-file-scenarios.png"
+  alt="Acceptance scenarios as rows, with GIVEN, WHEN and THEN in a column on the left and the text beside each."
+  caption="Given, When and Then line up, so a scenario reads at a glance."
+/>
+
+<DocFigure
+  src="live-file-requirements.png"
+  alt="Four requirement rows, FR-001 to FR-004, each rule with MUST or MUST NOT in bold."
+  caption="Each requirement is a row, with its MUST in bold."
+/>
+
+## plan.md
+
+| In the markdown | In the viewer |
+| --- | --- |
+| `## Summary` | The first sentence large, with the file count and the gate result under it |
+| `## Technical Context` | A grid of facts. A NEEDS CLARIFICATION value shows as open. |
+| `## Constitution Check` | One row per gate, marked pass, fail or justified |
+| `## Project Structure` | A file tree, each file marked new or changed |
+| A ` ```calls ` block | Call paths: the functions a change reaches, new rows green and changed rows amber |
+| A ` ```states ` block | Lifecycle states you click through, with the arrows between them |
+| A ` ```screen ` block | A rough sketch of the screen |
+
+The last three are [plan blocks](/docs/steps/plan-blocks). That page has the grammar of each.
+
+<DocFigure
+  src="plan-block-calls.png"
+  alt="A calls card titled Offline favorite. One entry function, one changed function tinted amber, and two new functions tinted green, each with its file path."
+  caption="A calls block becomes call paths."
+/>
+
+<DocFigure
+  src="plan-block-states.png"
+  alt="A states card for a waiting change: its states as boxes with arrows between them, one state picked and described below."
+  caption="A states block becomes a lifecycle you click through."
+/>
+
+<DocFigure
+  src="plan-block-screen.png"
+  alt="A screen card: a rough sketch of a page with a header, a list and numbered dots on its parts."
+  caption="A screen block becomes a rough screen."
+/>
+
+## tasks.md
+
+| In the markdown | In the viewer |
+| --- | --- |
+| The whole file | A header with tasks done, one bar for every task, and a filter by story |
+| `## Phase 3: User Story 1 … (P1)` | A phase with its progress bar and count. A finished phase folds shut. |
+| `- [ ] T012 [P] [US1] Do the thing in src/file.ts` | A task row: the id, `[P]` and the story as chips, the file as a link |
+| `**Checkpoint**: …` | What the phase must prove, and how many tasks are left before it can |
+
+<DocFigure
+  src="live-file-phases.png"
+  alt="Five finished phases: Setup, Foundational, and three user stories, each with its story chip, title, progress bar and a count such as 10/10."
+  caption="Phases show their progress, so you see how far a run got without opening one."
+/>
+
+## research.md
+
+| In the markdown | In the viewer |
+| --- | --- |
+| A `## Decision 1: Title` section, or a section with `**Decision**:` | A decision card: the pick, and why |
+| `**Alternatives considered**:` | The options turned down, each with the reason, folded under the card |
+| Every decision in the file | A Decisions at a glance list at the top |
+
+<DocFigure
+  src="live-file-decision.png"
+  alt="Decision D2, marked Decided: what was decided, a Why box, and 1 turned down, opened to show the rejected option and its reason."
+  caption="A decision keeps what it rejected, one click away."
+/>

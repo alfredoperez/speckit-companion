@@ -1,6 +1,6 @@
 # speckit-viewer
 
-The SpecKit Companion spec viewer as a library, for any host: the data contract, the markdown renderer and derivations, the stylesheet, the Preact view and a `<speckit-viewer>` custom element. Not on npm yet: the package stays private until its name is confirmed.
+The SpecKit Companion spec viewer as a library, for any host: the data contract, the markdown renderer and derivations, the stylesheet, the Preact view and a `<speckit-viewer>` custom element. Published on npm as [`speckit-viewer`](https://www.npmjs.com/package/speckit-viewer). How to embed the element: [speckit-companion.dev/docs/viewer-library](https://speckit-companion.dev/docs/viewer-library).
 
 ```sh
 npm install speckit-viewer

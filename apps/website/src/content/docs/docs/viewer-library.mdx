@@ -1,0 +1,96 @@
+---
+title: Viewer library
+description: Put the SpecKit Companion spec viewer in your own app with the speckit-viewer npm package and its one custom element, speckit-viewer.
+---
+
+The spec viewer from the VS Code extension is also a library. The [`speckit-viewer`](https://www.npmjs.com/package/speckit-viewer) package gives you one custom element, `<speckit-viewer>`, that draws a spec's pages in any web UI: the rail, the Overview and each document. You hand it the spec's files. It tells you what the reader clicked.
+
+Factory, a desktop app for running Claude Code, uses it for its spec panel.
+
+## Install
+
+```sh
+npm install speckit-viewer
+```
+
+Import the element once, then the styles: the viewer's stylesheet, one theme, and the code colours.
+
+```ts
+import 'speckit-viewer/element';
+import 'speckit-viewer/styles/viewer.css';
+import 'speckit-viewer/styles/themes/light.css';
+import 'speckit-viewer/styles/highlight/github-dark.css';
+```
+
+| Theme | For |
+| --- | --- |
+| `themes/light.css` | A light page |
+| `themes/dark.css` | A dark page |
+| `themes/vscode.css` | A VS Code webview |
+| `themes/ap-ui.css` | Factory's own look |
+
+The element ships as one ES module with Preact and highlight.js inside. It loads nothing from a CDN.
+
+## The element
+
+Set its inputs as JavaScript properties, not HTML attributes.
+
+| Property | What it is |
+| --- | --- |
+| `record` | The spec's `.spec-context.json`, or `null` for a spec with no run record |
+| `documents` | Every document the spec has: `type`, `label`, `fileName`, `filePath`, `exists`, `isCore` and `category` (`core`, `related` or `action`) |
+| `currentDoc` | The document to show, such as `spec`, `plan` or `tasks` |
+| `content` | The open document's markdown. `null` while you read it. |
+| `landing` | `overview` or `document`: where the viewer opens |
+| `live` | `true` while a run works on this spec |
+| `taskCounts` | `{ checked, total }` for the task bar |
+| `specTitle` | The spec's title. Read from `spec.md` when you leave it out. |
+
+The element moves between documents on its own. Everything else it says as a `speckit-action` event, with the action in `event.detail`.
+
+| `detail.type` | What to do |
+| --- | --- |
+| `stepperClick` or `switchDocument` | Read the file for `detail.phase` or `detail.documentType` and set `content` |
+| `overviewChosen` | Nothing. The viewer shows the Overview. |
+| `openFile` | Open `detail.filename` at `detail.line`, if your app can |
+
+A child with `slot="actions"` shows above the rail, outside the viewer's styles. Use it for your own buttons.
+
+Put one viewer on a page. It keeps its state in the module, so two would share it.
+
+## Embed it
+
+Plain JavaScript, on any page:
+
+```ts
+const viewer = document.querySelector('speckit-viewer');
+viewer.record = specContext;
+viewer.documents = documents;
+viewer.currentDoc = 'spec';
+viewer.content = await read('spec.md');
+
+viewer.addEventListener('speckit-action', async (event) => {
+  const action = event.detail;
+  if (action.type === 'stepperClick') viewer.content = await read(action.phase);
+  if (action.type === 'switchDocument') viewer.content = await read(action.documentType);
+});
+```
+
+In React 19, which passes custom element props as properties, Factory renders it straight from JSX:
+
+```tsx
+<speckit-viewer
+  ref={ref}
+  record={record}
+  documents={documents}
+  currentDoc={docType}
+  content={content}
+  landing="overview"
+  live={live}
+  taskCounts={{ checked, total }}
+>
+  {actions && <div slot="actions">{actions}</div>}
+</speckit-viewer>
+```
+
+The package's [README](https://github.com/alfredoperez/speckit-companion/tree/main/packages/viewer) covers its other entry points: the data contract, the markdown renderer and the Preact view.
