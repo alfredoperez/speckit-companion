@@ -1,0 +1,217 @@
+{
+  "workflow": "companion",
+  "specName": "Builder card with its hooks inside, and a node popover",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:43:21.190Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T17:44:06.978Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:44:11.996Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:44:57.723Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:45:06.789Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:45:26.979Z"
+    }
+  ],
+  "request": "Workflow Builder: a node card with its hooks inside it, each showing whether it ran, and a popover for the details.",
+  "unattended": true,
+  "expectations": [
+    "Changing how hooks are written",
+    "Redesigning the hook form, lanes, header or stock board",
+    "A per-hook Move button in the popover",
+    "Editing step-level hooks from the board"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder (Canvas, Inspector, index)",
+    "area: apps/vscode/webview/styles/pipeline-builder.css",
+    "constraint: host tokens only, no protocol change"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "One card per node holding before hooks, node row, after hooks",
+      "tasks": [
+        "T004",
+        "T006"
+      ]
+    },
+    "FR-002": {
+      "title": "Node row shows name and at most two marks",
+      "tasks": [
+        "T004",
+        "T006"
+      ]
+    },
+    "FR-003": {
+      "title": "Hook row shows kind icon, name and status slot",
+      "tasks": [
+        "T002",
+        "T004",
+        "T006"
+      ]
+    },
+    "FR-004": {
+      "title": "Phase and step hooks as slim rows at the top of their phase or lane",
+      "tasks": [
+        "T004",
+        "T006"
+      ]
+    },
+    "FR-005": {
+      "title": "Status from problem, then last run outcome, else nothing",
+      "tasks": [
+        "T001",
+        "T003",
+        "T006"
+      ]
+    },
+    "FR-006": {
+      "title": "Builder asks for hook runs on each graph",
+      "tasks": [
+        "T011"
+      ]
+    },
+    "FR-007": {
+      "title": "Hook drag, edit and remove keep working",
+      "tasks": [
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-008": {
+      "title": "Node click opens a popover with facts, hooks and actions",
+      "tasks": [
+        "T008",
+        "T009",
+        "T011"
+      ]
+    },
+    "FR-009": {
+      "title": "More keeps every Inspector action",
+      "tasks": [
+        "T008",
+        "T011"
+      ]
+    },
+    "FR-010": {
+      "title": "Bottom sheet when narrow, traps focus",
+      "tasks": [
+        "T008",
+        "T009"
+      ]
+    },
+    "FR-011": {
+      "title": "Focus in on open, restored on close, Escape closes",
+      "tasks": [
+        "T008",
+        "T009"
+      ]
+    },
+    "FR-012": {
+      "title": "Host theme tokens only",
+      "tasks": [
+        "T007"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 14,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Node card with hooks inside showing whether they ran, plus a node popover",
+  "size": "normal",
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/685-builder-card-popover --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 3 call paths, 8 lines, 1 screen, 10 parts. Every cited file and line checks out."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "One pure hookStatus derivation read by card and popover",
+      "why": "the two surfaces cannot disagree",
+      "rejected": "computing status in each row",
+      "by": "agent",
+      "at": "2026-11-24T17:44:57.549Z"
+    },
+    {
+      "decision": "Post readHookRuns on every graph message",
+      "why": "graphs arrive on open and after each write",
+      "rejected": "a host file watcher needing a protocol change",
+      "by": "agent",
+      "at": "2026-11-24T17:44:57.549Z"
+    },
+    {
+      "decision": "Fixed-position popover beside the card, bottom sheet under 640px",
+      "why": "lanes clip and scroll sideways",
+      "rejected": "absolute inside the lane",
+      "by": "agent",
+      "at": "2026-11-24T17:44:57.549Z"
+    },
+    {
+      "decision": "Edit node opens the existing Inspector pane",
+      "why": "editing a body needs room; other actions move to More",
+      "rejected": "inline textarea in the popover",
+      "by": "agent",
+      "at": "2026-11-24T17:44:57.549Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Card with slots, status derivation, popover and sheet; host unchanged",
+      "key_finding": "Run records match a board hook by step/when/anchor/index; type or ref mismatch means changed since"
+    },
+    "tasks": {
+      "summary": "13 tasks: foundational status and icons, card phase, popover phase, polish"
+    }
+  },
+  "approach": "Restructure Canvas Node into one card with hook slots and status rows from a pure hookStatus module; add NodePopover rendered from index.tsx with every Inspector action in More; Edit node opens the Inspector."
+}
