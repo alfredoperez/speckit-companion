@@ -212,7 +212,14 @@ def _hook(entry: dict) -> dict:
         ),
         # The extra line a skill hook may carry alongside its name.
         "note": (hook.get("text") or "").strip() if hook.get("type") == "skill" else "",
+        # Why a skill hook will do nothing in a run, in the build's own words.
+        "problem": (build.skill_problem(hook.get("ref"), *_SKILLS)
+                    if hook.get("type") == "skill" else ""),
     }
+
+
+#: `(catalog, plugins_read)` for the project being drawn, read once per graph.
+_SKILLS: tuple = ([], True)
 
 
 #: The order a run goes through the pipeline. `decomposed_commands` is sorted by
@@ -271,7 +278,9 @@ def _parked_hooks(project_root: str) -> dict:
     return {command: entry["hooks"] for command, entry in plan.items()}
 
 
-def build_graph(project_root: str) -> dict:
+def build_graph(project_root: str, home: str = None) -> dict:
+    global _SKILLS
+    _SKILLS = build.skill_catalog(project_root, home)
     use_project_nodes(project_root)
     build.use_project_hook_nodes(project_root)
     config = build.load_config(project_root)
@@ -411,6 +420,10 @@ def build_graph(project_root: str) -> dict:
            else [])
     choices = {
         "skills": build.available_skills(project_root),
+        # The same skills and more, each saying where it comes from and whether a
+        # hook can call it. Plugin skills are absent when `pluginsRead` is false.
+        "skillCatalog": _SKILLS[0],
+        "pluginsRead": _SKILLS[1],
         "nodes": build.available_hook_nodes(project_root),
         # Every hook command this project's registries carry, so attaching one
         # is a choice rather than a name you have to already know.
