@@ -12,7 +12,6 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **Custom workflows open the spec like stock ones.** A workflow's Specification step ==opens the feature spec== and keeps it out of the sub-documents. ([#1062](https://github.com/alfredoperez/speckit-companion/pull/1062)) <!-- area: spec-viewer -->
-- **Custom workflows open the spec like stock ones.** A workflow's Specification step ==opens the feature spec== and keeps it out of the sub-documents. ([#PRNUM](https://github.com/alfredoperez/speckit-companion/pull/PRNUM)) <!-- area: spec-viewer -->
 - **Phases with several files read cleanly.** A phase listing two or more files shows ==one files chip== instead of stray markup. ([#1059](https://github.com/alfredoperez/speckit-companion/pull/1059)) <!-- area: spec-viewer -->
 
 ## [0.40.0] - 2026-11-17
