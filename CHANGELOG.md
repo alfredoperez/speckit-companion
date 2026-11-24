@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-11-24
+
+Project health in the sidebar, Spec Kit presets in the Workflow Builder, and open questions you can clarify from the spec header.
+
 ### Added
 - **The Overview shows when a spec was amended.** The intent card counts the amendments and ==names the last change==. ([#1042](https://github.com/alfredoperez/speckit-companion/pull/1042)) <!-- area: overview -->
 - **A project health check in the sidebar.** Project health lists ==the CLI, Companion, constitution and AI agent==, and a click runs the fix. ([#1048](https://github.com/alfredoperez/speckit-companion/pull/1048)) <!-- area: sidebar -->
@@ -27,20 +31,3 @@ Bugs paused at review get their answer from the pane, and task phases take comme
 - **Task phases and waves take comments again.** Hover a phase or wave header and use ==the plus button==, and the phase stays open. ([#1018](https://github.com/alfredoperez/speckit-companion/pull/1018)) <!-- area: spec-viewer -->
 - **Spec titles and task notes stop repeating.** Every tab keeps the spec's own title, and a wave's shared notes show ==once instead of on every task==. ([#1010](https://github.com/alfredoperez/speckit-companion/pull/1010)) <!-- area: spec-viewer -->
 
-## [0.39.0] - 2026-11-12
-
-Spec documents get a new look, and the Living Specs view is retired.
-
-### Highlights
-
-#### A new look for spec documents
-Specs, plans, tasks and research read as ==cards and meters== with clickable ids, and each story shows how far it got.
-<!-- area: spec-viewer; pr: 999; media: spec-cards, task-progress, research-decisions -->
-
-### Removed
-- **Living Specs view and commands are gone.** The status bar item left too, and older specs still show ==their living specs card==. ([#1008](https://github.com/alfredoperez/speckit-companion/pull/1008)) <!-- area: living-specs -->
-
-### Fixed
-- **Create GitHub issues works on Spec Kit 1.4.** It sends the command from Spec Kit's ==github extension== when that extension is installed. ([#1001](https://github.com/alfredoperez/speckit-companion/pull/1001)) <!-- area: spec-viewer -->
-- **The viewer reads cleanly.** Wrapped lines stay with their list item, wide tables ==scroll inside the page==, and Given and Then mark keywords only. ([#988](https://github.com/alfredoperez/speckit-companion/pull/988)) <!-- area: spec-viewer -->
-- **The outline and header agree with the page.** The outline marks ==the section you are reading==, file chips stay on one line, and tasks always show as a percentage. ([#988](https://github.com/alfredoperez/speckit-companion/pull/988)) <!-- area: spec-viewer -->
