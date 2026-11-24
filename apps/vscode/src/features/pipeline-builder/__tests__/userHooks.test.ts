@@ -1,6 +1,6 @@
 import * as yaml from 'js-yaml';
 import { StockHookDraft } from '../../../protocol/pipeline';
-import { addUserHook, removeUserHook, updateUserHook } from '../stockHooks';
+import { addUserHook, removeUserHook, setHookEnabled, updateUserHook } from '../stockHooks';
 
 const INSTALLED = new Set(['git']);
 
@@ -231,5 +231,26 @@ describe('removing a hook you added', () => {
     it('refuses malformed YAML', () => {
         const result = removeUserHook('hooks: [\n', { step: 'plan', when: 'after', index: 0 }, INSTALLED);
         expect(result).toEqual({ error: expect.stringContaining('could not be read') });
+    });
+});
+
+describe('a registry with Windows line endings', () => {
+    const CRLF = REGISTRY.split('\n').join('\r\n');
+    const bare = (text: string) => text.replace(/\r\n/g, '');
+
+    it('keeps every line CRLF through add, update, remove and a switch', () => {
+        const once = ok(addUserHook(CRLF, 'plan', 'after', NOTE, INSTALLED));
+        expect(bare(once)).not.toContain('\n');
+        expect(once).toBe(ok(addUserHook(REGISTRY, 'plan', 'after', NOTE, INSTALLED)).split('\n').join('\r\n'));
+
+        const changed = ok(updateUserHook(once, { step: 'plan', when: 'after', index: 1 },
+            { ...NOTE, prompt: 'Log?', description: 'Changed' }, INSTALLED));
+        expect(bare(changed)).not.toContain('\n');
+        expect(hooks(changed).after_plan[1]).toMatchObject({ prompt: 'Log?', description: 'Changed' });
+
+        expect(ok(removeUserHook(once, { step: 'plan', when: 'after', index: 1 }, INSTALLED))).toBe(CRLF);
+
+        const off = ok(setHookEnabled(CRLF, { step: 'plan', when: 'before', index: 0, enabled: false }));
+        expect(off).toBe(CRLF.replace('    enabled: true\r\n    optional: true  # ask', '    enabled: false\r\n    optional: true  # ask'));
     });
 });

@@ -19,6 +19,11 @@ export interface HookSwitch {
 
 interface Refused { error: string }
 
+/** The file's lines and the line ending it uses, so a write keeps a CRLF file CRLF. */
+function splitLines(text: string): { lines: string[]; eol: string } {
+    return { lines: text.split(/\r?\n/), eol: text.includes('\r\n') ? '\r\n' : '\n' };
+}
+
 function indentOf(line: string): number {
     return line.length - line.replace(/^\s+/, '').length;
 }
@@ -41,7 +46,7 @@ function entrySpan(lines: string[], start: number): number {
  * touched. A refusal leaves the caller with the text it passed in.
  */
 export function setHookEnabled(text: string, flip: HookSwitch): { text: string } | Refused {
-    const lines = text.split('\n');
+    const { lines, eol } = splitLines(text);
     const key = `${flip.when}_${flip.step}:`;
     const at = lines.findIndex(line => line.trim() === key);
     if (at < 0) { return { error: `${key.slice(0, -1)} is not in this registry.` }; }
@@ -67,14 +72,14 @@ export function setHookEnabled(text: string, flip: HookSwitch): { text: string }
         const found = /^(\s*(?:- )?enabled:\s*)\S.*$/.exec(lines[i]);
         if (found) {
             lines[i] = `${found[1]}${value}`;
-            return { text: lines.join('\n') };
+            return { text: lines.join(eol) };
         }
     }
 
     // No `enabled` at all means the hook runs, so the switch is written in.
     const bullet = indentOf(lines[start]);
     lines.splice(start + 1, 0, `${' '.repeat(bullet + 2)}enabled: ${value}`);
-    return { text: lines.join('\n') };
+    return { text: lines.join(eol) };
 }
 
 /** The extension id written on a hook the person adds. No installed extension may own it. */
@@ -262,7 +267,8 @@ export function addUserHook(
     const { doc } = parsed;
     const before = entriesOf(doc, key)?.length ?? 0;
 
-    const lines = source === '' ? [] : source.split('\n');
+    const { lines: split, eol } = splitLines(source);
+    const lines = source === '' ? [] : split;
     const hooks = hooksSection(lines);
     if (!hooks) {
         if (doc.hooks !== undefined) { return { error: `hooks ${UNSAFE}` }; }
@@ -283,7 +289,7 @@ export function addUserHook(
         }
     }
 
-    const out = lines.join('\n');
+    const out = lines.join(eol);
     const after = parse(out);
     const entries = 'error' in after ? undefined : entriesOf(after.doc, key);
     if (!entries || entries.length !== before + 1 || !matches(entries[before], draft)) {
@@ -295,7 +301,7 @@ export function addUserHook(
 /** Where one of the person's entries sits, or why it cannot be touched. */
 function ownEntry(
     text: string, at: HookAddress, installed: ReadonlySet<string>,
-): { doc: Doc; lines: string[]; start: number; keyAt: number; key: string } | Refused {
+): { doc: Doc; lines: string[]; eol: string; start: number; keyAt: number; key: string } | Refused {
     const parsed = parse(text);
     if ('error' in parsed) { return parsed; }
     const { doc } = parsed;
@@ -311,13 +317,13 @@ function ownEntry(
                 + 'It can be switched on or off here.',
         };
     }
-    const lines = text.split('\n');
+    const { lines, eol } = splitLines(text);
     const hooks = hooksSection(lines);
     const found = hooks && keySection(lines, hooks.at, hooks.end, hooks.childIndent, key);
     if (!found || found.bullets.length !== entriesOf(doc, key)!.length) {
         return { error: `${key} ${UNSAFE}` };
     }
-    return { doc, lines, start: found.bullets[at.index], keyAt: found.at, key };
+    return { doc, lines, eol, start: found.bullets[at.index], keyAt: found.at, key };
 }
 
 /**
@@ -332,7 +338,7 @@ export function updateUserHook(
     if (bad) { return { error: bad }; }
     const found = ownEntry(text, at, installed);
     if ('error' in found) { return found; }
-    const { lines, start, key } = found;
+    const { lines, eol, start, key } = found;
     const bullet = indentOf(lines[start]);
     const fieldIndent = bullet + 2;
     const prompt = draft.prompt?.trim() ?? '';
@@ -373,7 +379,7 @@ export function updateUserHook(
         }
     }
 
-    const out = lines.join('\n');
+    const out = lines.join(eol);
     const after = parse(out);
     const entries = 'error' in after ? undefined : entriesOf(after.doc, key);
     if (!entries || entries.length !== entriesOf(found.doc, key)!.length
@@ -389,7 +395,7 @@ export function removeUserHook(
 ): Written {
     const found = ownEntry(text, at, installed);
     if ('error' in found) { return found; }
-    const { lines, start, keyAt, key } = found;
+    const { lines, eol, start, keyAt, key } = found;
     const count = entriesOf(found.doc, key)!.length;
     const end = trimEnd(lines, start, entrySpan(lines, start));
     if (count === 1) {
@@ -398,7 +404,7 @@ export function removeUserHook(
         lines.splice(start, end - start);
     }
 
-    const out = lines.join('\n');
+    const out = lines.join(eol);
     const after = parse(out);
     if ('error' in after || (entriesOf(after.doc, key)?.length ?? 0) !== count - 1) {
         return { error: UNSURE };
