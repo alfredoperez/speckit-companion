@@ -373,13 +373,16 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 }
 
 .pb-canvas {
+    --pb-page: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary));
+    --pb-band: color-mix(in srgb, var(--text-primary) 2%, var(--bg-primary));
     flex-grow: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    padding: var(--space-4);
+    padding: var(--space-5);
     overflow: auto;
+    background: var(--pb-page);
 }
 
 /* `auto` runs the others: a band above the row, never a column in it. */
@@ -462,13 +465,6 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
 /* A lane is a bounded panel on a quieter page: the edge says where one step
    ends, and the band at its top says which step it is. */
-.pb-canvas {
-    --pb-page: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary));
-    --pb-band: color-mix(in srgb, var(--text-primary) 2%, var(--bg-primary));
-    padding: var(--space-5);
-    background: var(--pb-page);
-}
-
 .pb-step {
     display: flex;
     flex-direction: column;
