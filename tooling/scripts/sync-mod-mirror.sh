@@ -12,9 +12,10 @@ mirror="${MOD_MIRROR_DIR:-$(dirname "$main")/speckit-companion-claude-mod}"
 [ -d "$mirror/.git" ] || gh repo clone "$MIRROR_REPO" "$mirror"
 git -C "$mirror" pull -q --ff-only
 
+git -C "$main" fetch -q origin main
 find "$mirror" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-git -C "$main" archive HEAD:apps/claude-mod .claude-plugin hooks README.md CHANGELOG.md | tar -x -C "$mirror"
-cp "$main/LICENSE" "$mirror/LICENSE"
+git -C "$main" archive origin/main:apps/claude-mod .claude-plugin hooks README.md CHANGELOG.md | tar -x -C "$mirror"
+git -C "$main" show origin/main:LICENSE > "$mirror/LICENSE"
 printf '\n---\n\nThis repository is a release mirror. The mod is developed in [alfredoperez/speckit-companion](https://github.com/alfredoperez/speckit-companion/tree/main/apps/claude-mod); issues and pull requests go there.\n' >> "$mirror/README.md"
 
 claude plugin validate --strict "$mirror"
