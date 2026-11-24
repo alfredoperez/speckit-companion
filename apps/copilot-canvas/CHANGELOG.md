@@ -4,6 +4,8 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-24
+
 ### Changed
 - **The Overview uses the viewer's own components.** The board renders the dossier sections from the same code as VS Code, so ==the two cannot drift==. <!-- area: copilot-app -->
 ### Added
