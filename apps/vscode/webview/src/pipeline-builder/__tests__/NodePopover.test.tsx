@@ -104,6 +104,23 @@ describe('the builder asks whether each hook ran', () => {
     });
 });
 
+describe('the run record is read again when it may have changed', () => {
+    const asks = () => posted.filter(m => m.type === 'readHookRuns').length;
+
+    it('asks on window focus and when the panel becomes visible', async () => {
+        const before = asks();
+        window.dispatchEvent(new Event('focus'));
+        document.dispatchEvent(new Event('visibilitychange'));
+        expect(asks()).toBe(before + 2);
+    });
+
+    it('asks when a popover opens', async () => {
+        const before = asks();
+        await open();
+        expect(asks()).toBe(before + 1);
+    });
+});
+
 describe("a node's popover", () => {
     it('opens beside the node it was clicked on, and takes the keyboard', async () => {
         await open();

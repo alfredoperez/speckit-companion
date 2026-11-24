@@ -225,12 +225,20 @@ function App() {
             }
         };
         const onResize = () => setNarrow(window.innerWidth <= NARROW);
+        // Nothing watches the run records, so a run that finished elsewhere is read on return.
+        const onReturn = () => {
+            if (document.visibilityState !== 'hidden') { vscode.postMessage({ type: 'readHookRuns' }); }
+        };
         window.addEventListener('message', onMessage);
         window.addEventListener('resize', onResize);
+        window.addEventListener('focus', onReturn);
+        document.addEventListener('visibilitychange', onReturn);
         vscode.postMessage({ type: 'ready' });
         return () => {
             window.removeEventListener('message', onMessage);
             window.removeEventListener('resize', onResize);
+            window.removeEventListener('focus', onReturn);
+            document.removeEventListener('visibilitychange', onReturn);
         };
     }, []);
 
@@ -312,7 +320,9 @@ function App() {
         vscode.postMessage({ type: 'readNode', command, nodeId });
     };
     const openNode = (command: string, nodeId: string) => {
-        setPop(pop?.command === command && pop.nodeId === nodeId ? null : { command, nodeId });
+        const closing = pop?.command === command && pop.nodeId === nodeId;
+        setPop(closing ? null : { command, nodeId });
+        if (!closing) { vscode.postMessage({ type: 'readHookRuns' }); }
         setNotice(null);
         setAnnounced('');
     };
