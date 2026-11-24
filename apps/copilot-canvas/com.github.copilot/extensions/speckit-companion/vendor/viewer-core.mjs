@@ -538,6 +538,24 @@ function pickConcerns(ctx) {
   }
   return out.length > 0 ? out : void 0;
 }
+function pickAmendments(ctx) {
+  const v = ctx.amendments;
+  if (!Array.isArray(v)) return void 0;
+  const out = [];
+  for (const entry of v) {
+    if (!entry || typeof entry !== "object") continue;
+    const e = entry;
+    if (typeof e.what !== "string" || e.what.trim() === "") continue;
+    const what = e.what.replace(/\s+/g, " ").trim();
+    const item = { what: what.length > 120 ? `${what.slice(0, 119)}\u2026` : what };
+    if (typeof e.why === "string") item.why = e.why;
+    if (typeof e.at === "string") item.at = e.at;
+    if (typeof e.by === "string") item.by = e.by;
+    if (typeof e.replanned === "boolean") item.replanned = e.replanned;
+    out.push(item);
+  }
+  return out.length > 0 ? out : void 0;
+}
 function pickReviewComments(ctx) {
   const v = ctx.reviewComments;
   if (!Array.isArray(v) || v.length === 0) return void 0;
@@ -648,6 +666,7 @@ function deriveViewerState(ctx, activeStep = ctx.currentStep, workflowSteps, con
     source: optString(ctx.source),
     extends: optString(ctx.extends),
     supersedes: optString(ctx.supersedes),
+    amendments: pickAmendments(ctx),
     expectations: asStringArray(ctx.expectations),
     context: asStringArray(ctx.context),
     verified: pickVerified(ctx),
