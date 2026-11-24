@@ -42,6 +42,8 @@ Pictures and footage of the real product, and the scripted checks that take them
 
 **One step at a time.** `npm run shots -- --only <step,step>` and `npm run check:terminal -- --only <step,step>` run only the named steps. `--only` takes step names (the first argument of a `step(...)` call), not crop names, so search the script for the crop's name to find its step. A name that matches no step runs nothing and says nothing, so check the picture was written. `npm run shots:board` ignores `--only`.
 
+**Talk steps run one process each.** With `--sandbox` on a talk sandbox (one with `.talk/state.mjs`) and `--shots` or `--record`, `desktop-check.mjs` runs every `talk-*` step in its own process and its own window, retries a failed step once, and ends every process it started. The other steps run once afterwards in a single process. `--step-timeout <seconds>` (600 by default) bounds each try. The run exits 1 and names the steps that failed twice.
+
 ## Crops of the extension
 
 | Crop | What it shows |
