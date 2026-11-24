@@ -967,7 +967,6 @@ function Phase({ phase, actions, controls }: {
                             (event.currentTarget as HTMLElement).blur();
                         }
                     }}>{phase.name}</h3>
-                <span class="pb-phase-rule" aria-hidden="true" />
                 {picking ? (
                     <Menu
                         // Keyed apart from the menu it replaces: without it
@@ -1385,12 +1384,29 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
  * where: clicking the one after `tasks` opens the form with "Runs after" already
  * reading `tasks`.
  */
-function LaneSeam({ after, onNewStep }: { after: string; onNewStep: Props['onNewStep'] }) {
+function LaneJoin({ after, next, onNewStep }: {
+    after: string;
+    next: string;
+    onNewStep: Props['onNewStep'];
+}) {
     return (
-        <button class="pb-lane-seam" onClick={() => onNewStep(after)}
-            title={`Add a step after ${after}`}>
-            <span class="pb-lane-seam-label">Add a step after {after}</span>
-        </button>
+        <div class="pb-lane-join">
+            <svg class="pb-lane-arrow pb-lane-arrow--across" width="24" height="12"
+                viewBox="0 0 24 12" aria-hidden="true">
+                <path d="M1 6H21M16 1L22 6L16 11" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <svg class="pb-lane-arrow pb-lane-arrow--down" width="12" height="24"
+                viewBox="0 0 12 24" aria-hidden="true">
+                <path d="M6 2V20M2 15L6 21L10 15" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="pb-lane-then">then {next}</span>
+            <button class="pb-lane-seam" onClick={() => onNewStep(after)}
+                title={`Add a step after ${after}`}>
+                <span class="pb-lane-seam-label">Add a step after {after}</span>
+            </button>
+        </div>
     );
 }
 
@@ -1414,8 +1430,8 @@ export function Canvas(
                     children of the run itself. */}
                 {sequence.flatMap((step, index) => [
                     index > 0 && (
-                        <LaneSeam key={`seam-${step.name}`}
-                            after={sequence[index - 1].name} onNewStep={onNewStep} />
+                        <LaneJoin key={`seam-${step.name}`} after={sequence[index - 1].name}
+                            next={step.name} onNewStep={onNewStep} />
                     ),
                     <Step key={step.name} step={step} index={index} actions={actions}
                         onReorder={onReorder} onAddHook={onAddHook}
