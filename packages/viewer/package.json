@@ -1,6 +1,6 @@
 {
   "name": "speckit-viewer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The SpecKit Companion spec viewer: contract, core and styles, shared by the extension and other hosts.",
   "license": "MIT",
   "repository": {
