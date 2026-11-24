@@ -87,7 +87,7 @@ describe('the panel posts nothing a handler cannot act on', () => {
             expect(message).not.toContain('movedFrom');
         }
         // The save branch sends one move carrying the edit, and never a removal.
-        const attach = panel.slice(panel.indexOf('onAttach={(a: Attachment)'));
+        const attach = panel.slice(panel.indexOf('onAttach={(a: Attachment, keepOpen: boolean)'));
         const until = attach.slice(0, attach.indexOf('onRemove='));
         expect(until.match(/type: 'moveHook'/g)).toHaveLength(1);
         expect(until).toMatch(/\? \{ hookType: a\.hookType, value: a\.value/);

@@ -12,7 +12,7 @@ import type { Meta, StoryObj } from '@storybook/preact';
 import { BrokenPipeline } from '../BrokenPipeline';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
-import { AttachForm } from '../AttachForm';
+import { HookModal } from '../HookModal';
 import { Inspector } from '../Inspector';
 import { NodePopover } from '../NodePopover';
 import { CHOICES, IMPLEMENT, NO_CHANGES, SPECIFY, graph, hook, node, phase, step } from './fixtures';
@@ -361,12 +361,12 @@ export const FillInAHook: Story = {
     name: 'Fill in the hook form',
     render: () => (
         <div class="builder">
-            <AttachForm step={SPECIFY} anchor="author" choices={CHOICES}
+            <HookModal step={SPECIFY} anchor="author" choices={CHOICES}
                 onCancel={noop} onAttach={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        const input = canvasElement.querySelector('.pb-input--mono') as HTMLInputElement;
+        const input = canvasElement.querySelector('.pb-modal-search input') as HTMLInputElement;
         const submit = canvasElement.querySelector('.pb-action--primary') as HTMLButtonElement;
         assert(submit.disabled, 'nothing to add until a skill is named');
 
@@ -382,36 +382,34 @@ export const ChangeTheHookType: Story = {
     name: 'Change what a hook does',
     render: () => (
         <div class="builder">
-            <AttachForm step={SPECIFY} anchor="author" choices={CHOICES}
+            <HookModal step={SPECIFY} anchor="author" choices={CHOICES}
                 onCancel={noop} onAttach={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        const segments = canvasElement.querySelectorAll('.pb-segment');
-        assert(segments.length === 4, 'the four kinds sit on one row');
-        (segments[1] as HTMLButtonElement).click();
+        const kinds = canvasElement.querySelectorAll('.pb-modal-kind');
+        assert(kinds.length === 4, 'the four kinds sit on one row');
+        (kinds[1] as HTMLButtonElement).click();
         await new Promise(resolve => setTimeout(resolve, 0));
-        assert(Boolean(canvasElement.querySelector('.pb-input--area')),
+        assert(Boolean(canvasElement.querySelector('.pb-modal-area')),
             'an instruction gets room to write in');
-        assert(canvasElement.querySelectorAll('.pb-kind .pb-field-note').length === 1,
-            'and one help line, for the kind that is on');
     },
 };
 
 export const PlaceTheHookFirst: Story = {
-    name: 'Say where a hook goes before saying what it is',
+    name: 'Change where a hook goes',
     render: () => (
         <div class="builder">
-            <AttachForm step={SPECIFY} anchor="draft-spec" choices={CHOICES}
+            <HookModal step={SPECIFY} anchor="draft-spec" choices={CHOICES}
                 onCancel={noop} onAttach={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        const triggers = canvasElement.querySelectorAll('.pb-runs .pb-menu-trigger');
-        assert(triggers.length === 2, 'when and where, in the row that comes first');
+        const triggers = canvasElement.querySelectorAll('.pb-modal-runs .pb-menu-trigger');
+        assert(triggers.length === 2, 'when and where, on one quiet line');
         (triggers[1] as HTMLButtonElement).click();
         await new Promise(resolve => setTimeout(resolve, 0));
-        const options = Array.from(canvasElement.querySelectorAll('.pb-runs .pb-menu-option'));
+        const options = Array.from(canvasElement.querySelectorAll('.pb-modal-runs .pb-menu-option'));
         assert(options.length > 0, 'the anchors are named, not listed as ids');
         const draft = options.find(el => el.textContent?.startsWith('Draft the spec'));
         (draft as HTMLButtonElement).click();
@@ -539,22 +537,20 @@ export const OpenWhatChangedOnAStep: Story = {
     },
 };
 
-export const ReachASeamWithNoPointer: Story = {
-    name: 'Reach a seam with no pointer',
+export const ReachTheNodePlusWithNoPointer: Story = {
+    name: 'Reach a node\'s "+" with no pointer',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        // The seam's `+` used to be `opacity: 0` until a pointer arrived, on the
-        // one route to placing a hook precisely.
-        const seam = canvasElement.querySelector('.pb-slot') as HTMLButtonElement;
-        assert(seam.tagName === 'BUTTON' && !seam.disabled,
-            'a seam is a real button, so tab order reaches it');
+        const plus = canvasElement.querySelector('.pb-edge-add--after') as HTMLButtonElement;
+        assert(plus.tagName === 'BUTTON' && !plus.disabled,
+            'the "+" on a node is a real button, so tab order reaches it');
 
-        seam.focus();
-        assert(canvasElement.ownerDocument.activeElement === seam, 'and it takes the focus');
+        plus.focus();
+        assert(canvasElement.ownerDocument.activeElement === plus, 'and it takes the focus');
 
-        seam.click();
+        plus.click();
         const sent = sentFrom(canvasElement);
-        assert(sent[0]?.what === 'addHook', 'and adds a hook at the gap it marks');
+        assert(sent[0]?.what === 'addHook', 'and adds a hook on its side of the node');
     },
 };
 

@@ -11,7 +11,8 @@ import { Header } from '../Header';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { Inspector } from '../Inspector';
-import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { HookModal } from '../HookModal';
 import { TemplateForm } from '../TemplateForm';
 import { moveTargets } from '../moves';
 import { NodePopover } from '../NodePopover';
@@ -921,7 +922,7 @@ export const InspectorFrame: Story = {
 export const AttachSkill: Story = {
     name: 'Add hook · a skill',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="author" choices={CHOICES}
+        <One><HookModal step={SPECIFY} anchor="author" choices={CHOICES}
             onCancel={noop} onAttach={noop} /></One>
     ),
 };
@@ -929,7 +930,7 @@ export const AttachSkill: Story = {
 export const AttachEditing: Story = {
     name: 'Add hook · editing one that is there',
     render: () => (
-        <One><AttachForm step={IMPLEMENT} anchor="handoff" choices={CHOICES}
+        <One><HookModal step={IMPLEMENT} anchor="handoff" choices={CHOICES}
             editing={hook({
                 when: 'after', type: 'skill', anchor: 'handoff', index: 1,
                 summary: 'create-pr', note: 'Do not merge.',
@@ -941,7 +942,7 @@ export const AttachEditing: Story = {
 export const AttachNothingToPick: Story = {
     name: 'Add hook · a project with no skills yet',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
+        <One><HookModal step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
             onCancel={noop} onAttach={noop} /></One>
     ),
 };
@@ -957,7 +958,7 @@ export const AttachNothingToPick: Story = {
 export const AttachFromTheCatalog: Story = {
     name: 'Add hook · choosing a command this project has',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="draft-spec" choices={{
+        <One><HookModal step={SPECIFY} anchor="draft-spec" choices={{
             skills: ['create-pr'], nodes: ['review'], fragments: [], presets: [],
             commands: [
                 { id: 'speckit.git.initialize', label: 'speckit.git.initialize',
@@ -980,12 +981,53 @@ export const AttachFromTheCatalog: Story = {
 export const AttachCommand: Story = {
     name: 'Add hook · a command, after a node',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="draft-spec" choices={CHOICES}
+        <One><HookModal step={SPECIFY} anchor="draft-spec" choices={CHOICES}
             editing={hook({
                 when: 'after', type: 'command', anchor: 'draft-spec', index: 0,
                 summary: 'npm run lint-spec',
             })}
             onCancel={noop} onAttach={noop} onRemove={noop} /></One>
+    ),
+};
+
+/** The skill list read from the catalog: where each one lives, and the one a hook cannot call. */
+const CATALOG_CHOICES = {
+    ...CHOICES,
+    skillCatalog: [
+        { id: 'superpowers:test-driven-development', name: 'test-driven-development',
+            source: 'plugin' as const, where: 'superpowers', description: '', callable: true, enabled: true },
+        { id: 'testing-library-patterns', name: 'testing-library-patterns',
+            source: 'project' as const, where: '.claude/skills', description: '', callable: true, enabled: true },
+        { id: 'run-tests', name: 'run-tests', source: 'user' as const,
+            where: '~/.claude/skills', description: '', callable: false, enabled: true },
+    ],
+};
+
+/** Type into the modal's search, the way a person would, so the list is drawn narrowed. */
+function typed(text: string) {
+    return (el: HTMLElement | null) => {
+        const input = el?.querySelector<HTMLInputElement>('.pb-modal-search input');
+        if (!input || input.value === text) { return; }
+        input.value = text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+}
+
+export const AttachFromTheSkillCatalog: Story = {
+    name: 'Add hook · the skill catalog, narrowed by typing',
+    render: () => (
+        <One><div ref={typed('test')}><HookModal step={IMPLEMENT} anchor="handoff" when="before"
+            choices={CATALOG_CHOICES} onCancel={noop} onAttach={noop} /></div></One>
+    ),
+};
+
+export const AttachNarrowSheet: Story = {
+    name: 'Add hook · a full-height sheet when the panel is narrow',
+    render: () => (
+        <div class="builder" style="width: 380px">
+            <div ref={typed('test')}><HookModal step={IMPLEMENT} anchor="handoff" when="before"
+                choices={CATALOG_CHOICES} onCancel={noop} onAttach={noop} /></div>
+        </div>
     ),
 };
 

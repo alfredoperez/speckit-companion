@@ -675,18 +675,20 @@ function EdgeHooks({ hooks, stock = [], anchor, boundary, actions, label }: {
     );
 }
 
-/** The quiet affordance for attaching work where nothing is attached yet. */
-function Seam({ side, anchor, onAdd, drop }: {
-    side: 'before' | 'after';
-    anchor: string;
+/** The `+` on a node's top or bottom edge, which opens the add modal for that side. */
+function EdgeAdd({ side, node, onAdd }: {
+    side: HookWhen;
+    node: PipelineNode;
     onAdd: () => void;
-    drop?: HookDrop;
 }) {
     return (
-        <button class={`pb-slot pb-slot--${side}`} onClick={onAdd}
-            {...hookDropZone(drop, () => ({ target: { when: side, anchor, boundary: 'node' } }))}
-            title={`Attach a skill, an instruction or a command ${side} ${anchor}`}>
-            <span class="pb-slot-label">{side} {anchor}</span>
+        <button type="button" class={`pb-edge-add pb-edge-add--${side}`} onClick={onAdd}
+            aria-label={`Add a hook ${side} ${node.name}`}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <path d="M5 1.5V8.5M1.5 5H8.5" />
+            </svg>
+            <span aria-hidden="true">{side}</span>
         </button>
     );
 }
@@ -723,21 +725,11 @@ function NodeMarks({ node }: { node: PipelineNode }) {
     return <span class="pb-node-meta">{marks}</span>;
 }
 
-function Node({ node, actions, stock, seams }: {
+function Node({ node, actions, stock }: {
     node: PipelineNode;
     actions: NodeActions;
     /** Extension hooks that fire at this node's boundary, by side. */
     stock: { before: StockHook[]; after: StockHook[] };
-    /**
-     * Which empty seams this node draws.
-     *
-     * `after <this node>` and `before <the next one>` are two anchors for one
-     * gap, and a hook at either lands in the same place — so drawing both put a
-     * pair of dashed lines at every join and made the lane look broken. One gap,
-     * one seam: a node draws only the seam above it, and only when something
-     * precedes it. The phase's own seams cover its two edges.
-     */
-    seams: { before: boolean; after: boolean };
 }) {
     const before = node.hooks.filter(hook => hook.when === 'before');
     const after = node.hooks.filter(hook => hook.when === 'after');
@@ -753,10 +745,7 @@ function Node({ node, actions, stock, seams }: {
 
     return (
         <div class="pb-node-group">
-            {seams.before && (
-                <Seam side="before" anchor={node.id} drop={actions.drop}
-                    onAdd={() => actions.onAdd(node.id, 'before')} />
-            )}
+            <EdgeAdd side="before" node={node} onAdd={() => actions.onAdd(node.id, 'before')} />
             <div class={`pb-card${hooked ? ' pb-card--hooked' : ''}${open ? ' pb-card--open' : ''}`}
                 data-node={`${actions.step}/${node.id}`}>
             <Slot side="before" node={node} ours={before} theirs={stock.before} actions={actions} />
@@ -814,10 +803,7 @@ function Node({ node, actions, stock, seams }: {
             </div>
             <Slot side="after" node={node} ours={after} theirs={stock.after} actions={actions} />
             </div>
-            {seams.after && (
-                <Seam side="after" anchor={node.id} drop={actions.drop}
-                    onAdd={() => actions.onAdd(node.id, 'after')} />
-            )}
+            <EdgeAdd side="after" node={node} onAdd={() => actions.onAdd(node.id, 'after')} />
         </div>
     );
 }
@@ -1045,12 +1031,6 @@ function Phase({ phase, actions, controls }: {
                     <Node key={node.id} node={node} actions={actions} stock={{
                         before: at === 0 ? controls.stockBefore : [],
                         after: at === phase.nodes.length - 1 ? controls.stockAfter : [],
-                    }} seams={{
-                        // One seam per gap. The phase's own seams own its edges,
-                        // and each node owns the gap above it, so the first
-                        // node draws nothing and no node draws below itself.
-                        before: at > 0,
-                        after: false,
                     }} />
                 ))}
             </div>

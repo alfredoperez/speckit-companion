@@ -109,13 +109,6 @@ describe('dragging a hook to another anchor', () => {
         expect(moved[0][2]).toEqual({ when: 'after', anchor: 'resolve-dir', boundary: 'node' });
     });
 
-    it('puts it last at a seam it is dropped on', () => {
-        const { host, moved } = render(board({ draft: [hook('draft-spec', 'after', 0, 'one')] }));
-        const seam = host.querySelector('.pb-slot--before')!;
-        dragOnto(rows(host)[0], seam);
-        expect(moved[0][2]).toEqual({ when: 'before', anchor: 'quality-checklist', boundary: 'node' });
-    });
-
     it('takes a phase heading as before that phase', () => {
         const { host, moved } = render(board({ draft: [hook('draft-spec', 'after', 0, 'one')] }));
         dragOnto(rows(host)[0], host.querySelectorAll('.pb-phase-head')[0]);

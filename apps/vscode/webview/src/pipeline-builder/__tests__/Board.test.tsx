@@ -3,7 +3,6 @@
  */
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { AttachForm } from '../AttachForm';
 import { withoutNode } from '../Canvas';
 import { NO_CHANGES, canvas, drag, flush, graph, mount, node, step } from './support';
 
@@ -87,52 +86,40 @@ describe('the run reads left to right', () => {
 });
 
 describe('where work can be attached', () => {
-    // A seam per gap between two nodes. The phase's own edges lost theirs: the
-    // phase header carries an explicit "Add hook", which answers "how do I
-    // attach work here" better than a dashed line ever did.
-    it('marks each gap between two nodes', () => {
-        const { host } = canvas(graph({
-            steps: [step({
-                phases: [{
-                    name: 'gather', hooks: [],
-                    nodes: [node({ id: 'a' }), node({ id: 'b' }), node({ id: 'c' })],
-                }],
-            })],
-        }));
-        expect(Array.from(host.querySelectorAll('.pb-slot')).map(el => el.textContent))
-            .toEqual(['before b', 'before c']);
+    const three = () => graph({
+        steps: [step({
+            phases: [{
+                name: 'gather', hooks: [],
+                nodes: [node({ id: 'a', name: 'A' }), node({ id: 'b', name: 'B' })],
+            }],
+        })],
     });
 
-    // The argument for hiding the seam's `+` was a field of twenty-odd marks.
-    // A node draws only the seam above it, so a board carries as many seams as
-    // it has nodes, less one per phase — eight on this repository's pipeline.
-    it('draws one seam per gap: as many as nodes, less one per phase', () => {
-        const sizes = [[2, 3], [1, 2]];
-        const { host } = canvas(graph({
-            steps: sizes.map((phases, s) => step({
-                name: `step-${s}`,
-                phases: phases.map((n, p) => ({
-                    name: `phase-${p}`, hooks: [],
-                    nodes: Array.from({ length: n }, (_, i) => node({ id: `n${s}${p}${i}` })),
-                })),
-            })),
-        }));
-        const nodes = sizes.flat().reduce((a, b) => a + b, 0);
-        const phases = sizes.flat().length;
-        expect(host.querySelectorAll('.pb-slot')).toHaveLength(nodes - phases);
+    it('puts a "+ before" and a "+ after" on every node, each a real button', () => {
+        const { host } = canvas(three());
+        expect(Array.from(host.querySelectorAll('.pb-edge-add')).map(el => [
+            el.tagName, el.getAttribute('aria-label'), el.textContent,
+        ])).toEqual([
+            ['BUTTON', 'Add a hook before A', 'before'],
+            ['BUTTON', 'Add a hook after A', 'after'],
+            ['BUTTON', 'Add a hook before B', 'before'],
+            ['BUTTON', 'Add a hook after B', 'after'],
+        ]);
     });
 
-    it('adds a hook at the anchor whose seam was clicked', () => {
-        const { host, added } = canvas(graph({
-            steps: [step({
-                phases: [{
-                    name: 'gather', hooks: [],
-                    nodes: [node({ id: 'a' }), node({ id: 'b' })],
-                }],
-            })],
-        }));
-        (host.querySelector('.pb-slot') as HTMLButtonElement).click();
-        expect(added).toEqual([['specify', 'b', 'before']]);
+    it('keeps them in the Tab order, around the node they belong to', () => {
+        const { host } = canvas(three());
+        const group = host.querySelector('.pb-node-group')!;
+        const stops = Array.from(group.querySelectorAll('button'))
+            .filter(el => el.tabIndex >= 0).map(el => el.className.split(' ')[0]);
+        expect(stops).toEqual(['pb-edge-add', 'pb-node-main', 'pb-edge-add']);
+    });
+
+    it('adds a hook on the side of the node that was pressed', () => {
+        const { host, added } = canvas(three());
+        (host.querySelectorAll('.pb-edge-add--after')[0] as HTMLButtonElement).click();
+        (host.querySelectorAll('.pb-edge-add--before')[1] as HTMLButtonElement).click();
+        expect(added).toEqual([['specify', 'a', 'after'], ['specify', 'b', 'before']]);
     });
 
     it('offers Add hook on every phase, which is the discoverable way in', async () => {
@@ -1147,44 +1134,6 @@ describe('a hook can be changed once it is there', () => {
         expect(host.querySelector('.pb-hook')?.getAttribute('title'))
             .toContain('.specify/extensions/companion/scripts/doctor.py');
     });
-
-    it('offers what the project has, rather than asking you to remember', () => {
-        const noop = () => undefined;
-        const sheet = mount(
-            <AttachForm step={step()} anchor="gather"
-                choices={{ skills: ['create-pr', 'verify-code-review'], nodes: ['review'],
-                    commands: [], fragments: [], presets: [] }}
-                onCancel={noop} onAttach={noop} />,
-        );
-        expect(sheet.querySelector('.pb-pick-open')).not.toBeNull();
-        expect(sheet.querySelector('.pb-field-help')?.textContent).toContain('2 in this project');
-    });
-
-    it('fills the form from the hook it is editing, and offers to remove it', () => {
-        const noop = () => undefined;
-        const sheet = mount(
-            <AttachForm step={step()} anchor="complete"
-                choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
-                editing={{
-                    when: 'after', type: 'skill', summary: 'create-pr',
-                    anchor: 'complete', index: 1, note: 'only on green',
-                }}
-                onCancel={noop} onAttach={noop} onRemove={noop} />,
-        );
-        expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Edit hook');
-        expect((sheet.querySelector('.pb-input--mono') as HTMLInputElement).value)
-            .toBe('create-pr');
-        expect(sheet.querySelector('.pb-action--primary')?.textContent).toContain('Save hook');
-        expect(sheet.querySelector('.pb-action--remove')).not.toBeNull();
-    });
-
-    it('says nothing about removing when it is a new hook', () => {
-        const noop = () => undefined;
-        const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
-                onCancel={noop} onAttach={noop} />);
-        expect(sheet.querySelector('.pb-action--remove')).toBeNull();
-    });
 });
 
 describe('the changed mark says what changed', () => {
@@ -1596,9 +1545,10 @@ describe('a resting control on the board is drawn', () => {
         return css.slice(at, css.indexOf('}', at));
     };
 
-    // It was `opacity: 0`: the seam's `+` is the one route to placing a hook precisely.
-    it('gives the seam no opacity to hide behind', () => {
-        expect(rule('.pb-slot::before')).not.toMatch(/opacity:/);
+    // Hidden only until the pointer or the keyboard reaches the node, and never on a touch screen.
+    it('shows the "+" on a node on hover, on focus, and wherever there is no hover', () => {
+        expect(css).toMatch(/\.pb-node-group:hover > \.pb-edge-add,\n\.pb-node-group:focus-within > \.pb-edge-add,\n\.pb-edge-add:focus-visible \{ opacity: 1; \}/);
+        expect(css).toMatch(/@media \(hover: none\) \{\n    \.pb-edge-add \{ opacity: 1; \}/);
     });
 
     // An `opacity: 0` element still hit-tests: parked below its `+`, the lane
@@ -1626,9 +1576,10 @@ describe('a resting control on the board is drawn', () => {
         expect(narrow).toMatch(/\.pb-lane-then \{[^}]*position: static;/);
     });
 
-    // .45 over a token that already carries an alpha put it under the 3:1 a
-    // control that is not text has to clear.
-    it('rests the seam on a token rather than a fraction of one', () => {
-        expect(rule('.pb-slot::before')).toContain('color: var(--text-secondary);');
+    it('draws the add modal in theme tokens and turns it into a sheet when narrow', () => {
+        expect(rule('.pb-modal')).toContain('background: var(--bg-elevated);');
+        expect(rule('.pb-modal')).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+        const narrow = css.slice(css.lastIndexOf('@container builder (max-width: 640px) {\n    .pb-modal-layer'));
+        expect(narrow).toMatch(/\.pb-modal \{[^}]*width: 100%;/);
     });
 });

@@ -2,7 +2,8 @@
  * @jest-environment jsdom
  */
 import { Inspector } from '../Inspector';
-import { AttachForm, Attachment, NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { Attachment, NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { HookModal } from '../HookModal';
 import { TemplateForm } from '../TemplateForm';
 import type { PipelineNode } from '../../../../src/protocol/pipeline';
 import { readFileSync } from 'fs';
@@ -243,10 +244,6 @@ describe('every side pane wears one shell', () => {
         ['the inspector',
             <Inspector node={node()} step="specify" body="x" parts={[]} {...INSPECT} />,
             'Resolve the spec folder'],
-        ['the hook form',
-            <AttachForm step={step()} anchor="author" choices={CHOICES}
-                onCancel={noop} onAttach={noop} />,
-            'Add hook'],
         ['the document shape',
             <TemplateForm step={TEMPLATE} fragments={[]} onCancel={noop} onPick={noop} />,
             'What specify writes'],
@@ -684,7 +681,7 @@ describe('the kind tick is three steps of one neutral', () => {
     });
 });
 
-describe('the hook form asks for the placement first', () => {
+describe('the hook modal keeps the placement it was opened with', () => {
     const noop = () => undefined;
     const CHOICES = {
         skills: ['create-pr', 'verify-code-review'], nodes: [], commands: [], fragments: [], presets: [],
@@ -693,179 +690,19 @@ describe('the hook form asks for the placement first', () => {
     function form(anchor = 'draft-spec', when?: 'before' | 'after') {
         const made: Attachment[] = [];
         const host = mount(
-            <AttachForm step={step()} anchor={anchor} when={when} choices={CHOICES}
+            <HookModal step={step()} anchor={anchor} when={when} choices={CHOICES}
                 onCancel={noop} onAttach={a => made.push(a)} />,
         );
         return { host, made };
     }
 
     const whenShown = (host: HTMLElement) =>
-        (host.querySelectorAll('.pb-runs .pb-trigger-text')[0].textContent ?? '').trim();
+        (host.querySelectorAll('.pb-modal-runs .pb-trigger-text')[0].textContent ?? '').trim();
 
     const open = async (host: HTMLElement, which: number) => {
-        (host.querySelectorAll('.pb-runs .pb-menu-trigger')[which] as HTMLButtonElement).click();
+        (host.querySelectorAll('.pb-modal-runs .pb-menu-trigger')[which] as HTMLButtonElement).click();
         await flush();
     };
-
-    // The seam under a node and the seam above it opened the same form seeded
-    // `before`, so attaching after something meant correcting the form first.
-    it('opens on the side of the anchor the button was pressed on', () => {
-        expect(whenShown(form('draft-spec', 'after').host)).toBe('after');
-        expect(whenShown(form('draft-spec', 'before').host)).toBe('before');
-        expect(whenShown(form().host)).toBe('before');
-    });
-
-    // "Runs before Draft the spec" is the sentence, so it is read in that order.
-    it('puts Runs at the top, as when and where in one row', () => {
-        const { host } = form();
-        const fields = Array.from(host.querySelectorAll('.pb-field-label'))
-            .map(el => el.textContent);
-        expect(fields[0]).toBe('Runs');
-        expect(host.querySelectorAll('.pb-runs .pb-menu-trigger')).toHaveLength(2);
-    });
-
-    it('names the anchor rather than showing its id, in the panel\'s own menu', async () => {
-        const { host } = form();
-        expect(host.querySelectorAll('.pb-runs select')).toHaveLength(0);
-        expect((host.querySelectorAll('.pb-runs .pb-trigger-text')[1].textContent ?? '').trim())
-            .toBe('Draft the spec');
-
-        await open(host, 1);
-        expect(Array.from(host.querySelectorAll('.pb-menu-label')).map(el => el.textContent))
-            .toEqual(['the gather phase', 'Resolve the spec folder', 'the author phase',
-                'Draft the spec']);
-    });
-
-    it('changes when it runs from the same row', async () => {
-        const { host, made } = form();
-        await open(host, 0);
-        (Array.from(host.querySelectorAll('.pb-menu-option'))
-            .find(el => el.textContent?.startsWith('after')) as HTMLButtonElement).click();
-        await flush();
-
-        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
-        input.value = 'create-pr';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        await flush();
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-        expect(made[0].when).toBe('after');
-    });
-
-    // Four help texts at once asked the reader to discard three of them.
-    it('shows one help line, for the kind that is selected', async () => {
-        const { host } = form();
-        const segments = Array.from(host.querySelectorAll('.pb-segment'));
-        expect(segments.map(el => el.textContent))
-            .toEqual(['Skill', 'Instruction', 'Command', 'Node']);
-        expect(host.querySelectorAll('.pb-kind .pb-field-note')).toHaveLength(1);
-        expect(host.querySelector('.pb-kind .pb-field-note')?.textContent)
-            .toContain('The instructions stay in the skill');
-
-        (segments[2] as HTMLButtonElement).click();
-        await flush();
-        expect(host.querySelector('.pb-kind .pb-field-note')?.textContent)
-            .toContain('needs a terminal');
-        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Command');
-    });
-
-    // A radiogroup is one tab stop, and arrows move inside it.
-    it('walks the kinds with arrows, on one tab stop', async () => {
-        const { host } = form();
-        const segments = () => Array.from(host.querySelectorAll('.pb-segment'));
-        const stops = () => segments().map(el => el.getAttribute('tabindex'));
-        expect(stops()).toEqual(['0', '-1', '-1', '-1']);
-
-        segments()[0].dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-        await flush();
-        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Instruction');
-        expect(stops()).toEqual(['-1', '0', '-1', '-1']);
-
-        segments()[1].dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
-        await flush();
-        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Node');
-
-        // Wraps, so the group has no dead end at either edge.
-        segments()[3].dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-        await flush();
-        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Skill');
-    });
-
-    // Only a skill hook renders its note; the other three drop it.
-    it('asks for a note only where one is rendered', async () => {
-        const { host } = form();
-        expect(host.querySelector('.pb-note')).not.toBeNull();
-        const segment = (label: string) =>
-            Array.from(host.querySelectorAll('.pb-segment'))
-                .find(el => el.textContent === label) as HTMLButtonElement;
-
-        for (const label of ['Instruction', 'Command', 'Node']) {
-            segment(label).click();
-            await flush();
-            expect(host.querySelector('.pb-note')).toBeNull();
-        }
-        segment('Skill').click();
-        await flush();
-        expect(host.querySelector('.pb-note')).not.toBeNull();
-    });
-
-    // The renderer reads a note only on a skill hook, so one left behind by a
-    // switch shipped a `text:` key into companion.yml that nothing ever reads.
-    it('drops a note typed under Skill when the kind changes', async () => {
-        const { host, made } = form();
-        const segment = (label: string) =>
-            Array.from(host.querySelectorAll('.pb-segment'))
-                .find(el => el.textContent === label) as HTMLButtonElement;
-
-        const note = host.querySelector('.pb-note .pb-input') as HTMLInputElement;
-        note.value = 'read the changelog first';
-        note.dispatchEvent(new Event('input', { bubbles: true }));
-        await flush();
-
-        segment('Node').click();
-        await flush();
-        const value = host.querySelector('.pb-field .pb-input') as HTMLInputElement;
-        value.value = 'review';
-        value.dispatchEvent(new Event('input', { bubbles: true }));
-        await flush();
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-
-        expect(made).toHaveLength(1);
-        expect(made[0].note).toBe('');
-    });
-
-    it('names the note for what it is, and marks it optional', () => {
-        const { host } = form();
-        const labels = Array.from(host.querySelectorAll('.pb-field-label'))
-            .map(el => el.textContent);
-        expect(labels).toContain('Note');
-        expect(labels).not.toContain('Anything to add');
-        const note = host.querySelector('.pb-note .pb-input') as HTMLInputElement;
-        expect(note.placeholder).toBe('Anything the assistant should know first');
-        expect(note.getAttribute('aria-label')).toBe('Note to the assistant (optional)');
-        expect(host.querySelector('.pb-note .pb-field-help')?.textContent).toBe('optional');
-    });
-
-    // An index only means anything under the anchor it was read from. Keeping it
-    // while moving the hook replaced whatever sat at that position under the new
-    // anchor — destroying an unrelated hook and leaving the original in place.
-    const editing = {
-        when: 'before' as const, type: 'skill' as const, summary: 'create-pr',
-        anchor: 'draft-spec', index: 1, note: '',
-    };
-
-    function editForm(anchor = 'draft-spec') {
-        const made: Attachment[] = [];
-        const host = mount(
-            <AttachForm step={step()} anchor={anchor} choices={CHOICES} editing={editing}
-                onCancel={noop} onAttach={a => made.push(a)} />,
-        );
-        return { host, made };
-    }
 
     const send = async (host: HTMLElement) => {
         (host.querySelector('form') as HTMLFormElement)
@@ -879,10 +716,98 @@ describe('the hook form asks for the placement first', () => {
         await flush();
     };
 
-    // A `<button>` in a form submits it unless it says otherwise, and the Runs
-    // row is two menus inside the hook form. Picking an option attached the
-    // hook there and then — invisible while adding, because an empty value is
-    // refused, and live while editing, where the value arrives filled in.
+    const typeIn = async (el: HTMLInputElement, text: string) => {
+        el.value = text;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        await flush();
+    };
+
+    const kind = (host: HTMLElement, label: string) =>
+        Array.from(host.querySelectorAll('.pb-modal-kind'))
+            .find(el => el.getAttribute('aria-label') === label) as HTMLButtonElement;
+
+    it('opens on the side of the anchor the button was pressed on', () => {
+        expect(whenShown(form('draft-spec', 'after').host)).toBe('after');
+        expect(whenShown(form('draft-spec', 'before').host)).toBe('before');
+        expect(whenShown(form().host)).toBe('before');
+    });
+
+    it('names the anchor rather than showing its id, in the panel\'s own menu', async () => {
+        const { host } = form();
+        expect((host.querySelectorAll('.pb-modal-runs .pb-trigger-text')[1].textContent ?? '').trim())
+            .toBe('Draft the spec');
+        await open(host, 1);
+        expect(Array.from(host.querySelectorAll('.pb-menu-label')).map(el => el.textContent))
+            .toEqual(['the gather phase', 'Resolve the spec folder', 'the author phase',
+                'Draft the spec']);
+    });
+
+    it('changes when it runs from the same line, and the title follows', async () => {
+        const { host, made } = form();
+        await open(host, 0);
+        await choose(host, 'after');
+        expect(host.querySelector('.pb-modal-title')?.textContent).toBe('Add after Draft the spec');
+        await typeIn(host.querySelector('.pb-modal-search input') as HTMLInputElement, 'create-pr');
+        await send(host);
+        expect(made[0].when).toBe('after');
+    });
+
+    it('walks the kinds with arrows, on one tab stop', async () => {
+        const { host } = form();
+        const kinds = () => Array.from(host.querySelectorAll('.pb-modal-kind'));
+        const stops = () => kinds().map(el => el.getAttribute('tabindex'));
+        expect(stops()).toEqual(['0', '-1', '-1', '-1']);
+        kinds()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-modal-kind--on')?.getAttribute('aria-label')).toBe('Instruction');
+        expect(stops()).toEqual(['-1', '0', '-1', '-1']);
+        kinds()[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-modal-kind--on')?.getAttribute('aria-label')).toBe('Node file');
+        kinds()[3].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-modal-kind--on')?.getAttribute('aria-label')).toBe('Skill');
+    });
+
+    it('asks for a note only where one is rendered', async () => {
+        const { host } = form();
+        expect(host.querySelector('.pb-modal-note')).not.toBeNull();
+        for (const label of ['Instruction', 'Shell command', 'Node file']) {
+            kind(host, label).click();
+            await flush();
+            expect(host.querySelector('.pb-modal-note')).toBeNull();
+        }
+        kind(host, 'Skill').click();
+        await flush();
+        const note = host.querySelector('.pb-modal-note') as HTMLInputElement;
+        expect(note.getAttribute('aria-label')).toBe('Note to the assistant (optional)');
+    });
+
+    it('drops a note typed under Skill when the kind changes', async () => {
+        const { host, made } = form();
+        await typeIn(host.querySelector('.pb-modal-note') as HTMLInputElement, 'read the changelog first');
+        kind(host, 'Node file').click();
+        await flush();
+        await typeIn(host.querySelector('.pb-modal-search input') as HTMLInputElement, 'review');
+        await send(host);
+        expect(made).toHaveLength(1);
+        expect(made[0].note).toBe('');
+    });
+
+    const editing = {
+        when: 'before' as const, type: 'skill' as const, summary: 'create-pr',
+        anchor: 'draft-spec', index: 1, note: '',
+    };
+
+    function editForm(anchor = 'draft-spec') {
+        const made: Attachment[] = [];
+        const host = mount(
+            <HookModal step={step()} anchor={anchor} choices={CHOICES} editing={editing}
+                onCancel={noop} onAttach={a => made.push(a)} />,
+        );
+        return { host, made };
+    }
+
     it('does not attach anything just because a menu was used', async () => {
         const { host, made } = editForm();
         await open(host, 0);
@@ -902,14 +827,12 @@ describe('the hook form asks for the placement first', () => {
         await open(host, 1);
         await choose(host, 'Resolve the spec folder');
         await send(host);
-
         expect(made).toHaveLength(1);
-        expect(made[0].anchor).toBe('resolve-dir');
-        expect(made[0].boundary).toBe('node');
-        expect(made[0].editIndex).toBeUndefined();
-        expect(made[0].movedFrom).toEqual({ anchor: 'draft-spec', when: 'before', index: 1 });
-        // One move carries the content too, so the panel never needs a second write.
-        expect(made[0]).toMatchObject({ hookType: 'skill', value: 'create-pr' });
+        expect(made[0]).toMatchObject({
+            anchor: 'resolve-dir', boundary: 'node', editIndex: undefined,
+            movedFrom: { anchor: 'draft-spec', when: 'before', index: 1 },
+            hookType: 'skill', value: 'create-pr',
+        });
     });
 
     it('does not carry the old index across a change of side', async () => {
@@ -917,12 +840,11 @@ describe('the hook form asks for the placement first', () => {
         await open(host, 0);
         await choose(host, 'after');
         await send(host);
-
         expect(made).toHaveLength(1);
-        expect(made[0].when).toBe('after');
-        expect(made[0].editIndex).toBeUndefined();
+        expect(made[0]).toMatchObject({
+            when: 'after', editIndex: undefined, anchor: 'draft-spec', boundary: 'node', value: 'create-pr',
+        });
         expect(made[0].movedFrom?.when).toBe('before');
-        expect(made[0]).toMatchObject({ anchor: 'draft-spec', boundary: 'node', value: 'create-pr' });
     });
 });
 

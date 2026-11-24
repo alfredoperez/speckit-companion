@@ -147,7 +147,7 @@ describe("a node's popover", () => {
         popover()!.querySelector<HTMLButtonElement>('[aria-label="Edit npm run lint"]')!.click();
         await flush();
         expect(popover()).toBeNull();
-        expect(root.querySelector('.pb-form')).not.toBeNull();
+        expect(root.querySelector('.pb-modal')).not.toBeNull();
 
         await open();
         Array.from(popover()!.querySelectorAll<HTMLButtonElement>('.pb-pop-button'))

@@ -35,9 +35,8 @@ import { Header } from './Header';
 import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
 import { moveTargets, movedToPhase } from './moves';
-import {
-    AttachForm, NewStepForm, NewWorkflowForm, Attachment, boundaryOf,
-} from './AttachForm';
+import { NewStepForm, NewWorkflowForm, Attachment, boundaryOf } from './AttachForm';
+import { HookModal } from './HookModal';
 import { TemplateForm } from './TemplateForm';
 import { DecisionForm } from './DecisionForm';
 
@@ -370,7 +369,7 @@ function App() {
     };
 
     return (
-        <div class={`builder ${side ? 'builder--inspecting' : ''}`}>
+        <div class={`builder ${side && side.kind !== 'attach' ? 'builder--inspecting' : ''}`}>
             <Header
                 graph={graph}
                 buildState={buildState}
@@ -456,7 +455,7 @@ function App() {
                 />
 
                 {attachStep && attaching && (
-                    <AttachForm
+                    <HookModal
                         // Per opening: another hook remounts it, a keyboard move keeps focus.
                         key={`${attaching.command}/${attaching.opened}`}
                         step={attachStep}
@@ -465,8 +464,8 @@ function App() {
                         choices={graph.choices}
                         editing={attaching.hook ?? null}
                         onCancel={() => setSide(null)}
-                        onAttach={(a: Attachment) => {
-                            setSide(null);
+                        onAttach={(a: Attachment, keepOpen: boolean) => {
+                            if (!keepOpen) { setSide(null); }
                             // A new place is one move carrying the edit, never a removal and an addition.
                             if (a.movedFrom) {
                                 const old = attaching.hook;

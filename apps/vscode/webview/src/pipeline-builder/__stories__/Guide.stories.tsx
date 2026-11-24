@@ -22,7 +22,8 @@ import { Inspector } from '../Inspector';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { BrokenPipeline } from '../BrokenPipeline';
-import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { NewStepForm, NewWorkflowForm } from '../AttachForm';
+import { HookModal } from '../HookModal';
 import { TemplateForm } from '../TemplateForm';
 import { moveTargets } from '../moves';
 import {
@@ -490,7 +491,7 @@ export const AttachingWork: Story = {
     name: 'Attaching work',
     render: () => (
         <Pane>
-            <AttachForm step={SPECIFY} anchor="author" choices={CHOICES}
+            <HookModal step={SPECIFY} anchor="author" choices={CHOICES}
                 onCancel={noop} onAttach={noop} />
         </Pane>
     ),
@@ -541,7 +542,7 @@ export const MovingAHookFromTheKeyboard: Story = {
     name: 'Moving a hook from the keyboard',
     render: () => (
         <Pane>
-            <AttachForm step={HOOKED} anchor="complete" choices={CHOICES}
+            <HookModal step={HOOKED} anchor="complete" choices={CHOICES}
                 editing={HOOKED.phases[0].nodes[0].hooks[1]} count={2}
                 onCancel={noop} onAttach={noop} onRemove={noop} onMove={noop} />
         </Pane>
