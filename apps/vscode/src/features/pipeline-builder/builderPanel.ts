@@ -637,6 +637,10 @@ export class PipelineBuilderPanel {
             await vscode.commands.executeCommand('speckit.constitution');
         },
 
+        installCompanion: async () => {
+            await vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
+        },
+
         /**
          * Change where one verdict routes.
          *

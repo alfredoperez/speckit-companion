@@ -470,6 +470,7 @@ export function readStockWorkflow(workspaceRoot: string, drawing?: string): Stoc
                     : known?.label ?? command,
                 writes: gate ? [] : known?.writes ?? [],
                 hooks: gate ? [] : registryHooks(registry, step, installed),
+                ...(gate ? {} : { hookStep: step }),
             };
         })
         : installedCommands(workspaceRoot).map(step => ({
@@ -479,6 +480,7 @@ export function readStockWorkflow(workspaceRoot: string, drawing?: string): Stoc
             label: STOCK_STEPS[step]?.label ?? step,
             writes: STOCK_STEPS[step]?.writes ?? [],
             hooks: registryHooks(registry, step, installed),
+            hookStep: step,
         }));
 
     const choices: StockWorkflowChoice[] = all.map(found => ({

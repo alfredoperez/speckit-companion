@@ -103,6 +103,16 @@ describe('the stock workflow read from a project', () => {
         expect(plan.writes).toContain('plan.md');
     });
 
+    it('names the registry step a new hook of a command step goes under, and none for a gate', () => {
+        const root = project();
+        write(root, '.specify/workflows/speckit/workflow.yml', WORKFLOW);
+
+        const [specify, gate] = readStockWorkflow(root).steps;
+
+        expect(specify.hookStep).toBe('specify');
+        expect(gate.hookStep).toBeUndefined();
+    });
+
     it('attaches the registry hooks to their step, keeping a disabled one', () => {
         const root = project();
         write(root, '.specify/workflows/speckit/workflow.yml', WORKFLOW);

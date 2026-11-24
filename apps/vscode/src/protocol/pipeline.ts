@@ -53,6 +53,8 @@ export interface StockStepRow {
     /** The documents a run of it writes. */
     writes: string[];
     hooks: StockHookRow[];
+    /** The lifecycle step its registry hooks key on, where a new one is added. Absent on a gate. */
+    hookStep?: string;
 }
 
 /** One entry in `.specify/extensions.yml`, with the one switch stock Spec Kit owns. */
@@ -805,6 +807,8 @@ export type BuilderToExtensionMessage =
     | { type: 'selectStockWorkflow'; id: string }
     /** Run a stock Spec Kit command that owns what a row is about. */
     | { type: 'runStockCommand'; command: 'constitution' }
+    /** Add the Companion Spec Kit extension, the way every other install surface does. */
+    | { type: 'installCompanion' }
     /** `specify preset search <query>`, in a terminal the person can see. */
     | { type: 'presetSearch'; query: string }
     /** `specify preset add|update|remove <id>`, after a confirm that names what it replaces. */

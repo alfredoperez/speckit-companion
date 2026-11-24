@@ -15,13 +15,13 @@ const EVERY_MESSAGE: MessageType[] = [
     'addNode', 'newStep', 'selectWorkflow', 'newWorkflow', 'undo', 'removeNode',
     'moveNode', 'dismissFirstRun', 'setStockHook', 'openStockFile',
     'selectStockWorkflow', 'runStockCommand', 'addStockHook', 'updateStockHook',
-    'removeStockHook',
+    'removeStockHook', 'installCompanion',
 ];
 
 const ALLOWED: MessageType[] = [
     'ready', 'dismissFirstRun', 'setStockHook', 'openStockFile',
     'selectStockWorkflow', 'runStockCommand', 'addStockHook', 'updateStockHook',
-    'removeStockHook',
+    'removeStockHook', 'installCompanion',
 ];
 
 describe('what the builder may do on a stock Spec Kit project', () => {
