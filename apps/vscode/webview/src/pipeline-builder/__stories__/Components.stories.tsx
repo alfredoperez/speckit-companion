@@ -12,9 +12,9 @@ import { Header } from '../Header';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { Inspector } from '../Inspector';
-import { NewWorkflowForm } from '../AttachForm';
 import { HookModal } from '../HookModal';
-import { TemplateForm } from '../TemplateForm';
+import { DocumentModal } from '../DocumentModal';
+import { NewWorkflowModal } from '../NewWorkflowModal';
 import { movePlaces, moveTargets } from '../moves';
 import { NodePopover } from '../NodePopover';
 import type { HookRunsAnswer } from '../../../../src/protocol/pipeline';
@@ -29,7 +29,7 @@ const noop = () => undefined;
 const CANVAS = {
     onOpenNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
-    onOpenFrame: noop, onOpenTemplate: noop, onNewStep: noop,
+    onOpenFrame: noop, onNewStep: noop,
 };
 
 const POPOVER = {
@@ -272,6 +272,18 @@ const MOVING = step('plan', [
         pinned: 'it hands off to the next step, so nothing can run after it',
     })]),
 ]);
+
+export const NodePopoverDocument: Story = {
+    name: 'Node popover · the document it writes',
+    render: () => (
+        <One>
+            <NodePopover node={MOVING.phases[0].nodes[0]} step="plan" hooksIn="companion.yml"
+                moves={movePlaces(MOVING, 'write-plan')} removeBlocked=""
+                document={{ file: 'plan.md', sections: 5, yours: 1 }} onOpenDocument={noop}
+                {...POPOVER} />
+        </One>
+    ),
+};
 
 export const NodePopoverMove: Story = {
     name: 'Node popover · Move…, one place refused',
@@ -650,6 +662,18 @@ export const HeaderStale: Story = {
     name: 'Header · the build is behind',
     render: () => (
         <One><Header graph={graph([SPECIFY])} buildState="stale" busy={false} {...HEAD} /></One>
+    ),
+};
+
+export const HeaderWorkflowList: Story = {
+    name: 'Header · the workflow list, a saved one selected and not built',
+    render: () => (
+        <div style="height: 360px"><One><Header
+            graph={graph([SPECIFY], {
+                configured: true,
+                workflows: { available: ['shipped', '', 'skill-only', 'docs-lean'], active: 'skill-only' },
+            })}
+            buildState="stale" busy={false} selectedNotBuilt workflowsOpen {...HEAD} /></One></div>
     ),
 };
 
@@ -1161,65 +1185,81 @@ export const AttachNarrowSheet: Story = {
     ),
 };
 
-export const TemplateSections: Story = {
-    name: 'Template · the document a step writes',
+const SPEC_DOCUMENT = step('specify', SPECIFY.phases, {
+    template: {
+        file: 'spec-template.md',
+        sections: ['User Scenarios & Testing'],
+        sectionsAvailable: ['User Scenarios & Testing', 'Requirements', 'Success Criteria'],
+        chosenBy: { 'User Scenarios & Testing': 'ears-requirements' },
+    },
+});
+
+export const DocumentSections: Story = {
+    name: 'Document · replace a section, with the outline beside it',
     render: () => (
-        <One><TemplateForm
-            step={step('specify', SPECIFY.phases, {
-                template: {
-                    file: 'spec-template.md',
-                    sections: ['User Scenarios & Testing'],
-                    sectionsAvailable: [
-                        'User Scenarios & Testing', 'Requirements', 'Success Criteria',
-                    ],
-                    chosenBy: { 'User Scenarios & Testing': 'ears-requirements' },
-                },
-            })}
-            fragments={CHOICES.fragments} onCancel={noop} onPick={noop} /></One>
+        <div class="builder" style="width: 1100px; height: 720px">
+            <DocumentModal step={SPEC_DOCUMENT} nodeName="Draft the spec"
+                fragments={CHOICES.fragments} savesTo="companion.yml"
+                openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
+        </div>
     ),
 };
 
-// A section with nothing behind it drew a field that looked exactly like the
-// working one above it, with the reason in the chosen fragment's slot.
-export const TemplateNoAlternatives: Story = {
-    name: 'Template · nothing else written for any section',
+export const DocumentNoAlternatives: Story = {
+    name: 'Document · nothing else written for any section',
     render: () => (
-        <One><TemplateForm
-            step={step('plan', PLAN.phases, {
-                template: {
-                    file: 'plan-template.md',
-                    sections: [],
-                    sectionsAvailable: [
-                        'Technical Context', 'Constitution Check', 'Project Structure',
-                    ],
-                    chosenBy: {},
-                },
-            })}
-            fragments={CHOICES.fragments} onCancel={noop} onPick={noop} /></One>
+        <div class="builder" style="width: 1100px; height: 620px">
+            <DocumentModal
+                step={step('plan', PLAN.phases, {
+                    template: {
+                        file: 'plan-template.md', sections: [], chosenBy: {},
+                        sectionsAvailable: ['Technical Context', 'Constitution Check', 'Project Structure'],
+                    },
+                })}
+                nodeName="Write the plan" fragments={CHOICES.fragments} savesTo="companion.yml"
+                onCancel={noop} onSave={noop} />
+        </div>
+    ),
+};
+
+export const DocumentNarrow: Story = {
+    name: 'Document · a sheet with Sections and Preview tabs when narrow',
+    render: () => (
+        <div class="builder" style="width: 380px; height: 760px">
+            <DocumentModal step={SPEC_DOCUMENT} nodeName="Draft the spec" narrow
+                fragments={CHOICES.fragments} savesTo="companion.yml"
+                openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
+        </div>
     ),
 };
 
 export const NewWorkflow: Story = {
     name: 'New workflow',
     render: () => (
-        <One><NewWorkflowForm from="" taken={['shipped', 'bugfix']} presets={CHOICES.presets}
-            onCancel={noop} onCreate={noop} /></One>
+        <div class="builder" style="width: 900px; height: 520px">
+            <NewWorkflowModal taken={['shipped', '', 'bugfix']} hasProject active=""
+                presets={CHOICES.presets} onCancel={noop} onCreate={noop} />
+        </div>
     ),
 };
 
 export const NewWorkflowFromAnother: Story = {
     name: 'New workflow · seeded from one you are on',
     render: () => (
-        <One><NewWorkflowForm from="bugfix" taken={['shipped', 'bugfix']} presets={CHOICES.presets}
-            onCancel={noop} onCreate={noop} /></One>
+        <div class="builder" style="width: 900px; height: 560px">
+            <NewWorkflowModal taken={['shipped', '', 'bugfix']} hasProject active="bugfix"
+                presets={CHOICES.presets} onCancel={noop} onCreate={noop} />
+        </div>
     ),
 };
 
-export const NewWorkflowNoPresets: Story = {
-    name: 'New workflow · nothing shipped to start from',
+export const NewWorkflowNarrow: Story = {
+    name: 'New workflow · a sheet when narrow',
     render: () => (
-        <One><NewWorkflowForm from="" taken={['shipped']} presets={[]}
-            onCancel={noop} onCreate={noop} /></One>
+        <div class="builder" style="width: 380px; height: 640px">
+            <NewWorkflowModal taken={['shipped']} hasProject={false} active=""
+                presets={[]} onCancel={noop} onCreate={noop} />
+        </div>
     ),
 };
 

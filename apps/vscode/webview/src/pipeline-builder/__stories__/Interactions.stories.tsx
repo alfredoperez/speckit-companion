@@ -47,7 +47,6 @@ function board(g = graph([SPECIFY])) {
                 onAddNode={(c, id, p) => sent.push({ what: 'addNode', with: [c, id, p] })}
                 onOpenFrame={on('openFrame')}
                 onNewStep={on('newStep')}
-                onOpenTemplate={on('openTemplate')}
                 onMoveHook={(c, from, to) => sent.push({ what: 'moveHook', with: [c, from, to] })}
                 onRefuse={on('refuse')} />
         </div>
@@ -426,7 +425,7 @@ export const AddToALane: Story = {
                 }}>
                 <Canvas graph={graph([SPECIFY])} onOpenNode={noop} onReorder={noop}
                     onAddHook={noop} onEditHook={noop} onSetPhases={noop} onAddNode={noop}
-                    onOpenFrame={noop} onOpenTemplate={noop} onNewStep={noop}
+                    onOpenFrame={noop} onNewStep={noop}
                     onAddTo={c => sent.push({ what: 'addTo', with: c })} />
             </div>
         );

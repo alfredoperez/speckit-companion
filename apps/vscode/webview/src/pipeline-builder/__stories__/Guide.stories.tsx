@@ -23,9 +23,9 @@ import { Inspector } from '../Inspector';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { BrokenPipeline } from '../BrokenPipeline';
-import { NewWorkflowForm } from '../AttachForm';
 import { HookModal } from '../HookModal';
-import { TemplateForm } from '../TemplateForm';
+import { DocumentModal } from '../DocumentModal';
+import { NewWorkflowModal } from '../NewWorkflowModal';
 import { moveTargets } from '../moves';
 import {
     CHOICES, IMPLEMENT, NO_CHANGES, PLAN, SPECIFY, TASKS,
@@ -37,7 +37,7 @@ const noop = () => undefined;
 const CANVAS = {
     onOpenNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
-    onOpenFrame: noop, onOpenTemplate: noop, onNewStep: noop,
+    onOpenFrame: noop, onNewStep: noop,
 };
 const HEAD = {
     onPreview: noop, onOpenConfig: noop,
@@ -417,11 +417,11 @@ export const AddingANode: Story = {
 // ── The document a step writes ──────────────────────────
 
 export const ChangingTheDocument: Story = {
-    parameters: { capture: { width: 440, height: 450 } },
+    parameters: { capture: { width: 1100, height: 640 } },
     name: 'Changing what a step writes',
     render: () => (
-        <Pane>
-            <TemplateForm
+        <div class="builder" style="width: 1100px; height: 640px">
+            <DocumentModal
                 step={step('specify', [], {
                     template: {
                         file: 'spec-template.md',
@@ -432,9 +432,9 @@ export const ChangingTheDocument: Story = {
                         chosenBy: { 'User Scenarios & Testing': 'ears-requirements' },
                     },
                 })}
-                fragments={CHOICES.fragments}
-                onCancel={noop} onPick={noop} />
-        </Pane>
+                nodeName="Draft the spec" fragments={CHOICES.fragments} savesTo="companion.yml"
+                openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
+        </div>
     ),
 };
 
@@ -546,13 +546,13 @@ export const MovingAHookFromTheKeyboard: Story = {
 // ── Whole configurations ────────────────────────────────
 
 export const StartingFromAPreset: Story = {
-    parameters: { capture: { width: 440, height: 530 } },
+    parameters: { capture: { width: 640, height: 520 } },
     name: 'Starting from a preset',
     render: () => (
-        <Pane>
-            <NewWorkflowForm from="" taken={['shipped']} presets={CHOICES.presets}
-                onCancel={noop} onCreate={noop} />
-        </Pane>
+        <div class="builder" style="width: 640px; height: 520px">
+            <NewWorkflowModal taken={['shipped', '']} hasProject active=""
+                presets={CHOICES.presets} onCancel={noop} onCreate={noop} />
+        </div>
     ),
 };
 

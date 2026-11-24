@@ -169,7 +169,7 @@ describe('switching workflows', () => {
             .toContain('This project');
     });
 
-    it('lists every workflow, with shipped explained', async () => {
+    it('lists every workflow, with shipped explained and the saved ones grouped (FR-008)', async () => {
         const { host } = header(graph({
             workflows: { available: ['shipped', 'bugfix', 'client'], active: '' },
         }));
@@ -178,9 +178,10 @@ describe('switching workflows', () => {
 
         const options = Array.from(host.querySelectorAll('.pb-menu-option'));
         expect(options.map(el => el.textContent)).toEqual([
-            'As shippedCompanion with nothing changed', 'bugfix', 'client',
-            'New workflow…Starts from the one in force',
+            'ShippedNothing changed', 'bugfix', 'client',
+            'New workflow…Starts from Shipped, This project or a preset',
         ]);
+        expect(host.querySelector('.pb-menu-group')?.textContent).toBe('Saved');
     });
 
     it('reports the one someone picked', async () => {
@@ -216,7 +217,23 @@ describe('switching workflows', () => {
         (host.querySelector('.builder-workflow-current') as HTMLButtonElement).click();
         await flush();
         const options = Array.from(host.querySelectorAll('.pb-menu-option'));
-        expect(options[1].textContent).toBe('bugfixIn force');
+        expect(options.map(el => el.getAttribute('aria-checked'))).toEqual(['false', 'true', null]);
+        expect(options[1].getAttribute('role')).toBe('menuitemradio');
+        expect(options[1].querySelector('.pb-menu-trail')?.textContent).toBe('built');
+    });
+
+    it('says a switched workflow is selected and not built (FR-009)', () => {
+        const host = mount(
+            <Header graph={graph({ workflows: { available: ['shipped', 'bugfix'], active: 'bugfix' } })}
+                buildState="stale" busy={false} selectedNotBuilt {...HEAD} />);
+        expect(host.querySelector('.builder-state--selected')?.textContent).toBe('Selected, not built');
+        expect(host.textContent).not.toContain('Built, up to date');
+    });
+
+    it('says nothing about a selection when none was made here', () => {
+        const host = mount(
+            <Header graph={graph()} buildState="stale" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-state--selected')).toBeNull();
     });
 
     describe('running the pipeline as it ships', () => {
@@ -332,9 +349,9 @@ describe('switching workflows', () => {
             await flush();
             expect(Array.from(host.querySelectorAll('.pb-menu-option'))
                 .map(el => el.textContent)).toEqual([
+                'ShippedNothing changedbuilt',
                 'This projectWhatever .specify/companion.yml says',
-                'As shippedCompanion with nothing changed · In force',
-                'New workflow…Starts from the one in force',
+                'New workflow…Starts from Shipped, This project or a preset',
             ]);
         });
 

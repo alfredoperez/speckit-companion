@@ -2,9 +2,8 @@
  * @jest-environment jsdom
  */
 import { Inspector } from '../Inspector';
-import { Attachment, NewWorkflowForm } from '../AttachForm';
+import { Attachment } from '../AttachForm';
 import { HookModal } from '../HookModal';
-import { TemplateForm } from '../TemplateForm';
 import type { PipelineNode } from '../../../../src/protocol/pipeline';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -233,23 +232,10 @@ describe('every side pane wears one shell', () => {
         onUseVariant: noop, onRemove: noop, onMove: noop, editable: 'x',
     };
     const CHOICES = { skills: [], nodes: [], commands: [], fragments: [], presets: [] };
-    const TEMPLATE = step({
-        template: {
-            file: 'spec-template.md', sections: [],
-            sectionsAvailable: ['Requirements'], chosenBy: {},
-        },
-    });
-
     const panes: Array<[string, preact.VNode, string]> = [
         ['the inspector',
             <Inspector node={node()} step="specify" body="x" parts={[]} {...INSPECT} />,
             'Resolve the spec folder'],
-        ['the document shape',
-            <TemplateForm step={TEMPLATE} fragments={[]} onCancel={noop} onPick={noop} />,
-            'What specify writes'],
-        ['a new workflow',
-            <NewWorkflowForm from="" taken={[]} presets={[]} onCancel={noop} onCreate={noop} />,
-            'New workflow'],
     ];
 
     it.each(panes)('draws %s in it', (_name, pane, title) => {
@@ -263,7 +249,7 @@ describe('every side pane wears one shell', () => {
 
     it('names the close button rather than leaving it a bare mark', () => {
         const host = mount(
-            <NewWorkflowForm from="" taken={[]} presets={[]} onCancel={noop} onCreate={noop} />);
+            <Inspector node={node()} step="specify" body="x" parts={[]} {...INSPECT} />);
         const close = host.querySelector('.pb-side-close')!;
         expect(close.getAttribute('aria-label')).toBeTruthy();
     });
@@ -454,76 +440,6 @@ describe('replacing a whole step, from its frame', () => {
         const host = mount(
             <Inspector node={frame} step="specify" body="x" parts={[]} {...actions} />);
         expect(await moreOptions(host)).not.toContain('Remove from the run');
-    });
-});
-
-describe('starting a workflow from something', () => {
-    const noop = () => undefined;
-
-    function form(presets = PRESETS, from = '') {
-        const made: Array<[string, string]> = [];
-        const host = mount(
-            <NewWorkflowForm from={from} taken={['shipped']} presets={presets}
-                onCancel={noop} onCreate={(name, seed) => made.push([name, seed])} />,
-        );
-        return { host, made };
-    }
-
-    const PRESETS = [
-        { name: 'classic', label: 'Classic spec-kit', summary: 'Stock shapes.' },
-        { name: 'brownfield', label: 'Brownfield', summary: 'For an existing system.' },
-    ];
-
-    const type = (host: HTMLElement, value: string) => {
-        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-
-    /** Every card's name, in the order they are offered. */
-    const cards = (host: HTMLElement) =>
-        Array.from(host.querySelectorAll('.pb-choice-label')).map(el => el.textContent);
-
-    it('offers every shipped preset by its label, beside what you run now', () => {
-        const { host } = form();
-        expect(cards(host))
-            .toEqual(['The pipeline as shipped', 'Classic spec-kit', 'Brownfield']);
-    });
-
-    // The default is what you are on. A picker that started at a preset would
-    // quietly discard the configuration someone is already running.
-    it('starts from the workflow in force', async () => {
-        const { host, made } = form(PRESETS, 'bugfix');
-        type(host, 'mine');
-        await flush();
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-        expect(made).toEqual([['mine', 'bugfix']]);
-    });
-
-    it('sends the preset someone picked, prefixed so it is not read as a workflow', async () => {
-        const { host, made } = form();
-        type(host, 'mine');
-        (host.querySelectorAll('.pb-choice input')[2] as HTMLInputElement).click();
-        await flush();
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-        expect(made).toEqual([['mine', 'preset:brownfield']]);
-    });
-
-    it('says what every preset does before any of them is committed to', () => {
-        const { host } = form();
-        expect(Array.from(host.querySelectorAll('.pb-choice-help')).map(el => el.textContent))
-            .toEqual([
-                'Your nodes, hooks and templates as they are today.',
-                'Stock shapes.',
-                'For an existing system.',
-            ]);
-    });
-
-    it('offers only what you run now when nothing else ships', () => {
-        const { host } = form([]);
-        expect(cards(host)).toEqual(['The pipeline as shipped']);
     });
 });
 
@@ -731,101 +647,5 @@ describe('the hook modal keeps the placement it was opened with', () => {
             when: 'after', editIndex: undefined, anchor: 'draft-spec', boundary: 'node', value: 'create-pr',
         });
         expect(made[0].movedFrom?.when).toBe('before');
-    });
-});
-
-describe('the template picker shows what a fragment does', () => {
-    const noop = () => undefined;
-    const FRAGMENTS = [
-        {
-            name: 'ears', section: 'User Scenarios', for: '',
-            summary: 'Numbered WHEN / THEN / SHALL.',
-        },
-        {
-            name: 'outcomes', section: 'User Scenarios', for: '',
-            summary: 'Observable outcomes.',
-        },
-    ];
-
-    function form(chosen = '') {
-        const picked: Array<[string, string]> = [];
-        const host = mount(
-            <TemplateForm
-                step={step({
-                    template: {
-                        file: 'spec-template.md',
-                        sections: chosen ? ['User Scenarios'] : [],
-                        sectionsAvailable: ['User Scenarios', 'Requirements'],
-                        chosenBy: chosen ? { 'User Scenarios': chosen } : {},
-                    },
-                })}
-                fragments={FRAGMENTS}
-                onCancel={noop} onPick={(h, f) => picked.push([h, f])} />,
-        );
-        return { host, picked };
-    }
-
-    it('picks from the panel\'s own menu, each fragment\'s summary on its row', async () => {
-        const { host } = form();
-        expect(host.querySelectorAll('select')).toHaveLength(0);
-        (host.querySelector('.pb-template-pick .pb-menu-trigger') as HTMLButtonElement).click();
-        await flush();
-        expect(Array.from(host.querySelectorAll('.pb-menu-note')).map(el => el.textContent))
-            .toEqual(['The section the way Companion writes it.',
-                'Numbered WHEN / THEN / SHALL.', 'Observable outcomes.']);
-    });
-
-    it('shows the chosen fragment, and what it does, under the row', () => {
-        const { host } = form('ears');
-        expect((host.querySelector('.pb-trigger-text')?.textContent ?? '').trim()).toBe('ears');
-        expect(host.querySelector('.pb-template-summary')?.textContent)
-            .toBe('Numbered WHEN / THEN / SHALL.');
-    });
-
-    it('sends an empty fragment, which is how a section goes back to shipped', async () => {
-        const { host, picked } = form('ears');
-        (host.querySelector('.pb-template-pick .pb-menu-trigger') as HTMLButtonElement).click();
-        await flush();
-        (Array.from(host.querySelectorAll('.pb-menu-option'))
-            .find(el => el.textContent?.startsWith('As shipped')) as HTMLButtonElement).click();
-        expect(picked).toEqual([['User Scenarios', '']]);
-    });
-
-    // A dead field read as the working one a row above, with the reason sitting
-    // where the chosen fragment's summary goes.
-    it('draws no field for a section with nothing to pick, and says so on one line', () => {
-        const { host } = form();
-        const rows = Array.from(host.querySelectorAll('.pb-template-row'));
-        expect(rows[1].querySelector('.pb-template-pick')).toBeNull();
-        expect(rows[1].querySelector('.pb-menu-trigger')).toBeNull();
-        expect(rows[1].querySelector('.pb-template-summary')?.textContent)
-            .toBe('As shipped · nothing else is written for this section.');
-    });
-
-    it('leaves a section that does have fragments alone', () => {
-        const { host } = form();
-        const rows = Array.from(host.querySelectorAll('.pb-template-row'));
-        expect(rows[0].querySelector('.pb-template-pick .pb-menu-trigger')).not.toBeNull();
-    });
-
-    // Three dead rows saying the same thing is the sentence, three times.
-    it('says it once at the top when it is true of every section', () => {
-        const host = mount(
-            <TemplateForm
-                step={step({
-                    template: {
-                        file: 'plan-template.md', sections: [],
-                        sectionsAvailable: ['Technical Context', 'Constitution Check'],
-                        chosenBy: {},
-                    },
-                })}
-                fragments={FRAGMENTS} onCancel={noop} onPick={noop} />,
-        );
-        const said = Array.from(host.querySelectorAll('.pb-template-summary'))
-            .map(el => el.textContent);
-        expect(said).toEqual(
-            ['As shipped · nothing else is written for any section of this document.']);
-        expect(host.querySelectorAll('.pb-template-heading')).toHaveLength(2);
-        expect(host.querySelector('.pb-menu-trigger')).toBeNull();
     });
 });

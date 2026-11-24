@@ -48,7 +48,7 @@ function render(g: PipelineGraph) {
         <Canvas graph={g}
             onOpenNode={() => {}} onReorder={(_c, order) => reordered.push(order)}
             onAddHook={() => {}} onEditHook={() => {}} onAddNode={() => {}}
-            onOpenFrame={() => {}} onOpenTemplate={() => {}} onNewStep={() => {}}
+            onOpenFrame={() => {}} onNewStep={() => {}}
             onSetPhases={() => {}}
             onMoveHook={(c, from, to) => moved.push([c, from, to])}
             onRefuse={reason => refused.push(reason)} />,

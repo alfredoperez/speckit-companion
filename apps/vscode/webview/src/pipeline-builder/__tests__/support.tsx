@@ -104,7 +104,6 @@ export function canvas(
     const movedNodes: Array<Record<string, unknown>> = [];
     const frames: string[] = [];
     const replacedSteps: string[] = [];
-    const templates: string[] = [];
     const decisions: Calls = [];
     let newSteps = 0;
     /** The step each request named to run behind, or `undefined` for the tail. */
@@ -116,7 +115,6 @@ export function canvas(
             onEditHook={(c, h) => edited.push([c, h.anchor, String(h.index)])}
             onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}
             onOpenFrame={c => frames.push(c)}
-            onOpenTemplate={c => templates.push(c)}
             onOpenDecision={(c, n) => decisions.push([c, n])}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
@@ -125,7 +123,7 @@ export function canvas(
     );
     return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes, addTo, undone,
         removedNodes, movedNodes, decisions,
-        frames, replacedSteps, templates, newStepAfter, newSteps: () => newSteps };
+        frames, replacedSteps, newStepAfter, newSteps: () => newSteps };
 }
 
 

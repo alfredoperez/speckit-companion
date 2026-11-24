@@ -58,8 +58,6 @@ interface Props {
     ) => void;
     /** Read a step's own preamble — the text every node in it sits under. */
     onOpenFrame: (command: string) => void;
-    /** Open the panel for this step's document shape. */
-    onOpenTemplate: (command: string) => void;
     /** Add a step of the project's own to the run. */
     /** `after` names the step a new one runs behind, when the click said where. */
     onNewStep: (after?: string) => void;
@@ -1070,7 +1068,7 @@ export function hooksAt(step: PipelineStep, anchor: string, boundary: 'node' | '
 }
 
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
-    onAddNode, onOpenFrame, onOpenTemplate, onMoveHook, onRefuse,
+    onAddNode, onOpenFrame, onMoveHook, onRefuse,
     onOpenDecision, onAddTo, adding, removed, onUndo }: {
     step: PipelineStep;
     index: number;
@@ -1087,7 +1085,6 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     onSetPhases: Props['onSetPhases'];
     onAddNode: Props['onAddNode'];
     onOpenFrame: Props['onOpenFrame'];
-    onOpenTemplate: Props['onOpenTemplate'];
     onOpenDecision: Props['onOpenDecision'];
 }) {
     const [showChanges, setShowChanges] = useState(false);
@@ -1188,31 +1185,6 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                                 {step.artifacts.length === 1 ? ' file' : ' files'}
                             </span>
                         </>
-                    )}
-                    {/* The document's shape, opened from the step that writes
-                        it — and the only door to the whole template feature, so
-                        it is a chip rather than a grey word set exactly like the
-                        node count beside it. The count carries the review ink
-                        once a section has been replaced; the chip itself is an
-                        offer, not a change. */}
-                    {step.template && (step.template.sectionsAvailable.length > 0
-                        || step.template.sections.length > 0) && (
-                        <button class="pb-template"
-                            title={step.template.sections.length
-                                ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
-                                : `Change the shape of ${step.template.file}`}
-                            onClick={() => onOpenTemplate(step.name)}>
-                            <span class="pb-template-name">Document shape</span>
-                            {step.template.sections.length > 0 && (
-                                <>
-                                    <span class="pb-fact-dot" aria-hidden="true">·</span>
-                                    <span class="pb-template-count">
-                                        {step.template.sections.length}
-                                    </span>
-                                </>
-                            )}
-                            <span class="pb-template-caret" aria-hidden="true">▸</span>
-                        </button>
                     )}
                 </div>
                 {/* What changed, on the step it changed. It was a word with the
@@ -1347,7 +1319,7 @@ function LaneJoin({ after, next, onNewStep }: {
 export function Canvas(
     { graph, onOpenNode, onReorder, onAddHook,
         onEditHook, onSetPhases, onAddNode, onOpenFrame,
-        onOpenTemplate, onNewStep, selected, onMoveHook, onRefuse,
+        onNewStep, selected, onMoveHook, onRefuse,
         onOpenDecision, runs, onAddTo, adding, removed, onUndo }: Props,
 ) {
     const actions = { onOpenNode, selected, runs, yours: hookHome(graph.workflows.active) };
@@ -1371,7 +1343,6 @@ export function Canvas(
                         onReorder={onReorder} onAddHook={onAddHook}
                         onEditHook={onEditHook} onSetPhases={onSetPhases}
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
-                        onOpenTemplate={onOpenTemplate}
                         onMoveHook={onMoveHook} onRefuse={onRefuse}
                         onOpenDecision={onOpenDecision} onAddTo={onAddTo}
                         adding={adding === step.name} removed={removed} onUndo={onUndo} />,

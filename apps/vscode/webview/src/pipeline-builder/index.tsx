@@ -39,9 +39,11 @@ import { Header } from './Header';
 import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
 import { movePlaces, moveTargets, movedToPhase, movedWithin } from './moves';
-import { NewWorkflowForm, Attachment, boundaryOf } from './AttachForm';
+import { Attachment, boundaryOf } from './AttachForm';
 import { AddMode, FRESH_PHASE, HookModal } from './HookModal';
-import { TemplateForm } from './TemplateForm';
+import { DocumentModal } from './DocumentModal';
+import { NewWorkflowModal } from './NewWorkflowModal';
+import { documentFile, documentNodeId, sectionsOf } from './documentNode';
 import { DecisionForm } from './DecisionForm';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
@@ -75,7 +77,8 @@ type Side =
     | { kind: 'node'; at: Selection }
     | { kind: 'attach'; at: Attaching }
     | { kind: 'new-workflow' }
-    | { kind: 'template'; command: string }
+    /** The document a step writes, opened from the node that writes it. */
+    | { kind: 'document'; command: string; nodeName: string }
     | { kind: 'presets' }
     /** Where one node's verdicts route. `node` is the node that decides. */
     | { kind: 'decision'; command: string; node: string }
@@ -169,6 +172,8 @@ function App() {
     // The form as it was before a keyboard move, put back if the write refuses it.
     const unmoved = useRef<Attaching | null>(null);
     const opens = useRef(0);
+    // The workflow switched to from this panel, until a build makes it current.
+    const [switchedTo, setSwitchedTo] = useState<string | null>(null);
 
     useEffect(() => {
         const onMessage = (event: MessageEvent) => {
@@ -177,6 +182,7 @@ function App() {
                 setGraph(message.graph);
                 setStock(null);
                 setBuildState(message.buildState);
+                if (message.buildState === 'current') { setSwitchedTo(null); }
                 vscode.postMessage({ type: 'readHookRuns' });
             } else if (message.type === 'hookRuns') {
                 setRuns(message.answer);
@@ -232,6 +238,12 @@ function App() {
     useEffect(() => {
         if (pop && graph && !isGraphError(graph) && !findNode(graph, pop)) { setPop(null); }
     }, [graph, pop]);
+
+    // And a rebuild that took the document away closes it.
+    useEffect(() => {
+        if (side?.kind !== 'document' || !graph || isGraphError(graph)) { return; }
+        if (!graph.steps.find(s => s.name === side.command)?.template) { setSide(null); }
+    }, [graph, side]);
 
     const presetActions = {
         onPresetSearch: (query: string) => vscode.postMessage({ type: 'presetSearch', query }),
@@ -376,7 +388,8 @@ function App() {
     };
 
     // A modal or a bottom sheet covers the foot, so the bar steps aside for it.
-    const sheetOpen = Boolean(attachStep && attaching) || (narrow && Boolean(pop || side));
+    const modalOpen = side?.kind === 'document' || side?.kind === 'new-workflow';
+    const sheetOpen = Boolean(attachStep && attaching) || modalOpen || (narrow && Boolean(pop || side));
     // The bar carries the last write while it is up; the foot line otherwise.
     const barUp = !sheetOpen && needsBuild(buildState);
     const undo = (token: string) => {
@@ -420,7 +433,7 @@ function App() {
     const shownRemoved = removed && status?.undo?.token === removed.token ? removed : null;
 
     return (
-        <div class={`builder ${side && side.kind !== 'attach' ? 'builder--inspecting' : ''}${
+        <div class={`builder ${side && side.kind !== 'attach' && !modalOpen ? 'builder--inspecting' : ''}${
             barUp ? ' builder--bar' : ''}`}>
             <Header
                 graph={graph}
@@ -428,8 +441,13 @@ function App() {
                 busy={busy}
                 onPreview={() => vscode.postMessage({ type: 'preview' })}
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
-                onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
+                onSelectWorkflow={name => {
+                    setSwitchedTo(name);
+                    send({ type: 'selectWorkflow', name });
+                }}
                 onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
+                selectedNotBuilt={switchedTo !== null && switchedTo === graph.workflows.active
+                    && needsBuild(buildState)}
                 onNewStep={newStep}
                 onOpenPresets={() => { setNotice(null); setSide({ kind: 'presets' }); }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
@@ -476,10 +494,6 @@ function App() {
                         setNotice(null);
                         setBody(null);
                         vscode.postMessage({ type: 'readFrame', command });
-                    }}
-                    onOpenTemplate={command => {
-                        setSide({ kind: 'template', command });
-                        setNotice(null);
                     }}
                     onEditHook={(command, hook) => openAttach({ command, anchor: hook.anchor, hook })}
                     onAddHook={(command, anchor, when) => openAttach({ command, anchor, when })}
@@ -632,17 +646,24 @@ function App() {
                     );
                 })()}
 
-                {side?.kind === 'template' && (() => {
+                {side?.kind === 'document' && (() => {
                     const step = graph.steps.find(s => s.name === side.command);
-                    return step ? (
-                        <TemplateForm
+                    return step?.template ? (
+                        <DocumentModal
+                            key={step.name}
                             step={step}
+                            nodeName={side.nodeName}
                             fragments={graph.choices.fragments}
+                            savesTo={hookHome(graph.workflows.active).name}
+                            narrow={narrow}
                             onCancel={() => setSide(null)}
-                            onPick={(heading, fragment) => send({
-                                type: 'setTemplateSection',
-                                command: side.command, heading, fragment,
-                            })}
+                            onSave={picks => {
+                                setSide(null);
+                                picks.forEach(({ heading, fragment }) => send({
+                                    type: 'setTemplateSection',
+                                    command: side.command, heading, fragment,
+                                }));
+                            }}
                         />
                     ) : null;
                 })()}
@@ -660,13 +681,15 @@ function App() {
                 )}
 
                 {side?.kind === 'new-workflow' && (
-                    <NewWorkflowForm
-                        from={graph.workflows.active}
+                    <NewWorkflowModal
                         taken={graph.workflows.available}
+                        hasProject={graph.configured}
+                        active={graph.workflows.active}
                         presets={graph.choices.presets}
                         onCancel={() => setSide(null)}
                         onCreate={(name, from) => {
                             setSide(null);
+                            setSwitchedTo(name);
                             send({ type: 'newWorkflow', from, name });
                         }}
                     />
@@ -739,6 +762,16 @@ function App() {
                         anchor: hook.anchor, when: hook.when, index: hook.index,
                     })}
                     onAction={action => act(pop, action)}
+                    document={popStep.template && documentNodeId(popStep) === pop.nodeId ? {
+                        file: documentFile(popStep.template.file),
+                        sections: sectionsOf(popStep).length,
+                        yours: popStep.template.sections.length,
+                    } : null}
+                    onOpenDocument={() => {
+                        setPop(null);
+                        setNotice(null);
+                        setSide({ kind: 'document', command: pop.command, nodeName: popNode.name });
+                    }}
                 />
             )}
         </div>

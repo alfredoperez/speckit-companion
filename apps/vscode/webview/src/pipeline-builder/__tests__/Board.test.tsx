@@ -664,31 +664,12 @@ describe('one hue marks everything the project owns', () => {
         expect(host.querySelector('.pb-yours')?.textContent).toBe('yours');
     });
 
-    // `template` was a grey mono word set exactly like `4 nodes` beside it, and
-    // it is the only way into the whole document-shape panel.
-    it('names the document shape as a chip, and counts what is yours in it', () => {
-        const swapped = graph({
-            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'], sectionsAvailable: [], chosenBy: {} } })],
-        });
-        const { host } = canvas(swapped);
-        const chip = host.querySelector('.pb-template')!;
-        expect(chip.querySelector('.pb-template-name')?.textContent).toBe('Document shape');
-        // The separator is neither the offer nor the change, so it stays out of
-        // the ink that means "this is yours".
-        expect(chip.querySelector('.pb-template-count')?.textContent).toBe('1');
-        expect(chip.querySelector('.pb-fact-dot')?.textContent).toBe('·');
-        // The section names are the title, since a lane is 300px and a heading
-        // can be any length. `§` on its own named nothing a reader could read.
-        expect(chip.getAttribute('title')).toContain('Requirements');
-    });
-
-    it('offers the shape with no count when nothing in it was replaced', () => {
+    it('puts no document chip on the step header: the document opens from its node', () => {
         const { host } = canvas(graph({
-            steps: [step({ template: { file: 'spec-template.md', sections: [], sectionsAvailable: ['Requirements'], chosenBy: {} } })],
+            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'], sectionsAvailable: ['Requirements'], chosenBy: {} } })],
         }));
-        const chip = host.querySelector('.pb-template')!;
-        expect(chip.querySelector('.pb-template-name')?.textContent).toBe('Document shape');
-        expect(chip.querySelector('.pb-template-count')).toBeNull();
+        expect(host.querySelector('.pb-step-head')?.textContent).not.toContain('Document shape');
+        expect(host.querySelector('.pb-template')).toBeNull();
     });
 
     it('leaves a shipped node and a stock template unmarked', () => {

@@ -10,10 +10,7 @@ import { PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline
 import { changed } from './changes';
 import { PipelineTotals, totals } from './counts';
 import { Menu, MenuOption } from './Menu';
-
-/** Starts a workflow rather than switching to one. A workflow is a `.yml`
-    stem, so `#` cannot be the name of a real one. */
-const NEW_WORKFLOW = '#new';
+import { WorkflowMenu } from './WorkflowMenu';
 
 interface Props {
     graph: PipelineGraph;
@@ -31,6 +28,10 @@ interface Props {
     onOpenPresets?: () => void;
     /** The first-run line has been read. Absent outside the panel. */
     onDismissFirstRun?: () => void;
+    /** The workflow was switched to from this panel and has not been built since. */
+    selectedNotBuilt?: boolean;
+    /** Render the workflow list open, for a story or a capture. */
+    workflowsOpen?: boolean;
 }
 
 /**
@@ -121,12 +122,6 @@ function tallyOptions(counts: PipelineTotals): MenuOption[] {
     return options;
 }
 
-function workflowLabel(name: string): string {
-    if (name === '') { return 'This project'; }
-    if (name === 'shipped') { return 'As shipped'; }
-    return name;
-}
-
 /** The build state when the bar has nothing to say. */
 function quietState(state: PipelineBuildKind): string {
     if (state === 'current') { return 'Built, up to date'; }
@@ -145,37 +140,28 @@ export function Header(props: Props) {
     // one line below, that this is the pipeline as it ships.
     const firstRun = graph.firstRun === true && !graph.configured && changedSteps === 0
         && !onShipped;
-    const quiet = busy ? '' : quietState(buildState);
-
-    const workflows = [
-        ...graph.workflows.available.map(name => ({
-            id: name,
-            label: workflowLabel(name),
-            note: [
-                name === 'shipped' ? 'Companion with nothing changed' : '',
-                name === '' ? 'Whatever .specify/companion.yml says' : '',
-                name === graph.workflows.active ? 'In force' : '',
-            ].filter(Boolean).join(' · ') || undefined,
-        })),
-        { id: NEW_WORKFLOW, label: 'New workflow…', note: 'Starts from the one in force' },
-    ];
+    const selected = Boolean(props.selectedNotBuilt) && !busy;
+    const quiet = busy || selected ? '' : quietState(buildState);
 
     return (
         <header class="builder-header">
             <div class="builder-identity">
                 <span class="builder-title">Workflow</span>
-                <div class="builder-workflow">
-                    <Menu
-                        class="builder-workflow-current"
-                        trigger={workflowLabel(graph.workflows.active)}
-                        label={`Workflow: ${workflowLabel(graph.workflows.active)}`}
-                        title="The way of working this project is on"
-                        options={workflows}
-                        onPick={id => {
-                            if (id === NEW_WORKFLOW) { props.onNewWorkflow(); }
-                            else { props.onSelectWorkflow(id); }
-                        }} />
+                <div class={`builder-workflow${selected ? ' builder-workflow--selected' : ''}`}>
+                    <WorkflowMenu
+                        available={graph.workflows.available}
+                        active={graph.workflows.active}
+                        buildState={buildState}
+                        defaultOpen={props.workflowsOpen}
+                        onSelect={props.onSelectWorkflow}
+                        onNew={props.onNewWorkflow} />
                 </div>
+                {selected && (
+                    <span class="builder-state builder-state--selected" role="status">
+                        <span class="builder-state-dot" aria-hidden="true" />
+                        Selected, not built
+                    </span>
+                )}
                 {quiet && (
                     <span class="builder-state">
                         {buildState === 'current' && <StatusIcon tone="done" />}

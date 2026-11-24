@@ -40,6 +40,9 @@ interface Props {
     moreOpen?: boolean;
     /** Render with the move list showing, for a story or a capture. */
     moveOpen?: boolean;
+    /** The document this node writes, when its step has a template. */
+    document?: { file: string; sections: number; yours: number } | null;
+    onOpenDocument?: () => void;
 }
 
 function Arrow({ direction }: { direction: 'up' | 'down' }) {
@@ -321,6 +324,33 @@ export function NodePopover(props: Props) {
                         </>
                     )}
                 </dl>
+                {props.document && (
+                    <button type="button" class="pb-pop-doc" onClick={props.onOpenDocument}>
+                        <svg class="pb-pop-doc-icon" width="14" height="14" viewBox="0 0 14 14"
+                            fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <path d="M3 1.5H8.5L11 4V12.5H3Z M8.5 1.5V4H11" />
+                        </svg>
+                        <span class="pb-pop-doc-text">
+                            <span class="pb-pop-doc-name">
+                                Document: <span class="pb-pop-mono">{props.document.file}</span>
+                            </span>
+                            <span class="pb-pop-doc-meta">
+                                {`${props.document.sections} section${props.document.sections === 1 ? '' : 's'}`}
+                                {props.document.yours > 0 && <>
+                                    {' · '}
+                                    <span class="pb-pop-doc-yours">{`${props.document.yours} yours`}</span>
+                                </>}
+                            </span>
+                        </span>
+                        <svg class="pb-pop-doc-chevron" width="14" height="14" viewBox="0 0 14 14"
+                            fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true" focusable="false">
+                            <path d="M5.5 3.5L9 7L5.5 10.5" />
+                        </svg>
+                    </button>
+                )}
             </section>
 
             <section class="pb-pop-section" aria-label="Its hooks">
