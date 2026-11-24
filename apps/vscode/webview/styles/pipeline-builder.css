@@ -37,7 +37,12 @@ body {
        width however narrow the panel got and pushed the board out of view. */
     container-type: inline-size;
     container-name: builder;
+    /* VS Code sets `contrastBorder` transparent outside high contrast, which
+       left every outlined button and dashed add tile with no edge at all. */
+    --border-hover: color-mix(in srgb, var(--text-primary) 28%, transparent);
 }
+
+body.vscode-high-contrast .builder { --border-hover: var(--vscode-contrastBorder, var(--text-primary)); }
 
 .builder-empty,
 .builder-error {
@@ -3120,9 +3125,12 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
 .pb-pop-actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
 }
+
+.pb-pop-actions > * { flex-shrink: 0; white-space: nowrap; }
 
 .pb-pop-actions .pb-menu { margin-left: auto; }
 
@@ -3463,12 +3471,12 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
 .pb-modal-kind--on {
     font-weight: 600;
-    color: var(--accent);
-    background: var(--accent-subtle);
-    border-color: var(--accent);
+    color: var(--review-ink);
+    background: var(--review-subtle);
+    border-color: var(--review);
 }
 
-.pb-modal-kind--on .pb-hook-icon { color: var(--accent); }
+.pb-modal-kind--on .pb-hook-icon { color: var(--review-ink); }
 
 .pb-modal-kind-short { display: none; }
 
@@ -3496,9 +3504,9 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-modal-row:hover { background: var(--bg-hover); }
 
 .pb-modal-row--on,
-.pb-modal-row--on:hover { background: var(--accent-subtle); }
+.pb-modal-row--on:hover { background: var(--review-subtle); }
 
-.pb-modal-row--on .pb-hook-icon { color: var(--accent); }
+.pb-modal-row--on .pb-hook-icon { color: var(--review-ink); }
 
 .pb-modal-row-text {
     display: flex;
@@ -3515,7 +3523,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-modal-row--on .pb-modal-row-name { font-weight: 600; }
 
 .pb-modal-match {
-    color: var(--accent);
+    color: var(--review-ink);
     background: transparent;
 }
 
@@ -3530,7 +3538,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     flex: none;
     font-size: var(--text-xs);
     font-weight: 500;
-    color: var(--accent);
+    color: var(--review-ink);
 }
 
 .pb-modal-hint {
@@ -3681,6 +3689,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
+    max-width: none;
     height: auto;
     font-family: inherit;
     background: none;
@@ -4185,12 +4194,12 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 .pb-dm-option:hover { background: var(--bg-hover); }
 .pb-dm-option:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 
-.pb-dm-option--on { background: var(--accent-subtle); }
-.pb-dm-option--on:hover { background: var(--accent-subtle); }
+.pb-dm-option--on { background: var(--review-subtle); }
+.pb-dm-option--on:hover { background: var(--review-subtle); }
 
 .pb-dm-icon { flex: none; color: var(--text-secondary); }
 .pb-dm-option--on .pb-dm-icon,
-.pb-dm-check { flex: none; color: var(--accent); }
+.pb-dm-check { flex: none; color: var(--review-ink); }
 
 .pb-dm-option-text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 

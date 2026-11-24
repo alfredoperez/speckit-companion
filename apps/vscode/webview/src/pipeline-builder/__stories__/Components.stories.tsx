@@ -774,6 +774,19 @@ export const BuildBarReview: Story = {
     },
 };
 
+export const BuildBarReviewNarrow: Story = {
+    name: 'Build bar · review open with a problem, in a docked panel',
+    parameters: { capture: { width: 380, height: 420 } },
+    render: () => (
+        <Foot width={380}><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={PREVIEW_REPORT}
+            status={{ tone: 'done', text: 'Hook added before execute',
+                undo: { token: 'add:implement' } }}
+            {...BAR} /></Foot>
+    ),
+    play: BuildBarReview.play,
+};
+
 export const BuildBarBuilding: Story = {
     name: 'Build bar · building',
     render: () => (
