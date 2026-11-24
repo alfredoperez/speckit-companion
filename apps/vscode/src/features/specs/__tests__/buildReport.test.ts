@@ -57,3 +57,23 @@ describe('what a preview would change', () => {
         expect(report.output).toBe(PREVIEW);
     });
 });
+
+describe('what a build warned about', () => {
+    const MISSING = 'specify: skill hook before draft-spec: No skill named "no-such-skill" in this project or an installed plugin, so this hook does nothing in a run. Install it or pick another skill.';
+
+    it('lists each warning printed before the summary, without its prefix', () => {
+        const output = [`[build] ${MISSING}`, PREVIEW].join('\n');
+        const report = readBuildReport({ ok: true, output }, true);
+        expect(report.warnings).toEqual([MISSING]);
+        expect(report.changed).toEqual(['implement', 'specify']);
+    });
+
+    it('reports none when the build said nothing but its summary', () => {
+        expect(readBuildReport({ ok: true, output: PREVIEW }, true).warnings).toEqual([]);
+    });
+
+    it('does not read a refusal as a warning', () => {
+        const output = '[build] cannot build — nothing was written\n  specify: names nodes that do not exist';
+        expect(readBuildReport({ ok: false, output }, false).warnings).toEqual([]);
+    });
+});

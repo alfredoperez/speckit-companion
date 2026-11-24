@@ -135,6 +135,31 @@ export interface PipelineHook {
     note: string;
     /** Written by this project and not running, because `shipped` is in force. */
     parked?: boolean;
+    /**
+     * Why a skill hook will do nothing in a run, in words the panel shows as is:
+     * the skill is missing, its plugin is off, or it refuses model calls. Empty
+     * when it can run. The build prints the same sentence as a warning.
+     * Optional: a graph from an older install omits it.
+     */
+    problem?: string;
+}
+
+/** One skill a hook can name, and where it comes from. */
+export interface SkillChoice {
+    /** What a hook writes in `ref`: `house-check`, or `plugin:skill` for a plugin's. */
+    id: string;
+    /** The skill's own name, without a plugin prefix. */
+    name: string;
+    /** `project` is shared with the repository; `user` is only this developer's. */
+    source: 'project' | 'user' | 'plugin';
+    /** The folder (`.claude/skills`, `~/.claude/skills`) or, for a plugin, its name. */
+    where: string;
+    /** The skill's own description, one line, up to 200 characters. Empty when it has none. */
+    description: string;
+    /** False when its frontmatter sets `disable-model-invocation: true`: a hook cannot call it. */
+    callable: boolean;
+    /** False only for a plugin turned off in Claude Code settings. */
+    enabled: boolean;
 }
 
 /** An alternative for one node's slot: same place in the run, different words. */
@@ -359,6 +384,17 @@ export interface OfferedEntry {
 
 export interface PipelineChoices {
     skills: string[];
+    /**
+     * Every skill a hook can name, with its source, description and whether a
+     * hook can call it. Project skills first, then the developer's own, then
+     * installed plugins'. Optional: a graph from an older install omits it.
+     */
+    skillCatalog?: SkillChoice[];
+    /**
+     * Whether Claude Code's plugin list could be read. False means plugin skills
+     * are missing from `skillCatalog` because they could not be checked.
+     */
+    pluginsRead?: boolean;
     nodes: string[];
     /**
      * Hook commands this project's registries carry, so attaching one is a choice.
@@ -475,6 +511,12 @@ export interface BuildReport {
     dryRun: boolean;
     /** The full log, which the output channel also holds. */
     output: string;
+    /**
+     * What the build warned about without refusing, such as a skill hook whose
+     * skill is missing: `specify: skill hook before draft-spec: No skill named …`.
+     * Always filled by the extension; optional so older report literals still type.
+     */
+    warnings?: string[];
 }
 
 // ============================================
