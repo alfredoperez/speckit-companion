@@ -10,7 +10,7 @@ import type { WorkflowStepConfig } from '../workflows/types';
 import { isInsideSpecDirectory } from '../../core/specDirectoryResolver';
 import { getProjectRoot } from '../../core/projectRoot';
 import { SPEC_CONTEXT_FILENAME } from '../specs/specContextReader';
-import { STOCK_SPEC_FILE, featureSpecPath, isFeatureSpecFile } from '../specs/featureSpecPath';
+import { STOCK_SPEC_FILE, declaredStepFile, featureSpecPath, isFeatureSpecFile } from '../specs/featureSpecPath';
 
 /**
  * Generates a random nonce for CSP
@@ -58,7 +58,7 @@ export function getDocumentTypeFromPath(filePath: string, steps?: WorkflowStepCo
     // Check workflow steps first when available
     if (steps) {
         for (const step of steps) {
-            const stepFile = (step.file ?? `${step.name}.md`).toLowerCase();
+            const stepFile = declaredStepFile(step).toLowerCase();
             if (fileName === stepFile || (stepFile === STOCK_SPEC_FILE && isFeatureSpecFile(fileName))) {
                 return step.name;
             }

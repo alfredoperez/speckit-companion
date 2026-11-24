@@ -13,7 +13,7 @@ import {
 } from './types';
 import { fileNameToDocType, fileNameToDisplayName, relativePathToDocType } from '../../core/utils/fileNaming';
 import type { WorkflowStepConfig } from '../workflows/types';
-import { featureSpecName, resolveStepFile } from '../specs/featureSpecPath';
+import { declaredStepFile, featureSpecName, resolveStepFile } from '../specs/featureSpecPath';
 
 /**
  * Legacy per-document scratchpad files (`*-extra.md`). Review comments now live
@@ -149,7 +149,7 @@ export async function scanDocuments(
 
             // Scan subDir for sub-specs belonging to this step
             if (step.subDir) {
-                const stepFile = step.file ?? `${step.name}.md`;
+                const stepFile = declaredStepFile(step);
                 const subDirPath = path.join(specDirectory, step.subDir);
                 try {
                     const subDirUri = vscode.Uri.file(subDirPath);
