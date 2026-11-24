@@ -263,3 +263,37 @@ describe("a project's added step in the rail", () => {
         expect(docs.find(d => d.type === 'implement')?.category).toBe('action');
     });
 });
+
+describe('a custom workflow whose specify step declares no file', () => {
+    const fsReal = require('fs');
+    const os = require('os');
+    const path = require('path');
+    // Shape of the "Discuss First" workflow, and a spec folder holding a `<name>.spec.md`.
+    const steps: WorkflowStepConfig[] = [
+        { name: 'discussion', label: 'Discussion', command: 'speckit.discuss' },
+        { name: 'specify', command: 'speckit.specify' },
+        { name: 'plan', command: 'speckit.plan' },
+        { name: 'tasks', command: 'speckit.tasks' },
+        { name: 'implement', command: 'speckit.implement', actionOnly: true },
+    ];
+    let dir: string;
+
+    beforeEach(() => {
+        dir = fsReal.mkdtempSync(path.join(os.tmpdir(), 'spec-1060-'));
+        fsReal.writeFileSync(path.join(dir, 'article-draft-autosave.spec.md'), '# Spec');
+        mockFileExists(`${dir}/article-draft-autosave.spec.md`);
+        mockReadDirectory({ [dir]: [['article-draft-autosave.spec.md', vscode.FileType.File]] });
+    });
+    afterEach(() => fsReal.rmSync(dir, { recursive: true, force: true }));
+
+    it('opens the feature spec as the Specification step, not as a related document', async () => {
+        const docs = await scanDocuments(dir, outputChannel, steps);
+        expect(docs.find(d => d.type === 'specify')).toMatchObject({
+            label: 'Specification',
+            fileName: 'article-draft-autosave.spec.md',
+            exists: true,
+            category: 'core',
+        });
+        expect(docs.filter(d => d.category === 'related')).toEqual([]);
+    });
+});

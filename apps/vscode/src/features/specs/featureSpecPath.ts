@@ -33,8 +33,13 @@ export function featureSpecPath(specDir: string): string {
     return path.join(specDir, featureSpecName(specDir));
 }
 
+/** The file a step writes when it declares none: `spec.md` for the stock `specify` step, else `<name>.md`. */
+export function declaredStepFile(step: WorkflowStepConfig): string {
+    return step.file ?? (step.name === 'specify' ? STOCK_SPEC_FILE : `${step.name}.md`);
+}
+
 /** A step's output file, with the stock `spec.md` slot resolved to whichever spec name is on disk. */
 export function resolveStepFile(specDir: string, step: WorkflowStepConfig): string {
-    const file = step.file ?? `${step.name}.md`;
+    const file = declaredStepFile(step);
     return file === STOCK_SPEC_FILE ? featureSpecName(specDir) : file;
 }

@@ -22,6 +22,7 @@ import { ConfigKeys, WorkflowSteps, AIProviders, COMPANION_WORKFLOW_NAME, SPECKI
 import { getProjectRoot } from '../../core/projectRoot';
 import { getConfiguredProviderType, AIProviderType } from '../../ai-providers/aiProvider';
 import { isCompanionInstalled } from '../settings/companionPresetReconciler';
+import { declaredStepFile } from '../specs/featureSpecPath';
 
 /**
  * Legacy alias — existing .spec-context.json files may use "default".
@@ -82,7 +83,7 @@ export const COMPANION_WORKFLOW: WorkflowConfig = {
  * Returns the explicit `file` property or defaults to `{name}.md`.
  */
 export function getStepFile(step: WorkflowStepConfig): string {
-    return step.file ?? `${step.name}.md`;
+    return declaredStepFile(step);
 }
 
 /**
