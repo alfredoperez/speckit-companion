@@ -17,6 +17,8 @@ interface Props {
     buildState: PipelineBuildKind;
     busy: boolean;
     onPreview: () => void;
+    /** Write the commands whatever the state says, e.g. after they were deleted. */
+    onBuild?: () => void;
     onOpenConfig: () => void;
     /** Switch the whole configuration to another saved workflow. */
     onSelectWorkflow: (name: string) => void;
@@ -181,6 +183,8 @@ export function Header(props: Props) {
                         ...(graph.configured || onShipped
                             ? [{ id: 'open', label: 'Open companion.yml' }] : []),
                         { id: 'preview', label: 'Preview build', disabled: busy },
+                        ...(props.onBuild
+                            ? [{ id: 'build', label: 'Build again', disabled: busy }] : []),
                         { id: 'presets', label: 'Spec Kit presets' },
                         ...tallyOptions(counts),
                     ]}
@@ -189,6 +193,7 @@ export function Header(props: Props) {
                         else if (id === 'open') { onOpenConfig(); }
                         else if (id === 'presets') { props.onOpenPresets?.(); }
                         else if (id === 'preview') { onPreview(); }
+                        else if (id === 'build') { props.onBuild?.(); }
                     }} />
             </div>
 

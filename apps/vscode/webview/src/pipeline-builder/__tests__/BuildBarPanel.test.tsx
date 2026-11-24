@@ -104,6 +104,15 @@ describe('the panel carries Build in the bar', () => {
         expect(root.querySelector('.builder-bar')).toBeNull();
     });
 
+    it('builds again from the menu when the build is current', async () => {
+        await deliver({ type: 'graph', graph: CHANGED, buildState: 'current' });
+        root.querySelector<HTMLButtonElement>('.builder-more')!.click();
+        await flush();
+        Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+            .find(el => el.textContent === 'Build again')!.click();
+        expect(posted.at(-1)).toEqual({ type: 'build' });
+    });
+
     it('steps aside while the hook modal is open (FR-011)', async () => {
         await deliver({ type: 'graph', graph: CHANGED, buildState: 'stale' });
         button('Review')!.click();

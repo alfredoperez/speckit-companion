@@ -79,6 +79,25 @@ describe('the header is the name and the workflow', () => {
         expect(fired).toEqual(['step', 'open', 'preview', 'presets']);
     });
 
+    it('offers Build again when the build is current, and sends a build', async () => {
+        let built = 0;
+        const host = mount(<Header graph={graph()} buildState="current" busy={false} {...HEAD}
+            onBuild={() => { built += 1; }} />);
+        await menu(host);
+        Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+            .find(el => el.textContent === 'Build again')!.click();
+        expect(built).toBe(1);
+    });
+
+    it('cannot build again while a build runs', async () => {
+        const host = mount(<Header graph={graph()} buildState="unconfigured" busy {...HEAD}
+            onBuild={() => undefined} />);
+        await menu(host);
+        const again = Array.from(host.querySelectorAll('.pb-menu-option'))
+            .find(el => el.textContent === 'Build again');
+        expect(again?.getAttribute('aria-disabled')).toBe('true');
+    });
+
     it('cannot preview while a build runs', async () => {
         const host = mount(<Header graph={graph()} buildState="current" busy {...HEAD} />);
         await menu(host);

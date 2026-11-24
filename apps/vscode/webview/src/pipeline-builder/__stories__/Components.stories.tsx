@@ -81,7 +81,7 @@ const RAN = step('implement', [
 ], { changes: { ...NO_CHANGES, hooks: 4 } });
 
 const HEAD = {
-    onPreview: noop, onOpenConfig: noop,
+    onPreview: noop, onBuild: noop, onOpenConfig: noop,
     onSelectWorkflow: noop, onNewWorkflow: noop, onNewStep: noop,
 };
 

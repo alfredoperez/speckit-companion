@@ -455,6 +455,7 @@ function App() {
                 buildState={buildState}
                 busy={busy}
                 onPreview={() => vscode.postMessage({ type: 'preview' })}
+                onBuild={() => vscode.postMessage({ type: 'build' })}
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
                 onSelectWorkflow={name => {
                     setSwitchedTo(name);
