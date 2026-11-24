@@ -719,13 +719,33 @@ try {
         await scrollTo(webview().locator('h2', { hasText: /User Scenarios/ }), 'start', 24);
         await page.waitForTimeout(300);
         await capture('rich-spec-stories', { target: 'editor', ratio: 16 / 9 });
-        await scrollTo(webview().locator('p', { hasText: /^Acceptance Scenarios/ }), 'start', 130);
+        await scrollTo(webview().locator('.lg-sp-scn'), 'start', 130);
         await page.waitForTimeout(300);
         await capture('rich-spec-scenarios', { target: 'editor', ratio: 16 / 9 });
+        // One component per crop, for the docs page that maps each markdown part to what the viewer draws.
+        const part = async (name, target) => {
+            await command('Notifications: Clear All Notifications').catch(() => undefined);
+            await scrollTo(Array.isArray(target) ? target[0] : target, 'start', 24);
+            await page.waitForTimeout(300);
+            await capture(name, { target, padding: 16, within: 'editor' });
+        };
+        const story = webview().locator('.lg-sp-story').first();
+        await part('file-story-card', [story.locator('.lg-sp-lane'), story.locator('.lg-sp-test')]);
+        await part('file-scenarios', story.locator('.lg-sp-scn').first());
+        const reqs = webview().locator('.lg-sp-req');
+        await part('file-requirements', [reqs.first(), reqs.nth(3)]);
         await open('Tasks');
-        await scrollTo(webview().locator('.phase-header[data-phase="1"]'), 'start', 24);
+        await scrollTo(webview().locator('.lg-phase[data-phase="1"]'), 'start', 24);
         await page.waitForTimeout(300);
         await capture('rich-spec-tasks', { target: 'editor', ratio: 16 / 9 });
+        const phases = webview().locator('.lg-phase-head');
+        await part('file-phases', [phases.first(), phases.nth(4)]);
+        await webview().locator('.step-child:text-is("Research")').first().click();
+        const decision = webview().locator('.lg-decision').nth(1);
+        await decision.waitFor({ timeout: 15000 });
+        const turned = decision.locator('details.lg-turned summary').first();
+        if (await turned.count()) await turned.click();
+        await part('file-decision', decision);
         await open('Overview');
         await scrollTo(webview().locator('.dossier-intent'), 'start', 60);
         await page.waitForTimeout(300);

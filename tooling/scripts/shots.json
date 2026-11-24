@@ -287,6 +287,31 @@
       "to": "docs/screenshots/generated/live-sidebar-more-actions.png"
     }
   ],
+  "file-story-card": [
+    {
+      "to": "docs/screenshots/live-file-story-card.png"
+    }
+  ],
+  "file-scenarios": [
+    {
+      "to": "docs/screenshots/live-file-scenarios.png"
+    }
+  ],
+  "file-requirements": [
+    {
+      "to": "docs/screenshots/live-file-requirements.png"
+    }
+  ],
+  "file-phases": [
+    {
+      "to": "docs/screenshots/live-file-phases.png"
+    }
+  ],
+  "file-decision": [
+    {
+      "to": "docs/screenshots/live-file-decision.png"
+    }
+  ],
   "overview-intent": [
     {
       "to": "docs/screenshots/live-run-intent.png"

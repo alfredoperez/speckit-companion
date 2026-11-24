@@ -177,7 +177,7 @@ export default defineConfig({
           href: 'https://github.com/alfredoperez/speckit-companion',
         },
       ],
-      // Sixteen pages in six groups, in reading order: the footer's previous
+      // Seventeen pages in six groups, in reading order: the footer's previous
       // and next buttons walk it. A page is added to its group below, and a
       // new page needs a reason an existing page cannot hold.
       sidebar: [
@@ -203,6 +203,7 @@ export default defineConfig({
           items: [
             { label: 'Viewer and sidebar', slug: 'docs/navigate/viewer-and-sidebar' },
             { label: 'Overview and progress', slug: 'docs/results/the-overview' },
+            { label: 'What each file becomes', slug: 'docs/navigate/what-each-file-becomes' },
           ],
         },
         {
@@ -210,6 +211,7 @@ export default defineConfig({
           items: [
             { label: 'Copilot app', slug: 'docs/copilot-app' },
             { label: 'Claude Code', slug: 'docs/claude-code' },
+            { label: 'Viewer library', slug: 'docs/viewer-library' },
           ],
         },
         {

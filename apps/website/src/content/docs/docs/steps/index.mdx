@@ -199,7 +199,7 @@ Specs flow forward. Each change gets its own spec folder, and a completed spec i
 
 **Reactivate** is the one exception. It reopens a completed or archived spec in place, for work that belongs to that same change.
 
-Companion doesn't write changes back into a long-lived spec per capability. Living specs, the sidebar view, and the seven `living-*` commands were retired; the [loss list](https://github.com/alfredoperez/speckit-companion/blob/main/specs/669-retire-living-specs/loss-list.md) names what went and why. Teams that want flow-back can use the community [`reconcile`](https://github.com/stn1slv/spec-kit-reconcile) extension for Spec Kit, which reconciles drift into the feature's own spec, plan and tasks.
+Companion doesn't write changes back into an older spec. To bring a spec back in line with the code, use the community [`reconcile`](https://github.com/stn1slv/spec-kit-reconcile) extension for Spec Kit. It updates the feature's own spec, plan and tasks.
 
 Each spec's `.spec-context.json` can record three lineage fields:
 
