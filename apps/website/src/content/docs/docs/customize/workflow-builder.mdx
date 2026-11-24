@@ -155,12 +155,12 @@ The node declares which answers exist, and a build refuses a `folds` entry namin
 
 ## Document shape
 
-The **Document shape** chip on a step lists each `##` section of the template it writes. Pick an alternative for a section, or **As shipped**. Your own alternatives are files in `.specify/companion/fragments/`.
+Open the node that writes a document, such as **Write the plan**, and choose its **Document** row. It lists each `##` section of the template, says which are yours, and opens a section to the alternatives written for it or **Restore shipped**. An outline beside the list shows what each section will hold. **Done** saves your picks and **Cancel** drops them. Your own alternatives are files in `.specify/companion/fragments/`.
 
 <DocFigure
   src="builder-template.png"
-  alt="The template panel with one row per section."
-  caption="One row per section of the document the step writes."
+  alt="The Document dialog, with the sections listed beside an outline of the resulting document."
+  caption="One row per section of the document the node writes, beside an outline of the result."
 />
 
 ## Steps and workflows
@@ -173,15 +173,15 @@ The **Document shape** chip on a step lists each `##` section of the template it
   caption="A new step: its name, where it runs and what it writes."
 />
 
-A workflow is a whole named configuration. Switching swaps node order, hooks, templates and routing together, so a one-line fix and a client deliverable can run differently in one repository.
+A workflow is a whole named configuration. Switching swaps node order, hooks, templates and routing together, so a one-line fix and a client deliverable can run differently in one repository. The **Workflow** dropdown in the header lists **Shipped**, **This project** and your saved workflows. After a switch the header says **Selected, not built** until you build.
 
 <DocFigure
   src="builder-preset.png"
-  alt="The New workflow form, offering three whole configurations to start from as cards."
-  caption="A new workflow starts from what you run today, or from a preset."
+  alt="The New workflow dialog: a name, and a start from Shipped, This project or a preset."
+  caption="A new workflow starts from Shipped, what you run today, or a preset."
 />
 
-**Classic spec-kit** changes document shapes only, back to P1/P2/P3 stories and the full Technical Context block. **Brownfield** is for changing an existing system: the spec is written as a delta, the task list is challenged before it runs, and a person opens the result before it counts as done. **As shipped**, in the **Workflow** dropdown, parks your configuration without deleting it.
+**New workflow…**, at the foot of the dropdown, asks for a name and what to start from. **Classic spec-kit** changes document shapes only, back to P1/P2/P3 stories and the full Technical Context block. **Brownfield** is for changing an existing system: the spec is written as a delta, the task list is challenged before it runs, and a person opens the result before it counts as done. **Shipped** parks your configuration without deleting it.
 
 ## Build
 
