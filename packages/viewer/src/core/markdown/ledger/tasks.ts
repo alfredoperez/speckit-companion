@@ -140,7 +140,7 @@ function phaseOpen(p: LgPhase, sourceLine: string): string {
     const bits = [
         p.tasks.length ? plural(p.tasks.length, 'task') : '',
         p.waves.length > 1 ? plural(p.waves.length, 'wave') : '',
-        p.files.length ? `<span class="lg-phase-files" title="${attr(p.files.join('\n'))}">${plural(p.files.length, 'file')}</span>` : '',
+        p.files.length ? `<span class="lg-phase-files" title="${p.files.map(attr).join('&#10;')}">${plural(p.files.length, 'file')}</span>` : '',
     ].filter(Boolean).join(' · ');
     const goal = p.goal ? `<p class="lg-phase-goal"><span>Goal</span> ${parseInline(p.goal)}</p>` : '';
     return `<details class="lg-phase line" data-line="${at}" data-phase="${attr(p.key)}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ''}${done ? '' : 'open'}>` +
