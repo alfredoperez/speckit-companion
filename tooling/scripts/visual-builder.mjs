@@ -141,16 +141,20 @@ function layoutProblems() {
             // A scrollable ancestor can bring the element into its own view, so
             // whatever sits above it is no longer this element's problem.
             if (scrolls(style)) break;
-            if (!hides(style)) continue;
-            const clip = p.getBoundingClientRect();
-            if (clip.width < 1 || clip.height < 1) continue;
-            const outside = box.right <= clip.left || box.left >= clip.right
-                || box.bottom <= clip.top || box.top >= clip.bottom;
-            if (outside) {
-                problems.push(
-                    `"${(el.textContent || '').trim().slice(0, 30)}" is clipped out of view`);
-                break;
+            if (hides(style)) {
+                const clip = p.getBoundingClientRect();
+                const outside = clip.width >= 1 && clip.height >= 1
+                    && (box.right <= clip.left || box.left >= clip.right
+                        || box.bottom <= clip.top || box.top >= clip.bottom);
+                if (outside) {
+                    problems.push(
+                        `"${(el.textContent || '').trim().slice(0, 30)}" is clipped out of view`);
+                    break;
+                }
             }
+            // A modal layer is fixed to the viewport, so a hidden overflow above
+            // it clips nothing it holds.
+            if (style.position === 'fixed') break;
         }
     }
     return problems;

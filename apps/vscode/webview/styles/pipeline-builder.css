@@ -2936,7 +2936,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
     flex-direction: column;
     gap: 14px;
     width: 372px;
-    max-width: calc(100vw - var(--space-4));
+    max-width: min(100%, calc(100vw - var(--space-4)));
     box-sizing: border-box;
     padding: var(--space-4);
     font-size: var(--text-sm);
@@ -4000,6 +4000,20 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 
 /* The workflow list names configurations in words; a saved one is a file stem. */
 .builder-workflow .pb-menu-list { min-width: 300px; max-width: 360px; }
+
+/* Docked narrow, the list hangs off the header the way the tally does, so it
+   opens across the panel instead of running past its right edge. */
+@container builder (max-width: 480px) {
+    .builder-workflow,
+    .builder-workflow .pb-menu { position: static; }
+
+    .builder-workflow .pb-menu-list {
+        left: var(--space-4);
+        right: var(--space-4);
+        min-width: 0;
+        max-width: none;
+    }
+}
 
 .builder-workflow .pb-menu-label {
     font-family: inherit;
