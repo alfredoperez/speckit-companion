@@ -198,6 +198,23 @@ describe('the keyboard adds without leaving the field', () => {
         expect(document.activeElement).toBe(plus);
     });
 
+    it('closes on Escape while the result list shows skills', () => {
+        let closed = 0;
+        const host = modal({ skills: ['create-pr'] }, noop, { onCancel: () => { closed += 1; } });
+        expect(search(host).getAttribute('aria-expanded')).toBe('true');
+        key(search(host), 'Escape');
+        expect(closed).toBe(1);
+    });
+
+    it('closes on Escape after text is typed', async () => {
+        let closed = 0;
+        const host = modal({}, noop, { onCancel: () => { closed += 1; } });
+        await type(search(host), 'nothing-like-it');
+        expect(search(host).getAttribute('aria-expanded')).toBe('true');
+        key(search(host), 'Escape');
+        expect(closed).toBe(1);
+    });
+
     it('keeps the focus inside while open', () => {
         const host = modal({ skills: ['create-pr'] });
         const dialog = host.querySelector('[role="dialog"]')!;

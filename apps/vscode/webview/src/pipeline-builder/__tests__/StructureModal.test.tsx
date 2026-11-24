@@ -121,6 +121,18 @@ describe('Node lists what the step has on offer', () => {
             .toContain('.specify/companion/nodes/tasks/');
         expect((host.querySelector('.pb-action--primary') as HTMLButtonElement).disabled).toBe(true);
     });
+
+    it('closes on Escape while the list has rows, typed or not', async () => {
+        let closed = 0;
+        const { host } = modal({ mode: 'node', onCancel: () => { closed += 1; } });
+        const search = host.querySelector('.pb-modal-search input') as HTMLInputElement;
+        expect(search.getAttribute('aria-expanded')).toBe('true');
+        search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        type(search, 'gaps');
+        await flush();
+        search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        expect(closed).toBe(2);
+    });
 });
 
 describe('Step adds a lane of its own', () => {

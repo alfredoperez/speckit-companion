@@ -306,7 +306,7 @@ export function HookModal(props: Props) {
         const onKey = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
                 // An open menu inside takes Escape for itself.
-                if (box.current?.querySelector('[aria-expanded="true"]')) { return; }
+                if (box.current?.querySelector('[aria-haspopup][aria-expanded="true"]')) { return; }
                 event.preventDefault();
                 onCancel();
                 return;
