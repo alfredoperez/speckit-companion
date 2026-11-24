@@ -1,0 +1,30 @@
+{
+  "duration": 20.4,
+  "captions": [
+    {
+      "t": 2.4,
+      "noun": "Step rail",
+      "rest": "what's done, what's next"
+    },
+    {
+      "t": 5.86,
+      "noun": "Next step",
+      "rest": "one click from the footer"
+    },
+    {
+      "t": 9.32,
+      "noun": "Tasks",
+      "rest": "tick off as the AI works"
+    },
+    {
+      "t": 12.78,
+      "noun": "Timing",
+      "rest": "how far the run has got"
+    },
+    {
+      "t": 16.24,
+      "noun": "Running",
+      "rest": "the footer follows the run"
+    }
+  ]
+}

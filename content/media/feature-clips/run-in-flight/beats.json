@@ -1,0 +1,11 @@
+{
+  "title": "A run in flight",
+  "shots": ["clip-run-tasked", "clip-run-implementing"],
+  "beats": [
+    { "shot": "clip-run-tasked", "part": "rail", "noun": "Step rail", "rest": "what's done, what's next" },
+    { "shot": "clip-run-tasked", "part": "footer", "noun": "Next step", "rest": "one click from the footer" },
+    { "shot": "clip-run-implementing", "part": "tasks", "noun": "Tasks", "rest": "tick off as the AI works" },
+    { "shot": "clip-run-implementing", "part": "timing", "noun": "Timing", "rest": "how far the run has got" },
+    { "shot": "clip-run-implementing", "part": "footer", "noun": "Running", "rest": "the footer follows the run" }
+  ]
+}

@@ -1837,6 +1837,155 @@ try {
         }
     }, { needs: 'talk-sandbox', shots: true });
 
+    // Feature clips: whole-window pictures, each saved with <name>.rects.json, the measured box of every part a clip points at (window CSS px), so a clip never guesses a coordinate.
+    /** The box around every locator given, in window CSS px, cut to the editor or the window. */
+    const unionBox = async (locators, within) => {
+        const boxes = [];
+        for (const locator of locators) {
+            const box = await locator.first().boundingBox().catch(() => null);
+            if (box) boxes.push(box);
+        }
+        if (!boxes.length) return null;
+        let [x, y] = [Math.min(...boxes.map(b => b.x)), Math.min(...boxes.map(b => b.y))];
+        let [r, b] = [Math.max(...boxes.map(o => o.x + o.width)), Math.max(...boxes.map(o => o.y + o.height))];
+        if (within) {
+            const area = await page.locator(`.part.${within}`).boundingBox();
+            x = Math.max(x, area.x); y = Math.max(y, area.y);
+            r = Math.min(r, area.x + area.width); b = Math.min(b, area.y + area.height);
+        }
+        return [x, y, r - x, b - y].map(Math.round);
+    };
+    /** A sentence inside a paragraph, measured as text: anything with a boundingBox(), in window CSS px. */
+    const sentence = (text) => ({
+        first: () => ({
+            boundingBox: async () => {
+                const block = webview().locator('p, li, div', { hasText: text }).last();
+                const outer = await block.boundingBox();
+                const inner = await block.evaluate((element, wanted) => {
+                    const own = element.getBoundingClientRect();
+                    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+                    let all = '';
+                    const nodes = [];
+                    while (walker.nextNode()) { nodes.push([walker.currentNode, all.length]); all += walker.currentNode.textContent; }
+                    const at = all.indexOf(wanted);
+                    if (at < 0) return null;
+                    const find = (offset) => { const hit = nodes.findLast(([, start]) => start <= offset); return [hit[0], offset - hit[1]]; };
+                    const range = document.createRange();
+                    range.setStart(...find(at));
+                    range.setEnd(...find(at + wanted.length - 1));
+                    range.setEnd(range.endContainer, range.endOffset + 1);
+                    const r = range.getBoundingClientRect();
+                    return { x: r.x - own.x, y: r.y - own.y, width: r.width, height: r.height };
+                }, text);
+                return outer && inner ? { x: outer.x + inner.x, y: outer.y + inner.y, width: inner.width, height: inner.height } : null;
+            },
+        }),
+    });
+    /** Saves the window as <name>.png and the boxes of `parts` ({ key: locator | [locators] }) as <name>.rects.json. */
+    const clipShot = async (name, parts, within = 'editor') => {
+        await capture(name, { target: 'window' });
+        const view = await page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight }));
+        const rects = {};
+        const missing = [];
+        for (const [key, part] of Object.entries(parts)) {
+            const box = await unionBox(Array.isArray(part) ? part : [part], part.within ?? within);
+            if (box && box[2] > 0 && box[3] > 0) rects[key] = box; else missing.push(key);
+        }
+        if (SHOTS) writeFileSync(join(SHOTS, `${name}.rects.json`), JSON.stringify({ window: [view.width, view.height], scale: SCALE, rects }, null, 2));
+        if (missing.length) throw new Error(`${name}: nothing on screen for ${missing.join(', ')}`);
+        return name;
+    };
+
+    await step('clip-review', 'Clip: the plan with three pending comments, the same plan after Refine, and the Specs pane, each with the boxes the review clip points at', async () => {
+        await talkWindow();
+        const comment = () => webview().locator('.line.has-refinement').first();
+        try {
+            await walkAutosave('planned', (folder) => withComments(planComments(folder, 'pending'))(folder));
+            await openTalkSpec(AUTOSAVE, 'Plan');
+            await scrollTo(comment(), 'center', 80);
+            await page.waitForTimeout(500);
+            await clipShot('clip-review-pending', {
+                comment: comment().locator('.line-comment-slot'),
+                commentLine: comment(),
+                refine: webview().locator('#refine-submit-btn'),
+            });
+            await walkAutosave('planned', refinePlan);
+            await talkWindow();
+            await openTalkSpec(AUTOSAVE, 'Plan');
+            await webview().locator('.pl-summary details.pl-more').evaluateAll((folds) => folds.forEach((fold) => { fold.open = true; }));
+            await scrollTo(comment(), 'center', 80);
+            await page.waitForTimeout(500);
+            await clipShot('clip-review-applied', {
+                comment: comment().locator('.line-comment-slot'),
+                answer: sentence(PLAN_ANSWERS[0][1].trim()),
+            });
+            await clipShot('clip-review-sidebar', {
+                specs: [pane('Specs').locator('.pane-header'), pane('Specs').locator('.monaco-list-row').last()],
+            }, 'sidebar');
+            return 'clip-review-pending, clip-review-applied, clip-review-sidebar';
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-run', 'Clip: the autosave run at tasks, then mid-implement, with the boxes of the rail, the tasks, the timing and the footer', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('tasked');
+            await openTalkSpec(AUTOSAVE, 'Tasks');
+            await clipShot('clip-run-tasked', {
+                rail: [webview().locator('.rail-overview'), webview().locator('.step-tab').last()],
+                footer: webview().locator('footer.actions'),
+            });
+            await walkAutosave('implementing');
+            await openTalkSpec(AUTOSAVE, 'Tasks');
+            const done = webview().locator('li, .task-item').filter({ has: webview().locator('input[type="checkbox"]:checked, .task-done, [data-done="true"]') });
+            await clipShot('clip-run-implementing', {
+                rail: [webview().locator('.rail-overview'), webview().locator('.step-tab').last()],
+                timing: webview().getByText(/^Timing/).first(),
+                tasks: [webview().locator('li, .task-item', { hasText: 'T001' }), webview().locator('li, .task-item', { hasText: 'T004' })],
+                footer: webview().locator('footer.actions'),
+            });
+            return `${await done.count()} done task rows matched`;
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-overview', 'Clip: the finished autosave run\'s Overview scrolled to each region, each picture with that region\'s box', async () => {
+        await talkWindow();
+        // A finished spec that first opens on its Overview can draw the Specification with no Overview entry in the rail,
+        // so the spec is opened on Tasks and the Overview is chosen from the rail once it is there.
+        await openTalkSpec(AUTOSAVE, 'Tasks');
+        await webview().locator('.rail-overview').first().click({ timeout: 15000 });
+        await webview().locator('.dossier-intent').first().waitFor({ timeout: 15000 });
+        await page.waitForTimeout(1000);
+        const regions = {
+            intent: '.dossier-intent',
+            timing: '.dossier-timing',
+            expectations: '.dossier-section[aria-label="Expectations"]',
+            verified: '.dossier-section[aria-label="Verified"]',
+            decisions: '.dossier-section[aria-label="Decisions"]',
+            coverage: '.dossier-section[aria-label="Coverage"]',
+        };
+        const footer = webview().locator('footer.actions').first();
+        await footer.evaluate(element => { element.style.visibility = 'hidden'; });
+        const saved = [];
+        try {
+            for (const [key, selector] of Object.entries(regions)) {
+                const region = webview().locator(selector).first();
+                if (!(await region.isVisible().catch(() => false))) continue;
+                await scrollTo(region, 'start', 24);
+                await page.waitForTimeout(400);
+                saved.push(await clipShot(`clip-overview-${key}`, { region }));
+            }
+        } finally {
+            await footer.evaluate(element => { element.style.visibility = ''; });
+        }
+        if (saved.length < 4) throw new Error(`only ${saved.length} regions on the page`);
+        return saved.join(', ');
+    }, { needs: 'talk-sandbox', shots: true });
+
     await step('shot-steering-constitution', 'With a written constitution, the Steering view lists it under SpecKit Project Files', async () => {
         await clear();
         const settings = join(built.user, 'User', 'settings.json');
