@@ -1103,6 +1103,14 @@ def _main() -> int:
                 records.append(parse_hook_outcome(raw))
             except ValueError as exc:
                 bad.append(f"not recording hook outcome: {exc}")
+        # A specify hook can fire before the new spec folder exists; alone and
+        # pointer-resolved, a finished spec is the previous one, so its record would be misfiled.
+        if (hook_only and _pointer_resolved(args) and any(r["step"] == "specify" for r in records)
+                and _has_complete(canonical_log(read_ctx(feature_dir / ".spec-context.json")), "specify")):
+            dropped = [r for r in records if r["step"] == "specify"]
+            records = [r for r in records if r["step"] != "specify"]
+            bad.append(f"not recording {len(dropped)} specify hook outcome(s): {feature_dir} already "
+                       f"finished specify, so this is the previous spec. Pass --feature-dir <the new spec folder>.")
         for line in bad:
             print(f"[companion] {line}", file=sys.stderr)
         try:

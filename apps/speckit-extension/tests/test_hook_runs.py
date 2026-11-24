@@ -91,6 +91,20 @@ class TheWriterKeepsTheRecord(unittest.TestCase):
         self.assertEqual(done.returncode, 0, done.stderr)
         self.assertEqual(len(self.ctx()["hookRuns"]), 1)
 
+    def test_a_specify_record_alone_on_a_finished_spec_writes_nothing(self):
+        self.write("--step", "specify", "--advance", "--by", "ai")
+        done = self.write("--hook-outcome", "specify/before/draft-spec/0/prompt=ran")
+        self.assertEqual(done.returncode, 2)
+        self.assertIn("--feature-dir", done.stderr)
+        self.assertNotIn("hookRuns", self.ctx())
+
+    def test_a_specify_record_with_feature_dir_lands_on_a_finished_spec(self):
+        self.write("--step", "specify", "--advance", "--by", "ai")
+        done = self.write("--feature-dir", "specs/001-x",
+                          "--hook-outcome", "specify/after/handoff/0/prompt=ran")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(len(self.ctx()["hookRuns"]), 1)
+
     def test_a_skip_keeps_its_reason_on_one_line(self):
         self.write("--hook-outcome", "specify/before/draft-spec/1/prompt=skipped: not\nneeded here")
         [run] = self.ctx()["hookRuns"]
