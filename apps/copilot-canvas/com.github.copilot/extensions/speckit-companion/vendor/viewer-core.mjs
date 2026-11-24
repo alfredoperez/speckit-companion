@@ -657,15 +657,60 @@ function deriveViewerState(ctx, activeStep = ctx.currentStep, workflowSteps, con
     converge
   };
 }
+
+// packages/viewer/src/core/staleness.ts
+function isStalenessRelevant(status) {
+  return status !== SpecStatuses.COMPLETED && status !== SpecStatuses.ARCHIVED;
+}
+var SAME_GENERATION_MS = 1e3;
+var FRESH = { isStale: false, staleReason: "", newerUpstream: "" };
+function stalenessFrom(docs) {
+  const map = {};
+  const labels = new Map(docs.map((d) => [d.type, d.label]));
+  docs.forEach((doc, i) => {
+    if (i === 0 || !doc.exists || doc.mtime === void 0) {
+      map[doc.type] = { ...FRESH };
+      return;
+    }
+    let newestType = "";
+    let newestMtime = 0;
+    for (const up of docs.slice(0, i)) {
+      if (up.mtime !== void 0 && up.mtime - doc.mtime > SAME_GENERATION_MS && up.mtime > newestMtime) {
+        newestType = up.type;
+        newestMtime = up.mtime;
+      }
+    }
+    if (!newestType) {
+      map[doc.type] = { ...FRESH };
+      return;
+    }
+    const upstreamLabel = labels.get(newestType) || newestType;
+    map[doc.type] = {
+      isStale: true,
+      staleReason: `${doc.label} was generated before the current ${upstreamLabel.toLowerCase()}. Consider regenerating.`,
+      newerUpstream: upstreamLabel
+    };
+  });
+  return map;
+}
+
+// packages/viewer/src/core/constitution.ts
+function constitutionNeedsSetup(text) {
+  const body = text.replace(/<!--[\s\S]*?-->/g, "");
+  return /\[PROJECT_NAME\]|\[PRINCIPLE_\d+_NAME\]|\[PLACEHOLDER\]/.test(body);
+}
 export {
   DEFAULT_PIPELINE_STEPS,
   STATUSES,
   STEP_STATUS,
   clarificationsIn,
+  constitutionNeedsSetup,
   countTaskCheckboxes,
   deriveStepHistory,
   deriveTimingSummary,
   deriveViewerState,
   formatElapsed,
-  markMissingTests
+  isStalenessRelevant,
+  markMissingTests,
+  stalenessFrom
 };

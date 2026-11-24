@@ -7,8 +7,8 @@ import { readFile } from 'node:fs/promises';
 import { realpathSync, statSync, watch } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildSnapshot, findSpec, readSpecDetail, recordLive, resolveSpecDirs } from './specs-core.mjs';
-import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
+import { buildSnapshot, findSpec, readConstitution, readSpecDetail, recordLive, resolveSpecDirs } from './specs-core.mjs';
+import { STEP_COMMANDS, availableCommands, buildAskPrompt, buildConstitutionPrompt, buildInstallPrompt, buildPrompt, buildSpecifyPrompt, buildStepPreamble, commandPattern, commandSetFor, detectCommandSet, resolveCommand, runInstructionsDoc, specifyChoices, stepInstructionsName, writeRunInstructions, writerPath } from './prompts.mjs';
 import { BUSY, recordStep } from './run-record.mjs';
 import { stepEvidence, withRunningStep } from './spec-rules.mjs';
 import { validateRepositoryRoot, validateRoot } from './workspace.mjs';
@@ -121,7 +121,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
     }
 
     function snapshot() {
-        return { ...state.snapshot, rootSource: state.bound ? 'bound' : state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', boundSession: state.bound, coordinatedSessions: state.coordinatedSessions, children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root) };
+        return { ...state.snapshot, rootSource: state.bound ? 'bound' : state.manual ? 'selected' : state.root === state.workingDirectory ? 'session' : 'child', boundSession: state.bound, coordinatedSessions: state.coordinatedSessions, children: state.children, childNote: state.childNote, specs: state.snapshot.specs.map(present), selected: state.selected, commandSet: commandSet(), commands: availableCommands(commandSet()), specify: specifyChoices(state.root), constitution: readConstitution(state.root) };
     }
 
     /** The step's document as it is on disk right now, so a later look can tell whether the run touched it. */
@@ -475,6 +475,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
 
     function startWatching() {
         for (const dir of state.specDirs) watchSpecDir(dir);
+        watchSpecDir(join('.specify', 'memory'));
     }
 
     function requireSpec(query) {
@@ -498,6 +499,12 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
         const sent = await send(prompt);
         emit('run', { spec, command, prompt, instructionsFile, sent, at: new Date().toISOString() });
         return { prompt, instructionsFile, sent };
+    }
+
+    /** The stock constitution command: it belongs to the project, not to a spec, so it needs no spec and no run record. */
+    async function runConstitution() {
+        const prompt = buildConstitutionPrompt(state.root);
+        return deliver(null, 'constitution', prompt);
     }
 
     async function run(query, command) {
@@ -633,6 +640,7 @@ export async function createSpecServer({ root, workingDirectory = root, manual =
             }
             if (pathname === '/api/focus') return sendJson(res, 200, focus(body.spec));
             if (pathname === '/api/run') return sendJson(res, 200, await run(body.spec, body.command));
+            if (pathname === '/api/constitution') return sendJson(res, 200, await runConstitution());
             if (pathname === '/api/specify') return sendJson(res, 200, await specify(body.description, body.workflow));
             if (pathname === '/api/install') return sendJson(res, 200, await install());
         }

@@ -144,6 +144,12 @@ export function buildPrompt(command, specId, commandSet = 'companion', spelling 
     return instructionsFile ? `${text}\n\n${instructionsSentence(instructionsFile)}` : text;
 }
 
+/** The chat message for the constitution card: always the stock command, since Companion has none of its own. */
+export function buildConstitutionPrompt(root) {
+    const spelling = resolveCommand(root, 'constitution', 'speckit');
+    return `/${spelling.name}${bodySentence(spelling, 'for this project')}`;
+}
+
 /** The step preamble for a run button, or null: for commands VS Code sends none for, and for a stock run with no context writer to call. */
 export function buildStepPreamble(command, specId, root, commandSet, now = new Date(), writer = writerPath(root)) {
     if (!STEP_COMMANDS.includes(command) || !isKnownStep(command)) return null;

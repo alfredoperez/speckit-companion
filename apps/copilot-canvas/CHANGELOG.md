@@ -6,6 +6,7 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ### Added
 
+- **A constitution card and stale-document lines.** The board shows ==whether the constitution is in place== and warns when a plan is older than its spec. <!-- area: copilot-app -->
 - **Clarify a spec's open questions.** A spec that still carries open questions shows a Clarify chip with ==how many are left==. <!-- area: copilot-app -->
 
 ### Fixed

@@ -59,6 +59,7 @@ const els = {
     repositoryBrowse: $('repository-browse'),
     repositoryWarning: $('repository-warning'),
     repositoryFollow: $('repository-follow'),
+    constitution: $('constitution-card'),
     coordinatedSession: $('coordinated-session'),
     coordinatedHint: $('coordinated-session-hint'),
     childrenBox: $('repository-children'),
@@ -339,6 +340,35 @@ function renderCoordinatedSessions() {
         : sessions.length ? 'The coordinator maintains this list; commands run in this chat.' : 'Ask the coordinator to update the session list.';
 }
 
+/** One line on the project's constitution, with a button to run the stock command when it is missing or still the template. */
+function renderConstitution() {
+    const { constitution, missingSpecDirectories } = state.snapshot;
+    els.constitution.hidden = !constitution || missingSpecDirectories;
+    if (els.constitution.hidden) return;
+    const needsRun = constitution.state !== 'in-place';
+    const label = constitution.state === 'missing'
+        ? 'No constitution yet'
+        : constitution.state === 'template' ? 'Constitution · still the template' : `Constitution · in place · changed ${relativeTime(constitution.changedAt)}`;
+    els.constitution.replaceChildren(
+        el('span', { class: 'constitution-card__label' }, label),
+        needsRun ? el('button', {
+            class: 'btn btn-quiet',
+            type: 'button',
+            title: 'Sends the stock constitution command to the chat',
+            onclick: async (e) => {
+                const button = e.currentTarget;
+                button.disabled = true;
+                try {
+                    await reportSend(await api('/api/constitution', {}));
+                } catch (error) {
+                    toast(`Could not send: ${error.message}`);
+                } finally {
+                    button.disabled = false;
+                }
+            },
+        }, 'Run constitution') : null);
+}
+
 function renderBoard() {
     const specs = state.snapshot?.specs ?? [];
     const active = specs.filter(s => !s.done).length;
@@ -354,6 +384,7 @@ function renderBoard() {
     els.repositoryFollow.title = state.snapshot.boundSession ? 'Stop showing the bound session and go back to this chat\'s own directory' : 'Drop the chosen directory and follow this session';
     els.repoLine.textContent += state.snapshot.boundSession ? ` · from ${state.snapshot.boundSession.name}` : '';
     els.repositoryWarning.textContent = `No spec directory found in ${state.snapshot.root}. Choose the repository containing your specs.`;
+    renderConstitution();
     renderChildren();
     renderCoordinatedSessions();
 
@@ -582,6 +613,7 @@ function renderDetail() {
         head,
         renderRail(spec.steps),
         renderNext(spec),
+        (detail.staleNotes ?? []).length ? el('div', { class: 'stale-notes', role: 'status' }, detail.staleNotes.map(note => el('p', { class: 'stale-note' }, note))) : null,
         tabBar,
         el('div', { class: 'panel', role: 'tabpanel' }, renderPanel(detail, state.tab))));
     restoreStates(picked);

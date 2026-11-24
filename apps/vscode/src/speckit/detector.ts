@@ -11,6 +11,7 @@ import { isCompanionInstalled } from '../features/settings/companionPresetReconc
 import { buildInstallCommand } from './specKitExtensionInstall';
 import { cliUpgradeCommand, inSequence, installedAgents, projectUpgradeCommands, specifyVersion } from './specKitUpgrade';
 import { detectShell } from '../core/utils/shellDetection';
+import { constitutionNeedsSetup as templatePlaceholdersIn } from 'speckit-viewer/core/constitution';
 
 const execAsync = promisify(exec);
 
@@ -122,11 +123,7 @@ export class SpecKitDetector {
 
         try {
             const content = fs.readFileSync(constitutionPath, 'utf-8');
-            // The Sync Impact Report `/speckit.constitution` writes at the top is an
-            // HTML comment listing every placeholder it replaced, so a finished
-            // constitution still contains the words. Read the body only.
-            const body = content.replace(/<!--[\s\S]*?-->/g, '');
-            const hasPlaceholders = /\[PROJECT_NAME\]|\[PRINCIPLE_\d+_NAME\]|\[PLACEHOLDER\]/.test(body);
+            const hasPlaceholders = templatePlaceholdersIn(content);
             this._constitutionNeedsSetup = hasPlaceholders;
             this.log(`Constitution needs setup: ${hasPlaceholders}`);
             await setContextKey(CONTEXT_KEYS.constitutionNeedsSetup, hasPlaceholders);

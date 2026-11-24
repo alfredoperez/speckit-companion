@@ -52,6 +52,8 @@ await build({
             "export { clarificationsIn } from './packages/viewer/src/core/clarificationsIn';",
             "export { STATUSES, STEP_STATUS, DEFAULT_PIPELINE_STEPS } from './packages/viewer/src/contract/specContext';",
             "export { deriveViewerState, markMissingTests } from './packages/viewer/src/core/stateDerivation';",
+            "export { stalenessFrom, isStalenessRelevant } from './packages/viewer/src/core/staleness';",
+            "export { constitutionNeedsSetup } from './packages/viewer/src/core/constitution';",
         ].join('\n'),
         resolveDir: absWorkingDir,
         loader: 'ts',
