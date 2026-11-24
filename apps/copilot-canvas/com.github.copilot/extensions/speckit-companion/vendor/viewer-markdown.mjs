@@ -2030,7 +2030,7 @@ function phaseOpen(p, sourceLine) {
   const bits = [
     p.tasks.length ? plural(p.tasks.length, "task") : "",
     p.waves.length > 1 ? plural(p.waves.length, "wave") : "",
-    p.files.length ? `<span class="lg-phase-files" title="${attr(p.files.join("\n"))}">${plural(p.files.length, "file")}</span>` : ""
+    p.files.length ? `<span class="lg-phase-files" title="${p.files.map(attr).join("&#10;")}">${plural(p.files.length, "file")}</span>` : ""
   ].filter(Boolean).join(" \xB7 ");
   const goal = p.goal ? `<p class="lg-phase-goal"><span>Goal</span> ${parseInline(p.goal)}</p>` : "";
   return `<details class="lg-phase line" data-line="${at}" data-phase="${attr(p.key)}" data-state="${state}" ${p.story ? `data-story="${attr(p.story)}" ` : ""}${done ? "" : "open"}><summary class="lg-phase-head"><span class="lg-phase-lane">${lane}</span><span class="lg-phase-title">${codicon("chevron-right")}<span class="lg-phase-name line-content" id="phase-${attr(p.key)}" data-toc="">${parseInline(p.title)}</span>${phaseChips(p)}</span>${progress2}${addButton(at, `phase ${p.key}: ${p.title}`)}</summary><div class="lg-phase-body"><div class="line-comment-slot"></div>${bits ? `<p class="lg-phase-meta">${bits}</p>` : ""}${goal}`;

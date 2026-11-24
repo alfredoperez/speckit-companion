@@ -238,6 +238,15 @@ describe('a callout line', () => {
         expect(html).not.toContain('&lt;details');
     });
 
+    it('draws a phase that lists several files as one chip, with no markup leaking as text', () => {
+        const html = renderMarkdown('## Phase 2: Foundational\n\nFiles: `src/a.ts`, `src/b.ts`, `src/c.test.ts`\n\n- [ ] T001 first\n');
+        const chip = html.match(/<span class="lg-phase-files" title="([^"]*)">3 files<\/span>/);
+        expect(chip).not.toBeNull();
+        expect(chip![1]).toContain('src/a.ts');
+        expect(chip![1]).toContain('src/c.test.ts');
+        expect(html).not.toContain('c.test.ts&quot;&gt;');
+    });
+
     it('keeps the line numbers below a callout that wraps onto a second line', () => {
         const source = [
             '## Phase 1: Setup',
