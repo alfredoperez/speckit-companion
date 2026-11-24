@@ -68,6 +68,40 @@ export interface StockHookRow {
     enabled: boolean;
     optional: boolean;
     conditional: boolean;
+    /**
+     * The person's own entry: its extension is not installed here, so nothing
+     * rewrites it and the board may edit and remove it. An installed
+     * extension's hook stays switch-only, since a reinstall rewrites it.
+     * The host always sets it; optional so boards drawn before it still type.
+     */
+    own?: boolean;
+    /** What an optional hook asks before it runs. Empty for none. */
+    prompt?: string;
+}
+
+/** A hook the person attaches to a stock step, or the new values of one they own. */
+export interface StockHookDraft {
+    /** The skill or command it runs, e.g. `house-note`. */
+    command: string;
+    description: string;
+    /** Optional hooks ask first; required ones just run. */
+    optional: boolean;
+    /** What an optional hook asks. Empty or absent writes none. */
+    prompt?: string;
+}
+
+/** Where a template comes from, in the order Spec Kit resolves it. */
+export type StockTemplateLayerKind = 'override' | 'preset' | 'extension' | 'core';
+
+/** One layer a template resolves through. */
+export interface StockTemplateLayer {
+    kind: StockTemplateLayerKind;
+    /** The preset or extension id. Empty for an override and for core. */
+    source: string;
+    /** Workspace-relative. */
+    path: string;
+    /** How it combines with the layers under it. */
+    strategy: 'replace' | 'prepend' | 'append' | 'wrap' | 'replace-section';
 }
 
 /** One template under `.specify/templates/`, and the step that fills it. */
@@ -87,6 +121,13 @@ export interface StockTemplate {
     note: string;
     /** The command that fills it, in this project's spelling. Empty for none. */
     command: string;
+    /** The layer a run uses: the top of `layers`. Always set by the host. */
+    inForce?: StockTemplateLayerKind;
+    /**
+     * Every layer that composes the template, top first. The last is the base
+     * the others prepend, append or wrap; a single entry replaces outright.
+     */
+    layers?: StockTemplateLayer[];
 }
 
 /** One workflow installed under `.specify/workflows/`. */
@@ -710,6 +751,18 @@ export type BuilderToExtensionMessage =
         index: number;
         enabled: boolean;
     }
+    /** Attach the person's own hook to a stock step. Stock projects only. */
+    | { type: 'addStockHook'; step: string; when: HookWhen; hook: StockHookDraft }
+    /** Change a hook the person added, addressed as `setStockHook` addresses one. */
+    | {
+        type: 'updateStockHook';
+        step: string;
+        when: HookWhen;
+        index: number;
+        hook: StockHookDraft;
+    }
+    /** Take away a hook the person added. */
+    | { type: 'removeStockHook'; step: string; when: HookWhen; index: number }
     /**
      * Open one of the files the stock board drew from, in an editor.
      *

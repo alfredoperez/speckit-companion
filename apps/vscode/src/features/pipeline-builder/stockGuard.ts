@@ -16,8 +16,9 @@ type MessageType = BuilderToExtensionMessage['type'];
 
 const ALLOWED_ON_STOCK: ReadonlySet<MessageType> = new Set<MessageType>([
     'ready', 'dismissFirstRun',
-    // The registry switch, which is stock Spec Kit's own.
-    'setStockHook',
+    // The registry switch, which is stock Spec Kit's own, and the person's own
+    // entries in that registry. Whose entry it is gets checked by the writer.
+    'setStockHook', 'addStockHook', 'updateStockHook', 'removeStockHook',
     // Reads: opening a file the board drew, and drawing another workflow.
     'openStockFile', 'selectStockWorkflow',
     // Dispatches a stock command this project registers. Its payload is a
