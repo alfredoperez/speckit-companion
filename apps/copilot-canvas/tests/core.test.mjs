@@ -128,7 +128,7 @@ describe('prompts', () => {
 
     it('falls back to the stock commands when Companion is not installed', () => {
         assert.equal(buildPrompt('plan', 'specs/042-x', 'speckit'), '/speckit.plan specs/042-x');
-        assert.deepEqual(availableCommands('speckit'), ['plan', 'tasks', 'implement']);
+        assert.deepEqual(availableCommands('speckit'), ['plan', 'tasks', 'implement', 'clarify']);
         assert.throws(() => buildPrompt('resume', 'specs/042-x', 'speckit'));
     });
 
@@ -775,5 +775,32 @@ describe('shared rules the Claude Code mod bundles', () => {
     it('treats a status named like an Object.prototype key as an unknown status', () => {
         assert.equal(specStatusLabel('constructor'), 'Constructor');
         assert.equal(deriveStepBadges({ status: 'toString', history: [] }).specify, 'not-started');
+    });
+});
+
+describe('open questions and the clarify action', () => {
+    const specWith = text => {
+        const root = mkdtempSync(join(tmpdir(), 'canvas-oq-'));
+        mkdirSync(join(root, 'specs', '009-q'), { recursive: true });
+        writeFileSync(join(root, 'specs', '009-q', 'spec.md'), text);
+        return scanSpec(root, 'specs/009-q');
+    };
+
+    it('counts the markers in spec.md on each spec row', () => {
+        assert.equal(specWith('# S\n\n[NEEDS CLARIFICATION: who signs in?]\n- [NEEDS CLARIFICATION: how long?]\n').openQuestions, 2);
+    });
+
+    it('counts none for a spec with no markers, or only markers inside code', () => {
+        assert.equal(specWith('# S\n').openQuestions, 0);
+        assert.equal(specWith('# S\n\n`[NEEDS CLARIFICATION: x]`\n\n```\n[NEEDS CLARIFICATION: y]\n```\n').openQuestions, 0);
+    });
+
+    it('resolves clarify to the stock command in both command sets', () => {
+        for (const set of ['speckit', 'companion']) {
+            assert.ok(availableCommands(set).includes('clarify'));
+            const root = workspace({ companion: set === 'companion' });
+            assert.deepEqual(resolveCommand(root, 'clarify', set), { name: 'speckit.clarify', registered: false, instructions: null });
+            assert.equal(buildPrompt('clarify', 'specs/042-x', set, resolveCommand(root, 'clarify', set)).split('\n')[0], '/speckit.clarify specs/042-x');
+        }
     });
 });

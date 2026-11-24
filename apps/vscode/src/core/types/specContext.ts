@@ -75,6 +75,8 @@ export interface ViewerState {
     prNumber?: number;
     checkpointStatus?: CheckpointStatus;
     stepSummaries?: Record<string, Record<string, unknown>>;
+    /** Open `[NEEDS CLARIFICATION]` markers in spec.md. Absent when none. */
+    openQuestions?: number;
     /** Reasoning-trail capture, normalized for rendering. */
     intent?: string;
     request?: string;

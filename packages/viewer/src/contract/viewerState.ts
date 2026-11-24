@@ -50,6 +50,8 @@ export interface ViewerState {
     stepSummaries?: Record<string, Record<string, unknown>>;
     /** Persisted inline review comments, for restore + the Activity list. */
     reviewComments?: ReviewComment[];
+    /** Open `[NEEDS CLARIFICATION]` markers in spec.md. Absent when none. */
+    openQuestions?: number;
     /** Living specs this feature loaded/synced. Absent when none. */
     livingSpecs?: LivingSpecsView;
     /** Reasoning-trail capture, normalized for rendering. */

@@ -49,6 +49,7 @@ await build({
             "export { deriveStepHistory, deriveTimingSummary } from './packages/viewer/src/core/stepHistoryDerivation';",
             "export { formatElapsed } from './packages/viewer/src/core/relativeTime';",
             "export { countTaskCheckboxes } from './packages/viewer/src/core/taskCheckboxes';",
+            "export { clarificationsIn } from './packages/viewer/src/core/clarificationsIn';",
             "export { STATUSES, STEP_STATUS, DEFAULT_PIPELINE_STEPS } from './packages/viewer/src/contract/specContext';",
             "export { deriveViewerState, markMissingTests } from './packages/viewer/src/core/stateDerivation';",
         ].join('\n'),

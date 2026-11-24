@@ -224,3 +224,24 @@ export const StatusImplemented: Story = {
         return <SpecHeader />;
     },
 };
+
+// A spec that still carries open-question markers: the count opens Clarify.
+export const WithOpenQuestions: Story = {
+    render: () => {
+        navState.value = mockNavState({
+            specContextName: 'Profile Photo Upload',
+            docTypeLabel: 'Specification',
+        });
+        vs.value = {
+            status: 'specified',
+            activeStep: 'specify',
+            steps: {},
+            pulse: null,
+            highlights: [],
+            activeSubstep: null,
+            footer: [],
+            openQuestions: 2,
+        };
+        return <SpecHeader />;
+    },
+};

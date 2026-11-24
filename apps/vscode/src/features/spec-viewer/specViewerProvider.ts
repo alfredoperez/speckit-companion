@@ -68,7 +68,7 @@ import { resetMalformedContext } from "../specs/specContextReset";
 import { reconcileAndPersist } from "../specs/specContextReconciler";
 import { resolveInstallPrompt, type InstallPrompt } from "../../speckit/specKitExtensionInstall";
 import { reportInstallPromptShown, reportSpecOpened } from "../../core/telemetry";
-import { deriveViewerState, isStepCompleted, findRunningStep, markMissingTests, markStaleChecks } from "./stateDerivation";
+import { deriveViewerState, openQuestionsOf, isStepCompleted, findRunningStep, markMissingTests, markStaleChecks } from "./stateDerivation";
 import { FRESHNESS_TIMEOUT_MS, staleCounts } from "./checkFreshness";
 import { deriveConvergeResult } from "./convergeResult";
 import { bugDirectoryOf } from "../bugs/bugReports";
@@ -1331,6 +1331,9 @@ export class SpecViewerProvider {
           ? deriveConvergeResult(specCtx, await fs.promises.readFile(path.join(specDirectory, "tasks.md"), "utf-8").catch(() => ""))
           : undefined;
         const derivedVs = deriveViewerState(specCtx, active, wfSteps, converge);
+        derivedVs.openQuestions = openQuestionsOf(
+          await fs.promises.readFile(path.join(specDirectory, "spec.md"), "utf-8").catch(() => "")
+        );
         // Coverage is the same shape of enrichment: the derivation cannot open a
         // file, so the table would otherwise present a named test that is not
         // there exactly like one that is.

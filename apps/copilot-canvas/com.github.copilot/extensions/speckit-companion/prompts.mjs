@@ -5,8 +5,9 @@ import { CONTEXT_WRITER, DEFAULT_SPEC_DIRS } from './spec-rules.mjs';
 import { isKnownStep, renderPreamble, renderSpecifyCreationLifecyclePreamble } from './vendor/preamble.mjs';
 
 export const STEP_COMMANDS = ['plan', 'tasks', 'implement'];
-export const SPEC_COMMANDS = [...STEP_COMMANDS, 'status', 'resume', 'doctor', 'mark-complete'];
+export const SPEC_COMMANDS = [...STEP_COMMANDS, 'status', 'resume', 'doctor', 'mark-complete', 'clarify'];
 const COMPANION_ONLY = new Set(['status', 'resume', 'doctor', 'mark-complete']);
+const STOCK_ONLY = new Set(['clarify']);
 
 /** Companion is installed when its extension folder is: the same check VS Code makes (`isCompanionInstalled`). */
 export function isCompanionInstalled(root) {
@@ -50,7 +51,7 @@ export function availableCommands(commandSet) {
     return SPEC_COMMANDS.filter(command => commandSet === 'companion' || !COMPANION_ONLY.has(command));
 }
 
-const dottedName = (command, commandSet) => (commandSet === 'companion' ? `speckit.companion.${command}` : `speckit.${command}`);
+const dottedName = (command, commandSet) => (commandSet === 'companion' && !STOCK_ONLY.has(command) ? `speckit.companion.${command}` : `speckit.${command}`);
 const SKILL_DIRS = ['.github/skills', '.agents/skills', '.claude/skills'];
 
 /** How this project spells a command: dashed for a skill folder, dotted for a prompt or agent file, and a dotted guess (`registered` false) with the command's body when neither exists. */
@@ -62,7 +63,7 @@ export function resolveCommand(root, command, commandSet = 'companion') {
     if (skill) return { name: dashed, registered: true, instructions: skill };
     const prompt = first([`.github/prompts/${dotted}.prompt.md`, `.github/agents/${dotted}.agent.md`]);
     if (prompt) return { name: dotted, registered: true, instructions: prompt };
-    const body = first([commandSet === 'companion' ? `.specify/extensions/companion/commands/${dotted}.md` : `.specify/templates/commands/${command}.md`]);
+    const body = first([commandSet === 'companion' && !STOCK_ONLY.has(command) ? `.specify/extensions/companion/commands/${dotted}.md` : `.specify/templates/commands/${command}.md`]);
     return { name: dotted, registered: false, instructions: body };
 }
 
