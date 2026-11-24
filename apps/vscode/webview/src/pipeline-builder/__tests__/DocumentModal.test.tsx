@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+import { render } from 'preact';
 import { DocumentModal, SectionPick } from '../DocumentModal';
 import { documentNodeId } from '../documentNode';
 import type { PipelineFragment } from '../../../../src/protocol/pipeline';
@@ -165,5 +166,26 @@ describe('the document a node writes', () => {
     it('takes the keyboard when it opens', () => {
         const { host } = open();
         expect(document.activeElement).toBe(host.querySelector('.pb-dm-row-head'));
+    });
+
+    it('keeps Tab inside it, both ways (FR-011)', () => {
+        const { host } = open();
+        const first = host.querySelector<HTMLElement>('.pb-modal-close')!;
+        const done = button(host, 'Done');
+        done.focus();
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+        expect(document.activeElement).toBe(first);
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true }));
+        expect(document.activeElement).toBe(done);
+    });
+
+    it('gives the keyboard back to what opened it', () => {
+        const opener = document.createElement('button');
+        document.body.appendChild(opener);
+        opener.focus();
+        const { host } = open();
+        expect(document.activeElement).not.toBe(opener);
+        render(null, host);
+        expect(document.activeElement).toBe(opener);
     });
 });
