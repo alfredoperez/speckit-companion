@@ -121,3 +121,17 @@ export async function runSpecifyExtensionAdd(
     await runInTerminal(terminal, `specify extension add ${id} --force`);
     return terminal;
 }
+
+export async function runSpecifyPreset(
+    root: string | undefined,
+    commandLine: string,
+): Promise<vscode.Terminal | undefined> {
+    if (!root) {
+        void vscode.window.showWarningMessage('Open a project folder first.');
+        return undefined;
+    }
+    const terminal = vscode.window.createTerminal({ name: 'Spec Kit presets', cwd: root });
+    terminal.show();
+    await runInTerminal(terminal, commandLine);
+    return terminal;
+}

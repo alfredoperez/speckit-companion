@@ -116,8 +116,6 @@ export interface StockWorkflowView {
      * the run will actually name.
      */
     constitution: { command: string; written: boolean } | null;
-    /** Presets applied under `.specify/presets/`, which override command bodies. */
-    presets: Array<{ id: string; name: string; description: string }>;
     /** The extension registry, when this project has one. */
     registry: { path: string } | null;
     /** Why Build does nothing here, said once. */
@@ -681,12 +679,51 @@ export type BuilderToExtensionMessage =
     /** Draw another installed workflow. Reads a second file; writes nothing. */
     | { type: 'selectStockWorkflow'; id: string }
     /** Run a stock Spec Kit command that owns what a row is about. */
-    | { type: 'runStockCommand'; command: 'constitution' };
+    | { type: 'runStockCommand'; command: 'constitution' }
+    /** `specify preset search <query>`, in a terminal the person can see. */
+    | { type: 'presetSearch'; query: string }
+    /** `specify preset add|update|remove <id>`, after a confirm that names what it replaces. */
+    | { type: 'presetAdd'; id: string }
+    | { type: 'presetUpdate'; id: string }
+    | { type: 'presetRemove'; id: string };
+
+export const PRESET_ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+export const PRESET_QUERY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 -]*$/;
+
+/** One command, template or script a Spec Kit preset provides. */
+export interface SpecPresetItem {
+    type: 'command' | 'template' | 'script';
+    name: string;
+    /** What it stands in for; the item's own name when the manifest says nothing. */
+    replaces: string;
+    strategy: 'replace' | 'prepend' | 'append' | 'wrap' | 'replace-section';
+    file: string;
+}
+
+/** A Spec Kit preset installed under `.specify/presets/<id>/`. Not a Companion workflow preset. */
+export interface SpecPreset {
+    id: string;
+    name: string;
+    version: string;
+    description: string;
+    /** `local`, or the catalog it came from. */
+    source: string;
+    enabled: boolean;
+    /** Lower wins. */
+    priority: number;
+    items: SpecPresetItem[];
+    /** Commands or templates Companion relies on that this preset replaces or wraps. */
+    clashes: string[];
+    /** Set when the manifest could not be read; the preset is listed by its folder name. */
+    problem?: string;
+}
 
 export type ExtensionToBuilderMessage =
     | { type: 'graph'; graph: PipelineGraphResult; buildState: PipelineBuildKind }
     /** This project runs stock Spec Kit, so the board draws that instead. */
     | { type: 'stock'; view: StockWorkflowView }
+    /** The Spec Kit presets installed here, sent after `stock` or `graph`. */
+    | { type: 'specPresets'; presets: SpecPreset[] }
     | { type: 'busy'; busy: boolean }
     /** A node's instructions, with the frontmatter and shared-part fences taken out. */
     | {

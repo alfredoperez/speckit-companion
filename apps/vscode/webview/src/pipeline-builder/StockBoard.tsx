@@ -7,9 +7,10 @@
  */
 
 import {
-    HookWhen, PipelineStatus, StockHookRow, StockStepRow, StockWorkflowView,
+    HookWhen, PipelineStatus, SpecPreset, StockHookRow, StockStepRow, StockWorkflowView,
 } from '../../../src/protocol/pipeline';
 import { StatusIcon } from './Header';
+import { PresetsPanel } from './PresetsPanel';
 
 /** The one way on to Companion, for a reader who wants more than this. */
 const INSTALL_DOCS = 'https://speckit-companion.dev/docs/install/#2-add-the-companion-extension-for-spec-kit';
@@ -25,7 +26,15 @@ interface Props {
     onSelectWorkflow: (id: string) => void;
     /** Run the stock command that owns the constitution. */
     onRunCommand: (command: 'constitution') => void;
+    /** The Spec Kit presets installed here. */
+    presets?: SpecPreset[];
+    onPresetSearch?: (query: string) => void;
+    onPresetAdd?: (id: string) => void;
+    onPresetUpdate?: (id: string) => void;
+    onPresetRemove?: (id: string) => void;
 }
+
+const noop = () => undefined;
 
 function tally(count: number, noun: string): string {
     return `${count} ${noun}${count === 1 ? '' : 's'}`;
@@ -84,9 +93,8 @@ function Step({ step, onSetHook }: { step: StockStepRow; onSetHook: Props['onSet
     );
 }
 
-export function StockBoard(
-    { view, status, onSetHook, onOpenFile, onSelectWorkflow, onRunCommand }: Props,
-) {
+export function StockBoard(props: Props) {
+    const { view, status, onSetHook, onOpenFile, onSelectWorkflow, onRunCommand } = props;
     const hooks = view.steps.reduce((n, step) => n + step.hooks.length, 0);
     const running = view.steps.reduce(
         (n, step) => n + step.hooks.filter(hook => hook.enabled).length, 0);
@@ -255,25 +263,14 @@ export function StockBoard(
                     </section>
                 )}
 
-                {view.presets.length > 0 && (
-                    <section class="pb-stock-section">
-                        <h2 class="pb-stock-heading">Presets applied here</h2>
-                        <ul class="pb-stock-presets">
-                            {view.presets.map(preset => (
-                                <li class="pb-stock-preset" key={preset.id}>
-                                    <span class="pb-stock-preset-name">{preset.name}</span>
-                                    <span class="pb-stock-preset-note">
-                                        {preset.description || preset.id}
-                                    </span>
-                                </li>
-                            ))}
-                        </ul>
-                        <p class="pb-stock-prose">
-                            A preset replaces the text of the stock commands. Add or remove one
-                            with <code>specify preset</code>.
-                        </p>
-                    </section>
-                )}
+                <section class="pb-stock-section">
+                    <h2 class="pb-stock-heading">Spec Kit presets</h2>
+                    <PresetsPanel presets={props.presets ?? []}
+                        onSearch={props.onPresetSearch ?? noop}
+                        onAdd={props.onPresetAdd ?? noop}
+                        onUpdate={props.onPresetUpdate ?? noop}
+                        onRemove={props.onPresetRemove ?? noop} />
+                </section>
 
                 <p class="pb-stock-foot">
                     <a class="builder-link" href={INSTALL_DOCS}>

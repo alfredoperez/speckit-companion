@@ -14,7 +14,10 @@ import { BrokenPipeline } from '../BrokenPipeline';
 import { Canvas } from '../Canvas';
 import { DecisionForm } from '../DecisionForm';
 import { Header } from '../Header';
+import { PresetsPanel } from '../PresetsPanel';
+import { SidePanel } from '../SidePanel';
 import { StockBoard } from '../StockBoard';
+import { SPEC_PRESETS } from './fixtures';
 import type {
     PipelineGraph,
     PipelineHook,
@@ -748,7 +751,6 @@ function stock(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
         steps: STOCK_STEPS,
         templates: STOCK_TEMPLATES,
         constitution: { command: 'speckit-constitution', written: true },
-        presets: [],
         registry: { path: '.specify/extensions.yml' },
         buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
         ...over,
@@ -825,13 +827,8 @@ export const StockWithPreset: Story = {
                     },
                 ],
                 constitution: { command: 'speckit-constitution', written: false },
-                presets: [{
-                    id: 'acme-house-style',
-                    name: 'Acme House Style',
-                    description: 'Stock spec-kit pipeline with the team\'s own spec and plan '
-                        + 'templates.',
-                }],
             })}
+            presets={SPEC_PRESETS}
             status={{
                 tone: 'done',
                 text: 'specify before hook is off',
@@ -839,4 +836,29 @@ export const StockWithPreset: Story = {
             }}
             {...STOCK_ACTIONS} />
     ),
+};
+
+const PRESET_ACTIONS = {
+    onSearch: () => undefined, onAdd: () => undefined,
+    onUpdate: () => undefined, onRemove: () => undefined,
+};
+
+export const SpecPresetsBesideThePipeline: Story = {
+    name: '33 · Spec Kit presets beside the pipeline',
+    render: () => {
+        const g = graph([DECIDING, PLAN], { configured: true, customised: true });
+        return (
+            <div class="builder builder--inspecting">
+                <Header graph={g} buildState="current" busy={false} {...HEADER_ACTIONS} />
+                <div class="builder-body">
+                    <Canvas graph={g} {...CANVAS_ACTIONS} />
+                    <SidePanel label="Spec Kit presets" title="Spec Kit presets"
+                        where="Installed under .specify/presets, and what each one replaces."
+                        onClose={() => undefined}>
+                        <PresetsPanel presets={SPEC_PRESETS} {...PRESET_ACTIONS} />
+                    </SidePanel>
+                </div>
+            </div>
+        );
+    },
 };

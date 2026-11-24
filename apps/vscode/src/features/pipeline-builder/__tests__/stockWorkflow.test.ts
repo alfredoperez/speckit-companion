@@ -135,24 +135,6 @@ describe('the stock workflow read from a project', () => {
         expect(view.steps.map(step => step.id)).toEqual(['specify', 'plan', 'tasks']);
     });
 
-    it('names the presets applied to the project', () => {
-        const root = project();
-        fs.mkdirSync(path.join(root, '.specify'), { recursive: true });
-        write(root, '.specify/presets/companion-standard/preset.yml', [
-            'preset:',
-            '  id: "companion-standard"',
-            '  name: "Companion Standard"',
-            '  description: "Stock spec-kit pipeline, unchanged"',
-            '',
-        ].join('\n'));
-
-        expect(readStockWorkflow(root).presets).toEqual([{
-            id: 'companion-standard',
-            name: 'Companion Standard',
-            description: 'Stock spec-kit pipeline, unchanged',
-        }]);
-    });
-
     it('reports no hooks rather than failing on a registry it cannot read', () => {
         const root = project();
         write(root, '.specify/workflows/speckit/workflow.yml', WORKFLOW);

@@ -16,7 +16,6 @@ import {
 
 const WORKFLOWS_REL = path.join('.specify', 'workflows');
 const EXTENSIONS_REL = path.join('.specify', 'extensions.yml');
-const PRESETS_REL = path.join('.specify', 'presets');
 const TEMPLATES_REL = path.join('.specify', 'templates');
 const CONSTITUTION_REL = path.join('.specify', 'memory', 'constitution.md');
 
@@ -200,24 +199,6 @@ function stepName(command: string, id: string): string {
     return named ? named[1] : id;
 }
 
-function presets(workspaceRoot: string): StockWorkflowView['presets'] {
-    const dir = path.join(workspaceRoot, PRESETS_REL);
-    let ids: string[] = [];
-    try {
-        ids = fs.readdirSync(dir, { withFileTypes: true })
-            .filter(entry => entry.isDirectory()).map(entry => entry.name).sort();
-    } catch { return []; }
-    return ids.map(id => {
-        const meta = (loadYaml(path.join(dir, id, 'preset.yml'))?.preset
-            ?? {}) as Record<string, unknown>;
-        return {
-            id,
-            name: String(meta.name ?? id),
-            description: String(meta.description ?? '').trim(),
-        };
-    });
-}
-
 /**
  * Every command in the view, spelled the way this project registers them.
  *
@@ -344,7 +325,6 @@ export function readStockWorkflow(workspaceRoot: string, drawing?: string): Stoc
             command: 'speckit.constitution',
             written: fs.existsSync(path.join(workspaceRoot, CONSTITUTION_REL)),
         },
-        presets: presets(workspaceRoot),
         registry: registry !== null ? { path: EXTENSIONS_REL } : null,
         buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
     };
