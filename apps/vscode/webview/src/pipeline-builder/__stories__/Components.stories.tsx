@@ -419,6 +419,17 @@ export const LaneSeam: Story = {
     ),
 };
 
+/** Docked narrow, the lanes stack and each join reads "then <step>". */
+export const LanesStacked: Story = {
+    name: 'Step · lanes stacked in a docked panel',
+    parameters: { capture: { width: 380, height: 900 } },
+    render: () => (
+        <div style="width: 380px;">
+            <One><Canvas graph={graph([SPECIFY, PLAN, TASKS, IMPLEMENT])} {...CANVAS} /></One>
+        </div>
+    ),
+};
+
 /** A step declaring no phase at all — the one lane that could not be changed. */
 export const NoPhases: Story = {
     name: 'Step · no phases yet',

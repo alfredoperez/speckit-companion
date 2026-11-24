@@ -1481,6 +1481,28 @@ describe('a seam between two lanes says where a step would go', () => {
         expect(newStepAfter).toEqual(['tasks']);
     });
 
+    // The arrow says which step runs next; stacked, the words say it too.
+    it('joins each pair of lanes with an arrow and the step that runs next', () => {
+        const { host } = canvas(run());
+        const joins = Array.from(host.querySelectorAll('.pb-run > .pb-lane-join'));
+        expect(joins).toHaveLength(3);
+        expect(joins.map(join => join.querySelector('.pb-lane-then')?.textContent))
+            .toEqual(['then plan', 'then tasks', 'then implement']);
+        for (const join of joins) {
+            expect(join.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(2);
+            expect(join.querySelector('button.pb-lane-seam')).not.toBeNull();
+        }
+    });
+
+    // A phase is a quiet label in the lane: the rule across it is gone, its menu stays.
+    it('labels a phase without a rule and keeps its menu', () => {
+        const { host } = canvas(run());
+        const head = host.querySelector('.pb-phase-head') as HTMLElement;
+        expect(head.querySelector('.pb-phase-rule')).toBeNull();
+        expect(head.querySelector('.pb-phase-name')).not.toBeNull();
+        expect(head.querySelector('.pb-phase-add')).not.toBeNull();
+    });
+
     it('draws no seam on a run of one step', () => {
         const { host } = canvas(graph({ steps: [step({ name: 'specify' })] }));
         expect(host.querySelector('.pb-lane-seam')).toBeNull();
@@ -1588,6 +1610,24 @@ describe('a resting control on the board is drawn', () => {
     // took the clicks meant for it.
     it('leaves the pointer nothing to hit on a label it has hidden', () => {
         expect(rule('.pb-lane-seam-label')).toContain('pointer-events: none;');
+    });
+
+    // A lane is a bounded panel in the user's theme, with a band over its body.
+    it('bounds each lane and bands its header in theme tokens', () => {
+        expect(rule('.pb-step')).toContain('border: 1px solid var(--border);');
+        expect(rule('.pb-step')).toContain('background: var(--bg-primary);');
+        expect(css).toMatch(/\.pb-step-head \{[^}]*border-bottom: 1px solid var\(--border\);/);
+        expect(css).toMatch(/\.pb-step-head \{[^}]*background: var\(--pb-band\);/);
+        for (const selector of ['.pb-step', '.pb-lane-join']) {
+            expect(rule(selector)).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+        }
+    });
+
+    it('stacks the lanes and draws the "then" line when the builder is narrow', () => {
+        const narrow = css.slice(css.lastIndexOf('@container builder (max-width: 640px) {\n    .pb-run'));
+        expect(narrow).toContain('grid-template-columns: minmax(0, 1fr);');
+        expect(narrow).toMatch(/\.pb-lane-arrow--down \{ display: block; \}/);
+        expect(narrow).toMatch(/\.pb-lane-then \{[^}]*position: static;/);
     });
 
     // .45 over a token that already carries an alpha put both under the 3:1 a

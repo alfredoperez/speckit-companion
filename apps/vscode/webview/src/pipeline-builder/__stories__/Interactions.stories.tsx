@@ -488,6 +488,10 @@ export const AddAStepBetweenTwoLanes: Story = {
         // BEFORE implement. The seam is the only control that says where.
         const seams = Array.from(canvasElement.querySelectorAll('.pb-lane-seam'));
         assert(seams.length === 3, 'one seam per join, and none at either end');
+        const then = Array.from(canvasElement.querySelectorAll('.pb-lane-then'))
+            .map(line => line.textContent);
+        assert(then.join('|') === 'then plan|then tasks|then implement',
+            'each join names the step that runs next');
 
         (seams[2] as HTMLButtonElement).click();
         const sent = sentFrom(canvasElement);
