@@ -1,0 +1,240 @@
+{
+  "workflow": "companion",
+  "specName": "Workflow Builder on stock Spec Kit",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:22:24.764Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T19:23:16.676Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:23:21.874Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:24:22.936Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:24:33.894Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:24:57.305Z"
+    }
+  ],
+  "request": "Workflow Builder on stock Spec Kit: the same lanes and cards, your own hooks through the add modal, and which template layer is in force.",
+  "unattended": true,
+  "expectations": [
+    "extension lists with priorities and on/off",
+    "preset on/off and priorities, overlays, override creation",
+    "last-run line on stock hooks",
+    "skill search in the stock modal",
+    "changes to the host stock writers"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder/StockBoard.tsx",
+    "area: apps/vscode/src/features/pipeline-builder/stockGuard.ts",
+    "constraint: draw only fields the host sends",
+    "constraint: host theme tokens only"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "One lane per command step with number, name and count line",
+      "tasks": [
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-002": {
+      "title": "One card per lane: label, command, files written",
+      "tasks": [
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-003": {
+      "title": "Review gate as a chip on the join, waits for you",
+      "tasks": [
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-004": {
+      "title": "Dashed With Companion block under each card, no invented numbers",
+      "tasks": [
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-005": {
+      "title": "One quiet banner with an outline Add Companion button running the install command",
+      "tasks": [
+        "T001",
+        "T003",
+        "T004",
+        "T013",
+        "T014"
+      ]
+    },
+    "FR-006": {
+      "title": "Header says changes apply at once, no Build",
+      "tasks": [
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-007": {
+      "title": "Extension hook neutral with source and on/off switch",
+      "tasks": [
+        "T008",
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-008": {
+      "title": "Your own hook in the yours style",
+      "tasks": [
+        "T013"
+      ]
+    },
+    "FR-009": {
+      "title": "+ before / + after on each card open the add modal",
+      "tasks": [
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-010": {
+      "title": "Stock add modal: name, description, required/optional, prompt; sends addStockHook",
+      "tasks": [
+        "T005",
+        "T007",
+        "T014"
+      ]
+    },
+    "FR-011": {
+      "title": "Hook popover with real fields; Edit and Remove for your own",
+      "tasks": [
+        "T006",
+        "T008",
+        "T014"
+      ]
+    },
+    "FR-012": {
+      "title": "Documents modal: layers top first, in force marked, Open; constitution Open and Revise",
+      "tasks": [
+        "T009",
+        "T010"
+      ]
+    },
+    "FR-013": {
+      "title": "Header workflow switcher and an extensions-and-workflows modal with presets",
+      "tasks": [
+        "T011",
+        "T012",
+        "T013"
+      ]
+    },
+    "FR-014": {
+      "title": "Narrow: stacked lanes, sheet popover, modals trap and restore focus",
+      "tasks": [
+        "T002",
+        "T007",
+        "T008",
+        "T010"
+      ]
+    },
+    "FR-015": {
+      "title": "Every prior stock action remains reachable",
+      "tasks": [
+        "T012",
+        "T014"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 16,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Redraw the stock Spec Kit board as the same lanes and cards, with your own hooks through the add modal and the template layer in force",
+  "size": "normal",
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/689-builder-stock-board --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 call paths, 6 lines, 1 screen, 12 parts. Every cited file and line checks out."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "A stock add modal of its own on the pb-modal classes",
+      "why": "HookModal is typed against Companion steps and choices",
+      "rejected": "a stock mode inside HookModal",
+      "by": "agent",
+      "at": "2026-11-24T19:24:22.670Z"
+    },
+    {
+      "decision": "Add Companion sends installCompanion, which runs speckit.companion.installSpecKitExtension",
+      "why": "the one command every install surface reuses",
+      "rejected": "a docs link only",
+      "by": "agent",
+      "at": "2026-11-24T19:24:22.670Z"
+    },
+    {
+      "decision": "Fixed With Companion copy, no counts",
+      "why": "the stock view sends no node counts",
+      "rejected": "reading the shipped graph on stock",
+      "by": "agent",
+      "at": "2026-11-24T19:24:22.670Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Stock board rebuilt on the Companion lane, card, popover and modal styles, with three small new surfaces",
+      "key_finding": "the host already handles add/update/remove stock hooks; only Add Companion needs a new message"
+    },
+    "tasks": {
+      "summary": "16 tasks: foundational protocol and CSS, three standalone surfaces, then the board and polish"
+    }
+  },
+  "approach": "Rewrite StockBoard as lanes of 2B cards reusing the board CSS. Add a stock hook modal, a hook popover and a documents modal; wire installCompanion through the stock guard to the existing install command."
+}
