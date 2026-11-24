@@ -53,6 +53,46 @@
       "kind": "start",
       "by": "extension",
       "at": "2026-11-24T15:40:42.564Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:26:29.895Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:26:29.919Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:26:33.535Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:26:33.541Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T16:26:33.542Z"
     }
   ],
   "request": "Workflow Builder: draw each step as a bounded lane with a header and run-order arrows, side by side when wide and stacked when narrow.",
@@ -100,5 +140,62 @@
   },
   "intent": "Draw each builder step as a bounded lane with run-order arrows, stacked when narrow",
   "size": "simple",
-  "approach": "Restyle the step lanes in CSS and swap the lane seam for an arrow join holding the existing add-step button"
+  "approach": "Restyle the step lanes in CSS and swap the lane seam for an arrow join holding the existing add-step button",
+  "currentTask": "T005",
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "lane join with arrows and then-line, bounded lane CSS, stacked narrow layout",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "lane join with arrows and then-line, bounded lane CSS, stacked narrow layout",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "tests for joins, phase label, lane CSS; stacked lanes story; seam story asserts then-lines",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Interactions.stories.tsx"
+      ],
+      "wave": "T003-T005"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "tests for joins, phase label, lane CSS; stacked lanes story; seam story asserts then-lines",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Interactions.stories.tsx"
+      ],
+      "wave": "T003-T005"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "tests for joins, phase label, lane CSS; stacked lanes story; seam story asserts then-lines",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Interactions.stories.tsx"
+      ],
+      "wave": "T003-T005"
+    }
+  },
+  "concerns": [
+    {
+      "note": "T006 changelog line not committed: the docs-consistency test requires a PR link on every Unreleased entry and this run opens no PR; add the line when the PR exists",
+      "step": "implement"
+    }
+  ]
 }
