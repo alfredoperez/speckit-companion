@@ -1089,7 +1089,7 @@ def _main() -> int:
     # Silently absorbing it is what left a new spec stuck on `specifying` with its
     # close recorded nowhere. Name the flag that fixes it and fail loudly; an
     # explicit --feature-dir keeps every idempotent path exactly as it was.
-    if _unscoped_specify_on_finished_spec(args, feature_dir, capture_mode):
+    if not hook_only and _unscoped_specify_on_finished_spec(args, feature_dir, capture_mode):
         msg = (f"refusing: {feature_dir} already finished specify; this is the previous "
                f"spec. Pass --feature-dir <the new spec folder>.")
         print(f"[companion] {msg}", file=sys.stderr)

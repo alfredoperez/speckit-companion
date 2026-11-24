@@ -85,6 +85,12 @@ class TheWriterKeepsTheRecord(unittest.TestCase):
              "type": "skill", "ref": "house-check", "outcome": "ran", "by": "ai"})
         self.assertTrue(run["at"].endswith("Z"))
 
+    def test_a_record_alone_lands_on_a_spec_past_specify(self):
+        self.write("--step", "specify", "--advance", "--by", "ai")
+        done = self.write("--hook-outcome", "plan/before/plan-doc/0/node:debug-timing=ran")
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertEqual(len(self.ctx()["hookRuns"]), 1)
+
     def test_a_skip_keeps_its_reason_on_one_line(self):
         self.write("--hook-outcome", "specify/before/draft-spec/1/prompt=skipped: not\nneeded here")
         [run] = self.ctx()["hookRuns"]
