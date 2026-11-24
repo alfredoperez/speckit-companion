@@ -1,0 +1,206 @@
+{
+  "workflow": "companion",
+  "specName": "Your own hook on stock Spec Kit, and the template layer in force",
+  "branch": "feat/builder-hook-data",
+  "currentStep": "tasks",
+  "status": "ready-to-implement",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T16:59:43.715Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T17:01:20.757Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:01:26.763Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:01:30.009Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:02:05.622Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:02:28.815Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:02:29.474Z"
+    }
+  ],
+  "request": "Workflow Builder on stock Spec Kit: attach, edit and remove your own hook on a step, and see which template layer is in force. (Work ONLY in the worktree /Users/alfredoperez/dev/GitHub/speckit-companion-wb-data.)",
+  "unattended": true,
+  "expectations": [
+    "No webview changes",
+    "Moving a hook between steps",
+    "Editing condition or priority",
+    "Editing override files",
+    "Companion project hooks"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/pipeline-builder (stockHooks, stockWorkflow, stockGuard, builderPanel)",
+    "area: apps/vscode/src/protocol/pipeline.ts",
+    "constraint: registry edited as text, never round-tripped",
+    "constraint: no webview edits"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Add a hook before or after a stock step",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-002": {
+      "title": "Create the registry or change only the new entry lines",
+      "tasks": [
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-003": {
+      "title": "Edit a user hook in place",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-004": {
+      "title": "Remove a user hook, dropping an empty key",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-005": {
+      "title": "Refuse edit/remove of an extension hook",
+      "tasks": [
+        "T004",
+        "T005"
+      ]
+    },
+    "FR-006": {
+      "title": "Refuse unknown step, malformed YAML, unsafe shape untouched",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ]
+    },
+    "FR-007": {
+      "title": "Mark each stock hook own vs extension, carry prompt",
+      "tasks": [
+        "T007",
+        "T008"
+      ]
+    },
+    "FR-008": {
+      "title": "Allow the three messages on stock only",
+      "tasks": [
+        "T002",
+        "T003"
+      ]
+    },
+    "FR-009": {
+      "title": "Template layer in force and its stack",
+      "tasks": [
+        "T007",
+        "T008"
+      ]
+    },
+    "FR-010": {
+      "title": "Override-only templates appear as rows",
+      "tasks": [
+        "T007",
+        "T008"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Stock board can add, edit and remove the user own hooks and shows the template layer in force",
+  "size": "normal",
+  "planBlocks": [
+    "calls"
+  ],
+  "planBlocksPicked": [
+    "calls"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/683-builder-stock-hooks --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 call paths, 10 lines. Every cited file and line checks out."
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Edit extensions.yml as text, parse only to validate",
+      "why": "keeps comments and untouched entries byte for byte",
+      "rejected": "js-yaml load/dump",
+      "by": "agent",
+      "at": "2026-11-24T17:02:05.384Z"
+    },
+    {
+      "decision": "Own hook = extension not installed",
+      "why": "Spec Kit purges only by extension id, so such entries survive",
+      "rejected": "a marker field Spec Kit drops on save",
+      "by": "agent",
+      "at": "2026-11-24T17:02:05.384Z"
+    },
+    {
+      "decision": "Template layers resolved in TS copying resolve_template_content order",
+      "why": "stock projects have no Companion scripts",
+      "rejected": "shelling out to the CLI",
+      "by": "agent",
+      "at": "2026-11-24T17:02:05.384Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Three stock hook messages, own/prompt on hooks, template layer stack",
+      "key_finding": "Spec Kit purges hooks only by extension id, so a hand-written entry naming no installed extension is safe"
+    },
+    "tasks": {
+      "summary": "10 tasks: foundational protocol+guard, hooks writer story, reader story, polish"
+    }
+  },
+  "approach": "A text writer in stockHooks.ts adds, updates and removes user hooks; the panel allows three new stock messages. stockWorkflow.ts marks hooks own and resolves each template layer stack in Spec Kit order."
+}
