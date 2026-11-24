@@ -50,15 +50,35 @@ export function rectShift(stored, measured) {
     return { edge: worst[0], px: worst[1] };
 }
 
+/** A drawn ring is padded around its element on purpose; past this many pixels it is aiming somewhere else. */
+export const AIM_WARN_PX = 16;
+
 const round = (n) => Math.round(n * 10) / 10;
 const fmt = (r) => `[${r.map(round).join(', ')}]`;
+const nameOf = ({ clip, beat, label, selector }) => `${clip} beat ${beat + 1}${label ? ` "${label}"` : ''} (${selector})`;
+
+/** The composition's drawn rect no longer matches the one the baseline was recorded against. */
+export function describeEdited({ drawn, baseline, ...box }, tolerance = TOLERANCE_PX) {
+    if (!baseline) return null;
+    const { edge, px } = rectShift(baseline, drawn);
+    if (Math.abs(px) <= tolerance) return null;
+    return `${nameOf(box)}: the BEATS rect changed (${edge} edge ${round(px)}px) since its baseline, re-check the ring and run --update`;
+}
+
+/** A warning when the rect a clip draws sits far from the element it is meant to ring, else null. */
+export function describeAim({ drawn, measured, ...box }, limit = AIM_WARN_PX) {
+    if (!measured) return null;
+    const { edge, px } = rectShift(drawn, measured);
+    if (Math.abs(px) <= limit) return null;
+    return `${nameOf(box)}: the drawn ring ${fmt(drawn)} is ${round(Math.abs(px))}px off its element ${fmt(measured)} (${edge} edge)`;
+}
 
 /**
  * Compare one stored rect with a measurement. Returns null when it held, otherwise the
  * sentence the check prints: it names the clip and the box and says which way it moved.
  */
 export function describeDrift({ clip, beat, label, selector, stored, measured }, tolerance = TOLERANCE_PX) {
-    const name = `${clip} beat ${beat + 1}${label ? ` "${label}"` : ''} (${selector})`;
+    const name = nameOf({ clip, beat, label, selector });
     if (!measured) return `${name}: element not found, nothing to measure`;
     const { edge, px } = rectShift(stored, measured);
     if (Math.abs(px) <= tolerance) return null;

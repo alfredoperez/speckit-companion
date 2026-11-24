@@ -8,7 +8,8 @@
  * A clip's BEATS rects are measured once and then drawn onto a still, so a layout change
  * leaves the ring on empty space and nothing says so. `content/media/feature-clips/boxes.json`
  * names, per clip and beat, the element that beat highlights and the rect it measured when
- * the box was last checked by eye. This script opens the story that beat is drawn over,
+ * the box was last checked by eye, plus the BEATS rect it was recorded against (`drawn`), so
+ * editing a ring without re-recording fails too. This script opens the story that beat is drawn over,
  * measures that element again with getBoundingClientRect (the way capture-docs-images.mjs
  * measures its annotation target) and fails when any edge moved more than 4 CSS pixels.
  *
@@ -22,7 +23,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { REPO_ROOT, ensureStorybook, launchChrome, openStory, storyIndex } from './lib/storybook-browser.mjs';
 import { CLIP_CAPTURES } from './capture-docs-images.mjs';
-import { describeDrift, readComposition, shotAtBeat } from './lib/clip-boxes.mjs';
+import { describeAim, describeDrift, describeEdited, readComposition, shotAtBeat } from './lib/clip-boxes.mjs';
 
 const CLIPS_DIR = join(REPO_ROOT, 'content', 'media', 'feature-clips');
 const BOXES_FILE = join(CLIPS_DIR, 'boxes.json');
@@ -39,6 +40,18 @@ async function measure(page, selector, nth) {
     }, { selector, nth });
 }
 
+/** A story that scrolls itself into place can still be moving after settle(), so read until two reads agree. */
+async function measureStable(page, selector, nth) {
+    let last = await measure(page, selector, nth);
+    for (let i = 0; i < 6; i++) {
+        await page.waitForTimeout(250);
+        const next = await measure(page, selector, nth);
+        if (JSON.stringify(next) === JSON.stringify(last)) return next;
+        last = next;
+    }
+    return last;
+}
+
 /** Every registered box with the story it is drawn over, the beat's label and its stored rect. */
 function plan(registry, only) {
     const storyOf = new Map(CLIP_CAPTURES.map((c) => [`${c.clip}/${c.out}`, c.story]));
@@ -46,7 +59,13 @@ function plan(registry, only) {
     const problems = [];
     for (const [clip, boxes] of Object.entries(registry)) {
         if (only && clip !== only) continue;
-        const comp = readComposition(readFileSync(join(CLIPS_DIR, clip, 'index.html'), 'utf8'));
+        let comp;
+        try {
+            comp = readComposition(readFileSync(join(CLIPS_DIR, clip, 'index.html'), 'utf8'));
+        } catch (err) {
+            problems.push(`${clip}: cannot read its BEATS (${err.message.split('\n')[0]})`);
+            continue;
+        }
         if (!comp) {
             problems.push(`${clip}: boxes.json lists it but its index.html has no BEATS array`);
             continue;
@@ -63,7 +82,7 @@ function plan(registry, only) {
                 problems.push(`${clip} beat ${box.beat + 1}: capture ${file} is not in CLIP_CAPTURES`);
                 continue;
             }
-            jobs.push({ clip, box, story, label: beat.label ?? null });
+            jobs.push({ clip, box, story, label: beat.label ?? null, drawn: beat.r });
         }
     }
     return { jobs, problems };
@@ -87,11 +106,13 @@ async function main() {
     }
 
     const spawned = await ensureStorybook();
-    const known = new Set(Object.keys(await storyIndex()));
-    const browser = await launchChrome();
+    let browser = null;
     const drifted = [];
+    const aims = [];
     let checked = 0;
     try {
+        const known = new Set(Object.keys(await storyIndex()));
+        browser = await launchChrome();
         const context = await browser.newContext({
             viewport: { width: 1600, height: 1200 },
             deviceScaleFactor: 2,
@@ -105,11 +126,18 @@ async function main() {
             }
             await openStory(page, story);
             for (const job of list) {
-                const { clip, box, label } = job;
-                const measured = await measure(page, box.selector, box.nth ?? 0);
+                const { clip, box, label, drawn } = job;
+                const named = { clip, beat: box.beat, label, selector: box.selector };
+                const measured = await measureStable(page, box.selector, box.nth ?? 0);
                 if (update) {
-                    if (!measured) problems.push(`${clip} beat ${box.beat + 1} (${box.selector}): element not found`);
-                    else box.rect = measured.map((n) => Math.round(n * 10) / 10);
+                    if (!measured) {
+                        problems.push(`${clip} beat ${box.beat + 1} (${box.selector}): element not found`);
+                        continue;
+                    }
+                    box.rect = measured.map((n) => Math.round(n * 10) / 10);
+                    box.drawn = drawn;
+                    const aim = describeAim({ ...named, drawn, measured });
+                    if (aim) aims.push(aim);
                     continue;
                 }
                 checked++;
@@ -117,14 +145,14 @@ async function main() {
                     problems.push(`${clip} beat ${box.beat + 1} (${box.selector}): no baseline, run --update ${clip}`);
                     continue;
                 }
-                const sentence = describeDrift({
-                    clip, beat: box.beat, label, selector: box.selector, stored: box.rect, measured,
-                });
-                if (sentence) drifted.push(sentence);
+                const moved = describeDrift({ ...named, stored: box.rect, measured });
+                if (moved) drifted.push(moved);
+                const edited = describeEdited({ ...named, drawn, baseline: box.drawn });
+                if (edited) drifted.push(edited);
             }
         }
     } finally {
-        await browser.close();
+        if (browser) await browser.close();
         if (spawned) spawned.kill();
     }
 
@@ -134,8 +162,13 @@ async function main() {
                 .replace(/\[\s+([-\d.,\s]+?)\s+\]/g, (_, nums) => `[${nums.replace(/\s+/g, ' ')}]`);
             writeFileSync(BOXES_FILE, text + '\n');
             console.log(`Recorded ${jobs.length} box baselines in content/media/feature-clips/boxes.json.`);
+            if (aims.length > 0) {
+                console.log(`\n${aims.length} drawn ring${aims.length === 1 ? ' is' : 's are'} far from the element they name; fix the BEATS rect, then --update again:`);
+                for (const line of aims) console.log('  ' + line);
+            }
             return 0;
         }
+        console.error('Nothing was written: fix the problems below and run --update again.');
     } else if (drifted.length === 0 && problems.length === 0) {
         console.log(`clip boxes: all ${checked} highlight boxes are where they were measured.`);
         return 0;

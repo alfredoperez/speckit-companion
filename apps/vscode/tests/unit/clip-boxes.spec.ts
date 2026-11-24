@@ -87,4 +87,35 @@ describe('clip box drift check', () => {
             expect(run<string>(`lib.describeDrift(${box}, measured: null })`)).toContain('element not found');
         });
     });
+
+    describe('when the drawn ring is edited', () => {
+        const box = `{ clip: 'review', beat: 0, label: 'Catch it', selector: '.slot'`;
+
+        it('passes while the BEATS rect still matches the baseline', () => {
+            expect(run(`lib.describeEdited(${box}, baseline: [10, 20, 100, 40], drawn: [12, 20, 100, 40] })`)).toBeNull();
+        });
+
+        it('fails once the BEATS rect moved without a re-record', () => {
+            const sentence = run<string>(`lib.describeEdited(${box}, baseline: [10, 20, 100, 40], drawn: [10, 46, 100, 40] })`);
+            expect(sentence).toContain('review beat 1');
+            expect(sentence).toContain('--update');
+        });
+
+        it('has nothing to compare against before a baseline exists', () => {
+            expect(run(`lib.describeEdited(${box}, drawn: [0, 0, 1, 1] })`)).toBeNull();
+        });
+    });
+
+    describe('when the drawn ring aims somewhere else than its element', () => {
+        const box = `{ clip: 'review', beat: 0, label: 'Catch it', selector: '.slot', drawn: [232, 197, 648, 52]`;
+
+        it('allows the padding a ring is drawn with', () => {
+            expect(run(`lib.describeAim(${box}, measured: [240, 205, 640, 44] })`)).toBeNull();
+        });
+
+        it('warns when the element is 26px below the ring', () => {
+            const sentence = run<string>(`lib.describeAim(${box}, measured: [232, 223, 648, 52] })`);
+            expect(sentence).toContain('26px off');
+        });
+    });
 });
