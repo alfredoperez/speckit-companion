@@ -50,7 +50,7 @@ The mod only reads. It never writes a spec file or the run record, and it never 
 - **Runs:** one program, your editor, and only when you press `o`. When no editor can be started, the file's path goes to your clipboard.
 - **Sends:** nothing. The mod makes no network request and has no telemetry.
 
-Tested on Claude Code 2.1.291. The mods API can change between releases.
+Tested on Claude Code 2.1.331. The mods API can change between releases.
 
 <!-- other-products:start -->
 ## SpecKit Companion runs in four places
