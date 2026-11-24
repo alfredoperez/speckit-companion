@@ -3024,7 +3024,11 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 }
 
 .pb-spec-preset-problem,
-.pb-spec-preset-clash { margin: 0; }
+.pb-spec-preset-clash {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--warning);
+}
 
 .pb-spec-preset-actions {
     display: flex;

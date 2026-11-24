@@ -36,7 +36,7 @@ function PresetRow({ preset, onUpdate, onRemove }: {
                 </ul>
             )}
             {preset.clashes.length > 0 && (
-                <p class="pb-field-problem pb-spec-preset-clash">
+                <p class="pb-spec-preset-clash">
                     {`Overlaps ${preset.clashes.join(', ')}: Companion's hooks or templates may be bypassed.`}
                 </p>
             )}
