@@ -1,0 +1,32 @@
+{
+  "title": "Workflow documents",
+  "shots": [
+    "clip-workflow-documents"
+  ],
+  "beats": [
+    {
+      "shot": "clip-workflow-documents",
+      "part": "plan",
+      "noun": "Plan",
+      "rest": "and the files it wrote"
+    },
+    {
+      "shot": "clip-workflow-documents",
+      "part": "rail",
+      "noun": "Documents",
+      "rest": "switch without opening a file"
+    },
+    {
+      "shot": "clip-workflow-documents",
+      "part": "phases",
+      "noun": "Tasks",
+      "rest": "grouped by phase"
+    },
+    {
+      "shot": "clip-workflow-documents",
+      "part": "toc",
+      "noun": "On this page",
+      "rest": "follows the open document"
+    }
+  ]
+}

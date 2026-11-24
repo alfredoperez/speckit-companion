@@ -1,0 +1,33 @@
+{
+  "title": "Pick a pipeline",
+  "shots": [
+    "clip-own-picker",
+    "clip-own-rail"
+  ],
+  "beats": [
+    {
+      "shot": "clip-own-picker",
+      "part": "picker",
+      "noun": "Your workflow",
+      "rest": "in the same list as the built-ins"
+    },
+    {
+      "shot": "clip-own-picker",
+      "part": "pitch",
+      "noun": "Its description",
+      "rest": "straight from your settings"
+    },
+    {
+      "shot": "clip-own-rail",
+      "part": "rail",
+      "noun": "The rail",
+      "rest": "built from the workflow you picked"
+    },
+    {
+      "shot": "clip-own-rail",
+      "part": "discussion",
+      "noun": "Discussion",
+      "rest": "a step only your workflow has"
+    }
+  ]
+}

@@ -1849,7 +1849,7 @@ try {
         let [x, y] = [Math.min(...boxes.map(b => b.x)), Math.min(...boxes.map(b => b.y))];
         let [r, b] = [Math.max(...boxes.map(o => o.x + o.width)), Math.max(...boxes.map(o => o.y + o.height))];
         if (within) {
-            const area = await page.locator(`.part.${within}`).boundingBox();
+            const area = await page.locator(`.part.${within}`).first().boundingBox();
             x = Math.max(x, area.x); y = Math.max(y, area.y);
             r = Math.min(r, area.x + area.width); b = Math.min(b, area.y + area.height);
         }
@@ -1977,13 +1977,282 @@ try {
                 if (!(await region.isVisible().catch(() => false))) continue;
                 await scrollTo(region, 'start', 24);
                 await page.waitForTimeout(400);
-                saved.push(await clipShot(`clip-overview-${key}`, { region }));
+                // A tall region is pointed at by its heading and first rows, so the zoom stays readable.
+                const firstRows = { decisions: '.dossier-decision', coverage: '.dossier-coverage__row' }[key];
+                const part = firstRows ? [region.locator('.dossier-section__head'), region.locator(firstRows).nth(key === 'coverage' ? 2 : 1)] : region;
+                saved.push(await clipShot(`clip-overview-${key}`, { region: part }));
             }
         } finally {
             await footer.evaluate(element => { element.style.visibility = ''; });
         }
         if (saved.length < 4) throw new Error(`only ${saved.length} regions on the page`);
         return saved.join(', ');
+    }, { needs: 'talk-sandbox', shots: true });
+
+    /** Opens a spec on its Overview by way of Tasks: a finished spec that first opens on its Overview can draw the Specification with no Overview entry in the rail. */
+    const openOverview = async (title) => {
+        await openTalkSpec(title, 'Tasks');
+        await webview().locator('.rail-overview').first().click({ timeout: 15000 });
+        await webview().locator('.dossier-intent').first().waitFor({ timeout: 15000 });
+        await page.waitForTimeout(1000);
+    };
+    /** Runs `body` with the viewer's footer hidden, so it never covers a region of the Overview. */
+    const withoutFooter = async (body) => {
+        const footer = webview().locator('footer.actions').first();
+        await footer.evaluate(element => { element.style.visibility = 'hidden'; }).catch(() => undefined);
+        try { return await body(); } finally { await footer.evaluate(element => { element.style.visibility = ''; }).catch(() => undefined); }
+    };
+    const section = (label) => webview().locator(`.dossier-section[aria-label="${label}"]`).first();
+    const specsRows = () => pane('Specs').locator('.monaco-list-row');
+    /** The rail from its Overview entry (or first step) to its last step, without the empty column under it. */
+    const railSteps = () => [webview().locator('.rail-overview'), webview().locator('.step-tab').first(), webview().locator('.step-tab').last()];
+    /** Opens every closed row of the Specs pane, groups and specs alike. */
+    const openSpecsTree = async () => {
+        await setPanes(['Specs'], true);
+        for (let tries = 0; tries < 8; tries++) {
+            const closed = pane('Specs').locator('.monaco-list-row[aria-expanded="false"]');
+            if (!(await closed.count())) break;
+            // The twistie opens a row in place; a click on a spec's name would open the spec instead.
+            await closed.first().locator('.monaco-tl-twistie').click();
+            await page.waitForTimeout(300);
+        }
+    };
+
+    await step('clip-coverage', 'Clip: the coverage table of the finished autosave run, with its first rows, one row and that row\'s tasks', async () => {
+        await talkWindow();
+        await openOverview(AUTOSAVE);
+        return withoutFooter(async () => {
+            const coverage = section('Coverage');
+            await scrollTo(coverage, 'start', 24);
+            await page.waitForTimeout(400);
+            const row = coverage.locator('.dossier-coverage__row').nth(1);
+            return clipShot('clip-coverage', {
+                table: [coverage.locator('.dossier-section__head'), coverage.locator('.dossier-coverage__row').nth(2)],
+                row,
+                tasks: row.locator('.dossier-coverage__tasks'),
+            });
+        });
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-inline-comments', 'Clip: a pending comment on the autosave plan, collapsed, then open with its Refine, Edit and Delete', async () => {
+        await talkWindow();
+        const comment = () => webview().locator('.line.has-refinement').first();
+        try {
+            await walkAutosave('planned', (folder) => withComments(planComments(folder, 'pending'))(folder));
+            await openTalkSpec(AUTOSAVE, 'Plan');
+            await scrollTo(comment(), 'center', 80);
+            await page.waitForTimeout(500);
+            await clipShot('clip-inline-collapsed', { comment: comment().locator('.comment-disclosure'), line: comment() });
+            await comment().locator('.comment-disclosure').first().click();
+            await comment().locator('.comment-actions').first().waitFor({ timeout: 5000 });
+            // The open card grows downward, so the page is moved until the whole card is in view.
+            await scrollTo(comment(), 'center', -60);
+            await page.mouse.move(2, 2);
+            await page.waitForTimeout(500);
+            return clipShot('clip-inline-open', {
+                card: comment().locator('.line-comment-slot'),
+                actions: comment().locator('.comment-actions'),
+            });
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    // A custom workflow, written into the sandbox's workspace settings for the steps that need one and removed after.
+    const DISCUSS_FIRST = {
+        name: 'discuss-first',
+        displayName: 'Discuss First',
+        description: 'Talk the shape through before any document is written.',
+        steps: [
+            { name: 'discussion', label: 'Discussion', command: 'speckit.discuss' },
+            { name: 'specify', command: 'speckit.specify' },
+            { name: 'plan', command: 'speckit.plan' },
+            { name: 'tasks', command: 'speckit.tasks' },
+            { name: 'implement', command: 'speckit.implement' },
+        ],
+    };
+    const withCustomWorkflow = async (body) => {
+        const file = join(built.project, '.vscode', 'settings.json');
+        const before = existsSync(file) ? readFileSync(file, 'utf8') : undefined;
+        mkdirSync(dirname(file), { recursive: true });
+        writeFileSync(file, JSON.stringify({ ...(before ? JSON.parse(before) : {}), 'speckit.customWorkflows': [DISCUSS_FIRST] }, null, 4) + '\n');
+        await page.waitForTimeout(1500);
+        try { return await body(file); } finally {
+            if (before === undefined) rmSync(file, { force: true }); else writeFileSync(file, before);
+        }
+    };
+
+    await step('clip-make-it-yours', 'Clip: a custom workflow in the workspace settings, and the Workflow Builder board', async () => {
+        await talkWindow();
+        await clear();
+        return withCustomWorkflow(async () => {
+            // Quick Open puts the file in an ordinary tab; the settings command opens a modal editor over the window.
+            await page.locator('.part.titlebar').click({ position: { x: 200, y: 8 } });
+            await page.keyboard.press('Meta+P');
+            await page.locator('.quick-input-widget input').fill('.vscode/settings.json');
+            await page.locator('.quick-input-list .monaco-list-row').first().waitFor({ timeout: 10000 });
+            await page.keyboard.press('Enter');
+            const line = (text) => page.locator('.part.editor .view-line', { hasText: text }).first();
+            await line('speckit.customWorkflows').waitFor({ timeout: 15000 });
+            await page.waitForTimeout(800);
+            await clipShot('clip-make-settings', {
+                workflow: [line('speckit.customWorkflows'), line('"description"')],
+                steps: [line('"steps"'), line('speckit.specify')],
+            });
+            await clear();
+            if (await sidebarShown()) await command('View: Toggle Primary Side Bar Visibility');
+            try {
+                await command('Open Workflow Builder');
+                await webview().locator('.pb-step').first().waitFor({ timeout: 20000 });
+                await page.waitForTimeout(1500);
+                return await clipShot('clip-make-builder', {
+                    board: [webview().locator('.pb-step').first(), webview().locator('.pb-step').last()],
+                    step: webview().locator('.pb-node', { hasText: 'Draft the spec' }),
+                });
+            } finally {
+                await clear();
+                await talkWindow();
+            }
+        });
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-own-workflow', 'Clip: New Spec with the custom workflow picked and its description, then a spec on that workflow and its rail', async () => {
+        await talkWindow();
+        try {
+            return await withCustomWorkflow(async () => {
+                await clear();
+                await pane('Specs').locator('.pane-header').hover();
+                await pane('Specs').locator('.pane-header a.action-label[aria-label^="New Spec"]').click();
+                const picker = webview().locator('#workflowChoices');
+                await picker.waitFor({ timeout: 15000 });
+                await picker.selectOption('discuss-first');
+                await webview().locator('#workflowPitch:not([hidden])').waitFor({ timeout: 5000 });
+                await webview().locator('#specContent').fill('Stop the article editor from losing work when the writer navigates away.');
+                await page.waitForTimeout(800);
+                await clipShot('clip-own-picker', { picker: webview().locator('.workflow-row'), pitch: webview().locator('#workflowPitch') });
+                await clear();
+                await walkAutosave('specified', (folder) => {
+                    const file = join(folder, '.spec-context.json');
+                    writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(file, 'utf8')), workflow: 'discuss-first' }, null, 2));
+                });
+                await openTalkSpec(AUTOSAVE, 'Specification');
+                return await clipShot('clip-own-rail', {
+                    rail: [webview().locator('.step-tab').first(), webview().locator('.step-tab').last()],
+                    discussion: webview().locator('.step-tab', { hasText: 'Discussion' }),
+                });
+            });
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-spec-viewer', 'Clip: the autosave Specification at its requirements, with the page outline and the rail', async () => {
+        await talkWindow();
+        await openTalkSpec(AUTOSAVE, 'Specification');
+        const reqs = webview().locator('.lg-sp-req');
+        await scrollTo(reqs.first(), 'start', 90);
+        await page.waitForTimeout(500);
+        return clipShot('clip-spec-viewer', {
+            requirements: [reqs.nth(0), reqs.nth(3)],
+            toc: webview().locator('#spec-toc'),
+            rail: railSteps(),
+        });
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-specs-sidebar', 'Clip: the Specs pane with every group and spec open, beside the autosave Overview', async () => {
+        await talkWindow();
+        await openOverview(AUTOSAVE);
+        await openSpecsTree();
+        const after = (text) => specsRows().filter({ hasText: text });
+        // Only the autosave spec stays open, so the other specs read as one row each.
+        for (const other of ['Offline Queue', 'Reading Time']) {
+            const row = after(other).first();
+            if ((await row.getAttribute('aria-expanded')) === 'true') await row.locator('.monaco-tl-twistie').click();
+        }
+        await page.locator('.part.titlebar').click({ position: { x: 200, y: 8 } });
+        await page.mouse.move(2, 2);
+        await page.waitForTimeout(400);
+        return clipShot('clip-specs-sidebar', {
+            spec: [after(AUTOSAVE).first(), after('Tasks').first()],
+            others: [after('Offline Queue').first(), after('Reading Time').first()],
+            group: specsRows().first(),
+        }, 'sidebar');
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-step-rail', 'Clip: the rail and the footer on the autosave spec after specify, then mid-implement', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('specified');
+            await openTalkSpec(AUTOSAVE, 'Specification');
+            await clipShot('clip-rail-specified', { rail: railSteps(), footer: webview().locator('footer.actions') });
+            await walkAutosave('implementing');
+            await openTalkSpec(AUTOSAVE, 'Tasks');
+            return await clipShot('clip-rail-implementing', { rail: railSteps(), footer: webview().locator('footer.actions') });
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-workflow-documents', 'Clip: the finished autosave Tasks page, with the Plan step and its documents, the rail, the first phases and the outline', async () => {
+        await talkWindow();
+        await openTalkSpec(AUTOSAVE, 'Tasks');
+        const plan = webview().locator('.step-tab-group', { hasText: 'Plan' }).first();
+        return clipShot('clip-workflow-documents', {
+            plan,
+            rail: railSteps(),
+            phases: [webview().locator('.lg-phase').nth(0), webview().locator('.lg-phase').nth(1)],
+            toc: webview().locator('#spec-toc'),
+        });
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-overview-engine', 'Clip: the top of the finished autosave Overview, its run facts and timing, then its run log open', async () => {
+        await talkWindow();
+        await openOverview(AUTOSAVE);
+        return withoutFooter(async () => {
+            await clipShot('clip-engine-top', {
+                facts: webview().locator('.run-strip'),
+                timing: webview().locator('.dossier-timing'),
+            });
+            const log = webview().locator('.dossier-log').first();
+            await log.locator('summary').first().click();
+            await scrollTo(log, 'start', 24);
+            await page.waitForTimeout(500);
+            return clipShot('clip-engine-log', { log: [log.locator('summary').first(), log.locator('.activity-feed').first()] });
+        });
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-overview-readme', 'Clip: the finished autosave Overview at its approach and working area, its fence, and its first checks', async () => {
+        await talkWindow();
+        await openOverview(AUTOSAVE);
+        return withoutFooter(async () => {
+            const approach = webview().locator('.dossier-intent__approach').first();
+            await scrollTo(approach, 'start', 120);
+            await page.waitForTimeout(400);
+            await clipShot('clip-readme-approach', { approach, context: webview().locator('.dossier-intent__context').first() });
+            const fence = webview().locator('.dossier-fence-grid').first();
+            await scrollTo(fence, 'start', 120);
+            await page.waitForTimeout(400);
+            await clipShot('clip-readme-fence', { scope: webview().locator('.dossier-fence--scope').first(), out: webview().locator('.dossier-fence--out').first() });
+            const verified = section('Verified');
+            await scrollTo(verified, 'start', 24);
+            await page.waitForTimeout(400);
+            return clipShot('clip-readme-verified', { checks: [verified.locator('.dossier-section__head'), verified.locator('.dossier-evidence__row').nth(1)] });
+        });
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('clip-write-only-specs', 'Clip: the finished specs in the Specs pane beside an Overview, its intent, and its first decisions', async () => {
+        await talkWindow();
+        await openOverview(AUTOSAVE);
+        return withoutFooter(async () => {
+            await clipShot('clip-written-top', {
+                completed: Object.assign([specsRows().filter({ hasText: 'Completed' }).first(), specsRows().filter({ hasText: 'Reading Time' }).first()], { within: 'sidebar' }),
+                intent: webview().locator('.dossier-intent__statement').first(),
+            });
+            const decisions = section('Decisions');
+            await scrollTo(decisions, 'start', 24);
+            await page.waitForTimeout(400);
+            return clipShot('clip-written-decisions', { decisions: [decisions.locator('.dossier-section__head'), decisions.locator('.dossier-decision').nth(1)] });
+        });
     }, { needs: 'talk-sandbox', shots: true });
 
     await step('shot-steering-constitution', 'With a written constitution, the Steering view lists it under SpecKit Project Files', async () => {

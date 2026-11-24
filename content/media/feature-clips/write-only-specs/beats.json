@@ -1,0 +1,27 @@
+{
+  "title": "Write-only specs",
+  "shots": [
+    "clip-written-top",
+    "clip-written-decisions"
+  ],
+  "beats": [
+    {
+      "shot": "clip-written-top",
+      "part": "completed",
+      "noun": "Finished specs",
+      "rest": "still one click away"
+    },
+    {
+      "shot": "clip-written-top",
+      "part": "intent",
+      "noun": "What was asked",
+      "rest": "without rereading the spec"
+    },
+    {
+      "shot": "clip-written-decisions",
+      "part": "decisions",
+      "noun": "Decisions",
+      "rest": "the next run won't rediscover"
+    }
+  ]
+}

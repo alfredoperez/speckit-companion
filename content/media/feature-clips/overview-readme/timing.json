@@ -1,0 +1,30 @@
+{
+  "duration": 20.4,
+  "captions": [
+    {
+      "t": 2.4,
+      "noun": "Approach",
+      "rest": "how it set out to do it"
+    },
+    {
+      "t": 5.86,
+      "noun": "Working area",
+      "rest": "where it touched the code"
+    },
+    {
+      "t": 9.32,
+      "noun": "The fence",
+      "rest": "what had to stay true"
+    },
+    {
+      "t": 12.78,
+      "noun": "Out of scope",
+      "rest": "said up front"
+    },
+    {
+      "t": 16.24,
+      "noun": "Checks",
+      "rest": "what ran, and what it said"
+    }
+  ]
+}

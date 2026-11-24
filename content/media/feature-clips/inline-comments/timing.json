@@ -1,0 +1,20 @@
+{
+  "duration": 13.48,
+  "captions": [
+    {
+      "t": 2.4,
+      "noun": "A comment",
+      "rest": "pinned under the line it is about"
+    },
+    {
+      "t": 5.86,
+      "noun": "The full note",
+      "rest": "not sent to your AI yet"
+    },
+    {
+      "t": 9.32,
+      "noun": "Refine",
+      "rest": "one prompt from every note here"
+    }
+  ]
+}

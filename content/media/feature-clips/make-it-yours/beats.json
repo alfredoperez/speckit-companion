@@ -1,0 +1,33 @@
+{
+  "title": "Make it yours",
+  "shots": [
+    "clip-make-settings",
+    "clip-make-builder"
+  ],
+  "beats": [
+    {
+      "shot": "clip-make-settings",
+      "part": "workflow",
+      "noun": "Your workflow",
+      "rest": "a few lines in settings"
+    },
+    {
+      "shot": "clip-make-settings",
+      "part": "steps",
+      "noun": "Steps",
+      "rest": "each one a command you choose"
+    },
+    {
+      "shot": "clip-make-builder",
+      "part": "board",
+      "noun": "Workflow Builder",
+      "rest": "the pipeline as a board"
+    },
+    {
+      "shot": "clip-make-builder",
+      "part": "step",
+      "noun": "A node",
+      "rest": "open it to change what it runs"
+    }
+  ]
+}
