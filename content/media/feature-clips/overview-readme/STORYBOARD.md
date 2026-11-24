@@ -1,5 +1,17 @@
 # overview-readme
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-readme-approach` · approach | **Approach** how it set out to do it |
+| 2 | `clip-readme-approach` · context | **Working area** where it touched the code |
+| 3 | `clip-readme-fence` · scope | **The fence** what had to stay true |
+| 4 | `clip-readme-fence` · out | **Out of scope** said up front |
+| 5 | `clip-readme-verified` · checks | **Checks** what ran, and what it said |
+
 The long-form loop over the whole Overview page of a completed run: established in one view, then walked section by section, closing on an end card. **It no longer publishes.** `docs/screenshots/generated/overview.gif`, the root README's opening image, is now rendered from the sibling `overview` composition, which walks the same page in ten beats at 23.5 s instead of nine at 29.5 s. This one is kept as the slower cut, with the establishing pull-back and the end card that the faster one has no room for.
 
 `STORYBOARD-v2.md` beside this file is the design and build log for the same composition, including the review decisions and the two as-built addenda. This file is the current shape: source captures, the beat table, the cuts, the encode, and the loop check.

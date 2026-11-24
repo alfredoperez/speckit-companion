@@ -1,5 +1,15 @@
 # coverage
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-coverage` · table | **Coverage** every requirement, its tasks, its tests |
+| 2 | `clip-coverage` · row | **One requirement** read across to its evidence |
+| 3 | `clip-coverage` · tasks | **Task chips** where that ask got built |
+
 A 7.9 second pass over the coverage table at the foot of a completed run's Overview: the requirement-to-task-to-test grid as a whole, then one row read down to its task chips and its test count. It renders to this project's own `renders/`; it is not promoted to `docs/screenshots/generated/`, and no README or doc page embeds it. `media/manifest.json` records it as `shipped` with `readmeGif` and `docsStill` both null, and names its web outputs for the site.
 
 ## Why it exists

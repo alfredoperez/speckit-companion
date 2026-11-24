@@ -1,5 +1,17 @@
 # review
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-review-pending` · comment | **Comments** on any line of the plan |
+| 2 | `clip-review-pending` · refine | **Refine** sends every note to your AI |
+| 3 | `clip-review-applied` · comment | **Applied** the note stays with the spec |
+| 4 | `clip-review-applied` · answer | **The answer** written into the plan |
+| 5 | `clip-review-sidebar` · specs | **Specs** find it again by how far it got |
+
 Correcting a spec before it turns into code: you disagree with a line, you say what has to change, that goes to your AI, the note stays behind so later you still know what that bit was about, and the side bar opens on where you will go looking for that spec next time. Built for the review tab on the landing page and the review-and-refine guide.
 
 ## Why it exists

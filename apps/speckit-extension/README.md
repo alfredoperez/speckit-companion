@@ -75,7 +75,7 @@ Full reference: [docs/commands.md](./docs/commands.md). A build check requires e
 
 The record is a file, and the VS Code extension turns it into a page. Install it with `code --install-extension alfredoperez.speckit-companion`.
 
-![The record a run leaves behind: the whole Overview page, per-phase timing, verified checks with their commands, and requirement-to-test coverage](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/overview-engine.gif)
+![The record a run leaves behind: run facts counted from what it wrote, each phase timed as it ran, and the run log's latest activity](https://raw.githubusercontent.com/alfredoperez/speckit-companion/main/docs/screenshots/generated/overview-engine.gif)
 
 <!-- other-products:start -->
 ## SpecKit Companion runs in four places

@@ -1,5 +1,15 @@
 # specs-sidebar
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-specs-sidebar` · spec | **A spec** and every document it wrote |
+| 2 | `clip-specs-sidebar` · others | **Each row** when it last moved |
+| 3 | `clip-specs-sidebar` · group | **Completed** finished runs, kept together |
+
 A short loop over the Specs tree: the features it lists, the documents each one has produced, what hasn't been created yet, and how far the last run got. Promoted to `docs/screenshots/generated/specs-sidebar.gif`, which the root README embeds under "A sidebar that scales".
 
 ## Why it exists

@@ -1,5 +1,16 @@
 # own-workflow
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-own-picker` · picker | **Your workflow** in the same list as the built-ins |
+| 2 | `clip-own-picker` · pitch | **Its description** straight from your settings |
+| 3 | `clip-own-rail` · rail | **The rail** built from the workflow you picked |
+| 4 | `clip-own-rail` · discussion | **Discussion** a step only your workflow has |
+
 The clip for the pick-a-pipeline guide: a workflow you defined in `speckit.customWorkflows` shows up in Create New Spec next to the two built-ins, you pick it, and the spec the run creates builds its step rail from it.
 
 ## Why it exists

@@ -1,5 +1,16 @@
 # step-rail
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-rail-specified` · rail | **Grey steps** not written yet |
+| 2 | `clip-rail-specified` · footer | **The next step** named on the button |
+| 3 | `clip-rail-implementing` · rail | **The rail** moves as the run does |
+| 4 | `clip-rail-implementing` · footer | **While it runs** the footer says so |
+
 The pipeline rail and the next-step button, watched together as one run moves from specified to implementing. It renders to this project's own `renders/`; it isn't promoted to `docs/screenshots/generated/`, and nothing in the README or the docs embeds it.
 
 ## Why it exists

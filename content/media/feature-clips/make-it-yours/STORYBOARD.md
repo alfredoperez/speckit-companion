@@ -1,5 +1,16 @@
 # make-it-yours
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-make-settings` · workflow | **Your workflow** a few lines in settings |
+| 2 | `clip-make-settings` · steps | **Steps** each one a command you choose |
+| 3 | `clip-make-builder` · board | **Workflow Builder** the pipeline as a board |
+| 4 | `clip-make-builder` · step | **A node** open it to change what it runs |
+
 The customization asset, and the landing page's Customize tab. It carries one message: you can define your own pipeline and run it. Promoted to `docs/screenshots/generated/make-it-yours.gif`.
 
 ## Why it exists

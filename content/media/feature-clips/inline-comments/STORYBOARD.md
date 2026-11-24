@@ -1,5 +1,15 @@
 # inline-comments
 
+## Caption style D (current cut)
+
+This clip is now built by `tooling/scripts/build-caption-clip.mjs` from `beats.json` and the captures of the `clip-*` step in `tooling/scripts/desktop-check.mjs` (Bearded Anthracite, DPR 3, Conduit talk sandbox). `index.html` is generated: edit `beats.json`, re-run the capture step and the build. The rest of this file describes the earlier cut and its captures, kept for the reasoning behind it.
+
+| Beat | Picture · part | Pill |
+|---|---|---|
+| 1 | `clip-inline-collapsed` · comment | **A comment** pinned under the line it is about |
+| 2 | `clip-inline-open` · card | **The full note** not sent to your AI yet |
+| 3 | `clip-inline-open` · actions | **Refine** one prompt from every note here |
+
 The 9 second look at reviewing a spec line by line: a comment pinned under the line it annotates, opened to its full card, and the Refine action that sends it back to the AI. Promoted to `docs/screenshots/generated/inline-comments.gif`, which the README embeds under **Inline Review Comments**.
 
 ## Why it exists
