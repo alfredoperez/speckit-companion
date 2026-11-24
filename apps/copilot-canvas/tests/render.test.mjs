@@ -37,6 +37,17 @@ describe('overview dossier', () => {
         assert.deepEqual(order, [...order].sort((a, b) => a - b));
     });
 
+    it('carries no inline style, which the board\'s CSP would block', () => {
+        const html = renderOverview(ctx, TEAMBOARD, { boardTimed: true });
+        assert.ok(html.length > 0);
+        assert.ok(!/style\s*=/i.test(html));
+    });
+
+    it('says how the board timed the run under the timing card', () => {
+        const html = renderOverview(ctx, TEAMBOARD, { boardTimed: true });
+        assert.match(html, /dossier-timing__note/);
+    });
+
     it('escapes record text', () => {
         const html = renderOverview({ intent: '<img src=x onerror=alert(1)>' }, null);
         assert.ok(!html.includes('<img'));

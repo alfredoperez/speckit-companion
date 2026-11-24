@@ -4,6 +4,8 @@ Changes to the **Copilot app canvas** are listed here. It is versioned on its ow
 
 ## [Unreleased]
 
+### Changed
+- **The Overview uses the viewer's own components.** The board renders the dossier sections from the same code as VS Code, so ==the two cannot drift==. <!-- area: copilot-app -->
 ### Added
 
 - **A project health panel on the board.** It checks the CLI, Companion, constitution, agent, dependencies and linked files, and folds when all is ready. <!-- area: copilot-app -->
