@@ -1361,7 +1361,7 @@ try {
             await page.waitForTimeout(1200);
             return await tourFilm('tour-builder', 'The Workflow Builder: the spec-kit pipeline laid out as columns of nodes, specify to implement, with the hooks around them. A phase menu is opened to show what can be added there, then closed, and one node is picked to show its settings.', async (recording, beat) => {
                 await recording.hold(2.5);
-                const menu = webview().locator('button.pb-phase-add[aria-haspopup="menu"]').first();
+                const menu = webview().locator('button.pb-phase-name[aria-haspopup="menu"]').first();
                 await tourClick(recording, beat, menu, 'open a phase menu', 2.5);
                 await page.keyboard.press('Escape');
                 await recording.hold(1);
@@ -2484,7 +2484,7 @@ try {
         await clear();
         await command('Open Workflow Builder');
         await webview().locator('.pb-step').first().waitFor({ timeout: 20000 });
-        await webview().locator('button.pb-phase-add[aria-haspopup="menu"]').first().click();
+        await webview().locator('button.pb-phase-name[aria-haspopup="menu"]').first().click();
         const items = webview().locator('[role="menu"] [role="menuitem"]');
         await items.first().waitFor({ timeout: 5000 });
         const count = await items.count();
@@ -2496,7 +2496,7 @@ try {
     await step('builder-add-step', 'Add step opens the new-step form, and Cancel leaves the board as it was', async () => {
         const before = await webview().locator('.pb-step').count();
         await webview().locator('.builder-action--add').click();
-        const cancel = webview().locator('.pb-side-head ~ * button, .builder--inspecting button', { hasText: /^Cancel$/ }).first();
+        const cancel = webview().locator('.pb-modal .pb-modal-cancel').first();
         await cancel.waitFor({ timeout: 5000 });
         await cancel.click();
         await page.waitForTimeout(400);
