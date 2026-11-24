@@ -229,17 +229,35 @@ describe('the keyboard adds without leaving the field', () => {
 });
 
 describe('keep open adds another', () => {
-    it('writes, stays open, says what it added and empties the field', async () => {
+    const keepOpen = async (answer: { refusal?: string | null; written?: boolean }) => {
         const made: Array<[Attachment, boolean]> = [];
-        const host = modal({ skills: ['create-pr'] }, (a, keep) => made.push([a, keep]));
+        const host = mount(<div />);
+        const { render } = await import('preact');
+        const draw = (a = {}) => render(
+            <HookModal step={step()} anchor="draft-spec" choices={choices({ skills: ['create-pr'] })}
+                onCancel={noop} onAttach={(at, keep) => made.push([at, keep])} answer={a} />, host);
+        draw();
         (host.querySelector('.pb-modal-keep input') as HTMLInputElement).click();
         await flush();
         await type(search(host), 'create');
         key(search(host), 'Enter');
         await flush();
         expect(made).toEqual([[expect.objectContaining({ value: 'create-pr' }), true]]);
-        expect(host.querySelector('.pb-modal-added')?.textContent).toBe('Added create-pr');
         expect(search(host).value).toBe('');
+        expect(host.querySelector('.pb-modal-added')?.textContent).toBe('');
+        draw(answer);
+        await flush();
+        return host.querySelector('.pb-modal-added')!;
+    };
+
+    it('writes, stays open, empties the field and says Added once the write answers', async () => {
+        expect((await keepOpen({ written: true })).textContent).toBe('Added create-pr');
+    });
+
+    it('says the refusal instead when the write is refused', async () => {
+        const line = await keepOpen({ refusal: 'No step called specify', written: false });
+        expect(line.textContent).toBe('No step called specify');
+        expect(line.className).toContain('pb-modal-added--refused');
     });
 });
 

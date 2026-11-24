@@ -161,6 +161,8 @@ function App() {
         { key: string; body: string; parts: string[]; editable: string } | null>(null);
     // A move is announced once its write answers, never when it is only asked for.
     const [announced, setAnnounced] = useState('');
+    // A status answers only a write that went through; a refusal comes as a notice.
+    const [wrote, setWrote] = useState(false);
     // The last run's outcome per hook, asked for with every graph.
     const [runs, setRuns] = useState<HookRunsAnswer | null>(null);
     // The node whose details hang beside its card. Not the side column: the two can both be open.
@@ -206,6 +208,7 @@ function App() {
                 }
             } else if (message.type === 'status') {
                 setStatus(message.status);
+                setWrote(true);
                 if (moving.current && message.status) {
                     moving.current = false;
                     unmoved.current = null;
@@ -265,6 +268,7 @@ function App() {
             <StockBoard
                 view={stock}
                 status={status ?? (notice ? { tone: 'warning', text: notice } : null)}
+                answer={{ refusal: notice, written: wrote }}
                 narrow={narrow}
                 onSetHook={flip => {
                     setNotice(null);
@@ -272,6 +276,7 @@ function App() {
                 }}
                 onAddHook={add => {
                     setNotice(null);
+                    setWrote(false);
                     vscode.postMessage({ type: 'addStockHook', ...add });
                 }}
                 onUpdateHook={update => {
@@ -339,7 +344,7 @@ function App() {
         ? graph.steps.find(s => s.name === attaching.command) ?? null
         : null;
 
-    const send = (message: unknown) => { setNotice(null); vscode.postMessage(message); };
+    const send = (message: unknown) => { setNotice(null); setWrote(false); vscode.postMessage(message); };
     const sendMove = (message: unknown) => {
         moving.current = true;
         setAnnounced('');
@@ -592,6 +597,7 @@ function App() {
                         } : undefined}
                         count={hookCount}
                         announce={announced}
+                        answer={{ refusal: notice, written: wrote }}
                         mode={attaching.mode}
                         modes={attaching.modes}
                         title={attaching.title}

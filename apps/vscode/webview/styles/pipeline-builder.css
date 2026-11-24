@@ -3293,6 +3293,7 @@ button.builder-chip--customised:hover { border-color: var(--review-ink); }
 }
 
 .pb-modal-added:empty { display: none; }
+.pb-modal-added--refused { color: var(--warning); background: var(--warning-subtle); }
 
 .pb-modal-head {
     display: flex;

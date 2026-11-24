@@ -2,6 +2,7 @@
 import { useRef, useState } from 'preact/hooks';
 import { HookWhen, StockHookDraft, StockHookRow } from '../../../src/protocol/pipeline';
 import { useModal } from './useModal';
+import { AddedLine, WriteAnswer } from './AddedLine';
 
 interface Props {
     /** The registry step the hook goes under, such as `plan`. */
@@ -14,6 +15,8 @@ interface Props {
     onCancel: () => void;
     onSave: (hook: StockHookDraft, keepOpen: boolean) => void;
     onRemove?: () => void;
+    /** How the write behind a kept-open addition answered. */
+    answer?: WriteAnswer;
 }
 
 /** The writer's own rule, said before it is asked. */
@@ -25,7 +28,7 @@ export function commandProblem(command: string): string {
     return 'A skill or command name: letters, digits and . _ : / - only.';
 }
 
-export function StockHookModal({ step, label, when, editing, onCancel, onSave, onRemove }: Props) {
+export function StockHookModal({ step, label, when, editing, onCancel, onSave, onRemove, answer }: Props) {
     const box = useRef<HTMLDivElement>(null);
     const [command, setCommand] = useState(editing?.command ?? '');
     const [description, setDescription] = useState(editing?.description ?? '');
@@ -62,9 +65,7 @@ export function StockHookModal({ step, label, when, editing, onCancel, onSave, o
             <div ref={box} class="pb-modal pb-sh" role="dialog" aria-modal="true"
                 aria-labelledby={`${id}-title`}>
                 <span class="pb-sheet-grip pb-modal-grip" aria-hidden="true" />
-                <p class="pb-modal-added" role="status" aria-live="polite">
-                    {added && `Added ${added}`}
-                </p>
+                <AddedLine pending={added} answer={answer} />
                 <header class="pb-modal-head">
                     <div class="pb-modal-heading">
                         <h2 class="pb-modal-title" id={`${id}-title`}>

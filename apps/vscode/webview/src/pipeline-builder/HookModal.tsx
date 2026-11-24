@@ -8,6 +8,7 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { HookIcon } from './HookIcon';
 import { Menu } from './Menu';
+import { AddedLine, WriteAnswer } from './AddedLine';
 import { Attachment, boundaryOf } from './AttachForm';
 import {
     HookType, HookWhen, OfferedEntry, PipelineChoices, PipelineHook, PipelineStep, SkillChoice,
@@ -32,6 +33,8 @@ interface Props {
     count?: number;
     /** What the last move's write said, read once it answers. */
     announce?: string;
+    /** How the write behind a kept-open addition answered. */
+    answer?: WriteAnswer;
     /** Which choice opens. Hook unless said. */
     mode?: AddMode;
     /** The choices offered in the first row; none, or one, draws no row. */
@@ -595,18 +598,7 @@ export function HookModal(props: Props) {
             <div class="pb-modal-scrim" aria-hidden="true" onClick={onCancel} />
             <div ref={box} class="pb-modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
                 <span class="pb-sheet-grip pb-modal-grip" aria-hidden="true" />
-                <p class="pb-modal-added" role="status" aria-live="polite">
-                    {added && (
-                        <>
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"
-                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                <path d="M2 6.5L4.75 9L10 3.5" />
-                            </svg>
-                            {`Added ${added}`}
-                        </>
-                    )}
-                </p>
+                <AddedLine pending={added} answer={props.answer} />
                 <header class="pb-modal-head">
                     <div class="pb-modal-heading">
                         <h2 class="pb-modal-title" id={titleId}>{title}</h2>

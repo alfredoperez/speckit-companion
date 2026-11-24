@@ -16,6 +16,7 @@ import { GateIcon, HookIcon } from './HookIcon';
 import { Menu } from './Menu';
 import { StockDocuments, inForceWord } from './StockDocuments';
 import { StockHookModal } from './StockHookModal';
+import { WriteAnswer } from './AddedLine';
 import { StockHookPopover } from './StockHookPopover';
 import { StockSetup } from './StockSetup';
 import { FileIcon, HookSwitch, PlugIcon, hookKey, hookMeta, hookTitle } from './stockParts';
@@ -34,6 +35,8 @@ export type StockOpen =
 interface Props {
     view: StockWorkflowView;
     status: PipelineStatus | null;
+    /** How the last write answered, for a modal kept open to add another. */
+    answer?: WriteAnswer;
     narrow?: boolean;
     /** Switch one registry hook on or off. */
     onSetHook: (flip: Flip) => void;
@@ -365,6 +368,7 @@ export function StockBoard(props: Props) {
             {open?.kind === 'add' && (
                 <StockHookModal step={open.step} when={open.when}
                     label={adding?.label ?? open.step}
+                    answer={props.answer}
                     onCancel={() => setOpen(null)}
                     onSave={(hook, keep) => {
                         props.onAddHook({ step: open.step, when: open.when, hook });

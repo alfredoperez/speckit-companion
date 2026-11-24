@@ -57,8 +57,12 @@ describe('the stock add modal', () => {
 
     it('asks what an optional hook says only once it is optional, and sends it', async () => {
         const saved: Array<[StockHookDraft, boolean]> = [];
-        const host = mount(<StockHookModal step="plan" label="Plan the work" when="after"
-            onCancel={noop} onSave={(hook, keep) => saved.push([hook, keep])} />);
+        const host = mount(<div />);
+        const { render } = await import('preact');
+        const draw = (written = false) => render(<StockHookModal step="plan" label="Plan the work" when="after"
+            answer={{ written }}
+            onCancel={noop} onSave={(hook, keep) => saved.push([hook, keep])} />, host);
+        draw();
         const [name, description] = Array.from(host.querySelectorAll<HTMLInputElement>('input[type="text"]'));
         type(name, 'house-note');
         type(description, 'Write a house note');
@@ -75,6 +79,9 @@ describe('the stock add modal', () => {
         expect(saved).toEqual([[
             { command: 'house-note', description: 'Write a house note', optional: true, prompt: 'Now?' }, true,
         ]]);
+        expect(host.querySelector('.pb-modal-added')!.textContent).toBe('');
+        draw(true);
+        await flush();
         expect(host.querySelector('.pb-modal-added')!.textContent).toBe('Added house-note');
     });
 
