@@ -401,9 +401,10 @@ function App() {
         }
     };
 
-    // A modal or a bottom sheet covers the foot, so the bar steps aside for it.
+    // A modal, a side pane or a bottom sheet covers the foot, so the bar steps aside for it.
     const modalOpen = side?.kind === 'document' || side?.kind === 'new-workflow';
-    const sheetOpen = Boolean(attachStep && attaching) || modalOpen || (narrow && Boolean(pop || side));
+    const paneOpen = Boolean(side && side.kind !== 'attach');
+    const sheetOpen = Boolean(attachStep && attaching) || paneOpen || (narrow && Boolean(pop));
     // The bar carries the last write while it is up; the foot line otherwise.
     const barUp = !sheetOpen && needsBuild(buildState);
     const undo = (token: string) => {

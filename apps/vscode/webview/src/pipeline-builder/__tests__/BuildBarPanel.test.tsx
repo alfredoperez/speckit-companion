@@ -94,6 +94,16 @@ describe('the panel carries Build in the bar', () => {
         });
     });
 
+    it('steps aside while a side pane is open, at any width', async () => {
+        await deliver({ type: 'graph', graph: CHANGED, buildState: 'stale' });
+        expect(root.querySelector('.builder-bar')).not.toBeNull();
+        root.querySelector<HTMLButtonElement>('.pb-node-main')!.click();
+        await flush();
+        button('Edit node')!.click();
+        await flush();
+        expect(root.querySelector('.builder-bar')).toBeNull();
+    });
+
     it('steps aside while the hook modal is open (FR-011)', async () => {
         await deliver({ type: 'graph', graph: CHANGED, buildState: 'stale' });
         button('Review')!.click();
