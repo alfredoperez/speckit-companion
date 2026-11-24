@@ -1,0 +1,104 @@
+{
+  "workflow": "companion",
+  "specName": "Workflow Builder lanes",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "implement",
+  "status": "implementing",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T15:39:55.368Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T15:40:42.048Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T15:40:42.357Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T15:40:42.358Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T15:40:42.359Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T15:40:42.360Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T15:40:42.564Z"
+    }
+  ],
+  "request": "Workflow Builder: draw each step as a bounded lane with a header and run-order arrows, side by side when wide and stacked when narrow.",
+  "unattended": true,
+  "expectations": [
+    "node card redesign",
+    "node popover",
+    "hook-adding modal",
+    "+ Add to <step> header button",
+    "host or protocol change"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+    "area: apps/vscode/webview/styles/pipeline-builder.css",
+    "constraint: host tokens only, keep existing class names"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Each step renders as a bordered lane with a header band"
+    },
+    "FR-002": {
+      "title": "Wide: lanes side by side with a run-order arrow between headers"
+    },
+    "FR-003": {
+      "title": "Narrow: stacked full-width lanes with then <step> arrows"
+    },
+    "FR-004": {
+      "title": "Phases are quiet labels keeping rename and menu"
+    },
+    "FR-005": {
+      "title": "Join keeps the Add a step after control, accessible"
+    },
+    "FR-006": {
+      "title": "Every existing board action keeps working"
+    },
+    "FR-007": {
+      "title": "Lane colours come from host theme tokens"
+    }
+  },
+  "classification": {
+    "projectedFiles": 5,
+    "projectedTasks": 7,
+    "scopeSignal": "none",
+    "verdict": "simple"
+  },
+  "intent": "Draw each builder step as a bounded lane with run-order arrows, stacked when narrow",
+  "size": "simple",
+  "approach": "Restyle the step lanes in CSS and swap the lane seam for an arrow join holding the existing add-step button"
+}
