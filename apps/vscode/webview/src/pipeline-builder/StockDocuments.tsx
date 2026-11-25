@@ -79,24 +79,32 @@ function Detail({ template, onOpenFile }: { template: StockTemplate; onOpenFile:
                                         {layerName(layer)}
                                         {how && layer.kind !== 'core' && ` · ${how}`}
                                     </span>
-                                    <span class="pb-sd-layer-path">{layer.path}</span>
+                                    <span class="pb-sd-layer-path" title={layer.path}>
+                                        {layer.path.replace(/^\.specify\//, '')}
+                                    </span>
                                 </span>
                                 <span class="pb-sd-layer-state">{STATE_WORDS[state]}</span>
-                                <button type="button" class="pb-pop-button pb-sd-layer-open"
-                                    aria-label={`Open ${layer.path}`}
-                                    onClick={() => onOpenFile(layer.path)}>Open</button>
                             </li>
                         );
                     })}
                 </ol>
             )}
-            {layers.length === 0 && (
-                <div class="pb-sd-actions">
-                    <button type="button" class="pb-pop-button" onClick={() => onOpenFile(template.path)}>
+            <div class="pb-sd-actions">
+                {layers.length > 1 ? layers.map((layer, at) => (
+                    <button key={`${layer.kind}-${layer.path}`} type="button"
+                        class={`pb-pop-button pb-sd-layer-open${at === 0 ? ' pb-sd-layer-open--top' : ''}`}
+                        aria-label={`Open ${layer.path}`}
+                        onClick={() => onOpenFile(layer.path)}>
+                        {at === 0 ? 'Open' : `Open ${layer.kind === 'core' ? 'core' : layer.source || KIND_NAMES[layer.kind]}`}
+                    </button>
+                )) : (
+                    <button type="button" class="pb-pop-button pb-sd-layer-open"
+                        aria-label={`Open ${layers[0]?.path ?? template.path}`}
+                        onClick={() => onOpenFile(layers[0]?.path ?? template.path)}>
                         Open
                     </button>
-                </div>
-            )}
+                )}
+            </div>
         </section>
     );
 }
@@ -164,7 +172,7 @@ export function StockDocuments({ templates, constitution, open, onOpenFile, onRe
                 </div>
                 <footer class="pb-modal-foot">
                     <p class="pb-dm-foot-note">A template opens in an editor. Spec Kit reads it on the next run.</p>
-                    <button type="button" class="pb-action pb-modal-cancel" onClick={onClose}>Done</button>
+                    <button type="button" class="pb-action pb-action--primary" onClick={onClose}>Done</button>
                 </footer>
             </div>
         </div>
