@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **The Workflow Builder is redesigned.** Steps read as ==lanes of cards==, with each node's hooks beside it and your own changes marked in color. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+- **Add to a lane from its header.** **+ Add to** opens one modal for a hook, a node or a step, each with its own form. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+- **Move, replace or remove from a popover.** Places the run would refuse are greyed out with the reason, and a removed node keeps an **Undo**. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+- **Attach a skill, instruction or command.** Pick where it runs, then the kind; hooks at one place show their order and run status. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+- **A build bar replaces the Build button.** It says what is ==not built yet==, opens a review of the changes, and confirms when the build finishes. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+- **Edit a document's sections from its node.** The **Document** row lists each section, lets you pick an alternative, and previews the outline before you save. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+- **Switch and create workflows from the header.** The workflow list shows each saved one, and **New workflow…** starts from Shipped, this project or a preset. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+- **Stock Spec Kit projects get the board.** Lanes, cards and hooks are drawn from its own commands, and you can add Companion from there. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+- **A narrow panel keeps every control.** Lanes stack, popovers open as sheets, and Cancel and Add span the full width. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+
 ## [0.41.0] - 2026-11-24
 
 Project health in the sidebar, Spec Kit presets in the Workflow Builder, and open questions you can clarify from the spec header.

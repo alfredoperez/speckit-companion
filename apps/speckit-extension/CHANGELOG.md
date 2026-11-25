@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/); this ext
 
 ## [Unreleased]
 
+### Added
+- **Hooks record when they run.** The builder shows ==each hook's last run== and flags a skill hook that points at a skill you don't have. ([#9999](https://github.com/alfredoperez/speckit-companion/pull/9999)) <!-- area: pipeline-builder -->
+
 ## [0.29.0] - 2026-11-24
 
 Amend a spec after work starts, settle open questions before plan, and have implement check every requirement.
