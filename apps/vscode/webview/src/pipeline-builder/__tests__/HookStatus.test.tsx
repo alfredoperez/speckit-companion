@@ -17,9 +17,14 @@ const record = (runs: HookRun[]): HookRunsAnswer => ({
 });
 
 describe('what a hook row says about its last run', () => {
-    it('says nothing when the project has no run on record', () => {
+    it('says nothing until the host has answered', () => {
         expect(hookStatus('specify', hook(), null)).toBeNull();
-        expect(hookStatus('specify', hook(), { spec: null, runAt: null, runs: [] })).toBeNull();
+        expect(hookStatus('specify', hook(), undefined)).toBeNull();
+    });
+
+    it('says not seen when the project has no run on record', () => {
+        expect(hookStatus('specify', hook(), { spec: null, runAt: null, runs: [] }))
+            .toEqual(expect.objectContaining({ word: 'not seen', tone: 'unseen' }));
     });
 
     it('puts the problem first, whatever the run says', () => {
@@ -61,8 +66,8 @@ describe('what a hook row says about its last run', () => {
             record([run({ type: 'command', ref: '' })]))?.word).toBe('ran');
     });
 
-    it('says nothing about a hook on a step the run has not reached', () => {
-        expect(hookStatus('plan', hook(), record([run()]))).toBeNull();
+    it('says not seen for a hook on a step the run has not reached', () => {
+        expect(hookStatus('plan', hook(), record([run()]))?.reason).toMatch(/No run on record/);
     });
 });
 

@@ -182,6 +182,17 @@ describe('everything attached to one anchor sits in one block', () => {
         expect(card.className).toContain('pb-card--hooked');
     });
 
+    it('opens a gap for the add pill beside each side that holds hook rows, so it covers none', () => {
+        const { host } = canvas(hooked());
+        const group = host.querySelector('.pb-node-group')!;
+        expect(group.classList.contains('pb-node-group--before')).toBe(true);
+        expect(group.classList.contains('pb-node-group--after')).toBe(true);
+        expect(host.querySelector('.pb-card')!.classList.contains('pb-card--yours')).toBe(true);
+        const css = readFileSync(join(__dirname, '../../../styles/pipeline-builder.css'), 'utf8');
+        expect(css).toMatch(/\.pb-node-group--before \{ margin-top: 12px; \}/);
+        expect(css).toMatch(/\.pb-node-group--before > \.pb-edge-add--before \{ top: -17px; \}/);
+    });
+
     it('names each slot for a screen reader by the node it runs around', () => {
         const { host } = canvas(hooked());
         expect(Array.from(host.querySelectorAll('.pb-card-slot'))

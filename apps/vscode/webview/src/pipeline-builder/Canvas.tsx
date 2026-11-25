@@ -764,10 +764,16 @@ function Node({ node, actions, stock }: {
     const hooked = before.length + after.length + stock.before.length + stock.after.length > 0;
     const decision = actions.routing?.decisions.find(d => d.node === node.id);
 
+    const hasBefore = before.length + stock.before.length > 0;
+    const hasAfter = after.length + stock.after.length > 0;
+    const ownHooks = before.length + after.length > 0;
+
     return (
-        <div class="pb-node-group">
+        <div class={`pb-node-group${hasBefore ? ' pb-node-group--before' : ''}${
+            hasAfter ? ' pb-node-group--after' : ''}`}>
             <EdgeAdd side="before" node={node} onAdd={() => actions.onAdd(node.id, 'before')} />
-            <div class={`pb-card${hooked ? ' pb-card--hooked' : ''}${open ? ' pb-card--open' : ''}`}
+            <div class={`pb-card${hooked ? ' pb-card--hooked' : ''}${
+                ownHooks ? ' pb-card--yours' : ''}${open ? ' pb-card--open' : ''}`}
                 data-node={`${actions.step}/${node.id}`}>
             <Slot side="before" node={node} ours={before} theirs={stock.before} actions={actions} />
             <div

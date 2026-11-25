@@ -5096,6 +5096,7 @@ button.pb-sb-doc:hover .pb-sb-doc-file { text-decoration: underline; }
 }
 
 body {
+    --border-hover: color-mix(in srgb, var(--text-primary) 28%, transparent);
     /* One primary across the panel: a solid fill in the editor's own ink. The
        button tokens are a tint in several themes, and the label sank into it. */
     --pb-primary: var(--text-primary);
@@ -5104,6 +5105,7 @@ body {
 }
 
 body.vscode-high-contrast {
+    --border-hover: var(--vscode-contrastBorder, var(--text-primary));
     --pb-primary: var(--vscode-button-background, var(--text-primary));
     --pb-primary-ink: var(--vscode-button-foreground, var(--bg-primary));
     --pb-primary-hover: var(--vscode-button-hoverBackground, var(--pb-primary));
@@ -5173,13 +5175,16 @@ body.vscode-high-contrast {
 
 /* ---- Lanes: 318px, a 40px join, scrolled sideways rather than squeezed ---- */
 
-.pb-run,
+.pb-run {
+    grid-template-columns: 318px max-content;
+    padding-right: var(--space-5);
+}
+
 .pb-run--seamed {
     grid-template-columns:
         318px
         repeat(var(--pb-seams), 40px 318px)
         max-content;
-    padding-right: var(--space-5);
 }
 
 .pb-step { flex-shrink: 0; overflow: clip; }
@@ -5363,3 +5368,62 @@ body.vscode-high-contrast {
 
     .pb-lane-seam { opacity: 1; }
 }
+
+/* ---- Hooks in the card: one outline, purple only on the project's own rows ---- */
+
+.pb-card,
+.pb-card--hooked { border-color: var(--border); }
+
+.pb-card--yours { border-color: color-mix(in srgb, var(--review) 35%, var(--border)); }
+
+.pb-card--open,
+.pb-card--open.pb-card--yours {
+    border-color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+}
+
+.pb-card-slot { background: transparent; }
+
+.pb-card-slot--before,
+.pb-card-slot--after { border-color: var(--border); }
+
+.pb-card-slot .pb-hook + .pb-hook { border-top: 1px solid var(--border); }
+
+.pb-card .pb-hook,
+.pb-edge-hooks .pb-hook { background: var(--review-subtle); }
+
+.pb-card .pb-hook--stock,
+.pb-edge-hooks .pb-hook--stock {
+    background: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary));
+}
+
+.pb-card .pb-hook--stock .pb-hook-source,
+.pb-edge-hooks .pb-hook--stock .pb-hook-source,
+.pb-hook--stock .pb-hook-icon { color: var(--text-secondary); }
+
+.pb-card .pb-hook-status,
+.pb-edge-hooks .pb-hook-status { margin-left: auto; }
+
+.pb-hook-status--skipped,
+.pb-hook-status--unseen { color: var(--text-secondary); }
+
+.pb-hook-status--problem { color: var(--warning); }
+
+/* ---- + before / + after: on the edge of a bare card, in the gap beside a hooked one ---- */
+
+.pb-edge-add {
+    height: 16px;
+    padding: 0 6px;
+    gap: 3px;
+    font-size: 11px;
+    border-radius: 8px;
+}
+
+.pb-edge-add--before { top: -8px; }
+.pb-edge-add--after { bottom: -8px; }
+
+.pb-node-group--before { margin-top: 12px; }
+.pb-node-group--after { margin-bottom: 12px; }
+
+.pb-node-group--before > .pb-edge-add--before { top: -17px; }
+.pb-node-group--after > .pb-edge-add--after { bottom: -17px; }
