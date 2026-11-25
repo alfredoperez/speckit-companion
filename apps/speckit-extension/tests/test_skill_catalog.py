@@ -66,6 +66,15 @@ class EachSkillSaysWhereItComesFrom(Fixture):
         self.assertEqual(skills["spec-lint"]["where"], ".specify/skills")
         self.assertEqual(skills["spec-lint"]["description"], "")
 
+    def test_a_skill_in_several_agent_folders_is_listed_once(self):
+        write_skill(self.project / ".claude" / "skills" / "speckit-plan", "description: a\n")
+        write_skill(self.project / ".agents" / "skills" / "speckit-plan", "description: b\n")
+        write_skill(self.home / ".claude" / "skills" / "speckit-plan", "description: c\n")
+        skills, _ = build.skill_catalog(str(self.project), str(self.home))
+        copies = [s for s in skills if s["id"] == "speckit-plan"]
+        self.assertEqual(len(copies), 1)
+        self.assertEqual(copies[0]["where"], ".claude/skills")
+
     def test_a_folded_description_reads_as_one_line(self):
         write_skill(self.project / ".agents" / "skills" / "grill",
                     "description: >-\n  Ask hard questions:\n  one at a time.\n")

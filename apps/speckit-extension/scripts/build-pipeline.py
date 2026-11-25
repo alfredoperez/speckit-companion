@@ -388,7 +388,13 @@ def skill_catalog(project_root: str, home: str = None) -> tuple:
         skills.append(dict(_skill_meta(path), id=name, name=name, source="user",
                            where="~/.claude/skills", enabled=True))
     plugins = _plugin_skills(project_root, home)
-    return skills + (plugins or []), plugins is not None
+    # A project set up for several agents carries the same skill in each folder.
+    seen, unique = set(), []
+    for skill in skills + (plugins or []):
+        if skill["id"] not in seen:
+            seen.add(skill["id"])
+            unique.append(skill)
+    return unique, plugins is not None
 
 
 def skill_problem(ref: str, catalog: list, plugins_read: bool = True) -> str:
