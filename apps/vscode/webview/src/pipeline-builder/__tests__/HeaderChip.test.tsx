@@ -21,8 +21,20 @@ async function menu(host: HTMLElement): Promise<string[]> {
 }
 
 describe('the header is the name and the workflow', () => {
-    it('carries no Build: that is the bar at the foot (FR-001)', () => {
-        const host = mount(<Header graph={graph()} buildState="stale" busy={false} {...HEAD} />);
+    it('carries Build while something waits, and sends it', () => {
+        const build = jest.fn();
+        const host = mount(
+            <Header graph={graph()} buildState="stale" busy={false} {...HEAD} onBuild={build} />);
+        const button = Array.from(host.querySelectorAll('button'))
+            .find(el => el.textContent?.trim() === 'Build')!;
+        expect(button.classList.contains('builder-action--primary')).toBe(true);
+        button.click();
+        expect(build).toHaveBeenCalled();
+    });
+
+    it('carries no Build when the build is current', () => {
+        const host = mount(
+            <Header graph={graph()} buildState="current" busy={false} {...HEAD} onBuild={noop} />);
         expect(Array.from(host.querySelectorAll('button'))
             .some(el => el.textContent?.trim() === 'Build')).toBe(false);
     });
@@ -32,9 +44,10 @@ describe('the header is the name and the workflow', () => {
         expect(host.querySelector('.builder-state')?.textContent).toBe('Built, up to date');
     });
 
-    it('says nothing about the build while something waits, since the bar does', () => {
-        const host = mount(<Header graph={graph()} buildState="stale" busy={false} {...HEAD} />);
-        expect(host.querySelector('.builder-state')).toBeNull();
+    it('counts the changes that wait for a build', () => {
+        const g = graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 2 } })] });
+        const host = mount(<Header graph={g} buildState="stale" busy={false} {...HEAD} />);
+        expect(host.querySelector('.builder-state')?.textContent).toBe('2 changes not built yet');
     });
 
     it('says there is nothing to build on a project that has no configuration', () => {

@@ -53,8 +53,8 @@ afterEach(() => {
 describe('the panel carries Build in the bar', () => {
     it('shows the bar when stale and builds from it', async () => {
         await deliver({ type: 'graph', graph: CHANGED, buildState: 'stale' });
-        expect(root.querySelector('.builder-header')?.textContent).not.toContain('Build');
-        button('Build')!.click();
+        expect(root.querySelector('.builder-header .builder-build')).not.toBeNull();
+        root.querySelector<HTMLButtonElement>('.builder-bar .builder-action--primary')!.click();
         expect(posted.at(-1)).toEqual({ type: 'build' });
     });
 

@@ -34,3 +34,18 @@ export function changeSummary(step: PipelineStep): string[] {
     }
     return bits;
 }
+
+/** How many separate changes a step carries, one per thing a person did. */
+export function changeCount(step: PipelineStep): number {
+    const c = step.changes;
+    return c.added.length + c.removed.length + (c.reordered ? 1 : 0) + c.hooks
+        + c.decisions.length + c.replaced.length + c.phases.length
+        + (step.template?.sections.length ?? 0);
+}
+
+/** `2 changes not built yet`, or the plain fact when nothing is counted. */
+export function unbuiltLine(steps: PipelineStep[], neverBuilt = false): string {
+    const n = steps.reduce((sum, step) => sum + changeCount(step), 0);
+    if (n === 0) { return neverBuilt ? 'Never built' : 'Not built yet'; }
+    return `${n} change${n === 1 ? '' : 's'} not built yet`;
+}

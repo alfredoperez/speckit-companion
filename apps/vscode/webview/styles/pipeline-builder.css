@@ -5081,3 +5081,89 @@ button.pb-sb-doc:hover .pb-sb-doc-file { text-decoration: underline; }
     .pb-ss-body { padding: var(--space-3) var(--space-4); }
     .pb-ss-row { flex-wrap: wrap; }
 }
+
+
+/* ============================================
+   The picked design
+   ============================================
+   Last in the file, so it settles the older rules above. Every colour is a host
+   token: the design's ink is the editor foreground, its white the editor ground. */
+
+.builder {
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    /* One primary across the panel: a solid fill in the editor's own ink. The
+       button tokens are a tint in several themes, and the label sank into it. */
+    --pb-primary: var(--text-primary);
+    --pb-primary-ink: var(--bg-primary);
+    --pb-primary-hover: color-mix(in srgb, var(--text-primary) 86%, var(--bg-primary));
+}
+
+body.vscode-high-contrast .builder {
+    --pb-primary: var(--vscode-button-background, var(--text-primary));
+    --pb-primary-ink: var(--vscode-button-foreground, var(--bg-primary));
+    --pb-primary-hover: var(--vscode-button-hoverBackground, var(--pb-primary));
+}
+
+.builder-action--primary,
+.pb-action--primary {
+    min-height: 32px;
+    padding: 0 18px;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--pb-primary-ink);
+    background: var(--pb-primary);
+    border: 1px solid var(--pb-primary);
+    border-radius: var(--radius-md);
+}
+
+.builder-action--primary:hover:not(:disabled),
+.pb-action--primary:hover:not(:disabled) {
+    background: var(--pb-primary-hover);
+    border-color: var(--pb-primary-hover);
+}
+
+.builder-action--primary:disabled,
+.pb-action--primary:disabled { opacity: 0.4; }
+
+.builder-action--primary:focus-visible,
+.pb-action--primary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* ---- Header: 52px, the name, the count, Build ---- */
+
+.builder-header {
+    min-height: 52px;
+    box-sizing: border-box;
+    gap: 0 var(--space-4);
+    padding: 0 var(--space-5);
+    background: var(--bg-primary);
+}
+
+.builder-header > .builder-identity { min-height: 51px; }
+
+.builder-header > .builder-notice { margin-bottom: var(--space-3); }
+
+.builder-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.builder-state {
+    font-size: var(--text-sm);
+    line-height: 18px;
+    color: var(--text-secondary);
+}
+
+.builder-build { margin-left: auto; }
+
+.builder-build + .builder-overflow { margin-left: 0; }
+
+@container builder (max-width: 860px) {
+    .builder-build { order: 2; }
+    .builder-overflow { order: 3; }
+}

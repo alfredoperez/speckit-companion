@@ -1,13 +1,13 @@
 /**
  * The page-chrome band: what this pipeline is called and which workflow runs.
  *
- * Build lives in the bar at the foot, which appears when there is something to
- * build. Everything else the band offered folds into one menu, and one quiet
- * line says the build is current so the state is never invisible.
+ * While something waits it says how many changes are unbuilt and carries Build.
+ * Everything else the band offered folds into one menu, and one quiet line says
+ * the build is current so the state is never invisible.
  */
 
-import { PipelineBuildKind, PipelineGraph } from '../../../src/protocol/pipeline';
-import { changed } from './changes';
+import { PipelineBuildKind, PipelineGraph, needsBuild } from '../../../src/protocol/pipeline';
+import { changed, unbuiltLine } from './changes';
 import { PipelineTotals, totals } from './counts';
 import { Menu, MenuOption } from './Menu';
 import { WorkflowMenu } from './WorkflowMenu';
@@ -143,7 +143,9 @@ export function Header(props: Props) {
     const firstRun = graph.firstRun === true && !graph.configured && changedSteps === 0
         && !onShipped;
     const selected = Boolean(props.selectedNotBuilt) && !busy;
-    const quiet = busy || selected ? '' : quietState(buildState);
+    const waiting = needsBuild(buildState);
+    const quiet = busy || selected ? '' : waiting
+        ? unbuiltLine(graph.steps, buildState === 'never-built') : quietState(buildState);
 
     return (
         <header class="builder-header">
@@ -165,12 +167,19 @@ export function Header(props: Props) {
                     </span>
                 )}
                 {quiet && (
-                    <span class="builder-state">
+                    <span class={`builder-state${waiting ? ' builder-state--waiting' : ''}`}>
                         {buildState === 'current' && <StatusIcon tone="done" />}
                         {quiet}
                     </span>
                 )}
             </div>
+
+            {waiting && props.onBuild && (
+                <button class="builder-action builder-action--primary builder-build"
+                    disabled={busy} onClick={props.onBuild}>
+                    {busy ? 'Building…' : 'Build'}
+                </button>
+            )}
 
             <div class="builder-overflow">
                 <Menu class="builder-action builder-more"
@@ -183,7 +192,7 @@ export function Header(props: Props) {
                         ...(graph.configured || onShipped
                             ? [{ id: 'open', label: 'Open companion.yml' }] : []),
                         { id: 'preview', label: 'Preview build', disabled: busy },
-                        ...(props.onBuild
+                        ...(props.onBuild && !waiting
                             ? [{ id: 'build', label: 'Build again', disabled: busy }] : []),
                         { id: 'presets', label: 'Spec Kit presets' },
                         ...tallyOptions(counts),

@@ -40,7 +40,7 @@ const CANVAS = {
     onOpenFrame: noop, onNewStep: noop,
 };
 const HEAD = {
-    onPreview: noop, onOpenConfig: noop,
+    onPreview: noop, onBuild: noop, onOpenConfig: noop,
     onSelectWorkflow: noop, onNewWorkflow: noop,
 };
 const BAR = {

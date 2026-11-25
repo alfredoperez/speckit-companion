@@ -130,7 +130,7 @@ const CANVAS_ACTIONS = {
     onNewStep: noop, onMoveNode: noop,
 };
 const HEADER_ACTIONS = {
-    onPreview: noop, onOpenConfig: noop,
+    onPreview: noop, onBuild: noop, onOpenConfig: noop,
     onSelectWorkflow: noop, onNewWorkflow: noop,
 };
 const BAR_ACTIONS = {

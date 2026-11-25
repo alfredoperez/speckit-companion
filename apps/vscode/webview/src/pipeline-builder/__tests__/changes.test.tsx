@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import type { PipelineChanges } from '../../../../src/protocol/pipeline';
-import { changed } from '../changes';
+import { changeCount, changed, unbuiltLine } from '../changes';
 import { step } from './support';
 
 /**
@@ -46,5 +46,24 @@ describe('what counts as a step this project changed', () => {
 
     it('does not count a template nobody replaced', () => {
         expect(changed(step({ changes: { ...NOTHING }, template: { ...TEMPLATE } }))).toBe(false);
+    });
+});
+
+describe('how many changes wait for a build', () => {
+    it('counts one per thing a person did, across steps', () => {
+        const a = step({ changes: { ...NOTHING, added: ['x', 'y'], hooks: 1 } });
+        const b = step({ changes: { ...NOTHING, reordered: true } });
+        expect(changeCount(a)).toBe(3);
+        expect(unbuiltLine([a, b])).toBe('4 changes not built yet');
+    });
+
+    it('agrees in number for one change', () => {
+        expect(unbuiltLine([step({ changes: { ...NOTHING, hooks: 1 } })]))
+            .toBe('1 change not built yet');
+    });
+
+    it('says plainly that it is unbuilt when nothing is counted', () => {
+        expect(unbuiltLine([step({ changes: { ...NOTHING } })])).toBe('Not built yet');
+        expect(unbuiltLine([step({ changes: { ...NOTHING } })], true)).toBe('Never built');
     });
 });
