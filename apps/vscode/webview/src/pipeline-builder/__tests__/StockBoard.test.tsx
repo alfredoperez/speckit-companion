@@ -214,7 +214,7 @@ describe('the board on a stock Spec Kit project', () => {
         expect(button(pop, 'Open extensions.yml')).toBeDefined();
     });
 
-    it('switches the drawn workflow from the header (FR-013)', async () => {
+    it('switches the drawn workflow from Workflows and presets (FR-013)', async () => {
         const picked: string[] = [];
         const host = mount(
             <StockBoard
@@ -226,11 +226,13 @@ describe('the board on a stock Spec Kit project', () => {
                 })}
                 status={null} {...ACTIONS} onSelectWorkflow={id => picked.push(id)} />);
 
-        (host.querySelector('.pb-sb-workflow') as HTMLButtonElement).click();
+        expect(host.querySelector('.builder-header')!.textContent).not.toContain('Full SDD Cycle');
+        Array.from(host.querySelectorAll<HTMLButtonElement>('.builder-header button'))
+            .find(el => el.textContent?.trim() === 'Workflows and presets')!.click();
         await flush();
-        const option = Array.from(document.querySelectorAll('[role="menuitemradio"], [role="menuitem"], [role="option"]'))
-            .find(el => el.textContent?.includes('Quick fix')) as HTMLElement;
-        option.click();
+        const draw = Array.from(document.querySelectorAll<HTMLButtonElement>('button'))
+            .find(el => el.textContent === 'Draw' && el.closest('li')?.textContent?.includes('Quick fix'))!;
+        draw.click();
         expect(picked).toEqual(['quick-fix']);
     });
 
@@ -268,7 +270,6 @@ describe('the board on a stock Spec Kit project', () => {
             <StockBoard view={view({ source: 'commands', workflow: null, workflows: [] })}
                 status={null} {...ACTIONS} />);
 
-        expect(host.querySelector('.pb-sb-workflow')!.textContent).toBe('The installed commands');
         expect(host.querySelector('.pb-sb-banner')!.textContent).toContain('no workflow file');
     });
 });

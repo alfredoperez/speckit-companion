@@ -6,17 +6,15 @@ export function hookKey(hook: StockHookRow): string {
     return `${hook.step}/${hook.when}/${hook.index}`;
 }
 
-/** What a hook is called: its description, else its command, else whose it is. */
+/** What a hook is called: the command it runs, else its description, else whose it is. */
 export function hookTitle(hook: StockHookRow): string {
-    return hook.description || hook.command || `A hook from ${hook.extension}`;
+    return hook.command.trim() || hook.description.trim() || `A hook from ${hook.extension}`;
 }
 
-/** The quiet line under a hook's name: whose it is, then what changes how it runs. */
+/** The quiet line under a hook's name: whose it is, and whether it is off. How it asks is the popover's. */
 export function hookMeta(hook: StockHookRow): string {
     return [
         hook.own ? 'yours' : `from ${hook.extension}`,
-        hook.optional && 'asks first',
-        hook.conditional && 'only if',
         !hook.enabled && 'off',
     ].filter(Boolean).join(' · ');
 }

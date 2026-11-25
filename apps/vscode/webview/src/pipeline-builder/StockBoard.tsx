@@ -13,7 +13,6 @@ import {
 } from '../../../src/protocol/pipeline';
 import { StatusIcon } from './Header';
 import { GateIcon, HookIcon } from './HookIcon';
-import { Menu } from './Menu';
 import { StockDocuments, inForceWord } from './StockDocuments';
 import { StockHookModal } from './StockHookModal';
 import { WriteAnswer } from './AddedLine';
@@ -107,14 +106,26 @@ function Arrow() {
     );
 }
 
+/** A review gate by what it reviews: the document the lane before it writes, else that lane. */
+export function gateName(previous: StockStepRow | undefined): string {
+    const file = previous?.writes[0]?.split('/').pop()?.replace(/\.[^.]+$/, '');
+    const what = file || previous?.hookStep || previous?.id;
+    return what ? `Review the ${what}` : 'Review';
+}
+
 /** The join between two lanes: the review gates that wait there, then the arrow. */
-function Join({ gates, arrow, next }: { gates: StockStepRow[]; arrow: boolean; next?: string }) {
+function Join({ gates, arrow, next, previous }: {
+    gates: StockStepRow[];
+    arrow: boolean;
+    next?: string;
+    previous?: StockStepRow;
+}) {
     return (
         <div class="pb-sj" role="group" aria-label={next ? `Then ${next}` : 'At the end'}>
             {gates.map(gate => (
-                <div key={gate.id} class="pb-sj-gate" data-step={gate.id}>
+                <div key={gate.id} class="pb-sj-gate" data-step={gate.id} title={gate.label}>
                     <GateIcon />
-                    <span class="pb-sj-gate-name">{gate.label}</span>
+                    <span class="pb-sj-gate-name">{gateName(previous)}</span>
                     <span class="pb-sj-gate-wait">waits for you</span>
                 </div>
             ))}
@@ -138,7 +149,9 @@ function HookRow({ hook, open, onOpen, onSetHook }: {
                 onClick={onOpen}>
                 <span class="pb-sh-mark">{own ? <HookIcon type="skill" /> : <PlugIcon />}</span>
                 <span class="pb-sh-text">
-                    <span class="pb-sh-name">{hookTitle(hook)}</span>
+                    <span class="pb-sh-name" title={hook.description || undefined}>
+                        {hookTitle(hook)}
+                    </span>
                     <span class="pb-sh-meta">{hookMeta(hook)}</span>
                 </span>
             </button>
@@ -223,17 +236,10 @@ export function StockBoard(props: Props) {
     const stepFor = (name: string) => view.steps.find(step => (step.hookStep ?? step.id) === name);
 
     const drawing = view.workflow?.name ?? 'The installed commands';
-    const workflowMenu = view.workflows.length > 1 ? (
-        <Menu class="builder-workflow-current pb-sb-workflow"
-            trigger={drawing}
-            label={`Drawing: ${drawing}`}
-            title="The installed workflow the board draws"
-            options={view.workflows.map(choice => ({
-                id: choice.id, label: choice.name, note: choice.description, checked: choice.drawn,
-            }))}
-            onPick={onSelectWorkflow} />
-    ) : <span class="pb-sb-workflow">{drawing}</span>;
 
+    // The strip names the templates a command fills; the rest are in the documents modal.
+    const used = view.templates.filter(template => template.command
+        && template.command !== view.constitution?.command);
     const popped = open?.kind === 'hook' ? find(open.key) : undefined;
     const editing = open?.kind === 'edit' ? find(open.key) : undefined;
     const adding = open?.kind === 'add' ? stepFor(open.step) : undefined;
@@ -249,11 +255,7 @@ export function StockBoard(props: Props) {
             <header class="builder-header">
                 <div class="builder-identity">
                     <span class="builder-title">Workflow</span>
-                    <span class="builder-workflow">
-                        <span class="builder-workflow-label">Drawing</span>
-                        {workflowMenu}
-                    </span>
-                    <span class="pb-sb-applies">Changes apply at once</span>
+                    <span class="pb-sb-applies" title={`Drawing ${drawing}`}>Changes apply at once</span>
                 </div>
                 <div class="builder-facts">
                     <button type="button" class="builder-action builder-action--quiet"
@@ -293,7 +295,8 @@ export function StockBoard(props: Props) {
                         {lanes.flatMap((lane, at) => [
                             (at > 0 || lane.gates.length > 0) && (
                                 <Join key={`join-${lane.step.id}`} gates={lane.gates} arrow={at > 0}
-                                    next={lane.step.hookStep ?? lane.step.id} />
+                                    next={lane.step.hookStep ?? lane.step.id}
+                                    previous={lanes[at - 1]?.step} />
                             ),
                             <StockLane key={lane.step.id} lane={lane} openKey={openKey}
                                 onSetHook={onSetHook}
@@ -303,15 +306,18 @@ export function StockBoard(props: Props) {
                                     kind: 'add', step: lane.step.hookStep ?? lane.step.id, when,
                                 })} />,
                         ])}
-                        {tail.length > 0 && <Join key="join-tail" gates={tail} arrow={false} />}
+                        {tail.length > 0 && (
+                            <Join key="join-tail" gates={tail} arrow={false}
+                                previous={lanes[lanes.length - 1]?.step} />
+                        )}
                     </div>
                 )}
 
-                {(view.templates.length > 0 || view.constitution) && (
+                {(used.length > 0 || view.constitution) && (
                     <section class="pb-sb-docs" aria-labelledby="pb-sb-docs-label">
                         <h2 class="pb-sb-docs-label" id="pb-sb-docs-label">Documents</h2>
                         <ul class="pb-sb-docs-list">
-                            {view.templates.map(template => (
+                            {used.map(template => (
                                 <li key={template.path}>
                                     <button type="button" class="pb-sb-doc" aria-haspopup="dialog"
                                         onClick={() => setOpen({ kind: 'documents', file: template.file })}>
@@ -330,13 +336,6 @@ export function StockBoard(props: Props) {
                                 <li class="pb-sb-doc pb-sb-doc--memory">
                                     <FileIcon />
                                     <span class="pb-sb-doc-file">constitution.md</span>
-                                    {view.constitution.path && (
-                                        <button type="button" class="pb-sb-revise"
-                                            aria-label={`Open ${view.constitution.path}`}
-                                            onClick={() => onOpenFile(view.constitution!.path!)}>
-                                            Open
-                                        </button>
-                                    )}
                                     <button type="button" class="pb-sb-revise"
                                         title={`Sends /${view.constitution.command} to your assistant`}
                                         onClick={() => onRunCommand('constitution')}>

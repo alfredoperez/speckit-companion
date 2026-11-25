@@ -32,10 +32,26 @@ function Facts({ hook, command }: { hook: StockHookRow; command: string }) {
                 {hook.when === 'before' ? 'Before ' : 'After '}
                 <span class="pb-pop-mono">{command ? `/${command}` : hook.step}</span>
             </dd>
+            {hook.description.trim() && (
+                <>
+                    <dt>Does</dt>
+                    <dd>{hook.description.trim()}</dd>
+                </>
+            )}
             <dt>Calls</dt>
             <dd class="pb-pop-mono">{hook.command || 'Names no command'}</dd>
             <dt>Asks</dt>
-            <dd>{hook.optional ? 'Optional: the run asks first.' : 'Required: it runs every time.'}</dd>
+            <dd>
+                <span class="pb-segments pb-shp-asks" role="group" aria-label="Asks">
+                    <span class={`pb-segment${hook.optional ? '' : ' pb-segment--on'}`}
+                        aria-current={hook.optional ? undefined : 'true'}>Required</span>
+                    <span class={`pb-segment${hook.optional ? ' pb-segment--on' : ''}`}
+                        aria-current={hook.optional ? 'true' : undefined}>Optional</span>
+                </span>
+                <span class="pb-shp-help">
+                    {hook.optional ? 'The run asks before it runs this.' : 'It runs every time, without asking.'}
+                </span>
+            </dd>
             {hook.optional && hook.prompt && (
                 <>
                     <dt>Its note</dt>
@@ -45,7 +61,12 @@ function Facts({ hook, command }: { hook: StockHookRow; command: string }) {
             {hook.conditional && (
                 <>
                     <dt>Only if</dt>
-                    <dd>A condition the run checks, so it may not run.</dd>
+                    <dd>
+                        A condition the run checks.
+                        <span class="pb-shp-warn" role="note">
+                            The stock commands skip any hook with a condition, so this one has not run here.
+                        </span>
+                    </dd>
                 </>
             )}
         </dl>

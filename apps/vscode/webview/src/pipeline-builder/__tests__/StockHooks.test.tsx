@@ -116,7 +116,7 @@ describe('a stock hook\'s popover', () => {
         expect(facts).toContain('house-note');
         expect(facts).toContain('Optional');
         expect(facts).toContain('"Write it now?"');
-        expect(facts).toContain('may not run');
+        expect(facts).toContain('skip any hook with a condition');
     });
 
     it('is a modal sheet when narrow, and switches the hook', () => {
