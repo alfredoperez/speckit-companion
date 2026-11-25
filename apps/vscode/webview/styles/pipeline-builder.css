@@ -5586,3 +5586,11 @@ body.vscode-high-contrast {
 .pb-nw-radio { accent-color: var(--pb-primary); }
 
 .pb-nw-input { font-family: var(--font-mono); }
+
+/* ---- The document modal: a white page on the pane, a neutral open row ---- */
+
+.pb-dm-page { background: var(--bg-primary); }
+
+.pb-dm-row--open { background: var(--bg-primary); border-color: var(--border); }
+
+.pb-dm-option-name { font-family: inherit; font-size: var(--text-sm); }

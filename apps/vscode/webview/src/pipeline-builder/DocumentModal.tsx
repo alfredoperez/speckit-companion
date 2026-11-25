@@ -203,12 +203,10 @@ export function DocumentModal(props: Props) {
                     return (
                         <div key={heading} class={`pb-dm-block${value ? ' pb-dm-block--yours' : ''}`}>
                             <div class="pb-dm-block-head">
-                                <span class="pb-dm-block-title">{heading}</span>
-                                {value && (
-                                    <span class="pb-dm-block-tag">
-                                        {value === OWN ? 'your text' : value}
-                                    </span>
-                                )}
+                                <span class="pb-dm-block-title">
+                                    {!value ? heading : value === OWN ? 'Your text' : fragment?.name || value}
+                                </span>
+                                {value && <span class="pb-dm-block-tag">{`replaces ${heading}`}</span>}
                             </div>
                             <p class="pb-dm-block-body">
                                 {!value ? 'As shipped'
@@ -265,7 +263,7 @@ export function DocumentModal(props: Props) {
                     {preview}
                 </div>
                 <footer class="pb-modal-foot">
-                    <p class="pb-dm-foot-note">{`Done saves to ${props.savesTo}. Build to use it.`}</p>
+                    <p class="pb-dm-foot-note">{`Saved to ${props.savesTo}. Build to use it.`}</p>
                     <button type="button" class="pb-action pb-modal-cancel"
                         onClick={props.onCancel}>Cancel</button>
                     <button type="button" class="pb-action pb-action--primary"

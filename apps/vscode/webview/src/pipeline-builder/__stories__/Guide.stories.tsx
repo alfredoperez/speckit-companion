@@ -432,7 +432,7 @@ export const ChangingTheDocument: Story = {
                         chosenBy: { 'User Scenarios & Testing': 'ears-requirements' },
                     },
                 })}
-                nodeName="Draft the spec" fragments={CHOICES.fragments} savesTo="companion.yml"
+                nodeName="Draft the spec" fragments={CHOICES.fragments} savesTo="This project"
                 openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
         </div>
     ),

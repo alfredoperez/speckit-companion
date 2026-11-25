@@ -1305,7 +1305,7 @@ export const DocumentSections: Story = {
     render: () => (
         <div class="builder" style="width: 1100px; height: 720px">
             <DocumentModal step={SPEC_DOCUMENT} nodeName="Draft the spec"
-                fragments={CHOICES.fragments} savesTo="companion.yml"
+                fragments={CHOICES.fragments} savesTo="This project"
                 openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
         </div>
     ),
@@ -1322,7 +1322,7 @@ export const DocumentNoAlternatives: Story = {
                         sectionsAvailable: ['Technical Context', 'Constitution Check', 'Project Structure'],
                     },
                 })}
-                nodeName="Write the plan" fragments={CHOICES.fragments} savesTo="companion.yml"
+                nodeName="Write the plan" fragments={CHOICES.fragments} savesTo="This project"
                 onCancel={noop} onSave={noop} />
         </div>
     ),
@@ -1333,7 +1333,7 @@ export const DocumentNarrow: Story = {
     render: () => (
         <div class="builder" style="width: 380px; height: 760px">
             <DocumentModal step={SPEC_DOCUMENT} nodeName="Draft the spec" narrow
-                fragments={CHOICES.fragments} savesTo="companion.yml"
+                fragments={CHOICES.fragments} savesTo="This project"
                 openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
         </div>
     ),

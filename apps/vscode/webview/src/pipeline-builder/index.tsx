@@ -45,6 +45,7 @@ import { DocumentModal } from './DocumentModal';
 import { NewWorkflowModal } from './NewWorkflowModal';
 import { documentFile, documentNodeId, sectionsOf } from './documentNode';
 import { DecisionForm } from './DecisionForm';
+import { workflowLabel } from './WorkflowMenu';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
 const vscode = acquireVsCodeApi();
@@ -686,7 +687,7 @@ function App() {
                             step={step}
                             nodeName={side.nodeName}
                             fragments={graph.choices.fragments}
-                            savesTo={hookHome(graph.workflows.active).name}
+                            savesTo={workflowLabel(graph.workflows.active)}
                             narrow={narrow}
                             onCancel={() => setSide(null)}
                             onSave={picks => {
