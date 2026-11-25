@@ -29,7 +29,7 @@ const noop = () => undefined;
 const CANVAS = {
     onOpenNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
-    onOpenFrame: noop, onNewStep: noop,
+    onOpenFrame: noop, onNewStep: noop, onAddTo: noop,
 };
 
 const POPOVER = {

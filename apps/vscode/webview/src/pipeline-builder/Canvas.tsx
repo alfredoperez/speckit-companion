@@ -284,6 +284,12 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
     yours: HookHome;
     /** Present when hooks can be dragged here. */
     drop?: HookDrop;
+    /** Where a deciding node's verdicts send the run, drawn under that node. */
+    routing?: {
+        decisions: PipelineDecision[];
+        changed: string[];
+        onOpen?: Props['onOpenDecision'];
+    };
 };
 
 /**
@@ -721,7 +727,7 @@ function NodeMarks({ node }: { node: PipelineNode }) {
                 title={sometimes
                     ? 'this node produces it at some sizes, and folds it away at others'
                     : `this node produces ${[...node.writes, ...node.mayWrite].join(', ')}`}>
-                {file}
+                {file.split('/').pop()}
             </span>
         ),
         node.kind === 'gate' && (
@@ -756,6 +762,7 @@ function Node({ node, actions, stock }: {
         return { upper, target: { when: upper ? 'before' : 'after', anchor: node.id, boundary: 'node' } };
     });
     const hooked = before.length + after.length + stock.before.length + stock.after.length > 0;
+    const decision = actions.routing?.decisions.find(d => d.node === node.id);
 
     return (
         <div class="pb-node-group">
@@ -818,6 +825,36 @@ function Node({ node, actions, stock }: {
             <Slot side="after" node={node} ours={after} theirs={stock.after} actions={actions} />
             </div>
             <EdgeAdd side="after" node={node} onAdd={() => actions.onAdd(node.id, 'after')} />
+            {decision && actions.routing && (
+                <Routing step={actions.step} decision={decision}
+                    changed={actions.routing.changed} onOpen={actions.routing.onOpen} />
+            )}
+        </div>
+    );
+}
+
+/** A deciding node's routing: one quiet line under its card that opens to the verdicts. */
+function Routing({ step, decision, changed, onOpen }: {
+    step: string;
+    decision: PipelineDecision;
+    changed: string[];
+    onOpen?: Props['onOpenDecision'];
+}) {
+    const [open, setOpen] = useState(false);
+    const id = `pb-routing-${step}-${decision.node}`;
+    return (
+        <div class="pb-routing">
+            <button type="button" class="pb-routing-toggle" aria-expanded={open}
+                aria-controls={id} onClick={() => setOpen(!open)}>
+                Routing
+                <span class="pb-routing-caret" aria-hidden="true">{open ? '▴' : '▾'}</span>
+            </button>
+            {open && (
+                <div id={id}>
+                    <Decisions step={step} decisions={[decision]} changed={changed}
+                        onOpen={onOpen} />
+                </div>
+            )}
         </div>
     );
 }
@@ -1134,6 +1171,9 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         },
         onAdd: (anchor, when) => onAddHook(step.name, anchor, when),
         onEditHook: hook => onEditHook(step.name, hook),
+        routing: {
+            decisions: step.decisions, changed: step.changes.decisions, onOpen: onOpenDecision,
+        },
         drop: onMoveHook && onRefuse && {
             step: step.name,
             onRefuse,
@@ -1151,6 +1191,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         },
     };
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
+    const nodeIds = new Set(step.phases.flatMap(phase => phase.nodes.map(n => n.id)));
 
     return (
         <section class={`pb-step ${changed(step) ? 'pb-step--changed' : ''}`}
@@ -1186,27 +1227,29 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                             </span>
                         </>
                     )}
+                    {/* What changed, on the step it changed, opened in place. */}
+                    {changed(step) && (
+                        <>
+                            <span class="pb-fact-dot" aria-hidden="true">·</span>
+                            <button class="pb-changed" aria-expanded={showChanges}
+                                aria-controls={`pb-changed-${step.name}`}
+                                onClick={() => setShowChanges(!showChanges)}>
+                                changed
+                                <span class="pb-changed-caret" aria-hidden="true">
+                                    {showChanges ? '▴' : '▾'}
+                                </span>
+                            </button>
+                        </>
+                    )}
                 </div>
-                {/* What changed, on the step it changed. It was a word with the
-                    facts in a `title`, which is a fact nobody reads and nothing
-                    a touch screen can reach. */}
-                {changed(step) && (
-                    <button class="pb-changed" aria-expanded={showChanges}
-                        aria-controls={`pb-changed-${step.name}`}
-                        onClick={() => setShowChanges(!showChanges)}>
-                        changed
-                        <span class="pb-changed-caret" aria-hidden="true">
-                            {showChanges ? '▴' : '▾'}
-                        </span>
-                    </button>
-                )}
                 {showChanges && (
                     <p class="pb-changed-line" id={`pb-changed-${step.name}`}>
                         {changeSummary(step).join(' · ')}
                     </p>
                 )}
                 {onAddTo && (
-                    <button type="button" class={`pb-lane-add${adding ? ' pb-lane-add--on' : ''}`}
+                    <button type="button"
+                        class={`pb-lane-add pb-lane-add--head${adding ? ' pb-lane-add--on' : ''}`}
                         aria-haspopup="dialog" aria-expanded={Boolean(adding)}
                         onClick={() => onAddTo(step.name)}>
                         <PlusIcon />
@@ -1273,8 +1316,19 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                 {step.phases.length === 0 && (
                     <FirstPhase step={step} onAddNode={onAddNode} />
                 )}
-                <Decisions step={step.name} decisions={step.decisions}
+                {/* A decision no node on the board makes still says where it routes. */}
+                <Decisions step={step.name}
+                    decisions={step.decisions.filter(d => !nodeIds.has(d.node))}
                     changed={step.changes.decisions} onOpen={onOpenDecision} />
+                {onAddTo && (
+                    <button type="button"
+                        class={`pb-lane-add pb-lane-add--foot${adding ? ' pb-lane-add--on' : ''}`}
+                        aria-haspopup="dialog" aria-expanded={Boolean(adding)}
+                        onClick={() => onAddTo(step.name)}>
+                        <PlusIcon />
+                        <span>Add to {step.name}</span>
+                    </button>
+                )}
             </div>
         </section>
     );

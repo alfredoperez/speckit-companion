@@ -127,7 +127,7 @@ const CANVAS_ACTIONS = {
     onOpenNode: noop, onRestoreNode: noop,
     onReorder: noop, onAddHook: noop, onEditHook: noop,
     onAddNode: noop, onOpenFrame: noop, onReplaceStep: noop, onSetPhases: noop,
-    onNewStep: noop, onMoveNode: noop,
+    onNewStep: noop, onMoveNode: noop, onAddTo: noop,
 };
 const HEADER_ACTIONS = {
     onPreview: noop, onBuild: noop, onOpenConfig: noop,
@@ -406,6 +406,19 @@ export const WithWarnings: Story = {
 
 // ── 7. Scale and edges ──────────────────────────────────
 
+const TASKS = step('tasks', [
+    phase('author', [node('tasks-doc', 'Write the task list', { kind: 'author', writes: ['tasks.md'] })]),
+    phase('check', [node('review-gaps', 'Review for gaps', { kind: 'gate' })]),
+], { artifacts: ['tasks.md'] });
+
+const IMPLEMENT = step('implement', [
+    phase('execute', [node('implement-exec', 'Execute the tasks', { kind: 'author', writes: ['tasks.md'] })]),
+    phase('wrap-up', [
+        node('complete', 'Mark the spec complete'),
+        node('handoff', 'Hand off at the end'),
+    ]),
+]);
+
 export const TheWholePipeline: Story = {
     name: '16 · All five steps',
     render: () => {
@@ -414,19 +427,7 @@ export const TheWholePipeline: Story = {
                 phase('orchestrate', [node('orchestrate', 'Run every step in order')]),
                 phase('wrap-up', [node('handoff', 'Hand off at the end')]),
             ]),
-            SPECIFY,
-            PLAN,
-            step('tasks', [
-                phase('author', [node('tasks-doc', 'Write the task list', { kind: 'author', writes: ['tasks.md'] })]),
-                phase('check', [node('review-gaps', 'Review for gaps', { kind: 'gate' })]),
-            ], { artifacts: ['tasks.md'] }),
-            step('implement', [
-                phase('execute', [node('implement-exec', 'Execute the tasks', { kind: 'author', writes: ['tasks.md'] })]),
-                phase('wrap-up', [
-                    node('complete', 'Mark the spec complete'),
-                    node('handoff', 'Hand off at the end'),
-                ]),
-            ]),
+            SPECIFY, PLAN, TASKS, IMPLEMENT,
         ], { configured: true, customised: true });
         return (
             <div class="builder">
@@ -488,13 +489,15 @@ export const APinnedNode: Story = {
 
 export const NarrowPanel: Story = {
     name: '19 · A narrow panel',
-    render: () => (
-        <div style={{ width: '380px', border: '1px dashed var(--border)' }}>
-            <Header graph={graph([SPECIFY], { configured: true, customised: true })}
-                buildState="stale" busy={false} {...HEADER_ACTIONS} />
-            <Canvas graph={graph([SPECIFY])} {...CANVAS_ACTIONS} />
-        </div>
-    ),
+    render: () => {
+        const g = graph([SPECIFY, PLAN, TASKS, IMPLEMENT], { configured: true, customised: true });
+        return (
+            <div class="builder" style={{ width: '380px', height: 'auto' }}>
+                <Header graph={g} buildState="stale" busy={false} {...HEADER_ACTIONS} />
+                <Canvas graph={g} {...CANVAS_ACTIONS} />
+            </div>
+        );
+    },
 };
 
 // ── Every anchor, filled and empty ──────────────────────

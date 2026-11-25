@@ -126,18 +126,28 @@ describe('where work can be attached', () => {
         const { host, addTo } = canvas(graph({
             steps: [step({ name: 'specify' }), step({ name: 'plan' })],
         }));
-        const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-lane-add'));
+        const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-lane-add--head'));
         expect(buttons.map(b => b.textContent)).toEqual(['Add to specify', 'Add to plan']);
         expect(buttons[0].getAttribute('aria-haspopup')).toBe('dialog');
         buttons[1].click();
         expect(addTo).toEqual(['plan']);
     });
 
+    it('offers the same Add at the foot of each lane, for the stacked board', () => {
+        const { host, addTo } = canvas(graph({
+            steps: [step({ name: 'specify' }), step({ name: 'plan' })],
+        }));
+        const feet = Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-lane-add--foot'));
+        expect(feet.map(b => b.closest('.pb-step-body') !== null)).toEqual([true, true]);
+        feet[0].click();
+        expect(addTo).toEqual(['specify']);
+    });
+
     it('marks the lane whose add modal is open', () => {
         const { host } = canvas(graph({
             steps: [step({ name: 'specify' }), step({ name: 'plan' })],
         }), undefined, undefined, { adding: 'plan' });
-        const buttons = host.querySelectorAll('.pb-lane-add');
+        const buttons = host.querySelectorAll('.pb-lane-add--head');
         expect(buttons[0].getAttribute('aria-expanded')).toBe('false');
         expect(buttons[1].getAttribute('aria-expanded')).toBe('true');
         expect(buttons[1].classList.contains('pb-lane-add--on')).toBe(true);
@@ -748,6 +758,18 @@ describe('a node says whether it can move, and why not', () => {
 describe('what a step produces sits with its name', () => {
     // A green pill holding a bare `1` said neither what it counted nor why it
     // was green. The facts line speaks in one voice now: `2 nodes · 1 file`.
+    it('names a node\'s file by its own name, not its folder', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'author', hooks: [],
+                    nodes: [node({ writes: ['checklists/requirements.md'] })],
+                }],
+            })],
+        }));
+        expect(host.querySelector('.pb-writes')?.textContent).toBe('requirements.md');
+    });
+
     it('counts the artifacts in words, and names them on hover', () => {
         const { host } = canvas();
         const chip = host.querySelector('.pb-step-facts .pb-produces');
@@ -1048,7 +1070,7 @@ describe("a step has instructions of its own", () => {
 describe('attaching work', () => {
     it('offers one Add to per lane, not a control on every phase', () => {
         const { host } = canvas();   // two phases, one node each
-        expect(host.querySelectorAll('.pb-lane-add')).toHaveLength(1);
+        expect(host.querySelectorAll('.pb-lane-add--head')).toHaveLength(1);
         expect(host.querySelectorAll('.pb-phase-head button:not(.pb-phase-name)')).toHaveLength(0);
     });
 

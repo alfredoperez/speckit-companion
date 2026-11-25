@@ -5093,6 +5093,9 @@ button.pb-sb-doc:hover .pb-sb-doc-file { text-decoration: underline; }
     --radius-sm: 4px;
     --radius-md: 6px;
     --radius-lg: 10px;
+}
+
+body {
     /* One primary across the panel: a solid fill in the editor's own ink. The
        button tokens are a tint in several themes, and the label sank into it. */
     --pb-primary: var(--text-primary);
@@ -5100,7 +5103,7 @@ button.pb-sb-doc:hover .pb-sb-doc-file { text-decoration: underline; }
     --pb-primary-hover: color-mix(in srgb, var(--text-primary) 86%, var(--bg-primary));
 }
 
-body.vscode-high-contrast .builder {
+body.vscode-high-contrast {
     --pb-primary: var(--vscode-button-background, var(--text-primary));
     --pb-primary-ink: var(--vscode-button-foreground, var(--bg-primary));
     --pb-primary-hover: var(--vscode-button-hoverBackground, var(--pb-primary));
@@ -5163,7 +5166,200 @@ body.vscode-high-contrast .builder {
 
 .builder-build + .builder-overflow { margin-left: 0; }
 
-@container builder (max-width: 860px) {
+@container builder (width <= 860px) {
     .builder-build { order: 2; }
     .builder-overflow { order: 3; }
+}
+
+/* ---- Lanes: 318px, a 40px join, scrolled sideways rather than squeezed ---- */
+
+.pb-run,
+.pb-run--seamed {
+    grid-template-columns:
+        318px
+        repeat(var(--pb-seams), 40px 318px)
+        max-content;
+    padding-right: var(--space-5);
+}
+
+.pb-step { flex-shrink: 0; overflow: clip; }
+
+.pb-step-head {
+    gap: 10px;
+    padding: var(--space-4);
+    border-radius: 0;
+}
+
+.pb-step-index {
+    font-size: var(--text-sm);
+    font-weight: 600;
+    line-height: 20px;
+    color: var(--text-secondary);
+}
+
+.pb-step-name {
+    font-size: 18px;
+    line-height: 24px;
+}
+
+.pb-step-facts {
+    gap: 6px;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.pb-step-counts,
+.pb-produces,
+.pb-fact-dot,
+.pb-changed {
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-secondary);
+}
+
+.pb-changed {
+    height: auto;
+    margin-left: 0;
+    padding: 0;
+    color: var(--review-ink);
+}
+
+.pb-changed-line { margin: 0; font-family: inherit; font-size: 12px; }
+
+.pb-lane-add {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    background: var(--bg-primary);
+}
+
+.pb-lane-add--foot { display: none; }
+
+.pb-step-body {
+    gap: 18px;
+    padding: var(--space-4) var(--space-4) 20px;
+}
+
+/* The join is an arrow; the way to put a step between two lanes waits for a pointer or the keyboard. */
+.pb-lane-seam { opacity: 0; }
+
+.pb-lane-join:hover .pb-lane-seam,
+.pb-lane-seam:focus-visible { opacity: 1; }
+
+@media (hover: none) {
+    .pb-lane-seam { opacity: 1; }
+}
+
+/* ---- Phases: a 12px label, 6px to its first card, cards 6px apart ---- */
+
+.pb-phase-head { padding: 0 0 6px; }
+
+.pb-menu-trigger.pb-phase-name {
+    margin-left: 0;
+    padding: 0;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+}
+
+.pb-phase-name .pb-menu-caret { opacity: 0; }
+
+.pb-phase-name:hover .pb-menu-caret,
+.pb-phase-name:focus-visible .pb-menu-caret,
+.pb-phase-name[aria-expanded='true'] .pb-menu-caret { opacity: 1; }
+
+.pb-phase-nodes { gap: 6px; }
+
+/* ---- Cards: 36px with the edge, 12px in, no grip until it is reached for ---- */
+
+.pb-card { box-sizing: border-box; }
+
+.pb-card .pb-node,
+.pb-card .pb-node--author,
+.pb-card .pb-node--gate,
+.pb-card .pb-node--open {
+    position: relative;
+    min-height: 34px;
+}
+
+.pb-card .pb-node-main { padding: var(--space-2) var(--space-3); }
+
+.pb-card .pb-node-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pb-card .pb-grip,
+.pb-grip {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    width: 12px;
+    padding: 0;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.pb-node:hover .pb-grip,
+.pb-node:focus-within .pb-grip,
+.pb-node--dragging .pb-grip { opacity: 1; }
+
+.pb-grip--pinned { cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+    .pb-grip { transition: none; }
+}
+
+/* ---- Routing: one quiet line under the node that decides ---- */
+
+.pb-routing { padding: var(--space-1) var(--space-3) 0; }
+
+.pb-routing-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0;
+    font: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-secondary);
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.pb-routing-toggle:hover { color: var(--text-primary); }
+
+.pb-routing-toggle:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.pb-routing .pb-decisions,
+.pb-decisions {
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    border: 0;
+}
+
+@container builder (width <= 640px) {
+    .pb-run,
+    .pb-run--seamed {
+        grid-template-columns: minmax(0, 1fr);
+        padding-right: 0;
+    }
+
+    .pb-step-head { padding: var(--space-3) 14px; }
+
+    .pb-lane-add--head { display: none; }
+    .pb-lane-add--foot { display: inline-flex; }
+
+    .pb-lane-seam { opacity: 1; }
 }
