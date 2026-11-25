@@ -174,16 +174,13 @@ describe('Step adds a lane of its own', () => {
         expect(steps).toEqual([]);
     });
 
-    it('says what it will write, and how several files separate', async () => {
+    it('asks only for a name, where it runs and what it writes, and says how files separate on hover', () => {
         const { host } = modal({ mode: 'step' });
-        type(name(host), 'review');
-        await flush();
-        const note = Array.from(host.querySelectorAll('.pb-modal-field-note'))
-            .map(el => el.textContent ?? '').join(' ');
-        expect(note).toContain('.specify/companion/nodes/review/');
-        expect(note).toContain('/speckit.companion.review');
-        expect(note).toContain('[review.md, notes.md]');
-        expect(note).toContain('empty if the step writes nothing');
+        const labels = Array.from(host.querySelectorAll('.pb-modal-field-label'))
+            .map(el => el.textContent);
+        expect(labels).toEqual(['Name', 'Runs after', 'Writes']);
+        const writes = host.querySelector<HTMLInputElement>('.pb-modal-text--mono')!;
+        expect(writes.title).toContain('[review.md, notes.md]');
     });
 
     it('warns that auto will not run it, naming the steps auto does run', () => {

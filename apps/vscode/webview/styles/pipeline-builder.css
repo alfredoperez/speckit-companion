@@ -5556,3 +5556,15 @@ body.vscode-high-contrast {
 
 .pb-sh-mark .pb-hook-icon,
 .pb-shp-mark .pb-hook-icon { color: inherit; }
+
+/* ---- Add a step: the auto warning in amber ---- */
+
+.pb-modal-warning {
+    color: var(--pb-warn-ink);
+    background: var(--pb-warn-wash);
+    border: 1px solid var(--pb-warn-edge);
+}
+
+/* A modal or a sheet dims what is behind it in the editor's own ink. */
+.pb-modal-scrim,
+.pb-sheet-scrim { background: color-mix(in srgb, var(--text-primary) 24%, transparent); }

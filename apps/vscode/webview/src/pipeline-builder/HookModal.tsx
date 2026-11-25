@@ -191,7 +191,6 @@ export function HookModal(props: Props) {
     const [nodePhase, setNodePhase] = useState(props.nodePhase ?? defaultPhase(step));
     const form = props.stepForm;
     const [stepName, setStepName] = useState('');
-    const [stepLabel, setStepLabel] = useState('');
     const [stepAfter, setStepAfter] = useState(
         form?.after ?? form?.sequence[form.sequence.length - 1] ?? '');
     const [stepWrites, setStepWrites] = useState('');
@@ -283,9 +282,9 @@ export function HookModal(props: Props) {
     const submitStep = () => {
         if (!cleanName || stepProblem) { return; }
         props.onNewStep?.({
-            name: cleanName, label: stepLabel.trim(), after: stepAfter, writes: stepWrites.trim(),
+            name: cleanName, label: '', after: stepAfter, writes: stepWrites.trim(),
         }, keep);
-        if (keep) { setAdded(cleanName); setStepName(''); setStepLabel(''); setStepWrites(''); }
+        if (keep) { setAdded(cleanName); setStepName(''); setStepWrites(''); }
     };
 
     useLayoutEffect(() => {
@@ -545,13 +544,6 @@ export function HookModal(props: Props) {
                     onInput={e => { setStepName((e.target as HTMLInputElement).value); setAdded(''); }} />
                 {stepProblem && <span class="pb-field-problem">{stepProblem}</span>}
             </label>
-            <label class="pb-modal-field pb-modal-field--wide">
-                <span class="pb-modal-field-label">Display name</span>
-                <input class="pb-modal-text" type="text" value={stepLabel}
-                    placeholder={cleanName ? `${cleanName[0].toUpperCase()}${cleanName.slice(1)}` : 'Review'}
-                    onInput={e => setStepLabel((e.target as HTMLInputElement).value)} />
-                <span class="pb-modal-field-note">Taken from the name unless you write something here.</span>
-            </label>
             <div class="pb-modal-field">
                 <span class="pb-modal-field-label" id={`${listId}-after`}>Runs after</span>
                 <Menu class="pb-menu-trigger--field pb-modal-select"
@@ -566,15 +558,9 @@ export function HookModal(props: Props) {
                 <span class="pb-modal-field-label">Writes</span>
                 <input class="pb-modal-text pb-modal-text--mono" type="text" value={stepWrites}
                     placeholder="review.md" spellcheck={false}
+                    title="Several files go in brackets: [review.md, notes.md]. Empty if it writes nothing."
                     onInput={e => setStepWrites((e.target as HTMLInputElement).value)} />
             </label>
-            <p class="pb-modal-field-note pb-modal-field--wide">
-                Several files go in brackets: <span class="pb-mono">[review.md, notes.md]</span>;
-                leave it empty if the step writes nothing. It writes{' '}
-                <span class="pb-mono">.specify/companion/nodes/{cleanName || 'name'}/</span> with one
-                node to edit, and after the next build the assistant can run{' '}
-                <span class="pb-mono">/speckit.companion.{cleanName || 'name'}</span>.
-            </p>
             {warning && (
                 <div class="pb-modal-warning pb-modal-field--wide" role="note">
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
