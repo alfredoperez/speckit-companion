@@ -1067,6 +1067,32 @@ describe('moving a node without dragging it', () => {
     });
 });
 
+describe('a status line names a node the way its card does', () => {
+    it('says the display name of the node a hook was added to', async () => {
+        graph.readPipelineGraph.mockResolvedValue({
+            steps: [{
+                name: 'specify',
+                phases: [{ name: 'gather', nodes: [{ id: 'resolve-dir', name: 'Resolve the spec folder' }] }],
+            }],
+        } as never);
+        await panel.__receive({ type: 'ready' });
+        await panel.__receive({
+            type: 'addHook', command: 'specify', anchor: 'resolve-dir', when: 'before',
+            hookType: 'skill', value: 'house-check', note: '',
+        } as never);
+        expect(panel.__lastPosted('status').status.text)
+            .toBe('Hook added before Resolve the spec folder');
+    });
+
+    it('falls back to the id for a node the board has not drawn', async () => {
+        await panel.__receive({
+            type: 'addHook', command: 'specify', anchor: 'resolve-dir', when: 'before',
+            hookType: 'skill', value: 'house-check', note: '',
+        } as never);
+        expect(panel.__lastPosted('status').status.text).toBe('Hook added before resolve-dir');
+    });
+});
+
 describe('moving a hook', () => {
     it('runs a second move only once the first has written', async () => {
         let finish!: (v: null) => void;

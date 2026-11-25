@@ -117,6 +117,8 @@ export class PipelineBuilderPanel {
 
     /** The report the panel shows now, so a redraw can tell whether it still holds. */
     private report: BuildReport | null = null;
+    /** The last graph drawn, so a status line can name a node the way its card does. */
+    private drawn: PipelineGraphResult | null = null;
 
     private constructor(
         private readonly panel: vscode.WebviewPanel,
@@ -386,7 +388,7 @@ export class PipelineBuilderPanel {
                 'Giving a node back',
                 {
                     tone: 'done',
-                    text: `${message.nodeId} runs the shipped node again`,
+                    text: `${this.named(message.command, message.nodeId)} runs the shipped node again`,
                     detail: 'Your copy went to the trash',
                     undo: { token },
                 });
@@ -416,7 +418,7 @@ export class PipelineBuilderPanel {
                 'Removing a hook',
                 {
                     tone: 'done',
-                    text: `Hook removed ${message.when} ${message.anchor}`,
+                    text: `Hook removed ${message.when} ${this.named(message.command, message.anchor)}`,
                     detail: 'Build to apply',
                 });
         },
@@ -444,8 +446,8 @@ export class PipelineBuilderPanel {
             {
                 tone: 'done',
                 text: message.editIndex === undefined
-                    ? `Hook added ${message.when} ${message.anchor}`
-                    : `Hook changed ${message.when} ${message.anchor}`,
+                    ? `Hook added ${message.when} ${this.named(message.command, message.anchor)}`
+                    : `Hook changed ${message.when} ${this.named(message.command, message.anchor)}`,
                 detail: 'Build to apply',
             });
         },
@@ -463,8 +465,8 @@ export class PipelineBuilderPanel {
                     tone: 'done',
                     text: along
                         ? `Hook moved ${(to.index ?? Infinity) < from.index ? 'up' : 'down'} `
-                            + `${to.when} ${to.anchor}`
-                        : `Hook moved to ${to.when} ${to.anchor}`,
+                            + `${to.when} ${this.named(message.command, to.anchor)}`
+                        : `Hook moved to ${to.when} ${this.named(message.command, to.anchor)}`,
                     detail: 'Build to apply',
                 });
         },
@@ -530,7 +532,7 @@ export class PipelineBuilderPanel {
                 'Removing a node',
                 {
                     tone: 'done',
-                    text: `${message.nodeId} no longer runs in ${message.command}`,
+                    text: `${this.named(message.command, message.nodeId)} no longer runs in ${message.command}`,
                     detail: 'Build to apply',
                     // Promised only when there is a shape to put back.
                     undo: before ? { token } : undefined,
@@ -556,8 +558,8 @@ export class PipelineBuilderPanel {
                 {
                     tone: 'done',
                     text: message.phase
-                        ? `${message.nodeId} moved to ${message.phase} in ${message.command}`
-                        : `${message.nodeId} moved in ${message.command}`,
+                        ? `${this.named(message.command, message.nodeId)} moved to ${message.phase} in ${message.command}`
+                        : `${this.named(message.command, message.nodeId)} moved in ${message.command}`,
                     detail: 'Build to apply',
                 });
         },
@@ -748,6 +750,15 @@ export class PipelineBuilderPanel {
         const turn = this.writing.then(() => this.writeNow(run, what, status));
         this.writing = turn.catch(() => undefined);
         return turn;
+    }
+
+    /** A node's display name, a phase or step by its own name, or the id when the board has not drawn it. */
+    private named(command: string, anchor: string): string {
+        const graph = this.drawn;
+        if (!graph || isGraphError(graph)) { return anchor; }
+        const step = graph.steps.find(s => s.name === command);
+        const node = step?.phases.flatMap(p => p.nodes).find(n => n.id === anchor);
+        return node?.name || anchor;
     }
 
     private writing: Promise<unknown> = Promise.resolve();
@@ -1111,6 +1122,7 @@ export class PipelineBuilderPanel {
         if (!isGraphError(graph)) {
             graph.firstRun = !this.context.workspaceState?.get<boolean>(FIRST_RUN_SEEN);
         }
+        this.drawn = graph;
         const buildState = readPipelineBuildState(this.workspaceRoot).kind;
         await this.post({ type: 'graph', graph, buildState });
         // A redraw means the pipeline moved — a panel write, an edit to
