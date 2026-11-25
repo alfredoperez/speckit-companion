@@ -4,24 +4,28 @@ import { stockRefusal } from '../stockGuard';
 type MessageType = BuilderToExtensionMessage['type'];
 
 /**
- * Every message the board can send. Listed rather than derived so a new one has
- * to be considered here: the default is refusal, and this says which ones are
- * not, in a project that has nothing to run a Companion pipeline.
+ * Every message the board can send. A record over the union, so a new message
+ * fails the type check until it is considered here: the default is refusal,
+ * and ALLOWED says which ones are not on a project with no Companion pipeline.
  */
-const EVERY_MESSAGE: MessageType[] = [
-    'ready', 'build', 'preview', 'openConfig', 'repair', 'saveNode', 'openNode',
-    'restoreNode', 'useVariant', 'setTemplateSection', 'reorderNodes', 'setPhases',
-    'addHook', 'moveHook', 'removeHook', 'readNode', 'readFrame', 'replaceStep',
-    'addNode', 'newStep', 'selectWorkflow', 'newWorkflow', 'undo', 'removeNode',
-    'moveNode', 'dismissFirstRun', 'setStockHook', 'openStockFile',
-    'selectStockWorkflow', 'runStockCommand', 'addStockHook', 'updateStockHook',
-    'removeStockHook', 'installCompanion',
-];
+const EVERY: Record<MessageType, true> = {
+    ready: true, build: true, preview: true, openConfig: true, repair: true,
+    saveNode: true, openNode: true, restoreNode: true, useVariant: true, setTemplateSection: true,
+    reorderNodes: true, setPhases: true, addHook: true, moveHook: true, removeHook: true,
+    readNode: true, readFrame: true, replaceStep: true, addNode: true, newStep: true,
+    selectWorkflow: true, newWorkflow: true, undo: true, removeNode: true, moveNode: true,
+    setDecision: true, restoreDecision: true, dismissFirstRun: true, setStockHook: true,
+    openStockFile: true, selectStockWorkflow: true, runStockCommand: true, addStockHook: true,
+    updateStockHook: true, removeStockHook: true, installCompanion: true, presetSearch: true,
+    presetAdd: true, presetUpdate: true, presetRemove: true, readHookRuns: true,
+};
+const EVERY_MESSAGE = Object.keys(EVERY) as MessageType[];
 
 const ALLOWED: MessageType[] = [
     'ready', 'dismissFirstRun', 'setStockHook', 'openStockFile',
     'selectStockWorkflow', 'runStockCommand', 'addStockHook', 'updateStockHook',
-    'removeStockHook', 'installCompanion',
+    'removeStockHook', 'installCompanion', 'presetSearch', 'presetAdd',
+    'presetUpdate', 'presetRemove', 'readHookRuns',
 ];
 
 describe('what the builder may do on a stock Spec Kit project', () => {
