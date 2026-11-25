@@ -295,8 +295,9 @@ export const CardAnatomy: Story = {
     render: () => (
         <div class="builder pb-anatomy" style={{ height: 'auto' }}>
             <style>{`
-                .pb-anatomy { display: grid; grid-template-columns: repeat(2, 380px); gap: 20px 32px; padding: 24px; }
-                .pb-anatomy-cell { display: grid; grid-template-columns: 240px 1fr; gap: 16px; align-items: start; }
+                .pb-anatomy { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 380px)); gap: 20px 32px; padding: 24px; }
+                .pb-anatomy-cell { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 16px; align-items: start; }
+                @media (max-width: 480px) { .pb-anatomy { padding: 12px; } .pb-anatomy-cell { grid-template-columns: minmax(0, 1fr); } }
                 .pb-anatomy-caption { padding-top: 10px; font-size: 13px; color: var(--text-secondary); }
                 .pb-anatomy .pb-canvas { padding: 0; background: none; overflow: visible; }
                 .pb-anatomy .pb-run { display: block; padding: 0; }
