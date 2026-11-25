@@ -436,3 +436,22 @@ describe('a phase and a node can share a name', () => {
         expect(host.querySelector('.pb-modal-title')?.textContent).toBe('Add before Review the work');
     });
 });
+
+describe('an instruction says where it will run', () => {
+    it('names the place, and the hook it runs after when one is there already', async () => {
+        const host = mount(
+            <HookModal step={step({
+                phases: [{ name: 'author', hooks: [], nodes: [node({
+                    id: 'draft-spec', name: 'Draft the spec',
+                    hooks: [{ when: 'before', type: 'skill', summary: 'test-driven-development',
+                        anchor: 'draft-spec', index: 0, note: '' }],
+                })] }],
+            })} anchor="draft-spec" when="before"
+            choices={choices()} onCancel={noop} onAttach={noop} />,
+        );
+        kind(host, 'Instruction');
+        await flush();
+        expect(host.querySelector('.pb-modal-runs')?.textContent)
+            .toBe('Runs before Draft the spec, after test-driven-development.');
+    });
+});

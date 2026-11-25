@@ -7,6 +7,7 @@
 
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { HookIcon } from './HookIcon';
+import { hookName } from './Canvas';
 import { Menu } from './Menu';
 import { AddedLine, WriteAnswer } from './AddedLine';
 import { Attachment, boundaryOf } from './AttachForm';
@@ -199,6 +200,13 @@ export function HookModal(props: Props) {
     const all = places(step);
     const place = all.find(p => p.id === where);
     const placeLabel = place?.label ?? editing?.anchor ?? anchor;
+    // A new hook goes last on its side, so it runs after the one already there.
+    const beside = step.phases.flatMap(p => [
+        ...(place?.boundary === 'phase' && p.name === place.anchor ? p.hooks : []),
+        ...p.nodes.filter(n => place?.boundary === 'node' && n.id === place.anchor)
+            .flatMap(n => n.hooks),
+    ]).filter(h => h.when === when);
+    const runsAfterHook = editing ? undefined : beside[beside.length - 1];
     const searching = hookType === 'skill' || hookType === 'node';
     const query = value.trim();
 
@@ -645,7 +653,12 @@ export function HookModal(props: Props) {
                             <div class="pb-modal-pick">
                                 <textarea ref={field} class="pb-modal-area" rows={4} value={value}
                                     aria-label={kind.field} placeholder={kind.placeholder}
+                                    aria-describedby={`${listId}-runs`}
                                     onInput={e => { setValue((e.target as HTMLTextAreaElement).value); setAdded(''); }} />
+                                <p class="pb-modal-hint pb-modal-runs" id={`${listId}-runs`}>
+                                    {`Runs ${when} ${placeLabel}${runsAfterHook
+                                        ? `, after ${hookName(runsAfterHook)}` : ''}.`}
+                                </p>
                                 {commands.length > 0 && (
                                     <Menu
                                         class="pb-pick-open"
@@ -743,9 +756,14 @@ function Order({ editing, count, label, onMove }: {
     const move = (direction: 'up' | 'down', edge: boolean, reason: string) => (
         <button type="button" class="pb-order-move"
             aria-disabled={edge ? 'true' : undefined}
-            title={edge ? reason : undefined}
+            title={edge ? reason : direction === 'up' ? 'Move up' : 'Move down'}
             onClick={() => { if (!edge) { onMove?.(direction); } }}>
-            {direction === 'up' ? 'Move up' : 'Move down'}
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                aria-hidden="true" focusable="false">
+                <path d={direction === 'up' ? 'M7 11.5V2.5M3.5 6L7 2.5L10.5 6' : 'M7 2.5V11.5M3.5 8L7 11.5L10.5 8'} />
+            </svg>
+            <span class="sr-only">{direction === 'up' ? 'Move up' : 'Move down'}</span>
             {edge && <span class="sr-only">{`, ${reason[0].toLowerCase()}${reason.slice(1)}`}</span>}
         </button>
     );

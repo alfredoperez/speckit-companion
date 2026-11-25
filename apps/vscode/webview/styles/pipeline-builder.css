@@ -5611,3 +5611,17 @@ body.vscode-high-contrast {
 @container builder (width <= 640px) {
     .pb-modal-foot .pb-action:not(.pb-action--remove) { flex: 1 1 100%; }
 }
+
+/* The order of a hook among its side's: two small arrows, the place said beside them. */
+.pb-order-move {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+}
+
+.pb-modal-pick:has(.pb-modal-runs) { flex-wrap: wrap; }
+
+.pb-modal-runs { flex-basis: 100%; margin: 0; }
