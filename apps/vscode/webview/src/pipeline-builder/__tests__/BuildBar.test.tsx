@@ -202,6 +202,19 @@ describe('after a build', () => {
         expect(host.querySelector('.builder-bar')).toBeNull();
     });
 
+    it('does not say Built again when it comes back after a sheet closed', async () => {
+        jest.useFakeTimers();
+        const report = { ...REPORT };
+        let first!: HTMLElement;
+        act(() => { first = bar({ state: 'current', report }).host; });
+        act(() => { jest.advanceTimersByTime(4100); });
+        expect(first.querySelector('.builder-bar')).toBeNull();
+        document.body.innerHTML = '';
+        let again!: HTMLElement;
+        act(() => { again = bar({ state: 'current', report }).host; });
+        expect(again.querySelector('.builder-bar')).toBeNull();
+    });
+
     it('stays open in a warning state when it failed, saying nothing was written (FR-010)', async () => {
         const { host, button, calls } = bar({
             report: { ...REPORT, ok: false, warnings: ['specify: unknown node nope'] },

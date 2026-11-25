@@ -18,6 +18,9 @@ import { HookIcon } from './HookIcon';
 /** How long the built confirmation stays before it leaves. */
 const BUILT_FOR = 4000;
 
+/** Reports already seen off. The bar unmounts while a sheet is open, so its own state cannot hold this. */
+const seenOff = new WeakSet<BuildReport>();
+
 interface Props {
     graph: PipelineGraph;
     buildState: PipelineBuildKind;
@@ -83,13 +86,17 @@ export function BuildBar(props: Props) {
     const [showingLog, setShowingLog] = useState(false);
     // The report the person has seen off: a built line that timed out, a
     // preview they hid. A new report is a new object, so it shows again.
-    const [gone, setGone] = useState<BuildReport | null>(null);
+    const [, setGoneCount] = useState(0);
+    const setGone = (seen: BuildReport | null) => {
+        if (seen) { seenOff.add(seen); }
+        setGoneCount(count => count + 1);
+    };
     const [checking, setChecking] = useState(false);
     const toggle = useRef<HTMLButtonElement>(null);
 
     const built = report?.ok === true && !report.dryRun ? report : null;
     useEffect(() => {
-        if (!built) { return; }
+        if (!built || seenOff.has(built)) { return; }
         const timer = setTimeout(() => setGone(built), BUILT_FOR);
         return () => clearTimeout(timer);
     }, [built]);
@@ -98,7 +105,7 @@ export function BuildBar(props: Props) {
     const waiting = needsBuild(buildState);
     const failed = report && !report.ok ? report : null;
     const preview = report?.ok && report.dryRun ? report : null;
-    const live = report && report !== gone ? report : null;
+    const live = report && !seenOff.has(report) ? report : null;
 
     if (built && live && !waiting) {
         return (
