@@ -5568,3 +5568,6 @@ body.vscode-high-contrast {
 /* A modal or a sheet dims what is behind it in the editor's own ink. */
 .pb-modal-scrim,
 .pb-sheet-scrim { background: color-mix(in srgb, var(--text-primary) 24%, transparent); }
+
+.pb-hook-status--problem,
+.pb-card .pb-hook-status--problem { color: var(--pb-warn-ink); }

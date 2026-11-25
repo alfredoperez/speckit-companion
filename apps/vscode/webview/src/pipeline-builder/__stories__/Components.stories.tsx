@@ -251,6 +251,71 @@ export const HooksNoRunOnRecord: Story = {
     ),
 };
 
+/** One node of each kind, one card each, so every kind is compared at a glance. */
+const ANATOMY_RUNS: HookRunsAnswer = {
+    spec: { name: '684-hook-run-record', path: '/proj/specs/684-hook-run-record' },
+    runAt: '2026-11-20T10:00:00Z',
+    runs: [
+        { key: 'implement/before/a5/0', step: 'implement', when: 'before', anchor: 'a5', index: 0,
+            type: 'skill', ref: 'house-check', outcome: 'ran', at: '2026-11-20T10:00:00Z' },
+        { key: 'implement/before/a7/0', step: 'implement', when: 'before', anchor: 'a7', index: 0,
+            type: 'skill', ref: 'house-check', outcome: 'ran', at: '2026-11-20T10:00:00Z' },
+        { key: 'implement/before/a8/0', step: 'implement', when: 'before', anchor: 'a8', index: 0,
+            type: 'prompt', ref: '', outcome: 'skipped', at: '2026-11-20T10:00:00Z' },
+    ],
+};
+
+const ANATOMY: Array<{ caption: string; node: ReturnType<typeof node> }> = [
+    { caption: 'Plain node', node: node('a1', 'Hand off') },
+    { caption: 'Writes a file', node: node('a2', 'Write the plan', { kind: 'author', writes: ['plan.md'] }) },
+    { caption: 'Gate: can stop the run', node: node('a3', 'Check the requirements', { kind: 'gate' }) },
+    { caption: 'Node you changed', node: node('a4', 'Quality checklist', { replaced: true }) },
+    { caption: 'Node with a before hook', node: node('a5', 'Resolve the spec folder', {
+        hooks: [hook({ when: 'before', type: 'skill', anchor: 'a5', summary: 'house-check' })] }) },
+    { caption: 'Node with before and after hooks', node: node('a6', 'Execute the tasks', {
+        hooks: [
+            hook({ when: 'before', type: 'prompt', anchor: 'a6', summary: 'Ask me before adding a new dependency' }),
+            hook({ when: 'after', type: 'command', anchor: 'a6', summary: 'npm run lint' }),
+        ] }) },
+    { caption: 'Skill, ran', node: node('a7', 'Gather context', {
+        hooks: [hook({ when: 'before', type: 'skill', anchor: 'a7', summary: 'house-check' })] }) },
+    { caption: 'Instruction, skipped', node: node('a8', 'Draft the spec', {
+        hooks: [hook({ when: 'before', type: 'prompt', anchor: 'a8', summary: 'Ask me before adding a new dependency' })] }) },
+    { caption: 'Shell command, not seen', node: node('a9', 'Record what was verified', {
+        hooks: [hook({ when: 'before', type: 'command', anchor: 'a9', summary: 'npm run lint' })] }) },
+    { caption: 'Skill, not installed', node: node('a10', 'Check against the constitution', {
+        hooks: [hook({ when: 'before', type: 'skill', anchor: 'a10', summary: 'pr-template',
+            problem: 'No skill named "pr-template" in this project or an installed plugin.' })] }) },
+    { caption: 'Node file', node: node('a11', 'Close implement', {
+        hooks: [hook({ when: 'before', type: 'node', anchor: 'a11', summary: 'security-scan.md' })] }) },
+];
+
+export const CardAnatomy: Story = {
+    name: 'Card anatomy · every kind side by side',
+    render: () => (
+        <div class="builder pb-anatomy" style={{ height: 'auto' }}>
+            <style>{`
+                .pb-anatomy { display: grid; grid-template-columns: repeat(2, 380px); gap: 20px 32px; padding: 24px; }
+                .pb-anatomy-cell { display: grid; grid-template-columns: 240px 1fr; gap: 16px; align-items: start; }
+                .pb-anatomy-caption { padding-top: 10px; font-size: 13px; color: var(--text-secondary); }
+                .pb-anatomy .pb-canvas { padding: 0; background: none; overflow: visible; }
+                .pb-anatomy .pb-run { display: block; padding: 0; }
+                .pb-anatomy .pb-step { border: 0; background: none; overflow: visible; }
+                .pb-anatomy .pb-step-head, .pb-anatomy .pb-phase-head,
+                .pb-anatomy .pb-outside, .pb-anatomy .pb-lane-add--foot { display: none; }
+                .pb-anatomy .pb-step-body { padding: 0; }
+            `}</style>
+            {ANATOMY.map(({ caption, node: shown }) => (
+                <div key={shown.id} class="pb-anatomy-cell">
+                    <Canvas graph={graph([step('implement', [phase('execute', [shown])])])}
+                        {...CANVAS} runs={ANATOMY_RUNS} />
+                    <span class="pb-anatomy-caption">{caption}</span>
+                </div>
+            ))}
+        </div>
+    ),
+};
+
 export const NodePopoverOpen: Story = {
     name: 'Node popover · details and hooks',
     render: () => (
