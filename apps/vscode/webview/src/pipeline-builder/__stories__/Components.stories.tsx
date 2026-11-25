@@ -261,6 +261,21 @@ export const NodePopoverOpen: Story = {
     ),
 };
 
+export const NodePopoverInTheLanes: Story = {
+    name: 'Node popover · beside its card, in the lanes',
+    render: () => (
+        <div class="builder" style={{ height: '640px' }}>
+            <div class="builder-body">
+                <Canvas graph={graph([RAN])} {...CANVAS} runs={RUNS}
+                    selected={{ command: 'implement', nodeId: 'execute' }} />
+            </div>
+            <NodePopover node={EXECUTE} step="implement" runs={RUNS} hooksIn="companion.yml"
+                anchorKey="implement/execute"
+                moves={movePlaces(RAN, 'execute')} removeBlocked="" {...POPOVER} />
+        </div>
+    ),
+};
+
 /** A node that reads the one above it, beside a held node: one place refused, one lock. */
 const MOVING = step('plan', [
     phase('author', [
@@ -277,7 +292,8 @@ export const NodePopoverDocument: Story = {
     name: 'Node popover · the document it writes',
     render: () => (
         <One>
-            <NodePopover node={MOVING.phases[0].nodes[0]} step="plan" hooksIn="companion.yml"
+            <NodePopover node={{ ...MOVING.phases[0].nodes[0], replaced: true, reads: ['spec.md'] }}
+                step="plan" hooksIn="companion.yml"
                 moves={movePlaces(MOVING, 'write-plan')} removeBlocked=""
                 document={{ file: 'plan.md', sections: 5, yours: 1 }} onOpenDocument={noop}
                 {...POPOVER} />

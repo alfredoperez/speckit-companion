@@ -183,7 +183,7 @@ function commandTail(command: string): string {
  * Blank, not just absent: `command` reaches here unstripped, and a row of
  * spaces is as empty to read as no row at all.
  */
-function stockName(hook: StockHook): string {
+export function stockName(hook: StockHook): string {
     if (hook.command.trim()) { return commandTail(hook.command); }
     return hook.description.trim() || 'no command';
 }
@@ -1098,6 +1098,15 @@ function FirstPhase({ step, onAddNode }: {
             onPick={id => onAddNode(step.name, id, FRESH_PHASE, [id],
                 [{ name: FRESH_PHASE, nodes: [id] }])} />
     );
+}
+
+/** The extension hooks the board draws on a node: the step's before on its first node, its after on its last. */
+export function stockAt(step: PipelineStep, nodeId: string): StockHook[] {
+    const nodes = step.phases.flatMap(phase => phase.nodes);
+    return [
+        ...(nodes[0]?.id === nodeId ? step.stockHooks.filter(h => h.when === 'before') : []),
+        ...(nodes[nodes.length - 1]?.id === nodeId ? step.stockHooks.filter(h => h.when === 'after') : []),
+    ];
 }
 
 /** This project's hooks at one anchor, which is what a dropped hook is counted among. */

@@ -32,7 +32,7 @@ import { PresetsPanel } from './PresetsPanel';
 import { SidePanel } from './SidePanel';
 import { BrokenPipeline } from './BrokenPipeline';
 import {
-    Canvas, RemovedRow, hookHome, hooksAt, withoutNode as withoutNodeOf,
+    Canvas, RemovedRow, hookHome, hooksAt, stockAt, withoutNode as withoutNodeOf,
 } from './Canvas';
 import { NodeAction, NodePopover } from './NodePopover';
 import { Header } from './Header';
@@ -773,6 +773,7 @@ function App() {
                     step={pop.command}
                     runs={runs}
                     hooksIn={hookHome(graph.workflows.active).name}
+                    stock={stockAt(popStep, pop.nodeId)}
                     anchorKey={`${pop.command}/${pop.nodeId}`}
                     narrow={narrow}
                     moves={movePlaces(popStep, pop.nodeId)}

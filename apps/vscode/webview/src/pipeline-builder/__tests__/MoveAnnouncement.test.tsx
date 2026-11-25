@@ -29,8 +29,10 @@ const deliver = async (data: unknown) => {
 const live = () => root.querySelector('.pb-live')?.textContent;
 
 async function moveTo(phase: string) {
-    Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-popover .pb-pop-button'))
-        .find(b => b.textContent?.startsWith('Move'))!.click();
+    root.querySelector<HTMLButtonElement>('.pb-popover .pb-pop-more')!.click();
+    await flush();
+    Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+        .find(b => b.querySelector('.pb-menu-label')?.textContent === 'Move…')!.click();
     await flush();
     Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-move-place'))
         .find(row => row.querySelector('.pb-move-label')?.textContent?.startsWith(`To phase ${phase},`))!.click();

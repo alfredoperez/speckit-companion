@@ -351,10 +351,13 @@ export const TakeANodeOutOfTheRun: Story = {
         );
     },
     play: async ({ canvasElement }) => {
-        // In the popover's footer, saying the file survives.
-        const remove = canvasElement.querySelector('.pb-pop-remove') as HTMLButtonElement;
-        assert(remove.textContent === 'Remove from the run', 'the footer carries the removal');
-        assert(remove.title.includes('Keeps the file'), 'and says the file survives it');
+        // Under More, saying the file survives.
+        (canvasElement.querySelector('.pb-pop-more') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const remove = Array.from(document.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+            .find(el => el.querySelector('.pb-menu-label')?.textContent === 'Remove from the run')!;
+        assert(Boolean(remove), 'More carries the removal');
+        assert((remove.textContent ?? '').includes('Keeps the file'), 'and says the file survives it');
         remove.click();
         const sent = sentFrom(canvasElement);
         assert(sent.at(-1)?.with === 'remove', 'and asks for the removal');
@@ -371,6 +374,9 @@ export const MoveANodeOnePlaceRefused: Story = {
                 node('pick-blocks', "Pick the plan's blocks", { reads: ['write-plan'] }),
             ]),
             phase('check', [node('constitution', 'Check against the constitution')]),
+            phase('wrap-up', [node('handoff', 'Hand off', {
+                pinned: 'it is the last thing the step does, so nothing goes after it',
+            })]),
         ]);
         return (
             <div class="builder"
@@ -378,6 +384,7 @@ export const MoveANodeOnePlaceRefused: Story = {
                     if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
                 }}>
                 <NodePopover node={plan.phases[0].nodes[1]} step="plan" hooksIn="companion.yml"
+                    moveOpen
                     moves={movePlaces(plan, 'pick-blocks')} removeBlocked=""
                     onClose={noop} onEditNode={noop} onAddHook={noop}
                     onEditHook={noop} onRemoveHook={noop}
@@ -386,9 +393,6 @@ export const MoveANodeOnePlaceRefused: Story = {
         );
     },
     play: async ({ canvasElement }) => {
-        (Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-pop-button'))
-            .find(b => b.textContent?.startsWith('Move'))!).click();
-        await new Promise(resolve => setTimeout(resolve, 0));
         const places = Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-move-place'));
         const up = places.find(p => p.textContent?.startsWith('Up'))!;
         assert(up.getAttribute('aria-disabled') === 'true'
@@ -399,6 +403,8 @@ export const MoveANodeOnePlaceRefused: Story = {
         legal.click();
         const sent = sentFrom(canvasElement);
         assert(sent.length === 1 && sent[0].with === 'phase:check', 'only the legal place is sent');
+        assert((canvasElement.textContent ?? '').includes('Hand off is held in place'),
+            'the node held in place is said beside the moves');
     },
 };
 

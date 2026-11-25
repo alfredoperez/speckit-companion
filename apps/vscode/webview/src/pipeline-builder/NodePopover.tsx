@@ -8,9 +8,9 @@ import { Menu, MenuOption } from './Menu';
 import { HookIcon } from './HookIcon';
 import { KIND_LABELS } from './hookKinds';
 import { hookStatus, runSource } from './hookStatus';
-import { StatusMark, hookName } from './Canvas';
+import { StatusMark, hookName, stockName } from './Canvas';
 import { MovePlaces } from './moves';
-import { HookRunsAnswer, PipelineHook, PipelineNode } from '../../../src/protocol/pipeline';
+import { HookRunsAnswer, PipelineHook, PipelineNode, StockHook } from '../../../src/protocol/pipeline';
 
 export type NodeAction =
     | 'open-file' | 'up' | 'down' | 'remove' | 'shipped' | 'add-hook'
@@ -24,6 +24,8 @@ interface Props {
     now?: Date;
     /** The file this project's hooks are written in, as the hook card names it. */
     hooksIn: string;
+    /** Hooks an installed extension runs at this node's edge: listed, never edited here. */
+    stock?: StockHook[];
     /** The `data-node` of the card this hangs beside; absent in a story, where it sits in the flow. */
     anchorKey?: string;
     narrow?: boolean;
@@ -37,6 +39,8 @@ interface Props {
     onAddHook: () => void;
     onEditHook: (hook: PipelineHook) => void;
     onRemoveHook: (hook: PipelineHook) => void;
+    /** Move one of its hooks; the hook form is where its place is chosen. */
+    onMoveHook?: (hook: PipelineHook) => void;
     onAction: (action: NodeAction) => void;
     /** Render with More already open, for a story or a capture. */
     moreOpen?: boolean;
@@ -87,6 +91,7 @@ function MoveList({ moves, onPick }: { moves: MovePlaces; onPick: (id: string) =
                                     <span class="pb-move-label">{place.label}</span>
                                     {place.refused && <span class="pb-move-reason">{place.refused}</span>}
                                 </span>
+                                {!place.refused && <kbd class="pb-move-enter" aria-hidden="true">Enter</kbd>}
                             </button>
                         </li>
                     ))}
@@ -96,7 +101,6 @@ function MoveList({ moves, onPick }: { moves: MovePlaces; onPick: (id: string) =
                 </ul>
             )}
             {moves.held.map(line => <p key={line} class="pb-move-held"><Lock />{line}</p>)}
-            <p class="pb-pop-empty">Or hold the grip and drag within the lane.</p>
         </section>
     );
 }
@@ -108,10 +112,10 @@ const EDGE = 8;
 const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** The node actions that are not in the footer, said the same way. */
-export function moreOptions(props: Pick<Props, 'node'>): MenuOption[] {
+export function moreOptions(props: Pick<Props, 'node'> & { removeBlocked?: string }): MenuOption[] {
     const { node } = props;
     const options: MenuOption[] = [
-        { id: 'add-hook', label: 'Add hook', note: 'A skill, an instruction or a command, before or after it.' },
+        { id: 'move', label: 'Move…', note: 'Up, down, or into another phase.' },
         { id: 'open-file', label: 'Open the file', note: 'In the editor, frontmatter and all.' },
         ...node.variants.map(variant => ({
             id: `variant:${variant.id}`,
@@ -125,16 +129,20 @@ export function moreOptions(props: Pick<Props, 'node'>): MenuOption[] {
             note: 'Sends your copy to the trash. Undo in the status line puts it back.',
         });
     }
+    options.push(props.removeBlocked
+        ? { id: 'remove', label: 'Remove from the run', disabled: true, note: props.removeBlocked }
+        : { id: 'remove', label: 'Remove from the run', note: 'Keeps the file: it stays on offer under Add node.' });
     return options;
 }
 
-function HookCard({ hook, step, runs, hooksIn, onEdit, onRemove }: {
+function HookCard({ hook, step, runs, hooksIn, onEdit, onRemove, onMove }: {
     hook: PipelineHook;
     step: string;
     runs?: HookRunsAnswer | null;
     hooksIn: string;
     onEdit: () => void;
     onRemove: () => void;
+    onMove: () => void;
 }) {
     const status = hookStatus(step, hook, runs);
     const name = hookName(hook);
@@ -157,10 +165,33 @@ function HookCard({ hook, step, runs, hooksIn, onEdit, onRemove }: {
                     <>
                         <button type="button" class="pb-pop-link" onClick={onEdit}
                             aria-label={`Edit ${name}`}>Edit</button>
+                        <button type="button" class="pb-pop-link" onClick={onMove}
+                            aria-label={`Move ${name}`}>Move</button>
                         <button type="button" class="pb-pop-link" onClick={onRemove}
                             aria-label={`Remove ${name}`}>Remove</button>
                     </>
                 )}
+            </div>
+        </li>
+    );
+}
+
+/** A hook an installed extension runs here: named by its command, marked shipped, not edited. */
+function StockHookCard({ hook }: { hook: StockHook }) {
+    const asks = [hook.optional && 'asks first', hook.conditional && 'only if its condition holds']
+        .filter(Boolean).join(' · ');
+    return (
+        <li class="pb-pop-hook pb-pop-hook--stock">
+            <div class="pb-pop-hook-head">
+                <span class="pb-pop-hook-when">{hook.when === 'before' ? 'Before' : 'After'}</span>
+                <span class="pb-pop-hook-kind">{KIND_LABELS.command.toLowerCase()}</span>
+            </div>
+            <p class="pb-pop-hook-name pb-pop-hook-name--ref">{stockName(hook)}</p>
+            {hook.description.trim() && <p class="pb-pop-hook-reason">{hook.description.trim()}</p>}
+            <div class="pb-pop-hook-foot">
+                <span class="pb-pop-hook-where">
+                    {`Shipped, from ${hook.extension || 'an extension'}${asks ? ` · ${asks}` : ''}`}
+                </span>
             </div>
         </li>
     );
@@ -261,6 +292,9 @@ export function NodePopover(props: Props) {
 
     const ownHooks = [...node.hooks].sort((a, b) => (a.when === b.when
         ? a.index - b.index : a.when === 'before' ? -1 : 1));
+    const stock = props.stock ?? [];
+    const stockBefore = stock.filter(hook => hook.when === 'before');
+    const stockAfter = stock.filter(hook => hook.when === 'after');
     const writes = [...node.writes, ...node.mayWrite];
     const titleId = `pb-pop-title-${step}-${node.id}`.replace(/[^\w-]/g, '-');
 
@@ -284,19 +318,22 @@ export function NodePopover(props: Props) {
             <header class="pb-pop-head">
                 <h2 class="pb-pop-title" id={titleId}>{node.name}</h2>
                 <span class={`pb-pop-source${node.replaced ? ' pb-pop-source--yours' : ''}`}>
-                    {node.replaced ? 'Yours' : 'As shipped'}
+                    {node.replaced ? 'Changed by you' : 'As shipped'}
                 </span>
                 {narrow && moving && (
                     <button type="button" class="pb-pop-button pb-pop-back"
                         onClick={() => setMoving(false)}>Back</button>
                 )}
-                <button type="button" class="pb-pop-close" aria-label="Close" title="Close"
-                    onClick={props.onClose}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                        stroke-width="1.4" stroke-linecap="round" aria-hidden="true" focusable="false">
-                        <path d="M4 4l8 8M12 4l-8 8" />
-                    </svg>
-                </button>
+                {/* Anchored beside its card, Escape and a click away close it. */}
+                {(narrow || !anchorKey) && (
+                    <button type="button" class="pb-pop-close" aria-label="Close" title="Close"
+                        onClick={props.onClose}>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                            stroke-width="1.4" stroke-linecap="round" aria-hidden="true" focusable="false">
+                            <path d="M4 4l8 8M12 4l-8 8" />
+                        </svg>
+                    </button>
+                )}
             </header>
 
             {moving ? <MoveList moves={props.moves} onPick={id => props.onAction(id as NodeAction)} /> : <>
@@ -356,51 +393,64 @@ export function NodePopover(props: Props) {
             </section>
 
             <section class="pb-pop-section" aria-label="Its hooks">
-                <h3 class="pb-pop-label">Its hooks · {ownHooks.length}</h3>
+                <h3 class="pb-pop-label">Its hooks · {ownHooks.length + stock.length}</h3>
                 {ownHooks.length > 0 && runSource(runs) && (
                     <p class="pb-pop-run">{runSource(runs, props.now)}</p>
                 )}
-                {ownHooks.length > 0 ? (
+                {ownHooks.length + stock.length > 0 ? (
                     <ul class="pb-pop-hooks">
+                        {stockBefore.map((hook, i) => <StockHookCard key={`stock-b-${i}`} hook={hook} />)}
                         {ownHooks.map(hook => (
                             <HookCard key={`${hook.when}-${hook.index}`} hook={hook} step={step}
                                 runs={runs} hooksIn={props.hooksIn}
                                 onEdit={() => props.onEditHook(hook)}
+                                onMove={() => (props.onMoveHook ?? props.onEditHook)(hook)}
                                 onRemove={() => props.onRemoveHook(hook)} />
                         ))}
+                        {stockAfter.map((hook, i) => <StockHookCard key={`stock-a-${i}`} hook={hook} />)}
                     </ul>
                 ) : (
-                    <p class="pb-pop-empty">Nothing runs before or after it yet.</p>
+                    <p class="pb-pop-empty">Nothing runs before or after this node.</p>
                 )}
             </section>
             </>}
 
             <footer class="pb-pop-actions">
                 <p class="pb-live" role="status" aria-live="polite">{props.announce ?? ''}</p>
-                <button type="button" class={`pb-pop-button${moving ? ' pb-pop-button--on' : ''}`}
-                    aria-pressed={moving} onClick={() => setMoving(!moving)}>
-                    Move…
-                </button>
-                <button type="button" class="pb-pop-button" onClick={props.onEditNode}>
-                    Edit node
-                </button>
-                <Menu
-                    class="pb-pop-more"
-                    trigger="More"
-                    align="right"
-                    floating
-                    title={`Everything else ${node.name} can do`}
-                    options={moreOptions(props)}
-                    onPick={id => (id === 'add-hook' ? props.onAddHook() : props.onAction(id as NodeAction))}
-                    defaultOpen={props.moreOpen}
-                />
-                <button type="button" class="pb-pop-remove"
-                    aria-disabled={props.removeBlocked ? 'true' : undefined}
-                    title={props.removeBlocked || 'Keeps the file: it stays on offer under Add node.'}
-                    onClick={() => { if (!props.removeBlocked) { props.onAction('remove'); } }}>
-                    Remove from the run
-                    {props.removeBlocked && <span class="sr-only">{`, ${props.removeBlocked}`}</span>}
-                </button>
+                {moving ? <>
+                    <button type="button" class="pb-pop-button pb-pop-button--on" aria-pressed="true"
+                        onClick={() => setMoving(false)}>
+                        Move…
+                    </button>
+                    <button type="button" class="pb-pop-button" onClick={props.onEditNode}>
+                        Edit node
+                    </button>
+                    <button type="button" class="pb-pop-remove"
+                        aria-disabled={props.removeBlocked ? 'true' : undefined}
+                        title={props.removeBlocked || 'Keeps the file: it stays on offer under Add node.'}
+                        onClick={() => { if (!props.removeBlocked) { props.onAction('remove'); } }}>
+                        Remove from the run
+                        {props.removeBlocked && <span class="sr-only">{`, ${props.removeBlocked}`}</span>}
+                    </button>
+                </> : <>
+                    <button type="button" class="pb-pop-button" onClick={props.onEditNode}>
+                        Edit node
+                    </button>
+                    <button type="button" class="pb-pop-button" onClick={props.onAddHook}>
+                        Add hook
+                    </button>
+                    <Menu
+                        class="pb-pop-more"
+                        trigger="More"
+                        align="right"
+                        floating
+                        title={`Everything else ${node.name} can do`}
+                        options={moreOptions(props)}
+                        onPick={id => (id === 'move' ? setMoving(true)
+                            : props.onAction(id as NodeAction))}
+                        defaultOpen={props.moreOpen}
+                    />
+                </>}
             </footer>
         </div>
     );

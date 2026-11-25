@@ -58,8 +58,7 @@ async function more(label: string) {
 const places = () => Array.from(popover()?.querySelectorAll<HTMLButtonElement>('.pb-move-place') ?? []);
 
 async function moveList() {
-    Array.from(popover()!.querySelectorAll<HTMLButtonElement>('.pb-pop-button'))
-        .find(el => el.textContent?.startsWith('Move'))!.click();
+    (await more('Move…')).click();
     await flush();
 }
 
@@ -127,7 +126,7 @@ describe("a node's popover", () => {
         const dialog = popover()!;
         expect(dialog.getAttribute('role')).toBe('dialog');
         expect(dialog.querySelector('.pb-pop-title')?.textContent).toBe('Draft the spec');
-        expect(dialog.querySelector('.pb-pop-source')?.textContent).toBe('Yours');
+        expect(dialog.querySelector('.pb-pop-source')?.textContent).toBe('Changed by you');
         expect(document.activeElement).toBe(dialog);
         expect(root.querySelector('.pb-card--open .pb-node-name')?.textContent).toBe('Draft the spec');
         expect(root.querySelector('.pb-inspector')).toBeNull();
@@ -148,11 +147,29 @@ describe("a node's popover", () => {
         expect(document.activeElement).toBe(button);
     });
 
-    it('closes from its own close button', async () => {
+    it('carries no close button beside its card, and closes on a click away', async () => {
         await open();
-        popover()!.querySelector<HTMLButtonElement>('.pb-pop-close')!.click();
+        expect(popover()!.querySelector('.pb-pop-close')).toBeNull();
+        document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
         await flush();
         expect(popover()).toBeNull();
+    });
+
+    it('lists the hooks an extension runs at its edge, marked shipped, with nothing to edit', async () => {
+        await deliver({ type: 'graph', graph: graph({ steps: [{
+            ...HOOKED,
+            stockHooks: [{
+                extension: 'git', command: 'speckit.git.feature', description: 'Make the branch',
+                when: 'before', optional: false, conditional: false,
+            }],
+        }] }), buildState: 'built' });
+        await open('Resolve');
+        const hooks = Array.from(popover()!.querySelectorAll('.pb-pop-hook--stock'));
+        expect(hooks).toHaveLength(1);
+        expect(hooks[0].querySelector('.pb-pop-hook-name')?.textContent).toBe('feature');
+        expect(hooks[0].textContent).toContain('Shipped, from git');
+        expect(hooks[0].textContent).toContain('Make the branch');
+        expect(hooks[0].querySelectorAll('button')).toHaveLength(0);
     });
 
     it('lists its hooks, before first, each with whose it is and Edit and Remove', async () => {
@@ -197,7 +214,8 @@ describe("a node's popover", () => {
         expect(posted.at(-1)).toMatchObject({ type: 'useVariant', replaces: 'draft-spec', variant: 'draft-lean' });
 
         await open('Quality checklist');
-        (await more('Add hook')).click();
+        Array.from(popover()!.querySelectorAll<HTMLButtonElement>('.pb-pop-button'))
+            .find(el => el.textContent?.includes('Add hook'))!.click();
         await flush();
         expect(root.querySelector('.pb-modal')).not.toBeNull();
     });
@@ -223,7 +241,7 @@ describe("a node's popover", () => {
 
     it('removes the node from the run, with the shape to write, and leaves a struck row with Undo', async () => {
         await open();
-        popover()!.querySelector<HTMLButtonElement>('.pb-pop-remove')!.click();
+        (await more('Remove from the run')).click();
         await flush();
         expect(posted.at(-1)).toEqual({
             type: 'removeNode', command: 'specify', nodeId: 'draft-spec',
@@ -253,7 +271,7 @@ describe("a node's popover", () => {
 
     it('drops the struck row once the status moves on', async () => {
         await open();
-        popover()!.querySelector<HTMLButtonElement>('.pb-pop-remove')!.click();
+        (await more('Remove from the run')).click();
         await deliver({ type: 'status', status: {
             tone: 'done', text: 'gone', undo: { token: 'remove:specify:draft-spec' },
         } });
@@ -296,7 +314,7 @@ describe("a node's popover", () => {
             phases: [{ name: 'only', hooks: [], nodes: [node({ id: 'one', name: 'The one' })] }],
         })] }), buildState: 'built' });
         await open('The one');
-        const remove = popover()!.querySelector<HTMLButtonElement>('.pb-pop-remove')!;
+        const remove = await more('Remove from the run');
         expect(remove.getAttribute('aria-disabled')).toBe('true');
         expect(remove.textContent).toContain('a step needs at least one');
         const before = posted.length;

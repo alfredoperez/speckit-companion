@@ -5473,3 +5473,25 @@ body.vscode-high-contrast {
 .builder-bar-problem .builder-notice-icon { color: var(--pb-warn-ink); }
 
 .builder-bar--failed .builder-bar-main { background: var(--pb-warn-wash); }
+
+/* ---- The node popover: neutral selection, purple only on what is yours ---- */
+
+.pb-move-place:focus-visible { outline: 1px solid var(--border-hover); outline-offset: -1px; }
+
+.pb-move-enter {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-family: inherit;
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0;
+}
+
+.pb-move-place:focus-visible .pb-move-enter,
+.pb-move-place:hover .pb-move-enter { opacity: 1; }
+
+.pb-pop-hook--stock { background: color-mix(in srgb, var(--text-primary) 4%, var(--bg-primary)); }
+
+.pb-pop-hook--stock .pb-pop-hook-where { color: var(--text-secondary); }
+
+.pb-popover:focus-visible { outline: none; }

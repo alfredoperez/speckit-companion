@@ -10,6 +10,6 @@ import { HookType } from '../../../src/protocol/pipeline';
 export const KIND_LABELS: Record<HookType, string> = {
     skill: 'Skill',
     prompt: 'Instruction',
-    command: 'Command',
+    command: 'Shell command',
     node: 'Node',
 };
