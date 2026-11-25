@@ -33,6 +33,7 @@ import { runSpecifyPreset } from '../../speckit/processExtensions';
 import { stockRefusal } from './stockGuard';
 import { addUserHook, removeUserHook, setHookEnabled, updateUserHook } from './stockHooks';
 import { readHookRuns } from './hookRuns';
+import { latestRun, reportHolds } from './latestRun';
 import {
     formatStockCommands, hookableSteps, installedExtensions, readStockWorkflow, stockFileToOpen,
 } from './stockWorkflow';
@@ -111,6 +112,11 @@ export class PipelineBuilderPanel {
 
     /** Which installed stock workflow the board is drawing. */
     private drawing: string | undefined;
+
+    private readonly runs = latestRun();
+
+    /** The report the panel shows now, so a redraw can tell whether it still holds. */
+    private report: BuildReport | null = null;
 
     private constructor(
         private readonly panel: vscode.WebviewPanel,
@@ -1022,16 +1028,25 @@ export class PipelineBuilderPanel {
      * and `quiet` drops the toast that would otherwise say it a second time.
      */
     private async run(command: string): Promise<void> {
+        const ticket = this.runs.start();
         await this.post({ type: 'busy', busy: true });
         let report: BuildReport | null = null;
         try {
             report = await vscode.commands.executeCommand<BuildReport | null>(
                 command, { quiet: true }) ?? null;
         } finally {
-            await this.post({ type: 'busy', busy: false });
-            // After the redraw, which is what clears the last one.
-            await this.send();
-            if (report) { await this.post({ type: 'buildReport', report }); }
+            // A Build pressed while Review's preview was still running answers last.
+            if (this.runs.isNewest(ticket)) { await this.answer(ticket, report); }
+        }
+    }
+
+    private async answer(ticket: number, report: BuildReport | null): Promise<void> {
+        await this.post({ type: 'busy', busy: false });
+        // After the redraw, which is what clears the last one.
+        await this.send();
+        if (report && this.runs.isNewest(ticket)) {
+            this.report = report;
+            await this.post({ type: 'buildReport', report });
         }
     }
 
@@ -1096,15 +1111,14 @@ export class PipelineBuilderPanel {
         if (!isGraphError(graph)) {
             graph.firstRun = !this.context.workspaceState?.get<boolean>(FIRST_RUN_SEEN);
         }
-        await this.post({
-            type: 'graph',
-            graph,
-            buildState: readPipelineBuildState(this.workspaceRoot).kind,
-        });
+        const buildState = readPipelineBuildState(this.workspaceRoot).kind;
+        await this.post({ type: 'graph', graph, buildState });
         // A redraw means the pipeline moved — a panel write, an edit to
         // companion.yml, a node saved. "Built 14:02 · 5 commands written" is
         // then a claim about a pipeline that no longer exists, and it would sit
         // beside the amber line saying so, the two contradicting each other.
+        if (reportHolds(this.report, buildState)) { return; }
+        this.report = null;
         await this.post({ type: 'buildReport', report: null });
     }
 

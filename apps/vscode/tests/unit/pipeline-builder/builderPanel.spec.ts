@@ -22,6 +22,7 @@ import type { PipelineGraphResult } from '../../../src/protocol/pipeline';
 // which is a testing affordance rather than part of the editor's API.
 import { createMockWebviewPanel } from '../../__mocks__/vscode';
 import * as graphModule from '../../../src/features/specs/pipelineGraph';
+import { readPipelineBuildState } from '../../../src/features/specs/pipelineBuild';
 import {
     PipelineBuilderPanel,
     registerPipelineBuilderCommands,
@@ -30,7 +31,7 @@ import {
 jest.mock('../../../src/features/specs/pipelineGraph');
 jest.mock('../../../src/features/specs/pipelineBuild', () => {
     const actual = jest.requireActual('../../../src/features/specs/pipelineBuild');
-    return { ...actual, readPipelineBuildState: () => ({ kind: 'current' }) };
+    return { ...actual, readPipelineBuildState: jest.fn(() => ({ kind: 'current' })) };
 });
 
 const graph = graphModule as jest.Mocked<typeof graphModule>;
@@ -70,8 +71,11 @@ function openPanel(): Panel {
     return (vscode.window.createWebviewPanel as jest.Mock).mock.results.at(-1)!.value as Panel;
 }
 
+const buildState = readPipelineBuildState as jest.Mock;
+
 beforeEach(() => {
     jest.clearAllMocks();
+    buildState.mockReturnValue({ kind: 'current' });
     workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-ws-'));
     extensionPath = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-ext-'));
     // A project with the Companion spec-kit extension installed, which is what
@@ -199,8 +203,34 @@ describe('building', () => {
             ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
         });
         await panel.__receive({ type: 'build' });
+        buildState.mockReturnValue({ kind: 'stale' });
         await panel.__receive({ type: 'selectWorkflow', name: 'bugfix' });
         expect(panel.__lastPosted('buildReport').report).toBeNull();
+    });
+
+    it('keeps Built through the redraw the build\'s own writes cause', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce({
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
+        });
+        await panel.__receive({ type: 'build' });
+        const watchers = (vscode.workspace.createFileSystemWatcher as jest.Mock)
+            .mock.results.map(r => r.value);
+        await watchers[0].fireChange(vscode.Uri.file('commands/speckit.companion.specify.md'));
+        expect(panel.__lastPosted('buildReport').report).not.toBeNull();
+    });
+
+    it('answers only the build when Build is pressed while Review\'s preview still runs', async () => {
+        let finishPreview: (report: unknown) => void = () => undefined;
+        (vscode.commands.executeCommand as jest.Mock)
+            .mockImplementationOnce(() => new Promise(resolve => { finishPreview = resolve; }))
+            .mockResolvedValueOnce({ ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x' });
+        const preview = panel.__receive({ type: 'preview' });
+        await panel.__receive({ type: 'build' });
+        finishPreview({ ok: true, at: '14:02', commands: 5, changed: [], dryRun: true, output: 'x' });
+        await preview;
+        const reports = panel.__posted.filter((m: { type: string; report?: unknown }) =>
+            m.type === 'buildReport' && m.report);
+        expect(reports.map((m: { report: { dryRun: boolean } }) => m.report.dryRun)).toEqual([false]);
     });
 
     it('drops it for a change made outside the panel too', async () => {
@@ -208,6 +238,7 @@ describe('building', () => {
             ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
         });
         await panel.__receive({ type: 'build' });
+        buildState.mockReturnValue({ kind: 'stale' });
         const watchers = (vscode.workspace.createFileSystemWatcher as jest.Mock)
             .mock.results.map(r => r.value);
         await watchers[0].fireChange(vscode.Uri.file('companion.yml'));
