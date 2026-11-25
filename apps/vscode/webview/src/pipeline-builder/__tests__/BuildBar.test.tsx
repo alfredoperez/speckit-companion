@@ -215,6 +215,19 @@ describe('after a build', () => {
         expect(again.querySelector('.builder-bar')).toBeNull();
     });
 
+    it('leaves four seconds after it first showed, however often it comes back', async () => {
+        jest.useFakeTimers();
+        const report = { ...REPORT };
+        act(() => { bar({ state: 'current', report }); });
+        act(() => { jest.advanceTimersByTime(3000); });
+        document.body.innerHTML = '';
+        let again!: HTMLElement;
+        act(() => { again = bar({ state: 'current', report }).host; });
+        expect(again.querySelector('.builder-bar--built')).not.toBeNull();
+        act(() => { jest.advanceTimersByTime(1100); });
+        expect(again.querySelector('.builder-bar')).toBeNull();
+    });
+
     it('stays open in a warning state when it failed, saying nothing was written (FR-010)', async () => {
         const { host, button, calls } = bar({
             report: { ...REPORT, ok: false, warnings: ['specify: unknown node nope'] },

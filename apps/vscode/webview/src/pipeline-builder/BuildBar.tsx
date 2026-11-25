@@ -18,8 +18,9 @@ import { HookIcon } from './HookIcon';
 /** How long the built confirmation stays before it leaves. */
 const BUILT_FOR = 4000;
 
-/** Reports already seen off. The bar unmounts while a sheet is open, so its own state cannot hold this. */
+/** Reports already seen off, and when each built one first showed. The bar unmounts while a sheet is open, so its own state cannot hold these. */
 const seenOff = new WeakSet<BuildReport>();
+const shownAt = new WeakMap<BuildReport, number>();
 
 interface Props {
     graph: PipelineGraph;
@@ -97,7 +98,9 @@ export function BuildBar(props: Props) {
     const built = report?.ok === true && !report.dryRun ? report : null;
     useEffect(() => {
         if (!built || seenOff.has(built)) { return; }
-        const timer = setTimeout(() => setGone(built), BUILT_FOR);
+        if (!shownAt.has(built)) { shownAt.set(built, Date.now()); }
+        const left = Math.max(0, BUILT_FOR - (Date.now() - shownAt.get(built)!));
+        const timer = setTimeout(() => setGone(built), left);
         return () => clearTimeout(timer);
     }, [built]);
     useEffect(() => { if (!busy) { setChecking(false); } }, [busy]);
