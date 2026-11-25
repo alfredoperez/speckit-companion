@@ -5604,3 +5604,10 @@ body.vscode-high-contrast {
 }
 
 .pb-sd-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.pb-modal-fields { align-content: start; }
+
+/* In a sheet the two footer actions stack, each the sheet's width. */
+@container builder (width <= 640px) {
+    .pb-modal-foot .pb-action:not(.pb-action--remove) { flex: 1 1 100%; }
+}
