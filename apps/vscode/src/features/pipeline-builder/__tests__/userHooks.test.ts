@@ -254,3 +254,28 @@ describe('a registry with Windows line endings', () => {
         expect(off).toBe(CRLF.replace('    enabled: true\r\n    optional: true  # ask', '    enabled: false\r\n    optional: true  # ask'));
     });
 });
+
+describe('a new key matches the list indent the file already uses', () => {
+    const INDENTED = [
+        'hooks:',
+        '  before_plan:',
+        '    - extension: git',
+        '      command: speckit.git.commit',
+        '      enabled: true',
+        '      optional: false',
+        '      description: Commit before planning',
+        '',
+    ].join('\n');
+
+    it('indents the entry under a new key the way the file indents its others', () => {
+        const out = ok(addUserHook(INDENTED, 'tasks', 'after', NOTE, INSTALLED));
+        expect(out).toContain('  after_tasks:\n    - extension: ');
+        expect(out).toContain('\n      command: house-note');
+        expect(hooks(out).after_tasks).toHaveLength(1);
+    });
+
+    it('keeps spec-kit\'s own style, with the list level with its key', () => {
+        const out = ok(addUserHook(REGISTRY, 'specify', 'before', NOTE, INSTALLED));
+        expect(out).toContain('  before_specify:\n  - extension: ');
+    });
+});

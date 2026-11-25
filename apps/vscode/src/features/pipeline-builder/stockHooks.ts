@@ -167,6 +167,17 @@ function hooksSection(lines: string[]): { at: number; childIndent: number; end: 
     return { at, childIndent, end: trimEnd(lines, at, end) };
 }
 
+/** How far the file indents a key's list items past the key itself: 0 for spec-kit's own style. */
+function listOffset(lines: string[], from: number, to: number, indent: number): number {
+    for (let i = from + 1; i < to; i += 1) {
+        const line = lines[i];
+        if (line.trim().startsWith('- ') && indentOf(line) >= indent) {
+            return indentOf(line) - indent;
+        }
+    }
+    return 0;
+}
+
 /** A `<when>_<step>:` key inside the section, its entry starts and where its list ends. */
 function keySection(lines: string[], from: number, to: number, indent: number, key: string) {
     const at = lines.findIndex((line, i) => i > from && i < to
@@ -281,8 +292,9 @@ export function addUserHook(
             if (entriesOf(doc, key) || (doc.hooks as Doc | null)?.[key] !== undefined) {
                 return { error: `${key} ${UNSAFE}` };
             }
+            const offset = listOffset(lines, hooks.at, hooks.end, hooks.childIndent);
             lines.splice(hooks.end, 0, `${' '.repeat(hooks.childIndent)}${key}:`,
-                ...entryLines(hooks.childIndent, draft));
+                ...entryLines(hooks.childIndent + offset, draft));
         } else {
             if (inlineValue(lines[found.at]) !== '') { return { error: `${key} ${UNSAFE}` }; }
             lines.splice(found.end, 0, ...entryLines(found.bullet, draft));
