@@ -53,11 +53,11 @@ const withProblem = () => graph({
 });
 
 describe('the build bar appears when there is something to build', () => {
-    it('says the build is out of date and offers Review and the one filled Build (FR-003)', () => {
+    it('says changes are not built and offers Review and the one filled Build (FR-003)', () => {
         const { host, button } = bar({
             g: graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 2 } }), step({ name: 'plan' })] }),
         });
-        expect(host.querySelector('.builder-bar-headline')?.textContent).toBe('The build is out of date');
+        expect(host.querySelector('.builder-bar-headline')?.textContent).toBe('Changes not built');
         expect(host.querySelector('.builder-bar-detail')?.textContent)
             .toBe('The assistant still reads the old commands');
         expect(button('Review')?.className).not.toContain('primary');
@@ -70,7 +70,15 @@ describe('the build bar appears when there is something to build', () => {
             g: graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 2 } }),
                 step({ name: 'plan', changes: { ...NO_CHANGES, reordered: true } })] }),
         });
-        expect(host.querySelector('.builder-bar-headline')?.textContent).toBe('The build is out of date');
+        expect(host.querySelector('.builder-bar-headline')?.textContent).toBe('Changes not built');
+    });
+
+    it('counts the changes on a project never built, since all of them wait', () => {
+        const { host } = bar({
+            state: 'never-built',
+            g: graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 2, reordered: true } })] }),
+        });
+        expect(host.querySelector('.builder-bar-headline')?.textContent).toBe('3 changes not built');
     });
 
     it('is not there when the build is current and nothing ran', () => {
@@ -146,7 +154,7 @@ describe('Review opens the list of changes', () => {
     it('lists a problem hook once, with its reason and its fixes (FR-006)', async () => {
         const { host, button, calls } = bar({ g: withProblem() });
         expect(host.querySelector('.builder-bar-detail')?.textContent)
-            .toBe('1 hook will do nothing. Review before you build.');
+            .toBe('Fix 1 problem first. That hook would do nothing.');
         button('Review')!.click();
         await flush();
         const problems = host.querySelectorAll('.builder-bar-row--problem');

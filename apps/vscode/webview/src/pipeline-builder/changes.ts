@@ -43,9 +43,13 @@ export function changeCount(step: PipelineStep): number {
         + (step.template?.sections.length ?? 0);
 }
 
-/** `2 changes not built yet`, or the plain fact when nothing is counted. */
-export function unbuiltLine(steps: PipelineStep[], neverBuilt = false): string {
-    const n = steps.reduce((sum, step) => sum + changeCount(step), 0);
-    if (n === 0) { return neverBuilt ? 'Never built' : 'Not built yet'; }
-    return `${n} change${n === 1 ? '' : 's'} not built yet`;
+/**
+ * What waits for a build, as a line. Only a project never built can count it:
+ * everything it changed from shipped is unbuilt. Once built, what differs from
+ * shipped is not what differs from the last build, so no number is claimed.
+ */
+export function unbuiltLine(steps: PipelineStep[], neverBuilt: boolean, tail = ' yet'): string {
+    const n = neverBuilt ? steps.reduce((sum, step) => sum + changeCount(step), 0) : 0;
+    if (n === 0) { return neverBuilt ? 'Never built' : `Changes not built${tail}`; }
+    return `${n} change${n === 1 ? '' : 's'} not built${tail}`;
 }

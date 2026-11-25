@@ -11,7 +11,7 @@ import {
     BuildReport, PipelineBuildKind, PipelineGraph, PipelineHook, PipelineStatus,
     needsBuild,
 } from '../../../src/protocol/pipeline';
-import { changeSummary, changed } from './changes';
+import { changeSummary, changed, unbuiltLine } from './changes';
 import { StatusIcon, tally } from './Header';
 import { HookIcon } from './HookIcon';
 
@@ -65,8 +65,9 @@ function readList(names: string[]): string {
     return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
-function waitingHeadline(state: PipelineBuildKind): string {
-    return state === 'never-built' ? 'Never built' : 'The build is out of date';
+/** `3 changes not built`, said the way the header says it. */
+export function waitingHeadline(graph: PipelineGraph, state: PipelineBuildKind): string {
+    return unbuiltLine(graph.steps, state === 'never-built', '');
 }
 
 /** Which commands a preview says the build rewrites. */
@@ -148,9 +149,10 @@ export function BuildBar(props: Props) {
             ?? (failed.dryRun ? 'The configuration could not be read.'
                 : `The build failed at ${failed.at}.`);
     } else if (waiting) {
-        headline = waitingHeadline(buildState);
+        headline = waitingHeadline(graph, buildState);
         detail = problems.length
-            ? `${tally(problems.length, 'hook')} will do nothing. Review before you build.`
+            ? `Fix ${tally(problems.length, 'problem')} first. ${problems.length === 1
+                ? 'That hook would' : 'Those hooks would'} do nothing.`
             : buildState === 'never-built'
                 ? 'The assistant still reads the shipped commands'
                 : 'The assistant still reads the old commands';
@@ -178,18 +180,6 @@ export function BuildBar(props: Props) {
                 <div class="builder-bar-review" id={listId}>
                     <h2 class="sr-only">What the build would change</h2>
                     <ul class="builder-bar-list">
-                        {status && (
-                            <li class="builder-bar-row">
-                                <StatusIcon tone={status.tone} />
-                                <span class="builder-bar-text">{status.text}</span>
-                                {status.undo && (
-                                    <button class="builder-bar-link"
-                                        onClick={() => props.onUndo(status.undo!.token)}>
-                                        {status.undo.label ?? 'Undo'}
-                                    </button>
-                                )}
-                            </li>
-                        )}
                         {problems.map(({ step, hook }) => (
                             <li class="builder-bar-row builder-bar-row--problem"
                                 key={`${step}/${hook.when}/${hook.anchor}/${hook.index}`}>
@@ -202,7 +192,7 @@ export function BuildBar(props: Props) {
                                         </span>
                                     </span>
                                 </div>
-                                <div class="builder-bar-problem">
+                                <div class="builder-bar-problem" role="note">
                                     <StatusIcon tone="warning" />
                                     <span class="builder-bar-text">{hook.problem}</span>
                                     <button class="builder-action"

@@ -360,9 +360,10 @@ export const BuildIsBehind: Story = {
     render: () => {
         const g = graph([SPECIFY], { configured: true, customised: true });
         return (
-            <div class="builder builder--bar" style="height: 320px;">
+            <div class="builder builder--bar" style="height: 820px;">
                 <Header graph={g} buildState="stale" busy={false} {...HEADER_ACTIONS} />
                 <BuildBar graph={g} buildState="stale" busy={false} {...BAR_ACTIONS} />
+                <div class="builder-body"><Canvas graph={g} {...CANVAS_ACTIONS} /></div>
             </div>
         );
     },
@@ -373,9 +374,10 @@ export const NeverBuilt: Story = {
     render: () => {
         const g = graph([SPECIFY], { configured: true, customised: true });
         return (
-            <div class="builder builder--bar" style="height: 320px;">
+            <div class="builder builder--bar" style="height: 820px;">
                 <Header graph={g} buildState="never-built" busy={false} {...HEADER_ACTIONS} />
                 <BuildBar graph={g} buildState="never-built" busy={false} {...BAR_ACTIONS} />
+                <div class="builder-body"><Canvas graph={g} {...CANVAS_ACTIONS} /></div>
             </div>
         );
     },

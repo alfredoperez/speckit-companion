@@ -46,8 +46,10 @@ describe('the header is the name and the workflow', () => {
 
     it('counts the changes that wait for a build', () => {
         const g = graph({ steps: [step({ changes: { ...NO_CHANGES, hooks: 2 } })] });
-        const host = mount(<Header graph={g} buildState="stale" busy={false} {...HEAD} />);
+        const host = mount(<Header graph={g} buildState="never-built" busy={false} {...HEAD} />);
         expect(host.querySelector('.builder-state')?.textContent).toBe('2 changes not built yet');
+        const stale = mount(<Header graph={g} buildState="stale" busy={false} {...HEAD} />);
+        expect(stale.querySelector('.builder-state')?.textContent).toBe('Changes not built yet');
     });
 
     it('says there is nothing to build on a project that has no configuration', () => {

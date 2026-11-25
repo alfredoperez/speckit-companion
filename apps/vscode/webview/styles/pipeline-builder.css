@@ -5102,6 +5102,10 @@ body {
     --pb-primary: var(--text-primary);
     --pb-primary-ink: var(--bg-primary);
     --pb-primary-hover: color-mix(in srgb, var(--text-primary) 86%, var(--bg-primary));
+    /* A warning reads as amber on the page, not as a beige box. */
+    --pb-warn-wash: color-mix(in srgb, var(--warning) 9%, var(--bg-primary));
+    --pb-warn-edge: color-mix(in srgb, var(--warning) 38%, var(--bg-primary));
+    --pb-warn-ink: color-mix(in srgb, var(--warning) 75%, var(--text-primary));
 }
 
 body.vscode-high-contrast {
@@ -5427,3 +5431,45 @@ body.vscode-high-contrast {
 
 .pb-node-group--before > .pb-edge-add--before { top: -17px; }
 .pb-node-group--after > .pb-edge-add--after { bottom: -17px; }
+
+/* ---- The build bar: 760px at most, 24px off the foot, the count first ---- */
+
+.builder-bar {
+    bottom: var(--space-5);
+    background: var(--bg-primary);
+    border-color: var(--border-hover);
+    border-radius: var(--radius-lg);
+}
+
+.builder-bar-main { padding: var(--space-3) var(--space-3) var(--space-3) 20px; }
+
+.builder-bar-says { gap: 2px; }
+
+.builder-bar-headline {
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.builder-bar-detail {
+    font-size: var(--text-sm);
+    line-height: 18px;
+    color: var(--text-secondary);
+}
+
+.builder-bar-actions .builder-action:not(.builder-action--primary) {
+    padding: 0 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-md);
+}
+
+.builder-bar-problem {
+    color: var(--pb-warn-ink);
+    background: var(--pb-warn-wash);
+    border-color: var(--pb-warn-edge);
+}
+
+.builder-bar-problem .builder-notice-icon { color: var(--pb-warn-ink); }
+
+.builder-bar--failed .builder-bar-main { background: var(--pb-warn-wash); }

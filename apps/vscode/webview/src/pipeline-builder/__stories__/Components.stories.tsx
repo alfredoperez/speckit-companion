@@ -822,6 +822,18 @@ export const BuildBarNarrow: Story = {
     ),
 };
 
+export const BuildBarFailedNarrow: Story = {
+    name: 'Build bar · the build failed, in a docked panel',
+    parameters: { capture: { width: 380, height: 420 } },
+    render: () => (
+        <Foot width={380}><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={{ ...BUILT_REPORT, ok: false,
+                warnings: ['specify did not build · nothing written'] }}
+            status={null} {...BAR} /></Foot>
+    ),
+    play: BuildBarReview.play,
+};
+
 /** Nothing configured, nothing changed: the first-run line is the loudest thing. */
 export const HeaderFresh: Story = {
     name: 'Header · a fresh project',
