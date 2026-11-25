@@ -5571,3 +5571,18 @@ body.vscode-high-contrast {
 
 .pb-hook-status--problem,
 .pb-card .pb-hook-status--problem { color: var(--pb-warn-ink); }
+
+/* ---- New workflow: one line a row, the radio says which ---- */
+
+.pb-nw-start--on,
+.pb-nw-start--on:hover { background: none; }
+
+.pb-nw-start-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pb-nw-radio { accent-color: var(--pb-primary); }
+
+.pb-nw-input { font-family: var(--font-mono); }

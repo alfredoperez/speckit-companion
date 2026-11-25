@@ -72,14 +72,14 @@ export function NewWorkflowModal({ taken, hasProject, active, presets, onCancel,
                         <fieldset class="pb-nw-starts">
                             <legend class="pb-nw-label">Start from</legend>
                             {starts.map(start => (
-                                <label key={start.id}
+                                <label key={start.id} title={start.note || undefined}
                                     class={`pb-nw-start${from === start.id ? ' pb-nw-start--on' : ''}`}>
                                     <input class="pb-nw-radio" type="radio" name="pb-nw-from"
                                         value={start.id} checked={from === start.id}
                                         onChange={() => setFrom(start.id)} />
                                     <span class="pb-nw-start-text">
                                         <span class="pb-nw-start-label">{start.label}</span>
-                                        {start.note && <span class="pb-nw-start-note">{start.note}</span>}
+                                        {start.note && <span class="sr-only">{`, ${start.note}`}</span>}
                                     </span>
                                     <span class="pb-nw-start-trail">{start.trail}</span>
                                 </label>
