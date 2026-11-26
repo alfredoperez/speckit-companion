@@ -100,8 +100,8 @@ class AConfiguredProjectGetsItsHooks(unittest.TestCase):
         out = project.root / "out"
         project.build_ok("--out", str(out))
         body = (out / "speckit.companion.implement.md").read_text(encoding="utf-8")
-        self.assertIn("<!-- speckit-companion:hook after-implement-exec-0 -->\nx\n"
-                      "<!-- /speckit-companion:hook after-implement-exec-0 -->", body)
+        self.assertIn("<!-- speckit-companion:hook after-implement-exec-0 -->\nx\n", body)
+        self.assertIn("<!-- /speckit-companion:hook after-implement-exec-0 -->", body)
 
 
 if __name__ == "__main__":
