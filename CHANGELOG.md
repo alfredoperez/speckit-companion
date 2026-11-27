@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
+- **A fresh clone reads as built.** The Workflow Builder no longer says a freshly cloned project needs building. <!-- area: pipeline-builder -->
 - **The Workflow Builder is redesigned.** Steps read as ==lanes of cards==, with each node's hooks beside it and your own changes marked in color. ([#1069](https://github.com/alfredoperez/speckit-companion/pull/1069)) <!-- area: pipeline-builder -->
 - **Add to a lane from its header.** **+ Add to** opens one modal for a hook, a node or a step, each with its own form. ([#1069](https://github.com/alfredoperez/speckit-companion/pull/1069)) <!-- area: pipeline-builder -->
 - **Move, replace or remove from a popover.** Places the run would refuse are greyed out with the reason, and a removed node keeps an **Undo**. ([#1069](https://github.com/alfredoperez/speckit-companion/pull/1069)) <!-- area: pipeline-builder -->

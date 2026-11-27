@@ -238,6 +238,29 @@ class ItReadsThisRepositorysOwnConfiguration(unittest.TestCase):
         self.assertIn("doctor.py", body, "the configured command hook did not reach the body")
 
 
+class TheManifestRecordsWhatTheBuildRead(unittest.TestCase):
+    def test_inputs_map_each_read_file_to_its_content_hash(self):
+        import hashlib
+        tmp = project_with("commands: {}\n")
+        self.addCleanup(tmp.cleanup)
+        node = Path(tmp.name) / ".specify" / "companion" / "nodes" / "x.md"
+        node.parent.mkdir(parents=True)
+        node.write_text("hello", encoding="utf-8")
+        out = Path(tmp.name) / ".specify" / "extensions" / "companion" / "commands"
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "build-pipeline.py"), "--project", tmp.name],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        manifest = json.loads((out / ".manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            manifest["inputs"][".specify/companion/nodes/x.md"],
+            hashlib.sha256(b"hello").hexdigest(),
+        )
+        self.assertIn(".specify/companion.yml", manifest["inputs"])
+        self.assertIn("commands", manifest)
+
+
 if __name__ == "__main__":
     unittest.main()
 

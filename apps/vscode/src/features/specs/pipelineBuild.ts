@@ -11,6 +11,7 @@
  * spec: compare modified times, and say so when the source is newer.
  */
 
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { needsBuild } from '../../protocol/pipeline';
@@ -95,6 +96,54 @@ function newestInputTime(workspaceRoot: string, dirs: string[]): number | null {
     return newest;
 }
 
+function sha256(file: string): string | null {
+    try {
+        return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+    } catch {
+        return null;
+    }
+}
+
+function listFiles(workspaceRoot: string, dirs: string[]): string[] {
+    const found: string[] = [];
+    const walk = (dir: string) => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(dir, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const entry of entries) {
+            const here = path.join(dir, entry.name);
+            if (entry.isDirectory()) { walk(here); } else { found.push(here); }
+        }
+    };
+    for (const rel of dirs) { walk(path.join(workspaceRoot, rel)); }
+    return found;
+}
+
+/** True when the build recorded its inputs, every one still has the recorded content, and no other input file exists. */
+function inputsUnchanged(workspaceRoot: string): boolean {
+    try {
+        const manifest = JSON.parse(fs.readFileSync(path.join(workspaceRoot, BUILT_COMMANDS_REL, '.manifest.json'), 'utf8'));
+        const recorded = manifest?.inputs;
+        if (!recorded || typeof recorded !== 'object' || Array.isArray(recorded)) { return false; }
+        const posix = (rel: string) => rel.split(path.sep).join('/');
+        const known = new Set(Object.keys(recorded));
+        const present = [
+            path.join(workspaceRoot, COMPANION_CONFIG_REL),
+            ...listFiles(workspaceRoot, [...BUILD_INPUT_DIRS, ...TEMPLATE_DIRS]),
+        ].filter(file => mtime(file) !== null);
+        if (present.some(file => !known.has(posix(path.relative(workspaceRoot, file))))) { return false; }
+        for (const [rel, hash] of Object.entries(recorded)) {
+            if (typeof hash !== 'string' || sha256(path.join(workspaceRoot, ...rel.split('/'))) !== hash) { return false; }
+        }
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 /**
  * Read the project's build state.
  *
@@ -124,7 +173,11 @@ export function readPipelineBuildState(workspaceRoot: string): PipelineBuildStat
 
     // Strictly newer: a build writes after it reads, so equal stamps mean the
     // build is the later event and the pipeline is current.
-    return configuredAt > builtAt
-        ? { kind: 'stale', configuredAt, builtAt }
-        : { kind: 'current', builtAt };
+    if (configuredAt > builtAt) {
+        // A clone or copy rewrites files in arbitrary order, so times alone call a built project stale.
+        return inputsUnchanged(workspaceRoot)
+            ? { kind: 'current', builtAt }
+            : { kind: 'stale', configuredAt, builtAt };
+    }
+    return { kind: 'current', builtAt };
 }
