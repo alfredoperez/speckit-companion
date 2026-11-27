@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Changed
-- **Override a template from the stock board.** **Override in this project** makes your own copy, other layers open read-only, and **Remove override** deletes it. <!-- area: pipeline-builder -->
+- **Override a template from the stock board.** **Override in this project** makes your own copy, other layers open read-only, and **Remove override** deletes it. ([#1072](https://github.com/alfredoperez/speckit-companion/pull/1072)) <!-- area: pipeline-builder -->
 - **A fresh clone reads as built.** The Workflow Builder no longer says a freshly cloned project needs building. ([#1071](https://github.com/alfredoperez/speckit-companion/pull/1071)) <!-- area: pipeline-builder -->
 - **The Workflow Builder is redesigned.** Steps read as ==lanes of cards==, with each node's hooks beside it and your own changes marked in color. ([#1069](https://github.com/alfredoperez/speckit-companion/pull/1069)) <!-- area: pipeline-builder -->
 - **Add to a lane from its header.** **+ Add to** opens one modal for a hook, a node or a step, each with its own form. ([#1069](https://github.com/alfredoperez/speckit-companion/pull/1069)) <!-- area: pipeline-builder -->
