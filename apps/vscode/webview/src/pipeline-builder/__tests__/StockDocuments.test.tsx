@@ -80,6 +80,23 @@ describe('the documents modal', () => {
         expect(overridden).toEqual(['.specify/presets/house-style/templates/plan-template.md']);
     });
 
+    it('disables Override in this project when a preset replaces a section, and says why', () => {
+        const sectioned: StockTemplate = {
+            ...NO_OVERRIDE,
+            layers: [{ ...NO_OVERRIDE.layers![0], strategy: 'replace-section' }, NO_OVERRIDE.layers![1]],
+        };
+        const overridden: string[] = [];
+        const host = mount(<StockDocuments templates={[sectioned]} constitution={null}
+            onOpenFile={noop} onViewFile={noop} onOverride={p => overridden.push(p)}
+            onRemoveOverride={noop} onRevise={noop} onClose={noop} />);
+
+        const button = host.querySelector<HTMLButtonElement>('.pb-sd-actions button')!;
+        expect(button.disabled).toBe(true);
+        expect(host.querySelector('.pb-sd-actions')!.textContent).toContain('Open the preset file instead');
+        button.click();
+        expect(overridden).toEqual([]);
+    });
+
     it('says where the copy lives and that Spec Kit files open read-only', () => {
         const host = mount(<StockDocuments templates={[LAYERED]} constitution={null}
             onOpenFile={noop} {...IDLE} onRevise={noop} onClose={noop} />);

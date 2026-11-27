@@ -27,6 +27,52 @@ describe('making a template override', () => {
         expect(fs.readFileSync(path.join(root, OVERRIDE), 'utf8')).toBe('# Core spec\n');
     });
 
+    function preset(root: string, strategy: string, body: string): string {
+        write(root, '.specify/presets/.registry', JSON.stringify({ presets: { house: { priority: 1, enabled: true } } }));
+        write(root, '.specify/presets/house/preset.yml', [
+            'preset:', '  id: house', 'provides:', '  templates:', '    - type: template',
+            '      name: spec-template', '      file: templates/spec-template.md',
+            `      strategy: ${strategy}`, ''].join('\n'));
+        write(root, '.specify/presets/house/templates/spec-template.md', body);
+        return '.specify/presets/house/templates/spec-template.md';
+    }
+    const overrideText = (root: string) => fs.readFileSync(path.join(root, OVERRIDE), 'utf8');
+
+    it('appends the preset after core, joined by a blank line', () => {
+        const root = project();
+        const top = preset(root, 'append', '## House rules\n');
+        expect(makeOverride(root, top)).toEqual({ file: path.join(root, OVERRIDE) });
+        expect(overrideText(root)).toBe('# Core spec\n\n\n## House rules\n');
+    });
+
+    it('prepends the preset before core', () => {
+        const root = project();
+        const top = preset(root, 'prepend', '## Banner\n');
+        makeOverride(root, top);
+        expect(overrideText(root)).toBe('## Banner\n\n\n# Core spec\n');
+    });
+
+    it('wraps core where the placeholder sits', () => {
+        const root = project();
+        const top = preset(root, 'wrap', 'before\n{CORE_TEMPLATE}\nafter\n');
+        makeOverride(root, top);
+        expect(overrideText(root)).toBe('before\n# Core spec\n\nafter\n');
+    });
+
+    it('refuses a wrap with no placeholder and writes nothing', () => {
+        const root = project();
+        const top = preset(root, 'wrap', 'no slot\n');
+        expect(makeOverride(root, top)).toEqual({ error: expect.stringContaining('{CORE_TEMPLATE}') });
+        expect(fs.existsSync(path.join(root, OVERRIDE))).toBe(false);
+    });
+
+    it('never writes a fragment for a section replacement', () => {
+        const root = project();
+        const top = preset(root, 'replace-section', '## Only this\n');
+        expect(makeOverride(root, top)).toEqual({ error: expect.stringContaining('Open the preset file') });
+        expect(fs.existsSync(path.join(root, OVERRIDE))).toBe(false);
+    });
+
     it('refuses a path the board did not offer', () => {
         const root = project();
         expect(makeOverride(root, '../../etc/passwd')).toEqual({ error: expect.any(String) });

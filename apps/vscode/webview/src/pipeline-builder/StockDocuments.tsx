@@ -69,6 +69,8 @@ function Detail({ template, onOpenFile, onViewFile, onOverride, onRemoveOverride
     { template: StockTemplate } & DetailActions) {
     const layers = template.layers ?? [];
     const hasOverride = layers[0]?.kind === 'override';
+    const blocked = layers.some(layer => layer.strategy === 'replace-section')
+        ? 'A preset replaces a section of this template. Open the preset file instead.' : null;
     return (
         <section class="pb-sd-detail" aria-labelledby="pb-sd-file">
             <h3 class="pb-sd-file" id="pb-sd-file">{template.file}</h3>
@@ -129,11 +131,13 @@ function Detail({ template, onOpenFile, onViewFile, onOverride, onRemoveOverride
                         <button key={`${layer.kind}-${layer.path}`} type="button"
                             class="pb-pop-button pb-sd-layer-open pb-sd-layer-open--top"
                             aria-label={`Copy ${layer.path} to templates/overrides/ and open the copy`}
+                            disabled={!!blocked} title={blocked ?? undefined}
                             onClick={() => onOverride(layer.path)}>
                             Override in this project
                         </button>
                     );
                 })}
+                {blocked && !hasOverride && <p class="pb-sd-note">{blocked}</p>}
                 {hasOverride && (
                     <button type="button" class="pb-action pb-action--remove"
                         aria-label={`Remove override ${layers[0].path}`}

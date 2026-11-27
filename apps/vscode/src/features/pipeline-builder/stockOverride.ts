@@ -8,9 +8,11 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { StockTemplateLayer } from '../../protocol/pipeline';
 import { readStockWorkflow } from './stockWorkflow';
 
 const OVERRIDES_REL = path.join('.specify', 'templates', 'overrides');
+const PLACEHOLDER = '{CORE_TEMPLATE}';
 
 export type OverrideResult = { file: string } | { error: string };
 
@@ -23,17 +25,57 @@ function topLayerOf(workspaceRoot: string, rel: string, drawing?: string) {
     return null;
 }
 
-/** Copy the file a run uses now into the overrides folder, and say where it is. */
+/** Why a copy cannot be made, or null. Shown beside the disabled button. */
+export function overrideRefusal(layers: StockTemplateLayer[]): string | null {
+    return layers.some(layer => layer.strategy === 'replace-section')
+        ? 'A preset replaces a section of this template. Open the preset file instead.'
+        : null;
+}
+
+/** The text a run uses, composed bottom-up with the joins Spec Kit's resolver uses. */
+function composed(workspaceRoot: string, layers: StockTemplateLayer[]): string | { error: string } {
+    const read = (layer: StockTemplateLayer) =>
+        fs.readFileSync(path.join(workspaceRoot, layer.path), 'utf8');
+    try {
+        if (layers.length === 1 || layers[0].strategy === 'replace') { return read(layers[0]); }
+        if (layers[layers.length - 1].strategy !== 'replace') {
+            return { error: 'This template has no base file to compose onto.' };
+        }
+        let text = read(layers[layers.length - 1]).replace(/\r\n/g, '\n');
+        for (const layer of layers.slice(0, -1).reverse()) {
+            const body = read(layer).replace(/\r\n/g, '\n');
+            if (layer.strategy === 'prepend') {
+                text = `${body}\n\n${text}`;
+            } else if (layer.strategy === 'append') {
+                text = `${text}\n\n${body}`;
+            } else if (layer.strategy === 'wrap') {
+                if (!body.includes(PLACEHOLDER)) {
+                    return { error: `${layer.path} has no ${PLACEHOLDER}, so it cannot be composed.` };
+                }
+                text = body.split(PLACEHOLDER).join(text);
+            } else {
+                return { error: `${layer.path} cannot be composed here.` };
+            }
+        }
+        return text;
+    } catch {
+        return { error: 'A layer of this template is not readable.' };
+    }
+}
+
+/** Write the text a run uses now into the overrides folder, and say where it is. */
 export function makeOverride(workspaceRoot: string, rel: string, drawing?: string): OverrideResult {
     const found = topLayerOf(workspaceRoot, rel, drawing);
     if (!found) { return { error: 'That is not a template this board drew.' }; }
     if (found.top.kind === 'override') { return { file: path.join(workspaceRoot, found.top.path) }; }
-    const source = path.join(workspaceRoot, found.top.path);
-    if (!fs.existsSync(source)) { return { error: `${found.top.path} is not on disk.` }; }
+    const layers = found.template.layers ?? [];
+    const refusal = overrideRefusal(layers);
+    if (refusal) { return { error: refusal }; }
+    const text = composed(workspaceRoot, layers);
+    if (typeof text !== 'string') { return text; }
     const target = path.join(workspaceRoot, OVERRIDES_REL, found.template.file);
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    // simplified: a preset that appends, prepends, wraps or replaces a section copies that layer's file alone, not the composed result; an override always replaces.
-    fs.copyFileSync(source, target);
+    fs.writeFileSync(target, text, 'utf8');
     return { file: target };
 }
 
