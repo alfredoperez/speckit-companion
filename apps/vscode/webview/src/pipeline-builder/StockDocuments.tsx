@@ -12,6 +12,12 @@ interface Props {
     /** The template open first, by file name. */
     open?: string;
     onOpenFile: (path: string) => void;
+    /** Open a lower layer read-only. */
+    onViewFile: (path: string) => void;
+    /** Copy the file in use, named by its path, into the project's overrides. */
+    onOverride: (path: string) => void;
+    /** Delete the override at this path; the host asks first. */
+    onRemoveOverride: (path: string) => void;
     onRevise: () => void;
     onClose: () => void;
 }
@@ -57,8 +63,12 @@ export function layerState(layers: StockTemplateLayer[], at: number): 'in-use' |
 
 const STATE_WORDS = { 'in-use': 'In use', combined: 'Part of it', hidden: 'Hidden' };
 
-function Detail({ template, onOpenFile }: { template: StockTemplate; onOpenFile: Props['onOpenFile'] }) {
+type DetailActions = Pick<Props, 'onOpenFile' | 'onViewFile' | 'onOverride' | 'onRemoveOverride'>;
+
+function Detail({ template, onOpenFile, onViewFile, onOverride, onRemoveOverride }:
+    { template: StockTemplate } & DetailActions) {
     const layers = template.layers ?? [];
+    const hasOverride = layers[0]?.kind === 'override';
     return (
         <section class="pb-sd-detail" aria-labelledby="pb-sd-file">
             <h3 class="pb-sd-file" id="pb-sd-file">{template.file}</h3>
@@ -90,18 +100,45 @@ function Detail({ template, onOpenFile }: { template: StockTemplate; onOpenFile:
                 </ol>
             )}
             <div class="pb-sd-actions">
-                {layers.length > 1 ? layers.map((layer, at) => (
-                    <button key={`${layer.kind}-${layer.path}`} type="button"
-                        class={`pb-pop-button pb-sd-layer-open${at === 0 ? ' pb-sd-layer-open--top' : ''}`}
-                        aria-label={`Open ${layer.path}`}
-                        onClick={() => onOpenFile(layer.path)}>
-                        {at === 0 ? 'Open' : `Open ${layer.kind === 'core' ? 'core' : layer.source || KIND_NAMES[layer.kind]}`}
-                    </button>
-                )) : (
+                {layers.length === 0 ? (
                     <button type="button" class="pb-pop-button pb-sd-layer-open"
-                        aria-label={`Open ${layers[0]?.path ?? template.path}`}
-                        onClick={() => onOpenFile(layers[0]?.path ?? template.path)}>
+                        aria-label={`Open ${template.path}`}
+                        onClick={() => onOpenFile(template.path)}>
                         Open
+                    </button>
+                ) : layers.map((layer, at) => {
+                    const name = layer.kind === 'core' ? 'core' : layer.source || KIND_NAMES[layer.kind];
+                    if (at > 0) {
+                        return (
+                            <button key={`${layer.kind}-${layer.path}`} type="button"
+                                class="pb-pop-button pb-sd-layer-open"
+                                aria-label={`View ${layer.path}, read-only`}
+                                onClick={() => onViewFile(layer.path)}>
+                                {`View ${name}`}
+                            </button>
+                        );
+                    }
+                    return hasOverride ? (
+                        <button key={`${layer.kind}-${layer.path}`} type="button"
+                            class="pb-pop-button pb-sd-layer-open pb-sd-layer-open--top"
+                            aria-label={`Open ${layer.path}`}
+                            onClick={() => onOpenFile(layer.path)}>
+                            Open
+                        </button>
+                    ) : (
+                        <button key={`${layer.kind}-${layer.path}`} type="button"
+                            class="pb-pop-button pb-sd-layer-open pb-sd-layer-open--top"
+                            aria-label={`Copy ${layer.path} to templates/overrides/ and open the copy`}
+                            onClick={() => onOverride(layer.path)}>
+                            Override in this project
+                        </button>
+                    );
+                })}
+                {hasOverride && (
+                    <button type="button" class="pb-action pb-action--remove"
+                        aria-label={`Remove override ${layers[0].path}`}
+                        onClick={() => onRemoveOverride(layers[0].path)}>
+                        Remove override
                     </button>
                 )}
             </div>
@@ -109,7 +146,9 @@ function Detail({ template, onOpenFile }: { template: StockTemplate; onOpenFile:
     );
 }
 
-export function StockDocuments({ templates, constitution, open, onOpenFile, onRevise, onClose }: Props) {
+export function StockDocuments({
+    templates, constitution, open, onOpenFile, onViewFile, onOverride, onRemoveOverride, onRevise, onClose,
+}: Props) {
     const box = useRef<HTMLDivElement>(null);
     const [picked, setPicked] = useState(open ?? templates[0]?.file ?? '');
     useModal(box, onClose, '.pb-sd-pick--on');
@@ -167,11 +206,12 @@ export function StockDocuments({ templates, constitution, open, onOpenFile, onRe
                         )}
                     </nav>
                     {template
-                        ? <Detail template={template} onOpenFile={onOpenFile} />
+                        ? <Detail template={template} onOpenFile={onOpenFile} onViewFile={onViewFile}
+                            onOverride={onOverride} onRemoveOverride={onRemoveOverride} />
                         : <p class="pb-sd-detail pb-pop-empty">No templates in this project yet.</p>}
                 </div>
                 <footer class="pb-modal-foot">
-                    <p class="pb-dm-foot-note">A template opens in an editor. Spec Kit reads it on the next run.</p>
+                    <p class="pb-dm-foot-note">Your copy lives in templates/overrides/. Spec Kit's own files open read-only.</p>
                     <button type="button" class="pb-action pb-action--primary" onClick={onClose}>Done</button>
                 </footer>
             </div>

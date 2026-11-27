@@ -31,6 +31,7 @@ import { projectKind } from './projectKind';
 import { cleanQuery, isPresetId, presetCommandLine, readSpecPresets } from './specPresets';
 import { runSpecifyPreset } from '../../speckit/processExtensions';
 import { stockRefusal } from './stockGuard';
+import { makeOverride, removeOverride } from './stockOverride';
 import { addUserHook, removeUserHook, setHookEnabled, updateUserHook } from './stockHooks';
 import { readHookRuns } from './hookRuns';
 import { latestRun, reportHolds } from './latestRun';
@@ -621,6 +622,36 @@ export class PipelineBuilderPanel {
                 return;
             }
             await vscode.window.showTextDocument(vscode.Uri.file(file));
+        },
+
+        viewStockFile: async message => {
+            const file = stockFileToOpen(this.workspaceRoot, message.path, this.drawing);
+            if (!file) {
+                this.say('That file is not one this board drew.');
+                return;
+            }
+            await vscode.window.showTextDocument(vscode.Uri.file(file));
+            await vscode.commands.executeCommand('workbench.action.files.setActiveEditorReadonlyInSession');
+        },
+
+        overrideStockTemplate: async message => {
+            const result = makeOverride(this.workspaceRoot, message.path, this.drawing);
+            if ('error' in result) { this.say(result.error); return; }
+            await this.send();
+            await vscode.window.showTextDocument(vscode.Uri.file(result.file));
+        },
+
+        removeStockOverride: async message => {
+            const result = await removeOverride(this.workspaceRoot, message.path, async relative => {
+                const action = 'Remove override';
+                const choice = await vscode.window.showWarningMessage(
+                    `Remove ${relative}?`,
+                    { modal: true, detail: 'Spec Kit goes back to the next layer down.' }, action);
+                return choice === action;
+            }, this.drawing);
+            if (!result) { return; }
+            if ('error' in result) { this.say(result.error); return; }
+            await this.send();
         },
 
         /**

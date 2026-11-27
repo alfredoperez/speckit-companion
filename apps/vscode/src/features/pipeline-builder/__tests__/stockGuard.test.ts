@@ -18,6 +18,7 @@ const EVERY: Record<MessageType, true> = {
     openStockFile: true, selectStockWorkflow: true, runStockCommand: true, addStockHook: true,
     updateStockHook: true, removeStockHook: true, installCompanion: true, presetSearch: true,
     presetAdd: true, presetUpdate: true, presetRemove: true, readHookRuns: true,
+    viewStockFile: true, overrideStockTemplate: true, removeStockOverride: true,
 };
 const EVERY_MESSAGE = Object.keys(EVERY) as MessageType[];
 
@@ -25,7 +26,8 @@ const ALLOWED: MessageType[] = [
     'ready', 'dismissFirstRun', 'setStockHook', 'openStockFile',
     'selectStockWorkflow', 'runStockCommand', 'addStockHook', 'updateStockHook',
     'removeStockHook', 'installCompanion', 'presetSearch', 'presetAdd',
-    'presetUpdate', 'presetRemove', 'readHookRuns',
+    'presetUpdate', 'presetRemove', 'readHookRuns', 'viewStockFile',
+    'overrideStockTemplate', 'removeStockOverride',
 ];
 
 describe('what the builder may do on a stock Spec Kit project', () => {

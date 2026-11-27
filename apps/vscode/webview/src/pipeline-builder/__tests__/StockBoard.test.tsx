@@ -62,7 +62,7 @@ function view(over: Partial<StockWorkflowView> = {}): StockWorkflowView {
 
 const noop = () => undefined;
 const ACTIONS = {
-    onSetHook: noop, onOpenFile: noop, onSelectWorkflow: noop, onRunCommand: noop,
+    onSetHook: noop, onOpenFile: noop, onViewFile: noop, onOverride: noop, onRemoveOverride: noop, onSelectWorkflow: noop, onRunCommand: noop,
     onAddHook: noop, onUpdateHook: noop, onRemoveHook: noop, onInstallCompanion: noop,
 };
 

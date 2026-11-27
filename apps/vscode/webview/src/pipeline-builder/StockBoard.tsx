@@ -46,6 +46,12 @@ interface Props {
     onRemoveHook: (address: Address) => void;
     /** Open one of the files the board drew, by the path it was given. */
     onOpenFile: (path: string) => void;
+    /** Open one of those files read-only. */
+    onViewFile: (path: string) => void;
+    /** Copy a template's file in use into the project's overrides. */
+    onOverride: (path: string) => void;
+    /** Delete a template override, after the host asks. */
+    onRemoveOverride: (path: string) => void;
     /** Draw another installed workflow. */
     onSelectWorkflow: (id: string) => void;
     /** Run the stock command that owns the constitution. */
@@ -393,7 +399,8 @@ export function StockBoard(props: Props) {
 
             {open?.kind === 'documents' && (
                 <StockDocuments templates={view.templates} constitution={view.constitution}
-                    open={open.file} onOpenFile={onOpenFile}
+                    open={open.file} onOpenFile={onOpenFile} onViewFile={props.onViewFile}
+                    onOverride={props.onOverride} onRemoveOverride={props.onRemoveOverride}
                     onRevise={() => onRunCommand('constitution')}
                     onClose={() => setOpen(null)} />
             )}
