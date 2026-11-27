@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 import importlib
 import json
 import os
@@ -835,6 +836,31 @@ def preview(bodies: dict, out_dir: str) -> list:
     return lines
 
 
+INPUT_DIRS_REL = (
+    os.path.join(".specify", "companion", "nodes"),
+    os.path.join(".specify", "companion", "workflows"),
+    os.path.join(".specify", "companion", "fragments"),
+    os.path.join(".specify", "templates"),
+    os.path.join(".specify", "presets"),
+)
+
+
+def input_hashes(project: str) -> dict:
+    """Content hash of every file the build reads, keyed by posix path from the project root."""
+    found = {}
+    files = [os.path.join(".specify", "companion.yml")]
+    for rel in INPUT_DIRS_REL:
+        for base, _dirs, names in os.walk(os.path.join(project, rel)):
+            files += [os.path.relpath(os.path.join(base, n), project) for n in names]
+    for rel in files:
+        try:
+            with open(os.path.join(project, rel), "rb") as fh:
+                found[rel.replace(os.sep, "/")] = hashlib.sha256(fh.read()).hexdigest()
+        except OSError:
+            continue
+    return dict(sorted(found.items()))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project", default=os.getcwd(),
@@ -935,7 +961,7 @@ def main() -> int:
     _remove_legacy_copies(project)
 
     with open(os.path.join(out_dir, ".manifest.json"), "w", encoding="utf-8") as fh:
-        json.dump(manifest, fh, indent=2)
+        json.dump({**manifest, "inputs": input_hashes(project)}, fh, indent=2)
         fh.write("\n")
 
     print(f"[build] wrote {len(bodies)} command bodies + the manifest to "
