@@ -290,6 +290,9 @@ function App() {
                 }}
                 onInstallCompanion={() => vscode.postMessage({ type: 'installCompanion' })}
                 onOpenFile={path => vscode.postMessage({ type: 'openStockFile', path })}
+                onViewFile={path => vscode.postMessage({ type: 'viewStockFile', path })}
+                onOverride={path => vscode.postMessage({ type: 'overrideStockTemplate', path })}
+                onRemoveOverride={path => vscode.postMessage({ type: 'removeStockOverride', path })}
                 onSelectWorkflow={id => {
                     setNotice(null);
                     vscode.postMessage({ type: 'selectStockWorkflow', id });

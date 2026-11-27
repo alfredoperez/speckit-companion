@@ -220,6 +220,6 @@ A preset that replaces or wraps a command Companion hooks into, or a template Co
 
 ## On a stock Spec Kit project
 
-Without the Companion extension for Spec Kit, the board draws the project's own workflow: `.specify/workflows/` when one is installed, otherwise the `/speckit.*` commands your assistant has. **Build** is disabled and nothing is written under `.specify/companion/`. A hook's checkbox sets `enabled` for it in `.specify/extensions.yml`, and a document shape row opens that template from `.specify/templates/`.
+Without the Companion extension for Spec Kit, the board draws the project's own workflow: `.specify/workflows/` when one is installed, otherwise the `/speckit.*` commands your assistant has. **Build** is disabled and nothing is written under `.specify/companion/`. A hook's checkbox sets `enabled` for it in `.specify/extensions.yml`, and a document shape row opens the Documents modal. **Override in this project** copies the template in use to `.specify/templates/overrides/` and opens your copy, **View** opens any other layer read-only, and **Remove override** deletes your copy after a confirm.
 
 Nodes, phases and your own hooks arrive with the extension. See [Install](/docs/install).

@@ -691,7 +691,7 @@ export const DecisionRoutingEditableLight: Story = {
 // ── 9. A project without the Companion extension ────────
 
 const STOCK_ACTIONS = {
-    onSetHook: noop, onOpenFile: noop, onSelectWorkflow: noop, onRunCommand: noop,
+    onSetHook: noop, onOpenFile: noop, onViewFile: noop, onOverride: noop, onRemoveOverride: noop, onSelectWorkflow: noop, onRunCommand: noop,
     onAddHook: noop, onUpdateHook: noop, onRemoveHook: noop, onInstallCompanion: noop,
 };
 
@@ -974,11 +974,20 @@ export const StockEditOwnHook: Story = {
 };
 
 export const StockDocumentsOpen: Story = {
-    name: '38 · Stock, which template layer is in force',
+    name: '38 · Stock, a template with your override',
     render: () => (
         <StockBoard view={stock({ steps: EVERY_KIND_STEPS, templates: LAYERED_TEMPLATES })}
             status={null} {...STOCK_ACTIONS}
             initialOpen={{ kind: 'documents', file: 'spec-template.md' }} />
+    ),
+};
+
+export const StockDocumentsNoOverride: Story = {
+    name: '38b · Stock, a template with no override yet',
+    render: () => (
+        <StockBoard view={stock({ steps: EVERY_KIND_STEPS, templates: LAYERED_TEMPLATES })}
+            status={null} {...STOCK_ACTIONS}
+            initialOpen={{ kind: 'documents', file: 'plan-template.md' }} />
     ),
 };
 

@@ -803,6 +803,12 @@ export type BuilderToExtensionMessage =
      * was clicked, not a free choice of file.
      */
     | { type: 'openStockFile'; path: string }
+    /** Open a file the board drew, read-only. */
+    | { type: 'viewStockFile'; path: string }
+    /** Copy the file in use for a template, named by its top layer's path, into `templates/overrides/`, and open the copy. */
+    | { type: 'overrideStockTemplate'; path: string }
+    /** Delete the project's override of a template, after the host asks. */
+    | { type: 'removeStockOverride'; path: string }
     /** Draw another installed workflow. Reads a second file; writes nothing. */
     | { type: 'selectStockWorkflow'; id: string }
     /** Run a stock Spec Kit command that owns what a row is about. */

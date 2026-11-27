@@ -20,7 +20,9 @@ const ALLOWED_ON_STOCK: ReadonlySet<MessageType> = new Set<MessageType>([
     // entries in that registry. Whose entry it is gets checked by the writer.
     'setStockHook', 'addStockHook', 'updateStockHook', 'removeStockHook',
     // Reads: opening a file the board drew, and drawing another workflow.
-    'openStockFile', 'selectStockWorkflow',
+    'openStockFile', 'selectStockWorkflow', 'viewStockFile',
+    // The person's own copy of a template: made in, and removed from, `templates/overrides/` only.
+    'overrideStockTemplate', 'removeStockOverride',
     // Dispatches a stock command this project registers. Its payload is a
     // closed set, so it cannot become "run this line for me".
     'runStockCommand',
