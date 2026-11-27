@@ -10,10 +10,13 @@
  */
 import type { Meta, StoryObj } from '@storybook/preact';
 import { BrokenPipeline } from '../BrokenPipeline';
+import { BuildBar } from '../BuildBar';
 import { Canvas } from '../Canvas';
 import { Header } from '../Header';
-import { AttachForm } from '../AttachForm';
+import { HookModal } from '../HookModal';
 import { Inspector } from '../Inspector';
+import { NodePopover } from '../NodePopover';
+import { movePlaces } from '../moves';
 import { CHOICES, IMPLEMENT, NO_CHANGES, SPECIFY, graph, hook, node, phase, step } from './fixtures';
 
 const noop = () => undefined;
@@ -44,8 +47,6 @@ function board(g = graph([SPECIFY])) {
                 onAddNode={(c, id, p) => sent.push({ what: 'addNode', with: [c, id, p] })}
                 onOpenFrame={on('openFrame')}
                 onNewStep={on('newStep')}
-                onOpenTemplate={on('openTemplate')}
-                onRemoveNode={on('removeNode')}
                 onMoveHook={(c, from, to) => sent.push({ what: 'moveHook', with: [c, from, to] })}
                 onRefuse={on('refuse')} />
         </div>
@@ -88,18 +89,21 @@ function assert(condition: boolean, said: string) {
     if (!condition) { throw new Error(said); }
 }
 
-/** Open a phase's one resting control and read back what it offers. */
+/** Open a phase's label menu and read back what it offers. */
 async function phaseMenu(root: HTMLElement, at: number) {
     const phase = root.querySelectorAll('.pb-phase')[at];
-    (phase.querySelector('.pb-phase-add') as HTMLButtonElement).click();
+    (phase.querySelector('.pb-phase-name') as HTMLButtonElement).click();
     await new Promise(resolve => setTimeout(resolve, 0));
     return Array.from(phase.querySelectorAll('.pb-menu-option')) as HTMLButtonElement[];
 }
 
 /** Open it and take the entry with this label. */
-async function fromPhaseMenu(root: HTMLElement, at: number, label: string) {
+async function fromPhaseMenu(root: HTMLElement, at: number, label: string | RegExp) {
     const options = await phaseMenu(root, at);
-    const hit = options.find(o => o.querySelector('.pb-menu-label')?.textContent === label);
+    const hit = options.find(o => {
+        const text = o.querySelector('.pb-menu-label')?.textContent ?? '';
+        return typeof label === 'string' ? text === label : label.test(text);
+    });
     assert(Boolean(hit), `the phase menu offers "${label}"`);
     hit!.click();
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -195,14 +199,13 @@ export const RenameAPhase: Story = {
     name: 'Rename a phase',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        const name = canvasElement.querySelector('.pb-phase-name') as HTMLElement;
-        assert(name.getAttribute('contenteditable') === 'true', 'a phase name is editable');
-        // Labelled, since contentEditable on its own reads to a screen reader
-        // as the heading it also looks like.
-        assert(name.getAttribute('role') === 'textbox', 'and says it is a field');
-        await fromPhaseMenu(canvasElement, 0, 'Rename phase');
-        assert(document.activeElement === name, 'the menu puts the caret in it');
-        name.textContent = 'set up';
+        const label = canvasElement.querySelector('.pb-phase-name') as HTMLElement;
+        assert(label.tagName === 'BUTTON', 'a phase name is a button that opens its menu');
+        await fromPhaseMenu(canvasElement, 0, 'Rename…');
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const name = canvasElement.querySelector('.pb-phase-input') as HTMLInputElement;
+        assert(document.activeElement === name, 'Rename… turns the label into a field with the caret in it');
+        name.value = 'set up';
         name.dispatchEvent(new Event('blur', { bubbles: true }));
         const sent = sentFrom(canvasElement);
         assert(sent.length === 1 && sent[0].what === 'setPhases',
@@ -226,18 +229,17 @@ export const APhaseOffersOnlyWhatWorks: Story = {
         // survives the `reads:` dependencies. The arrows could only ever fire,
         // be refused, and redraw unchanged.
         assert(!labels.some(l => /move/i.test(l ?? '')), 'nothing claims to move a phase');
-        assert(labels.includes('Split phase'), 'a phase can be split');
-        assert(labels.includes('Merge into the phase above'),
-            'and merged into the one above');
-        assert(labels[0] === 'Add hook', 'and the commonest change is first');
+        assert(labels.includes('Split'), 'a phase can be split');
+        assert(labels.includes('Merge into gather, above') && labels.includes('Merge into classify, below'),
+            'and merged into either neighbour, each named');
+        assert(labels[0] === 'Rename…', 'and renaming comes first');
 
-        // The first phase has nothing above it, and says which way its nodes
-        // would actually go.
+        // The first phase has nothing above it, so it offers only the way its nodes can go.
         const first = await phaseMenu(canvasElement, 0);
         const firstLabels = first.map(o => o.querySelector('.pb-menu-label')?.textContent);
-        assert(firstLabels.includes('Merge into the phase below'),
+        assert(firstLabels.includes('Merge into author, below'),
             'the first phase merges downward, and says so');
-        assert(!firstLabels.includes('Merge into the phase above'),
+        assert(!firstLabels.some(l => /above/.test(l ?? '')),
             'and never claims a direction it does not go');
 
         // A row that cannot run here is inert rather than absent: its note is
@@ -252,7 +254,24 @@ export const MergeAPhase: Story = {
     name: 'Merge a phase into the one above',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        await fromPhaseMenu(canvasElement, 1, 'Merge into the phase above');
+        await fromPhaseMenu(canvasElement, 1, /, above$/);
+        const sent = sentFrom(canvasElement);
+        const [, phases] = sent[0].with as [string, Array<{ name: string; nodes: string[] }>];
+        assert(phases[0].nodes.join(',') === 'resolve-dir,load-context,draft-spec,quality-checklist',
+            'its nodes join the end of the phase above');
+    },
+};
+
+export const MergeAPhaseDown: Story = {
+    name: 'Merge a phase into the one below',
+    render: () => board().view,
+    play: async ({ canvasElement }) => {
+        await fromPhaseMenu(canvasElement, 1, /, below$/);
+        const sent = sentFrom(canvasElement);
+        const [, phases] = sent[0].with as [string, Array<{ name: string; nodes: string[] }>];
+        assert(phases[1].name === 'classify'
+            && phases[1].nodes.join(',') === 'draft-spec,quality-checklist,classify-size,persist-size',
+        'its nodes join the start of the phase below');
     },
 };
 
@@ -260,7 +279,7 @@ export const SplitAPhase: Story = {
     name: 'Split a phase in two',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        await fromPhaseMenu(canvasElement, 0, 'Split phase');
+        await fromPhaseMenu(canvasElement, 0, 'Split');
     },
 };
 
@@ -269,20 +288,29 @@ export const SplitAPhase: Story = {
 export const PutADroppedNodeBack: Story = {
     name: 'Put a dropped node back',
     render: () => {
-        const g = graph([step('specify', [
-            phase('gather', [node('resolve-dir', 'Resolve the spec folder')]),
-        ], { dropped: ['branch', 'finalize'] })]);
-        return board(g).view;
+        const sent: Sent = [];
+        return (
+            <div class="builder"
+                ref={(el: HTMLElement | null) => {
+                    if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+                }}>
+                <HookModal step={step('specify', [
+                    phase('gather', [node('resolve-dir', 'Resolve the spec folder')]),
+                ], { dropped: ['branch', 'finalize'] })} anchor="gather" choices={CHOICES}
+                mode="node" modes={['hook', 'node', 'step']} onCancel={noop} onAttach={noop}
+                onAddNode={(phase, id) => sent.push({ what: 'addNode', with: [phase, id] })} />
+            </div>
+        );
     },
     play: async ({ canvasElement }) => {
-        // The panel's own menu, not a native select: a `<select>` is drawn by
-        // the operating system, so those two pickers arrived in a different
-        // visual language from everything around them. Reached from the phase's
-        // one resting control, which is where every phase change starts.
-        await fromPhaseMenu(canvasElement, 0, 'Add node');
-        const options = canvasElement.querySelectorAll('.pb-menu-option');
-        assert(options.length === 2, 'the two dropped nodes, with no placeholder row');
-        (options[0] as HTMLButtonElement).click();
+        const rows = canvasElement.querySelectorAll('.pb-modal-row');
+        assert(rows.length === 2, 'the two dropped nodes, with no placeholder row');
+        (rows[1] as HTMLElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        (canvasElement.querySelector('.pb-action--primary') as HTMLButtonElement).click();
+        const sent = sentFrom(canvasElement);
+        assert(JSON.stringify(sent[0]?.with) === '["gather","finalize"]',
+            'Add node puts the picked node at the end of the phase shown');
     },
 };
 
@@ -306,14 +334,77 @@ export const AShippedNodeCarriesNoExtraAction: Story = {
 
 export const TakeANodeOutOfTheRun: Story = {
     name: 'Take a node out of the run',
-    render: () => board().view,
+    render: () => {
+        const sent: Sent = [];
+        return (
+            <div class="builder"
+                ref={(el: HTMLElement | null) => {
+                    if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+                }}>
+                <NodePopover node={node('draft-spec', 'Draft the spec')}
+                    step="specify" hooksIn="companion.yml"
+                    moves={{ places: [], held: [], pinned: '' }} removeBlocked=""
+                    onClose={noop} onEditNode={noop} onAddHook={noop}
+                    onEditHook={noop} onRemoveHook={noop}
+                    onAction={action => sent.push({ what: 'nodeAction', with: action })} />
+            </div>
+        );
+    },
     play: async ({ canvasElement }) => {
-        // There was no way to stop running a node from the panel at all — the
-        // writer's own refusal named an action only the file could perform.
-        const drop = canvasElement.querySelector('.pb-node-drop') as HTMLButtonElement;
-        assert(drop.getAttribute('title')?.includes('The file stays') ?? false,
-            'it stops the node running, and says the file survives it');
-        drop.click();
+        // Under More, saying the file survives.
+        (canvasElement.querySelector('.pb-pop-more') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const remove = Array.from(document.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+            .find(el => el.querySelector('.pb-menu-label')?.textContent === 'Remove from the run')!;
+        assert(Boolean(remove), 'More carries the removal');
+        assert((remove.textContent ?? '').includes('Keeps the file'), 'and says the file survives it');
+        remove.click();
+        const sent = sentFrom(canvasElement);
+        assert(sent.at(-1)?.with === 'remove', 'and asks for the removal');
+    },
+};
+
+export const MoveANodeOnePlaceRefused: Story = {
+    name: 'Move a node, one place refused',
+    render: () => {
+        const sent: Sent = [];
+        const plan = step('plan', [
+            phase('author', [
+                node('write-plan', 'Write the plan'),
+                node('pick-blocks', "Pick the plan's blocks", { reads: ['write-plan'] }),
+            ]),
+            phase('check', [node('constitution', 'Check against the constitution')]),
+            phase('wrap-up', [node('handoff', 'Hand off', {
+                pinned: 'it is the last thing the step does, so nothing goes after it',
+            })]),
+        ]);
+        return (
+            <div class="builder"
+                ref={(el: HTMLElement | null) => {
+                    if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+                }}>
+                <NodePopover node={plan.phases[0].nodes[1]} step="plan" hooksIn="companion.yml"
+                    moveOpen
+                    moves={movePlaces(plan, 'pick-blocks')} removeBlocked=""
+                    onClose={noop} onEditNode={noop} onAddHook={noop}
+                    onEditHook={noop} onRemoveHook={noop}
+                    onAction={action => sent.push({ what: 'nodeAction', with: action })} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        const places = Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-move-place'));
+        const up = places.find(p => p.textContent?.startsWith('Up'))!;
+        assert(up.getAttribute('aria-disabled') === 'true'
+            && (up.textContent ?? '').includes('It reads Write the plan, so it cannot run before it.'),
+        'the place the writer would refuse is inert and says why');
+        up.click();
+        const legal = places.find(p => p.getAttribute('aria-disabled') !== 'true')!;
+        legal.click();
+        const sent = sentFrom(canvasElement);
+        assert(sent.length === 1 && sent[0].with === 'phase:check', 'only the legal place is sent');
+        assert((canvasElement.textContent ?? '').includes('Hand off is held in place'),
+            'the node held in place is said beside the moves');
     },
 };
 
@@ -323,7 +414,33 @@ export const AddAHook: Story = {
     name: 'Add a hook',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        await fromPhaseMenu(canvasElement, 0, 'Add hook');
+        (canvasElement.querySelector('.pb-edge-add--before') as HTMLButtonElement).click();
+        const sent = sentFrom(canvasElement);
+        assert(sent[0]?.what === 'addHook', 'the "+" before a node opens the hook form there');
+    },
+};
+
+export const AddToALane: Story = {
+    name: 'Add to a lane',
+    render: () => {
+        const { sent } = recorder();
+        return (
+            <div class="builder"
+                ref={(el: HTMLElement | null) => {
+                    if (el) { (el as HTMLElement & { __sent?: Sent }).__sent = sent; }
+                }}>
+                <Canvas graph={graph([SPECIFY])} onOpenNode={noop} onReorder={noop}
+                    onAddHook={noop} onEditHook={noop} onSetPhases={noop} onAddNode={noop}
+                    onOpenFrame={noop} onNewStep={noop}
+                    onAddTo={c => sent.push({ what: 'addTo', with: c })} />
+            </div>
+        );
+    },
+    play: async ({ canvasElement }) => {
+        (canvasElement.querySelector('.pb-lane-add') as HTMLButtonElement).click();
+        const sent = sentFrom(canvasElement);
+        assert(sent[0]?.what === 'addTo' && sent[0].with === 'specify',
+            'the lane button opens the add modal for its step');
     },
 };
 
@@ -342,12 +459,12 @@ export const FillInAHook: Story = {
     name: 'Fill in the hook form',
     render: () => (
         <div class="builder">
-            <AttachForm step={SPECIFY} anchor="author" choices={CHOICES}
+            <HookModal step={SPECIFY} anchor="author" choices={CHOICES}
                 onCancel={noop} onAttach={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        const input = canvasElement.querySelector('.pb-input--mono') as HTMLInputElement;
+        const input = canvasElement.querySelector('.pb-modal-search input') as HTMLInputElement;
         const submit = canvasElement.querySelector('.pb-action--primary') as HTMLButtonElement;
         assert(submit.disabled, 'nothing to add until a skill is named');
 
@@ -363,36 +480,34 @@ export const ChangeTheHookType: Story = {
     name: 'Change what a hook does',
     render: () => (
         <div class="builder">
-            <AttachForm step={SPECIFY} anchor="author" choices={CHOICES}
+            <HookModal step={SPECIFY} anchor="author" choices={CHOICES}
                 onCancel={noop} onAttach={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        const segments = canvasElement.querySelectorAll('.pb-segment');
-        assert(segments.length === 4, 'the four kinds sit on one row');
-        (segments[1] as HTMLButtonElement).click();
+        const kinds = canvasElement.querySelectorAll('.pb-modal-kind');
+        assert(kinds.length === 4, 'the four kinds sit on one row');
+        (kinds[1] as HTMLButtonElement).click();
         await new Promise(resolve => setTimeout(resolve, 0));
-        assert(Boolean(canvasElement.querySelector('.pb-input--area')),
+        assert(Boolean(canvasElement.querySelector('.pb-modal-area')),
             'an instruction gets room to write in');
-        assert(canvasElement.querySelectorAll('.pb-kind .pb-field-note').length === 1,
-            'and one help line, for the kind that is on');
     },
 };
 
 export const PlaceTheHookFirst: Story = {
-    name: 'Say where a hook goes before saying what it is',
+    name: 'Change where a hook goes',
     render: () => (
         <div class="builder">
-            <AttachForm step={SPECIFY} anchor="draft-spec" choices={CHOICES}
+            <HookModal step={SPECIFY} anchor="draft-spec" choices={CHOICES}
                 onCancel={noop} onAttach={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        const triggers = canvasElement.querySelectorAll('.pb-runs .pb-menu-trigger');
-        assert(triggers.length === 2, 'when and where, in the row that comes first');
+        const triggers = canvasElement.querySelectorAll('.pb-modal-runs .pb-menu-trigger');
+        assert(triggers.length === 2, 'when and where, on one quiet line');
         (triggers[1] as HTMLButtonElement).click();
         await new Promise(resolve => setTimeout(resolve, 0));
-        const options = Array.from(canvasElement.querySelectorAll('.pb-runs .pb-menu-option'));
+        const options = Array.from(canvasElement.querySelectorAll('.pb-modal-runs .pb-menu-option'));
         assert(options.length > 0, 'the anchors are named, not listed as ids');
         const draft = options.find(el => el.textContent?.startsWith('Draft the spec'));
         (draft as HTMLButtonElement).click();
@@ -488,6 +603,10 @@ export const AddAStepBetweenTwoLanes: Story = {
         // BEFORE implement. The seam is the only control that says where.
         const seams = Array.from(canvasElement.querySelectorAll('.pb-lane-seam'));
         assert(seams.length === 3, 'one seam per join, and none at either end');
+        const then = Array.from(canvasElement.querySelectorAll('.pb-lane-then'))
+            .map(line => line.textContent);
+        assert(then.join('|') === 'then plan|then tasks|then implement',
+            'each join names the step that runs next');
 
         (seams[2] as HTMLButtonElement).click();
         const sent = sentFrom(canvasElement);
@@ -516,22 +635,20 @@ export const OpenWhatChangedOnAStep: Story = {
     },
 };
 
-export const ReachASeamWithNoPointer: Story = {
-    name: 'Reach a seam with no pointer',
+export const ReachTheNodePlusWithNoPointer: Story = {
+    name: 'Reach a node\'s "+" with no pointer',
     render: () => board().view,
     play: async ({ canvasElement }) => {
-        // The seam's `+` used to be `opacity: 0` until a pointer arrived, on the
-        // one route to placing a hook precisely.
-        const seam = canvasElement.querySelector('.pb-slot') as HTMLButtonElement;
-        assert(seam.tagName === 'BUTTON' && !seam.disabled,
-            'a seam is a real button, so tab order reaches it');
+        const plus = canvasElement.querySelector('.pb-edge-add--after') as HTMLButtonElement;
+        assert(plus.tagName === 'BUTTON' && !plus.disabled,
+            'the "+" on a node is a real button, so tab order reaches it');
 
-        seam.focus();
-        assert(canvasElement.ownerDocument.activeElement === seam, 'and it takes the focus');
+        plus.focus();
+        assert(canvasElement.ownerDocument.activeElement === plus, 'and it takes the focus');
 
-        seam.click();
+        plus.click();
         const sent = sentFrom(canvasElement);
-        assert(sent[0]?.what === 'addHook', 'and adds a hook at the gap it marks');
+        assert(sent[0]?.what === 'addHook', 'and adds a hook on its side of the node');
     },
 };
 
@@ -546,7 +663,7 @@ export const SwitchWorkflow: Story = {
                     workflows: { available: ['shipped', 'bugfix', 'client'], active: '' },
                 })}
                 buildState="current" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                onPreview={noop} onOpenConfig={noop}
                 onSelectWorkflow={noop} onNewWorkflow={noop} />
         </div>
     ),
@@ -560,18 +677,15 @@ export const SwitchWorkflow: Story = {
     },
 };
 
-/**
- * The chip used to print the same list the board draws, one lane per line. Now
- * it names a lane and goes there, so the panel says each thing once.
- */
+/** The review under the build bar names each changed lane and goes there. */
 export const GoToWhatChanged: Story = {
     name: 'Go to what this project changed',
     render: () => {
         const shown: string[] = [];
         (GoToWhatChanged as { shown?: string[] }).shown = shown;
         return (
-            <div class="builder">
-                <Header
+            <div class="builder builder--bar" style="height: 420px;">
+                <BuildBar
                     graph={graph([
                         step('plan', SPECIFY.phases),
                         step('tasks', SPECIFY.phases, {
@@ -581,25 +695,26 @@ export const GoToWhatChanged: Story = {
                             },
                         }),
                     ], { customised: true, configured: true })}
-                    buildState="current" busy={false}
-                    onBuild={noop} onPreview={noop} onOpenConfig={noop}
-                    onSelectWorkflow={noop} onNewWorkflow={noop}
-                    onShowChanged={name => shown.push(name)} />
+                    buildState="stale" busy={false} report={null} status={null}
+                    onBuild={noop} onPreview={noop} onUndo={noop} onDismissStatus={noop}
+                    onEditHook={noop} onRemoveHook={noop}
+                    onShowStep={name => shown.push(name)} />
             </div>
         );
     },
     play: async ({ canvasElement }) => {
-        (canvasElement.querySelector('.builder-chip') as HTMLButtonElement).click();
+        Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.builder-bar button'))
+            .find(el => el.textContent === 'Review')!.click();
         await new Promise(resolve => setTimeout(resolve, 0));
+        (canvasElement.querySelector('[aria-label="Show tasks on the board"]') as HTMLButtonElement)
+            .click();
         const shown = (GoToWhatChanged as { shown?: string[] }).shown ?? [];
-        assert(canvasElement.querySelector('.builder-changes') === null,
-            'no list under the header, because the board is the list');
-        assert(shown.length === 1, 'the chip asks to be taken somewhere');
-        assert(shown[0] === 'tasks', 'and it is the first lane that changed');
+        assert(shown.length === 1, 'the row asks to be taken somewhere');
+        assert(shown[0] === 'tasks', 'and it is the lane that changed');
     },
 };
 
-/** The way to grow the run, in the band that names it. */
+/** The way to grow the run, in the menu of the band that names it. */
 export const AddAStepFromTheHeader: Story = {
     name: 'Add a step from the header',
     render: () => {
@@ -610,15 +725,18 @@ export const AddAStepFromTheHeader: Story = {
                 <Header
                     graph={graph([SPECIFY], { configured: true })}
                     buildState="current" busy={false}
-                    onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                    onPreview={noop} onOpenConfig={noop}
                     onSelectWorkflow={noop} onNewWorkflow={noop}
                     onNewStep={() => started.push('new')} />
             </div>
         );
     },
     play: async ({ canvasElement }) => {
-        const add = canvasElement.querySelector('.builder-action--add') as HTMLButtonElement;
-        assert(Boolean(add), 'the header offers a way to add a step');
+        (canvasElement.querySelector('.builder-overflow button') as HTMLButtonElement).click();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        const add = Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
+            .find(el => el.textContent === 'Add step')!;
+        assert(Boolean(add), 'the header menu offers a way to add a step');
         add.click();
         await new Promise(resolve => setTimeout(resolve, 0));
         assert((AddAStepFromTheHeader as { started?: string[] }).started?.length === 1,
@@ -634,12 +752,12 @@ export const OpenTheTally: Story = {
             <Header
                 graph={graph([SPECIFY], { configured: true })}
                 buildState="current" busy={false}
-                onBuild={noop} onPreview={noop} onOpenConfig={noop}
+                onPreview={noop} onOpenConfig={noop}
                 onSelectWorkflow={noop} onNewWorkflow={noop} />
         </div>
     ),
     play: async ({ canvasElement }) => {
-        (canvasElement.querySelector('.builder-tally') as HTMLButtonElement).click();
+        (canvasElement.querySelector('.builder-overflow button') as HTMLButtonElement).click();
         await new Promise(resolve => setTimeout(resolve, 0));
         const said = Array.from(canvasElement.querySelectorAll('.pb-menu-option'))
             .map(el => el.textContent ?? '');

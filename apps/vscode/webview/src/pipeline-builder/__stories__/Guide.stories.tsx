@@ -17,13 +17,15 @@
  */
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Canvas } from '../Canvas';
+import { BuildBar } from '../BuildBar';
 import { Header } from '../Header';
 import { Inspector } from '../Inspector';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { BrokenPipeline } from '../BrokenPipeline';
-import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
-import { TemplateForm } from '../TemplateForm';
+import { HookModal } from '../HookModal';
+import { DocumentModal } from '../DocumentModal';
+import { NewWorkflowModal } from '../NewWorkflowModal';
 import { moveTargets } from '../moves';
 import {
     CHOICES, IMPLEMENT, NO_CHANGES, PLAN, SPECIFY, TASKS,
@@ -35,12 +37,15 @@ const noop = () => undefined;
 const CANVAS = {
     onOpenNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
-    onOpenFrame: noop, onOpenTemplate: noop, onNewStep: noop,
-    onRemoveNode: noop,
+    onOpenFrame: noop, onNewStep: noop, onAddTo: noop,
 };
 const HEAD = {
-    onBuild: noop, onPreview: noop, onOpenConfig: noop,
+    onPreview: noop, onBuild: noop, onOpenConfig: noop,
     onSelectWorkflow: noop, onNewWorkflow: noop,
+};
+const BAR = {
+    onBuild: noop, onPreview: noop, onUndo: noop, onDismissStatus: noop,
+    onEditHook: noop, onRemoveHook: noop, onShowStep: noop,
 };
 const INSPECT = {
     onClose: noop, onOpenFile: noop, onReplace: noop, onRestore: noop,
@@ -62,10 +67,6 @@ function Pane({ children }: { children: preact.ComponentChildren }) {
 }
 
 /** Click a control the story wants photographed open. */
-function press(root: HTMLElement, selector: string) {
-    (root.querySelector(selector) as HTMLButtonElement | null)?.click();
-}
-
 const meta: Meta = { title: 'VS Code Extension/Pipeline Builder/Guide' };
 export default meta;
 type Story = StoryObj;
@@ -189,13 +190,9 @@ export const AStepHeader: Story = {
 };
 
 /**
- * The one control every phase carries, open.
- *
- * Everything a phase can do used to be a separate button that was invisible
- * until the pointer arrived. It is one `+` on the rule now, and the rows it
- * cannot run are shown inert with the reason — which is what teaches the
- * capability. The rows and notes here are the ones `Canvas.tsx` builds for a
- * phase holding a single node.
+ * A phase's label, open. The rows it cannot run are shown inert with the
+ * reason, which is what teaches the capability. The rows and notes here are
+ * the ones `Canvas.tsx` builds for a middle phase holding a single node.
  */
 export const ThePhaseMenu: Story = {
     parameters: { capture: { width: 440, height: 320 } },
@@ -203,21 +200,17 @@ export const ThePhaseMenu: Story = {
     render: () => (
         <div class="builder" style="width: 420px; padding: 16px">
             <Menu
-                class="pb-phase-add"
-                trigger="+"
-                caret={false}
+                class="pb-phase-name"
+                trigger={<span class="pb-trigger-text">author</span>}
+                heading="Phase author · 1 node"
                 defaultOpen
-                title="Add or change author"
+                title="Rename, split or merge author"
                 options={[
-                    { id: 'hook', label: 'Add hook',
-                      note: 'a skill, an instruction or a command' },
-                    { id: 'node', label: 'Add node', note: '2 on offer' },
-                    { id: 'rename', label: 'Rename phase',
-                      note: 'its hooks follow the new name' },
-                    { id: 'split', label: 'Split phase', disabled: true,
-                      note: 'one node here, so there is nothing to split off' },
-                    { id: 'merge', label: 'Merge into the phase above',
-                      note: 'its nodes go with it' },
+                    { id: 'rename', label: 'Rename…', note: 'Its hooks follow the new name.' },
+                    { id: 'split', label: 'Split', disabled: true,
+                      note: 'One node here, so there is nothing to split off.' },
+                    { id: 'merge-above', label: 'Merge into gather, above' },
+                    { id: 'merge-below', label: 'Merge into wrap-up, below' },
                 ]}
                 onPick={noop} />
         </div>
@@ -236,21 +229,7 @@ export const ASidePanel: Story = {
     ),
 };
 
-/**
- * The header chip, expanded.
- *
- * Two marks, side by side. The first says whether anything differs from the
- * shipped pipeline and takes you to the first lane that does; the second says
- * what the pipeline holds, and opens onto the counts. There is no prop for the
- * open state — it is what clicking does — so the story clicks it.
- */
-export const WhatChanged: Story = {
-    parameters: { capture: { width: 1000, height: 200 } },
-    name: 'What this project changed',
-    render: () => (
-        <Panel>
-            <Header
-                graph={graph([
+const CHANGED = graph([
                     step('specify', [phase('author', [node('draft-spec', 'Draft the spec', {
                         // Real hooks, because the tally counts what the board
                         // draws rather than what `changes` claims. A fixture that
@@ -272,12 +251,27 @@ export const WhatChanged: Story = {
                     step('tasks', [phase('author', [node('tasks-doc', 'Write the task list')])], {
                         changes: { ...NO_CHANGES, added: ['review-gaps'], reordered: true },
                     }),
-                ], { configured: true })}
-                buildState="stale" busy={false} {...HEAD} />
-        </Panel>
+                ], { configured: true });
+
+/**
+ * The build bar's review, open.
+ *
+ * Each step that differs from the shipped pipeline is a row with the way to
+ * it. There is no prop for the open state, so the story clicks Review.
+ */
+export const WhatChanged: Story = {
+    parameters: { capture: { width: 1000, height: 360 } },
+    name: 'What this project changed',
+    render: () => (
+        <div class="builder builder--bar" style="height: 360px;">
+            <Header graph={CHANGED} buildState="stale" busy={false} {...HEAD} />
+            <BuildBar graph={CHANGED} buildState="stale" busy={false}
+                report={null} status={null} {...BAR} />
+        </div>
     ),
     play: ({ canvasElement }: { canvasElement: HTMLElement }) => {
-        press(canvasElement, '.builder-tally');
+        Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.builder-bar button'))
+            .find(el => el.textContent === 'Review')?.click();
     },
 };
 
@@ -423,11 +417,11 @@ export const AddingANode: Story = {
 // ── The document a step writes ──────────────────────────
 
 export const ChangingTheDocument: Story = {
-    parameters: { capture: { width: 440, height: 450 } },
+    parameters: { capture: { width: 1100, height: 640 } },
     name: 'Changing what a step writes',
     render: () => (
-        <Pane>
-            <TemplateForm
+        <div class="builder" style="width: 1100px; height: 640px">
+            <DocumentModal
                 step={step('specify', [], {
                     template: {
                         file: 'spec-template.md',
@@ -438,9 +432,9 @@ export const ChangingTheDocument: Story = {
                         chosenBy: { 'User Scenarios & Testing': 'ears-requirements' },
                     },
                 })}
-                fragments={CHOICES.fragments}
-                onCancel={noop} onPick={noop} />
-        </Pane>
+                nodeName="Draft the spec" fragments={CHOICES.fragments} savesTo="This project"
+                openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
+        </div>
     ),
 };
 
@@ -491,7 +485,7 @@ export const AttachingWork: Story = {
     name: 'Attaching work',
     render: () => (
         <Pane>
-            <AttachForm step={SPECIFY} anchor="author" choices={CHOICES}
+            <HookModal step={SPECIFY} anchor="author" choices={CHOICES}
                 onCancel={noop} onAttach={noop} />
         </Pane>
     ),
@@ -542,7 +536,7 @@ export const MovingAHookFromTheKeyboard: Story = {
     name: 'Moving a hook from the keyboard',
     render: () => (
         <Pane>
-            <AttachForm step={HOOKED} anchor="complete" choices={CHOICES}
+            <HookModal step={HOOKED} anchor="complete" choices={CHOICES}
                 editing={HOOKED.phases[0].nodes[0].hooks[1]} count={2}
                 onCancel={noop} onAttach={noop} onRemove={noop} onMove={noop} />
         </Pane>
@@ -552,13 +546,13 @@ export const MovingAHookFromTheKeyboard: Story = {
 // ── Whole configurations ────────────────────────────────
 
 export const StartingFromAPreset: Story = {
-    parameters: { capture: { width: 440, height: 530 } },
+    parameters: { capture: { width: 640, height: 520 } },
     name: 'Starting from a preset',
     render: () => (
-        <Pane>
-            <NewWorkflowForm from="" taken={['shipped']} presets={CHOICES.presets}
-                onCancel={noop} onCreate={noop} />
-        </Pane>
+        <div class="builder" style="width: 640px; height: 520px">
+            <NewWorkflowModal taken={['shipped', '']} hasProject active=""
+                presets={CHOICES.presets} onCancel={noop} onCreate={noop} />
+        </div>
     ),
 };
 
@@ -567,9 +561,14 @@ export const AddingAStep: Story = {
     name: 'Adding a step of your own',
     render: () => (
         <Pane>
-            <NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
-                taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
-                onCancel={noop} onCreate={noop} />
+            <HookModal step={IMPLEMENT} anchor={IMPLEMENT.phases[0]?.name ?? 'implement'}
+                choices={CHOICES} mode="step" modes={['step']} title="Add a step"
+                stepForm={{
+                    sequence: ['specify', 'plan', 'tasks', 'implement'],
+                    taken: ['specify', 'plan', 'tasks', 'implement', 'auto'],
+                    autoRuns: ['specify', 'plan', 'tasks', 'implement'],
+                }}
+                onCancel={noop} onAttach={noop} onNewStep={noop} />
         </Pane>
     ),
 };
@@ -594,31 +593,38 @@ export const AStepOfYourOwn: Story = {
 // ── Building ────────────────────────────────────────────
 
 export const TheBuildIsBehind: Story = {
-    parameters: { capture: { width: 1000, height: 112 } },
+    parameters: { capture: { width: 1000, height: 200 } },
     name: 'The build is behind',
-    render: () => (
-        <Panel>
-            <Header graph={graph([SPECIFY], { configured: true, customised: true })}
-                buildState="stale" busy={false} {...HEAD} />
-        </Panel>
-    ),
+    render: () => {
+        const g = graph([SPECIFY], { configured: true, customised: true });
+        return (
+            <div class="builder builder--bar" style="height: 200px;">
+                <Header graph={g} buildState="stale" busy={false} {...HEAD} />
+                <BuildBar graph={g} buildState="stale" busy={false}
+                    report={null} status={null} {...BAR} />
+            </div>
+        );
+    },
 };
 
 /** A build answers in the panel it was asked from, not in the editor. */
 export const WhatTheBuildDid: Story = {
-    parameters: { capture: { width: 1000, height: 110 } },
+    parameters: { capture: { width: 1000, height: 200 } },
     name: 'What the build did',
-    render: () => (
-        <Panel>
-            <Header graph={graph([SPECIFY], { configured: true, customised: true })}
-                buildState="current" busy={false}
-                report={{
-                    ok: true, at: '14:02', commands: 5, changed: [], dryRun: false,
-                    output: 'wrote 5 commands',
-                }}
-                {...HEAD} />
-        </Panel>
-    ),
+    render: () => {
+        const g = graph([SPECIFY], { configured: true, customised: true });
+        return (
+            <div class="builder builder--bar" style="height: 200px;">
+                <Header graph={g} buildState="current" busy={false} {...HEAD} />
+                <BuildBar graph={g} buildState="current" busy={false} status={null}
+                    report={{
+                        ok: true, at: '14:02', commands: 5, changed: [], dryRun: false,
+                        output: 'wrote 5 commands',
+                    }}
+                    {...BAR} />
+            </div>
+        );
+    },
 };
 
 // ── When it cannot be read ──────────────────────────────

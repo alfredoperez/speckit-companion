@@ -10,13 +10,21 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
 import {
-    HookWhen, StockHookRow, StockStepRow, StockTemplate, StockWorkflowChoice,
-    StockWorkflowView,
+    HookWhen, StockHookRow, StockStepRow, StockTemplate, StockTemplateLayer,
+    StockWorkflowChoice, StockWorkflowView,
 } from '../../protocol/pipeline';
 
 const WORKFLOWS_REL = path.join('.specify', 'workflows');
 const EXTENSIONS_REL = path.join('.specify', 'extensions.yml');
 const TEMPLATES_REL = path.join('.specify', 'templates');
+const OVERRIDES_REL = path.join(TEMPLATES_REL, 'overrides');
+const PRESETS_REL = path.join('.specify', 'presets');
+const EXTENSION_DIRS_REL = path.join('.specify', 'extensions');
+const STRATEGIES: Array<StockTemplateLayer['strategy']> = [
+    'replace', 'prepend', 'append', 'wrap', 'replace-section',
+];
+/** Spec Kit's id rule for presets and extensions it resolves templates from. */
+const SAFE_ID = /^[a-z0-9-]+$/;
 const CONSTITUTION_REL = path.join('.specify', 'memory', 'constitution.md');
 
 const WHENS: HookWhen[] = ['before', 'after'];
@@ -111,7 +119,9 @@ function loadYaml(file: string): Record<string, unknown> | null {
  * one thing a person can change, and a hook that is off has to be visible to be
  * turned back on.
  */
-function registryHooks(registry: Record<string, unknown> | null, step: string): StockHookRow[] {
+function registryHooks(
+    registry: Record<string, unknown> | null, step: string, installed: ReadonlySet<string>,
+): StockHookRow[] {
     const hooks = registry?.hooks;
     if (!hooks || typeof hooks !== 'object') { return []; }
     const rows: StockHookRow[] = [];
@@ -121,6 +131,7 @@ function registryHooks(registry: Record<string, unknown> | null, step: string): 
         entries.forEach((entry, index) => {
             if (!entry || typeof entry !== 'object') { return; }
             const row = entry as Record<string, unknown>;
+            const extension = typeof row.extension === 'string' ? row.extension : '';
             rows.push({
                 when,
                 step,
@@ -132,6 +143,10 @@ function registryHooks(registry: Record<string, unknown> | null, step: string): 
                 enabled: row.enabled !== false,
                 optional: Boolean(row.optional),
                 conditional: Boolean(String(row.condition ?? '').trim()),
+                // Spec Kit purges hooks only by an installed extension's id,
+                // so an entry naming none is the person's and stays theirs.
+                own: !installed.has(extension),
+                prompt: typeof row.prompt === 'string' ? row.prompt.trim() : '',
             });
         });
     }
@@ -234,36 +249,197 @@ export function stockFileToOpen(
 ): string | null {
     const view = readStockWorkflow(workspaceRoot, drawing);
     const offered = [
-        ...view.templates.map(template => template.path),
+        ...view.templates.flatMap(template => [
+            template.path, ...(template.layers ?? []).map(layer => layer.path)]),
         ...view.workflows.map(choice => choice.path),
         ...(view.registry ? [view.registry.path] : []),
+        ...(view.constitution?.path ? [view.constitution.path] : []),
     ];
     if (!offered.includes(rel)) { return null; }
     const file = path.join(workspaceRoot, rel);
     return fs.existsSync(file) ? file : null;
 }
 
-/** The templates this project has, named by what their step does with them. */
-function templates(workspaceRoot: string): StockTemplate[] {
-    const dir = path.join(workspaceRoot, TEMPLATES_REL);
-    let files: string[] = [];
+function subdirs(dir: string): string[] {
     try {
-        files = fs.readdirSync(dir).filter(file => file.endsWith('.md'));
+        return fs.readdirSync(dir, { withFileTypes: true })
+            .filter(entry => entry.isDirectory()).map(entry => entry.name);
     } catch { return []; }
+}
+
+/**
+ * The extensions installed here: the registry's `installed` list and every
+ * folder under `.specify/extensions/`. A hook naming none of them is the
+ * person's own.
+ */
+export function installedExtensions(
+    workspaceRoot: string, registry = loadYaml(path.join(workspaceRoot, EXTENSIONS_REL)),
+): Set<string> {
+    const listed = Array.isArray(registry?.installed) ? registry.installed.map(String) : [];
+    const folders = subdirs(path.join(workspaceRoot, EXTENSION_DIRS_REL))
+        .filter(name => !name.startsWith('.'));
+    return new Set([...listed, ...folders]);
+}
+
+/** The steps the board drew that a hook can attach to, by their lifecycle name. */
+export function hookableSteps(workspaceRoot: string, drawing?: string): string[] {
+    return readStockWorkflow(workspaceRoot, drawing).steps
+        .filter(step => step.kind === 'command')
+        .map(step => stepName(step.command, step.id));
+}
+
+/** Spec Kit's priority rule: a whole number from 1 up, else 10. */
+function priority(value: unknown): number {
+    const number = typeof value === 'boolean' ? NaN : Number(value);
+    return Number.isInteger(number) && number >= 1 ? number : 10;
+}
+
+function readJson(file: string): Record<string, unknown> | null {
+    const text = read(file);
+    if (text === null) { return null; }
+    try {
+        const parsed = JSON.parse(text);
+        return parsed && typeof parsed === 'object' ? parsed as Record<string, unknown> : null;
+    } catch { return null; }
+}
+
+/** Enabled ids from a `.registry`, lowest priority first, then by id. */
+function ranked(entries: Record<string, unknown>): Array<[number, string]> {
+    return Object.entries(entries)
+        .filter(([id, meta]) => SAFE_ID.test(id) && meta && typeof meta === 'object'
+            && (meta as Record<string, unknown>).enabled !== false)
+        .map(([id, meta]) => [priority((meta as Record<string, unknown>).priority), id]);
+}
+
+function byRank(a: [number, string], b: [number, string]): number {
+    return a[0] - b[0] || (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0);
+}
+
+/** Presets in the order Spec Kit tries them: the registry when it reads, else the folders. */
+function presetOrder(workspaceRoot: string): string[] {
+    const dir = path.join(workspaceRoot, PRESETS_REL);
+    const presets = readJson(path.join(dir, '.registry'))?.presets;
+    if (presets && typeof presets === 'object') {
+        return ranked(presets as Record<string, unknown>).sort(byRank).map(([, id]) => id);
+    }
+    return subdirs(dir).filter(id => SAFE_ID.test(id)).sort();
+}
+
+/** Extensions in the order Spec Kit tries them: registered by priority, unregistered at 10. */
+function extensionOrder(workspaceRoot: string): string[] {
+    const dir = path.join(workspaceRoot, EXTENSION_DIRS_REL);
+    const listed = readJson(path.join(dir, '.registry'))?.extensions;
+    const registered = listed && typeof listed === 'object' ? listed as Record<string, unknown> : {};
+    const rest: Array<[number, string]> = subdirs(dir)
+        .filter(id => SAFE_ID.test(id) && !(id in registered))
+        .map(id => [10, id]);
+    return [...ranked(registered), ...rest].sort(byRank).map(([, id]) => id);
+}
+
+/** `<base>/templates/<name>.md`, then `<base>/<name>.md`, workspace-relative. */
+function conventional(workspaceRoot: string, baseRel: string, name: string): string | null {
+    for (const rel of [path.join(baseRel, 'templates', `${name}.md`), path.join(baseRel, `${name}.md`)]) {
+        if (fs.existsSync(path.join(workspaceRoot, rel))) { return rel; }
+    }
+    return null;
+}
+
+/** A preset's file and strategy for one template, as its manifest declares it. */
+function presetLayer(workspaceRoot: string, id: string, name: string): StockTemplateLayer | null {
+    const baseRel = path.join(PRESETS_REL, id);
+    const fallback = conventional(workspaceRoot, baseRel, name);
+    const layer = (rel: string, strategy: StockTemplateLayer['strategy']): StockTemplateLayer =>
+        ({ kind: 'preset', source: id, path: rel, strategy });
+    // simplified: an unreadable manifest falls back to the conventional file, where
+    // Spec Kit stops the run with an error; show that error when a board needs it.
+    const templates = (loadYaml(path.join(workspaceRoot, baseRel, 'preset.yml'))
+        ?.provides as Record<string, unknown> | undefined)?.templates;
+    if (Array.isArray(templates)) {
+        const entry = templates.find(item => item && typeof item === 'object'
+            && (item as Record<string, unknown>).name === name
+            && ((item as Record<string, unknown>).type ?? 'template') === 'template') as
+            Record<string, unknown> | undefined;
+        if (entry) {
+            const file = String(entry.file ?? '');
+            const strategy = String(entry.strategy ?? 'replace').toLowerCase();
+            const rel = path.join(baseRel, file);
+            if (!file || path.isAbsolute(file) || file.split(/[\\/]/).includes('..')
+                || !fs.existsSync(path.join(workspaceRoot, rel))
+                || !STRATEGIES.includes(strategy as StockTemplateLayer['strategy'])) {
+                return null;
+            }
+            return layer(rel, strategy as StockTemplateLayer['strategy']);
+        }
+    }
+    return fallback ? layer(fallback, 'replace') : null;
+}
+
+/**
+ * The layers one template resolves through, top first, in Spec Kit's order:
+ * the project's override, then presets, then extensions, then core. The walk
+ * stops at the first layer that replaces; the ones above it compose onto it.
+ */
+export function templateLayers(workspaceRoot: string, name: string): StockTemplateLayer[] {
+    const override = path.join(OVERRIDES_REL, `${name}.md`);
+    if (fs.existsSync(path.join(workspaceRoot, override))) {
+        return [{ kind: 'override', source: '', path: override, strategy: 'replace' }];
+    }
+    const layers: StockTemplateLayer[] = [];
+    for (const id of presetOrder(workspaceRoot)) {
+        const layer = presetLayer(workspaceRoot, id, name);
+        if (!layer) { continue; }
+        layers.push(layer);
+        if (layer.strategy === 'replace') { return layers; }
+    }
+    for (const id of extensionOrder(workspaceRoot)) {
+        const rel = conventional(workspaceRoot, path.join(EXTENSION_DIRS_REL, id), name);
+        if (rel) { return [...layers, { kind: 'extension', source: id, path: rel, strategy: 'replace' }]; }
+    }
+    const core = path.join(TEMPLATES_REL, `${name}.md`);
+    if (fs.existsSync(path.join(workspaceRoot, core))) {
+        layers.push({ kind: 'core', source: '', path: core, strategy: 'replace' });
+    }
+    return layers;
+}
+
+function markdownFiles(dir: string): string[] {
+    try {
+        return fs.readdirSync(dir, { withFileTypes: true })
+            .filter(entry => entry.isFile() && entry.name.endsWith('.md'))
+            .map(entry => entry.name);
+    } catch { return []; }
+}
+
+/**
+ * The templates this project has, named by what their step does with them,
+ * each with the layer a run uses. An override for a template core does not
+ * ship is a template of its own.
+ */
+function templates(workspaceRoot: string): StockTemplate[] {
+    const files = [...new Set([
+        ...markdownFiles(path.join(workspaceRoot, TEMPLATES_REL)),
+        ...markdownFiles(path.join(workspaceRoot, OVERRIDES_REL)),
+    ])];
+    const coreFiles = new Set(markdownFiles(path.join(workspaceRoot, TEMPLATES_REL)));
+    const where = (file: string) => coreFiles.has(file)
+        ? path.join(TEMPLATES_REL, file) : path.join(OVERRIDES_REL, file);
     const known = STOCK_TEMPLATES
         .filter(template => files.includes(template.file))
-        .map(template => ({ ...template, path: path.join(TEMPLATES_REL, template.file) }));
+        .map(template => ({ ...template, path: where(template.file) }));
     const rest = files
         .filter(file => !STOCK_TEMPLATES.some(template => template.file === file))
         .sort()
         .map(file => ({
             file,
-            path: path.join(TEMPLATES_REL, file),
+            path: where(file),
             label: file.replace(/-template\.md$/, '').replace(/\.md$/, ''),
-            note: 'A template this project added',
+            note: coreFiles.has(file) ? 'A template this project added' : 'A template only your override provides',
             command: '',
         }));
-    return [...known, ...rest];
+    return [...known, ...rest].map(template => {
+        const layers = templateLayers(workspaceRoot, template.file.replace(/\.md$/, ''));
+        return { ...template, inForce: layers[0]?.kind ?? 'core', layers };
+    });
 }
 
 /**
@@ -275,6 +451,7 @@ function templates(workspaceRoot: string): StockTemplate[] {
  */
 export function readStockWorkflow(workspaceRoot: string, drawing?: string): StockWorkflowView {
     const registry = loadYaml(path.join(workspaceRoot, EXTENSIONS_REL));
+    const installed = installedExtensions(workspaceRoot, registry);
     const all = installedWorkflows(workspaceRoot);
     const workflow = all.find(found => found.id === drawing) ?? all[0];
 
@@ -293,7 +470,8 @@ export function readStockWorkflow(workspaceRoot: string, drawing?: string): Stoc
                     ? String(raw.message ?? 'Wait for a person').trim()
                     : known?.label ?? command,
                 writes: gate ? [] : known?.writes ?? [],
-                hooks: gate ? [] : registryHooks(registry, step),
+                hooks: gate ? [] : registryHooks(registry, step, installed),
+                ...(gate ? {} : { hookStep: step }),
             };
         })
         : installedCommands(workspaceRoot).map(step => ({
@@ -302,7 +480,8 @@ export function readStockWorkflow(workspaceRoot: string, drawing?: string): Stoc
             kind: 'command' as const,
             label: STOCK_STEPS[step]?.label ?? step,
             writes: STOCK_STEPS[step]?.writes ?? [],
-            hooks: registryHooks(registry, step),
+            hooks: registryHooks(registry, step, installed),
+            hookStep: step,
         }));
 
     const choices: StockWorkflowChoice[] = all.map(found => ({
@@ -321,10 +500,9 @@ export function readStockWorkflow(workspaceRoot: string, drawing?: string): Stoc
         workflows: choices,
         steps,
         templates: templates(workspaceRoot),
-        constitution: {
-            command: 'speckit.constitution',
-            written: fs.existsSync(path.join(workspaceRoot, CONSTITUTION_REL)),
-        },
+        constitution: fs.existsSync(path.join(workspaceRoot, CONSTITUTION_REL))
+            ? { command: 'speckit.constitution', written: true, path: CONSTITUTION_REL.split(path.sep).join('/') }
+            : { command: 'speckit.constitution', written: false },
         registry: registry !== null ? { path: EXTENSIONS_REL } : null,
         buildBlocked: 'Build writes Companion\'s command files, so nothing here is built.',
     };

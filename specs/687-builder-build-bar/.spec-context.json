@@ -1,0 +1,546 @@
+{
+  "workflow": "companion",
+  "specName": "Workflow Builder: the build bar",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:18:57.128Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:19:36.981Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:19:42.379Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:20:13.263Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:20:28.627Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:20:36.053Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:20:44.699Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:24:07.924Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:24:07.925Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:24:07.925Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:34:43.560Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:34:43.727Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:34:43.880Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:34:47.267Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:34:47.268Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:36:07.535Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:36:07.565Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:36:50.432Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:37:39.482Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:37:45.629Z"
+    }
+  ],
+  "request": "Workflow Builder: a build bar at the bottom that appears when there is something to build, with a review of the changes.",
+  "unattended": true,
+  "expectations": [
+    "Installing a missing skill from the bar",
+    "Undo on any change but the last write",
+    "Blocking Build when a hook has a problem",
+    "The stock board status line"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder (Header, StatusLine, index)",
+    "area: apps/vscode/webview/styles/pipeline-builder.css",
+    "constraint: host tokens, accent only on Build, no new messages"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Header without Build",
+      "tasks": [
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "__tests__/HeaderChip.test.tsx::carries no Build"
+      ]
+    },
+    "FR-002": {
+      "title": "Quiet up-to-date line",
+      "tasks": [
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "__tests__/BuildBarPanel.test.tsx::shows no bar",
+        "and says so in the header"
+      ]
+    },
+    "FR-003": {
+      "title": "Bar when stale",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "__tests__/BuildBar.test.tsx::says what is not built"
+      ]
+    },
+    "FR-004": {
+      "title": "Review expands",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "__tests__/BuildBar.test.tsx::opens upward"
+      ]
+    },
+    "FR-005": {
+      "title": "Last write with Undo",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "__tests__/BuildBarPanel.test.tsx::says the last write in the bar"
+      ]
+    },
+    "FR-006": {
+      "title": "Problem hooks with fixes",
+      "tasks": [
+        "T001",
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "__tests__/BuildBarPanel.test.tsx::fixes a problem hook"
+      ]
+    },
+    "FR-007": {
+      "title": "Warnings not repeated",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "__tests__/BuildBar.test.tsx::lists a build warning"
+      ]
+    },
+    "FR-008": {
+      "title": "Changed steps and commands",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "__tests__/BuildBar.test.tsx::takes the reader to a changed step"
+      ]
+    },
+    "FR-009": {
+      "title": "Confirmation leaves",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "__tests__/BuildBar.test.tsx::says it built",
+        "then leaves"
+      ]
+    },
+    "FR-010": {
+      "title": "Failure stays",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "__tests__/BuildBar.test.tsx::stays open in a warning state"
+      ]
+    },
+    "FR-011": {
+      "title": "Hidden under sheets",
+      "tasks": [
+        "T005"
+      ],
+      "tests": [
+        "__tests__/BuildBarPanel.test.tsx::steps aside while the hook modal is open"
+      ]
+    },
+    "FR-012": {
+      "title": "Status in bar or foot",
+      "tasks": [
+        "T005"
+      ],
+      "tests": [
+        "__tests__/BuildBarPanel.test.tsx::keeps a write on the foot line"
+      ]
+    },
+    "FR-013": {
+      "title": "Accessible",
+      "tasks": [
+        "T001",
+        "T003",
+        "T004"
+      ],
+      "tests": [
+        "__tests__/BuildBar.test.tsx::names its region"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 10,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Move Build into a bottom bar with a review of the changes",
+  "size": "normal",
+  "planBlocks": [
+    "states",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "states",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/687-builder-build-bar --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 screens, 20 parts, 1 state block (6 states). Every block holds to its grammar."
+    },
+    {
+      "what": "Requirement check against the diff, run inline (no subagent tool)",
+      "result": "FR-001..FR-013 met; each has a rendered-surface test"
+    },
+    {
+      "what": "webview types",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.4,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json",
+      "commit": "e0019b0a",
+      "tree": "714079d75ee2409e0de7d11752955171c720f3c1"
+    },
+    {
+      "what": "extension types",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.1,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "e0019b0a",
+      "tree": "714079d75ee2409e0de7d11752955171c720f3c1"
+    },
+    {
+      "what": "builder tests",
+      "command": "npx jest apps/vscode/webview/src/pipeline-builder",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 28.4,
+      "result": "Snapshots:   0 total · Time:        26.733 s · Ran all test suites matching /apps\\/vscode\\/webview\\/src\\/pipeline-builder/i.",
+      "commit": "e0019b0a",
+      "tree": "714079d75ee2409e0de7d11752955171c720f3c1"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Count changed steps in the headline",
+      "why": "no record of writes since the last build",
+      "rejected": "preview on every write",
+      "by": "agent",
+      "at": "2026-11-24T18:20:13.004Z"
+    },
+    {
+      "decision": "Undo only on the last write",
+      "why": "host holds one undo",
+      "rejected": "per-row undo",
+      "by": "agent",
+      "at": "2026-11-24T18:20:13.004Z"
+    },
+    {
+      "decision": "Build stays enabled with a hook problem",
+      "why": "the build only warns",
+      "rejected": "disabled Build from the design",
+      "by": "agent",
+      "at": "2026-11-24T18:20:13.004Z"
+    },
+    {
+      "decision": "No Install it fix",
+      "why": "no host action",
+      "rejected": "a dead button",
+      "by": "agent",
+      "at": "2026-11-24T18:20:13.004Z"
+    },
+    {
+      "decision": "Hide the bar under the hook modal and, at narrow width, under the popover or a side pane",
+      "why": "those are the modal and sheets at the foot",
+      "rejected": "z-index stacking under them",
+      "by": "agent",
+      "at": "2026-11-24T18:36:07.721Z"
+    },
+    {
+      "decision": "Clear the write status when a build writes",
+      "why": "Build to apply is answered",
+      "rejected": "leaving a stale line on the foot",
+      "by": "agent",
+      "at": "2026-11-24T18:36:07.721Z"
+    },
+    {
+      "decision": "Map preact/test-utils in jest",
+      "why": "act flushes the after-paint effect that starts the confirmation clock",
+      "rejected": "a 4s real-time wait",
+      "by": "agent",
+      "at": "2026-11-24T18:36:07.721Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "New BuildBar component, header trimmed, panel owns open state",
+      "key_finding": "host clears the report on each redraw, so a held report is always fresh"
+    },
+    "tasks": {
+      "summary": "9 tasks: foundational wave of 3, bar wiring, header tests, polish"
+    },
+    "implement": {
+      "summary": "Build bar with review shipped; header trimmed to title, switcher and one menu"
+    }
+  },
+  "approach": "A BuildBar component at the foot reads build state, report, status and hook problems; Review opens a list and asks for a preview when none is held. The header keeps the title, switcher, an overflow menu and a quiet up-to-date line.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "BuildBar component, trimmed header with one overflow menu, bar styles",
+      "files": [
+        "BuildBar.tsx",
+        "Header.tsx",
+        "pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "BuildBar component, trimmed header with one overflow menu, bar styles",
+      "files": [
+        "BuildBar.tsx",
+        "Header.tsx",
+        "pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "BuildBar component, trimmed header with one overflow menu, bar styles",
+      "files": [
+        "BuildBar.tsx",
+        "Header.tsx",
+        "pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Bar tests through the rendered bar",
+      "files": [
+        "__tests__/BuildBar.test.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Panel wires the bar, hides it under sheets, folds the status line in",
+      "files": [
+        "index.tsx",
+        "__tests__/BuildBarPanel.test.tsx"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Header tests for the menu, the quiet line and no Build",
+      "files": [
+        "__tests__/HeaderChip.test.tsx"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Stories for the bar states; Guide, Interactions and Situations stories moved off the old header",
+      "files": [
+        "__stories__/Components.stories.tsx",
+        "__stories__/Guide.stories.tsx",
+        "__stories__/Interactions.stories.tsx",
+        "__stories__/PipelineBuilder.stories.tsx"
+      ],
+      "wave": "T007-T008"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Stories for the bar states; Guide, Interactions and Situations stories moved off the old header",
+      "files": [
+        "__stories__/Components.stories.tsx",
+        "__stories__/Guide.stories.tsx",
+        "__stories__/Interactions.stories.tsx",
+        "__stories__/PipelineBuilder.stories.tsx"
+      ],
+      "wave": "T007-T008"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "tsc on both configs clean, builder tests 596 passing"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "A failed build's Review opens with the log shown",
+      "files": [
+        "BuildBar.tsx",
+        "__tests__/BuildBar.test.tsx"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "Design items not built: Install it (no host action), per-row Undo (host keeps one), disabled Build on a problem (the build only warns).",
+      "step": "implement"
+    }
+  ],
+  "last_action": "implement validated",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-24T18:37:39.786Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T18:36:50.532Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T18:37:45.723Z",
+      "added": [
+        "T010"
+      ],
+      "completed": true
+    }
+  ]
+}

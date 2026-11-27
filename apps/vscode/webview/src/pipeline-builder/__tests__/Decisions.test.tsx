@@ -3,7 +3,7 @@
  */
 import { DecisionForm } from '../DecisionForm';
 import type { PipelineDecision } from '../../../../src/protocol/pipeline';
-import { canvas, flush, graph, mount, step } from './support';
+import { canvas, flush, graph, mount, node, step } from './support';
 
 afterEach(() => { document.body.innerHTML = ''; });
 
@@ -51,6 +51,23 @@ describe('the board says where a verdict routes, and offers the change', () => {
             steps: [step({ decisions: [DECISION] })],
         }));
         host.querySelector<HTMLButtonElement>('.pb-decision-edit')?.click();
+        expect(decisions).toEqual([['specify', 'classify-size']]);
+    });
+
+    it('folds the routing into one line under the node that decides', async () => {
+        const { host, decisions } = canvas(graph({
+            steps: [step({
+                decisions: [DECISION],
+                phases: [{ name: 'classify', hooks: [], nodes: [node({ id: 'classify-size' })] }],
+            })],
+        }));
+        const toggle = host.querySelector<HTMLButtonElement>('.pb-node-group .pb-routing-toggle')!;
+        expect(toggle.getAttribute('aria-expanded')).toBe('false');
+        expect(host.querySelector('.pb-verdicts')).toBeNull();
+        toggle.click();
+        await flush();
+        expect(host.querySelectorAll('.pb-verdicts li')).toHaveLength(3);
+        host.querySelector<HTMLButtonElement>('.pb-decision-edit')!.click();
         expect(decisions).toEqual([['specify', 'classify-size']]);
     });
 

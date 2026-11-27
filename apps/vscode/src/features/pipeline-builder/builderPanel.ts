@@ -31,8 +31,12 @@ import { projectKind } from './projectKind';
 import { cleanQuery, isPresetId, presetCommandLine, readSpecPresets } from './specPresets';
 import { runSpecifyPreset } from '../../speckit/processExtensions';
 import { stockRefusal } from './stockGuard';
-import { setHookEnabled } from './stockHooks';
-import { formatStockCommands, readStockWorkflow, stockFileToOpen } from './stockWorkflow';
+import { addUserHook, removeUserHook, setHookEnabled, updateUserHook } from './stockHooks';
+import { readHookRuns } from './hookRuns';
+import { latestRun, reportHolds } from './latestRun';
+import {
+    formatStockCommands, hookableSteps, installedExtensions, readStockWorkflow, stockFileToOpen,
+} from './stockWorkflow';
 import { formatCommandForProvider } from '../../ai-providers/aiProvider';
 import { readPipelineBuildState, COMPANION_CONFIG_REL } from '../specs/pipelineBuild';
 import {
@@ -109,6 +113,13 @@ export class PipelineBuilderPanel {
     /** Which installed stock workflow the board is drawing. */
     private drawing: string | undefined;
 
+    private readonly runs = latestRun();
+
+    /** The report the panel shows now, so a redraw can tell whether it still holds. */
+    private report: BuildReport | null = null;
+    /** The last graph drawn, so a status line can name a node the way its card does. */
+    private drawn: PipelineGraphResult | null = null;
+
     private constructor(
         private readonly panel: vscode.WebviewPanel,
         private readonly context: vscode.ExtensionContext,
@@ -184,6 +195,9 @@ export class PipelineBuilderPanel {
 
     private readonly handlers: DispatcherMap<BuilderToExtensionMessage, []> = {
         ready: () => this.send(),
+        readHookRuns: async () => {
+            await this.post({ type: 'hookRuns', answer: await readHookRuns(this.workspaceRoot) });
+        },
         presetSearch: async message => {
             const query = cleanQuery(message.query);
             if (!query) { this.say('That search has characters a preset search cannot take.'); return; }
@@ -374,7 +388,7 @@ export class PipelineBuilderPanel {
                 'Giving a node back',
                 {
                     tone: 'done',
-                    text: `${message.nodeId} runs the shipped node again`,
+                    text: `${this.named(message.command, message.nodeId)} runs the shipped node again`,
                     detail: 'Your copy went to the trash',
                     undo: { token },
                 });
@@ -404,7 +418,7 @@ export class PipelineBuilderPanel {
                 'Removing a hook',
                 {
                     tone: 'done',
-                    text: `Hook removed ${message.when} ${message.anchor}`,
+                    text: `Hook removed ${message.when} ${this.named(message.command, message.anchor)}`,
                     detail: 'Build to apply',
                 });
         },
@@ -432,8 +446,8 @@ export class PipelineBuilderPanel {
             {
                 tone: 'done',
                 text: message.editIndex === undefined
-                    ? `Hook added ${message.when} ${message.anchor}`
-                    : `Hook changed ${message.when} ${message.anchor}`,
+                    ? `Hook added ${message.when} ${this.named(message.command, message.anchor)}`
+                    : `Hook changed ${message.when} ${this.named(message.command, message.anchor)}`,
                 detail: 'Build to apply',
             });
         },
@@ -451,8 +465,8 @@ export class PipelineBuilderPanel {
                     tone: 'done',
                     text: along
                         ? `Hook moved ${(to.index ?? Infinity) < from.index ? 'up' : 'down'} `
-                            + `${to.when} ${to.anchor}`
-                        : `Hook moved to ${to.when} ${to.anchor}`,
+                            + `${to.when} ${this.named(message.command, to.anchor)}`
+                        : `Hook moved to ${to.when} ${this.named(message.command, to.anchor)}`,
                     detail: 'Build to apply',
                 });
         },
@@ -518,7 +532,7 @@ export class PipelineBuilderPanel {
                 'Removing a node',
                 {
                     tone: 'done',
-                    text: `${message.nodeId} no longer runs in ${message.command}`,
+                    text: `${this.named(message.command, message.nodeId)} no longer runs in ${message.command}`,
                     detail: 'Build to apply',
                     // Promised only when there is a shape to put back.
                     undo: before ? { token } : undefined,
@@ -544,8 +558,8 @@ export class PipelineBuilderPanel {
                 {
                     tone: 'done',
                     text: message.phase
-                        ? `${message.nodeId} moved to ${message.phase} in ${message.command}`
-                        : `${message.nodeId} moved in ${message.command}`,
+                        ? `${this.named(message.command, message.nodeId)} moved to ${message.phase} in ${message.command}`
+                        : `${this.named(message.command, message.nodeId)} moved in ${message.command}`,
                     detail: 'Build to apply',
                 });
         },
@@ -574,6 +588,25 @@ export class PipelineBuilderPanel {
                 detail: 'Saved to .specify/extensions.yml',
             });
         },
+
+        /**
+         * Attach, change or take away the person's own hook on a stock step.
+         *
+         * Only entries naming no installed extension: an extension rewrites
+         * its own on every install, so an edit there would not last.
+         */
+        addStockHook: message => this.writeUserHook(
+            message.step, true,
+            (text, installed) => addUserHook(text, message.step, message.when, message.hook, installed),
+            `${message.hook.command.trim()} runs ${message.when} ${message.step}`),
+        updateStockHook: message => this.writeUserHook(
+            message.step, false,
+            (text, installed) => updateUserHook(text!, message, message.hook, installed),
+            `${message.step} ${message.when} hook changed`),
+        removeStockHook: message => this.writeUserHook(
+            message.step, false,
+            (text, installed) => removeUserHook(text!, message, installed),
+            `${message.step} ${message.when} hook removed`),
 
         /**
          * Open one of the stock files the board drew, in an editor.
@@ -610,6 +643,10 @@ export class PipelineBuilderPanel {
 
         runStockCommand: async () => {
             await vscode.commands.executeCommand('speckit.constitution');
+        },
+
+        installCompanion: async () => {
+            await vscode.commands.executeCommand('speckit.companion.installSpecKitExtension');
         },
 
         /**
@@ -713,6 +750,15 @@ export class PipelineBuilderPanel {
         const turn = this.writing.then(() => this.writeNow(run, what, status));
         this.writing = turn.catch(() => undefined);
         return turn;
+    }
+
+    /** A node's display name, a phase or step by its own name, or the id when the board has not drawn it. */
+    private named(command: string, anchor: string): string {
+        const graph = this.drawn;
+        if (!graph || isGraphError(graph)) { return anchor; }
+        const step = graph.steps.find(s => s.name === command);
+        const node = step?.phases.flatMap(p => p.nodes).find(n => n.id === anchor);
+        return node?.name || anchor;
     }
 
     private writing: Promise<unknown> = Promise.resolve();
@@ -934,6 +980,37 @@ export class PipelineBuilderPanel {
         }
     }
 
+    /**
+     * One write to the registry on the person's behalf. The step must be one
+     * the board drew; a refusal leaves the file as it was.
+     */
+    private async writeUserHook(
+        step: string, mayCreate: boolean,
+        change: (text: string | null, installed: Set<string>) => { text: string } | { error: string },
+        done: string,
+    ): Promise<void> {
+        if (!hookableSteps(this.workspaceRoot, this.drawing).includes(step)) {
+            this.say(`${step} is not a step this project runs.`);
+            return;
+        }
+        const file = path.join(this.workspaceRoot, EXTENSIONS_REL);
+        const text = read(file);
+        if (text === null && !mayCreate) {
+            this.say('This project has no .specify/extensions.yml to change.');
+            return;
+        }
+        const result = change(text, installedExtensions(this.workspaceRoot));
+        if ('error' in result) { this.say(result.error); return; }
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, result.text, 'utf8');
+        await this.send();
+        this.sayStatus({
+            tone: 'done',
+            text: done,
+            detail: text === null ? 'Created .specify/extensions.yml' : 'Saved to .specify/extensions.yml',
+        });
+    }
+
     private readonly dispatch = createDispatcher(this.handlers, {
         onUnhandled: message => this.outputChannel.appendLine(
             `[PipelineBuilder] ignored message: ${(message as { type: string }).type}`),
@@ -962,16 +1039,25 @@ export class PipelineBuilderPanel {
      * and `quiet` drops the toast that would otherwise say it a second time.
      */
     private async run(command: string): Promise<void> {
+        const ticket = this.runs.start();
         await this.post({ type: 'busy', busy: true });
         let report: BuildReport | null = null;
         try {
             report = await vscode.commands.executeCommand<BuildReport | null>(
                 command, { quiet: true }) ?? null;
         } finally {
-            await this.post({ type: 'busy', busy: false });
-            // After the redraw, which is what clears the last one.
-            await this.send();
-            if (report) { await this.post({ type: 'buildReport', report }); }
+            // A Build pressed while Review's preview was still running answers last.
+            if (this.runs.isNewest(ticket)) { await this.answer(ticket, report); }
+        }
+    }
+
+    private async answer(ticket: number, report: BuildReport | null): Promise<void> {
+        await this.post({ type: 'busy', busy: false });
+        // After the redraw, which is what clears the last one.
+        await this.send();
+        if (report && this.runs.isNewest(ticket)) {
+            this.report = report;
+            await this.post({ type: 'buildReport', report });
         }
     }
 
@@ -1036,15 +1122,15 @@ export class PipelineBuilderPanel {
         if (!isGraphError(graph)) {
             graph.firstRun = !this.context.workspaceState?.get<boolean>(FIRST_RUN_SEEN);
         }
-        await this.post({
-            type: 'graph',
-            graph,
-            buildState: readPipelineBuildState(this.workspaceRoot).kind,
-        });
+        this.drawn = graph;
+        const buildState = readPipelineBuildState(this.workspaceRoot).kind;
+        await this.post({ type: 'graph', graph, buildState });
         // A redraw means the pipeline moved — a panel write, an edit to
         // companion.yml, a node saved. "Built 14:02 · 5 commands written" is
         // then a claim about a pipeline that no longer exists, and it would sit
         // beside the amber line saying so, the two contradicting each other.
+        if (reportHolds(this.report, buildState)) { return; }
+        this.report = null;
         await this.post({ type: 'buildReport', report: null });
     }
 

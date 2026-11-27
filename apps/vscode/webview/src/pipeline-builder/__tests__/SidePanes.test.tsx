@@ -2,8 +2,8 @@
  * @jest-environment jsdom
  */
 import { Inspector } from '../Inspector';
-import { AttachForm, Attachment, NewStepForm, NewWorkflowForm } from '../AttachForm';
-import { TemplateForm } from '../TemplateForm';
+import { Attachment } from '../AttachForm';
+import { HookModal } from '../HookModal';
 import type { PipelineNode } from '../../../../src/protocol/pipeline';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -232,31 +232,10 @@ describe('every side pane wears one shell', () => {
         onUseVariant: noop, onRemove: noop, onMove: noop, editable: 'x',
     };
     const CHOICES = { skills: [], nodes: [], commands: [], fragments: [], presets: [] };
-    const TEMPLATE = step({
-        template: {
-            file: 'spec-template.md', sections: [],
-            sectionsAvailable: ['Requirements'], chosenBy: {},
-        },
-    });
-
     const panes: Array<[string, preact.VNode, string]> = [
         ['the inspector',
             <Inspector node={node()} step="specify" body="x" parts={[]} {...INSPECT} />,
             'Resolve the spec folder'],
-        ['the hook form',
-            <AttachForm step={step()} anchor="author" choices={CHOICES}
-                onCancel={noop} onAttach={noop} />,
-            'Add hook'],
-        ['the document shape',
-            <TemplateForm step={TEMPLATE} fragments={[]} onCancel={noop} onPick={noop} />,
-            'What specify writes'],
-        ['a new step',
-            <NewStepForm sequence={['specify']} taken={['specify']}
-                onCancel={noop} onCreate={noop} />,
-            'New step'],
-        ['a new workflow',
-            <NewWorkflowForm from="" taken={[]} presets={[]} onCancel={noop} onCreate={noop} />,
-            'New workflow'],
     ];
 
     it.each(panes)('draws %s in it', (_name, pane, title) => {
@@ -270,10 +249,9 @@ describe('every side pane wears one shell', () => {
 
     it('names the close button rather than leaving it a bare mark', () => {
         const host = mount(
-            <NewStepForm sequence={['specify']} taken={['specify']}
-                onCancel={noop} onCreate={noop} />);
+            <Inspector node={node()} step="specify" body="x" parts={[]} {...INSPECT} />);
         const close = host.querySelector('.pb-side-close')!;
-        expect(close.getAttribute('aria-label')).toBe('Cancel');
+        expect(close.getAttribute('aria-label')).toBeTruthy();
     });
 
     it('lets the inspector keep its own rows on the shared aside', () => {
@@ -465,185 +443,6 @@ describe('replacing a whole step, from its frame', () => {
     });
 });
 
-describe('starting a workflow from something', () => {
-    const noop = () => undefined;
-
-    function form(presets = PRESETS, from = '') {
-        const made: Array<[string, string]> = [];
-        const host = mount(
-            <NewWorkflowForm from={from} taken={['shipped']} presets={presets}
-                onCancel={noop} onCreate={(name, seed) => made.push([name, seed])} />,
-        );
-        return { host, made };
-    }
-
-    const PRESETS = [
-        { name: 'classic', label: 'Classic spec-kit', summary: 'Stock shapes.' },
-        { name: 'brownfield', label: 'Brownfield', summary: 'For an existing system.' },
-    ];
-
-    const type = (host: HTMLElement, value: string) => {
-        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-
-    /** Every card's name, in the order they are offered. */
-    const cards = (host: HTMLElement) =>
-        Array.from(host.querySelectorAll('.pb-choice-label')).map(el => el.textContent);
-
-    it('offers every shipped preset by its label, beside what you run now', () => {
-        const { host } = form();
-        expect(cards(host))
-            .toEqual(['The pipeline as shipped', 'Classic spec-kit', 'Brownfield']);
-    });
-
-    // The default is what you are on. A picker that started at a preset would
-    // quietly discard the configuration someone is already running.
-    it('starts from the workflow in force', async () => {
-        const { host, made } = form(PRESETS, 'bugfix');
-        type(host, 'mine');
-        await flush();
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-        expect(made).toEqual([['mine', 'bugfix']]);
-    });
-
-    it('sends the preset someone picked, prefixed so it is not read as a workflow', async () => {
-        const { host, made } = form();
-        type(host, 'mine');
-        (host.querySelectorAll('.pb-choice input')[2] as HTMLInputElement).click();
-        await flush();
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-        expect(made).toEqual([['mine', 'preset:brownfield']]);
-    });
-
-    it('says what every preset does before any of them is committed to', () => {
-        const { host } = form();
-        expect(Array.from(host.querySelectorAll('.pb-choice-help')).map(el => el.textContent))
-            .toEqual([
-                'Your nodes, hooks and templates as they are today.',
-                'Stock shapes.',
-                'For an existing system.',
-            ]);
-    });
-
-    it('offers only what you run now when nothing else ships', () => {
-        const { host } = form([]);
-        expect(cards(host)).toEqual(['The pipeline as shipped']);
-    });
-});
-
-describe('naming a new step', () => {
-    const noop = () => undefined;
-    const SEQUENCE = ['specify', 'plan', 'tasks', 'implement'];
-
-    function form() {
-        const made: Array<Record<string, string>> = [];
-        const host = mount(
-            <NewStepForm sequence={SEQUENCE} taken={[...SEQUENCE, 'auto']}
-                onCancel={noop} onCreate={step => made.push(step)} />,
-        );
-        return { host, made };
-    }
-
-    const type = (host: HTMLElement, value: string) => {
-        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
-        input.value = value;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-    };
-
-    const submit = (host: HTMLElement) =>
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-
-    it('places it after the last step in the run by default', async () => {
-        const { host, made } = form();
-        type(host, 'review');
-        await flush();
-        submit(host);
-        expect(made[0].after).toBe('implement');
-    });
-
-    // A seam between two lanes IS the answer to "runs after", so arriving from
-    // one must not ask again.
-    it('seeds Runs after from the seam it was opened at', async () => {
-        const made: Array<Record<string, string>> = [];
-        const host = mount(
-            <NewStepForm sequence={SEQUENCE} taken={[...SEQUENCE, 'auto']} initialAfter="tasks"
-                onCancel={noop} onCreate={step => made.push(step)} />,
-        );
-        expect((host.querySelector('select') as HTMLSelectElement).value).toBe('tasks');
-        type(host, 'review');
-        await flush();
-        submit(host);
-        expect(made[0].after).toBe('tasks');
-    });
-
-    it('offers to leave it out of the run', () => {
-        const { host } = form();
-        const options = Array.from(host.querySelectorAll('select option'));
-        expect(options[options.length - 1].textContent).toContain('I launch it myself');
-    });
-
-    // The name becomes a command, so a space or a capital produces something
-    // nobody can type.
-    it('refuses a name that cannot be a command', async () => {
-        const { host } = form();
-        type(host, 'Review This');
-        await flush();
-        expect(host.querySelector('.pb-field-problem')?.textContent)
-            .toContain('it becomes a command');
-        expect((host.querySelector('.pb-action--primary') as HTMLButtonElement).disabled)
-            .toBe(true);
-    });
-
-    it('refuses a name a step already has', async () => {
-        const { host } = form();
-        type(host, 'plan');
-        await flush();
-        expect(host.querySelector('.pb-field-problem')?.textContent)
-            .toContain('already a step called plan');
-    });
-
-    it('says what it will write and what the assistant will be able to run', async () => {
-        const { host } = form();
-        type(host, 'review');
-        await flush();
-        const preview = host.querySelector('.pb-form-preview')?.textContent ?? '';
-        expect(preview).toContain('.specify/companion/nodes/review/');
-        expect(preview).toContain('/speckit.companion.review');
-    });
-
-    it('names the display name, and derives it from the name', async () => {
-        const { host, made } = form();
-        type(host, 'review');
-        await flush();
-        const labels = Array.from(host.querySelectorAll('.pb-field-label'))
-            .map(el => el.textContent);
-        expect(labels).toContain('Display name');
-        expect(labels).not.toContain('Reads as');
-        expect((host.querySelectorAll('.pb-input')[1] as HTMLInputElement).placeholder)
-            .toBe('Review');
-
-        submit(host);
-        expect(made[0].label).toBe('');
-    });
-
-    // A placeholder is an example; the instruction belongs under the field.
-    it('gives Writes an example, and says how several files separate', () => {
-        const { host } = form();
-        const writes = Array.from(host.querySelectorAll('.pb-input--mono'))
-            .at(-1) as HTMLInputElement;
-        expect(writes.placeholder).toBe('review.md');
-        const help = Array.from(host.querySelectorAll('.pb-field-note'))
-            .map(el => el.textContent ?? '');
-        expect(help.some(line => line.includes('[review.md, notes.md]'))).toBe(true);
-        expect(help.some(line => line.includes('empty if the step writes nothing'))).toBe(true);
-    });
-});
-
 // The tick is a mark on a board that already spends colour on build state, so it
 // encodes by weight. Read from the stylesheet because jsdom resolves no cascade.
 describe('the kind tick is three steps of one neutral', () => {
@@ -684,7 +483,7 @@ describe('the kind tick is three steps of one neutral', () => {
     });
 });
 
-describe('the hook form asks for the placement first', () => {
+describe('the hook modal keeps the placement it was opened with', () => {
     const noop = () => undefined;
     const CHOICES = {
         skills: ['create-pr', 'verify-code-review'], nodes: [], commands: [], fragments: [], presets: [],
@@ -693,179 +492,19 @@ describe('the hook form asks for the placement first', () => {
     function form(anchor = 'draft-spec', when?: 'before' | 'after') {
         const made: Attachment[] = [];
         const host = mount(
-            <AttachForm step={step()} anchor={anchor} when={when} choices={CHOICES}
+            <HookModal step={step()} anchor={anchor} when={when} choices={CHOICES}
                 onCancel={noop} onAttach={a => made.push(a)} />,
         );
         return { host, made };
     }
 
     const whenShown = (host: HTMLElement) =>
-        (host.querySelectorAll('.pb-runs .pb-trigger-text')[0].textContent ?? '').trim();
+        (host.querySelectorAll('.pb-modal-runs .pb-trigger-text')[0].textContent ?? '').trim();
 
     const open = async (host: HTMLElement, which: number) => {
-        (host.querySelectorAll('.pb-runs .pb-menu-trigger')[which] as HTMLButtonElement).click();
+        (host.querySelectorAll('.pb-modal-runs .pb-menu-trigger')[which] as HTMLButtonElement).click();
         await flush();
     };
-
-    // The seam under a node and the seam above it opened the same form seeded
-    // `before`, so attaching after something meant correcting the form first.
-    it('opens on the side of the anchor the button was pressed on', () => {
-        expect(whenShown(form('draft-spec', 'after').host)).toBe('after');
-        expect(whenShown(form('draft-spec', 'before').host)).toBe('before');
-        expect(whenShown(form().host)).toBe('before');
-    });
-
-    // "Runs before Draft the spec" is the sentence, so it is read in that order.
-    it('puts Runs at the top, as when and where in one row', () => {
-        const { host } = form();
-        const fields = Array.from(host.querySelectorAll('.pb-field-label'))
-            .map(el => el.textContent);
-        expect(fields[0]).toBe('Runs');
-        expect(host.querySelectorAll('.pb-runs .pb-menu-trigger')).toHaveLength(2);
-    });
-
-    it('names the anchor rather than showing its id, in the panel\'s own menu', async () => {
-        const { host } = form();
-        expect(host.querySelectorAll('.pb-runs select')).toHaveLength(0);
-        expect((host.querySelectorAll('.pb-runs .pb-trigger-text')[1].textContent ?? '').trim())
-            .toBe('Draft the spec');
-
-        await open(host, 1);
-        expect(Array.from(host.querySelectorAll('.pb-menu-label')).map(el => el.textContent))
-            .toEqual(['the gather phase', 'Resolve the spec folder', 'the author phase',
-                'Draft the spec']);
-    });
-
-    it('changes when it runs from the same row', async () => {
-        const { host, made } = form();
-        await open(host, 0);
-        (Array.from(host.querySelectorAll('.pb-menu-option'))
-            .find(el => el.textContent?.startsWith('after')) as HTMLButtonElement).click();
-        await flush();
-
-        const input = host.querySelector('.pb-input--mono') as HTMLInputElement;
-        input.value = 'create-pr';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        await flush();
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-        expect(made[0].when).toBe('after');
-    });
-
-    // Four help texts at once asked the reader to discard three of them.
-    it('shows one help line, for the kind that is selected', async () => {
-        const { host } = form();
-        const segments = Array.from(host.querySelectorAll('.pb-segment'));
-        expect(segments.map(el => el.textContent))
-            .toEqual(['Skill', 'Instruction', 'Command', 'Node']);
-        expect(host.querySelectorAll('.pb-kind .pb-field-note')).toHaveLength(1);
-        expect(host.querySelector('.pb-kind .pb-field-note')?.textContent)
-            .toContain('The instructions stay in the skill');
-
-        (segments[2] as HTMLButtonElement).click();
-        await flush();
-        expect(host.querySelector('.pb-kind .pb-field-note')?.textContent)
-            .toContain('needs a terminal');
-        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Command');
-    });
-
-    // A radiogroup is one tab stop, and arrows move inside it.
-    it('walks the kinds with arrows, on one tab stop', async () => {
-        const { host } = form();
-        const segments = () => Array.from(host.querySelectorAll('.pb-segment'));
-        const stops = () => segments().map(el => el.getAttribute('tabindex'));
-        expect(stops()).toEqual(['0', '-1', '-1', '-1']);
-
-        segments()[0].dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-        await flush();
-        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Instruction');
-        expect(stops()).toEqual(['-1', '0', '-1', '-1']);
-
-        segments()[1].dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
-        await flush();
-        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Node');
-
-        // Wraps, so the group has no dead end at either edge.
-        segments()[3].dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
-        await flush();
-        expect(host.querySelector('.pb-segment--on')?.textContent).toBe('Skill');
-    });
-
-    // Only a skill hook renders its note; the other three drop it.
-    it('asks for a note only where one is rendered', async () => {
-        const { host } = form();
-        expect(host.querySelector('.pb-note')).not.toBeNull();
-        const segment = (label: string) =>
-            Array.from(host.querySelectorAll('.pb-segment'))
-                .find(el => el.textContent === label) as HTMLButtonElement;
-
-        for (const label of ['Instruction', 'Command', 'Node']) {
-            segment(label).click();
-            await flush();
-            expect(host.querySelector('.pb-note')).toBeNull();
-        }
-        segment('Skill').click();
-        await flush();
-        expect(host.querySelector('.pb-note')).not.toBeNull();
-    });
-
-    // The renderer reads a note only on a skill hook, so one left behind by a
-    // switch shipped a `text:` key into companion.yml that nothing ever reads.
-    it('drops a note typed under Skill when the kind changes', async () => {
-        const { host, made } = form();
-        const segment = (label: string) =>
-            Array.from(host.querySelectorAll('.pb-segment'))
-                .find(el => el.textContent === label) as HTMLButtonElement;
-
-        const note = host.querySelector('.pb-note .pb-input') as HTMLInputElement;
-        note.value = 'read the changelog first';
-        note.dispatchEvent(new Event('input', { bubbles: true }));
-        await flush();
-
-        segment('Node').click();
-        await flush();
-        const value = host.querySelector('.pb-field .pb-input') as HTMLInputElement;
-        value.value = 'review';
-        value.dispatchEvent(new Event('input', { bubbles: true }));
-        await flush();
-        (host.querySelector('form') as HTMLFormElement)
-            .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-
-        expect(made).toHaveLength(1);
-        expect(made[0].note).toBe('');
-    });
-
-    it('names the note for what it is, and marks it optional', () => {
-        const { host } = form();
-        const labels = Array.from(host.querySelectorAll('.pb-field-label'))
-            .map(el => el.textContent);
-        expect(labels).toContain('Note');
-        expect(labels).not.toContain('Anything to add');
-        const note = host.querySelector('.pb-note .pb-input') as HTMLInputElement;
-        expect(note.placeholder).toBe('Anything the assistant should know first');
-        expect(note.getAttribute('aria-label')).toBe('Note to the assistant (optional)');
-        expect(host.querySelector('.pb-note .pb-field-help')?.textContent).toBe('optional');
-    });
-
-    // An index only means anything under the anchor it was read from. Keeping it
-    // while moving the hook replaced whatever sat at that position under the new
-    // anchor — destroying an unrelated hook and leaving the original in place.
-    const editing = {
-        when: 'before' as const, type: 'skill' as const, summary: 'create-pr',
-        anchor: 'draft-spec', index: 1, note: '',
-    };
-
-    function editForm(anchor = 'draft-spec') {
-        const made: Attachment[] = [];
-        const host = mount(
-            <AttachForm step={step()} anchor={anchor} choices={CHOICES} editing={editing}
-                onCancel={noop} onAttach={a => made.push(a)} />,
-        );
-        return { host, made };
-    }
 
     const send = async (host: HTMLElement) => {
         (host.querySelector('form') as HTMLFormElement)
@@ -879,10 +518,98 @@ describe('the hook form asks for the placement first', () => {
         await flush();
     };
 
-    // A `<button>` in a form submits it unless it says otherwise, and the Runs
-    // row is two menus inside the hook form. Picking an option attached the
-    // hook there and then — invisible while adding, because an empty value is
-    // refused, and live while editing, where the value arrives filled in.
+    const typeIn = async (el: HTMLInputElement, text: string) => {
+        el.value = text;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        await flush();
+    };
+
+    const kind = (host: HTMLElement, label: string) =>
+        Array.from(host.querySelectorAll('.pb-modal-kind'))
+            .find(el => el.getAttribute('aria-label') === label) as HTMLButtonElement;
+
+    it('opens on the side of the anchor the button was pressed on', () => {
+        expect(whenShown(form('draft-spec', 'after').host)).toBe('after');
+        expect(whenShown(form('draft-spec', 'before').host)).toBe('before');
+        expect(whenShown(form().host)).toBe('before');
+    });
+
+    it('names the anchor rather than showing its id, in the panel\'s own menu', async () => {
+        const { host } = form();
+        expect((host.querySelectorAll('.pb-modal-runs .pb-trigger-text')[1].textContent ?? '').trim())
+            .toBe('Draft the spec');
+        await open(host, 1);
+        expect(Array.from(host.querySelectorAll('.pb-menu-label')).map(el => el.textContent))
+            .toEqual(['the gather phase', 'Resolve the spec folder', 'the author phase',
+                'Draft the spec']);
+    });
+
+    it('changes when it runs from the same line, and the title follows', async () => {
+        const { host, made } = form();
+        await open(host, 0);
+        await choose(host, 'after');
+        expect(host.querySelector('.pb-modal-title')?.textContent).toBe('Add after Draft the spec');
+        await typeIn(host.querySelector('.pb-modal-search input') as HTMLInputElement, 'create-pr');
+        await send(host);
+        expect(made[0].when).toBe('after');
+    });
+
+    it('walks the kinds with arrows, on one tab stop', async () => {
+        const { host } = form();
+        const kinds = () => Array.from(host.querySelectorAll('.pb-modal-kind'));
+        const stops = () => kinds().map(el => el.getAttribute('tabindex'));
+        expect(stops()).toEqual(['0', '-1', '-1', '-1']);
+        kinds()[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-modal-kind--on')?.getAttribute('aria-label')).toBe('Instruction');
+        expect(stops()).toEqual(['-1', '0', '-1', '-1']);
+        kinds()[1].dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-modal-kind--on')?.getAttribute('aria-label')).toBe('Node file');
+        kinds()[3].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        await flush();
+        expect(host.querySelector('.pb-modal-kind--on')?.getAttribute('aria-label')).toBe('Skill');
+    });
+
+    it('asks for a note only where one is rendered', async () => {
+        const { host } = form();
+        expect(host.querySelector('.pb-modal-note')).not.toBeNull();
+        for (const label of ['Instruction', 'Shell command', 'Node file']) {
+            kind(host, label).click();
+            await flush();
+            expect(host.querySelector('.pb-modal-note')).toBeNull();
+        }
+        kind(host, 'Skill').click();
+        await flush();
+        const note = host.querySelector('.pb-modal-note') as HTMLInputElement;
+        expect(note.getAttribute('aria-label')).toBe('Note to the assistant (optional)');
+    });
+
+    it('drops a note typed under Skill when the kind changes', async () => {
+        const { host, made } = form();
+        await typeIn(host.querySelector('.pb-modal-note') as HTMLInputElement, 'read the changelog first');
+        kind(host, 'Node file').click();
+        await flush();
+        await typeIn(host.querySelector('.pb-modal-search input') as HTMLInputElement, 'review');
+        await send(host);
+        expect(made).toHaveLength(1);
+        expect(made[0].note).toBe('');
+    });
+
+    const editing = {
+        when: 'before' as const, type: 'skill' as const, summary: 'create-pr',
+        anchor: 'draft-spec', index: 1, note: '',
+    };
+
+    function editForm(anchor = 'draft-spec') {
+        const made: Attachment[] = [];
+        const host = mount(
+            <HookModal step={step()} anchor={anchor} choices={CHOICES} editing={editing}
+                onCancel={noop} onAttach={a => made.push(a)} />,
+        );
+        return { host, made };
+    }
+
     it('does not attach anything just because a menu was used', async () => {
         const { host, made } = editForm();
         await open(host, 0);
@@ -902,14 +629,12 @@ describe('the hook form asks for the placement first', () => {
         await open(host, 1);
         await choose(host, 'Resolve the spec folder');
         await send(host);
-
         expect(made).toHaveLength(1);
-        expect(made[0].anchor).toBe('resolve-dir');
-        expect(made[0].boundary).toBe('node');
-        expect(made[0].editIndex).toBeUndefined();
-        expect(made[0].movedFrom).toEqual({ anchor: 'draft-spec', when: 'before', index: 1 });
-        // One move carries the content too, so the panel never needs a second write.
-        expect(made[0]).toMatchObject({ hookType: 'skill', value: 'create-pr' });
+        expect(made[0]).toMatchObject({
+            anchor: 'resolve-dir', boundary: 'node', editIndex: undefined,
+            movedFrom: { anchor: 'draft-spec', when: 'before', index: 1 },
+            hookType: 'skill', value: 'create-pr',
+        });
     });
 
     it('does not carry the old index across a change of side', async () => {
@@ -917,107 +642,10 @@ describe('the hook form asks for the placement first', () => {
         await open(host, 0);
         await choose(host, 'after');
         await send(host);
-
         expect(made).toHaveLength(1);
-        expect(made[0].when).toBe('after');
-        expect(made[0].editIndex).toBeUndefined();
+        expect(made[0]).toMatchObject({
+            when: 'after', editIndex: undefined, anchor: 'draft-spec', boundary: 'node', value: 'create-pr',
+        });
         expect(made[0].movedFrom?.when).toBe('before');
-        expect(made[0]).toMatchObject({ anchor: 'draft-spec', boundary: 'node', value: 'create-pr' });
-    });
-});
-
-describe('the template picker shows what a fragment does', () => {
-    const noop = () => undefined;
-    const FRAGMENTS = [
-        {
-            name: 'ears', section: 'User Scenarios', for: '',
-            summary: 'Numbered WHEN / THEN / SHALL.',
-        },
-        {
-            name: 'outcomes', section: 'User Scenarios', for: '',
-            summary: 'Observable outcomes.',
-        },
-    ];
-
-    function form(chosen = '') {
-        const picked: Array<[string, string]> = [];
-        const host = mount(
-            <TemplateForm
-                step={step({
-                    template: {
-                        file: 'spec-template.md',
-                        sections: chosen ? ['User Scenarios'] : [],
-                        sectionsAvailable: ['User Scenarios', 'Requirements'],
-                        chosenBy: chosen ? { 'User Scenarios': chosen } : {},
-                    },
-                })}
-                fragments={FRAGMENTS}
-                onCancel={noop} onPick={(h, f) => picked.push([h, f])} />,
-        );
-        return { host, picked };
-    }
-
-    it('picks from the panel\'s own menu, each fragment\'s summary on its row', async () => {
-        const { host } = form();
-        expect(host.querySelectorAll('select')).toHaveLength(0);
-        (host.querySelector('.pb-template-pick .pb-menu-trigger') as HTMLButtonElement).click();
-        await flush();
-        expect(Array.from(host.querySelectorAll('.pb-menu-note')).map(el => el.textContent))
-            .toEqual(['The section the way Companion writes it.',
-                'Numbered WHEN / THEN / SHALL.', 'Observable outcomes.']);
-    });
-
-    it('shows the chosen fragment, and what it does, under the row', () => {
-        const { host } = form('ears');
-        expect((host.querySelector('.pb-trigger-text')?.textContent ?? '').trim()).toBe('ears');
-        expect(host.querySelector('.pb-template-summary')?.textContent)
-            .toBe('Numbered WHEN / THEN / SHALL.');
-    });
-
-    it('sends an empty fragment, which is how a section goes back to shipped', async () => {
-        const { host, picked } = form('ears');
-        (host.querySelector('.pb-template-pick .pb-menu-trigger') as HTMLButtonElement).click();
-        await flush();
-        (Array.from(host.querySelectorAll('.pb-menu-option'))
-            .find(el => el.textContent?.startsWith('As shipped')) as HTMLButtonElement).click();
-        expect(picked).toEqual([['User Scenarios', '']]);
-    });
-
-    // A dead field read as the working one a row above, with the reason sitting
-    // where the chosen fragment's summary goes.
-    it('draws no field for a section with nothing to pick, and says so on one line', () => {
-        const { host } = form();
-        const rows = Array.from(host.querySelectorAll('.pb-template-row'));
-        expect(rows[1].querySelector('.pb-template-pick')).toBeNull();
-        expect(rows[1].querySelector('.pb-menu-trigger')).toBeNull();
-        expect(rows[1].querySelector('.pb-template-summary')?.textContent)
-            .toBe('As shipped · nothing else is written for this section.');
-    });
-
-    it('leaves a section that does have fragments alone', () => {
-        const { host } = form();
-        const rows = Array.from(host.querySelectorAll('.pb-template-row'));
-        expect(rows[0].querySelector('.pb-template-pick .pb-menu-trigger')).not.toBeNull();
-    });
-
-    // Three dead rows saying the same thing is the sentence, three times.
-    it('says it once at the top when it is true of every section', () => {
-        const host = mount(
-            <TemplateForm
-                step={step({
-                    template: {
-                        file: 'plan-template.md', sections: [],
-                        sectionsAvailable: ['Technical Context', 'Constitution Check'],
-                        chosenBy: {},
-                    },
-                })}
-                fragments={FRAGMENTS} onCancel={noop} onPick={noop} />,
-        );
-        const said = Array.from(host.querySelectorAll('.pb-template-summary'))
-            .map(el => el.textContent);
-        expect(said).toEqual(
-            ['As shipped · nothing else is written for any section of this document.']);
-        expect(host.querySelectorAll('.pb-template-heading')).toHaveLength(2);
-        expect(host.querySelector('.pb-menu-trigger')).toBeNull();
     });
 });

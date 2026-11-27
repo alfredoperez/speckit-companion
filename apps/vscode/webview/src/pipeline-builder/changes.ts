@@ -34,3 +34,22 @@ export function changeSummary(step: PipelineStep): string[] {
     }
     return bits;
 }
+
+/** How many separate changes a step carries, one per thing a person did. */
+export function changeCount(step: PipelineStep): number {
+    const c = step.changes;
+    return c.added.length + c.removed.length + (c.reordered ? 1 : 0) + c.hooks
+        + c.decisions.length + c.replaced.length + c.phases.length
+        + (step.template?.sections.length ?? 0);
+}
+
+/**
+ * What waits for a build, as a line. Only a project never built can count it:
+ * everything it changed from shipped is unbuilt. Once built, what differs from
+ * shipped is not what differs from the last build, so no number is claimed.
+ */
+export function unbuiltLine(steps: PipelineStep[], neverBuilt: boolean, tail = ' yet'): string {
+    const n = neverBuilt ? steps.reduce((sum, step) => sum + changeCount(step), 0) : 0;
+    if (n === 0) { return neverBuilt ? 'Never built' : `Changes not built${tail}`; }
+    return `${n} change${n === 1 ? '' : 's'} not built${tail}`;
+}

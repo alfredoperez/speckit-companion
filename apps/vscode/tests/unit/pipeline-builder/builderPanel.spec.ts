@@ -22,6 +22,7 @@ import type { PipelineGraphResult } from '../../../src/protocol/pipeline';
 // which is a testing affordance rather than part of the editor's API.
 import { createMockWebviewPanel } from '../../__mocks__/vscode';
 import * as graphModule from '../../../src/features/specs/pipelineGraph';
+import { readPipelineBuildState } from '../../../src/features/specs/pipelineBuild';
 import {
     PipelineBuilderPanel,
     registerPipelineBuilderCommands,
@@ -30,7 +31,7 @@ import {
 jest.mock('../../../src/features/specs/pipelineGraph');
 jest.mock('../../../src/features/specs/pipelineBuild', () => {
     const actual = jest.requireActual('../../../src/features/specs/pipelineBuild');
-    return { ...actual, readPipelineBuildState: () => ({ kind: 'current' }) };
+    return { ...actual, readPipelineBuildState: jest.fn(() => ({ kind: 'current' })) };
 });
 
 const graph = graphModule as jest.Mocked<typeof graphModule>;
@@ -70,8 +71,11 @@ function openPanel(): Panel {
     return (vscode.window.createWebviewPanel as jest.Mock).mock.results.at(-1)!.value as Panel;
 }
 
+const buildState = readPipelineBuildState as jest.Mock;
+
 beforeEach(() => {
     jest.clearAllMocks();
+    buildState.mockReturnValue({ kind: 'current' });
     workspace = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-ws-'));
     extensionPath = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-ext-'));
     // A project with the Companion spec-kit extension installed, which is what
@@ -199,8 +203,34 @@ describe('building', () => {
             ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
         });
         await panel.__receive({ type: 'build' });
+        buildState.mockReturnValue({ kind: 'stale' });
         await panel.__receive({ type: 'selectWorkflow', name: 'bugfix' });
         expect(panel.__lastPosted('buildReport').report).toBeNull();
+    });
+
+    it('keeps Built through the redraw the build\'s own writes cause', async () => {
+        (vscode.commands.executeCommand as jest.Mock).mockResolvedValueOnce({
+            ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
+        });
+        await panel.__receive({ type: 'build' });
+        const watchers = (vscode.workspace.createFileSystemWatcher as jest.Mock)
+            .mock.results.map(r => r.value);
+        await watchers[0].fireChange(vscode.Uri.file('commands/speckit.companion.specify.md'));
+        expect(panel.__lastPosted('buildReport').report).not.toBeNull();
+    });
+
+    it('answers only the build when Build is pressed while Review\'s preview still runs', async () => {
+        let finishPreview: (report: unknown) => void = () => undefined;
+        (vscode.commands.executeCommand as jest.Mock)
+            .mockImplementationOnce(() => new Promise(resolve => { finishPreview = resolve; }))
+            .mockResolvedValueOnce({ ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x' });
+        const preview = panel.__receive({ type: 'preview' });
+        await panel.__receive({ type: 'build' });
+        finishPreview({ ok: true, at: '14:02', commands: 5, changed: [], dryRun: true, output: 'x' });
+        await preview;
+        const reports = panel.__posted.filter((m: { type: string; report?: unknown }) =>
+            m.type === 'buildReport' && m.report);
+        expect(reports.map((m: { report: { dryRun: boolean } }) => m.report.dryRun)).toEqual([false]);
     });
 
     it('drops it for a change made outside the panel too', async () => {
@@ -208,6 +238,7 @@ describe('building', () => {
             ok: true, at: '14:02', commands: 5, changed: [], dryRun: false, output: 'x',
         });
         await panel.__receive({ type: 'build' });
+        buildState.mockReturnValue({ kind: 'stale' });
         const watchers = (vscode.workspace.createFileSystemWatcher as jest.Mock)
             .mock.results.map(r => r.value);
         await watchers[0].fireChange(vscode.Uri.file('companion.yml'));
@@ -1036,6 +1067,32 @@ describe('moving a node without dragging it', () => {
     });
 });
 
+describe('a status line names a node the way its card does', () => {
+    it('says the display name of the node a hook was added to', async () => {
+        graph.readPipelineGraph.mockResolvedValue({
+            steps: [{
+                name: 'specify',
+                phases: [{ name: 'gather', nodes: [{ id: 'resolve-dir', name: 'Resolve the spec folder' }] }],
+            }],
+        } as never);
+        await panel.__receive({ type: 'ready' });
+        await panel.__receive({
+            type: 'addHook', command: 'specify', anchor: 'resolve-dir', when: 'before',
+            hookType: 'skill', value: 'house-check', note: '',
+        } as never);
+        expect(panel.__lastPosted('status').status.text)
+            .toBe('Hook added before Resolve the spec folder');
+    });
+
+    it('falls back to the id for a node the board has not drawn', async () => {
+        await panel.__receive({
+            type: 'addHook', command: 'specify', anchor: 'resolve-dir', when: 'before',
+            hookType: 'skill', value: 'house-check', note: '',
+        } as never);
+        expect(panel.__lastPosted('status').status.text).toBe('Hook added before resolve-dir');
+    });
+});
+
 describe('moving a hook', () => {
     it('runs a second move only once the first has written', async () => {
         let finish!: (v: null) => void;
@@ -1260,6 +1317,71 @@ describe('what the stock board can change', () => {
     it('refuses a workflow that is not installed', async () => {
         await panel.__receive({ type: 'selectStockWorkflow', id: 'invented' });
         expect(panel.__lastPosted('notice').text).toContain('not installed');
+    });
+
+    describe('a hook of your own', () => {
+        // The board draws the first installed workflow, `quick`, whose one step is implement.
+        const registry = () => path.join(workspace, '.specify', 'extensions.yml');
+        const NOTE = { command: 'house-note', description: 'Log a house note', optional: false };
+
+        it('creates the registry, writes the hook and draws it as yours', async () => {
+            await panel.__receive({ type: 'addStockHook', step: 'implement', when: 'after', hook: NOTE });
+
+            expect(fs.readFileSync(registry(), 'utf8')).toContain('command: house-note');
+            const hook = panel.__lastPosted('stock').view.steps[0].hooks[0];
+            expect(hook).toMatchObject({ command: 'house-note', own: true, when: 'after' });
+            expect(panel.__lastPosted('status').status.detail)
+                .toBe('Created .specify/extensions.yml');
+        });
+
+        it('changes and then removes it, leaving the file as it was', async () => {
+            const start = 'installed:\n- git\nhooks:\n  before_implement:\n  - extension: git\n'
+                + '    command: speckit.git.feature\n';
+            fs.writeFileSync(registry(), start, 'utf8');
+            fs.mkdirSync(path.join(workspace, '.specify', 'extensions', 'git'), { recursive: true });
+
+            await panel.__receive({ type: 'addStockHook', step: 'implement', when: 'before', hook: NOTE });
+            await panel.__receive({
+                type: 'updateStockHook', step: 'implement', when: 'before', index: 1,
+                hook: { ...NOTE, optional: true, prompt: 'Log it?' },
+            });
+            const hooks = panel.__lastPosted('stock').view.steps[0].hooks;
+            expect(hooks.map((h: { own: boolean }) => h.own)).toEqual([false, true]);
+            expect(hooks[1]).toMatchObject({ optional: true, prompt: 'Log it?' });
+
+            await panel.__receive({ type: 'removeStockHook', step: 'implement', when: 'before', index: 1 });
+            expect(fs.readFileSync(registry(), 'utf8')).toBe(start);
+        });
+
+        it('refuses an extension\'s hook, an unknown step and a broken file, writing nothing', async () => {
+            const start = 'installed:\n- git\nhooks:\n  before_implement:\n  - extension: git\n'
+                + '    command: speckit.git.feature\n';
+            fs.writeFileSync(registry(), start, 'utf8');
+
+            await panel.__receive({ type: 'removeStockHook', step: 'implement', when: 'before', index: 0 });
+            expect(panel.__lastPosted('notice').text).toContain('belongs to the git extension');
+
+            await panel.__receive({ type: 'addStockHook', step: 'deploy', when: 'after', hook: NOTE });
+            expect(panel.__lastPosted('notice').text).toContain('not a step this project runs');
+            expect(fs.readFileSync(registry(), 'utf8')).toBe(start);
+
+            fs.writeFileSync(registry(), 'hooks: [\n', 'utf8');
+            await panel.__receive({ type: 'addStockHook', step: 'implement', when: 'after', hook: NOTE });
+            expect(panel.__lastPosted('notice').text).toContain('could not be read');
+            expect(fs.readFileSync(registry(), 'utf8')).toBe('hooks: [\n');
+        });
+    });
+
+    it('says which layer each template comes from', async () => {
+        fs.mkdirSync(path.join(workspace, '.specify', 'templates', 'overrides'), { recursive: true });
+        fs.writeFileSync(path.join(workspace, '.specify', 'templates', 'overrides', 'spec-template.md'),
+            '# Ours\n', 'utf8');
+        await panel.__receive({ type: 'ready' });
+
+        const [template] = panel.__lastPosted('stock').view.templates;
+        expect(template.inForce).toBe('override');
+        expect(template.layers[0].path)
+            .toBe(path.join('.specify', 'templates', 'overrides', 'spec-template.md'));
     });
 
     it('hands the constitution to the command that owns it', async () => {

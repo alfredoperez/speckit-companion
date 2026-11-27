@@ -14,6 +14,7 @@ import {
     ExtensionToBuilderMessage,
     PipelineBuildKind,
     BuildReport,
+    HookRunsAnswer,
     PipelineGraph,
     PipelineGraphResult,
     PipelineHook,
@@ -23,26 +24,36 @@ import {
     SpecPreset,
     StockWorkflowView,
     isGraphError,
+    needsBuild,
 } from '../../../src/protocol/pipeline';
+import { BuildBar } from './BuildBar';
 import { StockBoard } from './StockBoard';
 import { PresetsPanel } from './PresetsPanel';
 import { SidePanel } from './SidePanel';
 import { BrokenPipeline } from './BrokenPipeline';
-import { Canvas, hooksAt, withoutNode as withoutNodeOf } from './Canvas';
+import {
+    Canvas, RemovedRow, hookHome, hooksAt, stockAt, withoutNode as withoutNodeOf,
+} from './Canvas';
+import { NodeAction, NodePopover } from './NodePopover';
 import { Header } from './Header';
 import { StatusLine } from './StatusLine';
 import { Inspector } from './Inspector';
-import { moveTargets, movedToPhase } from './moves';
-import {
-    AttachForm, NewStepForm, NewWorkflowForm, Attachment, boundaryOf,
-} from './AttachForm';
-import { TemplateForm } from './TemplateForm';
+import { movePlaces, moveTargets, movedToPhase, movedWithin } from './moves';
+import { Attachment, boundaryOf } from './AttachForm';
+import { AddMode, FRESH_PHASE, HookModal } from './HookModal';
+import { DocumentModal } from './DocumentModal';
+import { NewWorkflowModal } from './NewWorkflowModal';
+import { documentFile, documentNodeId, sectionsOf } from './documentNode';
 import { DecisionForm } from './DecisionForm';
+import { workflowLabel } from './WorkflowMenu';
 
 declare const acquireVsCodeApi: () => { postMessage: (message: unknown) => void };
 const vscode = acquireVsCodeApi();
 
 interface Selection { command: string; nodeId: string }
+
+/** The builder's width at which lanes stack, and a node's details become a sheet. */
+const NARROW = 640;
 interface Attaching {
     command: string;
     anchor: string;
@@ -51,15 +62,24 @@ interface Attaching {
     hook?: PipelineHook;
     /** Bumped each time the form opens, so a move inside it keeps it mounted. */
     opened: number;
+    /** Which choice opens, and which the first row offers; a hook alone when absent. */
+    mode?: AddMode;
+    modes?: AddMode[];
+    /** The step a new one runs behind, when the opener said. */
+    after?: string;
+    /** Set when the opener was not a lane, so the title does not name one. */
+    title?: string;
 }
+
+const ALL_MODES: AddMode[] = ['hook', 'node', 'step'];
 
 /** Only one thing occupies the side column at a time. */
 type Side =
     | { kind: 'node'; at: Selection }
     | { kind: 'attach'; at: Attaching }
     | { kind: 'new-workflow' }
-    | { kind: 'new-step'; after?: string }
-    | { kind: 'template'; command: string }
+    /** The document a step writes, opened from the node that writes it. */
+    | { kind: 'document'; command: string; nodeName: string }
     | { kind: 'presets' }
     /** Where one node's verdicts route. `node` is the node that decides. */
     | { kind: 'decision'; command: string; node: string }
@@ -94,15 +114,7 @@ function withoutNode(graph: PipelineGraph, at: Selection) {
 /** That shape again, with one node a place earlier or later inside its phase. */
 function movedNode(graph: PipelineGraph, at: Selection, direction: 'up' | 'down') {
     const step = graph.steps.find(s => s.name === at.command);
-    if (!step) { return null; }
-    const phases = step.phases.map(p => ({ name: p.name, nodes: p.nodes.map(n => n.id) }));
-    const phase = phases.find(p => p.nodes.includes(at.nodeId));
-    if (!phase) { return null; }
-    const from = phase.nodes.indexOf(at.nodeId);
-    const to = direction === 'up' ? from - 1 : from + 1;
-    if (to < 0 || to >= phase.nodes.length) { return null; }
-    [phase.nodes[from], phase.nodes[to]] = [phase.nodes[to], phase.nodes[from]];
-    return { order: phases.flatMap(p => p.nodes), phases };
+    return step ? movedWithin(step, at.nodeId, direction) : null;
 }
 
 /** Find the selected node in the graph, so the inspector follows a rebuild. */
@@ -150,10 +162,21 @@ function App() {
         { key: string; body: string; parts: string[]; editable: string } | null>(null);
     // A move is announced once its write answers, never when it is only asked for.
     const [announced, setAnnounced] = useState('');
+    // A status answers only a write that went through; a refusal comes as a notice.
+    const [wrote, setWrote] = useState(false);
+    // The last run's outcome per hook, asked for with every graph.
+    const [runs, setRuns] = useState<HookRunsAnswer | null>(null);
+    // The node whose details hang beside its card. Not the side column: the two can both be open.
+    const [pop, setPop] = useState<Selection | null>(null);
+    const [narrow, setNarrow] = useState(() => window.innerWidth <= NARROW);
+    // Where the last removed node sat; drawn while the status still offers its undo.
+    const [removed, setRemoved] = useState<RemovedRow | null>(null);
     const moving = useRef(false);
     // The form as it was before a keyboard move, put back if the write refuses it.
     const unmoved = useRef<Attaching | null>(null);
     const opens = useRef(0);
+    // The workflow switched to from this panel, until a build makes it current.
+    const [switchedTo, setSwitchedTo] = useState<string | null>(null);
 
     useEffect(() => {
         const onMessage = (event: MessageEvent) => {
@@ -162,6 +185,10 @@ function App() {
                 setGraph(message.graph);
                 setStock(null);
                 setBuildState(message.buildState);
+                if (message.buildState === 'current') { setSwitchedTo(null); }
+                vscode.postMessage({ type: 'readHookRuns' });
+            } else if (message.type === 'hookRuns') {
+                setRuns(message.answer);
             } else if (message.type === 'stock') {
                 setStock(message.view);
                 setGraph(null);
@@ -182,6 +209,7 @@ function App() {
                 }
             } else if (message.type === 'status') {
                 setStatus(message.status);
+                setWrote(true);
                 if (moving.current && message.status) {
                     moving.current = false;
                     unmoved.current = null;
@@ -189,6 +217,8 @@ function App() {
                 }
             } else if (message.type === 'buildReport') {
                 setReport(message.report);
+                // A build that wrote the files answers "Build to apply" for good.
+                if (message.report?.ok && !message.report.dryRun) { setStatus(null); }
             } else if (message.type === 'nodeBody') {
                 setBody({
                     key: `${message.command}/${message.nodeId}`,
@@ -198,10 +228,34 @@ function App() {
                 });
             }
         };
+        const onResize = () => setNarrow(window.innerWidth <= NARROW);
+        // Nothing watches the run records, so a run that finished elsewhere is read on return.
+        const onReturn = () => {
+            if (document.visibilityState !== 'hidden') { vscode.postMessage({ type: 'readHookRuns' }); }
+        };
         window.addEventListener('message', onMessage);
+        window.addEventListener('resize', onResize);
+        window.addEventListener('focus', onReturn);
+        document.addEventListener('visibilitychange', onReturn);
         vscode.postMessage({ type: 'ready' });
-        return () => window.removeEventListener('message', onMessage);
+        return () => {
+            window.removeEventListener('message', onMessage);
+            window.removeEventListener('resize', onResize);
+            window.removeEventListener('focus', onReturn);
+            document.removeEventListener('visibilitychange', onReturn);
+        };
     }, []);
+
+    // A rebuild that took the node away takes its details with it.
+    useEffect(() => {
+        if (pop && graph && !isGraphError(graph) && !findNode(graph, pop)) { setPop(null); }
+    }, [graph, pop]);
+
+    // And a rebuild that took the document away closes it.
+    useEffect(() => {
+        if (side?.kind !== 'document' || !graph || isGraphError(graph)) { return; }
+        if (!graph.steps.find(s => s.name === side.command)?.template) { setSide(null); }
+    }, [graph, side]);
 
     const presetActions = {
         onPresetSearch: (query: string) => vscode.postMessage({ type: 'presetSearch', query }),
@@ -215,10 +269,26 @@ function App() {
             <StockBoard
                 view={stock}
                 status={status ?? (notice ? { tone: 'warning', text: notice } : null)}
+                answer={{ refusal: notice, written: wrote }}
+                narrow={narrow}
                 onSetHook={flip => {
                     setNotice(null);
                     vscode.postMessage({ type: 'setStockHook', ...flip });
                 }}
+                onAddHook={add => {
+                    setNotice(null);
+                    setWrote(false);
+                    vscode.postMessage({ type: 'addStockHook', ...add });
+                }}
+                onUpdateHook={update => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'updateStockHook', ...update });
+                }}
+                onRemoveHook={address => {
+                    setNotice(null);
+                    vscode.postMessage({ type: 'removeStockHook', ...address });
+                }}
+                onInstallCompanion={() => vscode.postMessage({ type: 'installCompanion' })}
                 onOpenFile={path => vscode.postMessage({ type: 'openStockFile', path })}
                 onSelectWorkflow={id => {
                     setNotice(null);
@@ -248,14 +318,23 @@ function App() {
         );
     }
 
-    const openNode = (command: string, nodeId: string) => {
+    const readNode = (command: string, nodeId: string) => {
         setSide({ kind: 'node', at: { command, nodeId } });
         setNotice(null);
         setBody(null);
         setAnnounced('');
         vscode.postMessage({ type: 'readNode', command, nodeId });
     };
+    const openNode = (command: string, nodeId: string) => {
+        const closing = pop?.command === command && pop.nodeId === nodeId;
+        setPop(closing ? null : { command, nodeId });
+        if (!closing) { vscode.postMessage({ type: 'readHookRuns' }); }
+        setNotice(null);
+        setAnnounced('');
+    };
 
+    const popNode = pop ? findNode(graph, pop) : null;
+    const popStep = pop ? graph.steps.find(s => s.name === pop.command) : undefined;
     const selected = side?.kind === 'node' ? side.at : null;
     const node = selected ? findNode(graph, selected) : null;
     const selectedStep = selected
@@ -266,7 +345,7 @@ function App() {
         ? graph.steps.find(s => s.name === attaching.command) ?? null
         : null;
 
-    const send = (message: unknown) => { setNotice(null); vscode.postMessage(message); };
+    const send = (message: unknown) => { setNotice(null); setWrote(false); vscode.postMessage(message); };
     const sendMove = (message: unknown) => {
         moving.current = true;
         setAnnounced('');
@@ -293,58 +372,147 @@ function App() {
     const line: PipelineStatus | null = status
         ?? (notice ? { tone: 'warning', text: notice } : null);
 
-    // The header appends and passes nothing; a lane seam places and passes the
-    // step to its left. One handler, so the two cannot drift apart.
-    const newStep = (after?: string) => {
-        setNotice(null);
-        setSide({ kind: 'new-step', after });
+    /** Every node action, from the popover or the instructions pane, sent one way. */
+    const act = (at: Selection, action: NodeAction) => {
+        const step = graph.steps.find(s => s.name === at.command);
+        if (action === 'open-file') {
+            vscode.postMessage({ type: 'openNode', command: at.command, nodeId: at.nodeId });
+        } else if (action === 'shipped') {
+            vscode.postMessage({ type: 'restoreNode', command: at.command, nodeId: at.nodeId });
+        } else if (action === 'up' || action === 'down') {
+            const shape = movedNode(graph, at, action);
+            if (shape) {
+                sendMove({ type: 'moveNode', command: at.command, nodeId: at.nodeId, ...shape });
+            }
+        } else if (action === 'remove') {
+            const shape = withoutNode(graph, at);
+            if (!shape) { return; }
+            const phase = step?.phases.find(p => p.nodes.some(n => n.id === at.nodeId));
+            const index = phase?.nodes.findIndex(n => n.id === at.nodeId) ?? -1;
+            setRemoved(phase ? {
+                command: at.command, phase: phase.name, index,
+                name: phase.nodes[index].name, token: `remove:${at.command}:${at.nodeId}`,
+            } : null);
+            setPop(null);
+            setSide(null);
+            send({ type: 'removeNode', command: at.command, nodeId: at.nodeId, ...shape });
+        } else if (action.startsWith('phase:')) {
+            const phase = action.slice('phase:'.length);
+            const shape = step ? movedToPhase(step, at.nodeId, phase) : null;
+            if (shape) {
+                sendMove({
+                    type: 'moveNode', command: at.command, nodeId: at.nodeId, phase, ...shape,
+                });
+            }
+        } else if (action.startsWith('variant:')) {
+            const variant = action.slice('variant:'.length);
+            const swapped = swapNode(graph, at, variant);
+            if (!swapped) { return; }
+            const next = { command: at.command, nodeId: variant };
+            if (pop) { setPop(next); }
+            if (side?.kind === 'node') { setSide({ kind: 'node', at: next }); setBody(null); }
+            send({
+                type: 'useVariant', command: at.command, replaces: at.nodeId, variant, ...swapped,
+            });
+        }
     };
 
+    // A modal, a side pane or a bottom sheet covers the foot, so the bar steps aside for it.
+    const modalOpen = side?.kind === 'document' || side?.kind === 'new-workflow';
+    const paneOpen = Boolean(side && side.kind !== 'attach');
+    const sheetOpen = Boolean(attachStep && attaching) || paneOpen || (narrow && Boolean(pop));
+    // The bar carries the last write while it is up; the foot line otherwise.
+    const barUp = !sheetOpen && needsBuild(buildState);
+    const undo = (token: string) => {
+        vscode.postMessage({ type: 'undo', token });
+        setStatus(null);
+    };
+    // Matched on the property rather than through a selector, since a step is
+    // named by whoever wrote the workflow.
+    const showStep = (name: string) => {
+        const lane = Array.from(document.querySelectorAll<HTMLElement>('.pb-step'))
+            .find(el => el.dataset.step === name);
+        if (!lane) { return; }
+        // Absent in jsdom, so a test of this path would throw on it.
+        lane.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        // Removed and re-added around a layout read, or a second click on a
+        // lane already marked plays no pulse at all.
+        lane.classList.remove('pb-step--found');
+        void lane.offsetWidth;
+        lane.classList.add('pb-step--found');
+        setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
+    };
+
+    const sequence = graph.steps.filter(s => s.inSequence && !s.own).map(s => s.name);
+    // The header and the tail append; a lane seam passes the step to its left.
+    // One handler, so they cannot drift apart.
+    const newStep = (after?: string) => {
+        const host = after ?? sequence[sequence.length - 1] ?? graph.steps[0]?.name;
+        if (!host) { return; }
+        openAttach({
+            command: host, anchor: graph.steps.find(s => s.name === host)?.phases[0]?.name ?? host,
+            mode: 'step', modes: ['step'], after, title: 'Add a step',
+        });
+    };
+    const addTo = (command: string) => {
+        const step = graph.steps.find(s => s.name === command);
+        openAttach({
+            command, anchor: step?.phases[0]?.name ?? command, when: 'before',
+            mode: 'hook', modes: ALL_MODES, after: sequence.includes(command) ? command : undefined,
+        });
+    };
+    const shownRemoved = removed && status?.undo?.token === removed.token ? removed : null;
+
     return (
-        <div class={`builder ${side ? 'builder--inspecting' : ''}`}>
+        <div class={`builder ${side && side.kind !== 'attach' && !modalOpen ? 'builder--inspecting' : ''}${
+            barUp ? ' builder--bar' : ''}`}>
             <Header
                 graph={graph}
                 buildState={buildState}
                 busy={busy}
-                report={report}
-                onBuild={() => vscode.postMessage({ type: 'build' })}
                 onPreview={() => vscode.postMessage({ type: 'preview' })}
+                onBuild={() => vscode.postMessage({ type: 'build' })}
                 onOpenConfig={() => vscode.postMessage({ type: 'openConfig' })}
-                onSelectWorkflow={name => send({ type: 'selectWorkflow', name })}
+                onSelectWorkflow={name => {
+                    setSwitchedTo(name);
+                    send({ type: 'selectWorkflow', name });
+                }}
                 onNewWorkflow={() => { setNotice(null); setSide({ kind: 'new-workflow' }); }}
+                selectedNotBuilt={switchedTo !== null && switchedTo === graph.workflows.active
+                    && needsBuild(buildState)}
                 onNewStep={newStep}
                 onOpenPresets={() => { setNotice(null); setSide({ kind: 'presets' }); }}
-                // Matched on the property rather than through a selector, since
-                // a step is named by whoever wrote the workflow.
-                onShowChanged={name => {
-                    const lane = Array.from(document.querySelectorAll<HTMLElement>('.pb-step'))
-                        .find(el => el.dataset.step === name);
-                    if (!lane) { return; }
-                    // Absent in jsdom, so a test of this path would throw on it.
-                    lane.scrollIntoView?.({
-                        behavior: 'smooth', block: 'nearest', inline: 'center',
-                    });
-                    // Removed and re-added around a layout read, or a second
-                    // click on a lane already marked plays no pulse at all.
-                    lane.classList.remove('pb-step--found');
-                    void lane.offsetWidth;
-                    lane.classList.add('pb-step--found');
-                    setTimeout(() => lane.classList.remove('pb-step--found'), 1200);
-                }}
                 onDismissFirstRun={() => vscode.postMessage({ type: 'dismissFirstRun' })}
             />
-            {line && (
-                <StatusLine status={line}
-                    onUndo={token => {
-                        vscode.postMessage({ type: 'undo', token });
-                        setStatus(null);
-                    }}
+            {!sheetOpen && (
+                <BuildBar
+                    graph={graph}
+                    buildState={buildState}
+                    busy={busy}
+                    report={report}
+                    status={barUp ? status : null}
+                    onBuild={() => vscode.postMessage({ type: 'build' })}
+                    onPreview={() => vscode.postMessage({ type: 'preview' })}
+                    onUndo={undo}
+                    onDismissStatus={() => setStatus(null)}
+                    onEditHook={(command, hook) => openAttach({ command, anchor: hook.anchor, hook })}
+                    onRemoveHook={(command, hook) => send({
+                        type: 'removeHook', command,
+                        anchor: hook.anchor, when: hook.when, index: hook.index,
+                    })}
+                    onShowStep={showStep}
+                />
+            )}
+            {line && !(barUp && !notice) && (
+                <StatusLine status={barUp ? { tone: 'warning', text: notice! } : line}
+                    onUndo={undo}
                     onDismiss={() => { setStatus(null); setNotice(null); }} />
             )}
             <div class="builder-body">
                 <Canvas
                     graph={graph}
-                    selected={selected}
+                    selected={pop ?? selected}
+                    runs={runs}
                     onOpenNode={openNode}
                     onReorder={(command, order) =>
                         vscode.postMessage({ type: 'reorderNodes', command, order })}
@@ -353,17 +521,11 @@ function App() {
                     onAddNode={(command, nodeId, phase, order, phases) =>
                         send({ type: 'addNode', command, nodeId, phase, order, phases })}
                     onNewStep={newStep}
-                    onRemoveNode={(command, nodeId, order, phases) =>
-                        send({ type: 'removeNode', command, nodeId, order, phases })}
                     onOpenFrame={command => {
                         setSide({ kind: 'node', at: { command, nodeId: '_frame' } });
                         setNotice(null);
                         setBody(null);
                         vscode.postMessage({ type: 'readFrame', command });
-                    }}
-                    onOpenTemplate={command => {
-                        setSide({ kind: 'template', command });
-                        setNotice(null);
                     }}
                     onEditHook={(command, hook) => openAttach({ command, anchor: hook.anchor, hook })}
                     onAddHook={(command, anchor, when) => openAttach({ command, anchor, when })}
@@ -381,6 +543,11 @@ function App() {
                         });
                     }}
                     onRefuse={reason => { setStatus(null); setNotice(reason); }}
+                    onAddTo={addTo}
+                    adding={attaching && attaching.modes && attaching.modes.length > 1
+                        ? attaching.command : null}
+                    removed={shownRemoved}
+                    onUndo={undo}
                     onOpenDecision={(command, node) => {
                         setNotice(null);
                         setSide({ kind: 'decision', command, node });
@@ -388,7 +555,7 @@ function App() {
                 />
 
                 {attachStep && attaching && (
-                    <AttachForm
+                    <HookModal
                         // Per opening: another hook remounts it, a keyboard move keeps focus.
                         key={`${attaching.command}/${attaching.opened}`}
                         step={attachStep}
@@ -397,8 +564,8 @@ function App() {
                         choices={graph.choices}
                         editing={attaching.hook ?? null}
                         onCancel={() => setSide(null)}
-                        onAttach={(a: Attachment) => {
-                            setSide(null);
+                        onAttach={(a: Attachment, keepOpen: boolean) => {
+                            if (!keepOpen) { setSide(null); }
                             // A new place is one move carrying the edit, never a removal and an addition.
                             if (a.movedFrom) {
                                 const old = attaching.hook;
@@ -431,6 +598,35 @@ function App() {
                         } : undefined}
                         count={hookCount}
                         announce={announced}
+                        answer={{ refusal: notice, written: wrote }}
+                        mode={attaching.mode}
+                        modes={attaching.modes}
+                        title={attaching.title}
+                        onAddNode={(phase, nodeId, keepOpen) => {
+                            if (!keepOpen) { setSide(null); }
+                            const grouping = attachStep.phases.map(p => ({
+                                name: p.name, nodes: p.nodes.map(n => n.id),
+                            }));
+                            const phases = grouping.some(p => p.name === phase)
+                                ? grouping.map(p => (p.name === phase
+                                    ? { ...p, nodes: [...p.nodes, nodeId] } : p))
+                                : [...grouping, { name: phase || FRESH_PHASE, nodes: [nodeId] }];
+                            send({
+                                type: 'addNode', command: attaching.command, nodeId,
+                                phase: phase || FRESH_PHASE,
+                                order: phases.flatMap(p => p.nodes), phases,
+                            });
+                        }}
+                        stepForm={{
+                            sequence,
+                            taken: graph.steps.map(s => s.name),
+                            after: attaching.after,
+                            autoRuns: graph.steps.some(s => s.name === 'auto') ? sequence : null,
+                        }}
+                        onNewStep={(step, keepOpen) => {
+                            if (!keepOpen) { setSide(null); }
+                            send({ type: 'newStep', ...step });
+                        }}
                         onMove={editingHook ? (direction: 'up' | 'down') => {
                             const index = editingHook.index + (direction === 'up' ? -1 : 1);
                             // A press while the last move is unanswered would act on an index the file may not have.
@@ -483,17 +679,24 @@ function App() {
                     );
                 })()}
 
-                {side?.kind === 'template' && (() => {
+                {side?.kind === 'document' && (() => {
                     const step = graph.steps.find(s => s.name === side.command);
-                    return step ? (
-                        <TemplateForm
+                    return step?.template ? (
+                        <DocumentModal
+                            key={step.name}
                             step={step}
+                            nodeName={side.nodeName}
                             fragments={graph.choices.fragments}
+                            savesTo={workflowLabel(graph.workflows.active)}
+                            narrow={narrow}
                             onCancel={() => setSide(null)}
-                            onPick={(heading, fragment) => send({
-                                type: 'setTemplateSection',
-                                command: side.command, heading, fragment,
-                            })}
+                            onSave={picks => {
+                                setSide(null);
+                                picks.forEach(({ heading, fragment }) => send({
+                                    type: 'setTemplateSection',
+                                    command: side.command, heading, fragment,
+                                }));
+                            }}
                         />
                     ) : null;
                 })()}
@@ -510,28 +713,16 @@ function App() {
                     </SidePanel>
                 )}
 
-                {side?.kind === 'new-step' && (
-                    <NewStepForm
-                        sequence={graph.steps.filter(s => s.inSequence && !s.own)
-                            .map(s => s.name)}
-                        taken={graph.steps.map(s => s.name)}
-                        initialAfter={side.after}
-                        onCancel={() => setSide(null)}
-                        onCreate={step => {
-                            setSide(null);
-                            send({ type: 'newStep', ...step });
-                        }}
-                    />
-                )}
-
                 {side?.kind === 'new-workflow' && (
-                    <NewWorkflowForm
-                        from={graph.workflows.active}
+                    <NewWorkflowModal
                         taken={graph.workflows.available}
+                        hasProject={graph.configured}
+                        active={graph.workflows.active}
                         presets={graph.choices.presets}
                         onCancel={() => setSide(null)}
                         onCreate={(name, from) => {
                             setSide(null);
+                            setSwitchedTo(name);
                             send({ type: 'newWorkflow', from, name });
                         }}
                     />
@@ -548,50 +739,23 @@ function App() {
                         editable={body?.key === key ? body.editable : ''}
                         parts={body?.key === key ? body.parts : []}
                         onClose={() => { setSide(null); setBody(null); }}
-                        onOpenFile={() => vscode.postMessage({
-                            type: 'openNode', command: selected.command, nodeId: selected.nodeId,
-                        })}
+                        onOpenFile={() => act(selected, 'open-file')}
                         onSave={(text: string) => vscode.postMessage({
                             type: 'saveNode', command: selected.command,
                             nodeId: selected.nodeId, body: text,
                         })}
-                        onRestore={() => vscode.postMessage({
-                            type: 'restoreNode', command: selected.command, nodeId: selected.nodeId,
-                        })}
+                        onRestore={() => act(selected, 'shipped')}
                         // The step header no longer carries this, so the pane is
                         // the only route to it.
                         onReplaceStep={() => send({
                             type: 'replaceStep', command: selected.command,
                         })}
-                        onRemove={() => {
-                            const shape = withoutNode(graph, selected);
-                            if (!shape) { return; }
-                            setSide(null);
-                            send({
-                                type: 'removeNode', command: selected.command,
-                                nodeId: selected.nodeId, ...shape,
-                            });
-                        }}
-                        onMove={(direction: 'up' | 'down') => {
-                            const shape = movedNode(graph, selected, direction);
-                            if (!shape) { return; }
-                            sendMove({
-                                type: 'moveNode', command: selected.command,
-                                nodeId: selected.nodeId, ...shape,
-                            });
-                        }}
+                        onRemove={() => act(selected, 'remove')}
+                        onMove={(direction: 'up' | 'down') => act(selected, direction)}
                         announce={announced}
                         moveTargets={selectedStep && !node.pinned
                             ? moveTargets(selectedStep, selected.nodeId) : []}
-                        onMoveToPhase={(phase: string) => {
-                            const shape = selectedStep
-                                ? movedToPhase(selectedStep, selected.nodeId, phase) : null;
-                            if (!shape) { return; }
-                            sendMove({
-                                type: 'moveNode', command: selected.command,
-                                nodeId: selected.nodeId, phase, ...shape,
-                            });
-                        }}
+                        onMoveToPhase={(phase: string) => act(selected, `phase:${phase}`)}
                         // Opens the form, the way every other route to a hook
                         // does. Posting the message straight from here sent one
                         // with no kind and no value, and the write refused it
@@ -599,20 +763,51 @@ function App() {
                         onAttach={() => openAttach({
                             command: selected.command, anchor: selected.nodeId,
                         })}
-                        onUseVariant={(variantId: string) => {
-                            const swapped = swapNode(graph, selected, variantId);
-                            if (!swapped) { return; }
-                            setSide({ kind: 'node', at: { command: selected.command, nodeId: variantId } });
-                            setBody(null);
-                            send({
-                                type: 'useVariant', command: selected.command,
-                                replaces: selected.nodeId, variant: variantId,
-                                ...swapped,
-                            });
-                        }}
+                        onUseVariant={(variantId: string) => act(selected, `variant:${variantId}`)}
                     />
                 )}
             </div>
+            {pop && popNode && popStep && (
+                <NodePopover
+                    key={`${pop.command}/${pop.nodeId}`}
+                    node={popNode}
+                    step={pop.command}
+                    runs={runs}
+                    hooksIn={hookHome(graph.workflows.active).name}
+                    stock={stockAt(popStep, pop.nodeId)}
+                    anchorKey={`${pop.command}/${pop.nodeId}`}
+                    narrow={narrow}
+                    moves={movePlaces(popStep, pop.nodeId)}
+                    removeBlocked={withoutNode(graph, pop) ? ''
+                        : `The last node ${pop.command} has: a step needs at least one.`}
+                    announce={announced}
+                    onClose={() => setPop(null)}
+                    onEditNode={() => { setPop(null); readNode(pop.command, pop.nodeId); }}
+                    onAddHook={() => {
+                        setPop(null);
+                        openAttach({ command: pop.command, anchor: pop.nodeId });
+                    }}
+                    onEditHook={hook => {
+                        setPop(null);
+                        openAttach({ command: pop.command, anchor: hook.anchor, hook });
+                    }}
+                    onRemoveHook={hook => send({
+                        type: 'removeHook', command: pop.command,
+                        anchor: hook.anchor, when: hook.when, index: hook.index,
+                    })}
+                    onAction={action => act(pop, action)}
+                    document={popStep.template && documentNodeId(popStep) === pop.nodeId ? {
+                        file: documentFile(popStep.template.file),
+                        sections: sectionsOf(popStep).length,
+                        yours: popStep.template.sections.length,
+                    } : null}
+                    onOpenDocument={() => {
+                        setPop(null);
+                        setNotice(null);
+                        setSide({ kind: 'document', command: pop.command, nodeName: popNode.name });
+                    }}
+                />
+            )}
         </div>
     );
 }

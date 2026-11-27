@@ -17,15 +17,18 @@
  *   through connector arms nobody could read.
  */
 
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { Menu } from './Menu';
 import { changeSummary, changed } from './changes';
 import { KIND_LABELS } from './hookKinds';
+import { GateIcon, HookIcon } from './HookIcon';
+import { HookStatus, hookStatus } from './hookStatus';
 import {
     HookAddress, HookMove, HookTarget, hookMove, isHookDrag, readHookDrag, upperHalf,
     writeHookDrag,
 } from './hookMoves';
 import {
+    HookRunsAnswer,
     HookWhen,
     PipelineDecision,
     PipelineGraph,
@@ -55,20 +58,9 @@ interface Props {
     ) => void;
     /** Read a step's own preamble — the text every node in it sits under. */
     onOpenFrame: (command: string) => void;
-    /** Open the panel for this step's document shape. */
-    onOpenTemplate: (command: string) => void;
     /** Add a step of the project's own to the run. */
     /** `after` names the step a new one runs behind, when the click said where. */
     onNewStep: (after?: string) => void;
-    /**
-     * Stop running a node. The file stays, so it is still on offer to add back.
-     *
-     * Order and grouping go together, as they do for adding one.
-     */
-    onRemoveNode: (
-        command: string, nodeId: string,
-        order: string[], phases: Array<{ name: string; nodes: string[] }>,
-    ) => void;
     /** Save a step's whole phase grouping after a rename or a move. */
     onSetPhases: (
         command: string,
@@ -83,6 +75,24 @@ interface Props {
     onRefuse?: (reason: string) => void;
     /** Open where a decision's verdicts route, so they can be changed. */
     onOpenDecision?: (command: string, node: string) => void;
+    /** The last run's outcome per hook; absent until the host answers. */
+    runs?: HookRunsAnswer | null;
+    /** Open the add modal for a step, from its lane's header. */
+    onAddTo?: (command: string) => void;
+    /** The step whose add modal is open, so its lane button reads pressed. */
+    adding?: string | null;
+    /** A node just taken out whose removal can still be undone. */
+    removed?: RemovedRow | null;
+    onUndo?: (token: string) => void;
+}
+
+/** Where a removed node sat, drawn struck through while its undo is on offer. */
+export interface RemovedRow {
+    command: string;
+    phase: string;
+    index: number;
+    name: string;
+    token: string;
 }
 
 /**
@@ -173,7 +183,7 @@ function commandTail(command: string): string {
  * Blank, not just absent: `command` reaches here unstripped, and a row of
  * spaces is as empty to read as no row at all.
  */
-function stockName(hook: StockHook): string {
+export function stockName(hook: StockHook): string {
     if (hook.command.trim()) { return commandTail(hook.command); }
     return hook.description.trim() || 'no command';
 }
@@ -213,17 +223,6 @@ function PlusIcon() {
         <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor"
             stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false">
             <path d="M8 3.5v9M3.5 8h9" />
-        </svg>
-    );
-}
-
-/** Stop running a node. The file stays, so it is still on offer to add back. */
-function TrashIcon() {
-    return (
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-            stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"
-            aria-hidden="true" focusable="false">
-            <path d="M3 4h10M6 4V2.5h4V4M5 4l.6 9h4.8L11 4" />
         </svg>
     );
 }
@@ -277,16 +276,20 @@ type NodeActions = Pick<Props, 'onOpenNode'> & {
     onDrop: (moved: string, target: string) => void;
     onAdd: (anchor: string, when: HookWhen) => void;
     onEditHook: (hook: PipelineHook) => void;
-    /** Stop running one node, with the order and the grouping a drag would send. */
-    onRemove: (nodeId: string) => void;
-    /** Whether taking it out would leave a step that can still be written. */
-    canRemove: (nodeId: string) => boolean;
     selected?: Props['selected'];
+    /** The last run's outcome per hook, when the project has a run on record. */
+    runs?: HookRunsAnswer | null;
     step: string;
     /** The file this project's own hooks are written in, as the group is headed. */
     yours: HookHome;
     /** Present when hooks can be dragged here. */
     drop?: HookDrop;
+    /** Where a deciding node's verdicts send the run, drawn under that node. */
+    routing?: {
+        decisions: PipelineDecision[];
+        changed: string[];
+        onOpen?: Props['onOpenDecision'];
+    };
 };
 
 /**
@@ -345,7 +348,7 @@ type HookHome = { name: string; title: string };
  * them `companion.yml` named a file with none of them in it. `shipped` is
  * Companion unchanged and has no file at all.
  */
-function hookHome(workflow: string): HookHome {
+export function hookHome(workflow: string): HookHome {
     if (workflow === SHIPPED_WORKFLOW) {
         return {
             name: 'companion.yml · parked',
@@ -417,7 +420,9 @@ interface HookDrop {
 
 const OVER = ['pb-drop-over', 'pb-drop-over--upper', 'pb-drop-over--lower'];
 
-const PARKED_REASON = 'This hook is parked: the project runs the pipeline as it ships, so its own '
+const STEP_HOOK_REASON = 'On the step itself, outside every phase. Change it in the file it is written in.';
+
+const PARKED_REASON ='This hook is parked: the project runs the pipeline as it ships, so its own '
     + 'hooks are not moved until This project is running again.';
 
 /** The handlers that let an element take a hook dropped on it; `at` reads the target off the pointer. */
@@ -473,191 +478,278 @@ function readOnlyRow(drop: HookDrop | undefined, reason: string) {
     };
 }
 
-/** One hook of this project's, as a line: which of the four it is, then its value. */
+/** What a hook row is called: a command by its script, everything else by its value. */
+export function hookName(hook: PipelineHook): string {
+    return hook.type === 'command' ? shellName(hook.summary) : hook.summary;
+}
+
+/** One hook of this project's, as a line: its kind as a mark, then its value. */
 function HookLine({ hook }: { hook: PipelineHook }) {
     return (
         <>
-            <span class="pb-hook-kind">{KIND_LABELS[hook.type]}</span>
-            <span class={hook.type === 'prompt'
+            <HookIcon type={hook.type} />
+            <span class="pb-hook-kind sr-only">{`${KIND_LABELS[hook.type]}: `}</span>
+            <span class={hook.type === 'skill' || hook.type === 'prompt'
                 ? 'pb-hook-name' : 'pb-hook-name pb-hook-name--ref'}>
-                {clip(hook.type === 'command' ? shellName(hook.summary) : hook.summary)}
+                {clip(hookName(hook))}
             </span>
         </>
     );
 }
 
-/**
- * Everything attached to one anchor, in one block.
- *
- * Before this, each side got its own block with its own connector arm and its
- * own "before draft-spec" heading, so a node with work on both sides was
- * sandwiched between two boxes and four repetitions of its own name. Position
- * was carrying the before/after meaning and it did not carry it: the arrows
- * were the thing people could not read.
- *
- * So one block, under the anchor it belongs to, with the two sides named in
- * words, and one line per hook — the block under "Mark the spec complete" was
- * about five times the height of the card it hangs from.
- *
- * Under each side the hooks are grouped by whoever registered them, headed by
- * that source's mark and its name. Whose a hook was used to be a word at the
- * tail of the row, so identity was the last thing read on a line whose first
- * word was `Command` — the mechanism — and whose only other text was
- * `speckit.c…`, the prefix every one of them shares. The mark leads, the source
- * is named once for the group, and the row is left to say the work.
- */
-function Attached({ before, after, stockBefore = [], stockAfter = [], anchor, boundary, yours,
-    onEdit, drop }: {
-    before: PipelineHook[];
-    after: PipelineHook[];
-    stockBefore?: StockHook[];
-    stockAfter?: StockHook[];
-    anchor: string;
-    /** Whether the anchor is a node or a phase, which a moved hook has to land on. */
-    boundary: 'node' | 'phase';
-    /** The file this project's own hooks are in, which heads their group. */
-    yours: HookHome;
-    onEdit: (hook: PipelineHook) => void;
-    drop?: HookDrop;
-}) {
-    const sides: Array<[HookWhen, PipelineHook[], StockHook[]]> = [
-        ['before', before, stockBefore],
-        ['after', after, stockAfter],
-    ];
-    if (!sides.some(([, ours, theirs]) => ours.length + theirs.length > 0)) { return null; }
-
+/** Whether it ran, from the record alone; nothing when there is nothing on record. */
+export function StatusMark({ status }: { status: HookStatus | null }) {
+    if (!status) { return null; }
     return (
-        <div class="pb-attached">
-            {sides.map(([side, ours, theirs]) => (
-                (ours.length + theirs.length) > 0 && (
-                    <div key={side} class="pb-attached-side"
-                        {...hookDropZone(drop, () => ({ target: { when: side, anchor, boundary } }))}>
-                        <span class="pb-attached-when">{side}</span>
-                        {bySource(ours, theirs, yours, side).map((source, at) => (
-                            <div key={`${at}-${source.name}`} class="pb-hook-group">
-                                <span class="pb-hook-source" title={source.title}>
-                                    {sourceMark(source.mark)}
-                                    <span class="pb-hook-source-name">{source.name}</span>
-                                </span>
-                                <ul class="pb-attached-list">
-                                    {source.ours.map((hook, i) => (
-                                        <li key={`ours-${i}`}>
-                                            {hook.parked ? (
-                                                // The clipped name is unreachable by pointer or by keyboard, so the whole of it is said in text a screen reader gets and the eye does not.
-                                                <span class="pb-hook pb-hook--parked"
-                                                    title={`${hook.summary}\n\nParked — this `
-                                                        + 'project runs the pipeline as it '
-                                                        + 'ships, so this does not run.'}
-                                                    {...readOnlyRow(drop, PARKED_REASON)}>
-                                                    <HookLine hook={hook} />
-                                                    <span class="pb-hook-parked">parked</span>
-                                                    <span class="sr-only">
-                                                        {`${hook.summary} — parked, not running `
-                                                            + 'while the pipeline is the shipped one'}
-                                                    </span>
-                                                </span>
-                                            ) : (
-                                                <button class="pb-hook"
-                                                    title={`${hook.summary}\n\nClick to edit`
-                                                        + (drop ? ', drag to move' : '')}
-                                                    onClick={() => onEdit(hook)}
-                                                    draggable={Boolean(drop)}
-                                                    onDragStart={drop && (event => {
-                                                        event.stopPropagation();
-                                                        writeHookDrag(event.dataTransfer, {
-                                                            command: drop.step, when: hook.when,
-                                                            anchor: hook.anchor, index: hook.index,
-                                                            boundary,
-                                                        });
-                                                        event.currentTarget.classList
-                                                            .add('pb-hook--dragging');
-                                                    })}
-                                                    onDragEnd={event => event.currentTarget
-                                                        .classList.remove('pb-hook--dragging')}
-                                                    {...hookDropZone(drop, event => {
-                                                        const upper = overUpper(event);
-                                                        return {
-                                                            upper,
-                                                            target: {
-                                                                when: hook.when, anchor: hook.anchor,
-                                                                boundary,
-                                                                place: hook.index + (upper ? 0 : 1),
-                                                            },
-                                                        };
-                                                    })}>
-                                                    {drop && (
-                                                        <span class="pb-hook-grip"><GripIcon /></span>
-                                                    )}
-                                                    <HookLine hook={hook} />
-                                                </button>
-                                            )}
-                                        </li>
-                                    ))}
-                                    {source.theirs.map((hook, i) => (
-                                        <li key={`theirs-${i}`}>
-                                            {/* No kind badge: every one of these is a command. */}
-                                            <span class="pb-hook pb-hook--stock"
-                                                {...readOnlyRow(drop, source.title.replace(
-                                                    'is not edited', 'is not moved or edited'))}
-                                                title={(hook.description.trim()
-                                                    ? `${hook.description.trim()}\n\n` : '')
-                                                    + (hook.command.trim()
-                                                        || 'This entry names no command to run.')
-                                                    + (hook.optional
-                                                        ? '\nIt asks before it runs.' : '')
-                                                    + (hook.conditional
-                                                        ? '\nIt does not run every time.' : '')}>
-                                                <span class="pb-hook-name pb-hook-name--ref">
-                                                    {clip(stockName(hook))}
-                                                </span>
-                                                {/* The one fact here with a consequence. */}
-                                                {hook.optional && (
-                                                    <span class="pb-hook-asks">asks first</span>
-                                                )}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                )
-            ))}
-        </div>
+        <span class={`pb-hook-status pb-hook-status--${status.tone}`} title={status.reason}>
+            <span class="pb-status-dot" aria-hidden="true" />
+            {status.word}
+        </span>
     );
 }
 
-/** The quiet affordance for attaching work where nothing is attached yet. */
-function Seam({ side, anchor, onAdd, drop }: {
-    side: 'before' | 'after';
-    anchor: string;
-    onAdd: () => void;
+/** One of this project's hooks: opens to be changed, drags to move, unless it is parked. */
+function OwnHookRow({ hook, step, runs, boundary, yours, onEdit, drop, when, readOnly }: {
+    hook: PipelineHook;
+    step: string;
+    runs?: HookRunsAnswer | null;
+    boundary: 'node' | 'phase';
+    yours: HookHome;
+    onEdit: (hook: PipelineHook) => void;
     drop?: HookDrop;
+    /** Said on the row when its place does not say it: a phase's rows sit together at the top. */
+    when?: boolean;
+    /** Why the row is read and not opened here. */
+    readOnly?: string;
 }) {
+    const side = when && <span class="pb-hook-when">{hook.when}</span>;
+    if (readOnly && !hook.parked) {
+        return (
+            <span class="pb-hook pb-hook--fixed" title={`${hook.summary}\n\n${readOnly}`}>
+                {side}
+                <HookLine hook={hook} />
+                <StatusMark status={hookStatus(step, hook, runs)} />
+            </span>
+        );
+    }
+    if (hook.parked) {
+        return (
+            // The clipped name is unreachable by pointer or by keyboard, so the whole of it is said in text a screen reader gets and the eye does not.
+            <span class="pb-hook pb-hook--parked"
+                title={`${hook.summary}\n\nParked — this project runs the pipeline as it `
+                    + 'ships, so this does not run.'}
+                {...readOnlyRow(drop, PARKED_REASON)}>
+                {side}
+                <HookLine hook={hook} />
+                <span class="pb-hook-parked">parked</span>
+                <span class="sr-only">
+                    {`${hook.summary} — parked, not running while the pipeline is the shipped one`}
+                </span>
+            </span>
+        );
+    }
     return (
-        <button class={`pb-slot pb-slot--${side}`} onClick={onAdd}
-            {...hookDropZone(drop, () => ({ target: { when: side, anchor, boundary: 'node' } }))}
-            title={`Attach a skill, an instruction or a command ${side} ${anchor}`}>
-            <span class="pb-slot-label">{side} {anchor}</span>
+        <button class="pb-hook"
+            title={`${hook.summary}\n\n${yours.title.replace(/ Click.*$/, '')}\nClick to edit`
+                + (drop ? ', drag to move' : '')}
+            onClick={() => onEdit(hook)}
+            draggable={Boolean(drop)}
+            onDragStart={drop && (event => {
+                event.stopPropagation();
+                writeHookDrag(event.dataTransfer, {
+                    command: drop.step, when: hook.when,
+                    anchor: hook.anchor, index: hook.index, boundary,
+                });
+                event.currentTarget.classList.add('pb-hook--dragging');
+            })}
+            onDragEnd={event => event.currentTarget.classList.remove('pb-hook--dragging')}
+            {...hookDropZone(drop, event => {
+                const upper = overUpper(event);
+                return {
+                    upper,
+                    target: {
+                        when: hook.when, anchor: hook.anchor, boundary,
+                        place: hook.index + (upper ? 0 : 1),
+                    },
+                };
+            })}>
+            {side}
+            <HookLine hook={hook} />
+            <StatusMark status={hookStatus(step, hook, runs)} />
         </button>
     );
 }
 
-function Node({ node, actions, stock, seams }: {
+/** A hook another extension registered: read here, edited where it was registered. */
+function StockHookRow({ hook, source, drop }: {
+    hook: StockHook;
+    source: HookSource;
+    drop?: HookDrop;
+}) {
+    return (
+        <span class="pb-hook pb-hook--stock"
+            {...readOnlyRow(drop, source.title.replace('is not edited', 'is not moved or edited'))}
+            title={(hook.description.trim() ? `${hook.description.trim()}\n\n` : '')
+                + (hook.command.trim() || 'This entry names no command to run.')
+                + (hook.optional ? '\nIt asks before it runs.' : '')
+                + (hook.conditional ? '\nIt does not run every time.' : '')}>
+            <span class="pb-hook-source" title={source.title}>
+                {sourceMark(source.mark)}
+                <span class="pb-hook-source-name sr-only">{`${source.name}: `}</span>
+            </span>
+            <span class="pb-hook-name pb-hook-name--ref">{clip(stockName(hook))}</span>
+            {/* The one fact here with a consequence. */}
+            {hook.optional && <span class="pb-hook-asks">asks first</span>}
+        </span>
+    );
+}
+
+/** The rows on one side of an anchor, in the order they run. */
+function HookRows({ side, ours, theirs, step, runs, boundary, yours, onEdit, drop, when,
+    readOnly }: {
+    side: HookWhen;
+    ours: PipelineHook[];
+    theirs: StockHook[];
+    step: string;
+    runs?: HookRunsAnswer | null;
+    boundary: 'node' | 'phase';
+    yours: HookHome;
+    onEdit: (hook: PipelineHook) => void;
+    drop?: HookDrop;
+    when?: boolean;
+    readOnly?: string;
+}) {
+    return (
+        <>
+            {bySource(ours, theirs, yours, side).flatMap(source => [
+                ...source.ours.map(hook => (
+                    <OwnHookRow key={`ours-${hook.index}`} hook={hook} step={step} runs={runs}
+                        boundary={boundary} yours={yours} onEdit={onEdit} drop={drop}
+                        when={when} readOnly={readOnly} />
+                )),
+                ...source.theirs.map((hook, i) => (
+                    <StockHookRow key={`theirs-${source.name}-${i}`} hook={hook}
+                        source={source} drop={drop} />
+                )),
+            ])}
+        </>
+    );
+}
+
+/**
+ * One side of a node's card: the hooks that run before it sit inside the top of
+ * the card, the ones after it inside the bottom, so a node and its hooks read
+ * and move as one block. Absent when nothing runs on that side.
+ */
+function Slot({ side, node, ours, theirs, actions }: {
+    side: HookWhen;
+    node: PipelineNode;
+    ours: PipelineHook[];
+    theirs: StockHook[];
+    actions: NodeActions;
+}) {
+    if (ours.length + theirs.length === 0) { return null; }
+    return (
+        <div class={`pb-card-slot pb-card-slot--${side}`} role="group"
+            aria-label={`Runs ${side} ${node.name}`}
+            {...hookDropZone(actions.drop, () => ({
+                target: { when: side, anchor: node.id, boundary: 'node' },
+            }))}>
+            <HookRows side={side} ours={ours} theirs={theirs} step={actions.step}
+                runs={actions.runs} boundary="node" yours={actions.yours}
+                onEdit={actions.onEditHook} drop={actions.drop} />
+        </div>
+    );
+}
+
+/** A phase's or a step's own hooks: slim rows at its top, each saying its side. */
+function EdgeHooks({ hooks, stock = [], anchor, boundary, actions, label }: {
+    hooks: PipelineHook[];
+    stock?: StockHook[];
+    anchor: string;
+    boundary: 'phase' | null;
+    actions: NodeActions;
+    label: string;
+}) {
+    if (hooks.length + stock.length === 0) { return null; }
+    const drop = boundary ? actions.drop : undefined;
+    return (
+        <div class="pb-edge-hooks" role="group" aria-label={label}>
+            {(['before', 'after'] as HookWhen[]).map(side => {
+                const ours = hooks.filter(hook => hook.when === side);
+                const theirs = stock.filter(hook => hook.when === side);
+                if (ours.length + theirs.length === 0) { return null; }
+                return (
+                    <div key={side} class={`pb-edge-side pb-edge-side--${side}`}
+                        {...(boundary ? hookDropZone(drop, () => ({
+                            target: { when: side, anchor, boundary },
+                        })) : {})}>
+                        <HookRows side={side} ours={ours} theirs={theirs} step={actions.step}
+                            runs={actions.runs} boundary="phase" yours={actions.yours}
+                            onEdit={actions.onEditHook} drop={drop} when
+                            readOnly={boundary ? undefined : STEP_HOOK_REASON} />
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+/** The `+` on a node's top or bottom edge, which opens the add modal for that side. */
+function EdgeAdd({ side, node, onAdd }: {
+    side: HookWhen;
+    node: PipelineNode;
+    onAdd: () => void;
+}) {
+    return (
+        <button type="button" class={`pb-edge-add pb-edge-add--${side}`} onClick={onAdd}
+            aria-label={`Add a hook ${side} ${node.name}`}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor"
+                stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false">
+                <path d="M5 1.5V8.5M1.5 5H8.5" />
+            </svg>
+            <span aria-hidden="true">{side}</span>
+        </button>
+    );
+}
+
+/**
+ * At most two marks after a node's name: what it writes, that it can stop the
+ * run, that the project changed it. Ownership and the gate outrank the file
+ * when all three apply, since the file is also named in the popover.
+ */
+function NodeMarks({ node }: { node: PipelineNode }) {
+    const file = node.writes[0] ?? node.mayWrite[0];
+    const sometimes = !node.writes.length && Boolean(file);
+    const marks = [
+        file && (node.kind !== 'gate' || !node.replaced) && (
+            <span key="file" class={`pb-writes${sometimes ? ' pb-writes--sometimes' : ''}`}
+                title={sometimes
+                    ? 'this node produces it at some sizes, and folds it away at others'
+                    : `this node produces ${[...node.writes, ...node.mayWrite].join(', ')}`}>
+                {file.split('/').pop()}
+            </span>
+        ),
+        node.kind === 'gate' && (
+            <span key="gate" class="pb-node-gate" title="This node can stop the run">
+                <GateIcon /><span class="sr-only">gate</span>
+            </span>
+        ),
+        node.replaced && (
+            <span key="yours" class="pb-yours">
+                <span class="pb-status-dot" aria-hidden="true" />yours
+            </span>
+        ),
+    ].filter(Boolean);
+    if (marks.length === 0) { return null; }
+    return <span class="pb-node-meta">{marks}</span>;
+}
+
+function Node({ node, actions, stock }: {
     node: PipelineNode;
     actions: NodeActions;
     /** Extension hooks that fire at this node's boundary, by side. */
     stock: { before: StockHook[]; after: StockHook[] };
-    /**
-     * Which empty seams this node draws.
-     *
-     * `after <this node>` and `before <the next one>` are two anchors for one
-     * gap, and a hook at either lands in the same place — so drawing both put a
-     * pair of dashed lines at every join and made the lane look broken. One gap,
-     * one seam: a node draws only the seam above it, and only when something
-     * precedes it. The phase's own seams cover its two edges.
-     */
-    seams: { before: boolean; after: boolean };
 }) {
     const before = node.hooks.filter(hook => hook.when === 'before');
     const after = node.hooks.filter(hook => hook.when === 'after');
@@ -669,25 +761,24 @@ function Node({ node, actions, stock, seams }: {
         const upper = overUpper(event);
         return { upper, target: { when: upper ? 'before' : 'after', anchor: node.id, boundary: 'node' } };
     });
+    const hooked = before.length + after.length + stock.before.length + stock.after.length > 0;
+    const decision = actions.routing?.decisions.find(d => d.node === node.id);
+
+    const hasBefore = before.length + stock.before.length > 0;
+    const hasAfter = after.length + stock.after.length > 0;
+    const ownHooks = before.length + after.length > 0;
 
     return (
-        <div class="pb-node-group">
-            {seams.before && (
-                <Seam side="before" anchor={node.id} drop={actions.drop}
-                    onAdd={() => actions.onAdd(node.id, 'before')} />
-            )}
-            {/* Above the card, because BEFORE is an ordering claim and one
-                block under the card made it twice: a phase heading, the card,
-                and then a second BEFORE belonging to the card above it. */}
-            <Attached before={before} after={[]} stockBefore={stock.before}
-                anchor={node.id} boundary="node" yours={actions.yours}
-                onEdit={actions.onEditHook} drop={actions.drop} />
+        <div class={`pb-node-group${hasBefore ? ' pb-node-group--before' : ''}${
+            hasAfter ? ' pb-node-group--after' : ''}`}>
+            <EdgeAdd side="before" node={node} onAdd={() => actions.onAdd(node.id, 'before')} />
+            <div class={`pb-card${hooked ? ' pb-card--hooked' : ''}${
+                ownHooks ? ' pb-card--yours' : ''}${open ? ' pb-card--open' : ''}`}
+                data-node={`${actions.step}/${node.id}`}>
+            <Slot side="before" node={node} ours={before} theirs={stock.before} actions={actions} />
             <div
                 class={[
                     'pb-node',
-                    // The tick down the left says what the node does — writes a
-                    // file, can stop the run, or neither — so the kind is on the
-                    // board rather than only in the pane you have to open.
                     `pb-node--${node.kind}`,
                     node.replaced ? 'pb-node--yours' : '',
                     movable ? 'pb-node--movable' : 'pb-node--pinned',
@@ -728,68 +819,47 @@ function Node({ node, actions, stock, seams }: {
                     <GripIcon />
                 </span>
 
-                <button class="pb-node-main"
+                <button class="pb-node-main" aria-haspopup="dialog" aria-expanded={open}
                     onClick={() => actions.onOpenNode(actions.step, node.id)}
-                    title={node.replaced
-                        ? "Read this project's instructions for this node"
-                        : 'Read the instructions this node contributes'}>
+                    title={node.pinned
+                        ? `${node.name}. Held in place: ${node.pinned}. Open for its details.`
+                        : `${node.name}. Open for its details and everything it can do.`}>
                     <span class="pb-node-name">{node.name}</span>
-                    {(node.replaced || node.pinned || node.kind === 'gate'
-                        || node.writes.length > 0 || node.mayWrite.length > 0) && (
-                        <span class="pb-node-meta">
-                            {/* In a word, not a hue: every colour this panel
-                                has left already means something else. */}
-                            {node.kind === 'gate' && (
-                                <span class="pb-node-gate"
-                                    title="This node can stop the run">gate</span>
-                            )}
-                            {!movable && (
-                                <span class="pb-held"
-                                    title={`Cannot be reordered — ${node.pinned}. `
-                                        + 'You can still rewrite it, attach work to it, '
-                                        + 'or drop it from companion.yml.'}>held</span>
-                            )}
-                            {node.writes.map(file => (
-                                <span key={file} class="pb-writes"
-                                    title="this node produces it">{file}</span>
-                            ))}
-                            {/* Produced only sometimes — the size budget can fold
-                                these away. Without them the step counted four
-                                artifacts while the node writing three of them
-                                showed none. */}
-                            {node.mayWrite.map(file => (
-                                <span key={file} class="pb-writes pb-writes--sometimes"
-                                    title="this node produces it at some sizes, and folds it away at others">
-                                    {file}
-                                </span>
-                            ))}
-                            {node.replaced && <span class="pb-yours">yours</span>}
-                        </span>
-                    )}
+                    <NodeMarks node={node} />
                 </button>
-
-                {/* Nothing on the card says "make this mine" any more. Clicking
-                    it opens the panel where its instructions can be edited, and
-                    saving that edit is what makes it yours — so a separate step
-                    stood between someone and the thing they came to do. Going
-                    back to the shipped node lives in that same panel. */}
-                {/* Absent, not inert, on the last node a step has: taking it out
-                    would leave a step with no phases, which cannot be written.
-                    A step added through "Add step" ships with exactly one. */}
-                {actions.canRemove(node.id) && (
-                    <button class="pb-node-drop"
-                        title={`Stop running ${node.name}. The file stays, so it is `
-                            + 'still on offer under Add node.'}
-                        aria-label={`Stop running ${node.name}`}
-                        onClick={() => actions.onRemove(node.id)}><TrashIcon /></button>
-                )}
             </div>
-            <Attached before={[]} after={after} stockAfter={stock.after}
-                anchor={node.id} boundary="node" yours={actions.yours}
-                onEdit={actions.onEditHook} drop={actions.drop} />
-            {seams.after && (
-                <Seam side="after" anchor={node.id} drop={actions.drop}
-                    onAdd={() => actions.onAdd(node.id, 'after')} />
+            <Slot side="after" node={node} ours={after} theirs={stock.after} actions={actions} />
+            </div>
+            <EdgeAdd side="after" node={node} onAdd={() => actions.onAdd(node.id, 'after')} />
+            {decision && actions.routing && (
+                <Routing step={actions.step} decision={decision}
+                    changed={actions.routing.changed} onOpen={actions.routing.onOpen} />
+            )}
+        </div>
+    );
+}
+
+/** A deciding node's routing: one quiet line under its card that opens to the verdicts. */
+function Routing({ step, decision, changed, onOpen }: {
+    step: string;
+    decision: PipelineDecision;
+    changed: string[];
+    onOpen?: Props['onOpenDecision'];
+}) {
+    const [open, setOpen] = useState(false);
+    const id = `pb-routing-${step}-${decision.node}`;
+    return (
+        <div class="pb-routing">
+            <button type="button" class="pb-routing-toggle" aria-expanded={open}
+                aria-controls={id} onClick={() => setOpen(!open)}>
+                Routing
+                <span class="pb-routing-caret" aria-hidden="true">{open ? '▴' : '▾'}</span>
+            </button>
+            {open && (
+                <div id={id}>
+                    <Decisions step={step} decisions={[decision]} changed={changed}
+                        onOpen={onOpen} />
+                </div>
             )}
         </div>
     );
@@ -811,17 +881,9 @@ function Node({ node, actions, stock, seams }: {
  */
 interface PhaseControls {
     onRename: (from: string, to: string) => void;
-    onRemove: (name: string) => void;
+    /** Fold this phase into its neighbour; its nodes join that phase at the near edge. */
+    onMerge: (name: string, into: 'above' | 'below') => void;
     onAddPhaseAfter: (name: string) => void;
-    onAddNode: (phase: string, nodeId: string) => void;
-    /** Nodes this step could run and is not — the only ones that can be added. */
-    dropped: string[];
-    /** Which of those are shipped add-ons rather than nodes the recipe took out. */
-    addOns: string[];
-    /** What each offerable node is, so the picker names it rather than its id. */
-    offers: PipelineStep['offers'];
-    /** The step this phase belongs to, named when explaining where nodes come from. */
-    step: string;
     /**
      * Extension hooks that fire at the step's edges, given to the phase that
      * holds those edges — empty for every phase in between.
@@ -830,10 +892,25 @@ interface PhaseControls {
     stockAfter: StockHook[];
     /** A phase needs two nodes to split, since neither half may be empty. */
     canSplit: boolean;
-    /** A step needs at least one phase, so the last one cannot be removed. */
-    only: boolean;
-    /** The first phase has nothing above it, so its nodes merge downward. */
-    first: boolean;
+    /** The phases on either side, which are what a merge can join. */
+    above?: string;
+    below?: string;
+    /** A node just removed from this phase, still on offer to be put back. */
+    removed?: RemovedRow | null;
+    onUndo?: (token: string) => void;
+}
+
+/** A struck row where a removed node sat, with the way back while the host still offers it. */
+function RemovedNode({ row, onUndo }: { row: RemovedRow; onUndo?: (token: string) => void }) {
+    return (
+        <div class="pb-removed" role="group" aria-label={`${row.name} removed from the run`}>
+            <span class="pb-removed-name"><s>{row.name}</s></span>
+            {onUndo && (
+                <button type="button" class="pb-removed-undo" onClick={() => onUndo(row.token)}
+                    aria-label={`Undo removing ${row.name}`}>Undo</button>
+            )}
+        </div>
+    );
 }
 
 function Phase({ phase, actions, controls }: {
@@ -841,201 +918,100 @@ function Phase({ phase, actions, controls }: {
     actions: NodeActions;
     controls: PhaseControls;
 }) {
-    const { onRename } = controls;
-    const before = phase.hooks.filter(hook => hook.when === 'before');
-    const after = phase.hooks.filter(hook => hook.when === 'after');
-    const name = useRef<HTMLHeadingElement>(null);
-    const [picking, setPicking] = useState(false);
+    const [renaming, setRenaming] = useState(false);
+    const field = useRef<HTMLInputElement>(null);
 
-    // The node picker is the phase menu's second step, so a click that dismisses
-    // the list has to put the trigger back to the menu it opened from.
-    useEffect(() => {
-        if (!picking) { return undefined; }
-        const done = () => setPicking(false);
-        document.addEventListener('click', done);
-        return () => document.removeEventListener('click', done);
-    }, [picking]);
+    // The menu hands focus back to its trigger before the pick runs, so the field can take it now.
+    useLayoutEffect(() => {
+        if (renaming) { field.current?.focus(); field.current?.select(); }
+    }, [renaming]);
 
-    const rename = (event: Event) => {
-        const el = event.currentTarget as HTMLElement;
-        const next = (el.textContent ?? '').trim();
-        if (!next || next === phase.name) { el.textContent = phase.name; return; }
-        onRename(phase.name, next);
-        // Put the old name back and let the redraw carry the new one, rather
-        // than leaving the typed text standing. A refused write redraws the
-        // graph unchanged, and Preact then sees the same vdom text it rendered
-        // last time and touches nothing — so the board went on showing a phase
-        // name that is not in the configuration, which is the one thing every
-        // other refusal in this panel is careful not to do.
-        el.textContent = phase.name;
-    };
-
-    /** Put the caret in the name on the board rather than in a second field. */
-    const startRename = () => {
-        const el = name.current;
-        if (!el) { return; }
-        // After the menu has finished closing, not during it. A menu hands the
-        // keyboard back to its trigger on the way out, which is right for every
-        // other entry and would take the caret straight back off this one.
-        setTimeout(() => {
-            el.focus();
-            const range = document.createRange();
-            range.selectNodeContents(el);
-            const selection = window.getSelection();
-            selection?.removeAllRanges();
-            selection?.addRange(range);
-        }, 0);
+    const finish = (save: boolean) => {
+        // Escape unmounts the field, and a browser may blur it on the way out.
+        if (!field.current?.isConnected || field.current.dataset.done) { return; }
+        field.current.dataset.done = '1';
+        const next = field.current.value.trim();
+        setRenaming(false);
+        if (save && next && next !== phase.name) { controls.onRename(phase.name, next); }
     };
 
     /**
-     * Everything a phase can do, said in the same five words every time.
-     *
-     * Every one of these used to be a separate button that was `opacity: 0`
-     * until the pointer arrived, so the board showed nothing that could change
-     * anything and touch reached none of it. One `+` on the rule, always there.
-     *
-     * A row that cannot run here is shown inert rather than dropped, because
-     * the note is what teaches the capability: "one node here, so there is
-     * nothing to split off" says a phase can be split at the same moment it
-     * says why this one cannot. A dropped row teaches nothing, and a person
-     * who never sees Split never learns to look for it.
+     * What a phase can do, behind its own name. A row that cannot run here is
+     * shown inert with its reason, because the note is what teaches the
+     * capability: "one node here, so there is nothing to split off".
      */
     const offered = [
-        { id: 'hook', label: 'Add hook', note: 'a skill, an instruction or a command' },
-        controls.dropped.length
-            ? { id: 'node', label: 'Add node', note: `${controls.dropped.length} on offer` }
-            : {
-                id: 'node', label: 'Add node', disabled: true,
-                note: `every node ${controls.step} has is already in a phase — drag one in `
-                    + `from another, or write your own at .specify/companion/nodes/${controls.step}/`,
-            },
-        { id: 'rename', label: 'Rename phase', note: 'its hooks follow the new name' },
+        { id: 'rename', label: 'Rename…', note: 'Its hooks follow the new name.' },
         controls.canSplit
-            ? {
-                id: 'split', label: 'Split phase',
-                note: 'its last node starts a new phase after it',
-            }
+            ? { id: 'split', label: 'Split', note: 'Its last node starts a new phase after it.' }
             : {
-                id: 'split', label: 'Split phase', disabled: true,
-                note: 'one node here, so there is nothing to split off',
+                id: 'split', label: 'Split', disabled: true,
+                note: 'One node here, so there is nothing to split off.',
             },
-        // The first phase has nothing above it, so its nodes go down into the
-        // second. The label used to say "above" in both directions.
-        controls.only
-            ? {
-                id: 'merge', label: 'Merge into the phase above', disabled: true,
-                note: 'a step needs at least one phase',
-            }
-            : controls.first
-                ? {
-                    id: 'merge', label: 'Merge into the phase below',
-                    note: 'nothing sits above this one, so its nodes go down',
-                }
-                : {
-                    id: 'merge', label: 'Merge into the phase above',
-                    note: 'its nodes go with it',
-                },
+        ...(controls.above
+            ? [{ id: 'merge-above', label: `Merge into ${controls.above}, above` }] : []),
+        ...(controls.below
+            ? [{ id: 'merge-below', label: `Merge into ${controls.below}, below` }] : []),
+        ...(!controls.above && !controls.below
+            ? [{
+                id: 'merge', label: 'Merge', disabled: true,
+                note: 'A step needs at least one phase.',
+            }] : []),
     ];
 
     // No guards here: `Menu` will not call this for a row it drew inert.
     const act = (id: string) => {
-        if (id === 'hook') { actions.onAdd(phase.name, 'before'); }
-        if (id === 'node') { setPicking(true); }
-        if (id === 'rename') { startRename(); }
+        if (id === 'rename') { setRenaming(true); }
         if (id === 'split') { controls.onAddPhaseAfter(phase.name); }
-        if (id === 'merge') { controls.onRemove(phase.name); }
+        if (id === 'merge-above') { controls.onMerge(phase.name, 'above'); }
+        if (id === 'merge-below') { controls.onMerge(phase.name, 'below'); }
     };
+
+    const removed = controls.removed;
+    const nodes = phase.nodes.map((node, at) => (
+        // An installed extension registers against the step, not a node — so
+        // its hooks land on the step's real edges: the first node's `before`
+        // and the last node's `after`.
+        <Node key={node.id} node={node} actions={actions} stock={{
+            before: at === 0 ? controls.stockBefore : [],
+            after: at === phase.nodes.length - 1 ? controls.stockAfter : [],
+        }} />
+    ));
+    if (removed) {
+        nodes.splice(Math.min(removed.index, nodes.length), 0,
+            <RemovedNode key={`removed-${removed.token}`} row={removed} onUndo={controls.onUndo} />);
+    }
 
     return (
         <section class="pb-phase">
             <header class="pb-phase-head" {...hookDropZone(actions.drop, () => ({
                 target: { when: 'before', anchor: phase.name, boundary: 'phase' },
             }))}>
-                {/* A phase name is the project's to choose — it is also a hook
-                    anchor, so renaming it is a real edit, not a label. */}
-                <h3 class="pb-phase-name" contentEditable spellcheck={false}
-                    ref={name} role="textbox" aria-label="Phase name"
-                    title="Rename this phase"
-                    onBlur={rename}
-                    onKeyDown={event => {
-                        if (event.key === 'Enter') {
-                            event.preventDefault();
-                            (event.currentTarget as HTMLElement).blur();
-                        }
-                        if (event.key === 'Escape') {
-                            (event.currentTarget as HTMLElement).textContent = phase.name;
-                            (event.currentTarget as HTMLElement).blur();
-                        }
-                    }}>{phase.name}</h3>
-                <span class="pb-phase-rule" aria-hidden="true" />
-                {picking ? (
-                    <Menu
-                        // Keyed apart from the menu it replaces: without it
-                        // Preact reuses the instance, and the picker inherits
-                        // the closed state the pick that opened it left behind.
-                        key="pick"
-                        class="pb-phase-add"
-                        trigger={<PlusIcon />}
-                        caret={false}
-                        align="right"
-                        defaultOpen
-                        label={`Put a node in ${phase.name}`}
-                        title={`Put a node in ${phase.name}`}
-                        options={controls.dropped.map(id => ({
-                            id,
-                            // What the node IS, and what it does. The list used
-                            // to be bare ids under one sentence about the
-                            // category they were in — the same words on every
-                            // row, and never what picking one gets you.
-                            label: controls.offers[id]?.name || id,
-                            note: [
-                                controls.offers[id]?.summary,
-                                controls.addOns.includes(id)
-                                    ? `${controls.step} ships this and does not run it`
-                                    : 'removed from this run',
-                            ].filter(Boolean).join(' · '),
-                        }))}
-                        onPick={id => { setPicking(false); controls.onAddNode(phase.name, id); }}
-                    />
+                {/* A phase name is also a hook anchor, so renaming it is a real
+                    edit: the hooks on it follow the new name. */}
+                {renaming ? (
+                    <input ref={field} class="pb-phase-input" type="text" defaultValue={phase.name}
+                        aria-label={`Rename the ${phase.name} phase`} spellcheck={false}
+                        onBlur={() => finish(true)}
+                        onKeyDown={event => {
+                            if (event.key === 'Enter') { event.preventDefault(); finish(true); }
+                            if (event.key === 'Escape') { event.preventDefault(); finish(false); }
+                        }} />
                 ) : (
                     <Menu
-                        key="menu"
-                        class="pb-phase-add"
-                        trigger={<PlusIcon />}
-                        caret={false}
-                        align="right"
-                        label={`Add or change ${phase.name}`}
-                        title={`Add or change ${phase.name}`}
+                        class="pb-phase-name"
+                        trigger={<span class="pb-trigger-text">{phase.name}</span>}
+                        heading={`Phase ${phase.name} · ${count(phase.nodes.length)}`}
+                        label={`Phase ${phase.name}`}
+                        title={`Rename, split or merge ${phase.name}`}
                         options={offered}
                         onPick={act}
                     />
                 )}
             </header>
-            {/* Split the same way a node's are: a phase's `after` hooks run
-                after its nodes, so drawing them above the nodes made the
-                heading contradict the layout. Neither block is indented, which
-                is what separates a phase's from the card-hung ones below. */}
-            <Attached before={before} after={[]} anchor={phase.name} boundary="phase"
-                yours={actions.yours} onEdit={actions.onEditHook} drop={actions.drop} />
-            <div class="pb-phase-nodes">
-                {phase.nodes.map((node, at) => (
-                    // An installed extension registers against the step, not a
-                    // node — so its hooks land on the step's real edges: the
-                    // first node's `before` and the last node's `after`.
-                    <Node key={node.id} node={node} actions={actions} stock={{
-                        before: at === 0 ? controls.stockBefore : [],
-                        after: at === phase.nodes.length - 1 ? controls.stockAfter : [],
-                    }} seams={{
-                        // One seam per gap. The phase's own seams own its edges,
-                        // and each node owns the gap above it, so the first
-                        // node draws nothing and no node draws below itself.
-                        before: at > 0,
-                        after: false,
-                    }} />
-                ))}
-            </div>
-            <Attached before={[]} after={after} anchor={phase.name} boundary="phase"
-                yours={actions.yours} onEdit={actions.onEditHook} drop={actions.drop} />
+            <EdgeHooks hooks={phase.hooks} anchor={phase.name} boundary="phase"
+                actions={actions} label={`Hooks on the ${phase.name} phase`} />
+            <div class="pb-phase-nodes">{nodes}</div>
         </section>
     );
 }
@@ -1124,6 +1100,15 @@ function FirstPhase({ step, onAddNode }: {
     );
 }
 
+/** The extension hooks the board draws on a node: the step's before on its first node, its after on its last. */
+export function stockAt(step: PipelineStep, nodeId: string): StockHook[] {
+    const nodes = step.phases.flatMap(phase => phase.nodes);
+    return [
+        ...(nodes[0]?.id === nodeId ? step.stockHooks.filter(h => h.when === 'before') : []),
+        ...(nodes[nodes.length - 1]?.id === nodeId ? step.stockHooks.filter(h => h.when === 'after') : []),
+    ];
+}
+
 /** This project's hooks at one anchor, which is what a dropped hook is counted among. */
 export function hooksAt(step: PipelineStep, anchor: string, boundary: 'node' | 'phase'): PipelineHook[] {
     for (const phase of step.phases) {
@@ -1135,12 +1120,15 @@ export function hooksAt(step: PipelineStep, anchor: string, boundary: 'node' | '
 }
 
 function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPhases,
-    onAddNode, onOpenFrame, onRemoveNode, onOpenTemplate, onMoveHook, onRefuse,
-    onOpenDecision }: {
+    onAddNode, onOpenFrame, onMoveHook, onRefuse,
+    onOpenDecision, onAddTo, adding, removed, onUndo }: {
     step: PipelineStep;
     index: number;
-    actions: Omit<NodeActions,
-        'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'onRemove' | 'canRemove' | 'drop'>;
+    onAddTo?: Props['onAddTo'];
+    adding?: boolean;
+    removed?: RemovedRow | null;
+    onUndo?: Props['onUndo'];
+    actions: Omit<NodeActions, 'onDrop' | 'step' | 'onAdd' | 'onEditHook' | 'drop'>;
     onMoveHook: Props['onMoveHook'];
     onRefuse: Props['onRefuse'];
     onReorder: Props['onReorder'];
@@ -1149,8 +1137,6 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
     onSetPhases: Props['onSetPhases'];
     onAddNode: Props['onAddNode'];
     onOpenFrame: Props['onOpenFrame'];
-    onRemoveNode: Props['onRemoveNode'];
-    onOpenTemplate: Props['onOpenTemplate'];
     onOpenDecision: Props['onOpenDecision'];
 }) {
     const [showChanges, setShowChanges] = useState(false);
@@ -1200,12 +1186,9 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         },
         onAdd: (anchor, when) => onAddHook(step.name, anchor, when),
         onEditHook: hook => onEditHook(step.name, hook),
-        onRemove: nodeId => {
-            const shape = withoutNode(step, nodeId);
-            if (!shape) { return; }
-            onRemoveNode(step.name, nodeId, shape.order, shape.phases);
+        routing: {
+            decisions: step.decisions, changed: step.changes.decisions, onOpen: onOpenDecision,
         },
-        canRemove: nodeId => withoutNode(step, nodeId) !== null,
         drop: onMoveHook && onRefuse && {
             step: step.name,
             onRefuse,
@@ -1223,6 +1206,7 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
         },
     };
     const nodes = step.phases.reduce((n, phase) => n + phase.nodes.length, 0);
+    const nodeIds = new Set(step.phases.flatMap(phase => phase.nodes.map(n => n.id)));
 
     return (
         <section class={`pb-step ${changed(step) ? 'pb-step--changed' : ''}`}
@@ -1258,84 +1242,69 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                             </span>
                         </>
                     )}
-                    {/* The document's shape, opened from the step that writes
-                        it — and the only door to the whole template feature, so
-                        it is a chip rather than a grey word set exactly like the
-                        node count beside it. The count carries the review ink
-                        once a section has been replaced; the chip itself is an
-                        offer, not a change. */}
-                    {step.template && (step.template.sectionsAvailable.length > 0
-                        || step.template.sections.length > 0) && (
-                        <button class="pb-template"
-                            title={step.template.sections.length
-                                ? `${step.template.file} — you replaced: ${step.template.sections.join(', ')}`
-                                : `Change the shape of ${step.template.file}`}
-                            onClick={() => onOpenTemplate(step.name)}>
-                            <span class="pb-template-name">Document shape</span>
-                            {step.template.sections.length > 0 && (
-                                <>
-                                    <span class="pb-fact-dot" aria-hidden="true">·</span>
-                                    <span class="pb-template-count">
-                                        {step.template.sections.length}
-                                    </span>
-                                </>
-                            )}
-                            <span class="pb-template-caret" aria-hidden="true">▸</span>
-                        </button>
+                    {/* What changed, on the step it changed, opened in place. */}
+                    {changed(step) && (
+                        <>
+                            <span class="pb-fact-dot" aria-hidden="true">·</span>
+                            <button class="pb-changed" aria-expanded={showChanges}
+                                aria-controls={`pb-changed-${step.name}`}
+                                onClick={() => setShowChanges(!showChanges)}>
+                                changed
+                                <span class="pb-changed-caret" aria-hidden="true">
+                                    {showChanges ? '▴' : '▾'}
+                                </span>
+                            </button>
+                        </>
                     )}
                 </div>
-                {/* What changed, on the step it changed. It was a word with the
-                    facts in a `title`, which is a fact nobody reads and nothing
-                    a touch screen can reach. */}
-                {changed(step) && (
-                    <button class="pb-changed" aria-expanded={showChanges}
-                        aria-controls={`pb-changed-${step.name}`}
-                        onClick={() => setShowChanges(!showChanges)}>
-                        changed
-                        <span class="pb-changed-caret" aria-hidden="true">
-                            {showChanges ? '▴' : '▾'}
-                        </span>
-                    </button>
-                )}
                 {showChanges && (
                     <p class="pb-changed-line" id={`pb-changed-${step.name}`}>
                         {changeSummary(step).join(' · ')}
                     </p>
                 )}
+                {onAddTo && (
+                    <button type="button"
+                        class={`pb-lane-add pb-lane-add--head${adding ? ' pb-lane-add--on' : ''}`}
+                        aria-haspopup="dialog" aria-expanded={Boolean(adding)}
+                        onClick={() => onAddTo(step.name)}>
+                        <PlusIcon />
+                        <span>Add to {step.name}</span>
+                    </button>
+                )}
             </header>
 
             <div class="pb-step-body">
+                <EdgeHooks hooks={step.hooks ?? []} anchor={step.name} boundary={null}
+                    actions={bound} label={`Hooks on the ${step.name} step`} />
                 {step.phases.map((phase, at) => (
                     <Phase key={phase.name} phase={phase} actions={bound}
                         controls={{
-                            dropped: step.dropped,
-                            addOns: step.addOns,
-                            offers: step.offers,
-                            step: step.name,
                             stockBefore: at === 0
                                 ? step.stockHooks.filter(h => h.when === 'before') : [],
                             stockAfter: at === step.phases.length - 1
                                 ? step.stockHooks.filter(h => h.when === 'after') : [],
                             canSplit: phase.nodes.length > 1,
-                            only: step.phases.length === 1,
-                            first: at === 0,
+                            above: step.phases[at - 1]?.name,
+                            below: step.phases[at + 1]?.name,
+                            removed: removed?.command === step.name && removed.phase === phase.name
+                                ? removed : null,
+                            onUndo,
                             // The name is a hook anchor, so the hooks come with it.
                             onRename: (from, to) => onSetPhases(step.name, settled(
                                 grouping().map(p => p.name === from ? { ...p, name: to } : p)),
                                 { from, to }),
-                            // A phase's nodes have to land somewhere: they join
-                            // the phase above, or the one below when it is first.
-                            onRemove: name => {
+                            // Its nodes join the neighbour at the edge they meet it.
+                            onMerge: (name, direction) => {
                                 const phases = grouping();
                                 const i = phases.findIndex(p => p.name === name);
-                                if (i < 0 || phases.length < 2) { return; }
-                                const into = i === 0 ? 1 : i - 1;
+                                const into = direction === 'above' ? i - 1 : i + 1;
+                                if (i < 0 || !phases[into]) { return; }
                                 const next = phases.map((p, k) => k === into
                                     ? {
                                         ...p,
-                                        nodes: i === 0
-                                            ? [...phases[i].nodes, ...p.nodes]
-                                            : [...p.nodes, ...phases[i].nodes],
+                                        nodes: direction === 'above'
+                                            ? [...p.nodes, ...phases[i].nodes]
+                                            : [...phases[i].nodes, ...p.nodes],
                                     }
                                     : p);
                                 onSetPhases(step.name, next.filter((_, k) => k !== i));
@@ -1357,19 +1326,24 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
                                 next.splice(i + 1, 0, { name: fresh, nodes: [moved] });
                                 onSetPhases(step.name, next);
                             },
-                            onAddNode: (phaseName, nodeId) => {
-                                const phases = grouping().map(p => p.name === phaseName
-                                    ? { ...p, nodes: [...p.nodes, nodeId] } : p);
-                                onAddNode(step.name, nodeId, phaseName,
-                                    phases.flatMap(p => p.nodes), phases);
-                            },
                         }} />
                 ))}
                 {step.phases.length === 0 && (
                     <FirstPhase step={step} onAddNode={onAddNode} />
                 )}
-                <Decisions step={step.name} decisions={step.decisions}
+                {/* A decision no node on the board makes still says where it routes. */}
+                <Decisions step={step.name}
+                    decisions={step.decisions.filter(d => !nodeIds.has(d.node))}
                     changed={step.changes.decisions} onOpen={onOpenDecision} />
+                {onAddTo && (
+                    <button type="button"
+                        class={`pb-lane-add pb-lane-add--foot${adding ? ' pb-lane-add--on' : ''}`}
+                        aria-haspopup="dialog" aria-expanded={Boolean(adding)}
+                        onClick={() => onAddTo(step.name)}>
+                        <PlusIcon />
+                        <span>Add to {step.name}</span>
+                    </button>
+                )}
             </div>
         </section>
     );
@@ -1385,22 +1359,39 @@ function Step({ step, index, actions, onReorder, onAddHook, onEditHook, onSetPha
  * where: clicking the one after `tasks` opens the form with "Runs after" already
  * reading `tasks`.
  */
-function LaneSeam({ after, onNewStep }: { after: string; onNewStep: Props['onNewStep'] }) {
+function LaneJoin({ after, next, onNewStep }: {
+    after: string;
+    next: string;
+    onNewStep: Props['onNewStep'];
+}) {
     return (
-        <button class="pb-lane-seam" onClick={() => onNewStep(after)}
-            title={`Add a step after ${after}`}>
-            <span class="pb-lane-seam-label">Add a step after {after}</span>
-        </button>
+        <div class="pb-lane-join">
+            <svg class="pb-lane-arrow pb-lane-arrow--across" width="24" height="12"
+                viewBox="0 0 24 12" aria-hidden="true">
+                <path d="M1 6H21M16 1L22 6L16 11" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <svg class="pb-lane-arrow pb-lane-arrow--down" width="12" height="24"
+                viewBox="0 0 12 24" aria-hidden="true">
+                <path d="M6 2V20M2 15L6 21L10 15" fill="none" stroke="currentColor"
+                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span class="pb-lane-then">then {next}</span>
+            <button class="pb-lane-seam" onClick={() => onNewStep(after)}
+                title={`Add a step after ${after}`}>
+                <span class="pb-lane-seam-label">Add a step after {after}</span>
+            </button>
+        </div>
     );
 }
 
 export function Canvas(
     { graph, onOpenNode, onReorder, onAddHook,
-        onEditHook, onSetPhases, onAddNode, onOpenFrame, onRemoveNode,
-        onOpenTemplate, onNewStep, selected, onMoveHook, onRefuse,
-        onOpenDecision }: Props,
+        onEditHook, onSetPhases, onAddNode, onOpenFrame,
+        onNewStep, selected, onMoveHook, onRefuse,
+        onOpenDecision, runs, onAddTo, adding, removed, onUndo }: Props,
 ) {
-    const actions = { onOpenNode, selected, yours: hookHome(graph.workflows.active) };
+    const actions = { onOpenNode, selected, runs, yours: hookHome(graph.workflows.active) };
     const sequence = graph.steps.filter(step => step.inSequence);
     const aside = graph.steps.filter(step => !step.inSequence);
 
@@ -1414,17 +1405,16 @@ export function Canvas(
                     children of the run itself. */}
                 {sequence.flatMap((step, index) => [
                     index > 0 && (
-                        <LaneSeam key={`seam-${step.name}`}
-                            after={sequence[index - 1].name} onNewStep={onNewStep} />
+                        <LaneJoin key={`seam-${step.name}`} after={sequence[index - 1].name}
+                            next={step.name} onNewStep={onNewStep} />
                     ),
                     <Step key={step.name} step={step} index={index} actions={actions}
                         onReorder={onReorder} onAddHook={onAddHook}
                         onEditHook={onEditHook} onSetPhases={onSetPhases}
                         onAddNode={onAddNode} onOpenFrame={onOpenFrame}
-                        onRemoveNode={onRemoveNode}
-                        onOpenTemplate={onOpenTemplate}
                         onMoveHook={onMoveHook} onRefuse={onRefuse}
-                        onOpenDecision={onOpenDecision} />,
+                        onOpenDecision={onOpenDecision} onAddTo={onAddTo}
+                        adding={adding === step.name} removed={removed} onUndo={onUndo} />,
                 ])}
                 {/* The tail of the row: everything that does not take a turn in
                     the run, and the invitation to add something that does. This

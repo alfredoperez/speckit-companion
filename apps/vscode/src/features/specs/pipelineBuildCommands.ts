@@ -140,6 +140,20 @@ async function restoreLostBuild(workspaceRoot: string, extensionPath: string, lo
     return lost;
 }
 
+/**
+ * What the build warned about and built anyway. The script prints each warning as
+ * a `[build] ` line before its `would build` / `built` summary; a run that never
+ * reached the summary refused, and its lines are the refusal, not warnings.
+ */
+function buildWarnings(output: string): string[] {
+    const lines = output.split('\n');
+    const summary = lines.findIndex(line => /^\[build\] (?:would build|built) \d+ commands?/.test(line));
+    if (summary < 0) { return []; }
+    return lines.slice(0, summary)
+        .filter(line => line.startsWith('[build] '))
+        .map(line => line.slice('[build] '.length).trim());
+}
+
 /** What the run did, in the shape the panel reports it. */
 export function readBuildReport(outcome: BuildOutcome, dryRun: boolean): BuildReport {
     return {
@@ -151,6 +165,7 @@ export function readBuildReport(outcome: BuildOutcome, dryRun: boolean): BuildRe
         }),
         commands: commandCount(outcome.output),
         changed: changedCommands(outcome.output),
+        warnings: buildWarnings(outcome.output),
         dryRun,
         output: outcome.output,
     };

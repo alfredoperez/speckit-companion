@@ -37,8 +37,35 @@ def _slot(entry: dict) -> str:
     return f"{entry['when']}-{entry['anchor']}-{entry['index']}"
 
 
-def render_hook(entry: dict, nodes_dir: str | None = None) -> str:
-    """The body text for one resolved hook entry, fenced with its own marker."""
+#: What a hook record looks like on the writer's command line.
+OUTCOME_FLAG = "--hook-outcome"
+
+
+def hook_address(entry: dict, command: str) -> str:
+    """`specify/after/finalize/0/skill:review`: the hook, as its record names it."""
+    hook = entry["hook"]
+    kind = hook.get("type")
+    ref = str(hook.get("ref", "")).strip() if kind in ("skill", "node") else ""
+    return (f"{command}/{entry['when']}/{entry['anchor']}/{entry['index']}/"
+            f"{kind}{':' + ref if ref else ''}")
+
+
+def record_line(entry: dict, command: str) -> str:
+    """The one line that asks the assistant to say whether this hook ran.
+
+    It rides on the next writer call the step makes anyway, so a record costs
+    words, not a turn. It is the assistant's own report, not proof.
+    """
+    return (f"Record it on your next `write-context.py` call: add "
+            f"`{OUTCOME_FLAG} '{hook_address(entry, command)}=ran'`, "
+            f"or `=skipped: <why>` if you did not run it.")
+
+
+def render_hook(entry: dict, nodes_dir: str | None = None, command: str | None = None) -> str:
+    """The body text for one resolved hook entry, fenced with its own marker.
+
+    Given the step it belongs to, the block ends with the line asking for its record.
+    """
     hook = entry["hook"]
     kind = hook.get("type")
     slot = _slot(entry)
@@ -83,6 +110,8 @@ def render_hook(entry: dict, nodes_dir: str | None = None) -> str:
     inner = "\n".join(lines).strip("\n")
     if not inner:
         return ""
+    if command:
+        inner += "\n\n" + record_line(entry, command)
     return (
         HOOK_OPEN.format(slot=slot) + "\n"
         + inner + "\n"
@@ -171,7 +200,7 @@ def insert_hooks(body: str, entries: list, nodes_dir: str | None = None,
     grouped = group_by_anchor(entries)
     node_ids, phase_names = step_boundaries(body)
     for (when, anchor), group in grouped.items():
-        rendered = "".join(render_hook(entry, nodes_dir) for entry in group)
+        rendered = "".join(render_hook(entry, nodes_dir, command) for entry in group)
         if not rendered:
             continue
         kind = resolve_anchor(anchor, command, node_ids, phase_names)

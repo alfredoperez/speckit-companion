@@ -29,12 +29,13 @@ const deliver = async (data: unknown) => {
 const live = () => root.querySelector('.pb-live')?.textContent;
 
 async function moveTo(phase: string) {
-    const trigger = Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-order-move'))
-        .find(el => el.textContent?.startsWith('Move to phase'))!;
-    trigger.click();
+    root.querySelector<HTMLButtonElement>('.pb-popover .pb-pop-more')!.click();
     await flush();
     Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-menu-option'))
-        .find(row => row.querySelector('.pb-menu-label')?.textContent === phase)!.click();
+        .find(b => b.querySelector('.pb-menu-label')?.textContent === 'Move…')!.click();
+    await flush();
+    Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-move-place'))
+        .find(row => row.querySelector('.pb-move-label')?.textContent?.startsWith(`To phase ${phase},`))!.click();
     await flush();
 }
 
@@ -111,11 +112,10 @@ describe('a hook moved from its form is announced by what its write said', () =>
         ],
     });
 
-    const formLive = () => root.querySelector('.pb-form .pb-live')?.textContent;
-    const order = () => Array.from(root.querySelectorAll('.pb-form .pb-field-label'))
-        .find(el => el.textContent === 'Order')?.parentElement?.textContent ?? '';
+    const formLive = () => root.querySelector('.pb-modal .pb-live')?.textContent;
+    const order = () => root.querySelector('.pb-modal .pb-order-place')?.textContent ?? '';
     const press = async (label: string) => {
-        Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-form .pb-order-move'))
+        Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-modal .pb-order-move'))
             .find(el => el.textContent === label)!.click();
         await flush();
     };
@@ -164,13 +164,13 @@ describe('a hook moved from its form is announced by what its write said', () =>
     it('saves a change of place as one move, leaving an unedited entry as written', async () => {
         await openHook('create-pr');
         const counts = { add: sent('addHook'), remove: sent('removeHook'), move: sent('moveHook') };
-        (root.querySelectorAll('.pb-form .pb-runs .pb-menu-trigger')[1] as HTMLButtonElement).click();
+        (root.querySelectorAll('.pb-modal-runs .pb-menu-trigger')[1] as HTMLButtonElement).click();
         await flush();
-        Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-form .pb-menu-option'))
+        Array.from(root.querySelectorAll<HTMLButtonElement>('.pb-modal .pb-menu-option'))
             .find(el => el.querySelector('.pb-menu-label')?.textContent === 'the gather phase')!
             .click();
         await flush();
-        (root.querySelector('.pb-form .pb-action--primary') as HTMLButtonElement).click();
+        (root.querySelector('.pb-modal .pb-action--primary') as HTMLButtonElement).click();
         await flush();
 
         expect(sent('moveHook')).toBe(counts.move + 1);

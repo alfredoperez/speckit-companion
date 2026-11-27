@@ -10,7 +10,7 @@ import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { appendFileSync, chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tickTask, writeTeamboardRun } from './lib/teamboard-run.mjs';
 import { SCROLL_PX_PER_FRAME, recordDir, startRecording } from './lib/recording.mjs';
@@ -530,7 +530,7 @@ const { root } = built;
 
 try {
     await launch(built);
-    await page.locator('.activitybar a.action-label[aria-label^="SpecKit"]').first().click();
+    await page.locator('.activitybar a.action-label[aria-label^="SpecKit"]').first().click({ force: true });
     const sidebar = (await page.locator('.part.sidebar').boundingBox())?.width ?? 300;
     /** Drags the side bar out until the editor column is about this wide. */
     const editorWidth = async (width) => {
@@ -1361,7 +1361,7 @@ try {
             await page.waitForTimeout(1200);
             return await tourFilm('tour-builder', 'The Workflow Builder: the spec-kit pipeline laid out as columns of nodes, specify to implement, with the hooks around them. A phase menu is opened to show what can be added there, then closed, and one node is picked to show its settings.', async (recording, beat) => {
                 await recording.hold(2.5);
-                const menu = webview().locator('button.pb-phase-add[aria-haspopup="menu"]').first();
+                const menu = webview().locator('button.pb-phase-name[aria-haspopup="menu"]').first();
                 await tourClick(recording, beat, menu, 'open a phase menu', 2.5);
                 await page.keyboard.press('Escape');
                 await recording.hold(1);
@@ -2484,7 +2484,7 @@ try {
         await clear();
         await command('Open Workflow Builder');
         await webview().locator('.pb-step').first().waitFor({ timeout: 20000 });
-        await webview().locator('button.pb-phase-add[aria-haspopup="menu"]').first().click();
+        await webview().locator('button.pb-phase-name[aria-haspopup="menu"]').first().click();
         const items = webview().locator('[role="menu"] [role="menuitem"]');
         await items.first().waitFor({ timeout: 5000 });
         const count = await items.count();
@@ -2495,8 +2495,8 @@ try {
 
     await step('builder-add-step', 'Add step opens the new-step form, and Cancel leaves the board as it was', async () => {
         const before = await webview().locator('.pb-step').count();
-        await webview().locator('.builder-action--add').click();
-        const cancel = webview().locator('.pb-side-head ~ * button, .builder--inspecting button', { hasText: /^Cancel$/ }).first();
+        await webview().locator('.pb-add-step').last().click();
+        const cancel = webview().locator('.pb-modal .pb-modal-cancel').first();
         await cancel.waitFor({ timeout: 5000 });
         await cancel.click();
         await page.waitForTimeout(400);
@@ -2520,40 +2520,313 @@ try {
         return `${Math.round(facts.width)}px, one column, heads sticky`;
     }, { needs: 'fixtures', check: true });
 
-    await step('builder-move-to-phase', 'Move to phase… moves a free node and the status line says so', async () => {
+    await step('builder-move-to-phase', 'Move… in a node popover moves a free node to another phase and the status says so', async () => {
         try {
-            const nodes = webview().locator('.pb-node');
+            const nodes = webview().locator('.pb-node-main');
             const count = await nodes.count();
             for (let i = 0; i < count; i++) {
                 await nodes.nth(i).click();
-                const move = webview().locator('button.pb-order-move[aria-haspopup="menu"]').first();
-                if (!(await move.isVisible().catch(() => false))) continue;
-                await move.click();
-                const menu = webview().locator('[role="menu"]').first();
-                await menu.waitFor({ timeout: 5000 });
-                const fits = await menu.evaluate(element => {
+                const pop = webview().locator('.pb-popover').first();
+                if (!(await pop.waitFor({ timeout: 3000 }).then(() => true, () => false))) continue;
+                await pop.getByRole('button', { name: 'Move…' }).click();
+                const places = pop.locator('.pb-move-place:not([aria-disabled])').filter({ hasText: /^To phase / });
+                if (await places.count() === 0) { await page.keyboard.press('Escape'); continue; }
+                const fits = await pop.evaluate(element => {
                     const box = element.getBoundingClientRect();
                     return box.left >= -1 && box.right <= innerWidth + 1 && box.top >= -1 && box.bottom <= innerHeight + 1;
                 });
-                if (!fits) throw new Error('the phase list spills outside the panel');
-                const options = menu.locator('[role="menuitem"]');
-                const total = await options.count();
-                for (let pick = 0; pick < total; pick++) {
-                    const phase = (await options.nth(pick).innerText()).split('\n')[0].trim();
-                    await options.nth(pick).click();
-                    const said = webview().locator('.builder-status-text', { hasText: `moved to ${phase} in ` });
-                    if (await said.first().waitFor({ timeout: 4000 }).then(() => true, () => false)) return (await said.first().innerText()).trim();
-                    await move.click();
-                    await menu.waitFor({ timeout: 5000 });
-                }
-                throw new Error('every phase refused the node');
+                if (!fits) throw new Error('the popover spills outside the panel');
+                const label = (await places.first().locator('.pb-move-label').innerText()).trim();
+                const phase = label.replace(/^To phase /, '').replace(/, (first|last)$/, '');
+                await places.first().click();
+                const said = webview().locator('.builder-status-text, .builder-bar-status .builder-bar-text', { hasText: `moved to ${phase} in ` });
+                await said.first().waitFor({ timeout: 4000 });
+                return (await said.first().innerText()).trim();
             }
-            throw new Error('no free node with Move to phase… on the board');
+            throw new Error('no free node with a phase to move to on the board');
         } finally {
             await sidebarWidth(sidebar);
             await clear();
         }
     }, { needs: 'fixtures', check: true });
+
+    await step('qa-builder-redesign', 'The redesigned Workflow Builder, walked moment by moment on any project: a Companion board or a stock Spec Kit board', async () => {
+        const view = webview();
+        const moments = [];
+        let order = 0;
+        /** Runs one moment and captures it whatever happens; a missing element is noted and the walk goes on. */
+        const moment = async (name, run, target = 'editor') => {
+            const label = `qa-${String(++order).padStart(2, '0')}-${name}`;
+            const entry = { name: label, ok: false };
+            try {
+                entry.note = (await run()) ?? '';
+                entry.ok = !/MISSING|FAIL/.test(entry.note);
+            } catch (error) {
+                const message = String(error?.message ?? error).split('\n')[0];
+                entry.note = /^MISSING/.test(message) ? message : `FAIL: ${message}`;
+            }
+            await capture(label, { target: typeof target === 'function' ? await target().catch(() => 'editor') : target }).catch(() => capture(label, { target: 'editor' }).catch(() => undefined));
+            moments.push(entry);
+            console.log(`  ${entry.ok ? 'ok  ' : 'MISS'} ${label}${entry.note ? ` (${entry.note})` : ''}`);
+        };
+        /** Waits for an element, or throws "MISSING: <what>". */
+        const need = async (locator, what, timeout = 6000) => {
+            if (!(await locator.first().waitFor({ timeout }).then(() => true, () => false))) throw new Error(`MISSING: ${what}`);
+            return locator.first();
+        };
+        const gone = (locator, timeout = 4000) => locator.first().waitFor({ state: 'detached', timeout }).then(() => true, () => false);
+        const text = async (locator) => (await locator.first().innerText().catch(() => '')).replace(/\s+/g, ' ').trim();
+        const tag = basename(SANDBOX ?? 'fixtures');
+
+        await clear();
+        await command('View: Close Primary Side Bar').catch(() => undefined);
+        await command('Open Workflow Builder');
+        await need(view.locator('.pb-step, .builder--stock, .pb-sl'), 'the builder board', 25000);
+        await page.waitForTimeout(800);
+        const stock = await view.locator('.builder--stock').count() > 0;
+
+        if (stock) {
+            await moment('stock-board', async () => {
+                const lanes = await view.locator('.pb-sl').count();
+                if (!lanes) return 'MISSING: stock lanes (.pb-sl)';
+                return `${lanes} lanes, ${await view.locator('.pb-sh-row').count()} hook rows, workflow "${await text(view.locator('.builder-workflow'))}"`;
+            });
+            const skill = `qa-house-note-${Date.now() % 10000}`;
+            await moment('stock-add-modal', async () => {
+                const add = await need(view.locator('.pb-edge-add--stock.pb-edge-add--after'), '+ after on a stock step');
+                const where = await add.getAttribute('aria-label');
+                await add.click();
+                const modal = await need(view.locator('.pb-modal.pb-sh'), 'the stock add-hook modal');
+                await modal.locator('input.pb-modal-text--mono').fill(skill);
+                await modal.locator('input.pb-modal-text').nth(1).fill(`Write the ${skill} house note`);
+                return `"${await text(modal.locator('.pb-modal-title'))}" from "${where}"`;
+            }, async () => view.locator('.pb-modal.pb-sh'));
+            await moment('stock-hook-added', async () => {
+                const modal = view.locator('.pb-modal.pb-sh');
+                if (!(await modal.count())) return 'MISSING: the stock add-hook modal to submit';
+                await modal.locator('.pb-action--primary').click();
+                if (!(await gone(modal))) return `FAIL: the modal stayed open (${await text(modal.locator('.pb-field-problem'))})`;
+                const row = await need(view.locator('.pb-sh-row', { hasText: skill }), `a hook row for ${skill}`, 8000);
+                const written = readFileSync(join(SANDBOX, '.specify', 'extensions.yml'), 'utf8').includes(skill);
+                if (!written) return `FAIL: the row shows but extensions.yml has no ${skill}`;
+                return `row "${await text(row)}", written to extensions.yml`;
+            });
+            await moment('stock-hook-popover', async () => {
+                const open = await need(view.locator('.pb-sh-row', { hasText: skill }).locator('.pb-sh-open'), 'the new hook row');
+                await open.click();
+                const pop = await need(view.locator('.pb-popover'), 'the hook popover');
+                return `"${await text(pop.locator('.pb-pop-title'))}", actions: ${(await pop.locator('.pb-pop-actions button').allInnerTexts()).map(s => s.trim()).join(', ')}`;
+            });
+            await moment('stock-hook-popover-esc', async () => {
+                await page.keyboard.press('Escape');
+                return (await gone(view.locator('.pb-popover'))) ? 'closed' : 'FAIL: Escape left the popover open';
+            });
+            await moment('stock-documents', async () => {
+                const doc = await need(view.locator('button.pb-sb-doc'), 'a document under Documents');
+                const file = await text(doc);
+                await doc.click();
+                const modal = await need(view.locator('.pb-modal.pb-sd'), 'the Documents modal');
+                return `opened on "${file}": ${await text(modal.locator('.pb-sd-file'))}`;
+            });
+            await moment('stock-documents-close', async () => {
+                await page.keyboard.press('Escape');
+                return (await gone(view.locator('.pb-modal.pb-sd'))) ? 'closed' : 'FAIL: Escape left Documents open';
+            });
+            await page.locator('.activitybar a.action-label[aria-label^="SpecKit"]').first().click({ force: true });
+            await editorWidth(380);
+            await moment('stock-narrow', async () => {
+                const sideways = await view.locator('body').evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
+                return `${await view.locator('body').evaluate(() => innerWidth)}px${sideways ? ', FAIL: the board scrolls sideways' : ''}`;
+            });
+            await moment('stock-narrow-popover', async () => {
+                await (await need(view.locator('.pb-sh-open'), 'a hook row')).click();
+                const pop = await need(view.locator('.pb-popover'), 'the hook popover');
+                return (await pop.getAttribute('class')).includes('pb-popover--sheet') ? 'a bottom sheet' : 'FAIL: not a sheet at 380px';
+            });
+            await page.keyboard.press('Escape');
+        } else {
+            const firstGroup = view.locator('.pb-node-group').first();
+            const card = firstGroup.locator('.pb-card').first();
+            const nodeName = async () => text(card.locator('.pb-node-name'));
+            await moment('board', async () => {
+                const lanes = await view.locator('.pb-step').count();
+                const nodes = await view.locator('.pb-node').count();
+                const hooks = await view.locator('.pb-card-slot .pb-hook').count();
+                const bar = await view.locator('.builder-bar').count();
+                return `${lanes} lanes, ${nodes} nodes, ${hooks} hooks inside cards, workflow "${await text(view.locator('.builder-workflow-current'))}"${bar ? `, bar: ${await text(view.locator('.builder-bar-says'))}` : ''}`;
+            });
+            await moment('popover', async () => {
+                await (await need(view.locator('.pb-node-main'), 'a node card')).click();
+                const pop = await need(view.locator('.pb-popover'), 'the node popover');
+                return `"${await text(pop.locator('.pb-pop-title'))}", ${await pop.locator('.pb-pop-actions button').count()} actions`;
+            });
+            await moment('popover-esc', async () => {
+                await page.keyboard.press('Escape');
+                return (await gone(view.locator('.pb-popover'))) ? 'closed' : 'FAIL: Escape left the popover open';
+            });
+            let skill = '';
+            await moment('add-before-modal', async () => {
+                const name = await nodeName();
+                await firstGroup.hover();
+                await (await need(firstGroup.locator('.pb-edge-add--before'), `+ before on ${name}`)).click();
+                const modal = await need(view.locator('.pb-modal'), 'the add modal');
+                const title = await text(modal.locator('.pb-modal-title'));
+                const input = await need(modal.locator('input.pb-modal-input'), 'the skill search');
+                await input.fill('re');
+                await page.waitForTimeout(300);
+                let rows = modal.locator('.pb-modal-results [role="option"]');
+                if (!(await rows.count())) { await input.fill(''); await page.waitForTimeout(300); rows = modal.locator('.pb-modal-results [role="option"]'); }
+                const count = await rows.count();
+                return `title "${title}" (node "${name}"), ${count} skill rows for "re"${/before/i.test(title) && title.includes(name) ? '' : `; FAIL: the title does not name "before ${name}"`}`;
+            }, async () => view.locator('.pb-modal'));
+            await moment('add-skill', async () => {
+                const modal = view.locator('.pb-modal');
+                if (!(await modal.count())) return 'MISSING: the add modal';
+                const rows = modal.locator('.pb-modal-results [role="option"]');
+                if (!(await rows.count())) return 'MISSING: a skill row to pick';
+                const row = rows.first();
+                skill = await text(row.locator('.pb-modal-row-name'));
+                await row.click();
+                await (await need(modal.locator('.pb-action--primary:not([disabled])'), 'an enabled Add')).click();
+                if (!(await gone(modal))) return `FAIL: the modal stayed open after Add ("${await text(modal.locator('.pb-live'))}")`;
+                await page.waitForTimeout(800);
+                const inCard = await card.locator('.pb-card-slot--before .pb-hook').count();
+                return `added "${skill}", ${inCard} hook row(s) before the node${inCard ? '' : '; FAIL: no row inside the card'}`;
+            });
+            const instruction = `QA ${tag}: check the CHANGELOG names this change.`;
+            await moment('add-instruction', async () => {
+                await firstGroup.hover();
+                await (await need(firstGroup.locator('.pb-edge-add--after'), '+ after on the node')).click();
+                const modal = await need(view.locator('.pb-modal'), 'the add modal');
+                await (await need(modal.locator('[role="radio"][aria-label="Instruction"]'), 'the Instruction kind')).click();
+                await (await need(modal.locator('textarea.pb-modal-area'), 'the instruction field')).fill(instruction);
+                return `"${await text(modal.locator('.pb-modal-title'))}", instruction typed`;
+            }, async () => view.locator('.pb-modal'));
+            await moment('card-hooks', async () => {
+                const modal = view.locator('.pb-modal');
+                if (await modal.count()) {
+                    await modal.locator('.pb-action--primary').click();
+                    if (!(await gone(modal))) return `FAIL: the instruction modal stayed open ("${await text(modal.locator('.pb-live'))}")`;
+                }
+                await page.waitForTimeout(800);
+                const before = await card.locator('.pb-card-slot--before .pb-hook').count();
+                const after = await card.locator('.pb-card-slot--after .pb-hook').count();
+                const statuses = (await card.locator('.pb-hook-status').allInnerTexts()).map(s => s.trim()).filter(Boolean);
+                const problems = [];
+                if (!before) problems.push('no skill row before');
+                if (!after) problems.push('no instruction row after');
+                return `${before} before, ${after} after; statuses: ${statuses.join(' / ') || 'none shown'}${problems.length ? `; FAIL: ${problems.join(', ')}` : ''}`;
+            }, async () => card);
+            await moment('build-bar', async () => {
+                const bar = await need(view.locator('.builder-bar'), 'the build bar', 8000);
+                return `"${await text(bar.locator('.builder-bar-says'))}", buttons: ${(await bar.locator('.builder-bar-actions button').allInnerTexts()).join(', ')}`;
+            });
+            await moment('review', async () => {
+                const bar = view.locator('.builder-bar');
+                await (await need(bar.locator('.builder-bar-actions button', { hasText: 'Review' }), 'Review on the bar')).click();
+                const list = await need(bar.locator('.builder-bar-review'), 'the review list');
+                return (await list.locator('.builder-bar-row').allInnerTexts()).map(s => s.replace(/\s+/g, ' ').trim()).join(' | ').slice(0, 300);
+            });
+            await moment('build', async () => {
+                const bar = view.locator('.builder-bar');
+                await (await need(bar.locator('button', { hasText: /^Build$/ }), 'Build on the bar')).click();
+                const seen = [];
+                for (let tries = 0; tries < 60; tries++) {
+                    const headline = await text(view.locator('.builder-bar--built, .builder-bar-headline'));
+                    if (headline && seen[seen.length - 1] !== headline) seen.push(headline);
+                    if (await view.locator('.builder-bar--built, .builder-bar--failed').count()) break;
+                    // Between the redraw and the report the bar is briefly gone; give the report a moment.
+                    if (!(await view.locator('.builder-bar').count()) && tries > 8 && seen.includes('gone')) break;
+                    if (!(await view.locator('.builder-bar').count()) && !seen.includes('gone')) seen.push('gone');
+                    await page.waitForTimeout(250);
+                }
+                const built = await view.locator('.builder-bar--built').count();
+                const failed = await view.locator('.builder-bar--failed').count();
+                return `${built ? '' : 'FAIL: never said Built; '}${failed ? 'FAIL: the build failed; ' : ''}bar went: ${seen.join(' → ') || 'nothing'}; header "${await text(view.locator('.builder-state'))}"`;
+            });
+            await moment('lane-add-node', async () => {
+                await page.keyboard.press('Escape');
+                await (await need(view.locator('.pb-lane-add'), '"Add to <step>" on a lane')).click();
+                const modal = await need(view.locator('.pb-modal'), 'the add modal from the lane');
+                await (await need(modal.locator('.pb-modal-mode', { hasText: 'Node' }), 'the Node mode')).click();
+                await page.waitForTimeout(300);
+                return `"${await text(modal.locator('.pb-modal-title'))}": ${await modal.locator('.pb-modal-results [role="option"]').count()} nodes on offer`;
+            }, async () => view.locator('.pb-modal'));
+            await moment('lane-add-step', async () => {
+                const modal = view.locator('.pb-modal');
+                if (!(await modal.count())) return 'MISSING: the add modal';
+                await (await need(modal.locator('.pb-modal-mode', { hasText: 'Step' }), 'the Step mode')).click();
+                await page.waitForTimeout(300);
+                const fields = (await modal.locator('.pb-modal-field-label').allInnerTexts()).join(', ');
+                await modal.locator('.pb-modal-cancel').click();
+                await page.waitForTimeout(200);
+                const closed = !(await view.locator('.pb-modal').count());
+                return `fields: ${fields}${closed ? ', Cancel closed it' : '; FAIL: Cancel left it open'}`;
+            }, async () => (await view.locator('.pb-modal').count()) ? view.locator('.pb-modal') : 'editor');
+            await moment('move', async () => {
+                await (await need(view.locator('.pb-node--movable .pb-node-main'), 'a node that can move')).click();
+                const pop = await need(view.locator('.pb-popover'), 'the node popover');
+                await (await need(pop.getByRole('button', { name: 'Move…' }), 'Move… in the popover')).click();
+                const places = pop.locator('.pb-move-place');
+                const refused = pop.locator('.pb-move-place--refused');
+                return `${await places.count()} places, ${await refused.count()} refused; first: "${await text(places.first())}"`;
+            });
+            await page.keyboard.press('Escape');
+            await gone(view.locator('.pb-popover'));
+            await moment('document', async () => {
+                const writer = view.locator('.pb-node-main', { has: view.locator('.pb-writes:not(.pb-writes--sometimes)') });
+                await (await need(writer, 'a node that writes a file')).click();
+                const pop = await need(view.locator('.pb-popover'), 'the popover of a writing node');
+                await (await need(pop.locator('.pb-pop-doc'), 'the Document link in the popover')).click();
+                const modal = await need(view.locator('.pb-modal.pb-dm'), 'the document modal');
+                return `"${await text(modal.locator('.pb-modal-title'))}" · ${await text(modal.locator('.pb-modal-where'))}`;
+            });
+            await moment('document-close', async () => {
+                await page.keyboard.press('Escape');
+                const closed = await gone(view.locator('.pb-modal.pb-dm'));
+                await page.keyboard.press('Escape');
+                await gone(view.locator('.pb-popover'));
+                return closed ? 'closed' : 'FAIL: Escape left the document modal open';
+            });
+            await moment('workflows', async () => {
+                await (await need(view.locator('button.builder-workflow-current'), 'the workflow name in the header')).click();
+                const list = await need(view.locator('.pb-menu-list'), 'the workflow list');
+                return (await list.locator('[role^="menuitem"]').allInnerTexts()).map(s => s.replace(/\s+/g, ' ').trim()).join(' | ');
+            });
+            await page.keyboard.press('Escape');
+            await page.locator('.activitybar a.action-label[aria-label^="SpecKit"]').first().click({ force: true });
+            await editorWidth(380);
+            await page.waitForTimeout(600);
+            await moment('narrow-board', async () => {
+                const facts = await view.locator('body').evaluate(() => ({ width: innerWidth, sideways: document.documentElement.scrollWidth > innerWidth + 1 }));
+                return `${facts.width}px${facts.sideways ? '; FAIL: the board scrolls sideways' : ''}`;
+            });
+            await moment('narrow-popover', async () => {
+                await (await need(view.locator('.pb-node-main'), 'a node')).click();
+                const pop = await need(view.locator('.pb-popover'), 'the node popover');
+                return (await pop.getAttribute('class')).includes('pb-popover--sheet') ? 'a bottom sheet' : 'FAIL: not a sheet at 380px';
+            });
+            await page.keyboard.press('Escape');
+            await gone(view.locator('.pb-popover'));
+            await moment('narrow-add-modal', async () => {
+                const group = view.locator('.pb-node-group').first();
+                await group.hover();
+                await (await need(group.locator('.pb-edge-add--before'), '+ before on a node')).click();
+                const modal = await need(view.locator('.pb-modal'), 'the add modal');
+                const box = await modal.boundingBox();
+                const width = await view.locator('body').evaluate(() => innerWidth);
+                return `"${await text(modal.locator('.pb-modal-title'))}", ${Math.round(box?.width ?? 0)}px wide in ${width}px`;
+            });
+            await page.keyboard.press('Escape');
+        }
+        await sidebarWidth(sidebar);
+        await clear();
+        mkdirSync(OUT, { recursive: true });
+        writeFileSync(join(OUT, `qa-builder-redesign.${tag}.json`), JSON.stringify(moments, null, 2));
+        const missed = moments.filter(entry => !entry.ok);
+        if (missed.length) throw new Error(`${missed.length} of ${moments.length} moments failed: ${missed.map(entry => `${entry.name}: ${entry.note}`).join('; ')}`);
+        return `${moments.length} moments`;
+    }, { shots: true });
 
     await step('nav-links', 'The Links section opens the plan, the tasks, a far heading, another spec and a source file', async () => {
         await freshSpecs();

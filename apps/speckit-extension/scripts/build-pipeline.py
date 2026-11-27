@@ -49,6 +49,7 @@ from _command_parts import (  # noqa: E402
     node_source,
     read_node,
     nodes_command_dir,
+    split_frontmatter,
     project_commands,
     use_project_nodes,
 )
@@ -260,6 +261,183 @@ def available_skills(project_root: str) -> list:
             elif entry.endswith(".md") and not entry.startswith("_"):
                 found.add(entry[:-3])
     return sorted(found)
+
+
+def _skill_meta(path: str) -> dict:
+    """The two facts a hook needs from a skill's own frontmatter.
+
+    Top-level keys only, with `>`/`|` block scalars folded onto one line: skill
+    descriptions are often written that way, and the config reader refuses them.
+    """
+    try:
+        with open(path, encoding="utf-8") as fh:
+            front, _body = split_frontmatter(fh.read(8000).replace("\r\n", "\n"))
+    except (OSError, ValueError):
+        front = ""
+    meta, key = {}, None
+    for line in front.splitlines():
+        if line[:1] in (" ", "\t"):
+            if key:
+                meta[key] = f"{meta[key]} {line.strip()}".strip()
+            continue
+        key = None
+        if ":" not in line or line.lstrip().startswith("#"):
+            continue
+        name, value = line.split(":", 1)
+        value = value.strip()
+        if value[:1] in (">", "|"):
+            key, value = name.strip(), ""
+        meta[name.strip()] = value.strip("\"'")
+    description = " ".join(meta.get("description", "").split())
+    return {
+        "description": description[:200],
+        "callable": meta.get("disable-model-invocation", "").lower() != "true",
+    }
+
+
+def _skills_in(directory: str) -> list:
+    """`(name, SKILL.md path)` for each skill folder, plus flat `<name>.md` files."""
+    try:
+        entries = sorted(os.listdir(directory))
+    except OSError:
+        return []
+    out = []
+    for entry in entries:
+        path = os.path.join(directory, entry)
+        if os.path.isfile(os.path.join(path, "SKILL.md")):
+            out.append((entry, os.path.join(path, "SKILL.md")))
+        elif entry.endswith(".md") and not entry.startswith("_") and os.path.isfile(path):
+            out.append((entry[:-3], path))
+    return out
+
+
+def _read_json(path: str):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError):
+        return None
+
+
+def _plugin_switches(project_root: str, home: str) -> dict:
+    """`enabledPlugins` merged user, then project, then local: the last word wins."""
+    merged = {}
+    for path in (os.path.join(home, ".claude", "settings.json"),
+                 os.path.join(project_root, ".claude", "settings.json"),
+                 os.path.join(project_root, ".claude", "settings.local.json")):
+        switches = (_read_json(path) or {}).get("enabledPlugins") if os.path.isfile(path) else None
+        if isinstance(switches, dict):
+            merged.update(switches)
+    return merged
+
+
+def _plugin_skills(project_root: str, home: str):
+    """Skills from Claude Code plugins installed for every project or for this one.
+
+    Read only from the registry Claude Code keeps, in the one format this knows.
+    Returns `None` when that registry is absent or shaped differently, so a caller
+    can say "could not be checked" instead of guessing "not installed".
+    """
+    registry = _read_json(os.path.join(home, ".claude", "plugins", "installed_plugins.json"))
+    if (not isinstance(registry, dict) or registry.get("version") != 2
+            or not isinstance(registry.get("plugins"), dict)):
+        return None
+    switches = _plugin_switches(project_root, home)
+    here = os.path.realpath(project_root)
+    out = []
+    for key, installs in sorted(registry["plugins"].items()):
+        plugin = str(key).split("@", 1)[0]
+        for install in installs if isinstance(installs, list) else []:
+            if not isinstance(install, dict) or not isinstance(install.get("installPath"), str):
+                continue
+            scope, owner = install.get("scope"), install.get("projectPath")
+            if scope != "user" and not (isinstance(owner, str) and os.path.realpath(owner) == here):
+                continue
+            root = install["installPath"]
+            folders = ["skills"]
+            manifest = _read_json(os.path.join(root, ".claude-plugin", "plugin.json")) or {}
+            declared = manifest.get("skills") if isinstance(manifest, dict) else None
+            for rel in ([declared] if isinstance(declared, str) else declared or []):
+                if isinstance(rel, str) and not os.path.isabs(rel) and ".." not in rel.split("/"):
+                    folders.append(os.path.normpath(rel))
+            seen = set()
+            for folder in folders:
+                for name, path in _skills_in(os.path.join(root, folder)):
+                    if name in seen:
+                        continue
+                    seen.add(name)
+                    out.append(dict(_skill_meta(path), id=f"{plugin}:{name}", name=name,
+                                    source="plugin", where=plugin,
+                                    enabled=switches.get(key) is not False))
+            break
+    return out
+
+
+def skill_catalog(project_root: str, home: str = None) -> tuple:
+    """Every skill this project can use, with where it comes from. `(skills, plugins_read)`.
+
+    `home` is the user's home folder; tests point it at a throwaway one.
+    """
+    home = home or os.path.expanduser("~")
+    skills = []
+    for rel in SKILL_DIRS:
+        for name, path in _skills_in(os.path.join(project_root, rel)):
+            skills.append(dict(_skill_meta(path), id=name, name=name, source="project",
+                               where=rel.replace(os.sep, "/"), enabled=True))
+    for name, path in _skills_in(os.path.join(home, ".claude", "skills")):
+        skills.append(dict(_skill_meta(path), id=name, name=name, source="user",
+                           where="~/.claude/skills", enabled=True))
+    plugins = _plugin_skills(project_root, home)
+    # A project set up for several agents carries the same skill in each folder.
+    seen, unique = set(), []
+    for skill in skills + (plugins or []):
+        if skill["id"] not in seen:
+            seen.add(skill["id"])
+            unique.append(skill)
+    return unique, plugins is not None
+
+
+def skill_problem(ref: str, catalog: list, plugins_read: bool = True) -> str:
+    """Why a skill hook naming `ref` will do nothing in a run, or "" when it can run.
+
+    Written for a person to read as is: the builder shows it on the hook and the
+    build prints it, so the two never say different things.
+    """
+    ref = (ref or "").strip()
+    copies = [s for s in catalog if s["id"] == ref]
+    if any(s["callable"] and s["enabled"] for s in copies):
+        return ""
+    if any(s["callable"] for s in copies):
+        plugin = copies[0]["where"]
+        return (f'"{ref}" comes from the plugin "{plugin}", which is turned off in '
+                f"Claude Code settings, so this hook does nothing in a run.")
+    if copies:
+        return (f'"{ref}" is marked disable-model-invocation, so the assistant cannot '
+                f"call it from a hook. Only a person can run it, by typing /{ref}.")
+    if ":" in ref:
+        plugin, name = ref.split(":", 1)
+        if any(s["id"] == name for s in catalog):
+            return (f'No installed plugin provides "{ref}". This project has a skill '
+                    f'named "{name}": name it without the "{plugin}:" prefix.')
+        if not plugins_read:
+            return f"\"{ref}\" could not be checked: Claude Code's plugin list could not be read."
+    return (f'No skill named "{ref}" in this project or an installed plugin, so this '
+            f"hook does nothing in a run. Install it or pick another skill.")
+
+
+def skill_hook_warnings(plan: dict, project_root: str, home: str = None) -> list:
+    """One build warning per skill hook that cannot run. Warnings, never refusals:
+    the skill may be installed after the build."""
+    catalog, plugins_read = skill_catalog(project_root, home)
+    out = []
+    for command, entry in plan.items():
+        for h in entry["hooks"]:
+            if h["hook"].get("type") != "skill":
+                continue
+            problem = skill_problem(h["hook"].get("ref"), catalog, plugins_read)
+            if problem:
+                out.append(f"{command}: skill hook {h['when']} {h['anchor']}: {problem}")
+    return out
 
 
 def available_hook_nodes(project_root: str) -> list:
@@ -677,6 +855,7 @@ def main() -> int:
     try:
         config = load_config(project)
         plan, warnings = plan_build(config)
+        warnings = warnings + skill_hook_warnings(plan, project)
         # Every body and template is resolved before any is written: a build that
         # cannot finish must leave the working pipeline in place.
         # Templates first: a body now carries a note naming the sections this

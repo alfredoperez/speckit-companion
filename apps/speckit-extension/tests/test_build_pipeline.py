@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -182,6 +183,7 @@ class HooksLandOutsideTheirNode(unittest.TestCase):
         body = build.render("specify", plan["specify"])
         without_hooks = hook_render.HOOK_MARKER_LINE.sub("", body)
         without_hooks = without_hooks.replace("an injected instruction\n", "")
+        without_hooks = re.sub(r"\n.*--hook-outcome .*\n", "", without_hooks)
         self.assertEqual(cp.strip_node_markers(without_hooks),
                          assemble.assemble_command("specify", markers=False))
 

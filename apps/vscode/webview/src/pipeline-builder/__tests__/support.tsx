@@ -10,9 +10,10 @@
  * rather than run.
  */
 import { render } from 'preact';
+import type { ComponentProps } from 'preact';
 import { Canvas } from '../Canvas';
 import type {
-    PipelineGraph, PipelineNode, PipelineStep,
+    HookRunsAnswer, PipelineGraph, PipelineNode, PipelineStep,
 } from '../../../../src/protocol/pipeline';
 
 export function node(overrides: Partial<PipelineNode> = {}): PipelineNode {
@@ -87,7 +88,13 @@ export function mount(child: preact.ComponentChild): HTMLElement {
 
 export type Calls = string[][];
 
-export function canvas(g: PipelineGraph = graph(), selected?: { command: string; nodeId: string }) {
+export function canvas(
+    g: PipelineGraph = graph(), selected?: { command: string; nodeId: string },
+    runs?: HookRunsAnswer,
+    more: Partial<ComponentProps<typeof Canvas>> = {},
+) {
+    const addTo: string[] = [];
+    const undone: string[] = [];
     const opened: Calls = [], replaced: Calls = [], restored: Calls = [], added: Calls = [];
     const orders: Array<[string, string[]]> = [];
     const grouped: Array<[string, Array<{ name: string; nodes: string[] }>]> = [];
@@ -97,28 +104,26 @@ export function canvas(g: PipelineGraph = graph(), selected?: { command: string;
     const movedNodes: Array<Record<string, unknown>> = [];
     const frames: string[] = [];
     const replacedSteps: string[] = [];
-    const templates: string[] = [];
     const decisions: Calls = [];
     let newSteps = 0;
     /** The step each request named to run behind, or `undefined` for the tail. */
     const newStepAfter: Array<string | undefined> = [];
     const host = mount(
-        <Canvas graph={g} selected={selected}
+        <Canvas graph={g} selected={selected} runs={runs}
             onNewStep={after => { newSteps += 1; newStepAfter.push(after); }}
-            onRemoveNode={(c, n, order, phases) => removedNodes.push({ c, n, order, phases })}
             onSetPhases={(c, phases) => grouped.push([c, phases])}
             onEditHook={(c, h) => edited.push([c, h.anchor, String(h.index)])}
             onAddNode={(c, id, phase, order, phases) => addedNodes.push({ c, id, phase, order, phases })}
             onOpenFrame={c => frames.push(c)}
-            onOpenTemplate={c => templates.push(c)}
             onOpenDecision={(c, n) => decisions.push([c, n])}
             onOpenNode={(c, n) => opened.push([c, n])}
             onReorder={(c, order) => orders.push([c, order])}
-            onAddHook={(c, anchor, when) => added.push([c, anchor, when])} />,
+            onAddHook={(c, anchor, when) => added.push([c, anchor, when])}
+            onAddTo={c => addTo.push(c)} onUndo={token => undone.push(token)} {...more} />,
     );
-    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes,
+    return { host, opened, replaced, restored, orders, added, grouped, edited, addedNodes, addTo, undone,
         removedNodes, movedNodes, decisions,
-        frames, replacedSteps, templates, newStepAfter, newSteps: () => newSteps };
+        frames, replacedSteps, newStepAfter, newSteps: () => newSteps };
 }
 
 

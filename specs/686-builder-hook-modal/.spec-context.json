@@ -1,0 +1,511 @@
+{
+  "workflow": "companion",
+  "specName": "Workflow Builder: add a hook from a focused modal",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:05:40.339Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:06:31.748Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:06:37.507Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:07:13.440Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:07:33.470Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:07:33.944Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:07:42.780Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:11:00.277Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:11:00.277Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:11:00.277Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:11:00.392Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:12:41.465Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:12:41.465Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:13:30.359Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:14:12.002Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:15:40.987Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:15:41.007Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:16:12.364Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:16:22.991Z"
+    }
+  ],
+  "request": "Workflow Builder: add a hook from a focused modal that opens from the spot you clicked.",
+  "unattended": true,
+  "expectations": [
+    "board-side Added/Undo line under the node",
+    "stock board hooks",
+    "host write changes"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder (AttachForm, Canvas, index)",
+    "constraint: no host or protocol change"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "+ before/+ after on node edges",
+      "tasks": [
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "__tests__/Board.test.tsx::puts a + before and a + after on every node"
+      ]
+    },
+    "FR-002": {
+      "title": "modal titled with the place",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "__tests__/HookModal.test.tsx::titles itself with the side and the node"
+      ]
+    },
+    "FR-003": {
+      "title": "four kind buttons"
+    },
+    "FR-004": {
+      "title": "result list keys",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "__tests__/HookModal.test.tsx::moves with the arrows and adds the highlighted row on Enter"
+      ]
+    },
+    "FR-005": {
+      "title": "catalog source",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "__tests__/HookModal.test.tsx::reads the catalog"
+      ]
+    },
+    "FR-006": {
+      "title": "quiet note on not callable or not enabled"
+    },
+    "FR-007": {
+      "title": "unknown name",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "__tests__/HookModal.test.tsx::still takes a name nobody installed"
+      ]
+    },
+    "FR-008": {
+      "title": "keep open",
+      "tasks": [
+        "T004",
+        "T007"
+      ],
+      "tests": [
+        "__tests__/HookModal.test.tsx::writes",
+        "stays open"
+      ]
+    },
+    "FR-009": {
+      "title": "Esc returns focus",
+      "tasks": [
+        "T001",
+        "T005"
+      ],
+      "tests": [
+        "__tests__/HookModal.test.tsx::closes on Escape and gives the focus back"
+      ]
+    },
+    "FR-010": {
+      "title": "focus trapped in modal",
+      "tests": [
+        "__tests__/HookModal.test.tsx::keeps the focus inside while open"
+      ]
+    },
+    "FR-011": {
+      "title": "edit same modal",
+      "tasks": [
+        "T001",
+        "T007"
+      ],
+      "tests": [
+        "__tests__/HookModal.test.tsx::opens prefilled"
+      ]
+    },
+    "FR-012": {
+      "title": "phase menu, popover, pane Add hook open with place set",
+      "tests": [
+        "__tests__/NodePopover.test.tsx::opens the hook form for Edit"
+      ]
+    },
+    "FR-013": {
+      "title": "narrow sheet",
+      "tasks": [
+        "T003",
+        "T008"
+      ],
+      "tests": [
+        "__tests__/Board.test.tsx::turns it into a sheet when narrow"
+      ]
+    },
+    "FR-014": {
+      "title": "same writes",
+      "tasks": [
+        "T004",
+        "T007"
+      ],
+      "tests": [
+        "__tests__/MoveAnnouncement.test.tsx",
+        "__tests__/wiring.test.tsx"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 12,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Add a hook from a focused modal that opens from the spot you clicked",
+  "size": "normal",
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/686-builder-hook-modal --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 call paths, 10 lines, 1 screen, 14 parts ·   WARNING plan.md:31  `usage` is not within 8 lines of `apps/vscode/webview/src/pipeline-builder/index.tsx:459` (symbol-not-near) ·   0 error(s), 1 warning(s)"
+    },
+    {
+      "what": "requirements check against the diff, inline (no subagent tool in this session)",
+      "result": "FR-001..FR-014 met; focus return from popover and phase menu traced through their cleanup order"
+    },
+    {
+      "what": "webview types",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json",
+      "commit": "a3824a3f",
+      "tree": "b83b414bd49285b4fcc4f98645e3bbc5f6aee681"
+    },
+    {
+      "what": "extension types",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "a3824a3f",
+      "tree": "b83b414bd49285b4fcc4f98645e3bbc5f6aee681"
+    },
+    {
+      "what": "builder tests",
+      "command": "npx jest apps/vscode/webview/src/pipeline-builder",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 8.0,
+      "result": "Snapshots:   0 total · Time:        7.277 s · Ran all test suites matching /apps\\/vscode\\/webview\\/src\\/pipeline-builder/i.",
+      "commit": "a3824a3f",
+      "tree": "b83b414bd49285b4fcc4f98645e3bbc5f6aee681"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "keep side.kind attach as the modal state",
+      "why": "move rollback and drag guard already read it",
+      "rejected": "separate modal state",
+      "by": "agent",
+      "at": "2026-11-24T18:07:13.187Z"
+    },
+    {
+      "decision": "edge + buttons replace seams",
+      "why": "design puts the place on the node",
+      "rejected": "keeping seams too",
+      "by": "agent",
+      "at": "2026-11-24T18:07:13.187Z"
+    },
+    {
+      "decision": "combobox with aria-activedescendant",
+      "why": "typing keeps working while arrows move",
+      "rejected": "roving focus",
+      "by": "agent",
+      "at": "2026-11-24T18:07:13.187Z"
+    },
+    {
+      "decision": "edge + buttons hidden until hover or focus-within, always shown with hover: none",
+      "why": "the slice asks for hover and keyboard focus; touch has no hover",
+      "rejected": "always-visible quiet marks that collide between stacked cards",
+      "by": "agent",
+      "at": "2026-11-24T18:15:41.119Z"
+    },
+    {
+      "decision": "Runs menus kept as a quiet line in the modal",
+      "why": "the side form let you change the place; no lost behaviour",
+      "rejected": "fixed place from the click",
+      "by": "agent",
+      "at": "2026-11-24T18:15:41.119Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "HookModal replaces the side hook form, opened from node edge buttons",
+      "key_finding": "every Add hook route already funnels through openAttach"
+    },
+    "tasks": {
+      "summary": "9 tasks, foundational modal then tests per story"
+    },
+    "implement": {
+      "summary": "HookModal replaces the side hook form, opened from node edge + buttons and every Add hook route"
+    }
+  },
+  "approach": "A new HookModal component renders for side.kind attach, keeping the Attachment callbacks so host messages are unchanged. Canvas draws + before/+ after buttons on node edges. CSS adds the modal and a narrow sheet via the builder container query.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "HookModal, edge + buttons, modal and sheet styles",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/HookModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "HookModal, edge + buttons, modal and sheet styles",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/HookModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "HookModal, edge + buttons, modal and sheet styles",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/HookModal.tsx",
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "index renders HookModal for attach, keep open; hook form removed",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/AttachForm.tsx"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "HookModal tests; board edge-button tests replace seam tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookModal.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ],
+      "wave": "T005-T006"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "HookModal tests; board edge-button tests replace seam tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookModal.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ],
+      "wave": "T005-T006"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "side form tests moved onto the modal",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/SidePanes.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/vocabulary.test.tsx"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "stories moved to the modal, catalog and narrow sheet stories added",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Guide.stories.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Interactions.stories.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "tsc clean; 591 builder tests pass",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "Board-side Added/Build to apply/Undo line under the node (3D artboard 3) not built; the existing status line still says it",
+      "step": "implement"
+    },
+    {
+      "note": "No visual check in a real webview or Storybook this run; pixel baselines left for the final stage",
+      "step": "implement"
+    },
+    {
+      "note": "Design note asks questions in auto has no field in SkillChoice, so it is not drawn",
+      "step": "implement"
+    }
+  ],
+  "last_action": "builder tests and webview type-check green",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-24T18:16:12.412Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T18:16:12.465Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T18:16:23.083Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

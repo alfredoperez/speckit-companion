@@ -1,0 +1,509 @@
+{
+  "workflow": "companion",
+  "specName": "Your own hook on stock Spec Kit, and the template layer in force",
+  "branch": "feat/builder-hook-data",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T16:59:43.715Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T17:01:20.757Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:01:26.763Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:01:30.009Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:02:05.622Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:02:28.815Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:02:29.474Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:02:34.661Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:03:00.165Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:03:17.802Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:03:17.802Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:05:46.682Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:05:46.807Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:07:30.498Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:08:10.515Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:08:10.629Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:10:59.684Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:10:59.685Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:10:59.726Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:11:45.515Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T17:12:01.146Z"
+    }
+  ],
+  "request": "Workflow Builder on stock Spec Kit: attach, edit and remove your own hook on a step, and see which template layer is in force. (Work ONLY in the worktree /Users/alfredoperez/dev/GitHub/speckit-companion-wb-data.)",
+  "unattended": true,
+  "expectations": [
+    "No webview changes",
+    "Moving a hook between steps",
+    "Editing condition or priority",
+    "Editing override files",
+    "Companion project hooks"
+  ],
+  "context": [
+    "area: apps/vscode/src/features/pipeline-builder (stockHooks, stockWorkflow, stockGuard, builderPanel)",
+    "area: apps/vscode/src/protocol/pipeline.ts",
+    "constraint: registry edited as text, never round-tripped",
+    "constraint: no webview edits"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Add a hook before or after a stock step",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/vscode/tests/unit/pipeline-builder/builderPanel.spec.ts::creates the registry",
+        "writes the hook and draws it as yours"
+      ]
+    },
+    "FR-002": {
+      "title": "Create the registry or change only the new entry lines",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "apps/vscode/src/features/pipeline-builder/__tests__/userHooks.test.ts::adds one entry and keeps every other line byte for byte"
+      ]
+    },
+    "FR-003": {
+      "title": "Edit a user hook in place",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "userHooks.test.ts::changes only that entry",
+        "keeping its priority"
+      ]
+    },
+    "FR-004": {
+      "title": "Remove a user hook, dropping an empty key",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "builderPanel.spec.ts::changes and then removes it",
+        "leaving the file as it was"
+      ]
+    },
+    "FR-005": {
+      "title": "Refuse edit/remove of an extension hook",
+      "tasks": [
+        "T004",
+        "T005"
+      ],
+      "tests": [
+        "builderPanel.spec.ts::refuses an extension hook",
+        "an unknown step and a broken file",
+        "writing nothing"
+      ]
+    },
+    "FR-006": {
+      "title": "Refuse unknown step, malformed YAML, unsafe shape untouched",
+      "tasks": [
+        "T004",
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "builderPanel.spec.ts::refuses an extension hook",
+        "an unknown step and a broken file",
+        "writing nothing"
+      ]
+    },
+    "FR-007": {
+      "title": "Mark each stock hook own vs extension, carry prompt",
+      "tasks": [
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "stockWorkflow.test.ts::marks an installed extension hook as its",
+        "and a hand-written one as yours"
+      ]
+    },
+    "FR-008": {
+      "title": "Allow the three messages on stock only",
+      "tasks": [
+        "T002",
+        "T003"
+      ],
+      "tests": [
+        "stockGuard.test.ts::refuses every message but the stock ones"
+      ]
+    },
+    "FR-009": {
+      "title": "Template layer in force and its stack",
+      "tasks": [
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "stockWorkflow.test.ts::which template layer is in force"
+      ]
+    },
+    "FR-010": {
+      "title": "Override-only templates appear as rows",
+      "tasks": [
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "stockWorkflow.test.ts::lists an override for a template core does not ship"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 12,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Stock board can add, edit and remove the user own hooks and shows the template layer in force",
+  "size": "normal",
+  "planBlocks": [
+    "calls"
+  ],
+  "planBlocksPicked": [
+    "calls"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/683-builder-stock-hooks --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 call paths, 10 lines. Every cited file and line checks out."
+    },
+    {
+      "what": "Requirement check run inline (no subagent tool in this session); each FR read against the diff",
+      "result": "all met; FR-002/FR-006 proven byte-for-byte through the panel spec"
+    },
+    {
+      "what": "typecheck",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 8.0,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "275773ae",
+      "tree": "dcff64c2917d385d9bab56538a24b174966483b0"
+    },
+    {
+      "what": "related tests",
+      "command": "npx jest apps/vscode/src/features/pipeline-builder apps/vscode/tests/unit/pipeline-builder",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 11.0,
+      "result": "Snapshots:   0 total · Time:        10.114 s, estimated 14 s · Ran all test suites matching /apps\\/vscode\\/src\\/features\\/pipeline-builder|apps\\/vscode\\/tests\\/unit\\/pipeline-builder/i.",
+      "commit": "275773ae",
+      "tree": "dcff64c2917d385d9bab56538a24b174966483b0"
+    },
+    {
+      "what": "docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.6,
+      "result": "Snapshots:   0 total · Time:        2.446 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "275773ae",
+      "tree": "dcff64c2917d385d9bab56538a24b174966483b0"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Edit extensions.yml as text, parse only to validate",
+      "why": "keeps comments and untouched entries byte for byte",
+      "rejected": "js-yaml load/dump",
+      "by": "agent",
+      "at": "2026-11-24T17:02:05.384Z"
+    },
+    {
+      "decision": "Own hook = extension not installed",
+      "why": "Spec Kit purges only by extension id, so such entries survive",
+      "rejected": "a marker field Spec Kit drops on save",
+      "by": "agent",
+      "at": "2026-11-24T17:02:05.384Z"
+    },
+    {
+      "decision": "Template layers resolved in TS copying resolve_template_content order",
+      "why": "stock projects have no Companion scripts",
+      "rejected": "shelling out to the CLI",
+      "by": "agent",
+      "at": "2026-11-24T17:02:05.384Z"
+    },
+    {
+      "decision": "New view fields (own, prompt, inForce, layers) are optional in the protocol",
+      "why": "webview fixtures owned by another team construct these types; required fields would break their typecheck",
+      "rejected": "required fields",
+      "by": "agent",
+      "at": "2026-11-24T17:11:14.348Z"
+    },
+    {
+      "decision": "Every write parses the result back and refuses if the entry is not exactly what was asked",
+      "why": "a text writer cannot see every YAML shape; the parse-back is the safety net",
+      "rejected": "trusting the line edit",
+      "by": "agent",
+      "at": "2026-11-24T17:11:14.348Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Three stock hook messages, own/prompt on hooks, template layer stack",
+      "key_finding": "Spec Kit purges hooks only by extension id, so a hand-written entry naming no installed extension is safe"
+    },
+    "tasks": {
+      "summary": "10 tasks: foundational protocol+guard, hooks writer story, reader story, polish"
+    },
+    "implement": {
+      "summary": "Stock board can add, edit and remove the user own hooks; hooks say whose they are; templates say which layer is in force"
+    }
+  },
+  "approach": "A text writer in stockHooks.ts adds, updates and removes user hooks; the panel allows three new stock messages. stockWorkflow.ts marks hooks own and resolves each template layer stack in Spec Kit order.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Protocol: StockHookDraft, template layers, own/prompt, three stock hook messages",
+      "files": [
+        "apps/vscode/src/protocol/pipeline.ts"
+      ]
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Stock guard allows the three hook messages, test lists them",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/stockGuard.ts",
+        "apps/vscode/src/features/pipeline-builder/__tests__/stockGuard.test.ts"
+      ],
+      "wave": "T002-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Stock guard allows the three hook messages, test lists them",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/stockGuard.ts",
+        "apps/vscode/src/features/pipeline-builder/__tests__/stockGuard.test.ts"
+      ],
+      "wave": "T002-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Writer tests: add/edit/remove byte-for-byte, create file, refusals",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/__tests__/userHooks.test.ts"
+      ]
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "addUserHook/updateUserHook/removeUserHook text writers with parse-back check",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/stockHooks.ts"
+      ]
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Panel handlers for add/update/remove stock hooks with step check, plus panel tests",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/builderPanel.ts",
+        "apps/vscode/tests/unit/pipeline-builder/builderPanel.spec.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Reader tests: own vs extension hooks, layer in force for override/preset/append/extension/core, override-only row",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/__tests__/stockWorkflow.test.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Stock reader marks own hooks with prompt and resolves each template layer stack in Spec Kit order",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/stockWorkflow.ts"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Checks run: tsc clean, related jest 1062 pass, docs-consistency 23 pass; changelog line held back (the voice test needs a PR link)",
+      "wave": "T009-T010"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Checks run: tsc clean, related jest 1062 pass, docs-consistency 23 pass; changelog line held back (the voice test needs a PR link)",
+      "wave": "T009-T010"
+    }
+  },
+  "risk": {
+    "tier": "normal",
+    "computed": "normal",
+    "reasons": [
+      "15 files changed"
+    ]
+  },
+  "concerns": [
+    {
+      "note": "No independent code review ran: this session has no subagent tool and /code-review from the session reviews the main checkout, not this worktree",
+      "step": "implement"
+    },
+    {
+      "note": "Root CHANGELOG line held back: the voice test requires a PR link and this branch opens no PR; add it when the PR exists",
+      "step": "implement"
+    },
+    {
+      "note": "simplified: an unreadable preset manifest falls back to its conventional template where Spec Kit errors; surface the error when the board needs it",
+      "step": "implement"
+    }
+  ],
+  "last_action": "checks green; implement closing",
+  "convergeStartedAt": "2026-11-24T17:11:45.565Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T17:11:45.619Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T17:12:01.434Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

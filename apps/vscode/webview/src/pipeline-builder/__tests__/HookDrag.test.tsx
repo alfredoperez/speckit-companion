@@ -48,8 +48,8 @@ function render(g: PipelineGraph) {
         <Canvas graph={g}
             onOpenNode={() => {}} onReorder={(_c, order) => reordered.push(order)}
             onAddHook={() => {}} onEditHook={() => {}} onAddNode={() => {}}
-            onOpenFrame={() => {}} onOpenTemplate={() => {}} onNewStep={() => {}}
-            onRemoveNode={() => {}} onSetPhases={() => {}}
+            onOpenFrame={() => {}} onNewStep={() => {}}
+            onSetPhases={() => {}}
             onMoveHook={(c, from, to) => moved.push([c, from, to])}
             onRefuse={reason => refused.push(reason)} />,
     );
@@ -107,13 +107,6 @@ describe('dragging a hook to another anchor', () => {
         const { host, moved } = render(board({ draft: [hook('draft-spec', 'after', 0, 'one')] }));
         dragOnto(rows(host)[0], card(host, 'Resolve the spec folder'), 'lower');
         expect(moved[0][2]).toEqual({ when: 'after', anchor: 'resolve-dir', boundary: 'node' });
-    });
-
-    it('puts it last at a seam it is dropped on', () => {
-        const { host, moved } = render(board({ draft: [hook('draft-spec', 'after', 0, 'one')] }));
-        const seam = host.querySelector('.pb-slot--before')!;
-        dragOnto(rows(host)[0], seam);
-        expect(moved[0][2]).toEqual({ when: 'before', anchor: 'quality-checklist', boundary: 'node' });
     });
 
     it('takes a phase heading as before that phase', () => {

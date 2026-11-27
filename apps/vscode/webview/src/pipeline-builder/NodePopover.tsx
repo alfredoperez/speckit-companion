@@ -1,0 +1,465 @@
+/**
+ * One node's details beside its card: what it writes and needs, its hooks and
+ * whether each ran, and everything the node can do. A bottom sheet when the
+ * builder is narrow, which holds the keyboard until it closes.
+ */
+import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { Menu, MenuOption } from './Menu';
+import { HookIcon } from './HookIcon';
+import { KIND_LABELS } from './hookKinds';
+import { hookStatus, runSource } from './hookStatus';
+import { StatusMark, hookName, stockName } from './Canvas';
+import { MovePlaces } from './moves';
+import { HookRunsAnswer, PipelineHook, PipelineNode, StockHook } from '../../../src/protocol/pipeline';
+
+export type NodeAction =
+    | 'open-file' | 'up' | 'down' | 'remove' | 'shipped' | 'add-hook'
+    | `phase:${string}` | `variant:${string}`;
+
+interface Props {
+    node: PipelineNode;
+    step: string;
+    runs?: HookRunsAnswer | null;
+    /** The clock the run's age is read against; a story pins it. */
+    now?: Date;
+    /** The file this project's hooks are written in, as the hook card names it. */
+    hooksIn: string;
+    /** Hooks an installed extension runs at this node's edge: listed, never edited here. */
+    stock?: StockHook[];
+    /** The `data-node` of the card this hangs beside; absent in a story, where it sits in the flow. */
+    anchorKey?: string;
+    narrow?: boolean;
+    /** Where the node can go, and why the writer would refuse the rest. */
+    moves: MovePlaces;
+    /** Why the node cannot leave the run, or empty when it can. */
+    removeBlocked: string;
+    announce?: string;
+    onClose: () => void;
+    onEditNode: () => void;
+    onAddHook: () => void;
+    onEditHook: (hook: PipelineHook) => void;
+    onRemoveHook: (hook: PipelineHook) => void;
+    /** Move one of its hooks; the hook form is where its place is chosen. */
+    onMoveHook?: (hook: PipelineHook) => void;
+    onAction: (action: NodeAction) => void;
+    /** Render with More already open, for a story or a capture. */
+    moreOpen?: boolean;
+    /** Render with the move list showing, for a story or a capture. */
+    moveOpen?: boolean;
+    /** The document this node writes, when its step has a template. */
+    document?: { file: string; sections: number; yours: number } | null;
+    onOpenDocument?: () => void;
+}
+
+function Arrow({ direction }: { direction: 'up' | 'down' }) {
+    return (
+        <svg class="pb-move-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"
+            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true" focusable="false">
+            <path d={direction === 'up' ? 'M7 11.5V2.5M3.5 6L7 2.5L10.5 6' : 'M7 2.5V11.5M3.5 8L7 11.5L10.5 8'} />
+        </svg>
+    );
+}
+
+function Lock() {
+    return (
+        <svg class="pb-move-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"
+            stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+            <rect x="3" y="6.5" width="8" height="5.5" rx="1" />
+            <path d="M5 6.5V4.5a2 2 0 0 1 4 0v2" />
+        </svg>
+    );
+}
+
+/** The places a node can go; a refused one stays focusable so its reason is read. */
+function MoveList({ moves, onPick }: { moves: MovePlaces; onPick: (id: string) => void }) {
+    return (
+        <section class="pb-pop-section" aria-label="Move to">
+            <h3 class="pb-pop-label">Move to</h3>
+            {moves.pinned ? (
+                <p class="pb-move-held"><Lock />{`Held in place: ${moves.pinned}.`}</p>
+            ) : (
+                <ul class="pb-move-list">
+                    {moves.places.map(place => (
+                        <li key={place.id}>
+                            <button type="button"
+                                class={`pb-move-place${place.refused ? ' pb-move-place--refused' : ''}`}
+                                aria-disabled={place.refused ? 'true' : undefined}
+                                onClick={() => { if (!place.refused) { onPick(place.id); } }}>
+                                <Arrow direction={place.direction} />
+                                <span class="pb-move-text">
+                                    <span class="pb-move-label">{place.label}</span>
+                                    {place.refused && <span class="pb-move-reason">{place.refused}</span>}
+                                </span>
+                                {!place.refused && <kbd class="pb-move-enter" aria-hidden="true">Enter</kbd>}
+                            </button>
+                        </li>
+                    ))}
+                    {moves.places.length === 0 && (
+                        <li class="pb-pop-empty">It is the only node in this step, so there is nowhere to move it.</li>
+                    )}
+                </ul>
+            )}
+            {moves.held.map(line => <p key={line} class="pb-move-held"><Lock />{line}</p>)}
+        </section>
+    );
+}
+
+const WIDTH = 372;
+const GAP = 12;
+const EDGE = 8;
+
+const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+/** The node actions that are not in the footer, said the same way. */
+export function moreOptions(props: Pick<Props, 'node'> & { removeBlocked?: string }): MenuOption[] {
+    const { node } = props;
+    const options: MenuOption[] = [
+        { id: 'move', label: 'Move…', note: 'Up, down, or into another phase.' },
+        { id: 'open-file', label: 'Open the file', note: 'In the editor, frontmatter and all.' },
+        ...node.variants.map(variant => ({
+            id: `variant:${variant.id}`,
+            label: `Replace with ${variant.name}`,
+            note: variant.summary,
+        })),
+    ];
+    if (node.replaced && node.shipped) {
+        options.push({
+            id: 'shipped', label: 'Use the shipped node',
+            note: 'Sends your copy to the trash. Undo in the status line puts it back.',
+        });
+    }
+    options.push(props.removeBlocked
+        ? { id: 'remove', label: 'Remove from the run', disabled: true, note: props.removeBlocked }
+        : { id: 'remove', label: 'Remove from the run', note: 'Keeps the file: it stays on offer under Add node.' });
+    return options;
+}
+
+function HookCard({ hook, step, runs, hooksIn, onEdit, onRemove, onMove }: {
+    hook: PipelineHook;
+    step: string;
+    runs?: HookRunsAnswer | null;
+    hooksIn: string;
+    onEdit: () => void;
+    onRemove: () => void;
+    onMove: () => void;
+}) {
+    const status = hookStatus(step, hook, runs);
+    const name = hookName(hook);
+    return (
+        <li class="pb-pop-hook">
+            <div class="pb-pop-hook-head">
+                <span class="pb-pop-hook-when">{hook.when === 'before' ? 'Before' : 'After'}</span>
+                <HookIcon type={hook.type} />
+                <span class="pb-pop-hook-kind">{KIND_LABELS[hook.type].toLowerCase()}</span>
+                <StatusMark status={status} />
+            </div>
+            <p class={`pb-pop-hook-name${hook.type === 'command' || hook.type === 'node'
+                ? ' pb-pop-hook-name--ref' : ''}`}>{name}</p>
+            {status && <p class="pb-pop-hook-reason">{status.reason}</p>}
+            <div class="pb-pop-hook-foot">
+                <span class="pb-pop-hook-where">
+                    {hook.parked ? `Parked, in ${hooksIn}` : `Yours, in ${hooksIn}`}
+                </span>
+                {!hook.parked && (
+                    <>
+                        <button type="button" class="pb-pop-link" onClick={onEdit}
+                            aria-label={`Edit ${name}`}>Edit</button>
+                        <button type="button" class="pb-pop-link" onClick={onMove}
+                            aria-label={`Move ${name}`}>Move</button>
+                        <button type="button" class="pb-pop-link" onClick={onRemove}
+                            aria-label={`Remove ${name}`}>Remove</button>
+                    </>
+                )}
+            </div>
+        </li>
+    );
+}
+
+/** A hook an installed extension runs here: named by its command, marked shipped, not edited. */
+function StockHookCard({ hook }: { hook: StockHook }) {
+    const asks = [hook.optional && 'asks first', hook.conditional && 'only if its condition holds']
+        .filter(Boolean).join(' · ');
+    return (
+        <li class="pb-pop-hook pb-pop-hook--stock">
+            <div class="pb-pop-hook-head">
+                <span class="pb-pop-hook-when">{hook.when === 'before' ? 'Before' : 'After'}</span>
+                <span class="pb-pop-hook-kind">{KIND_LABELS.command.toLowerCase()}</span>
+            </div>
+            <p class="pb-pop-hook-name pb-pop-hook-name--ref">{stockName(hook)}</p>
+            {hook.description.trim() && <p class="pb-pop-hook-reason">{hook.description.trim()}</p>}
+            <div class="pb-pop-hook-foot">
+                <span class="pb-pop-hook-where">
+                    {`Shipped, from ${hook.extension || 'an extension'}${asks ? ` · ${asks}` : ''}`}
+                </span>
+            </div>
+        </li>
+    );
+}
+
+export function NodePopover(props: Props) {
+    const { node, step, runs, narrow, anchorKey } = props;
+    // Matched on the property, since a step and a node are named by whoever wrote them.
+    const card = () => (anchorKey
+        ? Array.from(document.querySelectorAll<HTMLElement>('.pb-card'))
+            .find(el => el.dataset.node === anchorKey) ?? null
+        : null);
+    const box = useRef<HTMLDivElement>(null);
+    const opener = useRef<Element | null>(null);
+    const [place, setPlace] = useState<{ top: number; left: number; side: 'left' | 'right'; arrow: number } | null>(null);
+    const [moving, setMoving] = useState(Boolean(props.moveOpen));
+
+    // The list takes the keyboard when it opens, on its first place that can be taken.
+    useLayoutEffect(() => {
+        if (!moving || props.moveOpen) { return; }
+        (box.current?.querySelector<HTMLElement>('.pb-move-place:not([aria-disabled])')
+            ?? box.current?.querySelector<HTMLElement>('.pb-move-place'))?.focus();
+    }, [moving]);
+
+    useLayoutEffect(() => {
+        if (narrow || !anchorKey || !box.current) { setPlace(null); return undefined; }
+        const position = () => {
+            const anchor = card();
+            if (!anchor || !box.current) { return; }
+            const at = anchor.getBoundingClientRect();
+            const el = box.current!;
+            const vw = document.documentElement.clientWidth || window.innerWidth;
+            const vh = document.documentElement.clientHeight || window.innerHeight;
+            const width = Math.min(WIDTH, vw - EDGE * 2);
+            const right = at.right + GAP + width <= vw - EDGE;
+            const left = right ? at.right + GAP : Math.max(EDGE, at.left - GAP - width);
+            const top = Math.min(Math.max(at.top, EDGE), Math.max(EDGE, vh - el.offsetHeight - EDGE));
+            setPlace({ top, left, side: right ? 'right' : 'left', arrow: Math.max(12, at.top - top + 12) });
+        };
+        position();
+        window.addEventListener('resize', position);
+        document.addEventListener('scroll', position, true);
+        return () => {
+            window.removeEventListener('resize', position);
+            document.removeEventListener('scroll', position, true);
+        };
+    }, [anchorKey, narrow, node.hooks.length, moving]);
+
+    useLayoutEffect(() => {
+        opener.current = document.activeElement;
+        const self = box.current;
+        self?.focus();
+        return () => {
+            const back = opener.current as HTMLElement | null;
+            const active = document.activeElement;
+            // Only when the keyboard was inside it: a click elsewhere, or a pane it opened, keeps focus.
+            const lost = !active || active === document.body || Boolean(self?.contains(active));
+            if (lost && back?.isConnected && !document.querySelector('.pb-side')) { back.focus(); }
+        };
+    }, []);
+
+    // Before paint, so a key pressed the moment it opens is already caught.
+    useLayoutEffect(() => {
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                // An open menu inside takes Escape for itself.
+                if (box.current?.querySelector('[aria-expanded="true"]')) { return; }
+                props.onClose();
+                return;
+            }
+            if (event.key !== 'Tab' || !narrow || !box.current) { return; }
+            const stops = Array.from(box.current.querySelectorAll<HTMLElement>(FOCUSABLE));
+            if (stops.length === 0) { return; }
+            const first = stops[0];
+            const last = stops[stops.length - 1];
+            const active = document.activeElement;
+            if (event.shiftKey && (active === first || active === box.current)) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && active === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+        const away = (event: MouseEvent) => {
+            const target = event.target as Element | null;
+            if (!target || target.closest('.pb-popover, .pb-menu-list')) { return; }
+            if (card()?.contains(target)) { return; }
+            props.onClose();
+        };
+        document.addEventListener('keydown', onKey);
+        document.addEventListener('mousedown', away);
+        return () => {
+            document.removeEventListener('keydown', onKey);
+            document.removeEventListener('mousedown', away);
+        };
+    }, [narrow, anchorKey, props.onClose]);
+
+    const ownHooks = [...node.hooks].sort((a, b) => (a.when === b.when
+        ? a.index - b.index : a.when === 'before' ? -1 : 1));
+    const stock = props.stock ?? [];
+    const stockBefore = stock.filter(hook => hook.when === 'before');
+    const stockAfter = stock.filter(hook => hook.when === 'after');
+    const writes = [...node.writes, ...node.mayWrite];
+    const titleId = `pb-pop-title-${step}-${node.id}`.replace(/[^\w-]/g, '-');
+
+    const body = (
+        <div
+            ref={box}
+            class={[
+                'pb-popover',
+                narrow ? 'pb-popover--sheet' : '',
+                place ? `pb-popover--${place.side}` : '',
+                !narrow && anchorKey ? 'pb-popover--floating' : '',
+            ].filter(Boolean).join(' ')}
+            role="dialog"
+            aria-modal={narrow ? 'true' : undefined}
+            aria-labelledby={titleId}
+            tabIndex={-1}
+            style={place
+                ? `top: ${place.top}px; left: ${place.left}px; --pb-arrow-top: ${place.arrow}px`
+                : undefined}>
+            {narrow && <span class="pb-sheet-grip" aria-hidden="true" />}
+            <header class="pb-pop-head">
+                <h2 class="pb-pop-title" id={titleId}>{node.name}</h2>
+                <span class={`pb-pop-source${node.replaced ? ' pb-pop-source--yours' : ''}`}>
+                    {node.replaced ? 'Changed by you' : 'As shipped'}
+                </span>
+                {narrow && moving && (
+                    <button type="button" class="pb-pop-button pb-pop-back"
+                        onClick={() => setMoving(false)}>Back</button>
+                )}
+                {/* Anchored beside its card, Escape and a click away close it. */}
+                {(narrow || !anchorKey) && (
+                    <button type="button" class="pb-pop-close" aria-label="Close" title="Close"
+                        onClick={props.onClose}>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                            stroke-width="1.4" stroke-linecap="round" aria-hidden="true" focusable="false">
+                            <path d="M4 4l8 8M12 4l-8 8" />
+                        </svg>
+                    </button>
+                )}
+            </header>
+
+            {moving ? <MoveList moves={props.moves} onPick={id => props.onAction(id as NodeAction)} /> : <>
+            <section class="pb-pop-section" aria-label="This node">
+                <h3 class="pb-pop-label">This node</h3>
+                <dl class="pb-pop-facts">
+                    <dt>Writes</dt>
+                    <dd class={writes.length ? 'pb-pop-mono' : ''}>
+                        {writes.length ? writes.join(', ') : 'No file'}
+                    </dd>
+                    {node.reads.length > 0 && (
+                        <>
+                            <dt>Needs</dt>
+                            <dd class="pb-pop-mono">{node.reads.join(', ')}</dd>
+                        </>
+                    )}
+                    {node.kind === 'gate' && (
+                        <>
+                            <dt>Gate</dt>
+                            <dd>It can stop the run.</dd>
+                        </>
+                    )}
+                    {node.pinned && (
+                        <>
+                            <dt>Held</dt>
+                            <dd>{node.pinned}</dd>
+                        </>
+                    )}
+                </dl>
+                {props.document && (
+                    <button type="button" class="pb-pop-doc" onClick={props.onOpenDocument}>
+                        <svg class="pb-pop-doc-icon" width="14" height="14" viewBox="0 0 14 14"
+                            fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linejoin="round" aria-hidden="true" focusable="false">
+                            <path d="M3 1.5H8.5L11 4V12.5H3Z M8.5 1.5V4H11" />
+                        </svg>
+                        <span class="pb-pop-doc-text">
+                            <span class="pb-pop-doc-name">
+                                Document: <span class="pb-pop-mono">{props.document.file}</span>
+                            </span>
+                            <span class="pb-pop-doc-meta">
+                                {`${props.document.sections} section${props.document.sections === 1 ? '' : 's'}`}
+                                {props.document.yours > 0 && <>
+                                    {' · '}
+                                    <span class="pb-pop-doc-yours">{`${props.document.yours} yours`}</span>
+                                </>}
+                            </span>
+                        </span>
+                        <svg class="pb-pop-doc-chevron" width="14" height="14" viewBox="0 0 14 14"
+                            fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            aria-hidden="true" focusable="false">
+                            <path d="M5.5 3.5L9 7L5.5 10.5" />
+                        </svg>
+                    </button>
+                )}
+            </section>
+
+            <section class="pb-pop-section" aria-label="Its hooks">
+                <h3 class="pb-pop-label">Its hooks · {ownHooks.length + stock.length}</h3>
+                {ownHooks.length > 0 && runSource(runs) && (
+                    <p class="pb-pop-run">{runSource(runs, props.now)}</p>
+                )}
+                {ownHooks.length + stock.length > 0 ? (
+                    <ul class="pb-pop-hooks">
+                        {stockBefore.map((hook, i) => <StockHookCard key={`stock-b-${i}`} hook={hook} />)}
+                        {ownHooks.map(hook => (
+                            <HookCard key={`${hook.when}-${hook.index}`} hook={hook} step={step}
+                                runs={runs} hooksIn={props.hooksIn}
+                                onEdit={() => props.onEditHook(hook)}
+                                onMove={() => (props.onMoveHook ?? props.onEditHook)(hook)}
+                                onRemove={() => props.onRemoveHook(hook)} />
+                        ))}
+                        {stockAfter.map((hook, i) => <StockHookCard key={`stock-a-${i}`} hook={hook} />)}
+                    </ul>
+                ) : (
+                    <p class="pb-pop-empty">Nothing runs before or after this node.</p>
+                )}
+            </section>
+            </>}
+
+            <footer class="pb-pop-actions">
+                <p class="pb-live" role="status" aria-live="polite">{props.announce ?? ''}</p>
+                {moving ? <>
+                    <button type="button" class="pb-pop-button pb-pop-button--on" aria-pressed="true"
+                        onClick={() => setMoving(false)}>
+                        Move…
+                    </button>
+                    <button type="button" class="pb-pop-button" onClick={props.onEditNode}>
+                        Edit node
+                    </button>
+                    <button type="button" class="pb-pop-remove"
+                        aria-disabled={props.removeBlocked ? 'true' : undefined}
+                        title={props.removeBlocked || 'Keeps the file: it stays on offer under Add node.'}
+                        onClick={() => { if (!props.removeBlocked) { props.onAction('remove'); } }}>
+                        Remove from the run
+                        {props.removeBlocked && <span class="sr-only">{`, ${props.removeBlocked}`}</span>}
+                    </button>
+                </> : <>
+                    <button type="button" class="pb-pop-button" onClick={props.onEditNode}>
+                        Edit node
+                    </button>
+                    <button type="button" class="pb-pop-button" onClick={props.onAddHook}>
+                        Add hook
+                    </button>
+                    <Menu
+                        class="pb-pop-more"
+                        trigger="More"
+                        align="right"
+                        floating
+                        title={`Everything else ${node.name} can do`}
+                        options={moreOptions(props)}
+                        onPick={id => (id === 'move' ? setMoving(true)
+                            : props.onAction(id as NodeAction))}
+                        defaultOpen={props.moreOpen}
+                    />
+                </>}
+            </footer>
+        </div>
+    );
+
+    if (!narrow) { return body; }
+    return (
+        <div class="pb-sheet-layer">
+            <div class="pb-sheet-scrim" aria-hidden="true" onClick={props.onClose} />
+            {body}
+        </div>
+    );
+}

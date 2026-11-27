@@ -56,11 +56,11 @@ Click a node to open its panel. **Edit** and **Save** write your version to `.sp
   caption="A node's panel: the instructions, then what it writes and what it needs."
 />
 
-To reorder, drag the node or use the **Order** row. **Move to phase…** drops it at the nearest edge of the phase you pick.
+To reorder, drag the node by its grip, or press **Move…** in the node's popover and pick a place. A place the run would refuse is greyed out with the reason, such as a node that reads the one above it. **Remove from the run** keeps the file, and the lane shows a struck row with **Undo** until the next change.
 
 <DocFigure src="builder-move-to-phase.png" caption="The Order row on a node, with the phase list open." />
 
-A node with alternatives has a **Replace** menu, and its hooks move with the replacement. **Add node**, in a phase's `+` menu, offers the add-ons that ship switched off.
+A node with alternatives has a **Replace** menu, and its hooks move with the replacement. **+ Add to** at the top of each lane opens a modal with **Hook**, **Node** and **Step**. **Node** offers the add-ons that ship switched off and the nodes you removed, and adds the one you pick at the end of a phase.
 
 <DocFigure
   src="builder-replace.png"
@@ -68,11 +68,11 @@ A node with alternatives has a **Replace** menu, and its hooks move with the rep
   caption="Replace swaps a node for one of its alternatives."
 />
 
-The same `+` menu renames, splits and merges phases. A row that can't run is greyed out with the reason.
+A phase's name opens its menu: rename, split, or merge into the phase above or below. A row that can't run is greyed out with the reason.
 
 <DocFigure
   src="builder-phase-menu.png"
-  alt="The phase menu open, offering Add hook, Add node, Rename phase, Split phase and Merge."
+  alt="The phase menu open, offering Rename, Split and Merge."
   caption="The phase menu."
 />
 
@@ -87,7 +87,7 @@ A hook is your own work, run before or after a node, a phase or a whole step. Th
 | **Command** | `{ type: command, run: "<shell line>" }` | A shell line. The assistant needs a terminal. |
 | **Node** | `{ type: node, ref: <id> }` | A file at `.specify/companion/nodes/<id>.md`, reusable in several places |
 
-**Add hook** is in a phase's `+` menu, in a node's panel, and on the dotted slot between nodes. Pick where it runs, then the kind.
+**Hook**, in a lane's **+ Add to** modal, adds one anywhere in that step; the `+` above or below a node adds one right there, and a node's popover has **Add hook** under **More**. Pick where it runs, then the kind.
 
 <DocFigure
   src="builder-attach.png"
@@ -155,17 +155,17 @@ The node declares which answers exist, and a build refuses a `folds` entry namin
 
 ## Document shape
 
-The **Document shape** chip on a step lists each `##` section of the template it writes. Pick an alternative for a section, or **As shipped**. Your own alternatives are files in `.specify/companion/fragments/`.
+Open the node that writes a document, such as **Write the plan**, and choose its **Document** row. It lists each `##` section of the template, says which are yours, and opens a section to the alternatives written for it or **Restore shipped**. An outline beside the list shows what each section will hold. **Done** saves your picks and **Cancel** drops them. Your own alternatives are files in `.specify/companion/fragments/`.
 
 <DocFigure
   src="builder-template.png"
-  alt="The template panel with one row per section."
-  caption="One row per section of the document the step writes."
+  alt="The Document dialog, with the sections listed beside an outline of the resulting document."
+  caption="One row per section of the document the node writes, beside an outline of the result."
 />
 
 ## Steps and workflows
 
-**Add step**, in the header or on the `+` between two lanes, asks for a name, the step it runs behind and the file it writes. After the next build your assistant runs it as `/speckit.companion.<name>`.
+**Add step**, in the header, at the end of the lanes, between two lanes or under **Step** in a lane's modal, asks for a name, the step it runs behind and the file it writes. After the next build your assistant runs it as `/speckit.companion.<name>`. The hands-off auto command runs only the steps that ship, so you start a step of your own yourself.
 
 <DocFigure
   src="builder-new-step.png"
@@ -173,19 +173,19 @@ The **Document shape** chip on a step lists each `##` section of the template it
   caption="A new step: its name, where it runs and what it writes."
 />
 
-A workflow is a whole named configuration. Switching swaps node order, hooks, templates and routing together, so a one-line fix and a client deliverable can run differently in one repository.
+A workflow is a whole named configuration. Switching swaps node order, hooks, templates and routing together, so a one-line fix and a client deliverable can run differently in one repository. The **Workflow** dropdown in the header lists **Shipped**, **This project** and your saved workflows. After a switch the header says **Selected, not built** until you build.
 
 <DocFigure
   src="builder-preset.png"
-  alt="The New workflow form, offering three whole configurations to start from as cards."
-  caption="A new workflow starts from what you run today, or from a preset."
+  alt="The New workflow dialog: a name, and a start from Shipped, This project or a preset."
+  caption="A new workflow starts from Shipped, what you run today, or a preset."
 />
 
-**Classic spec-kit** changes document shapes only, back to P1/P2/P3 stories and the full Technical Context block. **Brownfield** is for changing an existing system: the spec is written as a delta, the task list is challenged before it runs, and a person opens the result before it counts as done. **As shipped**, in the **Workflow** dropdown, parks your configuration without deleting it.
+**New workflow…**, at the foot of the dropdown, asks for a name and what to start from. **Classic spec-kit** changes document shapes only, back to P1/P2/P3 stories and the full Technical Context block. **Brownfield** is for changing an existing system: the spec is written as a delta, the task list is challenged before it runs, and a person opens the result before it counts as done. **Shipped** parks your configuration without deleting it.
 
 ## Build
 
-**Build** writes the command files your assistant loads. **Preview build** lists which commands would change and writes nothing. A failed build names the step and leaves the working commands as they were.
+The header counts the changes that are not built yet, and a bar at the foot of the board says the same. **Build**, on the bar or in the header, writes the command files your assistant loads. **Review** on the bar lists what changed and flags a hook that can't run. **Preview build**, in the header menu, lists which commands would change and writes nothing. When the build finishes the bar says **Built** for a few seconds. A failed build names the step and leaves the working commands as they were.
 
 ## The pipeline's files
 

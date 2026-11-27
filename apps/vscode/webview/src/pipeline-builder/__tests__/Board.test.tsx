@@ -3,15 +3,15 @@
  */
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { AttachForm } from '../AttachForm';
+import { withoutNode } from '../Canvas';
 import { NO_CHANGES, canvas, drag, flush, graph, mount, node, step } from './support';
 
 afterEach(() => { document.body.innerHTML = ''; });
 
-/** Open a phase's one resting control and read back what it offers. */
+/** Open a phase's label menu and read back what it offers. */
 async function phaseMenu(host: HTMLElement, at = 0) {
     const phase = host.querySelectorAll('.pb-phase')[at];
-    (phase.querySelector('.pb-phase-add') as HTMLButtonElement).click();
+    (phase.querySelector('.pb-phase-name') as HTMLButtonElement).click();
     await flush();
     return Array.from(phase.querySelectorAll('.pb-menu-option')) as HTMLButtonElement[];
 }
@@ -86,59 +86,71 @@ describe('the run reads left to right', () => {
 });
 
 describe('where work can be attached', () => {
-    // A seam per gap between two nodes. The phase's own edges lost theirs: the
-    // phase header carries an explicit "Add hook", which answers "how do I
-    // attach work here" better than a dashed line ever did.
-    it('marks each gap between two nodes', () => {
+    const three = () => graph({
+        steps: [step({
+            phases: [{
+                name: 'gather', hooks: [],
+                nodes: [node({ id: 'a', name: 'A' }), node({ id: 'b', name: 'B' })],
+            }],
+        })],
+    });
+
+    it('puts a "+ before" and a "+ after" on every node, each a real button', () => {
+        const { host } = canvas(three());
+        expect(Array.from(host.querySelectorAll('.pb-edge-add')).map(el => [
+            el.tagName, el.getAttribute('aria-label'), el.textContent,
+        ])).toEqual([
+            ['BUTTON', 'Add a hook before A', 'before'],
+            ['BUTTON', 'Add a hook after A', 'after'],
+            ['BUTTON', 'Add a hook before B', 'before'],
+            ['BUTTON', 'Add a hook after B', 'after'],
+        ]);
+    });
+
+    it('keeps them in the Tab order, around the node they belong to', () => {
+        const { host } = canvas(three());
+        const group = host.querySelector('.pb-node-group')!;
+        const stops = Array.from(group.querySelectorAll('button'))
+            .filter(el => el.tabIndex >= 0).map(el => el.className.split(' ')[0]);
+        expect(stops).toEqual(['pb-edge-add', 'pb-node-main', 'pb-edge-add']);
+    });
+
+    it('adds a hook on the side of the node that was pressed', () => {
+        const { host, added } = canvas(three());
+        (host.querySelectorAll('.pb-edge-add--after')[0] as HTMLButtonElement).click();
+        (host.querySelectorAll('.pb-edge-add--before')[1] as HTMLButtonElement).click();
+        expect(added).toEqual([['specify', 'a', 'after'], ['specify', 'b', 'before']]);
+    });
+
+    it('offers Add to <step> on every lane, which is the discoverable way in', () => {
+        const { host, addTo } = canvas(graph({
+            steps: [step({ name: 'specify' }), step({ name: 'plan' })],
+        }));
+        const buttons = Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-lane-add--head'));
+        expect(buttons.map(b => b.textContent)).toEqual(['Add to specify', 'Add to plan']);
+        expect(buttons[0].getAttribute('aria-haspopup')).toBe('dialog');
+        buttons[1].click();
+        expect(addTo).toEqual(['plan']);
+    });
+
+    it('offers the same Add at the foot of each lane, for the stacked board', () => {
+        const { host, addTo } = canvas(graph({
+            steps: [step({ name: 'specify' }), step({ name: 'plan' })],
+        }));
+        const feet = Array.from(host.querySelectorAll<HTMLButtonElement>('.pb-lane-add--foot'));
+        expect(feet.map(b => b.closest('.pb-step-body') !== null)).toEqual([true, true]);
+        feet[0].click();
+        expect(addTo).toEqual(['specify']);
+    });
+
+    it('marks the lane whose add modal is open', () => {
         const { host } = canvas(graph({
-            steps: [step({
-                phases: [{
-                    name: 'gather', hooks: [],
-                    nodes: [node({ id: 'a' }), node({ id: 'b' }), node({ id: 'c' })],
-                }],
-            })],
-        }));
-        expect(Array.from(host.querySelectorAll('.pb-slot')).map(el => el.textContent))
-            .toEqual(['before b', 'before c']);
-    });
-
-    // The argument for hiding the seam's `+` was a field of twenty-odd marks.
-    // A node draws only the seam above it, so a board carries as many seams as
-    // it has nodes, less one per phase — eight on this repository's pipeline.
-    it('draws one seam per gap: as many as nodes, less one per phase', () => {
-        const sizes = [[2, 3], [1, 2]];
-        const { host } = canvas(graph({
-            steps: sizes.map((phases, s) => step({
-                name: `step-${s}`,
-                phases: phases.map((n, p) => ({
-                    name: `phase-${p}`, hooks: [],
-                    nodes: Array.from({ length: n }, (_, i) => node({ id: `n${s}${p}${i}` })),
-                })),
-            })),
-        }));
-        const nodes = sizes.flat().reduce((a, b) => a + b, 0);
-        const phases = sizes.flat().length;
-        expect(host.querySelectorAll('.pb-slot')).toHaveLength(nodes - phases);
-    });
-
-    it('adds a hook at the anchor whose seam was clicked', () => {
-        const { host, added } = canvas(graph({
-            steps: [step({
-                phases: [{
-                    name: 'gather', hooks: [],
-                    nodes: [node({ id: 'a' }), node({ id: 'b' })],
-                }],
-            })],
-        }));
-        (host.querySelector('.pb-slot') as HTMLButtonElement).click();
-        expect(added).toEqual([['specify', 'b', 'before']]);
-    });
-
-    it('offers Add hook on every phase, which is the discoverable way in', async () => {
-        const { host } = canvas();
-        expect(host.querySelectorAll('.pb-phase-add')).toHaveLength(2);
-        const options = await phaseMenu(host);
-        expect(options[0].querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
+            steps: [step({ name: 'specify' }), step({ name: 'plan' })],
+        }), undefined, undefined, { adding: 'plan' });
+        const buttons = host.querySelectorAll('.pb-lane-add--head');
+        expect(buttons[0].getAttribute('aria-expanded')).toBe('false');
+        expect(buttons[1].getAttribute('aria-expanded')).toBe('true');
+        expect(buttons[1].classList.contains('pb-lane-add--on')).toBe(true);
     });
 });
 
@@ -158,21 +170,34 @@ describe('everything attached to one anchor sits in one block', () => {
         })],
     });
 
-    // Two boxes with two connector arms used to straddle a node with work on
-    // both sides, repeating its name four times — so it became one block under
-    // the card, with the sides named in words. The words are headings now, and
-    // a heading is an ordering claim: BEFORE cannot sit under the card it runs
-    // before, with the phase's own BEFORE above it.
-    it('puts what runs before the node above it, and what runs after below', () => {
+    it('holds the node and its hooks in one card: before rows, the node, after rows', () => {
+        const { host } = canvas(hooked());
+        const card = host.querySelector('.pb-node-group > .pb-card')!;
+        expect(Array.from(card.children).map(el => el.className.split(' ')[0]))
+            .toEqual(['pb-card-slot', 'pb-node', 'pb-card-slot']);
+        expect(card.children[0].className).toContain('pb-card-slot--before');
+        expect(card.children[0].textContent).toContain('doctor.py');
+        expect(card.children[2].className).toContain('pb-card-slot--after');
+        expect(card.children[2].textContent).toContain('create-pr');
+        expect(card.className).toContain('pb-card--hooked');
+    });
+
+    it('opens a gap for the add pill beside each side that holds hook rows, so it covers none', () => {
         const { host } = canvas(hooked());
         const group = host.querySelector('.pb-node-group')!;
-        const order = Array.from(group.children).map(el => el.className.split(' ')[0]);
+        expect(group.classList.contains('pb-node-group--before')).toBe(true);
+        expect(group.classList.contains('pb-node-group--after')).toBe(true);
+        expect(host.querySelector('.pb-card')!.classList.contains('pb-card--yours')).toBe(true);
+        const css = readFileSync(join(__dirname, '../../../styles/pipeline-builder.css'), 'utf8');
+        expect(css).toMatch(/\.pb-node-group--before \{ margin-top: 12px; \}/);
+        expect(css).toMatch(/\.pb-node-group--before > \.pb-edge-add--before \{ top: -17px; \}/);
+    });
 
-        expect(order).toEqual(['pb-attached', 'pb-node', 'pb-attached']);
-        expect(group.children[0].textContent).toContain('before');
-        expect(group.children[0].textContent).toContain('doctor.py');
-        expect(group.children[2].textContent).toContain('after');
-        expect(group.children[2].textContent).toContain('create-pr');
+    it('names each slot for a screen reader by the node it runs around', () => {
+        const { host } = canvas(hooked());
+        expect(Array.from(host.querySelectorAll('.pb-card-slot'))
+            .map(el => el.getAttribute('aria-label')))
+            .toEqual(['Runs before Mark the spec complete', 'Runs after Mark the spec complete']);
     });
 
     it('draws only the side that has work, on a node with one', () => {
@@ -187,61 +212,31 @@ describe('everything attached to one anchor sits in one block', () => {
                 }],
             })],
         }));
-        const group = host.querySelector('.pb-node-group')!;
-        expect(Array.from(group.children).map(el => el.className.split(' ')[0]))
-            .toEqual(['pb-node', 'pb-attached']);
+        const card = host.querySelector('.pb-card')!;
+        expect(Array.from(card.children).map(el => el.className.split(' ')[0]))
+            .toEqual(['pb-node', 'pb-card-slot']);
     });
 
-    it('names the two sides in words rather than by where they sit', () => {
-        const { host } = canvas(hooked());
-        expect(Array.from(host.querySelectorAll('.pb-attached-when')).map(el => el.textContent))
-            .toEqual(['before', 'after']);
-    });
-
-    it('keeps each side to its own list', () => {
-        const { host } = canvas(hooked());
-        const sides = Array.from(host.querySelectorAll('.pb-attached-side'));
-        expect(sides[0].textContent).toContain('doctor.py');
-        expect(sides[0].textContent).not.toContain('create-pr');
-        expect(sides[1].textContent).toContain('create-pr');
-    });
-
-    it('draws nothing at all for an anchor with no work', () => {
+    it('keeps a node without hooks to one line', () => {
         const { host } = canvas();
-        expect(host.querySelector('.pb-attached')).toBeNull();
+        expect(host.querySelector('.pb-card-slot')).toBeNull();
+        expect(host.querySelector('.pb-card--hooked')).toBeNull();
+        expect(host.querySelector('.pb-card')!.children).toHaveLength(1);
     });
 
-    // The kind was a lowercase word beside a dot beside the reference, in one
-    // purple run — three registers for two facts.
-    it('badges the kind in the reader\'s words, and then the name alone', () => {
+    it('marks the kind with an icon and says it in words a screen reader gets', () => {
         const { host } = canvas(hooked());
-        const after = host.querySelectorAll('.pb-attached-side')[1];
-        expect(after.querySelector('.pb-hook-kind')?.textContent).toBe('Skill');
+        const after = host.querySelector('.pb-card-slot--after')!;
+        expect(after.querySelector('.pb-hook-icon')).not.toBeNull();
+        expect(after.querySelector('.pb-hook-kind')?.textContent).toBe('Skill: ');
+        expect(after.querySelector('.pb-hook-kind')?.className).toContain('sr-only');
         expect(after.querySelector('.pb-hook-name')?.textContent).toBe('create-pr');
-        expect(host.querySelector('.pb-hook-dot')).toBeNull();
     });
 
-    // The word sat in a 3.6rem column beside the rows, which is a fifth of a
-    // lane spent on a label said once.
-    it('heads each side with its word rather than guttering it', () => {
+    it('says whose a hook is on its title, naming the file it is written in', () => {
         const { host } = canvas(hooked());
-        const side = host.querySelector('.pb-attached-side')!;
-        expect(side.firstElementChild?.className).toBe('pb-attached-when');
-        expect(side.lastElementChild?.className).toBe('pb-hook-group');
-    });
-
-    it("leads your own group with Companion's mark", () => {
-        const { host } = canvas(hooked());
-        expect(host.querySelector('.pb-hook-source .pb-mark')?.getAttribute('class'))
-            .toContain('pb-mark--moss');
-    });
-
-    it('heads your own rows with the file they are written in', () => {
-        const { host } = canvas(hooked());
-        const source = host.querySelector('.pb-hook-source')!;
-        expect(source.querySelector('.pb-hook-source-name')?.textContent)
-            .toBe('companion.yml');
-        expect(source.nextElementSibling?.className).toBe('pb-attached-list');
+        expect(host.querySelector('button.pb-hook')?.getAttribute('title'))
+            .toContain('.specify/companion.yml');
     });
 
     // A project on a named workflow keeps every hook in that workflow's file;
@@ -251,23 +246,8 @@ describe('everything attached to one anchor sits in one block', () => {
             ...hooked(),
             workflows: { available: ['shipped', 'client'], active: 'client' },
         });
-        const source = host.querySelector('.pb-hook-source')!;
-        expect(source.querySelector('.pb-hook-source-name')?.textContent).toBe('client.yml');
-        expect(source.getAttribute('title'))
+        expect(host.querySelector('button.pb-hook')?.getAttribute('title'))
             .toContain('.specify/companion/workflows/client.yml');
-    });
-
-    // `shipped` bypasses companion.yml rather than emptying it, so the hooks
-    // under this heading are the ones that file still holds and is not running.
-    it('names the file the hooks are parked in on the pipeline as it ships', () => {
-        const { host } = canvas({
-            ...hooked(),
-            workflows: { available: ['', 'shipped'], active: 'shipped' },
-        });
-        const source = host.querySelector('.pb-hook-source')!;
-        expect(source.querySelector('.pb-hook-source-name')?.textContent)
-            .toBe('companion.yml · parked');
-        expect(source.getAttribute('title')).toContain('is still there');
     });
 
     const parked = () => {
@@ -305,13 +285,6 @@ describe('everything attached to one anchor sits in one block', () => {
         expect(edited).toEqual([]);
     });
 
-    // A heading above rows one line tall was a third of the block's height, for
-    // a word the purple rule and `before`/`after` were already saying.
-    it('carries no HOOKS heading and no connector arms', () => {
-        const { host } = canvas(hooked());
-        expect(host.querySelector('.pb-attached-head')).toBeNull();
-        expect(host.querySelectorAll('.pb-attached-side')).toHaveLength(2);
-    });
 
     it('cuts a long hook at a word, and keeps the whole of it on the title', () => {
         const full = 'Read the doctor report above and act on it by this rule, fixing only bookkeeping';
@@ -344,14 +317,12 @@ describe('everything attached to one anchor sits in one block', () => {
             })],
         }));
         const phase = host.querySelector('.pb-phase')!;
-        expect(phase.querySelector(':scope > .pb-attached')?.textContent)
+        expect(phase.querySelector(':scope > .pb-edge-hooks')?.textContent)
             .toContain('read the steering docs');
-        expect(host.querySelector('.pb-node-group .pb-attached')).toBeNull();
+        expect(host.querySelector('.pb-card .pb-hook')).toBeNull();
     });
 
-    // The same claim one level up: a phase's `after` hooks run after its nodes,
-    // and drawing them above the nodes made the heading contradict the layout.
-    it('puts a phase\'s own sides either side of its nodes', () => {
+    it('draws a phase\'s own rows at its top, each saying which side it runs', () => {
         const { host } = canvas(graph({
             steps: [step({
                 phases: [{
@@ -366,7 +337,75 @@ describe('everything attached to one anchor sits in one block', () => {
         }));
         const phase = host.querySelector('.pb-phase')!;
         expect(Array.from(phase.children).map(el => el.className.split(' ')[0]))
-            .toEqual(['pb-phase-head', 'pb-attached', 'pb-phase-nodes', 'pb-attached']);
+            .toEqual(['pb-phase-head', 'pb-edge-hooks', 'pb-phase-nodes']);
+        expect(Array.from(phase.querySelectorAll('.pb-edge-hooks .pb-hook-when'))
+            .map(el => el.textContent)).toEqual(['before', 'after']);
+    });
+
+    it('draws a step\'s own hooks at the top of its lane, read and not opened', () => {
+        const { host, edited } = canvas(graph({
+            steps: [step({
+                hooks: [{ when: 'after', type: 'command', summary: 'npm test', anchor: 'specify', index: 0, note: '' }],
+            })],
+        }));
+        const body = host.querySelector('.pb-step-body')!;
+        expect(body.firstElementChild?.className).toBe('pb-edge-hooks');
+        const row = body.querySelector('.pb-hook--fixed') as HTMLElement;
+        expect(row.textContent).toContain('npm test');
+        expect(row.tagName).toBe('SPAN');
+        row.click();
+        expect(edited).toEqual([]);
+    });
+});
+
+describe('each hook says whether it ran, from the record alone', () => {
+    const run = (over: Record<string, unknown> = {}) => ({
+        key: 'specify/after/resolve-dir/0', step: 'specify', when: 'after' as const,
+        anchor: 'resolve-dir', index: 0, type: 'skill' as const, ref: 'house-check',
+        outcome: 'ran' as const, at: '2026-11-20T10:00:00Z', ...over,
+    });
+    const answer = (runs: ReturnType<typeof run>[]) => ({
+        spec: { name: '684-x', path: '/s' }, runAt: '2026-11-20T10:00:00Z', runs,
+    });
+    const hooked = (problem?: string) => graph({
+        steps: [step({
+            phases: [{
+                name: 'gather', hooks: [],
+                nodes: [node({ hooks: [
+                    { when: 'after', type: 'skill', summary: 'house-check', anchor: 'resolve-dir', index: 0, note: '', problem },
+                    { when: 'after', type: 'command', summary: 'npm run lint', anchor: 'resolve-dir', index: 1, note: '' },
+                ] })],
+            }],
+        })],
+    });
+    const words = (host: HTMLElement) => Array.from(host.querySelectorAll('.pb-hook'))
+        .map(row => row.querySelector('.pb-hook-status')?.textContent ?? '');
+
+    it('draws no status when the project has no run on record', () => {
+        const { host } = canvas(hooked());
+        expect(host.querySelector('.pb-hook-status')).toBeNull();
+    });
+
+    it('says ran from the run, and not seen for a hook the run never reached', () => {
+        const { host } = canvas(hooked(), undefined, answer([run()]));
+        expect(words(host)).toEqual(['ran', 'not seen']);
+        expect(host.querySelector('.pb-hook-status--unseen')?.getAttribute('title'))
+            .toBe('No trace of it in the run record.');
+    });
+
+    it('says skipped with the reason the run gave', () => {
+        const { host } = canvas(hooked(), undefined,
+            answer([run({ outcome: 'skipped', reason: 'Nothing to check.' })]));
+        const status = host.querySelector('.pb-hook-status--skipped')!;
+        expect(status.textContent).toBe('skipped');
+        expect(status.getAttribute('title')).toBe('Nothing to check.');
+    });
+
+    it('puts a missing skill ahead of anything the run says', () => {
+        const { host } = canvas(hooked('No skill named "house-check" in this project.'),
+            undefined, answer([run()]));
+        expect(words(host)[0]).toBe('not installed');
+        expect(host.querySelector('.pb-hook-status--problem')).not.toBeNull();
     });
 });
 
@@ -458,12 +497,13 @@ describe("hooks another extension registered run in the lane, not beneath it", (
 
     // The extension's name was printed on every one of these, at the tail of the
     // row, so identity was the last thing read on every line.
-    it('names the extension once above its rows, not on each of them', () => {
+    // Each row leads with whoever registered it, as a mark the eye reads and a name a screen reader says.
+    it('marks each row with the extension that registered it', () => {
         const { host } = canvas(graph({
             steps: [step({ stockHooks: [stock('before'), stock('after')] })],
         }));
-        const named = Array.from(host.querySelectorAll('.pb-hook-source-name'));
-        expect(named.map(el => el.textContent)).toEqual(['via git', 'via git']);
+        const named = Array.from(host.querySelectorAll('.pb-hook--stock .pb-hook-source-name'));
+        expect(named.map(el => el.textContent)).toEqual(['via git: ', 'via git: ']);
         expect(host.querySelectorAll('.pb-hook--stock')).toHaveLength(2);
     });
 
@@ -483,7 +523,7 @@ describe("hooks another extension registered run in the lane, not beneath it", (
             })],
         }));
         expect(Array.from(host.querySelectorAll('.pb-hook-source-name'))
-            .map(el => el.textContent)).toEqual(['via git', 'via companion', 'via git']);
+            .map(el => el.textContent)).toEqual(['via git: ', 'via companion: ', 'via git: ']);
         expect(Array.from(host.querySelectorAll('.pb-hook--stock .pb-hook-name'))
             .map(el => el.textContent)).toEqual(['commit', 'after-specify', 'validate']);
     });
@@ -507,14 +547,12 @@ describe("hooks another extension registered run in the lane, not beneath it", (
                 }],
             })],
         }));
-        const sides = Array.from(host.querySelectorAll('.pb-attached-side'));
-        const named = (side: Element) => Array.from(
-            side.querySelectorAll('.pb-hook-source-name')).map(el => el.textContent);
+        const whose = (side: string) => Array.from(
+            host.querySelectorAll(`.pb-card-slot--${side} .pb-hook`))
+            .map(row => (row.classList.contains('pb-hook--stock') ? 'git' : 'yours'));
 
-        expect(sides[0].querySelector('.pb-attached-when')?.textContent).toBe('before');
-        expect(named(sides[0])).toEqual(['via git', 'companion.yml']);
-        expect(sides[1].querySelector('.pb-attached-when')?.textContent).toBe('after');
-        expect(named(sides[1])).toEqual(['companion.yml', 'via git']);
+        expect(whose('before')).toEqual(['git', 'yours']);
+        expect(whose('after')).toEqual(['yours', 'git']);
     });
 
     it("tells your own file from Companion's extension beside it", () => {
@@ -530,8 +568,10 @@ describe("hooks another extension registered run in the lane, not beneath it", (
                 }],
             })],
         }));
-        expect(Array.from(host.querySelectorAll('.pb-hook-source-name'))
-            .map(el => el.textContent)).toEqual(['companion.yml', 'via companion']);
+        const rows = Array.from(host.querySelectorAll('.pb-card-slot--after .pb-hook'));
+        expect(rows[0].tagName).toBe('BUTTON');
+        expect(rows[0].getAttribute('title')).toContain('.specify/companion.yml');
+        expect(rows[1].querySelector('.pb-hook-source-name')?.textContent).toBe('via companion: ');
     });
 
     // A third party's extension is not published by GitHub, and their logo on
@@ -570,7 +610,7 @@ describe("hooks another extension registered run in the lane, not beneath it", (
 
     // Hue alone is not a cue: it separates these from your own for anyone who
     // can see the difference, and for nobody else.
-    it('splits the two sources into their own groups, yours first', () => {
+    it('puts your own rows first after a node, and the extension\'s read-only ones after', () => {
         const { host } = canvas(graph({
             steps: [step({
                 stockHooks: [stock('after')],
@@ -583,11 +623,9 @@ describe("hooks another extension registered run in the lane, not beneath it", (
                 }],
             })],
         }));
-        const groups = Array.from(host.querySelectorAll('.pb-hook-group'));
-        expect(groups.map(el => el.querySelector('.pb-hook-source-name')?.textContent))
-            .toEqual(['companion.yml', 'via git']);
-        expect(groups[0].querySelector('.pb-hook--stock')).toBeNull();
-        expect(groups[1].querySelectorAll('.pb-hook--stock')).toHaveLength(1);
+        const rows = Array.from(host.querySelectorAll('.pb-card-slot--after .pb-hook'));
+        expect(rows.map(row => row.tagName)).toEqual(['BUTTON', 'SPAN']);
+        expect(rows[1].className).toContain('pb-hook--stock');
     });
 
     // A hook that stops and asks is the one fact on the row with a consequence.
@@ -647,31 +685,12 @@ describe('one hue marks everything the project owns', () => {
         expect(host.querySelector('.pb-yours')?.textContent).toBe('yours');
     });
 
-    // `template` was a grey mono word set exactly like `4 nodes` beside it, and
-    // it is the only way into the whole document-shape panel.
-    it('names the document shape as a chip, and counts what is yours in it', () => {
-        const swapped = graph({
-            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'], sectionsAvailable: [], chosenBy: {} } })],
-        });
-        const { host } = canvas(swapped);
-        const chip = host.querySelector('.pb-template')!;
-        expect(chip.querySelector('.pb-template-name')?.textContent).toBe('Document shape');
-        // The separator is neither the offer nor the change, so it stays out of
-        // the ink that means "this is yours".
-        expect(chip.querySelector('.pb-template-count')?.textContent).toBe('1');
-        expect(chip.querySelector('.pb-fact-dot')?.textContent).toBe('·');
-        // The section names are the title, since a lane is 300px and a heading
-        // can be any length. `§` on its own named nothing a reader could read.
-        expect(chip.getAttribute('title')).toContain('Requirements');
-    });
-
-    it('offers the shape with no count when nothing in it was replaced', () => {
+    it('puts no document chip on the step header: the document opens from its node', () => {
         const { host } = canvas(graph({
-            steps: [step({ template: { file: 'spec-template.md', sections: [], sectionsAvailable: ['Requirements'], chosenBy: {} } })],
+            steps: [step({ template: { file: 'spec-template.md', sections: ['Requirements'], sectionsAvailable: ['Requirements'], chosenBy: {} } })],
         }));
-        const chip = host.querySelector('.pb-template')!;
-        expect(chip.querySelector('.pb-template-name')?.textContent).toBe('Document shape');
-        expect(chip.querySelector('.pb-template-count')).toBeNull();
+        expect(host.querySelector('.pb-step-head')?.textContent).not.toContain('Document shape');
+        expect(host.querySelector('.pb-template')).toBeNull();
     });
 
     it('leaves a shipped node and a stock template unmarked', () => {
@@ -708,17 +727,14 @@ describe('a node says whether it can move, and why not', () => {
 
     // A bare padlock read as "you may not touch this". It only stops reordering,
     // so the card says `held` in the meta row and the grip stays a grip.
-    it('says held in a word, and what held does not stop', () => {
+    // Two marks at most on a card, so why a node is held is said on its button and in its popover.
+    it('says why a node is held on the card that opens it', () => {
         const { host } = canvas(pinned());
-        const cards = host.querySelectorAll('.pb-node');
-        const held = cards[0].querySelector('.pb-held');
-        const title = held?.getAttribute('title') ?? '';
-
-        expect(held?.textContent).toBe('held');
-        expect(cards[1].querySelector('.pb-held')).toBeNull();
-        expect(title).toContain('Cannot be reordered');
-        expect(title).toContain('load-context has to run after it');
-        expect(title).toContain('rewrite it');
+        const opens = host.querySelectorAll('.pb-node-main');
+        expect(host.querySelector('.pb-held')).toBeNull();
+        expect(opens[0].getAttribute('title')).toContain('Held in place');
+        expect(opens[0].getAttribute('title')).toContain('load-context has to run after it');
+        expect(opens[1].getAttribute('title')).not.toContain('Held');
     });
 
     it('draws the same grip on a held node as on one that moves', () => {
@@ -753,6 +769,18 @@ describe('a node says whether it can move, and why not', () => {
 describe('what a step produces sits with its name', () => {
     // A green pill holding a bare `1` said neither what it counted nor why it
     // was green. The facts line speaks in one voice now: `2 nodes · 1 file`.
+    it('names a node\'s file by its own name, not its folder', () => {
+        const { host } = canvas(graph({
+            steps: [step({
+                phases: [{
+                    name: 'author', hooks: [],
+                    nodes: [node({ writes: ['checklists/requirements.md'] })],
+                }],
+            })],
+        }));
+        expect(host.querySelector('.pb-writes')?.textContent).toBe('requirements.md');
+    });
+
     it('counts the artifacts in words, and names them on hover', () => {
         const { host } = canvas();
         const chip = host.querySelector('.pb-step-facts .pb-produces');
@@ -789,30 +817,36 @@ describe('what a step produces sits with its name', () => {
 });
 
 describe('phases are the project\'s to name and group', () => {
-    // contentEditable with no role and no label reads to a screen reader as a
-    // heading, which is what it also looks like.
-    it('says the name is a field, and what field it is', () => {
+    /** Rename… from the label menu, then the field it leaves the caret in. */
+    async function renameField(host: HTMLElement): Promise<HTMLInputElement> {
+        await fromPhaseMenu(host, 0, 'Rename…');
+        await new Promise(resolve => setTimeout(resolve, 5));
+        return host.querySelector('.pb-phase-input') as HTMLInputElement;
+    }
+
+    it('makes the label a button that opens the phase menu, named for its phase', async () => {
         const { host } = canvas();
-        const name = host.querySelector('.pb-phase-name') as HTMLElement;
-        expect(name.getAttribute('role')).toBe('textbox');
-        expect(name.getAttribute('aria-label')).toBe('Phase name');
+        const label = host.querySelector('.pb-phase-name') as HTMLElement;
+        expect(label.tagName).toBe('BUTTON');
+        expect(label.getAttribute('aria-label')).toBe('Phase gather');
+        expect(label.getAttribute('aria-haspopup')).toBe('menu');
+        await phaseMenu(host, 0);
+        expect(host.querySelector('.pb-menu-heading')?.textContent).toBe('Phase gather · 1 node');
     });
 
-    // Hovering a heading to discover it can be typed into is not discovery.
-    it('puts the caret in the name from the phase menu', async () => {
+    it('puts the caret in a field holding the name from Rename…', async () => {
         const { host } = canvas();
-        await fromPhaseMenu(host, 0, 'Rename phase');
-        expect(document.activeElement)
-            .toBe(host.querySelectorAll('.pb-phase-name')[0]);
+        const field = await renameField(host);
+        expect(field.value).toBe('gather');
+        expect(document.activeElement).toBe(field);
+        expect(field.getAttribute('aria-label')).toBe('Rename the gather phase');
     });
 
-    it('renames a phase in place, and sends the whole grouping', () => {
+    it('renames a phase in place on Enter, and sends the whole grouping', async () => {
         const { host, grouped } = canvas();
-        const name = host.querySelector('.pb-phase-name') as HTMLElement;
-
-        expect(name.getAttribute('contenteditable')).toBe('true');
-        name.textContent = 'set up';
-        name.dispatchEvent(new Event('blur', { bubbles: true }));
+        const field = await renameField(host);
+        field.value = 'set up';
+        field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
         expect(grouped).toEqual([['specify', [
             { name: 'set up', nodes: ['resolve-dir'] },
@@ -820,11 +854,17 @@ describe('phases are the project\'s to name and group', () => {
         ]]]);
     });
 
-    it('says nothing when the name did not change', () => {
+    it('says nothing when the name did not change, or Escape cancelled it', async () => {
         const { host, grouped } = canvas();
-        const name = host.querySelector('.pb-phase-name') as HTMLElement;
-        name.dispatchEvent(new Event('blur', { bubbles: true }));
+        let field = await renameField(host);
+        field.dispatchEvent(new Event('blur', { bubbles: true }));
+        await flush();
+        field = await renameField(host);
+        field.value = 'other';
+        field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+        await flush();
         expect(grouped).toEqual([]);
+        expect(host.querySelector('.pb-phase-input')).toBeNull();
     });
 
     // Dropping across phases moves a node between them; the order and the
@@ -878,21 +918,17 @@ describe('a phase is a block a project owns', () => {
 
     // Five buttons at `opacity: 0` became one that is always there. Everything
     // a phase can do is said in words inside it.
-    it('says everything a phase can do, in one resting control', async () => {
+    it('says everything a phase can do, behind its own name', async () => {
         const { host } = canvas(three());
-        const labels = (await phaseMenu(host, 0))
+        const labels = (await phaseMenu(host, 1))
             .map(o => o.querySelector('.pb-menu-label')?.textContent);
         expect(labels).toEqual([
-            'Add hook', 'Add node', 'Rename phase', 'Split phase',
-            'Merge into the phase below',
+            'Rename…', 'Split', 'Merge into gather, above', 'Merge into wrap-up, below',
         ]);
     });
 
-    // `Menu` has no per-option disabled state, so a row that cannot run would
-    // be a live row that silently does nothing.
-    // The same five words every time, whatever this phase happens to allow —
-    // the note on an inert row is what teaches the capability.
-    it('says the same five things, marking the ones that cannot run here', async () => {
+    // The note on an inert row is what teaches the capability.
+    it('marks the ones that cannot run here, and says why', async () => {
         const { host } = canvas(graph({
             steps: [step({
                 dropped: [],
@@ -901,23 +937,22 @@ describe('a phase is a block a project owns', () => {
         }));
         const rows = await phaseMenu(host, 0);
         expect(rows.map(o => o.querySelector('.pb-menu-label')?.textContent)).toEqual([
-            'Add hook', 'Add node', 'Rename phase', 'Split phase',
-            'Merge into the phase above',
+            'Rename…', 'Split', 'Merge',
         ]);
-        expect(rows.map(o => o.getAttribute('aria-disabled'))).toEqual([
-            null, 'true', null, 'true', 'true',
-        ]);
+        expect(rows.map(o => o.getAttribute('aria-disabled'))).toEqual([null, 'true', 'true']);
     });
 
-    // The first phase has nothing above it, and the write merges downward.
+    // An edge phase offers only the neighbour it has.
     it('names the direction a merge actually goes', async () => {
         const { host } = canvas(three());
         const first = (await phaseMenu(host, 0))
             .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        const middle = (await phaseMenu(host, 1))
+        const last = (await phaseMenu(host, 2))
             .map(o => o.querySelector('.pb-menu-label')?.textContent);
-        expect(first).toContain('Merge into the phase below');
-        expect(middle).toContain('Merge into the phase above');
+        expect(first).toContain('Merge into author, below');
+        expect(first.some(l => /above/.test(l ?? ''))).toBe(false);
+        expect(last).toContain('Merge into author, above');
+        expect(last.some(l => /below/.test(l ?? ''))).toBe(false);
     });
 
     it('does not offer to reorder phases', async () => {
@@ -933,21 +968,21 @@ describe('a phase is a block a project owns', () => {
     });
 
     // A phase's nodes have to land somewhere; dropping them would drop work.
-    it('folds a removed phase into the one above it', async () => {
+    it('folds a phase into the one above it, at its end', async () => {
         const { host, grouped } = canvas(three());
-        await fromPhaseMenu(host, 1, 'Merge into the phase above');
+        await fromPhaseMenu(host, 1, 'Merge into gather, above');
         expect(grouped[0][1]).toEqual([
             { name: 'gather', nodes: ['a', 'b', 'c'] },
             { name: 'wrap-up', nodes: ['d'] },
         ]);
     });
 
-    it('folds the first phase into the one below it', async () => {
+    it('folds a phase into the one below it, at its start', async () => {
         const { host, grouped } = canvas(three());
-        await fromPhaseMenu(host, 0, 'Merge into the phase below');
+        await fromPhaseMenu(host, 1, 'Merge into wrap-up, below');
         expect(grouped[0][1]).toEqual([
-            { name: 'author', nodes: ['a', 'b', 'c'] },
-            { name: 'wrap-up', nodes: ['d'] },
+            { name: 'gather', nodes: ['a', 'b'] },
+            { name: 'wrap-up', nodes: ['c', 'd'] },
         ]);
     });
 
@@ -955,10 +990,10 @@ describe('a phase is a block a project owns', () => {
         const { host, grouped } = canvas(graph({
             steps: [step({ phases: [{ name: 'only', hooks: [], nodes: [node()] }] })],
         }));
-        const merge = (await phaseMenu(host, 0))[4];
+        const merge = (await phaseMenu(host, 0))[2];
         expect(merge.getAttribute('aria-disabled')).toBe('true');
         expect(merge.querySelector('.pb-menu-note')?.textContent)
-            .toBe('a step needs at least one phase');
+            .toBe('A step needs at least one phase.');
         merge.click();
         expect(grouped).toEqual([]);
     });
@@ -967,7 +1002,7 @@ describe('a phase is a block a project owns', () => {
     // takes a node from the phase it follows.
     it('adds a phase by splitting the one before it', async () => {
         const { host, grouped } = canvas(three());
-        await fromPhaseMenu(host, 0, 'Split phase');
+        await fromPhaseMenu(host, 0, 'Split');
         expect(grouped[0][1]).toEqual([
             { name: 'gather', nodes: ['a'] },
             { name: 'new phase', nodes: ['b'] },
@@ -981,60 +1016,47 @@ describe('a phase is a block a project owns', () => {
         // none to give. The row stays, because its note is where someone finds
         // out a phase can be split at all.
         const { host, grouped } = canvas(three());
-        const one = (await phaseMenu(host, 1))[3];
+        const one = (await phaseMenu(host, 1))[1];
         expect(one.getAttribute('aria-disabled')).toBe('true');
         expect(one.querySelector('.pb-menu-note')?.textContent)
-            .toBe('one node here, so there is nothing to split off');
+            .toBe('One node here, so there is nothing to split off.');
         one.click();
         expect(grouped).toEqual([]);
 
-        const two = (await phaseMenu(host, 0))[3];
+        const two = (await phaseMenu(host, 0))[1];
         expect(two.getAttribute('aria-disabled')).toBeNull();
     });
 });
 
-describe('a dropped node can be put back', () => {
-    const withDropped = () => graph({
+describe('a removed node leaves a struck row while its undo is on offer', () => {
+    const two = () => graph({
         steps: [step({
-            dropped: ['branch', 'finalize'],
-            phases: [{ name: 'gather', hooks: [], nodes: [node({ id: 'a' })] }],
+            phases: [{ name: 'gather', hooks: [], nodes: [node({ id: 'a', name: 'First' }), node({ id: 'b', name: 'Second' })] }],
         })],
     });
+    const row = {
+        command: 'specify', phase: 'gather', index: 1, name: 'Was here', token: 'remove:specify:gone',
+    };
 
-    it('offers only the nodes this step actually dropped', async () => {
-        const { host } = canvas(withDropped());
-        await fromPhaseMenu(host, 0, 'Add node');
-        const options = Array.from(host.querySelectorAll('.pb-menu-label'))
-            .map(el => el.textContent);
-        expect(options).toEqual(['branch', 'finalize']);
+    it('draws it where the node sat, struck, with Undo', () => {
+        const { host } = canvas(two(), undefined, undefined, { removed: row });
+        const nodes = Array.from(host.querySelector('.pb-phase-nodes')!.children)
+            .map(el => el.className.split(' ')[0]);
+        expect(nodes).toEqual(['pb-node-group', 'pb-removed', 'pb-node-group']);
+        expect(host.querySelector('.pb-removed s')?.textContent).toBe('Was here');
     });
 
-    it('says how many are on offer, and why there are none when there are none', async () => {
-        const { host } = canvas(withDropped());
-        const offered = await phaseMenu(host, 0);
-        expect(offered[1].querySelector('.pb-menu-label')?.textContent).toBe('Add node');
-        expect(offered[1].querySelector('.pb-menu-note')?.textContent).toBe('2 on offer');
-
-        document.body.innerHTML = '';
-        const bare = canvas();
-        const none = (await phaseMenu(bare.host, 0))[1];
-        expect(none.getAttribute('aria-disabled')).toBe('true');
-        expect(none.querySelector('.pb-menu-note')?.textContent)
-            .toMatch(/drag one in\s+from another/);
+    it('sends the undo token when Undo is pressed', () => {
+        const { host, undone } = canvas(two(), undefined, undefined, { removed: row });
+        const undo = host.querySelector('.pb-removed-undo') as HTMLButtonElement;
+        expect(undo.getAttribute('aria-label')).toBe('Undo removing Was here');
+        undo.click();
+        expect(undone).toEqual(['remove:specify:gone']);
     });
 
-    // The order says when it runs and the phase says where it sits; one without
-    // the other is a pipeline that contradicts itself.
-    it('sends the order and the grouping together', async () => {
-        const { host, addedNodes } = canvas(withDropped());
-        await fromPhaseMenu(host, 0, 'Add node');
-        (host.querySelectorAll('.pb-menu-option')[0] as HTMLButtonElement).click();
-
-        expect(addedNodes).toEqual([{
-            c: 'specify', id: 'branch', phase: 'gather',
-            order: ['a', 'branch'],
-            phases: [{ name: 'gather', nodes: ['a', 'branch'] }],
-        }]);
+    it('draws nothing in a lane the removal was not in', () => {
+        const { host } = canvas(two(), undefined, undefined, { removed: { ...row, command: 'plan' } });
+        expect(host.querySelector('.pb-removed')).toBeNull();
     });
 });
 
@@ -1057,34 +1079,17 @@ describe("a step has instructions of its own", () => {
 });
 
 describe('attaching work', () => {
-    it('offers one add-hook per phase, not a pair on every block', () => {
+    it('offers one Add to per lane, not a control on every phase', () => {
         const { host } = canvas();   // two phases, one node each
-        expect(host.querySelectorAll('.pb-phase-add')).toHaveLength(2);
+        expect(host.querySelectorAll('.pb-lane-add--head')).toHaveLength(1);
+        expect(host.querySelectorAll('.pb-phase-head button:not(.pb-phase-name)')).toHaveLength(0);
     });
 
-    // "Attach" read as "add a block". It adds a hook, and says so.
-    it('says a hook is what it adds', async () => {
-        const { host } = canvas();
-        const options = await phaseMenu(host, 0);
-        expect(options[0].querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
-        expect(options[0].querySelector('.pb-menu-note')?.textContent)
-            .toBe('a skill, an instruction or a command');
-    });
-
-    it('names the phase it would attach to', async () => {
-        const { host, added } = canvas();
-        await fromPhaseMenu(host, 0, 'Add hook');
-        expect(added).toEqual([['specify', 'gather', 'before']]);
-    });
-
-    // The one control on a phase is there without a pointer, and says whose
-    // phase it belongs to.
     it('is reachable at rest, and named', () => {
         const { host } = canvas();
-        const control = host.querySelector('.pb-phase-add') as HTMLElement;
+        const control = host.querySelector('.pb-lane-add') as HTMLElement;
         expect(control.tagName).toBe('BUTTON');
-        expect(control.getAttribute('aria-label')).toBe('Add or change gather');
-        expect(control.getAttribute('aria-haspopup')).toBe('menu');
+        expect(control.textContent).toBe('Add to specify');
     });
 });
 
@@ -1133,44 +1138,6 @@ describe('a hook can be changed once it is there', () => {
         expect(shown).toBe('doctor.py --chat');
         expect(host.querySelector('.pb-hook')?.getAttribute('title'))
             .toContain('.specify/extensions/companion/scripts/doctor.py');
-    });
-
-    it('offers what the project has, rather than asking you to remember', () => {
-        const noop = () => undefined;
-        const sheet = mount(
-            <AttachForm step={step()} anchor="gather"
-                choices={{ skills: ['create-pr', 'verify-code-review'], nodes: ['review'],
-                    commands: [], fragments: [], presets: [] }}
-                onCancel={noop} onAttach={noop} />,
-        );
-        expect(sheet.querySelector('.pb-pick-open')).not.toBeNull();
-        expect(sheet.querySelector('.pb-field-help')?.textContent).toContain('2 in this project');
-    });
-
-    it('fills the form from the hook it is editing, and offers to remove it', () => {
-        const noop = () => undefined;
-        const sheet = mount(
-            <AttachForm step={step()} anchor="complete"
-                choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
-                editing={{
-                    when: 'after', type: 'skill', summary: 'create-pr',
-                    anchor: 'complete', index: 1, note: 'only on green',
-                }}
-                onCancel={noop} onAttach={noop} onRemove={noop} />,
-        );
-        expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Edit hook');
-        expect((sheet.querySelector('.pb-input--mono') as HTMLInputElement).value)
-            .toBe('create-pr');
-        expect(sheet.querySelector('.pb-action--primary')?.textContent).toContain('Save hook');
-        expect(sheet.querySelector('.pb-action--remove')).not.toBeNull();
-    });
-
-    it('says nothing about removing when it is a new hook', () => {
-        const noop = () => undefined;
-        const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
-                onCancel={noop} onAttach={noop} />);
-        expect(sheet.querySelector('.pb-action--remove')).toBeNull();
     });
 });
 
@@ -1298,35 +1265,33 @@ describe('a node card says what its node does, and can be taken out of the run',
         expect(host.querySelector('.pb-node-gate')?.textContent).toBe('gate');
     });
 
-    // The refusal at the writer named an action the panel could not perform.
-    it('sends the order and the grouping the drag handler would', () => {
-        const { host, removedNodes } = canvas(graph({
-            steps: [step({
-                phases: [
-                    { name: 'gather', hooks: [], nodes: [node({ id: 'a' }), node({ id: 'b' })] },
-                    { name: 'author', hooks: [], nodes: [node({ id: 'c' })] },
-                ],
-            })],
-        }));
-        (host.querySelectorAll('.pb-node-drop')[1] as HTMLButtonElement).click();
-
-        expect(removedNodes).toEqual([{
-            c: 'specify', n: 'b',
+    // Removing a node lives in its popover now; the shape it sends is computed here.
+    it('takes a node out with the order and the grouping a drag would send', () => {
+        const shape = withoutNode(step({
+            phases: [
+                { name: 'gather', hooks: [], nodes: [node({ id: 'a' }), node({ id: 'b' })] },
+                { name: 'author', hooks: [], nodes: [node({ id: 'c' })] },
+            ],
+        }), 'b');
+        expect(shape).toEqual({
             order: ['a', 'c'],
             phases: [{ name: 'gather', nodes: ['a'] }, { name: 'author', nodes: ['c'] }],
-        }]);
+        });
     });
 
     it('drops a phase the removal emptied', () => {
-        const { host, removedNodes } = canvas();
-        (host.querySelectorAll('.pb-node-drop')[0] as HTMLButtonElement).click();
-        expect(removedNodes[0].phases)
+        expect(withoutNode(step(), 'resolve-dir')?.phases)
             .toEqual([{ name: 'author', nodes: ['draft-spec'] }]);
     });
 
-    // "Undo" on a node card deleted the project's copy with no notice, and is
-    // not what undo means anywhere else in this panel. Going back to the
-    // shipped node lives in the side column now.
+    it('will not take out the last node a step has', () => {
+        expect(withoutNode(step({
+            phases: [{ name: 'only', hooks: [], nodes: [node({ id: 'a' })] }],
+        }), 'a')).toBeNull();
+    });
+
+    // "Undo" on a node card deleted the project's copy with no notice. The card
+    // is one button that opens the node's details, where every action lives.
     it('carries one action, and it is not called Undo', () => {
         const { host } = canvas(graph({
             steps: [step({
@@ -1338,83 +1303,23 @@ describe('a node card says what its node does, and can be taken out of the run',
         }));
         const card = host.querySelector('.pb-node')!;
         expect(card.textContent).not.toContain('Undo');
-        expect(card.querySelectorAll('button')).toHaveLength(2);
-        expect(card.querySelector('.pb-node-drop')?.getAttribute('aria-label'))
-            .toBe('Stop running Resolve the spec folder');
+        expect(card.querySelectorAll('button')).toHaveLength(1);
+        expect(card.querySelector('.pb-node-main')?.getAttribute('aria-haspopup')).toBe('dialog');
     });
 
-    // The write would leave a step with no phases, which cannot be written — so
-    // the writer refuses it and the panel redraws unchanged. A step added
-    // through "Add step" ships with exactly one node, so this is the first
-    // thing a person meets.
-    it('offers no way out of the run for the last node a step has', () => {
-        const { host, removedNodes } = canvas(graph({
-            steps: [step({
-                phases: [{ name: 'only', hooks: [], nodes: [node({ id: 'a' })] }],
-            })],
-        }));
-        expect(host.querySelector('.pb-node-drop')).toBeNull();
-        expect(removedNodes).toEqual([]);
-    });
-
-    it('offers it again as soon as something would survive the removal', () => {
+    it('carries at most two marks, ownership and the gate ahead of the file', () => {
         const { host } = canvas(graph({
             steps: [step({
-                phases: [{
-                    name: 'only', hooks: [],
-                    nodes: [node({ id: 'a' }), node({ id: 'b' })],
-                }],
+                phases: [{ name: 'check', hooks: [], nodes: [node({
+                    id: 'review', kind: 'gate', replaced: true, writes: ['review.md'],
+                })] }],
             })],
         }));
-        expect(host.querySelectorAll('.pb-node-drop')).toHaveLength(2);
-    });
-});
-
-describe('what the Add node picker offers', () => {
-    // A node the recipe took out and one the step ships but does not run read
-    // identically as bare ids, so the list gave no clue which was which. And a
-    // summary the offer already carries was being thrown away for one of them.
-    it('says what the node is AND where it went, rather than one or the other', async () => {
-        const { host } = canvas(graph({
-            steps: [step({
-                dropped: ['branch', 'review-gaps'], addOns: ['review-gaps'],
-                offers: {
-                    branch: { name: 'Create the feature branch', summary: 'Creates the feature branch' },
-                    'review-gaps': { name: 'Review the task list for gaps', summary: 'Attacks the task list for gaps before it runs' },
-                },
-            })],
-        }));
-        await fromPhaseMenu(host, 0, 'Add node');
-        const rows = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => ({
-            label: el.querySelector('.pb-menu-label')?.textContent,
-            note: el.querySelector('.pb-menu-note')?.textContent,
-        }));
-        expect(rows).toEqual([
-            {
-                label: 'Create the feature branch',
-                note: 'Creates the feature branch · removed from this run',
-            },
-            {
-                label: 'Review the task list for gaps',
-                note: 'Attacks the task list for gaps before it runs · '
-                    + 'specify ships this and does not run it',
-            },
-        ]);
-    });
-
-    it('falls back to where it went when the offer carries no summary', async () => {
-        const { host } = canvas(graph({
-            steps: [step({ dropped: ['branch', 'clarify'], addOns: ['clarify'] })],
-        }));
-        await fromPhaseMenu(host, 0, 'Add node');
-        const rows = Array.from(host.querySelectorAll('.pb-menu-option')).map(el => ({
-            label: el.querySelector('.pb-menu-label')?.textContent,
-            note: el.querySelector('.pb-menu-note')?.textContent,
-        }));
-        expect(rows).toEqual([
-            { label: 'branch', note: 'removed from this run' },
-            { label: 'clarify', note: 'specify ships this and does not run it' },
-        ]);
+        const meta = host.querySelector('.pb-node-meta')!;
+        expect(meta.children).toHaveLength(2);
+        expect(meta.querySelector('.pb-writes')).toBeNull();
+        expect(meta.querySelector('.pb-node-gate')).not.toBeNull();
+        expect(meta.querySelector('.pb-yours')?.textContent).toBe('yours');
     });
 });
 
@@ -1479,6 +1384,27 @@ describe('a seam between two lanes says where a step would go', () => {
 
         seams[2].click();
         expect(newStepAfter).toEqual(['tasks']);
+    });
+
+    // The arrow says which step runs next; stacked, the words say it too.
+    it('joins each pair of lanes with an arrow and the step that runs next', () => {
+        const { host } = canvas(run());
+        const joins = Array.from(host.querySelectorAll('.pb-run > .pb-lane-join'));
+        expect(joins).toHaveLength(3);
+        expect(joins.map(join => join.querySelector('.pb-lane-then')?.textContent))
+            .toEqual(['then plan', 'then tasks', 'then implement']);
+        for (const join of joins) {
+            expect(join.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(2);
+            expect(join.querySelector('button.pb-lane-seam')).not.toBeNull();
+        }
+    });
+
+    // A phase is a quiet label in the lane: the rule across it is gone, its menu stays.
+    it('labels a phase without a rule and keeps its menu', () => {
+        const { host } = canvas(run());
+        const head = host.querySelector('.pb-phase-head') as HTMLElement;
+        expect(head.querySelector('.pb-phase-rule')).toBeNull();
+        expect(head.querySelector('.pb-phase-name')?.getAttribute('aria-haspopup')).toBe('menu');
     });
 
     it('draws no seam on a run of one step', () => {
@@ -1575,12 +1501,10 @@ describe('a resting control on the board is drawn', () => {
         return css.slice(at, css.indexOf('}', at));
     };
 
-    // Both were `opacity: 0`: the seam's `+` is the one route to placing a hook
-    // precisely, and the bin is a live destructive target.
-    it('gives the seam and the bin no opacity to hide behind', () => {
-        for (const selector of ['.pb-slot::before', '.pb-node-drop']) {
-            expect(rule(selector)).not.toMatch(/opacity:/);
-        }
+    // Hidden only until the pointer or the keyboard reaches the node, and never on a touch screen.
+    it('shows the "+" on a node on hover, on focus, and wherever there is no hover', () => {
+        expect(css).toMatch(/\.pb-node-group:hover > \.pb-edge-add,\n\.pb-node-group:focus-within > \.pb-edge-add,\n\.pb-edge-add:focus-visible \{ opacity: 1; \}/);
+        expect(css).toMatch(/@media \(hover: none\) \{\n    \.pb-edge-add \{ opacity: 1; \}/);
     });
 
     // An `opacity: 0` element still hit-tests: parked below its `+`, the lane
@@ -1590,11 +1514,28 @@ describe('a resting control on the board is drawn', () => {
         expect(rule('.pb-lane-seam-label')).toContain('pointer-events: none;');
     });
 
-    // .45 over a token that already carries an alpha put both under the 3:1 a
-    // control that is not text has to clear. One ink, one stop, both the same.
-    it('rests them on the same ink, and on a token rather than a fraction of one', () => {
-        for (const selector of ['.pb-slot::before', '.pb-node-drop']) {
-            expect(rule(selector)).toContain('color: var(--text-secondary);');
+    // A lane is a bounded panel in the user's theme, with a band over its body.
+    it('bounds each lane and bands its header in theme tokens', () => {
+        expect(rule('.pb-step')).toContain('border: 1px solid var(--border);');
+        expect(rule('.pb-step')).toContain('background: var(--bg-primary);');
+        expect(css).toMatch(/\.pb-step-head \{[^}]*border-bottom: 1px solid var\(--border\);/);
+        expect(css).toMatch(/\.pb-step-head \{[^}]*background: var\(--pb-band\);/);
+        for (const selector of ['.pb-step', '.pb-lane-join']) {
+            expect(rule(selector)).not.toMatch(/#[0-9a-f]{3,8}\b/i);
         }
+    });
+
+    it('stacks the lanes and draws the "then" line when the builder is narrow', () => {
+        const narrow = css.slice(css.lastIndexOf('@container builder (max-width: 640px) {\n    .pb-run'));
+        expect(narrow).toContain('grid-template-columns: minmax(0, 1fr);');
+        expect(narrow).toMatch(/\.pb-lane-arrow--down \{ display: block; \}/);
+        expect(narrow).toMatch(/\.pb-lane-then \{[^}]*position: static;/);
+    });
+
+    it('draws the add modal in theme tokens and turns it into a sheet when narrow', () => {
+        expect(rule('.pb-modal')).toContain('background: var(--bg-elevated);');
+        expect(rule('.pb-modal')).not.toMatch(/#[0-9a-f]{3,8}\b/i);
+        const narrow = css.slice(css.lastIndexOf('@container builder (max-width: 640px) {\n    .pb-modal-layer'));
+        expect(narrow).toMatch(/\.pb-modal \{[^}]*width: 100%;/);
     });
 });

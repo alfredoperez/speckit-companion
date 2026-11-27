@@ -16,13 +16,20 @@ type MessageType = BuilderToExtensionMessage['type'];
 
 const ALLOWED_ON_STOCK: ReadonlySet<MessageType> = new Set<MessageType>([
     'ready', 'dismissFirstRun',
-    // The registry switch, which is stock Spec Kit's own.
-    'setStockHook',
+    // The registry switch, which is stock Spec Kit's own, and the person's own
+    // entries in that registry. Whose entry it is gets checked by the writer.
+    'setStockHook', 'addStockHook', 'updateStockHook', 'removeStockHook',
     // Reads: opening a file the board drew, and drawing another workflow.
     'openStockFile', 'selectStockWorkflow',
     // Dispatches a stock command this project registers. Its payload is a
     // closed set, so it cannot become "run this line for me".
     'runStockCommand',
+    // Spec Kit's own presets, run through `specify preset` in a terminal.
+    'presetSearch', 'presetAdd', 'presetUpdate', 'presetRemove',
+    // Reads the last run per hook; the board asks on every focus.
+    'readHookRuns',
+    // The way off stock: the install command every other surface runs.
+    'installCompanion',
 ]);
 
 /** Why this message was not carried out, or null when it may be. */

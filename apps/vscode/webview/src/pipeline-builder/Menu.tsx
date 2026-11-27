@@ -29,6 +29,18 @@ export interface MenuOption {
      * An omitted row teaches nothing.
      */
     disabled?: boolean;
+    /** A heading drawn above the first option of each new group, with a rule. */
+    group?: string;
+    /** Starts a ruled section without a heading. */
+    rule?: boolean;
+    /** The one in force among several: read as a checked radio item, drawn with a check. */
+    checked?: boolean;
+    /** A quiet word at the row's end, such as "built". */
+    trail?: string;
+    /** A name that is a file stem, set in the mono face. */
+    mono?: boolean;
+    /** The row opens something further, drawn with a chevron. */
+    more?: boolean;
 }
 
 interface Props {
@@ -58,6 +70,8 @@ interface Props {
     defaultOpen?: boolean;
     /** Hang the list from the viewport on the side with room, for a trigger inside a pane that clips. */
     floating?: boolean;
+    /** A quiet line above the options naming what they act on. */
+    heading?: string;
 }
 
 /** How far a floating list keeps from the trigger, and from the panel's edges. */
@@ -108,7 +122,7 @@ function clippedAway(element: HTMLElement): boolean {
 
 export function Menu({
     trigger, title, options, onPick, disabled, disabledTitle, defaultOpen,
-    label, caret = true, align = 'left', floating = false, ...rest
+    label, caret = true, align = 'left', floating = false, heading, ...rest
 }: Props) {
     const [open, setOpen] = useState(Boolean(defaultOpen));
     const root = useRef<HTMLDivElement>(null);
@@ -230,27 +244,64 @@ export function Menu({
                 <ul class={`pb-menu-list${align === 'right' ? ' pb-menu-list--right' : ''}${
                     floating ? ' pb-menu-list--floating' : ''}`}
                     role="menu" aria-label={title} ref={list} onKeyDown={steer}>
-                    {options.map(option => (
-                        <li key={option.id} role="none">
-                            {/* `aria-disabled` rather than the native attribute,
-                                which would take the row out of the focus order
-                                and take its note with it. */}
-                            <button type="button" role="menuitem"
-                                class={`pb-menu-option${
-                                    option.disabled ? ' pb-menu-option--inert' : ''}`}
-                                aria-disabled={option.disabled ? 'true' : undefined}
-                                onClick={() => {
-                                    if (option.disabled) { return; }
-                                    shut();
-                                    onPick(option.id);
-                                }}>
-                                <span class="pb-menu-label">{option.label}</span>
-                                {option.note && (
-                                    <span class="pb-menu-note">{option.note}</span>
-                                )}
-                            </button>
-                        </li>
-                    ))}
+                    {heading && <li role="presentation" class="pb-menu-heading">{heading}</li>}
+                    {options.flatMap((option, index) => {
+                        const before = options[index - 1];
+                        const opensGroup = option.group && option.group !== before?.group;
+                        const ruled = index > 0 && (opensGroup || option.rule);
+                        const radio = option.checked !== undefined;
+                        const rich = radio || option.trail || option.more;
+                        return [
+                            ruled && <li key={`${option.id}-rule`} role="separator" class="pb-menu-rule" />,
+                            opensGroup && (
+                                <li key={`${option.id}-group`} role="presentation"
+                                    class="pb-menu-heading pb-menu-group">{option.group}</li>
+                            ),
+                            <li key={option.id} role="none">
+                                {/* `aria-disabled` rather than the native attribute,
+                                    which would take the row out of the focus order
+                                    and take its note with it. */}
+                                <button type="button" role={radio ? 'menuitemradio' : 'menuitem'}
+                                    class={`pb-menu-option${
+                                        option.disabled ? ' pb-menu-option--inert' : ''}${
+                                        rich ? ' pb-menu-option--rich' : ''}${
+                                        option.checked ? ' pb-menu-option--on' : ''}`}
+                                    aria-checked={radio ? option.checked : undefined}
+                                    aria-disabled={option.disabled ? 'true' : undefined}
+                                    onClick={() => {
+                                        if (option.disabled) { return; }
+                                        shut();
+                                        onPick(option.id);
+                                    }}>
+                                    <span class="pb-menu-label-wrap">
+                                        <span class={`pb-menu-label${option.mono ? ' pb-menu-label--mono' : ''}`}>
+                                            {option.label}
+                                        </span>
+                                        {option.note && (
+                                            <span class="pb-menu-note">{option.note}</span>
+                                        )}
+                                    </span>
+                                    {option.trail && <span class="pb-menu-trail">{option.trail}</span>}
+                                    {option.checked && (
+                                        <svg class="pb-menu-check" width="14" height="14" viewBox="0 0 14 14"
+                                            fill="none" stroke="currentColor" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            aria-hidden="true" focusable="false">
+                                            <path d="M2.5 7.5L5.5 10.5L11.5 3.5" />
+                                        </svg>
+                                    )}
+                                    {option.more && (
+                                        <svg class="pb-menu-chevron" width="14" height="14" viewBox="0 0 14 14"
+                                            fill="none" stroke="currentColor" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round"
+                                            aria-hidden="true" focusable="false">
+                                            <path d="M5.5 3.5L9 7L5.5 10.5" />
+                                        </svg>
+                                    )}
+                                </button>
+                            </li>,
+                        ];
+                    })}
                 </ul>
             )}
         </div>

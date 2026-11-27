@@ -7,13 +7,17 @@
  */
 import type { Meta, StoryObj } from '@storybook/preact';
 import { Canvas } from '../Canvas';
+import { BuildBar } from '../BuildBar';
 import { Header } from '../Header';
 import { Menu } from '../Menu';
 import { StatusLine } from '../StatusLine';
 import { Inspector } from '../Inspector';
-import { AttachForm, NewStepForm, NewWorkflowForm } from '../AttachForm';
-import { TemplateForm } from '../TemplateForm';
-import { moveTargets } from '../moves';
+import { HookModal } from '../HookModal';
+import { DocumentModal } from '../DocumentModal';
+import { NewWorkflowModal } from '../NewWorkflowModal';
+import { movePlaces, moveTargets } from '../moves';
+import { NodePopover } from '../NodePopover';
+import type { HookRunsAnswer } from '../../../../src/protocol/pipeline';
 import {
     AUTO, CHOICES, IMPLEMENT, NO_CHANGES, NO_PHASES, OWN_STEP, PLAN, SPECIFY,
     SPECIFY_THREE_YOURS, STOCK, TASKS,
@@ -25,13 +29,86 @@ const noop = () => undefined;
 const CANVAS = {
     onOpenNode: noop, onReorder: noop,
     onAddHook: noop, onEditHook: noop, onSetPhases: noop, onAddNode: noop,
-    onOpenFrame: noop, onOpenTemplate: noop, onNewStep: noop,
-    onRemoveNode: noop,
+    onOpenFrame: noop, onNewStep: noop, onAddTo: noop,
 };
 
+const POPOVER = {
+    onClose: noop, onEditNode: noop, onAddHook: noop, onEditHook: noop,
+    onRemoveHook: noop, onAction: noop, now: new Date('2026-11-20T12:00:00Z'),
+};
+
+/** A run record that saw two of the hooks below and not the third. */
+const RUNS: HookRunsAnswer = {
+    spec: { name: '684-hook-run-record', path: '/proj/specs/684-hook-run-record' },
+    runAt: '2026-11-20T10:00:00Z',
+    runs: [
+        {
+            key: 'implement/before/execute/0', step: 'implement', when: 'before',
+            anchor: 'execute', index: 0, type: 'prompt', ref: '', outcome: 'skipped',
+            reason: 'The assistant read it and chose not to.', at: '2026-11-20T10:00:00Z',
+        },
+        {
+            key: 'implement/before/gather/0', step: 'implement', when: 'before',
+            anchor: 'gather', index: 0, type: 'skill', ref: 'house-check', outcome: 'ran',
+            at: '2026-11-20T10:00:00Z',
+        },
+    ],
+};
+
+const EXECUTE = node('execute', 'Execute the tasks', {
+    kind: 'author', reads: ['tasks.md'],
+    hooks: [
+        hook({ when: 'before', type: 'prompt', anchor: 'execute', summary: 'Ask me before adding a new dependency' }),
+        hook({ when: 'after', type: 'command', anchor: 'execute', summary: 'npm run lint' }),
+    ],
+});
+
+const RAN = step('implement', [
+    phase('gather', [node('resolve-dir', 'Resolve the spec folder')], [
+        hook({ when: 'before', type: 'skill', anchor: 'gather', summary: 'house-check' }),
+    ]),
+    phase('execute', [
+        EXECUTE,
+        node('check', 'Check the requirements', {
+            kind: 'gate',
+            hooks: [hook({
+                when: 'after', type: 'skill', anchor: 'check', summary: 'pr-template',
+                problem: 'No skill named "pr-template" in this project or an installed plugin, so this hook does nothing in a run.',
+            })],
+        }),
+        node('draft', 'Draft the spec', { kind: 'author', writes: ['spec.md'], replaced: true }),
+    ]),
+], { changes: { ...NO_CHANGES, hooks: 4 } });
+
 const HEAD = {
-    onBuild: noop, onPreview: noop, onOpenConfig: noop,
-    onSelectWorkflow: noop, onNewWorkflow: noop, onNewStep: noop, onShowChanged: noop,
+    onPreview: noop, onBuild: noop, onOpenConfig: noop,
+    onSelectWorkflow: noop, onNewWorkflow: noop, onNewStep: noop,
+};
+
+const BAR = {
+    onBuild: noop, onPreview: noop, onUndo: noop, onDismissStatus: noop,
+    onEditHook: noop, onRemoveHook: noop, onShowStep: noop,
+};
+
+/** The bar floats at the foot of the panel, so it is drawn inside one. */
+function Foot({ children, width = 900 }: { children: preact.ComponentChildren; width?: number }) {
+    return (
+        <div class="builder builder--bar" style={`width: ${width}px; height: 420px;`}>
+            {children}
+        </div>
+    );
+}
+
+const BUILT_REPORT = {
+    ok: true, at: '14:02', commands: 4, changed: [], dryRun: false,
+    output: '[build] built 4 commands from .specify/companion.yml', warnings: [],
+};
+
+const PREVIEW_REPORT = {
+    ok: true, at: '14:02', commands: 4, changed: ['implement'], dryRun: true,
+    output: '[build] would build 4 commands from .specify/companion.yml\n'
+        + '[build] what would change:\n  implement: +12 −4 lines',
+    warnings: [],
 };
 
 const INSPECT = {
@@ -157,6 +234,180 @@ export const HooksEveryType: Story = {
                 }),
             ]),
         ], { changes: { ...NO_CHANGES, hooks: 4 } })])} {...CANVAS} /></One>
+    ),
+};
+
+export const HooksWhetherTheyRan: Story = {
+    name: 'Hooks · whether each ran',
+    render: () => (
+        <One><Canvas graph={graph([RAN])} runs={RUNS} {...CANVAS} /></One>
+    ),
+};
+
+export const HooksNoRunOnRecord: Story = {
+    name: 'Hooks · no run on record',
+    render: () => (
+        <One><Canvas graph={graph([RAN])} runs={{ spec: null, runAt: null, runs: [] }} {...CANVAS} /></One>
+    ),
+};
+
+/** One node of each kind, one card each, so every kind is compared at a glance. */
+const ANATOMY_RUNS: HookRunsAnswer = {
+    spec: { name: '684-hook-run-record', path: '/proj/specs/684-hook-run-record' },
+    runAt: '2026-11-20T10:00:00Z',
+    runs: [
+        { key: 'implement/before/a5/0', step: 'implement', when: 'before', anchor: 'a5', index: 0,
+            type: 'skill', ref: 'house-check', outcome: 'ran', at: '2026-11-20T10:00:00Z' },
+        { key: 'implement/before/a7/0', step: 'implement', when: 'before', anchor: 'a7', index: 0,
+            type: 'skill', ref: 'house-check', outcome: 'ran', at: '2026-11-20T10:00:00Z' },
+        { key: 'implement/before/a8/0', step: 'implement', when: 'before', anchor: 'a8', index: 0,
+            type: 'prompt', ref: '', outcome: 'skipped', at: '2026-11-20T10:00:00Z' },
+    ],
+};
+
+const ANATOMY: Array<{ caption: string; node: ReturnType<typeof node> }> = [
+    { caption: 'Plain node', node: node('a1', 'Hand off') },
+    { caption: 'Writes a file', node: node('a2', 'Write the plan', { kind: 'author', writes: ['plan.md'] }) },
+    { caption: 'Gate: can stop the run', node: node('a3', 'Check the requirements', { kind: 'gate' }) },
+    { caption: 'Node you changed', node: node('a4', 'Quality checklist', { replaced: true }) },
+    { caption: 'Node with a before hook', node: node('a5', 'Resolve the spec folder', {
+        hooks: [hook({ when: 'before', type: 'skill', anchor: 'a5', summary: 'house-check' })] }) },
+    { caption: 'Node with before and after hooks', node: node('a6', 'Execute the tasks', {
+        hooks: [
+            hook({ when: 'before', type: 'prompt', anchor: 'a6', summary: 'Ask me before adding a new dependency' }),
+            hook({ when: 'after', type: 'command', anchor: 'a6', summary: 'npm run lint' }),
+        ] }) },
+    { caption: 'Skill, ran', node: node('a7', 'Gather context', {
+        hooks: [hook({ when: 'before', type: 'skill', anchor: 'a7', summary: 'house-check' })] }) },
+    { caption: 'Instruction, skipped', node: node('a8', 'Draft the spec', {
+        hooks: [hook({ when: 'before', type: 'prompt', anchor: 'a8', summary: 'Ask me before adding a new dependency' })] }) },
+    { caption: 'Shell command, not seen', node: node('a9', 'Record what was verified', {
+        hooks: [hook({ when: 'before', type: 'command', anchor: 'a9', summary: 'npm run lint' })] }) },
+    { caption: 'Skill, not installed', node: node('a10', 'Check against the constitution', {
+        hooks: [hook({ when: 'before', type: 'skill', anchor: 'a10', summary: 'pr-template',
+            problem: 'No skill named "pr-template" in this project or an installed plugin.' })] }) },
+    { caption: 'Node file', node: node('a11', 'Close implement', {
+        hooks: [hook({ when: 'before', type: 'node', anchor: 'a11', summary: 'security-scan.md' })] }) },
+];
+
+export const CardAnatomy: Story = {
+    name: 'Card anatomy · every kind side by side',
+    render: () => (
+        <div class="builder pb-anatomy" style={{ height: 'auto' }}>
+            <style>{`
+                .pb-anatomy { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 380px)); gap: 20px 32px; padding: 24px; }
+                .pb-anatomy-cell { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 16px; align-items: start; }
+                @media (max-width: 480px) { .pb-anatomy { padding: 12px; } .pb-anatomy-cell { grid-template-columns: minmax(0, 1fr); } }
+                .pb-anatomy-caption { padding-top: 10px; font-size: 13px; color: var(--text-secondary); }
+                .pb-anatomy .pb-canvas { padding: 0; background: none; overflow: visible; }
+                .pb-anatomy .pb-run { display: block; padding: 0; }
+                .pb-anatomy .pb-step { border: 0; background: none; overflow: visible; }
+                .pb-anatomy .pb-step-head, .pb-anatomy .pb-phase-head,
+                .pb-anatomy .pb-outside, .pb-anatomy .pb-lane-add--foot { display: none; }
+                .pb-anatomy .pb-step-body { padding: 0; }
+            `}</style>
+            {ANATOMY.map(({ caption, node: shown }) => (
+                <div key={shown.id} class="pb-anatomy-cell">
+                    <Canvas graph={graph([step('implement', [phase('execute', [shown])])])}
+                        {...CANVAS} runs={ANATOMY_RUNS} />
+                    <span class="pb-anatomy-caption">{caption}</span>
+                </div>
+            ))}
+        </div>
+    ),
+};
+
+export const NodePopoverOpen: Story = {
+    name: 'Node popover · details and hooks',
+    render: () => (
+        <One>
+            <NodePopover node={EXECUTE} step="implement" runs={RUNS} hooksIn="companion.yml"
+                moves={movePlaces(RAN, 'execute')} removeBlocked="" {...POPOVER} />
+        </One>
+    ),
+};
+
+export const NodePopoverInTheLanes: Story = {
+    name: 'Node popover · beside its card, in the lanes',
+    render: () => (
+        <div class="builder" style={{ height: '640px' }}>
+            <div class="builder-body">
+                <Canvas graph={graph([RAN])} {...CANVAS} runs={RUNS}
+                    selected={{ command: 'implement', nodeId: 'execute' }} />
+            </div>
+            <NodePopover node={EXECUTE} step="implement" runs={RUNS} hooksIn="companion.yml"
+                anchorKey="implement/execute"
+                moves={movePlaces(RAN, 'execute')} removeBlocked="" {...POPOVER} />
+        </div>
+    ),
+};
+
+/** A node that reads the one above it, beside a held node: one place refused, one lock. */
+const MOVING = step('plan', [
+    phase('author', [
+        node('write-plan', 'Write the plan', { writes: ['plan.md'] }),
+        node('pick-blocks', "Pick the plan's blocks", { reads: ['write-plan'] }),
+    ]),
+    phase('check', [node('constitution', 'Check against the constitution', { kind: 'gate' })]),
+    phase('wrap-up', [node('handoff', 'Hand off', {
+        pinned: 'it hands off to the next step, so nothing can run after it',
+    })]),
+]);
+
+export const NodePopoverDocument: Story = {
+    name: 'Node popover · the document it writes',
+    render: () => (
+        <One>
+            <NodePopover node={{ ...MOVING.phases[0].nodes[0], replaced: true, reads: ['spec.md'] }}
+                step="plan" hooksIn="companion.yml"
+                moves={movePlaces(MOVING, 'write-plan')} removeBlocked=""
+                document={{ file: 'plan.md', sections: 5, yours: 1 }} onOpenDocument={noop}
+                {...POPOVER} />
+        </One>
+    ),
+};
+
+export const NodePopoverMove: Story = {
+    name: 'Node popover · Move…, one place refused',
+    render: () => (
+        <One>
+            <NodePopover node={MOVING.phases[0].nodes[1]} step="plan" hooksIn="companion.yml"
+                moves={movePlaces(MOVING, 'pick-blocks')} removeBlocked="" moveOpen {...POPOVER} />
+        </One>
+    ),
+};
+
+export const NodePopoverLastNode: Story = {
+    name: 'Node popover · the last node cannot leave',
+    render: () => (
+        <One>
+            <NodePopover node={node('only', 'The only node')} step="doctor" hooksIn="companion.yml"
+                moves={{ places: [], held: [], pinned: '' }}
+                removeBlocked="The last node doctor has: a step needs at least one." {...POPOVER} />
+        </One>
+    ),
+};
+
+export const NodePopoverMore: Story = {
+    name: 'Node popover · More open',
+    render: () => (
+        <One>
+            <NodePopover node={node('draft', 'Draft the spec', {
+                kind: 'author', writes: ['spec.md'], replaced: true,
+                variants: [{ id: 'draft-lean', name: 'Lean draft', summary: 'A shorter spec' }],
+            })} step="implement" runs={RUNS} hooksIn="companion.yml"
+            moves={movePlaces(RAN, 'draft')} removeBlocked="" moreOpen {...POPOVER} />
+        </One>
+    ),
+};
+
+export const NodePopoverSheet: Story = {
+    name: 'Node popover · bottom sheet when narrow',
+    render: () => (
+        <div class="builder" style="max-width: 380px; height: 640px; position: relative">
+            <NodePopover node={EXECUTE} step="implement" runs={RUNS} hooksIn="companion.yml"
+                moves={movePlaces(RAN, 'execute')} narrow removeBlocked="" {...POPOVER} />
+        </div>
     ),
 };
 
@@ -336,6 +587,33 @@ export const PhaseWithTools: Story = {
     ),
 };
 
+export const PhaseMenuOpen: Story = {
+    name: 'Phase · its label menu',
+    render: () => (
+        <One><Canvas graph={graph([step('specify', [
+            phase('gather', [node('a', 'First node')]),
+            phase('classify', [node('b', 'Second node'), node('c', 'Third node')]),
+            phase('author', [node('d', 'Fourth node')]),
+        ])])} {...CANVAS} /></One>
+    ),
+    play: async ({ canvasElement }) => {
+        (canvasElement.querySelectorAll('.pb-phase-name')[1] as HTMLButtonElement | undefined)?.click();
+    },
+};
+
+export const LaneAddAndRemoved: Story = {
+    name: 'Lane · Add to, and a removed node with Undo',
+    render: () => (
+        <One><Canvas graph={graph([step('implement', [
+            phase('execute', [node('execute', 'Execute the tasks'), node('check', 'Check the requirements')]),
+        ])])} {...CANVAS} onAddTo={noop} adding="implement" onUndo={noop}
+        removed={{
+            command: 'implement', phase: 'execute', index: 2,
+            name: 'Record what was verified', token: 'remove:implement:record-verified',
+        }} /></One>
+    ),
+};
+
 export const PhaseOnlyOne: Story = {
     name: 'Phase · the only one a step has',
     render: () => (
@@ -419,6 +697,17 @@ export const LaneSeam: Story = {
     ),
 };
 
+/** Docked narrow, the lanes stack and each join reads "then <step>". */
+export const LanesStacked: Story = {
+    name: 'Step · lanes stacked in a docked panel',
+    parameters: { capture: { width: 380, height: 900 } },
+    render: () => (
+        <div style="width: 380px;">
+            <One><Canvas graph={graph([SPECIFY, PLAN, TASKS, IMPLEMENT])} {...CANVAS} /></One>
+        </div>
+    ),
+};
+
 /** A step declaring no phase at all — the one lane that could not be changed. */
 export const NoPhases: Story = {
     name: 'Step · no phases yet',
@@ -455,6 +744,18 @@ export const HeaderStale: Story = {
     name: 'Header · the build is behind',
     render: () => (
         <One><Header graph={graph([SPECIFY])} buildState="stale" busy={false} {...HEAD} /></One>
+    ),
+};
+
+export const HeaderWorkflowList: Story = {
+    name: 'Header · the workflow list, a saved one selected and not built',
+    render: () => (
+        <div style="height: 360px"><One><Header
+            graph={graph([SPECIFY], {
+                configured: true,
+                workflows: { available: ['shipped', '', 'skill-only', 'docs-lean'], active: 'skill-only' },
+            })}
+            buildState="stale" busy={false} selectedNotBuilt workflowsOpen {...HEAD} /></One></div>
     ),
 };
 
@@ -519,29 +820,100 @@ export const HeaderFirstRun: Story = {
     ),
 };
 
-export const HeaderBuilt: Story = {
-    name: 'Header · what the build did',
+// ── Build bar ───────────────────────────────────────────
+
+export const BuildBarAppears: Story = {
+    name: 'Build bar · changes waiting',
     render: () => (
-        <One><Header graph={graph([SPECIFY])} buildState="current" busy={false} {...HEAD}
-            report={{
-                ok: true, at: '14:02', commands: 5, changed: [], dryRun: false,
-                output: '[build] built 5 commands from .specify/companion.yml',
-            }} /></One>
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={null} status={null} {...BAR} /></Foot>
     ),
 };
 
-export const HeaderPreviewed: Story = {
-    name: 'Header · what a preview would change',
+export const BuildBarAfterAWrite: Story = {
+    name: 'Build bar · the last write, with the way back',
     render: () => (
-        <One><Header graph={graph([SPECIFY])} buildState="stale" busy={false} {...HEAD}
-            report={{
-                ok: true, at: '14:02', commands: 5, changed: ['specify', 'implement'],
-                dryRun: true,
-                output: '[build] would build 5 commands from .specify/companion.yml\n'
-                    + '[build] what would change:\n'
-                    + '  implement: +12 −4 lines\n  plan: unchanged\n  specify: +31 −0 lines',
-            }} /></One>
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={null}
+            status={{ tone: 'done', text: 'draft-spec no longer runs in specify',
+                undo: { token: 'remove:specify:draft-spec' } }}
+            {...BAR} /></Foot>
     ),
+};
+
+export const BuildBarReview: Story = {
+    name: 'Build bar · review open, with a problem',
+    render: () => (
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={PREVIEW_REPORT}
+            status={{ tone: 'done', text: 'Hook added before execute',
+                undo: { token: 'add:implement' } }}
+            {...BAR} /></Foot>
+    ),
+    play: ({ canvasElement }: { canvasElement: HTMLElement }) => {
+        Array.from(canvasElement.querySelectorAll<HTMLButtonElement>('.builder-bar button'))
+            .find(el => el.textContent === 'Review')?.click();
+    },
+};
+
+export const BuildBarReviewNarrow: Story = {
+    name: 'Build bar · review open with a problem, in a docked panel',
+    parameters: { capture: { width: 380, height: 420 } },
+    render: () => (
+        <Foot width={380}><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={PREVIEW_REPORT}
+            status={{ tone: 'done', text: 'Hook added before execute',
+                undo: { token: 'add:implement' } }}
+            {...BAR} /></Foot>
+    ),
+    play: BuildBarReview.play,
+};
+
+export const BuildBarBuilding: Story = {
+    name: 'Build bar · building',
+    render: () => (
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy
+            report={null} status={null} {...BAR} /></Foot>
+    ),
+};
+
+export const BuildBarBuilt: Story = {
+    name: 'Build bar · built',
+    render: () => (
+        <Foot><BuildBar graph={graph([SPECIFY])} buildState="current" busy={false}
+            report={BUILT_REPORT} status={null} {...BAR} /></Foot>
+    ),
+};
+
+export const BuildBarFailed: Story = {
+    name: 'Build bar · the build failed',
+    render: () => (
+        <Foot><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={{ ...BUILT_REPORT, ok: false,
+                warnings: ['implement: unknown node "draft" in phase execute'] }}
+            status={null} {...BAR} /></Foot>
+    ),
+};
+
+export const BuildBarNarrow: Story = {
+    name: 'Build bar · a docked panel',
+    parameters: { capture: { width: 380, height: 420 } },
+    render: () => (
+        <Foot width={380}><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale"
+            busy={false} report={null} status={null} {...BAR} /></Foot>
+    ),
+};
+
+export const BuildBarFailedNarrow: Story = {
+    name: 'Build bar · the build failed, in a docked panel',
+    parameters: { capture: { width: 380, height: 420 } },
+    render: () => (
+        <Foot width={380}><BuildBar graph={graph([SPECIFY, RAN])} buildState="stale" busy={false}
+            report={{ ...BUILT_REPORT, ok: false,
+                warnings: ['specify did not build · nothing written'] }}
+            status={null} {...BAR} /></Foot>
+    ),
+    play: BuildBarReview.play,
 };
 
 /** Nothing configured, nothing changed: the first-run line is the loudest thing. */
@@ -563,11 +935,11 @@ export const HeaderTally: Story = {
             buildState="current" busy={false} {...HEAD} /></One>
     ),
     play: ({ canvasElement }: { canvasElement: HTMLElement }) => {
-        (canvasElement.querySelector('.builder-tally') as HTMLButtonElement | null)?.click();
+        (canvasElement.querySelector('.builder-overflow button') as HTMLButtonElement | null)?.click();
     },
 };
 
-/** Two rows: the name and the forward action, then the marks and the way in. */
+/** The name, the workflow and the menu; Build is in the bar at the foot. */
 export const HeaderNarrow: Story = {
     name: 'Header · a docked panel',
     parameters: { capture: { width: 380, height: 160 } },
@@ -811,7 +1183,7 @@ export const InspectorFrame: Story = {
 export const AttachSkill: Story = {
     name: 'Add hook · a skill',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="author" choices={CHOICES}
+        <One><HookModal step={SPECIFY} anchor="author" choices={CHOICES}
             onCancel={noop} onAttach={noop} /></One>
     ),
 };
@@ -819,7 +1191,7 @@ export const AttachSkill: Story = {
 export const AttachEditing: Story = {
     name: 'Add hook · editing one that is there',
     render: () => (
-        <One><AttachForm step={IMPLEMENT} anchor="handoff" choices={CHOICES}
+        <One><HookModal step={IMPLEMENT} anchor="handoff" choices={CHOICES}
             editing={hook({
                 when: 'after', type: 'skill', anchor: 'handoff', index: 1,
                 summary: 'create-pr', note: 'Do not merge.',
@@ -831,7 +1203,7 @@ export const AttachEditing: Story = {
 export const AttachNothingToPick: Story = {
     name: 'Add hook · a project with no skills yet',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
+        <One><HookModal step={SPECIFY} anchor="author" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
             onCancel={noop} onAttach={noop} /></One>
     ),
 };
@@ -847,7 +1219,7 @@ export const AttachNothingToPick: Story = {
 export const AttachFromTheCatalog: Story = {
     name: 'Add hook · choosing a command this project has',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="draft-spec" choices={{
+        <One><HookModal step={SPECIFY} anchor="draft-spec" choices={{
             skills: ['create-pr'], nodes: ['review'], fragments: [], presets: [],
             commands: [
                 { id: 'speckit.git.initialize', label: 'speckit.git.initialize',
@@ -870,7 +1242,7 @@ export const AttachFromTheCatalog: Story = {
 export const AttachCommand: Story = {
     name: 'Add hook · a command, after a node',
     render: () => (
-        <One><AttachForm step={SPECIFY} anchor="draft-spec" choices={CHOICES}
+        <One><HookModal step={SPECIFY} anchor="draft-spec" choices={CHOICES}
             editing={hook({
                 when: 'after', type: 'command', anchor: 'draft-spec', index: 0,
                 summary: 'npm run lint-spec',
@@ -879,84 +1251,178 @@ export const AttachCommand: Story = {
     ),
 };
 
-export const TemplateSections: Story = {
-    name: 'Template · the document a step writes',
+/** The skill list read from the catalog: where each one lives, and the one a hook cannot call. */
+const CATALOG_CHOICES = {
+    ...CHOICES,
+    skillCatalog: [
+        { id: 'superpowers:test-driven-development', name: 'test-driven-development',
+            source: 'plugin' as const, where: 'superpowers', description: '', callable: true, enabled: true },
+        { id: 'testing-library-patterns', name: 'testing-library-patterns',
+            source: 'project' as const, where: '.claude/skills', description: '', callable: true, enabled: true },
+        { id: 'run-tests', name: 'run-tests', source: 'user' as const,
+            where: '~/.claude/skills', description: '', callable: false, enabled: true },
+    ],
+};
+
+/** Type into the modal's search, the way a person would, so the list is drawn narrowed. */
+function typed(text: string) {
+    return (el: HTMLElement | null) => {
+        const input = el?.querySelector<HTMLInputElement>('.pb-modal-search input');
+        if (!input || input.value === text) { return; }
+        input.value = text;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+}
+
+export const AttachFromTheSkillCatalog: Story = {
+    name: 'Add hook · the skill catalog, narrowed by typing',
     render: () => (
-        <One><TemplateForm
-            step={step('specify', SPECIFY.phases, {
-                template: {
-                    file: 'spec-template.md',
-                    sections: ['User Scenarios & Testing'],
-                    sectionsAvailable: [
-                        'User Scenarios & Testing', 'Requirements', 'Success Criteria',
-                    ],
-                    chosenBy: { 'User Scenarios & Testing': 'ears-requirements' },
-                },
-            })}
-            fragments={CHOICES.fragments} onCancel={noop} onPick={noop} /></One>
+        <One><div ref={typed('test')}><HookModal step={IMPLEMENT} anchor="handoff" when="before"
+            choices={CATALOG_CHOICES} onCancel={noop} onAttach={noop} /></div></One>
     ),
 };
 
-// A section with nothing behind it drew a field that looked exactly like the
-// working one above it, with the reason in the chosen fragment's slot.
-export const TemplateNoAlternatives: Story = {
-    name: 'Template · nothing else written for any section',
+export const AttachNarrowSheet: Story = {
+    name: 'Add hook · a full-height sheet when the panel is narrow',
     render: () => (
-        <One><TemplateForm
-            step={step('plan', PLAN.phases, {
-                template: {
-                    file: 'plan-template.md',
-                    sections: [],
-                    sectionsAvailable: [
-                        'Technical Context', 'Constitution Check', 'Project Structure',
-                    ],
-                    chosenBy: {},
-                },
-            })}
-            fragments={CHOICES.fragments} onCancel={noop} onPick={noop} /></One>
+        <div class="builder" style="width: 380px">
+            <div ref={typed('test')}><HookModal step={IMPLEMENT} anchor="handoff" when="before"
+                choices={CATALOG_CHOICES} onCancel={noop} onAttach={noop} /></div>
+        </div>
+    ),
+};
+
+const SPEC_DOCUMENT = step('specify', SPECIFY.phases, {
+    template: {
+        file: 'spec-template.md',
+        sections: ['User Scenarios & Testing'],
+        sectionsAvailable: ['User Scenarios & Testing', 'Requirements', 'Success Criteria'],
+        chosenBy: { 'User Scenarios & Testing': 'ears-requirements' },
+    },
+});
+
+export const DocumentSections: Story = {
+    name: 'Document · replace a section, with the outline beside it',
+    render: () => (
+        <div class="builder" style="width: 1100px; height: 720px">
+            <DocumentModal step={SPEC_DOCUMENT} nodeName="Draft the spec"
+                fragments={CHOICES.fragments} savesTo="This project"
+                openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
+        </div>
+    ),
+};
+
+export const DocumentNoAlternatives: Story = {
+    name: 'Document · nothing else written for any section',
+    render: () => (
+        <div class="builder" style="width: 1100px; height: 620px">
+            <DocumentModal
+                step={step('plan', PLAN.phases, {
+                    template: {
+                        file: 'plan-template.md', sections: [], chosenBy: {},
+                        sectionsAvailable: ['Technical Context', 'Constitution Check', 'Project Structure'],
+                    },
+                })}
+                nodeName="Write the plan" fragments={CHOICES.fragments} savesTo="This project"
+                onCancel={noop} onSave={noop} />
+        </div>
+    ),
+};
+
+export const DocumentNarrow: Story = {
+    name: 'Document · a sheet with Sections and Preview tabs when narrow',
+    render: () => (
+        <div class="builder" style="width: 380px; height: 760px">
+            <DocumentModal step={SPEC_DOCUMENT} nodeName="Draft the spec" narrow
+                fragments={CHOICES.fragments} savesTo="This project"
+                openSection="User Scenarios & Testing" onCancel={noop} onSave={noop} />
+        </div>
     ),
 };
 
 export const NewWorkflow: Story = {
     name: 'New workflow',
     render: () => (
-        <One><NewWorkflowForm from="" taken={['shipped', 'bugfix']} presets={CHOICES.presets}
-            onCancel={noop} onCreate={noop} /></One>
+        <div class="builder" style="width: 900px; height: 520px">
+            <NewWorkflowModal taken={['shipped', '', 'bugfix']} hasProject active=""
+                presets={CHOICES.presets} onCancel={noop} onCreate={noop} />
+        </div>
     ),
 };
 
 export const NewWorkflowFromAnother: Story = {
     name: 'New workflow · seeded from one you are on',
     render: () => (
-        <One><NewWorkflowForm from="bugfix" taken={['shipped', 'bugfix']} presets={CHOICES.presets}
-            onCancel={noop} onCreate={noop} /></One>
+        <div class="builder" style="width: 900px; height: 560px">
+            <NewWorkflowModal taken={['shipped', '', 'bugfix']} hasProject active="bugfix"
+                presets={CHOICES.presets} onCancel={noop} onCreate={noop} />
+        </div>
     ),
 };
 
-export const NewWorkflowNoPresets: Story = {
-    name: 'New workflow · nothing shipped to start from',
+export const NewWorkflowNarrow: Story = {
+    name: 'New workflow · a sheet when narrow',
     render: () => (
-        <One><NewWorkflowForm from="" taken={['shipped']} presets={[]}
-            onCancel={noop} onCreate={noop} /></One>
+        <div class="builder" style="width: 380px; height: 640px">
+            <NewWorkflowModal taken={['shipped']} hasProject={false} active=""
+                presets={[]} onCancel={noop} onCreate={noop} />
+        </div>
+    ),
+};
+
+const STEP_FORM = {
+    sequence: ['specify', 'plan', 'tasks', 'implement'],
+    taken: ['specify', 'plan', 'tasks', 'implement', 'auto'],
+    autoRuns: ['specify', 'plan', 'tasks', 'implement'],
+};
+
+const OFFERING = step('implement', [
+    phase('execute', [node('execute', 'Execute the tasks'), node('check', 'Check the requirements')]),
+    phase('wrap-up', [node('handoff', 'Hand off', { pinned: 'it hands off to the next step, so nothing can run after it' })]),
+], {
+    dropped: ['review-gaps', 'verify-manually', 'record-verified'],
+    addOns: ['review-gaps', 'verify-manually'],
+    offers: {
+        'review-gaps': { name: 'Review the gaps', summary: 'Lists what the spec asked for and the code skipped' },
+        'verify-manually': { name: 'Verify by hand', summary: 'Asks you to try it before it closes' },
+        'record-verified': { name: 'Record what was verified', summary: '' },
+    },
+});
+
+export const AddModalNode: Story = {
+    name: 'Add modal · a node from the lane',
+    render: () => (
+        <One><HookModal step={OFFERING} anchor="execute" choices={CHOICES} mode="node"
+            modes={['hook', 'node', 'step']} stepForm={STEP_FORM}
+            onCancel={noop} onAttach={noop} onAddNode={noop} onNewStep={noop} /></One>
+    ),
+};
+
+export const AddModalNothingOnOffer: Story = {
+    name: 'Add modal · nothing on offer',
+    render: () => (
+        <One><HookModal step={step('tasks', [phase('author', [node('tasks-doc', 'Write the tasks')])])}
+            anchor="author" choices={CHOICES} mode="node" modes={['hook', 'node', 'step']}
+            stepForm={STEP_FORM} onCancel={noop} onAttach={noop} /></One>
     ),
 };
 
 export const NewStep: Story = {
-    name: 'New step',
+    name: 'Add modal · a step, with the auto warning',
     render: () => (
-        <One><NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
-            taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
-            onCancel={noop} onCreate={noop} /></One>
+        <One><HookModal step={OFFERING} anchor="execute" choices={CHOICES} mode="step"
+            modes={['hook', 'node', 'step']} stepForm={{ ...STEP_FORM, after: 'implement' }}
+            onCancel={noop} onAttach={noop} onNewStep={noop} /></One>
     ),
 };
 
 // Opened from the seam between two lanes, which is already the answer to
 // "runs after" — so the form does not ask again.
 export const NewStepAfterTasks: Story = {
-    name: 'New step · opened at the seam after tasks',
+    name: 'Add modal · a step opened at the seam after tasks',
     render: () => (
-        <One><NewStepForm sequence={['specify', 'plan', 'tasks', 'implement']}
-            taken={['specify', 'plan', 'tasks', 'implement', 'auto']}
-            initialAfter="tasks" onCancel={noop} onCreate={noop} /></One>
+        <One><HookModal step={OFFERING} anchor="execute" choices={CHOICES} mode="step"
+            modes={['step']} title="Add a step" stepForm={{ ...STEP_FORM, after: 'tasks' }}
+            onCancel={noop} onAttach={noop} onNewStep={noop} /></One>
     ),
 };

@@ -53,6 +53,8 @@ export interface StockStepRow {
     /** The documents a run of it writes. */
     writes: string[];
     hooks: StockHookRow[];
+    /** The lifecycle step its registry hooks key on, where a new one is added. Absent on a gate. */
+    hookStep?: string;
 }
 
 /** One entry in `.specify/extensions.yml`, with the one switch stock Spec Kit owns. */
@@ -68,6 +70,40 @@ export interface StockHookRow {
     enabled: boolean;
     optional: boolean;
     conditional: boolean;
+    /**
+     * The person's own entry: its extension is not installed here, so nothing
+     * rewrites it and the board may edit and remove it. An installed
+     * extension's hook stays switch-only, since a reinstall rewrites it.
+     * The host always sets it; optional so boards drawn before it still type.
+     */
+    own?: boolean;
+    /** What an optional hook asks before it runs. Empty for none. */
+    prompt?: string;
+}
+
+/** A hook the person attaches to a stock step, or the new values of one they own. */
+export interface StockHookDraft {
+    /** The skill or command it runs, e.g. `house-note`. */
+    command: string;
+    description: string;
+    /** Optional hooks ask first; required ones just run. */
+    optional: boolean;
+    /** What an optional hook asks. Empty or absent writes none. */
+    prompt?: string;
+}
+
+/** Where a template comes from, in the order Spec Kit resolves it. */
+export type StockTemplateLayerKind = 'override' | 'preset' | 'extension' | 'core';
+
+/** One layer a template resolves through. */
+export interface StockTemplateLayer {
+    kind: StockTemplateLayerKind;
+    /** The preset or extension id. Empty for an override and for core. */
+    source: string;
+    /** Workspace-relative. */
+    path: string;
+    /** How it combines with the layers under it. */
+    strategy: 'replace' | 'prepend' | 'append' | 'wrap' | 'replace-section';
 }
 
 /** One template under `.specify/templates/`, and the step that fills it. */
@@ -87,6 +123,13 @@ export interface StockTemplate {
     note: string;
     /** The command that fills it, in this project's spelling. Empty for none. */
     command: string;
+    /** The layer a run uses: the top of `layers`. Always set by the host. */
+    inForce?: StockTemplateLayerKind;
+    /**
+     * Every layer that composes the template, top first. The last is the base
+     * the others prepend, append or wrap; a single entry replaces outright.
+     */
+    layers?: StockTemplateLayer[];
 }
 
 /** One workflow installed under `.specify/workflows/`. */
@@ -115,7 +158,7 @@ export interface StockWorkflowView {
      * `command` is the spelling this project registers, so the row names what
      * the run will actually name.
      */
-    constitution: { command: string; written: boolean } | null;
+    constitution: { command: string; written: boolean; path?: string } | null;
     /** The extension registry, when this project has one. */
     registry: { path: string } | null;
     /** Why Build does nothing here, said once. */
@@ -135,6 +178,61 @@ export interface PipelineHook {
     note: string;
     /** Written by this project and not running, because `shipped` is in force. */
     parked?: boolean;
+    /**
+     * Why a skill hook will do nothing in a run, in words the panel shows as is:
+     * the skill is missing, its plugin is off, or it refuses model calls. Empty
+     * when it can run. The build prints the same sentence as a warning.
+     * Optional: a graph from an older install omits it.
+     */
+    problem?: string;
+}
+
+/**
+ * One hook's outcome in a run, as the assistant recorded it (`by: ai`): its own
+ * word, not proof. A board hook with no run under its `key` was "not seen".
+ */
+export interface HookRun {
+    /** `${step}/${when}/${anchor}/${index}`, the address a board hook is matched by. */
+    key: string;
+    step: string;
+    when: HookWhen;
+    anchor: string;
+    index: number;
+    type: HookType;
+    /** The skill or node name; empty for a command or prompt hook. A mismatch means the hook changed since. */
+    ref: string;
+    outcome: 'ran' | 'skipped';
+    /** Why it was skipped, one line, when the assistant gave one. */
+    reason?: string;
+    /** When it was recorded, ISO-8601 UTC. */
+    at: string;
+}
+
+/** The last run's hook outcomes: the newest spec in the project and its last record per hook. */
+export interface HookRunsAnswer {
+    /** `null` when the project has no spec run to read. */
+    spec: { name: string; path: string } | null;
+    /** The spec's newest activity, ISO-8601 UTC. */
+    runAt: string | null;
+    runs: HookRun[];
+}
+
+/** One skill a hook can name, and where it comes from. */
+export interface SkillChoice {
+    /** What a hook writes in `ref`: `house-check`, or `plugin:skill` for a plugin's. */
+    id: string;
+    /** The skill's own name, without a plugin prefix. */
+    name: string;
+    /** `project` is shared with the repository; `user` is only this developer's. */
+    source: 'project' | 'user' | 'plugin';
+    /** The folder (`.claude/skills`, `~/.claude/skills`) or, for a plugin, its name. */
+    where: string;
+    /** The skill's own description, one line, up to 200 characters. Empty when it has none. */
+    description: string;
+    /** False when its frontmatter sets `disable-model-invocation: true`: a hook cannot call it. */
+    callable: boolean;
+    /** False only for a plugin turned off in Claude Code settings. */
+    enabled: boolean;
 }
 
 /** An alternative for one node's slot: same place in the run, different words. */
@@ -359,6 +457,17 @@ export interface OfferedEntry {
 
 export interface PipelineChoices {
     skills: string[];
+    /**
+     * Every skill a hook can name, with its source, description and whether a
+     * hook can call it. Project skills first, then the developer's own, then
+     * installed plugins'. Optional: a graph from an older install omits it.
+     */
+    skillCatalog?: SkillChoice[];
+    /**
+     * Whether Claude Code's plugin list could be read. False means plugin skills
+     * are missing from `skillCatalog` because they could not be checked.
+     */
+    pluginsRead?: boolean;
     nodes: string[];
     /**
      * Hook commands this project's registries carry, so attaching one is a choice.
@@ -475,6 +584,12 @@ export interface BuildReport {
     dryRun: boolean;
     /** The full log, which the output channel also holds. */
     output: string;
+    /**
+     * What the build warned about without refusing, such as a skill hook whose
+     * skill is missing: `specify: skill hook before draft-spec: No skill named …`.
+     * Always filled by the extension; optional so older report literals still type.
+     */
+    warnings?: string[];
 }
 
 // ============================================
@@ -668,6 +783,18 @@ export type BuilderToExtensionMessage =
         index: number;
         enabled: boolean;
     }
+    /** Attach the person's own hook to a stock step. Stock projects only. */
+    | { type: 'addStockHook'; step: string; when: HookWhen; hook: StockHookDraft }
+    /** Change a hook the person added, addressed as `setStockHook` addresses one. */
+    | {
+        type: 'updateStockHook';
+        step: string;
+        when: HookWhen;
+        index: number;
+        hook: StockHookDraft;
+    }
+    /** Take away a hook the person added. */
+    | { type: 'removeStockHook'; step: string; when: HookWhen; index: number }
     /**
      * Open one of the files the stock board drew from, in an editor.
      *
@@ -680,12 +807,16 @@ export type BuilderToExtensionMessage =
     | { type: 'selectStockWorkflow'; id: string }
     /** Run a stock Spec Kit command that owns what a row is about. */
     | { type: 'runStockCommand'; command: 'constitution' }
+    /** Add the Companion Spec Kit extension, the way every other install surface does. */
+    | { type: 'installCompanion' }
     /** `specify preset search <query>`, in a terminal the person can see. */
     | { type: 'presetSearch'; query: string }
     /** `specify preset add|update|remove <id>`, after a confirm that names what it replaces. */
     | { type: 'presetAdd'; id: string }
     | { type: 'presetUpdate'; id: string }
-    | { type: 'presetRemove'; id: string };
+    | { type: 'presetRemove'; id: string }
+    /** Ask for the last run's outcome per hook; answered with `hookRuns`. Reads only. */
+    | { type: 'readHookRuns' };
 
 export const PRESET_ID_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 export const PRESET_QUERY_PATTERN = /^[A-Za-z0-9][A-Za-z0-9 -]*$/;
@@ -745,4 +876,6 @@ export type ExtensionToBuilderMessage =
      * it: the moment the configuration changes again, a timestamp saying what
      * was built has stopped being true.
      */
-    | { type: 'buildReport'; report: BuildReport | null };
+    | { type: 'buildReport'; report: BuildReport | null }
+    /** The answer to `readHookRuns`. */
+    | { type: 'hookRuns'; answer: HookRunsAnswer };

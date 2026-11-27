@@ -1,38 +1,39 @@
 /**
  * @jest-environment jsdom
  */
-import { AttachForm } from '../AttachForm';
+import { HookModal } from '../HookModal';
 import { canvas, flush, mount, step } from './support';
 
 afterEach(() => { document.body.innerHTML = ''; });
 
 describe('one action keeps one name through the flow', () => {
     const noop = () => undefined;
+    const CHOICES = { skills: [], nodes: [], commands: [], fragments: [], presets: [] };
 
-    it('says "Add hook" on the phase, in the sheet, and on the confirm', async () => {
+    it('says "Add to" on the lane, "Add" in the modal\'s title and on the confirm', () => {
         const { host } = canvas();
-        (host.querySelector('.pb-phase-add') as HTMLButtonElement).click();
-        await flush();
-        expect(host.querySelector('.pb-menu-label')?.textContent).toBe('Add hook');
+        expect(host.querySelector('.pb-lane-add')?.textContent).toBe('Add to specify');
 
         document.body.innerHTML = '';
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
+            <HookModal step={step()} anchor="gather" choices={CHOICES} onCancel={noop} onAttach={noop} />,
+        );
+        expect(sheet.querySelector('.pb-modal-title')?.textContent).toBe('Add before the gather phase');
+        expect(sheet.querySelector('.pb-action--primary')?.textContent).toBe('Add');
+
+        document.body.innerHTML = '';
+        const lane = mount(
+            <HookModal step={step()} anchor="gather" choices={CHOICES} modes={['hook', 'node', 'step']}
                 onCancel={noop} onAttach={noop} />,
         );
-        expect(sheet.querySelector('.pb-side-title')?.textContent).toBe('Add hook');
-        expect(sheet.querySelector('.pb-action--primary')?.textContent).toContain('Add hook');
+        expect(lane.querySelector('.pb-modal-title')?.textContent).toBe('Add to specify');
     });
 
-    it('names the anchor row for when and where it goes, not what it is', () => {
+    it('names the place line for when and where it goes, not what it is', () => {
         const sheet = mount(
-            <AttachForm step={step()} anchor="gather" choices={{ skills: [], nodes: [], commands: [], fragments: [], presets: [] }}
-                onCancel={noop} onAttach={noop} />);
-        const labels = Array.from(sheet.querySelectorAll('.pb-field-label'))
-            .map(el => el.textContent);
-        expect(labels).toContain('Runs');
-        expect(labels).not.toContain('What');
-        expect(Array.from(sheet.querySelectorAll('.pb-runs .pb-menu-trigger'))
+            <HookModal step={step()} anchor="gather" choices={CHOICES} onCancel={noop} onAttach={noop} />);
+        expect(sheet.querySelector('.pb-modal-runs')?.textContent).toContain('Runs');
+        expect(Array.from(sheet.querySelectorAll('.pb-modal-runs .pb-menu-trigger'))
             .map(el => el.getAttribute('aria-label'))).toEqual(['When', 'Where']);
     });
 });

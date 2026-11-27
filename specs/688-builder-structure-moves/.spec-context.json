@@ -1,0 +1,648 @@
+{
+  "workflow": "companion",
+  "specName": "Builder structure — add, move and remove through the modal and the popover",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:40:53.567Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:41:51.127Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:41:56.332Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:42:43.257Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:43:11.521Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:43:12.260Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:43:22.346Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:52.884Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:52.884Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:52.884Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.019Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.019Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.019Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.142Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.142Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.143Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.143Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.275Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.393Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T015",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.394Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T19:00:53.413Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T19:01:47.991Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T19:01:59.635Z"
+    }
+  ],
+  "request": "Workflow Builder: add a node or a step, move and remove nodes through the add modal and the node's popover.",
+  "unattended": true,
+  "expectations": [
+    "No change to the host, the protocol or the writer",
+    "No new way to write a node file",
+    "No change to the Inspector side pane",
+    "No pixel baselines or clips regenerated"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder (Canvas, HookModal, NodePopover, index)",
+    "constraint: host tokens only, no protocol change"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Lane header + Add to <step> opens the add modal",
+      "tasks": [
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::offers Add to <step> on every lane"
+      ]
+    },
+    "FR-002": {
+      "title": "Modal choice row Hook · Node · Step",
+      "tasks": [
+        "T007",
+        "T009"
+      ],
+      "tests": [
+        "StructureModal.test.tsx::shows the choice row as a radio group"
+      ]
+    },
+    "FR-003": {
+      "title": "Node choice lists nodes on offer, searchable",
+      "tasks": [
+        "T007",
+        "T009"
+      ],
+      "tests": [
+        "StructureModal.test.tsx::names each node"
+      ]
+    },
+    "FR-004": {
+      "title": "Node choice picks the phase and sends addNode",
+      "tasks": [
+        "T004",
+        "T007",
+        "T009"
+      ],
+      "tests": [
+        "StructureApp.test.tsx::adds a node on offer at the end of a phase"
+      ]
+    },
+    "FR-005": {
+      "title": "Step choice sends newStep with todays fields",
+      "tasks": [
+        "T008",
+        "T010"
+      ],
+      "tests": [
+        "StructureApp.test.tsx::adds a step behind the lane"
+      ]
+    },
+    "FR-006": {
+      "title": "Step choice warns auto will not run it",
+      "tasks": [
+        "T008",
+        "T010"
+      ],
+      "tests": [
+        "StructureModal.test.tsx::warns that auto will not run it"
+      ]
+    },
+    "FR-007": {
+      "title": "+ step control at the end of the lanes",
+      "tasks": [
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "StructureApp.test.tsx::opens the same modal on Step alone"
+      ]
+    },
+    "FR-008": {
+      "title": "Popover footer Move…, Edit node, Remove from the run",
+      "tasks": [
+        "T011",
+        "T013"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::keeps every other action under More"
+      ]
+    },
+    "FR-009": {
+      "title": "Move list with refused places and reasons",
+      "tasks": [
+        "T001",
+        "T005",
+        "T011",
+        "T013"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::greys a place the writer would refuse"
+      ]
+    },
+    "FR-010": {
+      "title": "Remove shows struck row with Undo",
+      "tasks": [
+        "T002",
+        "T004",
+        "T006",
+        "T012"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::removes the node from the run ... struck row with Undo"
+      ]
+    },
+    "FR-011": {
+      "title": "Phase label menu Rename, Split, Merge both ways",
+      "tasks": [
+        "T002",
+        "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::says everything a phase can do",
+        "behind its own name"
+      ]
+    },
+    "FR-012": {
+      "title": "Every host message stays reachable",
+      "tasks": [
+        "T004",
+        "T015"
+      ],
+      "tests": [
+        "StructureApp.test.tsx + NodePopover.test.tsx"
+      ]
+    },
+    "FR-013": {
+      "title": "Focus trap, restore, names, reduced motion",
+      "tasks": [
+        "T003",
+        "T009",
+        "T013"
+      ],
+      "tests": [
+        "StructureApp.test.tsx::restores focus to the control when it closes"
+      ]
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 14,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Add nodes and steps from the lane modal, move and remove nodes from the popover",
+  "size": "normal",
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/688-builder-structure-moves --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 2 call paths, 8 lines, 2 screens, 14 parts ·   WARNING plan.md:35  2 `note:` lines under the block, the budget is 1 (long-note) ·   0 error(s), 1 warning(s)"
+    },
+    {
+      "what": "Requirements check against the diff, run inline (no subagent tool here)",
+      "result": "FR-001..FR-013 met; each has a test through the rendered board, modal or App"
+    },
+    {
+      "what": "types",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "8b92d14d",
+      "tree": "989c8469a5c8c1b1535784874100befdde6a4b50"
+    },
+    {
+      "what": "webview types",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json",
+      "commit": "8b92d14d",
+      "tree": "989c8469a5c8c1b1535784874100befdde6a4b50"
+    },
+    {
+      "what": "builder tests",
+      "command": "npx jest apps/vscode/webview/src/pipeline-builder",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 6.9,
+      "result": "Snapshots:   0 total · Time:        6.218 s · Ran all test suites matching /apps\\/vscode\\/webview\\/src\\/pipeline-builder/i.",
+      "commit": "8b92d14d",
+      "tree": "989c8469a5c8c1b1535784874100befdde6a4b50"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Check move places in the webview from reads, readers and held nodes, in the writer wording",
+      "why": "the host exposes no per-place answer",
+      "rejected": "a new host message",
+      "by": "agent",
+      "at": "2026-11-24T18:42:42.978Z"
+    },
+    {
+      "decision": "Auto warning from shipped in-sequence steps",
+      "why": "auto dispatches a fixed list",
+      "rejected": "a host flag that does not exist",
+      "by": "agent",
+      "at": "2026-11-24T18:42:42.978Z"
+    },
+    {
+      "decision": "Extend HookModal with a mode instead of a second modal",
+      "why": "focus trap, sheet and footer already exist",
+      "rejected": "a new AddModal",
+      "by": "agent",
+      "at": "2026-11-24T18:42:42.978Z"
+    },
+    {
+      "decision": "Mirror the writer's reads and held rules in the webview to grey refused places",
+      "why": "the host exposes no per-place answer",
+      "rejected": "a protocol change",
+      "by": "agent",
+      "at": "2026-11-24T19:01:16.118Z"
+    },
+    {
+      "decision": "Retire the side-pane NewStepForm; every Add step route opens the modal on Step",
+      "why": "one form, one place",
+      "rejected": "keeping two step forms",
+      "by": "agent",
+      "at": "2026-11-24T19:01:16.118Z"
+    },
+    {
+      "decision": "Phase + menu removed; Add hook and Add node reached from the lane modal, the node edge + and the popover More menu",
+      "why": "the design moves adding to the lane",
+      "rejected": "keeping both entry points",
+      "by": "agent",
+      "at": "2026-11-24T19:01:16.118Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Lane add modal with Hook/Node/Step, popover Move list and remove with undo row, phase label menu",
+      "key_finding": "remove undo token is remove:<step>:<node>, so the struck row can track the real undo"
+    },
+    "tasks": {
+      "summary": "15 tasks: foundational (moves, canvas, wiring, css) then modal and popover stories, polish"
+    },
+    "implement": {
+      "summary": "Lane Add to modal with Hook/Node/Step, popover Move list with refusal reasons, remove with struck Undo row, phase label menu"
+    }
+  },
+  "approach": "Extend HookModal with a choice row and Node/Step panels; NodePopover gains a Move list from a pure movePlaces helper; Canvas adds the lane button, + step tail, phase label menu and struck undo row.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "movePlaces, lane Add to, + step, phase label menu, struck row, styles",
+      "files": [
+        "moves.ts",
+        "Canvas.tsx",
+        "pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "movePlaces, lane Add to, + step, phase label menu, struck row, styles",
+      "files": [
+        "moves.ts",
+        "Canvas.tsx",
+        "pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "movePlaces, lane Add to, + step, phase label menu, struck row, styles",
+      "files": [
+        "moves.ts",
+        "Canvas.tsx",
+        "pipeline-builder.css"
+      ],
+      "wave": "T001-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "index wiring for modal modes, addNode, newStep, removed row; move and board tests",
+      "files": [
+        "index.tsx",
+        "MovePlaces.test.tsx",
+        "Board.test.tsx",
+        "StructureApp.test.tsx"
+      ],
+      "wave": "T004-T006"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "index wiring for modal modes, addNode, newStep, removed row; move and board tests",
+      "files": [
+        "index.tsx",
+        "MovePlaces.test.tsx",
+        "Board.test.tsx",
+        "StructureApp.test.tsx"
+      ],
+      "wave": "T004-T006"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "index wiring for modal modes, addNode, newStep, removed row; move and board tests",
+      "files": [
+        "index.tsx",
+        "MovePlaces.test.tsx",
+        "Board.test.tsx",
+        "StructureApp.test.tsx"
+      ],
+      "wave": "T004-T006"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Hook/Node/Step choice row and Node, Step panels with tests",
+      "files": [
+        "HookModal.tsx",
+        "StructureModal.test.tsx"
+      ],
+      "wave": "T007-T010"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Hook/Node/Step choice row and Node, Step panels with tests",
+      "files": [
+        "HookModal.tsx",
+        "StructureModal.test.tsx"
+      ],
+      "wave": "T007-T010"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "Hook/Node/Step choice row and Node, Step panels with tests",
+      "files": [
+        "HookModal.tsx",
+        "StructureModal.test.tsx"
+      ],
+      "wave": "T007-T010"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "Hook/Node/Step choice row and Node, Step panels with tests",
+      "files": [
+        "HookModal.tsx",
+        "StructureModal.test.tsx"
+      ],
+      "wave": "T007-T010"
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "popover Move list, footer, Remove with reason; tests",
+      "files": [
+        "NodePopover.tsx",
+        "NodePopover.test.tsx"
+      ],
+      "wave": "T011-T013"
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "popover Move list, footer, Remove with reason; tests",
+      "files": [
+        "NodePopover.tsx",
+        "NodePopover.test.tsx"
+      ],
+      "wave": "T011-T013"
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "popover Move list, footer, Remove with reason; tests",
+      "files": [
+        "NodePopover.tsx",
+        "NodePopover.test.tsx"
+      ],
+      "wave": "T011-T013"
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "stories updated; tsc and related jest green",
+      "files": [
+        "Components.stories.tsx",
+        "Interactions.stories.tsx",
+        "Guide.stories.tsx"
+      ],
+      "wave": "T014-T015"
+    },
+    "T015": {
+      "status": "DONE",
+      "did": "stories updated; tsc and related jest green",
+      "files": [
+        "Components.stories.tsx",
+        "Interactions.stories.tsx",
+        "Guide.stories.tsx"
+      ],
+      "wave": "T014-T015"
+    }
+  },
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "concerns": [
+    {
+      "note": "Risk tier reads high because the branch already touches write-context.py and capture.py from earlier slices; this slice touches only webview files",
+      "step": "implement"
+    },
+    {
+      "note": "Pixel baselines and clips not regenerated by design; the final stage of the run does that",
+      "step": "implement"
+    },
+    {
+      "note": "Your node file versus removed earlier cannot be told apart in the graph, so the Node list says only shipped optional or removed from this run",
+      "step": "implement"
+    }
+  ],
+  "last_action": "verify-run and close implement",
+  "convergeStartedAt": "2026-11-24T19:01:48.027Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T19:01:48.063Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T19:01:59.701Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

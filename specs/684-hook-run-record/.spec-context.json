@@ -1,0 +1,555 @@
+{
+  "workflow": "companion",
+  "specName": "A record of which hooks ran",
+  "branch": "feat/builder-hook-data",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:14:17.306Z"
+    },
+    {
+      "step": "specify",
+      "substep": "classify-size",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:14:44.153Z"
+    },
+    {
+      "step": "specify",
+      "substep": "draft-spec",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:15:20.243Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T17:15:21.006Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:15:27.924Z"
+    },
+    {
+      "step": "plan",
+      "substep": "gather-context",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:15:55.140Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:16:37.191Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:16:56.557Z"
+    },
+    {
+      "step": "tasks",
+      "substep": "tasks-doc",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:16:56.991Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:16:58.489Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:17:08.509Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:20:57.004Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:20:57.005Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:20:57.158Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:20:57.159Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:23:33.370Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:23:33.485Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:23:33.599Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:23:33.599Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:24:07.506Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:24:30.820Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:24:30.820Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:24:30.841Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:28:27.163Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T17:28:39.842Z"
+    }
+  ],
+  "request": "Companion pipeline: each hook records whether it ran or was skipped, and the Workflow Builder can read the last run's outcome per hook.",
+  "unattended": true,
+  "expectations": [
+    "Proving a hook ran: a record is the assistant's own report",
+    "Records for stock Spec Kit hooks in extensions.yml",
+    "Drawing outcomes on the board",
+    "Changing what a hook does or when it runs"
+  ],
+  "context": [
+    "area: apps/speckit-extension/scripts (hook_render.py, write-context.py, capture.py)",
+    "area: apps/vscode/src/features/pipeline-builder + protocol/pipeline.ts",
+    "constraint: one writer and one lock for .spec-context.json; history only grows",
+    "constraint: webview files belong to another team"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "Each rendered hook ends with one instruction to record its outcome, naming the hook",
+      "tasks": [
+        "T001",
+        "T002"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_runs.py::EveryHookAsksForItsRecord"
+      ]
+    },
+    "FR-002": {
+      "title": "The record rides on any call of the existing run-record writer",
+      "tasks": [
+        "T001",
+        "T004"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_runs.py::test_it_rides_on_a_step_close_and_the_close_still_lands",
+        "test_it_rides_on_a_batch_and_the_batch_still_lands"
+      ]
+    },
+    "FR-003": {
+      "title": "Records are appended under the shared lock, stamped by: ai, never rewritten",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_runs.py::test_records_only_grow",
+        "test_set_cannot_replace_the_records"
+      ]
+    },
+    "FR-004": {
+      "title": "Outcome is ran or skipped with optional one-line reason; anything else refused",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_runs.py::test_a_bad_record_writes_nothing_and_the_other_work_still_happens",
+        "test_a_skip_keeps_its_reason_on_one_line"
+      ]
+    },
+    "FR-005": {
+      "title": "Hook records are never read as step boundaries",
+      "tasks": [
+        "T001",
+        "T003"
+      ],
+      "tests": [
+        "apps/speckit-extension/tests/test_hook_runs.py::test_a_record_alone_lands_and_adds_no_history_row"
+      ]
+    },
+    "FR-006": {
+      "title": "Host read returns the latest spec run and its last outcome per hook, or no run",
+      "tasks": [
+        "T005",
+        "T007",
+        "T008"
+      ],
+      "tests": [
+        "apps/vscode/src/features/pipeline-builder/__tests__/hookRuns.test.ts"
+      ]
+    },
+    "FR-007": {
+      "title": "The read passes over an unreadable run record",
+      "tasks": [
+        "T005",
+        "T007"
+      ],
+      "tests": [
+        "apps/vscode/src/features/pipeline-builder/__tests__/hookRuns.test.ts::passes over an unreadable record"
+      ]
+    },
+    "FR-008": {
+      "title": "Not seen is never written; each outcome carries a matching key",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "apps/vscode/src/features/pipeline-builder/__tests__/hookRuns.test.ts::names the newest spec with no runs"
+      ]
+    },
+    "FR-009": {
+      "title": "node-hooks reference lists the skill type and the record rule",
+      "tasks": [
+        "T009"
+      ],
+      "assumes": "documentation; read by the assistant, no test"
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 10,
+    "scopeSignal": "none",
+    "verdict": "normal"
+  },
+  "intent": "Each Companion hook records ran or skipped, and the Workflow Builder can read the last run's outcome per hook",
+  "size": "normal",
+  "source": "Workflow Builder Trial, section 7, gap 1",
+  "planBlocks": [
+    "calls"
+  ],
+  "planBlocksPicked": [
+    "calls"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/684-hook-run-record --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.1,
+      "result": "[plan-check] plan.md: 3 call paths, 11 lines ·   WARNING plan.md:39  `apps/speckit-extension/scripts/spec_context.py` has no `:line`, so it is unverified (no-line) ·   0 error(s), 1 warning(s)"
+    },
+    {
+      "what": "type-check",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.2,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "ea1cbff5",
+      "tree": "7b6e1eea573c35ffc4dfaf66f42ae1306b342273"
+    },
+    {
+      "what": "jest related",
+      "command": "npx jest --findRelatedTests apps/vscode/src/features/pipeline-builder/hookRuns.ts apps/vscode/src/features/pipeline-builder/builderPanel.ts apps/vscode/src/protocol/pipeline.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 77.4,
+      "result": "Snapshots:   0 total · Time:        76.643 s · Ran all test suites related to files matching /apps\\/vscode\\/src\\/features\\/pipeline-builder\\/hookRuns.ts|apps\\/vscode\\/src\\/features\\/pipeline-builder\\/builderPanel.ts|apps\\/vscode\\/src\\/protocol\\/pipeline.ts/i.",
+      "commit": "ea1cbff5",
+      "tree": "7b6e1eea573c35ffc4dfaf66f42ae1306b342273"
+    },
+    {
+      "what": "pytest hook records",
+      "command": "python3 -m pytest apps/speckit-extension/tests/test_hook_runs.py apps/speckit-extension/tests/test_build_pipeline.py apps/speckit-extension/tests/test_config.py -q -p no:cacheprovider",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.8,
+      "result": "........................................................................ [ 82%] · ...............                                                          [100%] · 87 passed in 3.64s",
+      "commit": "ea1cbff5",
+      "tree": "7b6e1eea573c35ffc4dfaf66f42ae1306b342273"
+    },
+    {
+      "what": "docs consistency",
+      "command": "npx jest apps/vscode/tests/integration/docs-consistency.test.ts",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.1,
+      "result": "Snapshots:   0 total · Time:        1.244 s, estimated 2 s · Ran all test suites matching /apps\\/vscode\\/tests\\/integration\\/docs-consistency.test.ts/i.",
+      "commit": "ea1cbff5",
+      "tree": "7b6e1eea573c35ffc4dfaf66f42ae1306b342273"
+    },
+    {
+      "what": "Requirements check against the diff, run inline (no subagent tool in this session)",
+      "result": "FR-001..FR-009 met; one at-risk found and closed by a test: a hook record alone on a spec past specify was refused as a stale specify start"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Hook records live in a new append-only hookRuns list, not history[]",
+      "why": "every history reader treats a row without substep/task and with an unknown kind as a step start",
+      "rejected": "a history row with kind hook, which needs five readers changed",
+      "by": "agent",
+      "at": "2026-11-24T17:16:36.442Z"
+    },
+    {
+      "decision": "--hook-outcome rides on any write-context.py call",
+      "why": "every step makes a writer call after its hooks, so the record costs no extra turn",
+      "rejected": "a dedicated call per hook",
+      "by": "agent",
+      "at": "2026-11-24T17:16:36.442Z"
+    },
+    {
+      "decision": "The build renders the whole hook address; the assistant only picks ran or skipped",
+      "why": "shortest prompt and the record survives later config edits",
+      "rejected": "JSON payloads or a slot id the writer resolves from companion.yml",
+      "by": "agent",
+      "at": "2026-11-24T17:16:36.442Z"
+    },
+    {
+      "decision": "Most recent run is the spec with the newest at across history and hookRuns",
+      "why": "folder numbers and mtimes do not order runs",
+      "rejected": "highest spec number",
+      "by": "agent",
+      "at": "2026-11-24T17:16:36.442Z"
+    },
+    {
+      "decision": "Records go in hookRuns[], not history[]",
+      "why": "every history reader treats an unknown row as a step start",
+      "rejected": "a history row with kind hook",
+      "by": "agent",
+      "at": "2026-11-24T17:28:20.351Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Record line in each rendered hook, --hook-outcome writer to hookRuns[], host readHookRuns message",
+      "key_finding": "history[] cannot carry non-boundary rows without corrupting step timing in every reader"
+    },
+    "tasks": {
+      "summary": "11 tasks, three disjoint story phases plus polish"
+    },
+    "implement": {
+      "summary": "Hooks ask for a ran/skipped record that rides on an existing writer call; the panel reads the last run's outcome per hook"
+    }
+  },
+  "approach": "hook_render appends one record line naming the hook; write-context.py --hook-outcome appends to hookRuns[] under the shared lock and rides on any call; the host reads the newest spec and answers a readHookRuns message.",
+  "currentTask": null,
+  "task_summaries": {
+    "T002": {
+      "status": "DONE",
+      "did": "record line in each rendered hook; hookRuns writer",
+      "files": [
+        "apps/speckit-extension/scripts/hook_render.py",
+        "apps/speckit-extension/scripts/capture.py",
+        "apps/speckit-extension/tests/test_build_pipeline.py"
+      ],
+      "wave": "T002-T003"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "record line in each rendered hook; hookRuns writer",
+      "files": [
+        "apps/speckit-extension/scripts/hook_render.py",
+        "apps/speckit-extension/scripts/capture.py",
+        "apps/speckit-extension/tests/test_build_pipeline.py"
+      ],
+      "wave": "T002-T003"
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "--hook-outcome rides on any writer call; tests",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py",
+        "apps/speckit-extension/tests/test_hook_runs.py"
+      ],
+      "wave": "T004-T001"
+    },
+    "T001": {
+      "status": "DONE",
+      "did": "--hook-outcome rides on any writer call; tests",
+      "files": [
+        "apps/speckit-extension/scripts/write-context.py",
+        "apps/speckit-extension/tests/test_hook_runs.py"
+      ],
+      "wave": "T004-T001"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "HookRun, HookRunsAnswer and the two messages",
+      "files": [
+        "apps/vscode/src/protocol/pipeline.ts"
+      ]
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "hookRunsFrom and readHookRuns",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/hookRuns.ts"
+      ]
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "panel handler; fixture tests",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/builderPanel.ts",
+        "apps/vscode/src/features/pipeline-builder/__tests__/hookRuns.test.ts"
+      ],
+      "wave": "T008-T005"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "panel handler; fixture tests",
+      "files": [
+        "apps/vscode/src/features/pipeline-builder/builderPanel.ts",
+        "apps/vscode/src/features/pipeline-builder/__tests__/hookRuns.test.ts"
+      ],
+      "wave": "T008-T005"
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "node-hooks reference lists skill and the record rule",
+      "files": [
+        "apps/speckit-extension/commands/reference/node-hooks.md"
+      ]
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "validated; changelog lines held for the PR link the voice test requires",
+      "wave": "T010-T011"
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "validated; changelog lines held for the PR link the voice test requires",
+      "wave": "T010-T011"
+    }
+  },
+  "concerns": [
+    {
+      "note": "A hook record is the assistant's own report (by: ai): it shows the assistant said it ran the hook, not that it did",
+      "step": "implement"
+    },
+    {
+      "note": "A --hook-outcome riding on --bug, --event or a specify --hook start is dropped: those paths return before the record write",
+      "step": "implement"
+    },
+    {
+      "note": "No changelog lines: the voice test requires a PR link and this branch opens no PR; add one line to each changelog when the PR exists",
+      "step": "implement"
+    },
+    {
+      "note": "Doctor warnings left alone, not this run's: workflow not registered with spec-kit's engine, three spec folders numbered 634",
+      "step": "implement"
+    },
+    {
+      "note": "The repo's own built command bodies are not rebuilt here, so this run did not exercise the record line",
+      "step": "implement"
+    },
+    {
+      "note": "Risk tier high wants two independent reviews; no subagent tool here and /code-review from this session would review the main checkout, so only a self-review ran",
+      "step": "implement"
+    }
+  ],
+  "last_action": "implement validated; closing at implemented",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-24T17:28:27.202Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T17:28:27.244Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T17:28:39.909Z",
+      "added": [],
+      "completed": true
+    }
+  ]
+}

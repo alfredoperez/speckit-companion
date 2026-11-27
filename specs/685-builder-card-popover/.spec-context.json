@@ -1,0 +1,609 @@
+{
+  "workflow": "companion",
+  "specName": "Builder card with its hooks inside, and a node popover",
+  "branch": "feat/builder-redesign-core",
+  "currentStep": "converge",
+  "status": "completed",
+  "history": [
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:43:21.190Z"
+    },
+    {
+      "step": "specify",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T17:44:06.978Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:44:11.996Z"
+    },
+    {
+      "step": "plan",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:44:57.723Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:45:06.789Z"
+    },
+    {
+      "step": "tasks",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:45:26.979Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T17:45:38.055Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T001",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:46:00.044Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T002",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:46:00.044Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T003",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:46:19.506Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T004",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:56:41.774Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T005",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:56:41.775Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T006",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:56:42.000Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T007",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:56:42.001Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T008",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.210Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T009",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.358Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T010",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.358Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T011",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.504Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T012",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T17:59:38.504Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T013",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:01:28.128Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:01:28.157Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "start",
+      "by": "extension",
+      "at": "2026-11-24T18:02:09.656Z"
+    },
+    {
+      "step": "implement",
+      "substep": null,
+      "task": "T014",
+      "kind": "complete",
+      "by": "ai",
+      "at": "2026-11-24T18:02:50.282Z"
+    },
+    {
+      "step": "converge",
+      "substep": null,
+      "kind": "complete",
+      "by": "extension",
+      "at": "2026-11-24T18:02:56.041Z"
+    }
+  ],
+  "request": "Workflow Builder: a node card with its hooks inside it, each showing whether it ran, and a popover for the details.",
+  "unattended": true,
+  "expectations": [
+    "Changing how hooks are written",
+    "Redesigning the hook form, lanes, header or stock board",
+    "A per-hook Move button in the popover",
+    "Editing step-level hooks from the board"
+  ],
+  "context": [
+    "area: apps/vscode/webview/src/pipeline-builder (Canvas, Inspector, index)",
+    "area: apps/vscode/webview/styles/pipeline-builder.css",
+    "constraint: host tokens only, no protocol change"
+  ],
+  "coverage": {
+    "FR-001": {
+      "title": "One card per node holding before hooks, node row, after hooks",
+      "tasks": [
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::holds the node and its hooks in one card"
+      ]
+    },
+    "FR-002": {
+      "title": "Node row shows name and at most two marks",
+      "tasks": [
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::carries at most two marks"
+      ]
+    },
+    "FR-003": {
+      "title": "Hook row shows kind icon, name and status slot",
+      "tasks": [
+        "T002",
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::marks the kind with an icon"
+      ]
+    },
+    "FR-004": {
+      "title": "Phase and step hooks as slim rows at the top of their phase or lane",
+      "tasks": [
+        "T004",
+        "T006"
+      ],
+      "tests": [
+        "Board.test.tsx::draws a phase's own rows at its top"
+      ]
+    },
+    "FR-005": {
+      "title": "Status from problem, then last run outcome, else nothing",
+      "tasks": [
+        "T001",
+        "T003",
+        "T006"
+      ],
+      "tests": [
+        "HookStatus.test.tsx; Board.test.tsx::each hook says whether it ran"
+      ]
+    },
+    "FR-006": {
+      "title": "Builder asks for hook runs on each graph",
+      "tasks": [
+        "T011"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::asks for the run record with every graph"
+      ]
+    },
+    "FR-007": {
+      "title": "Hook drag, edit and remove keep working",
+      "tasks": [
+        "T005",
+        "T006"
+      ],
+      "tests": [
+        "HookDrag.test.tsx"
+      ]
+    },
+    "FR-008": {
+      "title": "Node click opens a popover with facts, hooks and actions",
+      "tasks": [
+        "T008",
+        "T009",
+        "T011"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::opens beside the node"
+      ]
+    },
+    "FR-009": {
+      "title": "More keeps every Inspector action",
+      "tasks": [
+        "T008",
+        "T011"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::keeps every action the side pane had under More"
+      ]
+    },
+    "FR-010": {
+      "title": "Bottom sheet when narrow, traps focus",
+      "tasks": [
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::keeps Tab inside"
+      ]
+    },
+    "FR-011": {
+      "title": "Focus in on open, restored on close, Escape closes",
+      "tasks": [
+        "T008",
+        "T009"
+      ],
+      "tests": [
+        "NodePopover.test.tsx::closes on Escape and hands the keyboard back"
+      ]
+    },
+    "FR-012": {
+      "title": "Host theme tokens only",
+      "tasks": [
+        "T007"
+      ],
+      "assumes": "CSS review: only host tokens in the new section"
+    }
+  },
+  "classification": {
+    "projectedFiles": 9,
+    "projectedTasks": 14,
+    "scopeSignal": "larger",
+    "verdict": "normal"
+  },
+  "intent": "Node card with hooks inside showing whether they ran, plus a node popover",
+  "size": "normal",
+  "planBlocks": [
+    "calls",
+    "screens"
+  ],
+  "planBlocksPicked": [
+    "calls",
+    "screens"
+  ],
+  "verified": [
+    {
+      "what": "plan blocks check out",
+      "command": "python3 .specify/extensions/companion/scripts/check_plan.py --feature-dir specs/685-builder-card-popover --strict",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 0.0,
+      "result": "[plan-check] plan.md: 3 call paths, 8 lines, 1 screen, 10 parts. Every cited file and line checks out."
+    },
+    {
+      "what": "Requirements read against the diff inline (no subagent tool in this session)",
+      "result": "FR-001..FR-012 met; drag, edit and remove of hooks covered by HookDrag, Board and NodePopover tests"
+    },
+    {
+      "what": "webview types",
+      "command": "npx tsc --noEmit -p tsconfig.webview.json",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 3.1,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p tsconfig.webview.json",
+      "commit": "0f91e514",
+      "tree": "6eb44dacfc57b9363f5e6e8cda0e9cdaaa0ff011"
+    },
+    {
+      "what": "extension types",
+      "command": "npx tsc --noEmit -p ./",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 2.7,
+      "result": "npm notice run speckit-companion@0.41.0 npx · npm notice run 'tsc' --noEmit -p ./",
+      "commit": "0f91e514",
+      "tree": "6eb44dacfc57b9363f5e6e8cda0e9cdaaa0ff011"
+    },
+    {
+      "what": "builder tests",
+      "command": "npx jest apps/vscode/webview/src/pipeline-builder",
+      "source": "derived",
+      "exitCode": 0,
+      "durationSeconds": 9.6,
+      "result": "Snapshots:   0 total · Time:        8.836 s, estimated 10 s · Ran all test suites matching /apps\\/vscode\\/webview\\/src\\/pipeline-builder/i.",
+      "commit": "0f91e514",
+      "tree": "6eb44dacfc57b9363f5e6e8cda0e9cdaaa0ff011"
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "One pure hookStatus derivation read by card and popover",
+      "why": "the two surfaces cannot disagree",
+      "rejected": "computing status in each row",
+      "by": "agent",
+      "at": "2026-11-24T17:44:57.549Z"
+    },
+    {
+      "decision": "Post readHookRuns on every graph message",
+      "why": "graphs arrive on open and after each write",
+      "rejected": "a host file watcher needing a protocol change",
+      "by": "agent",
+      "at": "2026-11-24T17:44:57.549Z"
+    },
+    {
+      "decision": "Fixed-position popover beside the card, bottom sheet under 640px",
+      "why": "lanes clip and scroll sideways",
+      "rejected": "absolute inside the lane",
+      "by": "agent",
+      "at": "2026-11-24T17:44:57.549Z"
+    },
+    {
+      "decision": "Edit node opens the existing Inspector pane",
+      "why": "editing a body needs room; other actions move to More",
+      "rejected": "inline textarea in the popover",
+      "by": "agent",
+      "at": "2026-11-24T17:44:57.549Z"
+    },
+    {
+      "decision": "The card drops the trash button; removal lives in the popover's More",
+      "why": "the picked card carries a name and at most two marks",
+      "rejected": "keeping a bin on every card",
+      "by": "agent",
+      "at": "2026-11-24T18:01:39.447Z"
+    },
+    {
+      "decision": "Phase after-hooks sit at the top of the phase with a before/after word",
+      "why": "the slice asks for slim rows at the top; the word keeps the order honest",
+      "rejected": "after-hooks below the nodes",
+      "by": "agent",
+      "at": "2026-11-24T18:01:39.447Z"
+    },
+    {
+      "decision": "Step-level hooks are read-only rows",
+      "why": "the hook form has no step anchor",
+      "rejected": "rows that open a form that cannot place them",
+      "by": "agent",
+      "at": "2026-11-24T18:01:39.447Z"
+    }
+  ],
+  "step_summaries": {
+    "plan": {
+      "summary": "Card with slots, status derivation, popover and sheet; host unchanged",
+      "key_finding": "Run records match a board hook by step/when/anchor/index; type or ref mismatch means changed since"
+    },
+    "tasks": {
+      "summary": "13 tasks: foundational status and icons, card phase, popover phase, polish"
+    },
+    "implement": {
+      "summary": "Card with hooks inside and run statuses, node popover and sheet, every Inspector action under More"
+    }
+  },
+  "approach": "Restructure Canvas Node into one card with hook slots and status rows from a pure hookStatus module; add NodePopover rendered from index.tsx with every Inspector action in More; Edit node opens the Inspector.",
+  "currentTask": null,
+  "task_summaries": {
+    "T001": {
+      "status": "DONE",
+      "did": "Status derivation and hook kind icons",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/hookStatus.ts",
+        "apps/vscode/webview/src/pipeline-builder/HookIcon.tsx"
+      ],
+      "wave": "T001-T002"
+    },
+    "T002": {
+      "status": "DONE",
+      "did": "Status derivation and hook kind icons",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/hookStatus.ts",
+        "apps/vscode/webview/src/pipeline-builder/HookIcon.tsx"
+      ],
+      "wave": "T001-T002"
+    },
+    "T003": {
+      "status": "DONE",
+      "did": "Status derivation tests",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookStatus.test.tsx"
+      ]
+    },
+    "T004": {
+      "status": "DONE",
+      "did": "Board and hook drag tests on the card, slots, marks and statuses",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ],
+      "wave": "T004-T005"
+    },
+    "T005": {
+      "status": "DONE",
+      "did": "Board and hook drag tests on the card, slots, marks and statuses",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/Board.test.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/HookDrag.test.tsx"
+      ],
+      "wave": "T004-T005"
+    },
+    "T006": {
+      "status": "DONE",
+      "did": "Card with hook slots, status rows, phase and step hook rows, styles",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T006-T007"
+    },
+    "T007": {
+      "status": "DONE",
+      "did": "Card with hook slots, status rows, phase and step hook rows, styles",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/Canvas.tsx",
+        "apps/vscode/webview/styles/pipeline-builder.css"
+      ],
+      "wave": "T006-T007"
+    },
+    "T008": {
+      "status": "DONE",
+      "did": "Popover tests: focus, Escape, hooks, More actions, sheet trap",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/__tests__/NodePopover.test.tsx"
+      ]
+    },
+    "T009": {
+      "status": "DONE",
+      "did": "NodePopover with sheet and focus handling; stories for statuses and popover",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/NodePopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx"
+      ],
+      "wave": "T009-T010"
+    },
+    "T010": {
+      "status": "DONE",
+      "did": "NodePopover with sheet and focus handling; stories for statuses and popover",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/NodePopover.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__stories__/Components.stories.tsx"
+      ],
+      "wave": "T009-T010"
+    },
+    "T011": {
+      "status": "DONE",
+      "did": "Popover wired in index with every node action and readHookRuns; move tests drive the popover",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/MoveAnnouncement.test.tsx"
+      ],
+      "wave": "T011-T012"
+    },
+    "T012": {
+      "status": "DONE",
+      "did": "Popover wired in index with every node action and readHookRuns; move tests drive the popover",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/MoveAnnouncement.test.tsx"
+      ],
+      "wave": "T011-T012"
+    },
+    "T013": {
+      "status": "DONE",
+      "did": "Type-check and related builder tests pass",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder"
+      ]
+    },
+    "T014": {
+      "status": "DONE",
+      "did": "Popover closes when a rebuild removes its node",
+      "files": [
+        "apps/vscode/webview/src/pipeline-builder/index.tsx",
+        "apps/vscode/webview/src/pipeline-builder/__tests__/NodePopover.test.tsx"
+      ]
+    }
+  },
+  "concerns": [
+    {
+      "note": "No per-hook Move button in the popover; moving a hook stays in the hook form and by drag",
+      "step": "implement"
+    },
+    {
+      "note": "Requirement check ran inline: no subagent tool in this session",
+      "step": "implement"
+    },
+    {
+      "note": "Pixel baselines and clips not regenerated, by instruction; the final stage of the run does that",
+      "step": "implement"
+    },
+    {
+      "note": "Independent /code-review not run: no subagent tool here and the run asked for fast checks; high tier comes from earlier branch commits (capture scripts), not this slice",
+      "step": "implement"
+    }
+  ],
+  "last_action": "Committed 0f91e514",
+  "risk": {
+    "tier": "high",
+    "computed": "high",
+    "reasons": [
+      "touches apps/speckit-extension/scripts/capture.py, apps/speckit-extension/scripts/write-context.py"
+    ]
+  },
+  "convergeStartedAt": "2026-11-24T18:02:50.513Z",
+  "convergePasses": [
+    {
+      "startedAt": "2026-11-24T18:02:09.761Z",
+      "by": "extension",
+      "finishedAt": "2026-11-24T18:02:56.132Z",
+      "added": [
+        "T014"
+      ],
+      "completed": true
+    }
+  ]
+}
