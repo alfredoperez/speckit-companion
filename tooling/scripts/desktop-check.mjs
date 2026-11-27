@@ -1698,6 +1698,39 @@ try {
         }
     }, { needs: 'talk-sandbox', shots: true });
 
+    await step('talk-refine-sent', 'Talk: Refine pressed on the three plan comments, and the prompt the assistant receives', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('planned', (folder) => withComments(planComments(folder, 'pending'))(folder));
+            await openTalkSpec(AUTOSAVE, 'Plan');
+            const refine = webview().locator('#refine-submit-btn');
+            await expectText(refine, /Refine \(3\)/);
+            await refine.click();
+            const sent = await terminalText(/\[sent to assistant\]/);
+            await page.waitForTimeout(800);
+            await capture('talk-refine-sent-window', { target: 'window' });
+            // The whole terminal group, top to bottom: the prompt's three refinements sit below its preamble.
+            await capture('talk-refine-sent', { target: page.locator('.editor-group-container').last() });
+            return sent;
+        } finally {
+            await clear();
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-spec-requirements','Talk: the autosave spec\'s requirements once tasks exist, each traced to the task that builds it', async () => {
+        await talkWindow();
+        try {
+            await walkAutosave('tasked');
+            await openTalkSpec(AUTOSAVE, 'Specification');
+            await scrollTo(webview().locator('.lg-sp-req'), 'start', 150);
+            await capture('talk-spec-requirements', { target: 'editor', ratio: 16 / 9 });
+            return 'talk-spec-requirements';
+        } finally {
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
     await step('talk-run', 'Talk: the autosave run at tasks and mid-implement, three of eight tasks ticked', async () => {
         await talkWindow();
         try {
@@ -1717,7 +1750,72 @@ try {
         }
     }, { needs: 'talk-sandbox', shots: true });
 
-    await step('talk-overview', 'Talk: each region of the finished autosave run\'s Overview, and the Reading Time run sized simple', async () => {
+    // The run as four stills a deck cross-fades: tasks.md and .spec-context.json change between stills,
+    // every phase and wave is held open and the task count pinned to one spot,
+    // so between stills only the ticks, the counts, the badge and the footer move.
+    await step('talk-run-stills', 'Talk: the autosave Tasks tab at 0, 3 and 8 of 8, then Implemented with Converge, at one scroll position', async () => {
+        await talkWindow();
+        const contextFile = () => join(autosaveFolder(), '.spec-context.json');
+        const tasksFile = () => join(autosaveFolder(), 'tasks.md');
+        const read = (state) => { talkState(state); return { context: readFileSync(contextFile(), 'utf8'), tasks: readFileSync(tasksFile(), 'utf8') }; };
+        try {
+            // A done task with a summary grows a line under it and pushes the rows below down; without one every row keeps its place.
+            const quiet = (text) => { const context = JSON.parse(text); delete context.task_summaries; return context; };
+            const implementing = read('implementing');
+            const completed = read('completed');
+            const run = quiet(completed.context);
+            // 8 of 8 ticked while T008 still runs: the history stops before T008's completion, which would close the step.
+            const beforeT008 = run.history.findIndex(entry => entry.task === 'T008');
+            const allTicked = { ...run, history: run.history.slice(0, beforeT008), currentStep: 'implement', status: 'implementing', currentTask: 'T008', last_action: 'T007 completed' };
+            // Implemented: the whole run recorded, not yet marked complete, so the footer offers Converge.
+            const implemented = { ...run, status: 'implemented', last_action: 'implement completed' };
+            const tasked = read('tasked');
+            const open = tasked.tasks.replaceAll('- [x] **', '- [ ] **');
+            await walkAutosave('tasked', (folder) => writeFileSync(join(folder, 'tasks.md'), open));
+            await openTalkSpec(AUTOSAVE, 'Tasks');
+            const write = async (context, tasks) => {
+                writeFileSync(contextFile(), JSON.stringify(context, null, 2));
+                if (tasks) writeFileSync(tasksFile(), tasks);
+            };
+            // A file change redraws the tasks without the running one; a tab switch inside the viewer redraws them in full.
+            const tab = async (name) => {
+                await webview().locator('.step-tab', { hasText: name }).first().click();
+                await webview().locator('[aria-current="page"]', { hasText: name }).first().waitFor({ timeout: 15000 });
+                await page.waitForTimeout(1000);
+            };
+            const settle = async (pattern) => {
+                await page.waitForTimeout(2500);
+                await tab('Plan');
+                await tab('Tasks');
+                await webview().locator('details.lg-phase, details.lg-wave').evaluateAll((folds) => folds.forEach((fold) => { fold.open = true; }));
+                await scrollTo(webview().getByText(/\d of 8 tasks done/).first(), 'start', 16);
+                await page.waitForTimeout(500);
+                if (pattern) await expectText(webview().locator('body'), pattern);
+            };
+            const still = async (name) => {
+                await capture(`${name}-window`, { target: 'window' });
+                await capture(name, { target: 'editor' });
+            };
+            await settle(/0 of 8/);
+            await still('talk-run-0of8');
+            await write(quiet(implementing.context), implementing.tasks);
+            await settle(/3 of 8/);
+            await expectText(webview().locator('.lg-live--running'), /1 running/);
+            await still('talk-run-3of8');
+            await write(allTicked, completed.tasks);
+            await settle(/8 of 8/);
+            await still('talk-run-8of8');
+            await write(implemented);
+            await settle(/Converge/);
+            await still('talk-run-implemented');
+            return 'talk-run-0of8, talk-run-3of8, talk-run-8of8, talk-run-implemented';
+        } finally {
+            await clear();
+            resetTalk();
+        }
+    }, { needs: 'talk-sandbox', shots: true });
+
+    await step('talk-overview','Talk: each region of the finished autosave run\'s Overview, and the Reading Time run sized simple', async () => {
         await talkWindow();
         await openTalkSpec(AUTOSAVE, 'Overview');
         await capture('talk-overview-window', { target: 'window' });
